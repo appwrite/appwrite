@@ -88,6 +88,7 @@ class DatabasesStringTypesTest extends Scope
         $this->assertEquals(255, $varchar['body']['size']);
         $this->assertEquals(false, $varchar['body']['required']);
         $this->assertNull($varchar['body']['default']);
+        $this->assertFalse($varchar['body']['encrypt']);
 
         // Test SUCCESS: Create varchar with default value
         $varcharWithDefault = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/varchar', [
@@ -146,6 +147,21 @@ class DatabasesStringTypesTest extends Scope
 
         $this->assertEquals(202, $varcharMin['headers']['status-code']);
         $this->assertEquals(1, $varcharMin['body']['size']);
+
+        // Test SUCCESS: Create encrypted varchar attribute
+        $varcharEncrypted = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/varchar', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'varchar_encrypted',
+            'size' => 256,
+            'required' => false,
+            'encrypt' => true,
+        ]);
+
+        $this->assertEquals(202, $varcharEncrypted['headers']['status-code']);
+        $this->assertTrue($varcharEncrypted['body']['encrypt']);
 
         return $data;
     }
@@ -235,6 +251,20 @@ class DatabasesStringTypesTest extends Scope
         ]);
 
         $this->assertEquals(409, $varcharDuplicate['headers']['status-code']);
+
+        // Test FAILURE: Encrypted varchar with size too small
+        $varcharEncryptTooSmall = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/varchar', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'varchar_encrypt_small',
+            'size' => 149,
+            'required' => false,
+            'encrypt' => true,
+        ]);
+
+        $this->assertEquals(400, $varcharEncryptTooSmall['headers']['status-code']);
     }
 
     /**
@@ -259,6 +289,7 @@ class DatabasesStringTypesTest extends Scope
         $this->assertEquals('text_field', $text['body']['key']);
         $this->assertEquals('text', $text['body']['type']);
         $this->assertEquals(false, $text['body']['required']);
+        $this->assertFalse($text['body']['encrypt']);
 
         // Test SUCCESS: Create text with default value
         $textWithDefault = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/text', [
@@ -301,6 +332,20 @@ class DatabasesStringTypesTest extends Scope
         $this->assertEquals(202, $textArray['headers']['status-code']);
         $this->assertEquals(true, $textArray['body']['array']);
 
+        // Test SUCCESS: Create encrypted text attribute
+        $textEncrypted = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/text', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'text_encrypted',
+            'required' => false,
+            'encrypt' => true,
+        ]);
+
+        $this->assertEquals(202, $textEncrypted['headers']['status-code']);
+        $this->assertTrue($textEncrypted['body']['encrypt']);
+
         return $data;
     }
 
@@ -326,6 +371,7 @@ class DatabasesStringTypesTest extends Scope
         $this->assertEquals('mediumtext_field', $mediumtext['body']['key']);
         $this->assertEquals('mediumtext', $mediumtext['body']['type']);
         $this->assertEquals(false, $mediumtext['body']['required']);
+        $this->assertFalse($mediumtext['body']['encrypt']);
 
         // Test SUCCESS: Create mediumtext with default
         $mediumtextWithDefault = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/mediumtext', [
@@ -367,6 +413,20 @@ class DatabasesStringTypesTest extends Scope
         $this->assertEquals(202, $mediumtextArray['headers']['status-code']);
         $this->assertEquals(true, $mediumtextArray['body']['array']);
 
+        // Test SUCCESS: Create encrypted mediumtext attribute
+        $mediumtextEncrypted = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/mediumtext', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'mediumtext_encrypted',
+            'required' => false,
+            'encrypt' => true,
+        ]);
+
+        $this->assertEquals(202, $mediumtextEncrypted['headers']['status-code']);
+        $this->assertTrue($mediumtextEncrypted['body']['encrypt']);
+
         return $data;
     }
 
@@ -392,6 +452,7 @@ class DatabasesStringTypesTest extends Scope
         $this->assertEquals('longtext_field', $longtext['body']['key']);
         $this->assertEquals('longtext', $longtext['body']['type']);
         $this->assertEquals(false, $longtext['body']['required']);
+        $this->assertFalse($longtext['body']['encrypt']);
 
         // Test SUCCESS: Create longtext with default
         $longtextWithDefault = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/longtext', [
@@ -433,11 +494,82 @@ class DatabasesStringTypesTest extends Scope
         $this->assertEquals(202, $longtextArray['headers']['status-code']);
         $this->assertEquals(true, $longtextArray['body']['array']);
 
+        // Test SUCCESS: Create encrypted longtext attribute
+        $longtextEncrypted = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/longtext', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'longtext_encrypted',
+            'required' => false,
+            'encrypt' => true,
+        ]);
+
+        $this->assertEquals(202, $longtextEncrypted['headers']['status-code']);
+        $this->assertTrue($longtextEncrypted['body']['encrypt']);
+
         return $data;
     }
 
     /**
      * @depends testCreateLongtextAttribute
+     */
+    public function testListStringTypeAttributes(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+        $collectionId = $data['collectionId'];
+
+        // Wait for attributes to be created
+        sleep(2);
+
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $attributes = $response['body']['attributes'];
+        $types = array_column($attributes, 'type');
+
+        $this->assertContains('varchar', $types);
+        $this->assertContains('text', $types);
+        $this->assertContains('mediumtext', $types);
+        $this->assertContains('longtext', $types);
+
+        return $data;
+    }
+
+    /**
+     * @depends testListStringTypeAttributes
+     */
+    public function testGetCollectionWithStringTypeAttributes(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+        $collectionId = $data['collectionId'];
+
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $attributes = $response['body']['attributes'];
+        $types = array_column($attributes, 'type');
+
+        $this->assertContains('varchar', $types);
+        $this->assertContains('text', $types);
+        $this->assertContains('mediumtext', $types);
+        $this->assertContains('longtext', $types);
+
+        return $data;
+    }
+
+    /**
+     * @depends testGetCollectionWithStringTypeAttributes
      */
     public function testUpdateVarcharAttribute(array $data): array
     {

@@ -253,6 +253,7 @@ class Webhooks extends Action
             ->setParam('{{year}}', date("Y"));
 
         $queueForMails
+            ->setProject($project)
             ->setSubject($subject)
             ->setPreview($preview)
             ->setBody($body->render());

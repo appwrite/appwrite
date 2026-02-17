@@ -9283,6 +9283,12 @@
                                     "description": "Is attribute an array?",
                                     "default": false,
                                     "x-example": false
+                                },
+                                "encrypt": {
+                                    "type": "boolean",
+                                    "description": "Toggle encryption for the attribute. Encryption enhances security by not storing any plain text values in the database. However, encrypted attributes cannot be queried.",
+                                    "default": false,
+                                    "x-example": false
                                 }
                             },
                             "required": [
@@ -9503,6 +9509,12 @@
                                 "array": {
                                     "type": "boolean",
                                     "description": "Is attribute an array?",
+                                    "default": false,
+                                    "x-example": false
+                                },
+                                "encrypt": {
+                                    "type": "boolean",
+                                    "description": "Toggle encryption for the attribute. Encryption enhances security by not storing any plain text values in the database. However, encrypted attributes cannot be queried.",
                                     "default": false,
                                     "x-example": false
                                 }
@@ -10567,6 +10579,12 @@
                                     "description": "Is attribute an array?",
                                     "default": false,
                                     "x-example": false
+                                },
+                                "encrypt": {
+                                    "type": "boolean",
+                                    "description": "Toggle encryption for the attribute. Encryption enhances security by not storing any plain text values in the database. However, encrypted attributes cannot be queried.",
+                                    "default": false,
+                                    "x-example": false
                                 }
                             },
                             "required": [
@@ -11026,6 +11044,12 @@
                                 "array": {
                                     "type": "boolean",
                                     "description": "Is attribute an array?",
+                                    "default": false,
+                                    "x-example": false
+                                },
+                                "encrypt": {
+                                    "type": "boolean",
+                                    "description": "Toggle encryption for the attribute. Encryption enhances security by not storing any plain text values in the database. However, encrypted attributes cannot be queried.",
                                     "default": false,
                                     "x-example": false
                                 }
@@ -30404,6 +30428,12 @@
                                     "description": "Is column an array?",
                                     "default": false,
                                     "x-example": false
+                                },
+                                "encrypt": {
+                                    "type": "boolean",
+                                    "description": "Toggle encryption for the column. Encryption enhances security by not storing any plain text values in the database. However, encrypted columns cannot be queried.",
+                                    "default": false,
+                                    "x-example": false
                                 }
                             },
                             "required": [
@@ -30630,6 +30660,12 @@
                                 "array": {
                                     "type": "boolean",
                                     "description": "Is column an array?",
+                                    "default": false,
+                                    "x-example": false
+                                },
+                                "encrypt": {
+                                    "type": "boolean",
+                                    "description": "Toggle encryption for the column. Encryption enhances security by not storing any plain text values in the database. However, encrypted columns cannot be queried.",
                                     "default": false,
                                     "x-example": false
                                 }
@@ -31701,6 +31737,12 @@
                                     "description": "Is column an array?",
                                     "default": false,
                                     "x-example": false
+                                },
+                                "encrypt": {
+                                    "type": "boolean",
+                                    "description": "Toggle encryption for the column. Encryption enhances security by not storing any plain text values in the database. However, encrypted columns cannot be queried.",
+                                    "default": false,
+                                    "x-example": false
                                 }
                             },
                             "required": [
@@ -32164,6 +32206,12 @@
                                 "array": {
                                     "type": "boolean",
                                     "description": "Is column an array?",
+                                    "default": false,
+                                    "x-example": false
+                                },
+                                "encrypt": {
+                                    "type": "boolean",
+                                    "description": "Toggle encryption for the column. Encryption enhances security by not storing any plain text values in the database. However, encrypted columns cannot be queried.",
                                     "default": false,
                                     "x-example": false
                                 }
@@ -42308,6 +42356,12 @@
                     "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
                     "x-example": "default",
                     "x-nullable": true
+                },
+                "encrypt": {
+                    "type": "boolean",
+                    "description": "Defines whether this attribute is encrypted or not.",
+                    "x-example": false,
+                    "x-nullable": true
                 }
             },
             "required": [
@@ -42330,7 +42384,8 @@
                 "$createdAt": "2020-10-15T06:38:00.000+00:00",
                 "$updatedAt": "2020-10-15T06:38:00.000+00:00",
                 "size": 128,
-                "default": "default"
+                "default": "default",
+                "encrypt": false
             }
         },
         "attributeText": {
@@ -42391,6 +42446,12 @@
                     "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
                     "x-example": "default",
                     "x-nullable": true
+                },
+                "encrypt": {
+                    "type": "boolean",
+                    "description": "Defines whether this attribute is encrypted or not.",
+                    "x-example": false,
+                    "x-nullable": true
                 }
             },
             "required": [
@@ -42411,7 +42472,8 @@
                 "array": false,
                 "$createdAt": "2020-10-15T06:38:00.000+00:00",
                 "$updatedAt": "2020-10-15T06:38:00.000+00:00",
-                "default": "default"
+                "default": "default",
+                "encrypt": false
             }
         },
         "attributeMediumtext": {
@@ -42472,6 +42534,12 @@
                     "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
                     "x-example": "default",
                     "x-nullable": true
+                },
+                "encrypt": {
+                    "type": "boolean",
+                    "description": "Defines whether this attribute is encrypted or not.",
+                    "x-example": false,
+                    "x-nullable": true
                 }
             },
             "required": [
@@ -42492,7 +42560,8 @@
                 "array": false,
                 "$createdAt": "2020-10-15T06:38:00.000+00:00",
                 "$updatedAt": "2020-10-15T06:38:00.000+00:00",
-                "default": "default"
+                "default": "default",
+                "encrypt": false
             }
         },
         "attributeLongtext": {
@@ -42553,6 +42622,12 @@
                     "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
                     "x-example": "default",
                     "x-nullable": true
+                },
+                "encrypt": {
+                    "type": "boolean",
+                    "description": "Defines whether this attribute is encrypted or not.",
+                    "x-example": false,
+                    "x-nullable": true
                 }
             },
             "required": [
@@ -42573,7 +42648,8 @@
                 "array": false,
                 "$createdAt": "2020-10-15T06:38:00.000+00:00",
                 "$updatedAt": "2020-10-15T06:38:00.000+00:00",
-                "default": "default"
+                "default": "default",
+                "encrypt": false
             }
         },
         "table": {
@@ -44130,6 +44206,12 @@
                     "description": "Default value for column when not provided. Cannot be set when column is required.",
                     "x-example": "default",
                     "x-nullable": true
+                },
+                "encrypt": {
+                    "type": "boolean",
+                    "description": "Defines whether this column is encrypted or not.",
+                    "x-example": false,
+                    "x-nullable": true
                 }
             },
             "required": [
@@ -44152,7 +44234,8 @@
                 "$createdAt": "2020-10-15T06:38:00.000+00:00",
                 "$updatedAt": "2020-10-15T06:38:00.000+00:00",
                 "size": 128,
-                "default": "default"
+                "default": "default",
+                "encrypt": false
             }
         },
         "columnText": {
@@ -44213,6 +44296,12 @@
                     "description": "Default value for column when not provided. Cannot be set when column is required.",
                     "x-example": "default",
                     "x-nullable": true
+                },
+                "encrypt": {
+                    "type": "boolean",
+                    "description": "Defines whether this column is encrypted or not.",
+                    "x-example": false,
+                    "x-nullable": true
                 }
             },
             "required": [
@@ -44233,7 +44322,8 @@
                 "array": false,
                 "$createdAt": "2020-10-15T06:38:00.000+00:00",
                 "$updatedAt": "2020-10-15T06:38:00.000+00:00",
-                "default": "default"
+                "default": "default",
+                "encrypt": false
             }
         },
         "columnMediumtext": {
@@ -44294,6 +44384,12 @@
                     "description": "Default value for column when not provided. Cannot be set when column is required.",
                     "x-example": "default",
                     "x-nullable": true
+                },
+                "encrypt": {
+                    "type": "boolean",
+                    "description": "Defines whether this column is encrypted or not.",
+                    "x-example": false,
+                    "x-nullable": true
                 }
             },
             "required": [
@@ -44314,7 +44410,8 @@
                 "array": false,
                 "$createdAt": "2020-10-15T06:38:00.000+00:00",
                 "$updatedAt": "2020-10-15T06:38:00.000+00:00",
-                "default": "default"
+                "default": "default",
+                "encrypt": false
             }
         },
         "columnLongtext": {
@@ -44375,6 +44472,12 @@
                     "description": "Default value for column when not provided. Cannot be set when column is required.",
                     "x-example": "default",
                     "x-nullable": true
+                },
+                "encrypt": {
+                    "type": "boolean",
+                    "description": "Defines whether this column is encrypted or not.",
+                    "x-example": false,
+                    "x-nullable": true
                 }
             },
             "required": [
@@ -44395,7 +44498,8 @@
                 "array": false,
                 "$createdAt": "2020-10-15T06:38:00.000+00:00",
                 "$updatedAt": "2020-10-15T06:38:00.000+00:00",
-                "default": "default"
+                "default": "default",
+                "encrypt": false
             }
         },
         "index": {
