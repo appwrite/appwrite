@@ -42,7 +42,7 @@ class Schedule extends Model
             ])
             ->addRule('resourceUpdatedAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'The date the associated resource was last updated in ISO 8601 format.',
+                'description' => 'Change-tracking timestamp used by the scheduler to detect resource changes in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
