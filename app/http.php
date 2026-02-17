@@ -43,6 +43,10 @@ $domains = new Table(1_000_000); // 1 million rows
 $domains->column('value', Table::TYPE_INT, 1);
 $domains->create();
 
+$hostnames = new Table(100_000);
+$hostnames->column('value', Table::TYPE_INT, 1);
+$hostnames->create();
+
 $http = new Server(
     host: "0.0.0.0",
     port: System::getEnv('PORT', 80),
