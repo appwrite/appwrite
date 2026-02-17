@@ -246,8 +246,6 @@ class DatabasesStringTypesTest extends Scope
 
         $this->assertEquals(202, $varcharEncrypted['headers']['status-code']);
         $this->assertTrue($varcharEncrypted['body']['encrypt']);
-
-        return $data;
     }
 
     public function testCreateVarcharAttributeFailures(): void
@@ -410,8 +408,6 @@ class DatabasesStringTypesTest extends Scope
 
         $this->assertEquals(202, $textEncrypted['headers']['status-code']);
         $this->assertTrue($textEncrypted['body']['encrypt']);
-
-        return $data;
     }
 
     public function testCreateMediumtextAttribute(): void
@@ -474,8 +470,6 @@ class DatabasesStringTypesTest extends Scope
 
         $this->assertEquals(202, $mediumtextEncrypted['headers']['status-code']);
         $this->assertTrue($mediumtextEncrypted['body']['encrypt']);
-
-        return $data;
     }
 
     public function testCreateLongtextAttribute(): void
@@ -538,15 +532,11 @@ class DatabasesStringTypesTest extends Scope
 
         $this->assertEquals(202, $longtextEncrypted['headers']['status-code']);
         $this->assertTrue($longtextEncrypted['body']['encrypt']);
-
-        return $data;
     }
 
-    /**
-     * @depends testCreateLongtextAttribute
-     */
-    public function testListStringTypeAttributes(array $data): array
+    public function testListStringTypeAttributes(): void
     {
+        $data = $this->setupDatabaseAndCollection();
         $databaseId = $data['databaseId'];
         $collectionId = $data['collectionId'];
 
@@ -568,15 +558,11 @@ class DatabasesStringTypesTest extends Scope
         $this->assertContains('text', $types);
         $this->assertContains('mediumtext', $types);
         $this->assertContains('longtext', $types);
-
-        return $data;
     }
 
-    /**
-     * @depends testListStringTypeAttributes
-     */
-    public function testGetCollectionWithStringTypeAttributes(array $data): array
+    public function testGetCollectionWithStringTypeAttributes(): void
     {
+        $data = $this->setupDatabaseAndCollection();
         $databaseId = $data['databaseId'];
         $collectionId = $data['collectionId'];
 
@@ -595,14 +581,9 @@ class DatabasesStringTypesTest extends Scope
         $this->assertContains('text', $types);
         $this->assertContains('mediumtext', $types);
         $this->assertContains('longtext', $types);
-
-        return $data;
     }
 
-    /**
-     * @depends testGetCollectionWithStringTypeAttributes
-     */
-    public function testUpdateVarcharAttribute(array $data): array
+    public function testUpdateVarcharAttribute(): void
     {
         $this->markTestSkipped('Skipped until utopia-php/database updateAttribute supports VARCHAR type');
     }

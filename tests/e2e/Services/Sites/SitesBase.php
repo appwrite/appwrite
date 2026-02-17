@@ -69,12 +69,7 @@ trait SitesBase
 
         // Not === so multipart/form-data works fine too
         if (($params['activate'] ?? false) == true) {
-            // Wait briefly for auto-activation, then explicitly activate if needed
-            $activated = false;
-            $autoActivateTimeout = 30000; // 30 seconds for auto-activation
-            $start = \microtime(true);
-
-            while ((\microtime(true) - $start) * 1000 < $autoActivateTimeout) {
+            $this->assertEventually(function () use ($siteId, $deploymentId) {
                 $site = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId, array_merge([
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $this->getProject()['$id'],

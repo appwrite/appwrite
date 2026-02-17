@@ -2990,13 +2990,13 @@ trait DatabasesBase
                         '$databaseId' => 'some-other-database',
                         '$createdAt' => '2024-01-01T00:00:00Z',
                         '$updatedAt' => '2024-01-01T00:00:00Z',
-                    ],
                         'library' => [
                             '$id' => 'library3',
                             'libraryName' => 'Library 3',
                             '$createdAt' => '2024-01-01T00:00:00Z',
                             '$updatedAt' => '2024-01-01T00:00:00Z',
                         ],
+                    ],
                 ]);
 
                 $update = $personNoPerm;
