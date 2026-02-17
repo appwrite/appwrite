@@ -301,7 +301,7 @@ Http::init()
                 $projectId = explode('/', $uri)[3];
             }
 
-            $scopes = []; // Reset scope if admin
+            $scopes = isset($roles['analyst']) ? $roles['analyst']['scopes'] : []; // Base scope for admin users
             foreach ($adminRoles as $role) {
                 $isTeamWideRole = !str_starts_with($role, 'project-');
                 $isProjectSpecificRole = $projectId !== 'console' && str_starts_with($role, 'project-' . $projectId);
