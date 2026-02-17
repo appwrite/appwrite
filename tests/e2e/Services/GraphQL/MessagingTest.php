@@ -16,8 +16,20 @@ class MessagingTest extends Scope
     use SideServer;
     use Base;
 
-    public function testCreateProviders()
+    private static array $cachedProviders = [];
+    private static array $cachedTopic = [];
+    private static array $cachedSubscriber = [];
+    private static array $cachedEmail = [];
+    private static array $cachedSms = [];
+    private static array $cachedPush = [];
+
+    protected function setupProviders(): array
     {
+        $key = $this->getProject()['$id'];
+        if (!empty(static::$cachedProviders[$key])) {
+            return static::$cachedProviders[$key];
+        }
+
         $providersParams = [
             'Sendgrid' => [
                 'providerId' => ID::unique(),
@@ -99,11 +111,11 @@ class MessagingTest extends Scope
 
         $providers = [];
 
-        foreach (\array_keys($providersParams) as $key) {
-            $query = $this->getQuery('create_' . \strtolower($key) . '_provider');
+        foreach (\array_keys($providersParams) as $providerKey) {
+            $query = $this->getQuery('create_' . \strtolower($providerKey) . '_provider');
             $graphQLPayload = [
                 'query' => $query,
-                'variables' => $providersParams[$key],
+                'variables' => $providersParams[$providerKey],
             ];
             $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
                 'content-type' => 'application/json',
@@ -111,19 +123,24 @@ class MessagingTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]), $graphQLPayload);
 
-            $providers[] = $response['body']['data']['messagingCreate' . $key . 'Provider'];
+            $providers[] = $response['body']['data']['messagingCreate' . $providerKey . 'Provider'];
             $this->assertEquals(200, $response['headers']['status-code']);
-            $this->assertEquals($providersParams[$key]['name'], $response['body']['data']['messagingCreate' . $key . 'Provider']['name']);
+            $this->assertEquals($providersParams[$providerKey]['name'], $response['body']['data']['messagingCreate' . $providerKey . 'Provider']['name']);
         }
 
+        static::$cachedProviders[$key] = $providers;
         return $providers;
     }
 
-    /**
-     * @depends testCreateProviders
-     */
-    public function testUpdateProviders(array $providers): array
+    protected function setupUpdatedProviders(): array
     {
+        $key = $this->getProject()['$id'] . '_updated';
+        if (!empty(static::$cachedProviders[$key])) {
+            return static::$cachedProviders[$key];
+        }
+
+        $providers = $this->setupProviders();
+
         $providersParams = [
             'Sendgrid' => [
                 'providerId' => $providers[0]['_id'],
@@ -191,12 +208,12 @@ class MessagingTest extends Scope
                 'bundleId' => 'my-bundleid',
             ],
         ];
-        foreach (\array_keys($providersParams) as $index => $key) {
-            $query = $this->getQuery('update_' . \strtolower($key) . '_provider');
+        foreach (\array_keys($providersParams) as $index => $providerKey) {
+            $query = $this->getQuery('update_' . \strtolower($providerKey) . '_provider');
 
             $graphQLPayload = [
                 'query' => $query,
-                'variables' => $providersParams[$key],
+                'variables' => $providersParams[$providerKey],
             ];
 
             $response = $this->client->call(Client::METHOD_POST, '/graphql', [
@@ -205,9 +222,9 @@ class MessagingTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ], $graphQLPayload);
 
-            $providers[$index] = $response['body']['data']['messagingUpdate' . $key . 'Provider'];
+            $providers[$index] = $response['body']['data']['messagingUpdate' . $providerKey . 'Provider'];
             $this->assertEquals(200, $response['headers']['status-code']);
-            $this->assertEquals($providersParams[$key]['name'], $response['body']['data']['messagingUpdate' . $key . 'Provider']['name']);
+            $this->assertEquals($providersParams[$providerKey]['name'], $response['body']['data']['messagingUpdate' . $providerKey . 'Provider']['name']);
         }
 
         $response = $this->client->call(Client::METHOD_POST, '/graphql', [
@@ -229,72 +246,18 @@ class MessagingTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('Mailgun2', $response['body']['data']['messagingUpdateMailgunProvider']['name']);
         $this->assertEquals(false, $response['body']['data']['messagingUpdateMailgunProvider']['enabled']);
+
+        static::$cachedProviders[$key] = $providers;
         return $providers;
     }
 
-    /**
-     * @depends testUpdateProviders
-     */
-    public function testListProviders(array $providers)
+    protected function setupTopic(): array
     {
-        $query = $this->getQuery(self::LIST_PROVIDERS);
-        $graphQLPayload = [
-            'query' => $query,
-        ];
-        $response = $this->client->call(Client::METHOD_POST, '/graphql', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], $graphQLPayload);
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(\count($providers), \count($response['body']['data']['messagingListProviders']['providers']));
-    }
-
-    /**
-     * @depends testUpdateProviders
-     */
-    public function testGetProvider(array $providers)
-    {
-        $query = $this->getQuery(self::GET_PROVIDER);
-        $graphQLPayload = [
-            'query' => $query,
-            'variables' => [
-                'providerId' => $providers[0]['_id'],
-            ]
-        ];
-        $response = $this->client->call(Client::METHOD_POST, '/graphql', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], $graphQLPayload);
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals($providers[0]['name'], $response['body']['data']['messagingGetProvider']['name']);
-    }
-
-    /**
-     * @depends testUpdateProviders
-     */
-    public function testDeleteProvider(array $providers)
-    {
-        foreach ($providers as $provider) {
-            $query = $this->getQuery(self::DELETE_PROVIDER);
-            $graphQLPayload = [
-                'query' => $query,
-                'variables' => [
-                    'providerId' => $provider['_id'],
-                ]
-            ];
-            $response = $this->client->call(Client::METHOD_POST, '/graphql', [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey'],
-            ], $graphQLPayload);
-            $this->assertEquals(204, $response['headers']['status-code']);
+        $key = $this->getProject()['$id'];
+        if (!empty(static::$cachedTopic[$key])) {
+            return static::$cachedTopic[$key];
         }
-    }
 
-    public function testCreateTopic()
-    {
         $query = $this->getQuery(self::CREATE_TOPIC);
         $graphQLPayload = [
             'query' => $query,
@@ -312,15 +275,20 @@ class MessagingTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('topic1', $response['body']['data']['messagingCreateTopic']['name']);
 
-        return $response['body']['data']['messagingCreateTopic'];
+        static::$cachedTopic[$key] = $response['body']['data']['messagingCreateTopic'];
+        return static::$cachedTopic[$key];
     }
 
-    /**
-     * @depends testCreateTopic
-     */
-    public function testUpdateTopic(array $topic)
+    protected function setupUpdatedTopic(): string
     {
+        $key = $this->getProject()['$id'] . '_updated';
+        if (!empty(static::$cachedTopic[$key])) {
+            return static::$cachedTopic[$key];
+        }
+
+        $topic = $this->setupTopic();
         $topicId = $topic['_id'];
+
         $query = $this->getQuery(self::UPDATE_TOPIC);
         $graphQLPayload = [
             'query' => $query,
@@ -338,55 +306,18 @@ class MessagingTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('topic2', $response['body']['data']['messagingUpdateTopic']['name']);
 
+        static::$cachedTopic[$key] = $topicId;
         return $topicId;
     }
 
-    /**
-     * @depends testCreateTopic
-     */
-    public function testListTopics()
+    protected function setupSubscriber(): array
     {
-        $query = $this->getQuery(self::LIST_TOPICS);
-        $graphQLPayload = [
-            'query' => $query,
-        ];
-        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), $graphQLPayload);
+        $key = $this->getProject()['$id'];
+        if (!empty(static::$cachedSubscriber[$key])) {
+            return static::$cachedSubscriber[$key];
+        }
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, \count($response['body']['data']['messagingListTopics']['topics']));
-    }
-
-    /**
-     * @depends testUpdateTopic
-     */
-    public function testGetTopic(string $topicId)
-    {
-        $query = $this->getQuery(self::GET_TOPIC);
-        $graphQLPayload = [
-            'query' => $query,
-            'variables' => [
-                'topicId' => $topicId,
-            ],
-        ];
-        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), $graphQLPayload);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('topic2', $response['body']['data']['messagingGetTopic']['name']);
-    }
-
-    /**
-     * @depends testCreateTopic
-     */
-    public function testCreateSubscriber(array $topic)
-    {
+        $topic = $this->setupTopic();
         $topicId = $topic['_id'];
 
         $userId = $this->getUser()['$id'];
@@ -455,111 +386,17 @@ class MessagingTest extends Scope
         $this->assertEquals($response['body']['data']['messagingCreateSubscriber']['targetId'], $targetId);
         $this->assertEquals($response['body']['data']['messagingCreateSubscriber']['target']['userId'], $userId);
 
-        return $response['body']['data']['messagingCreateSubscriber'];
+        static::$cachedSubscriber[$key] = $response['body']['data']['messagingCreateSubscriber'];
+        return static::$cachedSubscriber[$key];
     }
 
-    /**
-     * @depends testCreateSubscriber
-     */
-    public function testListSubscribers(array $subscriber)
+    protected function setupEmail(): array
     {
-        $query = $this->getQuery(self::LIST_SUBSCRIBERS);
-        $graphQLPayload = [
-            'query' => $query,
-            'variables' => [
-                'topicId' => $subscriber['topicId'],
-            ],
-        ];
-        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), $graphQLPayload);
+        $key = $this->getProject()['$id'];
+        if (!empty(static::$cachedEmail[$key])) {
+            return static::$cachedEmail[$key];
+        }
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals($subscriber['topicId'], $response['body']['data']['messagingListSubscribers']['subscribers'][0]['topicId']);
-        $this->assertEquals($subscriber['targetId'], $response['body']['data']['messagingListSubscribers']['subscribers'][0]['targetId']);
-        $this->assertEquals($subscriber['target']['userId'], $response['body']['data']['messagingListSubscribers']['subscribers'][0]['target']['userId']);
-        $this->assertEquals(1, \count($response['body']['data']['messagingListSubscribers']['subscribers']));
-    }
-
-    /**
-     * @depends testCreateSubscriber
-     */
-    public function testGetSubscriber(array $subscriber)
-    {
-        $topicId = $subscriber['topicId'];
-        $subscriberId = $subscriber['_id'];
-
-        $query = $this->getQuery(self::GET_SUBSCRIBER);
-        $graphQLPayload = [
-            'query' => $query,
-            'variables' => [
-                'topicId' => $topicId,
-                'subscriberId' => $subscriberId,
-            ],
-        ];
-
-        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), $graphQLPayload);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals($subscriberId, $response['body']['data']['messagingGetSubscriber']['_id']);
-        $this->assertEquals($topicId, $response['body']['data']['messagingGetSubscriber']['topicId']);
-        $this->assertEquals($subscriber['targetId'], $response['body']['data']['messagingGetSubscriber']['targetId']);
-        $this->assertEquals($subscriber['target']['userId'], $response['body']['data']['messagingGetSubscriber']['target']['userId']);
-    }
-
-    /**
-     * @depends testCreateSubscriber
-     */
-    public function testDeleteSubscriber(array $subscriber)
-    {
-        $topicId = $subscriber['topicId'];
-        $subscriberId = $subscriber['_id'];
-
-        $query = $this->getQuery(self::DELETE_SUBSCRIBER);
-        $graphQLPayload = [
-            'query' => $query,
-            'variables' => [
-                'topicId' => $topicId,
-                'subscriberId' => $subscriberId,
-            ],
-        ];
-
-        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-        ], $this->getHeaders()), $graphQLPayload);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-    }
-
-    /**
-     * @depends testUpdateTopic
-     */
-    public function testDeleteTopic(string $topicId)
-    {
-        $query = $this->getQuery(self::DELETE_TOPIC);
-        $graphQLPayload = [
-            'query' => $query,
-            'variables' => [
-                'topicId' => $topicId,
-            ],
-        ];
-        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), $graphQLPayload);
-
-        $this->assertEquals(204, $response['headers']['status-code']);
-    }
-
-    public function testSendEmail()
-    {
         if (empty(System::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'))) {
             $this->markTestSkipped('Email DSN not provided');
         }
@@ -705,71 +542,17 @@ class MessagingTest extends Scope
         $this->assertEquals(1, $message['body']['data']['messagingGetMessage']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['data']['messagingGetMessage']['deliveryErrors']));
 
-        return $message['body']['data']['messagingGetMessage'];
+        static::$cachedEmail[$key] = $message['body']['data']['messagingGetMessage'];
+        return static::$cachedEmail[$key];
     }
 
-    /**
-     * @depends testSendEmail
-     */
-    public function testUpdateEmail(array $email)
+    protected function setupSms(): array
     {
-        $query = $this->getQuery(self::CREATE_EMAIL);
-        $graphQLPayload = [
-            'query' => $query,
-            'variables' => [
-                'messageId' => ID::unique(),
-                'status' => 'draft',
-                'topics' => [$email['topics'][0]],
-                'subject' => 'Khali beats Undertaker',
-                'content' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-            ],
-        ];
-        $email = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), $graphQLPayload);
+        $key = $this->getProject()['$id'];
+        if (!empty(static::$cachedSms[$key])) {
+            return static::$cachedSms[$key];
+        }
 
-        $this->assertEquals(200, $email['headers']['status-code']);
-
-        $query = $this->getQuery(self::UPDATE_EMAIL);
-        $graphQLPayload = [
-            'query' => $query,
-            'variables' => [
-                'messageId' => $email['body']['data']['messagingCreateEmail']['_id'],
-                'status' => 'processing',
-            ],
-        ];
-        $email = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), $graphQLPayload);
-
-        $this->assertEquals(200, $email['headers']['status-code']);
-
-        \sleep(5);
-
-        $query = $this->getQuery(self::GET_MESSAGE);
-        $graphQLPayload = [
-            'query' => $query,
-            'variables' => [
-                'messageId' => $email['body']['data']['messagingUpdateEmail']['_id'],
-            ],
-        ];
-        $message = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), $graphQLPayload);
-
-        $this->assertEquals(200, $message['headers']['status-code']);
-        $this->assertEquals(1, $message['body']['data']['messagingGetMessage']['deliveredTotal']);
-        $this->assertEquals(0, \count($message['body']['data']['messagingGetMessage']['deliveryErrors']));
-    }
-
-    public function testSendSMS()
-    {
         if (empty(System::getEnv('_APP_MESSAGE_SMS_TEST_DSN'))) {
             $this->markTestSkipped('SMS DSN not provided');
         }
@@ -909,70 +692,18 @@ class MessagingTest extends Scope
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(1, $message['body']['data']['messagingGetMessage']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['data']['messagingGetMessage']['deliveryErrors']));
-        return $message['body']['data']['messagingGetMessage'];
+
+        static::$cachedSms[$key] = $message['body']['data']['messagingGetMessage'];
+        return static::$cachedSms[$key];
     }
 
-    /**
-     * @depends testSendSMS
-     */
-    public function testUpdateSMS(array $sms)
+    protected function setupPush(): array
     {
-        $query = $this->getQuery(self::CREATE_SMS);
-        $graphQLPayload = [
-            'query' => $query,
-            'variables' => [
-                'messageId' => ID::unique(),
-                'status' => 'draft',
-                'topics' => [$sms['topics'][0]],
-                'content' => '345463',
-            ],
-        ];
-        $sms = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), $graphQLPayload);
+        $key = $this->getProject()['$id'];
+        if (!empty(static::$cachedPush[$key])) {
+            return static::$cachedPush[$key];
+        }
 
-        $this->assertEquals(200, $sms['headers']['status-code']);
-
-        $query = $this->getQuery(self::UPDATE_SMS);
-        $graphQLPayload = [
-            'query' => $query,
-            'variables' => [
-                'messageId' => $sms['body']['data']['messagingCreateSMS']['_id'],
-                'status' => 'processing',
-            ],
-        ];
-        $sms = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), $graphQLPayload);
-
-        $this->assertEquals(200, $sms['headers']['status-code']);
-
-        \sleep(5);
-
-        $query = $this->getQuery(self::GET_MESSAGE);
-        $graphQLPayload = [
-            'query' => $query,
-            'variables' => [
-                'messageId' => $sms['body']['data']['messagingUpdateSMS']['_id'],
-            ],
-        ];
-        $message = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), $graphQLPayload);
-
-        $this->assertEquals(200, $message['headers']['status-code']);
-        $this->assertEquals(1, $message['body']['data']['messagingGetMessage']['deliveredTotal']);
-        $this->assertEquals(0, \count($message['body']['data']['messagingGetMessage']['deliveryErrors']));
-    }
-
-    public function testSendPushNotification()
-    {
         if (empty(System::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'))) {
             $this->markTestSkipped('Push DSN empty');
         }
@@ -1115,14 +846,384 @@ class MessagingTest extends Scope
         $this->assertEquals(1, $message['body']['data']['messagingGetMessage']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['data']['messagingGetMessage']['deliveryErrors']));
 
-        return $message['body']['data']['messagingGetMessage'];
+        static::$cachedPush[$key] = $message['body']['data']['messagingGetMessage'];
+        return static::$cachedPush[$key];
     }
 
-    /**
-     * @depends testSendPushNotification
-     */
-    public function testUpdatePushNotification(array $push)
+    public function testCreateProviders(): void
     {
+        $providers = $this->setupProviders();
+        $this->assertCount(10, $providers);
+    }
+
+    public function testUpdateProviders(): void
+    {
+        $providers = $this->setupUpdatedProviders();
+        $this->assertEquals('Sengrid2', $providers[0]['name']);
+    }
+
+    public function testListProviders()
+    {
+        $providers = $this->setupUpdatedProviders();
+
+        $query = $this->getQuery(self::LIST_PROVIDERS);
+        $graphQLPayload = [
+            'query' => $query,
+        ];
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $graphQLPayload);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(\count($providers), \count($response['body']['data']['messagingListProviders']['providers']));
+    }
+
+    public function testGetProvider()
+    {
+        $providers = $this->setupUpdatedProviders();
+
+        $query = $this->getQuery(self::GET_PROVIDER);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'providerId' => $providers[0]['_id'],
+            ]
+        ];
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $graphQLPayload);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($providers[0]['name'], $response['body']['data']['messagingGetProvider']['name']);
+    }
+
+    public function testDeleteProvider()
+    {
+        $providers = $this->setupUpdatedProviders();
+
+        foreach ($providers as $provider) {
+            $query = $this->getQuery(self::DELETE_PROVIDER);
+            $graphQLPayload = [
+                'query' => $query,
+                'variables' => [
+                    'providerId' => $provider['_id'],
+                ]
+            ];
+            $response = $this->client->call(Client::METHOD_POST, '/graphql', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], $graphQLPayload);
+            $this->assertEquals(204, $response['headers']['status-code']);
+        }
+
+        // Clear cache after deletion
+        $key = $this->getProject()['$id'];
+        static::$cachedProviders[$key] = [];
+        static::$cachedProviders[$key . '_updated'] = [];
+    }
+
+    public function testCreateTopic(): void
+    {
+        $topic = $this->setupTopic();
+        $this->assertEquals('topic1', $topic['name']);
+    }
+
+    public function testUpdateTopic(): void
+    {
+        $topicId = $this->setupUpdatedTopic();
+        $this->assertNotEmpty($topicId);
+    }
+
+    public function testListTopics()
+    {
+        $this->setupTopic();
+
+        $query = $this->getQuery(self::LIST_TOPICS);
+        $graphQLPayload = [
+            'query' => $query,
+        ];
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), $graphQLPayload);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, \count($response['body']['data']['messagingListTopics']['topics']));
+    }
+
+    public function testGetTopic()
+    {
+        $topicId = $this->setupUpdatedTopic();
+
+        $query = $this->getQuery(self::GET_TOPIC);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'topicId' => $topicId,
+            ],
+        ];
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), $graphQLPayload);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('topic2', $response['body']['data']['messagingGetTopic']['name']);
+    }
+
+    public function testCreateSubscriber(): void
+    {
+        $subscriber = $this->setupSubscriber();
+        $this->assertNotEmpty($subscriber['_id']);
+    }
+
+    public function testListSubscribers()
+    {
+        $subscriber = $this->setupSubscriber();
+
+        $query = $this->getQuery(self::LIST_SUBSCRIBERS);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'topicId' => $subscriber['topicId'],
+            ],
+        ];
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), $graphQLPayload);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($subscriber['topicId'], $response['body']['data']['messagingListSubscribers']['subscribers'][0]['topicId']);
+        $this->assertEquals($subscriber['targetId'], $response['body']['data']['messagingListSubscribers']['subscribers'][0]['targetId']);
+        $this->assertEquals($subscriber['target']['userId'], $response['body']['data']['messagingListSubscribers']['subscribers'][0]['target']['userId']);
+        $this->assertEquals(1, \count($response['body']['data']['messagingListSubscribers']['subscribers']));
+    }
+
+    public function testGetSubscriber()
+    {
+        $subscriber = $this->setupSubscriber();
+        $topicId = $subscriber['topicId'];
+        $subscriberId = $subscriber['_id'];
+
+        $query = $this->getQuery(self::GET_SUBSCRIBER);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'topicId' => $topicId,
+                'subscriberId' => $subscriberId,
+            ],
+        ];
+
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), $graphQLPayload);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($subscriberId, $response['body']['data']['messagingGetSubscriber']['_id']);
+        $this->assertEquals($topicId, $response['body']['data']['messagingGetSubscriber']['topicId']);
+        $this->assertEquals($subscriber['targetId'], $response['body']['data']['messagingGetSubscriber']['targetId']);
+        $this->assertEquals($subscriber['target']['userId'], $response['body']['data']['messagingGetSubscriber']['target']['userId']);
+    }
+
+    public function testDeleteSubscriber()
+    {
+        $subscriber = $this->setupSubscriber();
+        $topicId = $subscriber['topicId'];
+        $subscriberId = $subscriber['_id'];
+
+        $query = $this->getQuery(self::DELETE_SUBSCRIBER);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'topicId' => $topicId,
+                'subscriberId' => $subscriberId,
+            ],
+        ];
+
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+        ], $this->getHeaders()), $graphQLPayload);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Clear cache after deletion
+        $key = $this->getProject()['$id'];
+        static::$cachedSubscriber[$key] = [];
+    }
+
+    public function testDeleteTopic()
+    {
+        $topicId = $this->setupUpdatedTopic();
+
+        $query = $this->getQuery(self::DELETE_TOPIC);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'topicId' => $topicId,
+            ],
+        ];
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), $graphQLPayload);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        // Clear cache after deletion
+        $key = $this->getProject()['$id'];
+        static::$cachedTopic[$key] = [];
+        static::$cachedTopic[$key . '_updated'] = [];
+    }
+
+    public function testSendEmail(): void
+    {
+        $email = $this->setupEmail();
+        $this->assertEquals(1, $email['deliveredTotal']);
+    }
+
+    public function testUpdateEmail()
+    {
+        $email = $this->setupEmail();
+
+        $query = $this->getQuery(self::CREATE_EMAIL);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'messageId' => ID::unique(),
+                'status' => 'draft',
+                'topics' => [$email['topics'][0]],
+                'subject' => 'Khali beats Undertaker',
+                'content' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+            ],
+        ];
+        $email = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), $graphQLPayload);
+
+        $this->assertEquals(200, $email['headers']['status-code']);
+
+        $query = $this->getQuery(self::UPDATE_EMAIL);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'messageId' => $email['body']['data']['messagingCreateEmail']['_id'],
+                'status' => 'processing',
+            ],
+        ];
+        $email = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), $graphQLPayload);
+
+        $this->assertEquals(200, $email['headers']['status-code']);
+
+        \sleep(5);
+
+        $query = $this->getQuery(self::GET_MESSAGE);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'messageId' => $email['body']['data']['messagingUpdateEmail']['_id'],
+            ],
+        ];
+        $message = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), $graphQLPayload);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(1, $message['body']['data']['messagingGetMessage']['deliveredTotal']);
+        $this->assertEquals(0, \count($message['body']['data']['messagingGetMessage']['deliveryErrors']));
+    }
+
+    public function testSendSMS(): void
+    {
+        $sms = $this->setupSms();
+        $this->assertEquals(1, $sms['deliveredTotal']);
+    }
+
+    public function testUpdateSMS()
+    {
+        $sms = $this->setupSms();
+
+        $query = $this->getQuery(self::CREATE_SMS);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'messageId' => ID::unique(),
+                'status' => 'draft',
+                'topics' => [$sms['topics'][0]],
+                'content' => '345463',
+            ],
+        ];
+        $sms = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), $graphQLPayload);
+
+        $this->assertEquals(200, $sms['headers']['status-code']);
+
+        $query = $this->getQuery(self::UPDATE_SMS);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'messageId' => $sms['body']['data']['messagingCreateSMS']['_id'],
+                'status' => 'processing',
+            ],
+        ];
+        $sms = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), $graphQLPayload);
+
+        $this->assertEquals(200, $sms['headers']['status-code']);
+
+        \sleep(5);
+
+        $query = $this->getQuery(self::GET_MESSAGE);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'messageId' => $sms['body']['data']['messagingUpdateSMS']['_id'],
+            ],
+        ];
+        $message = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), $graphQLPayload);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(1, $message['body']['data']['messagingGetMessage']['deliveredTotal']);
+        $this->assertEquals(0, \count($message['body']['data']['messagingGetMessage']['deliveryErrors']));
+    }
+
+    public function testSendPushNotification(): void
+    {
+        $push = $this->setupPush();
+        $this->assertEquals(1, $push['deliveredTotal']);
+    }
+
+    public function testUpdatePushNotification()
+    {
+        $push = $this->setupPush();
+
         $query = $this->getQuery(self::CREATE_PUSH_NOTIFICATION);
         $graphQLPayload = [
             'query' => $query,

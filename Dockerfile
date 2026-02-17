@@ -1,4 +1,4 @@
-FROM composer:2.0 AS composer
+FROM composer:2 AS composer
 
 ARG TESTING=false
 ENV TESTING=$TESTING

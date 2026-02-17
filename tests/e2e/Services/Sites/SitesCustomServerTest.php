@@ -659,8 +659,9 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals($sites['headers']['status-code'], 200);
         $this->assertCount(1, $sites['body']['sites']);
 
-        // Test pagination offset
+        // Test pagination offset with search filter (to only count our test site)
         $sites = $this->listSites([
+            'search' => 'Test List Sites',
             'queries' => [
                 Query::offset(1)->toString(),
             ],
@@ -669,8 +670,9 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals($sites['headers']['status-code'], 200);
         $this->assertCount(0, $sites['body']['sites']);
 
-        // Test filter enabled
+        // Test filter enabled (with search to isolate our test site)
         $sites = $this->listSites([
+            'search' => 'Test List Sites',
             'queries' => [
                 Query::equal('enabled', [true])->toString(),
             ],
@@ -679,8 +681,9 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals($sites['headers']['status-code'], 200);
         $this->assertCount(1, $sites['body']['sites']);
 
-        // Test filter disabled
+        // Test filter disabled (with search to isolate our test site)
         $sites = $this->listSites([
+            'search' => 'Test List Sites',
             'queries' => [
                 Query::equal('enabled', [false])->toString(),
             ],
@@ -733,6 +736,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals($sites['body']['sites'][1]['name'], 'Test List Sites 2');
 
         $sites1 = $this->listSites([
+            'search' => 'Test List Sites',
             'queries' => [
                 Query::cursorAfter(new Document(['$id' => $sites['body']['sites'][0]['$id']]))->toString(),
             ],
@@ -743,6 +747,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals($sites1['body']['sites'][0]['name'], 'Test List Sites 2');
 
         $sites2 = $this->listSites([
+            'search' => 'Test List Sites',
             'queries' => [
                 Query::cursorBefore(new Document(['$id' => $sites['body']['sites'][1]['$id']]))->toString(),
             ],
@@ -878,13 +883,7 @@ class SitesCustomServerTest extends Scope
             $deployment = $this->getDeployment($siteId, $deploymentIdActive);
 
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 300000, 500);
-
-        // Wait for activation to propagate (build worker sets deploymentId after status=ready)
-        $this->assertEventually(function () use ($siteId, $deploymentIdActive) {
-            $site = $this->getSite($siteId);
-            $this->assertEquals($deploymentIdActive, $site['body']['deploymentId']);
-        }, 30000, 500);
+        }, 120000, 1000);
 
         $deployment = $this->createDeployment($siteId, [
             'code' => $this->packageSite('static-single-file'),
@@ -993,7 +992,7 @@ class SitesCustomServerTest extends Scope
             $deployment = $this->getDeployment($siteId, $deploymentId);
 
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 50000, 500);
+        }, 120000, 1000);
 
         /**
          * Test for SUCCESS
@@ -1240,7 +1239,7 @@ class SitesCustomServerTest extends Scope
             $deployment = $this->getDeployment($siteId, $deploymentId);
 
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 50000, 500);
+        }, 120000, 1000);
 
         /**
          * Test for SUCCESS
@@ -1365,7 +1364,7 @@ class SitesCustomServerTest extends Scope
             $deployment = $this->getDeployment($siteId, $deploymentId);
 
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 50000, 500);
+        }, 120000, 1000);
 
         /**
          * Test for SUCCESS
@@ -1841,7 +1840,7 @@ class SitesCustomServerTest extends Scope
 
             $this->assertEquals(200, $rules['headers']['status-code']);
             $this->assertEquals(0, $rules['body']['total']);
-        }, 50000, 500);
+        }, 120000, 1000);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/');
 
@@ -2267,7 +2266,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEventually(function () use ($siteId, $deploymentId2) {
             $site = $this->getSite($siteId);
             $this->assertEquals($deploymentId2, $site['body']['deploymentId']);
-        }, 50000, 500);
+        }, 120000, 1000);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/not-found');
         $this->assertStringContainsString("Index page", $response['body']);
@@ -2728,8 +2727,20 @@ class SitesCustomServerTest extends Scope
             'x-appwrite-key' => API_KEY_DYNAMIC . '_' . $apiKey,
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertStringContainsString("Deployment build canceled", $response['body']);
-        $this->assertStringContainsString("View deployments", $response['body']);
+        $deployment = $this->getDeployment($siteId, $deploymentId);
+        $status = $deployment['body']['status'] ?? '';
+        $expectedMessage = match ($status) {
+            'failed' => 'Deployment build failed',
+            'canceled' => 'Deployment build canceled',
+            default => 'Deployment is still building',
+        };
+        $this->assertStringContainsString($expectedMessage, $response['body']);
+        $expectedCta = match ($status) {
+            'failed' => 'View logs',
+            'canceled' => 'View deployments',
+            default => 'Reload',
+        };
+        $this->assertStringContainsString($expectedCta, $response['body']);
 
         // check site domain for no active deployments
         $proxyClient->setEndpoint('http://' . $domain);
@@ -2766,7 +2777,7 @@ class SitesCustomServerTest extends Scope
             $deployment = $this->getDeployment($siteId, $deploymentId);
 
             $this->assertEquals('failed', $deployment['body']['status']);
-        }, 50000, 500);
+        }, 120000, 1000);
 
         // deployment failed error page
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [

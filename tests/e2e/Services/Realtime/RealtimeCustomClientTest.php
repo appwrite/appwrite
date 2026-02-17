@@ -23,6 +23,24 @@ class RealtimeCustomClientTest extends Scope
     use ProjectCustom;
     use SideClient;
 
+    /**
+     * Helper to create a team for membership tests.
+     */
+    protected function createTeam(): array
+    {
+        $projectId = $this->getProject()['$id'];
+
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'teamId' => ID::unique(),
+            'name' => 'Test Team ' . uniqid()
+        ]);
+
+        return ['teamId' => $team['body']['$id']];
+    }
+
     public function testChannelParsing()
     {
         $user = $this->getUser();
@@ -2319,7 +2337,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
     }
 
-    public function testChannelTeams(): array
+    public function testChannelTeams(): void
     {
         $user = $this->getUser();
         $session = $user['session'] ?? '';
@@ -2440,16 +2458,12 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('funcValue2', $response['data']['payload']['funcKey2']);
 
         $client->close();
-
-        return ['teamId' => $teamId];
     }
 
-    /**
-     * @depends testChannelTeams
-     */
-    public function testChannelMemberships(array $data)
+    public function testChannelMemberships(): void
     {
-        $teamId = $data['teamId'] ?? '';
+        $data = $this->createTeam();
+        $teamId = $data['teamId'];
 
         $user = $this->getUser();
         $session = $user['session'] ?? '';

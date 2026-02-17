@@ -136,9 +136,9 @@ class AccountConsoleClientTest extends Scope
 
 
         // Check the alert email
-        $lastEmail = $this->getLastEmail();
+        $lastEmail = $this->getLastEmailByAddress($email);
 
-        $this->assertEquals($email, $lastEmail['to'][0]['address']);
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
         $this->assertStringContainsString('Security alert: new session', $lastEmail['subject']);
         $this->assertStringContainsString($response['body']['ip'], $lastEmail['text']); // IP Address
         $this->assertStringContainsString('Unknown', $lastEmail['text']); // Country
@@ -166,9 +166,9 @@ class AccountConsoleClientTest extends Scope
 
         $userId = $response['body']['userId'];
 
-        $lastEmail = $this->getLastEmail();
+        $lastEmail = $this->getLastEmailByAddress('otpuser2@appwrite.io');
 
-        $this->assertEquals('otpuser2@appwrite.io', $lastEmail['to'][0]['address']);
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: otpuser2@appwrite.io');
         $this->assertEquals('OTP for ' . $this->getProject()['name'] . ' Login', $lastEmail['subject']);
 
         // Find 6 concurrent digits in email text - OTP
@@ -193,7 +193,7 @@ class AccountConsoleClientTest extends Scope
         $this->assertEmpty($response['body']['secret']);
 
         $lastEmailId = $lastEmail['id'];
-        $lastEmail = $this->getLastEmail();
+        $lastEmail = $this->getLastEmailByAddress('otpuser2@appwrite.io');
         $this->assertEquals($lastEmailId, $lastEmail['id']);
     }
 

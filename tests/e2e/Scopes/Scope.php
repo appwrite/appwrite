@@ -160,6 +160,33 @@ abstract class Scope extends TestCase
         return [];
     }
 
+    /**
+     * Get the last email sent to a specific address.
+     * This is more reliable than getLastEmail() when tests run in parallel.
+     */
+    protected function getLastEmailByAddress(string $address): array
+    {
+        sleep(3);
+
+        $emails = json_decode(file_get_contents('http://maildev:1080/email'), true);
+
+        if ($emails && is_array($emails)) {
+            // Search from the end (most recent) to the beginning
+            for ($i = count($emails) - 1; $i >= 0; $i--) {
+                $email = $emails[$i];
+                if (isset($email['to']) && is_array($email['to'])) {
+                    foreach ($email['to'] as $recipient) {
+                        if (isset($recipient['address']) && $recipient['address'] === $address) {
+                            return $email;
+                        }
+                    }
+                }
+            }
+        }
+
+        return [];
+    }
+
     protected function extractQueryParamsFromEmailLink(string $html): array
     {
         foreach (['/join-us?', '/verification?', '/recovery?'] as $prefix) {
@@ -226,16 +253,123 @@ abstract class Scope extends TestCase
     }
 
     /**
-     * @deprecated Use assertLastRequest instead. Used only historically in webhook tests
+     * @deprecated Use getLastRequestForProject instead. Used only historically in webhook tests
      */
     protected function getLastRequest(): array
     {
-        $hostname = 'request-catcher-webhook';
+        $project = $this->getProject();
+        $this->assertArrayHasKey('$id', $project, 'Project must have an $id');
+        return $this->getLastRequestForProject($project['$id']);
+    }
+
+    /**
+     * Get the last webhook request for a specific project.
+     * Polls with retry to handle parallel test race conditions.
+     */
+    protected function getLastRequestForProject(
+        string $projectId,
+        string $type = self::REQUEST_TYPE_WEBHOOK,
+        array $queryParams = [],
+        int $maxAttempts = 10,
+        int $delayMs = 500,
+        ?callable $probe = null
+    ): array {
+        $hostname = match ($type) {
+            self::REQUEST_TYPE_WEBHOOK => 'request-catcher-webhook',
+            self::REQUEST_TYPE_SMS => 'request-catcher-sms',
+            default => throw new \Exception('Invalid request catcher type.'),
+        };
+        $enforceProjectId = $type === self::REQUEST_TYPE_WEBHOOK;
+
+        if (empty($queryParams)) {
+            $queryParams = [
+                'header_X-Appwrite-Webhook-Project-Id' => $projectId,
+            ];
+        }
+
+        $query = http_build_query($queryParams);
 
         sleep(2);
 
-        $request = json_decode(file_get_contents('http://' . $hostname . ':5000/__last_request__'), true);
-        $request['data'] = json_decode($request['data'], true);
+        for ($attempt = 0; $attempt < $maxAttempts; $attempt++) {
+            $requests = json_decode(file_get_contents('http://' . $hostname . ':5000/__find_request__?' . $query), true);
+            if (is_array($requests)) {
+                for ($i = count($requests) - 1; $i >= 0; $i--) {
+                    $request = $this->decodeRequestData($requests[$i]);
+                    if ($probe !== null) {
+                        try {
+                            $probe($request);
+                            return $request;
+                        } catch (\Throwable $error) {
+                            continue;
+                        }
+                    }
+
+                    if ($enforceProjectId) {
+                        $requestProjectId = $request['headers']['X-Appwrite-Webhook-Project-Id'] ?? '';
+                        if ($requestProjectId === $projectId) {
+                            return $request;
+                        }
+                    } else {
+                        return $request;
+                    }
+                }
+            }
+
+            usleep($delayMs * 1000);
+        }
+
+        $requests = json_decode(file_get_contents('http://' . $hostname . ':5000/__find_request__?' . $query), true);
+        if (is_array($requests)) {
+            for ($i = count($requests) - 1; $i >= 0; $i--) {
+                $request = $this->decodeRequestData($requests[$i]);
+                if ($probe !== null) {
+                    try {
+                        $probe($request);
+                        return $request;
+                    } catch (\Throwable $error) {
+                        continue;
+                    }
+                }
+
+                if ($enforceProjectId) {
+                    $requestProjectId = $request['headers']['X-Appwrite-Webhook-Project-Id'] ?? '';
+                    if ($requestProjectId === $projectId) {
+                        return $request;
+                    }
+                } else {
+                    return $request;
+                }
+            }
+        }
+
+        return [];
+    }
+
+    protected function decodeRequestData(array $request): array
+    {
+        if (!array_key_exists('data', $request)) {
+            return $request;
+        }
+
+        if (is_array($request['data'])) {
+            return $request;
+        }
+
+        if (!is_string($request['data']) || $request['data'] === '') {
+            return $request;
+        }
+
+        $decoded = json_decode($request['data'], true);
+        if (json_last_error() === JSON_ERROR_NONE) {
+            $request['data'] = $decoded;
+            return $request;
+        }
+
+        parse_str($request['data'], $parsed);
+        if (!empty($parsed)) {
+            $request['data'] = $parsed;
+        }
 
         return $request;
     }
@@ -264,7 +398,8 @@ abstract class Scope extends TestCase
             return self::$root;
         }
 
-        $email = uniqid() . 'user@localhost.test';
+        // Use more entropy to avoid collisions in parallel test execution
+        $email = uniqid('', true) . getmypid() . bin2hex(random_bytes(4)) . '@localhost.test';
         $password = 'password';
         $name = 'User Name';
 
@@ -316,7 +451,8 @@ abstract class Scope extends TestCase
             return self::$user[$this->getProject()['$id']];
         }
 
-        $email = uniqid() . 'user@localhost.test';
+        // Use more entropy to avoid collisions in parallel test execution
+        $email = uniqid('', true) . getmypid() . bin2hex(random_bytes(4)) . '@localhost.test';
         $password = 'password';
         $name = 'User Name';
 

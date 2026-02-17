@@ -21,12 +21,104 @@ class WebhooksCustomServerTest extends Scope
     use ProjectCustom;
     use SideServer;
 
-    // Collection APIs
     /**
-     * @depends testCreateAttributes
+     * Creates a user and returns user details.
+     *
+     * @return array Array containing 'userId', 'name', 'email'
      */
-    public function testUpdateCollection($data): array
+    protected function setupUser(): array
     {
+        $email = uniqid() . 'user@localhost.test';
+        $password = 'password';
+        $name = 'User Name';
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+
+        return [
+            'userId' => $user['body']['$id'],
+            'name' => $user['body']['name'],
+            'email' => $user['body']['email'],
+        ];
+    }
+
+    /**
+     * Creates a function and returns function details.
+     *
+     * @return array Array containing 'functionId'
+     */
+    protected function setupFunction(): array
+    {
+        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'functionId' => ID::unique(),
+            'name' => 'Test',
+            'execute' => [Role::any()->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 10,
+        ]);
+
+        return ['functionId' => $function['body']['$id']];
+    }
+
+    /**
+     * Creates a function deployment and waits for it to be built.
+     *
+     * @param string $functionId Function ID
+     * @return array Array containing 'functionId', 'deploymentId'
+     */
+    protected function setupDeployment(string $functionId): array
+    {
+        $stderr = '';
+        $stdout = '';
+        $folder = 'timeout';
+        $code = realpath(__DIR__ . '/../../../resources/functions') . "/{$folder}/code.tar.gz";
+        Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/{$folder}  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $stdout, $stderr);
+
+        // Create variable first
+        $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'key' => 'key1',
+            'value' => 'value1',
+        ]);
+
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'entrypoint' => 'index.js',
+            'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
+            'activate' => true
+        ]);
+
+        $deploymentId = $deployment['body']['$id'];
+
+        // Wait for deployment to be built
+        $this->awaitDeploymentIsBuilt($functionId, $deploymentId);
+
+        return [
+            'functionId' => $functionId,
+            'deploymentId' => $deploymentId,
+        ];
+    }
+
+    // Collection APIs
+    public function testUpdateCollection(): void
+    {
+        // Set up collection with attributes
+        $data = $this->setupCollectionWithAttributes();
         $id = $data['actorsId'];
         $databaseId = $data['databaseId'];
 
@@ -63,19 +155,16 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals('Actors1', $webhook['data']['name']);
         $this->assertIsArray($webhook['data']['$permissions']);
         $this->assertCount(4, $webhook['data']['$permissions']);
-
-        return array_merge(['actorsId' => $actors['body']['$id']]);
     }
 
-    /**
-     * @depends testCreateAttributes
-     */
-    public function testCreateDeleteIndexes($data): array
+    public function testCreateDeleteIndexes(): void
     {
+        // Set up collection with attributes
+        $data = $this->setupCollectionWithAttributes();
         $actorsId = $data['actorsId'];
         $databaseId = $data['databaseId'];
 
-        $index = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['actorsId'] . '/indexes', array_merge([
+        $index = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actorsId . '/indexes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -111,7 +200,7 @@ class WebhooksCustomServerTest extends Scope
         }, 10000, 500);
 
         // Remove index
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['actorsId'] . '/indexes/' . $index['body']['key'], array_merge([
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $actorsId . '/indexes/' . $index['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -134,11 +223,9 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         $this->assertTrue(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''));
-
-        return $data;
     }
 
-    public function testDeleteCollection(): array
+    public function testDeleteCollection(): void
     {
         /**
          * Create database
@@ -204,16 +291,13 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals('Demo', $webhook['data']['name']);
         $this->assertIsArray($webhook['data']['$permissions']);
         $this->assertCount(4, $webhook['data']['$permissions']);
-
-        return [];
     }
 
     // Table APIs
-    /**
-     * @depends testCreateColumns
-     */
-    public function testUpdateTable($data): array
+    public function testUpdateTable(): void
     {
+        // Set up table with columns
+        $data = $this->setupTableWithColumns();
         $id = $data['actorsId'];
         $databaseId = $data['databaseId'];
 
@@ -250,19 +334,16 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals('Actors1', $webhook['data']['name']);
         $this->assertIsArray($webhook['data']['$permissions']);
         $this->assertCount(4, $webhook['data']['$permissions']);
-
-        return array_merge(['actorsId' => $actors['body']['$id']]);
     }
 
-    /**
-     * @depends testCreateColumns
-     */
-    public function testCreateDeleteColumnIndexes($data): array
+    public function testCreateDeleteColumnIndexes(): void
     {
+        // Set up table with columns
+        $data = $this->setupTableWithColumns();
         $actorsId = $data['actorsId'];
         $databaseId = $data['databaseId'];
 
-        $index = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['actorsId'] . '/indexes', array_merge([
+        $index = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $actorsId . '/indexes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -297,7 +378,7 @@ class WebhooksCustomServerTest extends Scope
         }, 10000, 500);
 
         // Remove index
-        $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId . '/tables/' . $data['actorsId'] . '/indexes/' . $index['body']['key'], array_merge([
+        $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId . '/tables/' . $actorsId . '/indexes/' . $index['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -320,11 +401,9 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         $this->assertTrue(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''));
-
-        return $data;
     }
 
-    public function testDeleteTable(): array
+    public function testDeleteTable(): void
     {
         /**
          * Create database
@@ -390,11 +469,9 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals('Demo', $webhook['data']['name']);
         $this->assertIsArray($webhook['data']['$permissions']);
         $this->assertCount(4, $webhook['data']['$permissions']);
-
-        return [];
     }
 
-    public function testCreateUser(): array
+    public function testCreateUser(): void
     {
         $email = uniqid() . 'user@localhost.test';
         $password = 'password';
@@ -439,18 +516,12 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['data']['email'], $email);
         $this->assertFalse($webhook['data']['emailVerification']);
         $this->assertEquals([], $webhook['data']['prefs']);
-
-        /**
-         * Test for FAILURE
-         */
-        return ['userId' => $user['body']['$id'], 'name' => $user['body']['name'], 'email' => $user['body']['email']];
     }
 
-    /**
-     * @depends testCreateUser
-     */
-    public function testUpdateUserPrefs(array $data): array
+    public function testUpdateUserPrefs(): void
     {
+        // Set up a user
+        $data = $this->setupUser();
         $id = $data['userId'];
 
         /**
@@ -483,15 +554,12 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertEquals('b', $webhook['data']['a']);
-
-        return $data;
     }
 
-    /**
-     * @depends testUpdateUserPrefs
-     */
-    public function testUpdateUserStatus(array $data): array
+    public function testUpdateUserStatus(): void
     {
+        // Set up a user
+        $data = $this->setupUser();
         $id = $data['userId'];
 
         /**
@@ -507,7 +575,21 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals(200, $user['headers']['status-code']);
         $this->assertNotEmpty($user['body']['$id']);
 
-        $webhook = $this->getLastRequest();
+        // Use probe to find the specific status update webhook for this user (parallel-safe)
+        $webhook = $this->getLastRequestForProject(
+            $this->getProject()['$id'],
+            self::REQUEST_TYPE_WEBHOOK,
+            [],
+            10,
+            500,
+            function ($request) use ($id) {
+                // Verify this is the status update event for our specific user
+                $events = $request['headers']['X-Appwrite-Webhook-Events'] ?? '';
+                if (!str_contains($events, "users.{$id}.update.status")) {
+                    throw new \Exception('Not the status update event for this user');
+                }
+            }
+        );
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals('POST', $webhook['method']);
@@ -529,16 +611,12 @@ class WebhooksCustomServerTest extends Scope
         $this->assertFalse($webhook['data']['status']);
         $this->assertEquals($webhook['data']['email'], $data['email']);
         $this->assertFalse($webhook['data']['emailVerification']);
-        $this->assertEquals('b', $webhook['data']['prefs']['a']);
-
-        return $data;
     }
 
-    /**
-     * @depends testUpdateUserStatus
-     */
-    public function testDeleteUser(array $data): array
+    public function testDeleteUser(): void
     {
+        // Set up a user
+        $data = $this->setupUser();
         $id = $data['userId'];
 
         /**
@@ -551,7 +629,21 @@ class WebhooksCustomServerTest extends Scope
 
         $this->assertEquals(204, $user['headers']['status-code']);
 
-        $webhook = $this->getLastRequest();
+        // Use probe to find the specific delete webhook for this user (parallel-safe)
+        $webhook = $this->getLastRequestForProject(
+            $this->getProject()['$id'],
+            self::REQUEST_TYPE_WEBHOOK,
+            [],
+            10,
+            500,
+            function ($request) use ($id) {
+                // Verify this is the delete event for our specific user
+                $events = $request['headers']['X-Appwrite-Webhook-Events'] ?? '';
+                if (!str_contains($events, "users.{$id}.delete")) {
+                    throw new \Exception('Not the delete event for this user');
+                }
+            }
+        );
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals('POST', $webhook['method']);
@@ -568,15 +660,13 @@ class WebhooksCustomServerTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], $data['name']);
         $this->assertTrue((new DatetimeValidator())->isValid($webhook['data']['registration']));
-        $this->assertFalse($webhook['data']['status']);
+        // User is created with status=true by default, so webhook shows that status at deletion
+        $this->assertTrue($webhook['data']['status']);
         $this->assertEquals($webhook['data']['email'], $data['email']);
         $this->assertFalse($webhook['data']['emailVerification']);
-        $this->assertEquals('b', $webhook['data']['prefs']['a']);
-
-        return $data;
     }
 
-    public function testCreateFunction(): array
+    public function testCreateFunction(): void
     {
         /**
          * Test for SUCCESS
@@ -607,23 +697,18 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-
-        return [
-            'functionId' => $id,
-        ];
     }
 
-    /**
-     * @depends testCreateFunction
-     */
-    public function testUpdateFunction($data): array
+    public function testUpdateFunction(): void
     {
+        // Set up a function
+        $data = $this->setupFunction();
         $id = $data['functionId'];
 
         /**
          * Test for SUCCESS
          */
-        $function = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'], array_merge([
+        $function = $this->client->call(Client::METHOD_PUT, '/functions/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -637,10 +722,10 @@ class WebhooksCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(200, $function['headers']['status-code']);
-        $this->assertEquals($function['body']['$id'], $data['functionId']);
+        $this->assertEquals($function['body']['$id'], $id);
 
         // Create variable
-        $variable = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/variables', array_merge([
+        $variable = $this->client->call(Client::METHOD_POST, '/functions/' . $id . '/variables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -663,15 +748,14 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-
-        return $data;
     }
 
-    /**
-     * @depends testUpdateFunction
-     */
-    public function testCreateDeployment($data): array
+    public function testCreateDeployment(): void
     {
+        // Set up a function
+        $data = $this->setupFunction();
+        $functionId = $data['functionId'];
+
         /**
          * Test for SUCCESS
          */
@@ -681,7 +765,7 @@ class WebhooksCustomServerTest extends Scope
         $code = realpath(__DIR__ . '/../../../resources/functions') . "/{$folder}/code.tar.gz";
         Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/{$folder}  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $stdout, $stderr);
 
-        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/deployments', array_merge([
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -690,7 +774,6 @@ class WebhooksCustomServerTest extends Scope
             'activate' => true
         ]);
 
-        $functionId = $data['functionId'] ?? '';
         $deploymentId = $deployment['body']['$id'] ?? '';
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
@@ -713,17 +796,15 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
 
         $this->awaitDeploymentIsBuilt($functionId, $deploymentId);
-
-        return array_merge($data, ['deploymentId' => $deploymentId]);
     }
 
-    /**
-     * @depends testCreateDeployment
-     */
-    public function testUpdateDeployment($data): array
+    public function testUpdateDeployment(): void
     {
-        $id = $data['functionId'] ?? '';
-        $deploymentId = $data['deploymentId'] ?? '';
+        // Set up a function with deployment
+        $data = $this->setupFunction();
+        $deploymentData = $this->setupDeployment($data['functionId']);
+        $id = $deploymentData['functionId'];
+        $deploymentId = $deploymentData['deploymentId'];
 
         /**
          * Test for SUCCESS
@@ -759,19 +840,14 @@ class WebhooksCustomServerTest extends Scope
             $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         }, 10000, 500);
 
-        /**
-         * Test for FAILURE
-         */
-
-        return $data;
     }
 
-    /**
-     * @depends testUpdateDeployment
-     */
-    public function testExecutions($data): array
+    public function testExecutions(): void
     {
-        $id = $data['functionId'] ?? '';
+        // Set up a function with deployment
+        $data = $this->setupFunction();
+        $deploymentData = $this->setupDeployment($data['functionId']);
+        $id = $deploymentData['functionId'];
 
         /**
          * Test for SUCCESS
@@ -829,21 +905,15 @@ class WebhooksCustomServerTest extends Scope
             $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
             $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         }, 30000, 1000);
-
-        /**
-         * Test for FAILURE
-         */
-
-        return $data;
     }
 
-    /**
-     * @depends testExecutions
-     */
-    public function testDeleteDeployment($data): array
+    public function testDeleteDeployment(): void
     {
-        $id = $data['functionId'] ?? '';
-        $deploymentId = $data['deploymentId'] ?? '';
+        // Set up a function with deployment
+        $data = $this->setupFunction();
+        $deploymentData = $this->setupDeployment($data['functionId']);
+        $id = $deploymentData['functionId'];
+        $deploymentId = $deploymentData['deploymentId'];
         /**
          * Test for SUCCESS
          */
@@ -874,19 +944,12 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-
-        /**
-         * Test for FAILURE
-         */
-
-        return $data;
     }
 
-    /**
-     * @depends testDeleteDeployment
-     */
-    public function testDeleteFunction($data): array
+    public function testDeleteFunction(): void
     {
+        // Set up a function
+        $data = $this->setupFunction();
         $id = $data['functionId'];
 
         /**
@@ -913,11 +976,5 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-
-        /**
-         * Test for FAILURE
-         */
-
-        return $data;
     }
 }

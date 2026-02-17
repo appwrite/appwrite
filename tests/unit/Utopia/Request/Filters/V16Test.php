@@ -4,6 +4,7 @@ namespace Tests\Unit\Utopia\Request\Filters;
 
 use Appwrite\Utopia\Request\Filter;
 use Appwrite\Utopia\Request\Filters\V16;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class V16Test extends TestCase
@@ -22,7 +23,7 @@ class V16Test extends TestCase
     {
     }
 
-    public function createExecutionProvider(): array
+    public static function createExecutionProvider(): array
     {
         return [
             'data' => [
@@ -42,9 +43,7 @@ class V16Test extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider createExecutionProvider
-     */
+    #[DataProvider('createExecutionProvider')]
     public function testCreateExecution(array $content, array $expected): void
     {
         $model = 'functions.createExecution';

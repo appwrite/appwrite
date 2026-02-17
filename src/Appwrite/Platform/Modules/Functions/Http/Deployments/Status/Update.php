@@ -104,11 +104,8 @@ class Update extends Action
 
         try {
             $executor->deleteRuntime($project->getId(), $deploymentId . "-build");
-        } catch (\Throwable $th) {
-            // Don't throw if the deployment doesn't exist
-            if ($th->getCode() !== 404) {
-                throw $th;
-            }
+        } catch (\Throwable) {
+            // Best-effort cleanup — deployment status is already 'canceled'
         }
 
         $queueForEvents

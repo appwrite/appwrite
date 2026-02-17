@@ -80,35 +80,8 @@ trait SitesBase
                     'x-appwrite-project' => $this->getProject()['$id'],
                     'x-appwrite-key' => $this->getProject()['apiKey'],
                 ]));
-
-                if (($site['body']['deploymentId'] ?? '') === $deploymentId) {
-                    $activated = true;
-                    break;
-                }
-
-                \usleep(500000); // 500ms
-            }
-
-            if (!$activated) {
-                // Auto-activation didn't happen in time, explicitly activate
-                $this->client->call(Client::METHOD_PATCH, '/sites/' . $siteId . '/deployment', array_merge([
-                    'content-type' => 'application/json',
-                    'x-appwrite-project' => $this->getProject()['$id'],
-                    'x-appwrite-key' => $this->getProject()['apiKey'],
-                ]), [
-                    'deploymentId' => $deploymentId,
-                ]);
-
-                // Verify activation
-                $this->assertEventually(function () use ($siteId, $deploymentId) {
-                    $site = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId, array_merge([
-                        'content-type' => 'application/json',
-                        'x-appwrite-project' => $this->getProject()['$id'],
-                        'x-appwrite-key' => $this->getProject()['apiKey'],
-                    ]));
-                    $this->assertEquals($deploymentId, $site['body']['deploymentId'], 'Deployment is not activated after explicit activation, deployment: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
-                }, 30000, 500);
-            }
+                $this->assertEquals($deploymentId, $site['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
+            }, 200000, 500);
         }
 
         return $deploymentId;

@@ -195,8 +195,7 @@ jobs:
           Account,
           Avatars,
           Console,
-          Databases/Legacy,
-          Databases/TablesDB,
+          Databases,
           Functions,
           FunctionsSchedule,
           GraphQL,
@@ -275,6 +274,36 @@ jobs:
           command: |
             echo "Using project tables"
 
+            elif [ "${{ matrix.db_adapter }}" = "MONGODB" ]; then
+              export _APP_DB_ADAPTER=mongodb
+              export _APP_DB_HOST=mongodb
+              export _APP_DB_PORT=27017
+              export _APP_DB_SCHEMA=appwrite
+            else
+            SERVICE_PATH="/usr/src/code/tests/e2e/Services/${{ matrix.service }}"
+
+            # Set DB Adapter Specific ENV Vars using if-elif
+            if [ "${{ matrix.db_adapter }}" = "MARIADB" ]; then
+              export _APP_DB_ADAPTER=mariadb
+              export _APP_DB_HOST=mariadb
+              export _APP_DB_PORT=3306
+              export _APP_DB_SCHEMA=appwrite
+           elif [ "${{ matrix.db_adapter }}" = "MONGODB" ]; then
+              export _APP_DB_ADAPTER=mongodb
+              export _APP_DB_HOST=mongodb
+              export _APP_DB_PORT=5432
+              export _APP_DB_SCHEMA=appwrite
+            elif [ "${{ matrix.db_adapter }}" = "POSTGRESQL" ]; then
+              export _APP_DB_ADAPTER=postgresql
+              export _APP_DB_HOST=postgresql
+              export _APP_DB_PORT=5432
+              export _APP_DB_SCHEMA=appwrite
+            else
+              echo "Unknown DB adapter: ${{ matrix.db_adapter }}"
+              exit 1
+            fi
+
+            echo "Running with paratest (parallel) for: ${{ matrix.service }}"
             docker compose exec -T \
               -e _APP_DATABASE_SHARED_TABLES="" \
               -e _APP_DATABASE_SHARED_TABLES_V1="" \
@@ -283,29 +312,13 @@ jobs:
               -e _APP_DB_PORT="${{ env._APP_DB_PORT }}" \
               -e _APP_DB_SCHEMA="${{ env._APP_DB_SCHEMA }}" \
               -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
-              appwrite test /usr/src/code/tests/e2e/Services/${{ matrix.service }} --debug --exclude-group abuseEnabled,screenshots
+              appwrite vendor/bin/paratest --processes $(nproc) --functional "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots
 
       - name: Failure Logs
         if: failure()
         run: |
-          echo "=== Container Status ==="
-          docker compose ps
-          echo "=== Appwrite DNS Config ==="
-          docker compose exec -T appwrite cat /etc/resolv.conf || true
-          echo "=== Appwrite Server Logs ==="
-          docker compose logs appwrite
-          echo "=== Database Container Logs (${{ matrix.db_adapter }}) ==="
-          if [ "${{ matrix.db_adapter }}" = "MARIADB" ]; then
-            docker compose logs mariadb || true
-          elif [ "${{ matrix.db_adapter }}" = "MONGODB" ]; then
-            docker compose logs mongodb || true
-          elif [ "${{ matrix.db_adapter }}" = "POSTGRESQL" ]; then
-            docker compose logs postgresql || true
-          fi
-          echo "=== Appwrite Worker Builds Logs ==="
-          docker compose logs appwrite-worker-builds
-          echo "=== OpenRuntimes Executor Logs ==="
-          docker compose logs openruntimes-executor
+          echo "=== Appwrite Logs ==="
+          docker compose logs
 
   e2e_shared_mode_test:
     name: E2E Shared Mode Service Test
@@ -323,8 +336,7 @@ jobs:
             Account,
             Avatars,
             Console,
-            Databases/Legacy,
-            Databases/TablesDB,
+            Databases,
             Functions,
             FunctionsSchedule,
             GraphQL,
@@ -391,12 +403,14 @@ jobs:
               export _APP_DATABASE_SHARED_TABLES=database_db_main
               export _APP_DATABASE_SHARED_TABLES_V1=
             fi
+
+            SERVICE_PATH="/usr/src/code/tests/e2e/Services/${{ matrix.service }}"
         
             docker compose exec -T \
               -e _APP_DATABASE_SHARED_TABLES \
               -e _APP_DATABASE_SHARED_TABLES_V1 \
               -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
-              appwrite test /usr/src/code/tests/e2e/Services/${{ matrix.service }} --debug --exclude-group abuseEnabled,screenshots
+              appwrite vendor/bin/paratest --processes $(nproc) --functional "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots
 
       - name: Failure Logs
         if: failure()
