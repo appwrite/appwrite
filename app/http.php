@@ -40,7 +40,7 @@ const DOMAIN_SYNC_TIMER = 30; // 30 seconds
 $files = new Files();
 $files->load(__DIR__ . '/../public');
 
-$domains = new Table(1_000_000); // 1 million rows
+$domains = new Table(100_000);
 $domains->column('value', Table::TYPE_INT, 1);
 $domains->create();
 
