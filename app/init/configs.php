@@ -7,43 +7,67 @@ require_once __DIR__ . '/../config/storage/resource_limits.php';
 
 $configAdapter = new PHP();
 
-Config::load('runtimes', __DIR__ . '/../config/runtimes.php', $configAdapter);
-Config::load('runtimes-v2', __DIR__ . '/../config/runtimes-v2.php', $configAdapter);
-Config::load('template-runtimes', __DIR__ . '/../config/template-runtimes.php', $configAdapter);
-Config::load('events', __DIR__ . '/../config/events.php', $configAdapter);
-Config::load('auth', __DIR__ . '/../config/auth.php', $configAdapter);
-Config::load('apis', __DIR__ . '/../config/apis.php', $configAdapter);  // List of APIs
-Config::load('errors', __DIR__ . '/../config/errors.php', $configAdapter);
-Config::load('oAuthProviders', __DIR__ . '/../config/oAuthProviders.php', $configAdapter);
-Config::load('sdks', __DIR__ . '/../config/sdks.php', $configAdapter);
-Config::load('platform', __DIR__ . '/../config/platform.php', $configAdapter);
-Config::load('console', __DIR__ . '/../config/console.php', $configAdapter);
-Config::load('collections', __DIR__ . '/../config/collections.php', $configAdapter);
-Config::load('frameworks', __DIR__ . '/../config/frameworks.php', $configAdapter);
-Config::load('usage', __DIR__ . '/../config/usage.php', $configAdapter);
-Config::load('roles', __DIR__ . '/../config/roles.php', $configAdapter);  // User roles and scopes
-Config::load('projectScopes', __DIR__ . '/../config/scopes/project.php', $configAdapter);
-Config::load('organizationScopes', __DIR__ . '/../config/scopes/organization.php', $configAdapter);
-Config::load('accountScopes', __DIR__ . '/../config/scopes/account.php', $configAdapter);
-Config::load('services', __DIR__ . '/../config/services.php', $configAdapter);  // List of services
-Config::load('variables', __DIR__ . '/../config/variables.php', $configAdapter);  // List of env variables
-Config::load('regions', __DIR__ . '/../config/regions.php', $configAdapter); // List of available regions
-Config::load('avatar-browsers', __DIR__ . '/../config/avatars/browsers.php', $configAdapter);
-Config::load('avatar-credit-cards', __DIR__ . '/../config/avatars/credit-cards.php', $configAdapter);
-Config::load('avatar-flags', __DIR__ . '/../config/avatars/flags.php', $configAdapter);
-Config::load('locale-codes', __DIR__ . '/../config/locale/codes.php', $configAdapter);
-Config::load('locale-currencies', __DIR__ . '/../config/locale/currencies.php', $configAdapter);
-Config::load('locale-eu', __DIR__ . '/../config/locale/eu.php', $configAdapter);
-Config::load('locale-languages', __DIR__ . '/../config/locale/languages.php', $configAdapter);
-Config::load('locale-phones', __DIR__ . '/../config/locale/phones.php', $configAdapter);
-Config::load('locale-countries', __DIR__ . '/../config/locale/countries.php', $configAdapter);
-Config::load('locale-continents', __DIR__ . '/../config/locale/continents.php', $configAdapter);
-Config::load('locale-templates', __DIR__ . '/../config/locale/templates.php', $configAdapter);
-Config::load('storage-logos', __DIR__ . '/../config/storage/logos.php', $configAdapter);
-Config::load('storage-mimes', __DIR__ . '/../config/storage/mimes.php', $configAdapter);
-Config::load('storage-inputs', __DIR__ . '/../config/storage/inputs.php', $configAdapter);
-Config::load('storage-outputs', __DIR__ . '/../config/storage/outputs.php', $configAdapter);
-Config::load('specifications', __DIR__ . '/../config/specifications.php', $configAdapter);
-Config::load('templates-function', __DIR__ . '/../config/templates/function.php', $configAdapter);
-Config::load('templates-site', __DIR__ . '/../config/templates/site.php', $configAdapter);
-Config::load('cors', __DIR__ . '/../config/cors.php', $configAdapter);
+$_configProfile = [];
+$_configMem = memory_get_usage();
+
+$configs = [
+    'runtimes' => __DIR__ . '/../config/runtimes.php',
+    'runtimes-v2' => __DIR__ . '/../config/runtimes-v2.php',
+    'template-runtimes' => __DIR__ . '/../config/template-runtimes.php',
+    'events' => __DIR__ . '/../config/events.php',
+    'auth' => __DIR__ . '/../config/auth.php',
+    'apis' => __DIR__ . '/../config/apis.php',
+    'errors' => __DIR__ . '/../config/errors.php',
+    'oAuthProviders' => __DIR__ . '/../config/oAuthProviders.php',
+    'sdks' => __DIR__ . '/../config/sdks.php',
+    'platform' => __DIR__ . '/../config/platform.php',
+    'console' => __DIR__ . '/../config/console.php',
+    'collections' => __DIR__ . '/../config/collections.php',
+    'frameworks' => __DIR__ . '/../config/frameworks.php',
+    'usage' => __DIR__ . '/../config/usage.php',
+    'roles' => __DIR__ . '/../config/roles.php',
+    'projectScopes' => __DIR__ . '/../config/scopes/project.php',
+    'organizationScopes' => __DIR__ . '/../config/scopes/organization.php',
+    'accountScopes' => __DIR__ . '/../config/scopes/account.php',
+    'services' => __DIR__ . '/../config/services.php',
+    'variables' => __DIR__ . '/../config/variables.php',
+    'regions' => __DIR__ . '/../config/regions.php',
+    'avatar-browsers' => __DIR__ . '/../config/avatars/browsers.php',
+    'avatar-credit-cards' => __DIR__ . '/../config/avatars/credit-cards.php',
+    'avatar-flags' => __DIR__ . '/../config/avatars/flags.php',
+    'locale-codes' => __DIR__ . '/../config/locale/codes.php',
+    'locale-currencies' => __DIR__ . '/../config/locale/currencies.php',
+    'locale-eu' => __DIR__ . '/../config/locale/eu.php',
+    'locale-languages' => __DIR__ . '/../config/locale/languages.php',
+    'locale-phones' => __DIR__ . '/../config/locale/phones.php',
+    'locale-countries' => __DIR__ . '/../config/locale/countries.php',
+    'locale-continents' => __DIR__ . '/../config/locale/continents.php',
+    'locale-templates' => __DIR__ . '/../config/locale/templates.php',
+    'storage-logos' => __DIR__ . '/../config/storage/logos.php',
+    'storage-mimes' => __DIR__ . '/../config/storage/mimes.php',
+    'storage-inputs' => __DIR__ . '/../config/storage/inputs.php',
+    'storage-outputs' => __DIR__ . '/../config/storage/outputs.php',
+    'specifications' => __DIR__ . '/../config/specifications.php',
+    'templates-function' => __DIR__ . '/../config/templates/function.php',
+    'templates-site' => __DIR__ . '/../config/templates/site.php',
+    'cors' => __DIR__ . '/../config/cors.php',
+];
+
+foreach ($configs as $key => $path) {
+    $before = memory_get_usage();
+    Config::load($key, $path, $configAdapter);
+    $cost = memory_get_usage() - $before;
+    if ($cost > 1024) { // only log configs > 1KB
+        $_configProfile[$key] = $cost;
+    }
+}
+
+// Sort by cost descending and print
+arsort($_configProfile);
+foreach ($_configProfile as $key => $cost) {
+    $costKB = round($cost / 1024);
+    error_log("MEMPROFILE config: {$key} = +{$costKB}KB");
+}
+$totalCost = memory_get_usage() - $_configMem;
+error_log("MEMPROFILE config: TOTAL = +" . round($totalCost / 1024) . "KB");
+unset($_configProfile, $_configMem, $configs, $totalCost);

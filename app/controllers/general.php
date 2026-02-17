@@ -1760,9 +1760,14 @@ Http::wildcard()
         throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
     });
 
-foreach (Config::getParam('services', []) as $service) {
+foreach (Config::getParam('services', []) as $svcKey => $service) {
     if (!empty($service['controller'])) {
+        $before = memory_get_usage();
         include_once $service['controller'];
+        $cost = memory_get_usage() - $before;
+        if ($cost > 10240) { // only log controllers > 10KB
+            error_log("MEMPROFILE controllers: service '{$svcKey}' = +" . round($cost / 1024) . "KB");
+        }
     }
 }
 
@@ -1773,5 +1778,8 @@ if (!empty(Method::getErrors())) {
 
 // Modules
 
+$_platformMem = memory_get_usage();
 $platform = new Appwrite();
 $platform->init(Service::TYPE_HTTP);
+error_log("MEMPROFILE controllers: platform_init = +" . round((memory_get_usage() - $_platformMem) / 1024) . "KB");
+unset($_platformMem);

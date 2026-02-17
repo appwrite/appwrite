@@ -1,6 +1,11 @@
 <?php
 
+$_httpMemProfile = [];
+$_httpMemProfile['start'] = memory_get_usage();
+
 require_once __DIR__ . '/../vendor/autoload.php';
+$_httpMemProfile['after_autoload'] = memory_get_usage();
+
 require_once __DIR__ . '/init/span.php';
 
 use Appwrite\Utopia\Request;
@@ -39,9 +44,11 @@ const DOMAIN_SYNC_TIMER = 30; // 30 seconds
 
 $files = null;
 
+$_httpMemProfile['before_table'] = memory_get_usage();
 $domains = new Table(1_000_000); // 1 million rows
 $domains->column('value', Table::TYPE_INT, 1);
 $domains->create();
+$_httpMemProfile['after_table'] = memory_get_usage();
 
 $http = new Server(
     host: "0.0.0.0",
@@ -169,6 +176,11 @@ $http->on(Constant::EVENT_WORKER_START, function ($server, $workerId) use (&$fil
         $files = new Files();
         $files->load(__DIR__ . '/../public');
     }
+    Span::init('http.worker.start');
+    Span::add('worker.id', $workerId);
+    Span::add('memory.baseline', memory_get_usage());
+    Span::add('memory.baseline.real', memory_get_usage(true));
+    Span::current()?->finish();
 });
 
 $http->on(Constant::EVENT_WORKER_STOP, function ($server, $workerId) {
@@ -184,7 +196,20 @@ $http->on(Constant::EVENT_AFTER_RELOAD, function ($server) {
     Console::success('Reload completed...');
 });
 
+$_httpMemProfile['before_controllers'] = memory_get_usage();
 include __DIR__ . '/controllers/general.php';
+$_httpMemProfile['after_controllers'] = memory_get_usage();
+
+// Print http.php memory profile
+$prev = null;
+foreach ($_httpMemProfile as $label => $mem) {
+    $cost = $prev !== null ? ($mem - $prev) : 0;
+    $costKB = round($cost / 1024);
+    $totalMB = round($mem / 1024 / 1024, 1);
+    error_log("MEMPROFILE http: {$label} = {$totalMB}MB (+" . $costKB . "KB)");
+    $prev = $mem;
+}
+unset($_httpMemProfile, $prev);
 
 function createDatabase(Http $app, string $resourceKey, string $dbName, array $collections, mixed $pools, ?callable $extraSetup = null): void
 {
@@ -475,12 +500,16 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
         return;
     }
 
+    Span::add('memory.request.start', memory_get_usage());
+
+    $memBeforeApp = memory_get_usage();
     $app = new Http('UTC');
     $app->setCompression(System::getEnv('_APP_COMPRESSION_ENABLED', 'enabled') === 'enabled');
     $app->setCompressionMinSize(intval(System::getEnv('_APP_COMPRESSION_MIN_SIZE_BYTES', '1024'))); // 1KB
 
     $pools = $register->get('pools');
     Http::setResource('pools', fn () => $pools);
+    Span::add('memory.cost_new_app', memory_get_usage() - $memBeforeApp);
 
     try {
         $authorization = $app->getResource('authorization');
@@ -490,7 +519,9 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
         $authorization->cleanRoles();
         $authorization->addRole(Role::any()->toString());
 
+        $memBeforeRun = memory_get_usage();
         $app->run($request, $response);
+        Span::add('memory.cost_run', memory_get_usage() - $memBeforeRun);
 
         $route = $app->getRoute();
         Span::add('http.path', $route?->getPath() ?? 'unknown');
@@ -577,6 +608,8 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
         $swooleResponse->end(\json_encode($output));
     } finally {
         Span::add('http.response.code', $response->getStatusCode());
+        Span::add('memory.request.end', memory_get_usage());
+        Span::add('memory.request.peak', memory_get_peak_usage());
         Span::current()?->finish();
     }
 });
