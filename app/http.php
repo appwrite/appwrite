@@ -37,7 +37,8 @@ use Utopia\System\System;
 
 const DOMAIN_SYNC_TIMER = 30; // 30 seconds
 
-$files = null;
+$files = new Files();
+$files->load(__DIR__ . '/../public');
 
 $domains = new Table(1_000_000); // 1 million rows
 $domains->column('value', Table::TYPE_INT, 1);
@@ -168,11 +169,7 @@ $http
         Constant::OPTION_TASK_WORKER_NUM => 1, // required for the task to fetch domains background
     ]);
 
-$http->on(Constant::EVENT_WORKER_START, function ($server, $workerId) use (&$files) {
-    if (!$server->taskworker) {
-        $files = new Files();
-        $files->load(__DIR__ . '/../public');
-    }
+$http->on(Constant::EVENT_WORKER_START, function ($server, $workerId) {
 });
 
 $http->on(Constant::EVENT_WORKER_STOP, function ($server, $workerId) {
@@ -456,7 +453,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $tot
     });
 });
 
-$http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register, &$files) {
+$http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register, $files) {
     Span::init('http.request');
 
     Http::setResource('swooleRequest', fn () => $swooleRequest);
@@ -467,7 +464,7 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
 
     Span::add('http.method', $request->getMethod());
 
-    if ($files instanceof Files && $files->isFileLoaded($request->getURI())) {
+    if ($files->isFileLoaded($request->getURI())) {
         $time = (60 * 60 * 24 * 45); // 45 days cache
 
         $response
