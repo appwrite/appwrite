@@ -2,9 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Schedules\Services;
 
-use Appwrite\Platform\Modules\Schedules\Http\Schedules\Create;
-use Appwrite\Platform\Modules\Schedules\Http\Schedules\Get;
-use Appwrite\Platform\Modules\Schedules\Http\Schedules\XList;
+use Appwrite\Platform\Modules\Schedules\Http\Projects\Schedules\Create;
+use Appwrite\Platform\Modules\Schedules\Http\Projects\Schedules\Get;
+use Appwrite\Platform\Modules\Schedules\Http\Projects\Schedules\XList;
 use Utopia\Platform\Service;
 
 class Http extends Service
