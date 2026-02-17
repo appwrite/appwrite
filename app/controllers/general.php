@@ -34,6 +34,7 @@ use Appwrite\Utopia\View;
 use Executor\Executor;
 use MaxMind\Db\Reader;
 use Swoole\Http\Request as SwooleRequest;
+use Swoole\Table;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -1073,7 +1074,8 @@ Http::init()
    ->inject('queueForCertificates')
    ->inject('platform')
     ->inject('authorization')
-   ->action(function (Request $request, Document $console, Database $dbForPlatform, Certificate $queueForCertificates, array $platform, Authorization $authorization) use ($hostnames) {
+    ->inject('hostnames')
+   ->action(function (Request $request, Document $console, Database $dbForPlatform, Certificate $queueForCertificates, array $platform, Authorization $authorization, Table $hostnames) {
        $hostname = $request->getHostname();
        $platformHostnames = $platform['hostnames'] ?? [];
 

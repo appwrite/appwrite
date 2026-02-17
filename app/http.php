@@ -48,6 +48,9 @@ $hostnames = new Table(100_000);
 $hostnames->column('value', Table::TYPE_INT, 1);
 $hostnames->create();
 
+Http::setResource('domains', fn () => $domains);
+Http::setResource('hostnames', fn () => $hostnames);
+
 $http = new Server(
     host: "0.0.0.0",
     port: System::getEnv('PORT', 80),
@@ -583,7 +586,7 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
 });
 
 // Fetch domains every `DOMAIN_SYNC_TIMER` seconds and update in the memory
-$http->on(Constant::EVENT_TASK, function () use ($register, $domains) {
+$http->on(Constant::EVENT_TASK, function () use ($register) {
     $lastSyncUpdate = null;
     $pools = $register->get('pools');
     Http::setResource('pools', fn () => $pools);
@@ -591,6 +594,9 @@ $http->on(Constant::EVENT_TASK, function () use ($register, $domains) {
 
     /** @var Utopia\Database\Database $dbForPlatform */
     $dbForPlatform = $app->getResource('dbForPlatform');
+
+    /** @var Table $domains */
+    $domains = $app->getResource('domains');
 
     Timer::tick(DOMAIN_SYNC_TIMER * 1000, function () use ($dbForPlatform, $domains, &$lastSyncUpdate, $app) {
         try {
