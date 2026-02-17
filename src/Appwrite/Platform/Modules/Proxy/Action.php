@@ -178,13 +178,17 @@ class Action extends PlatformAction
         }
 
         // Ensure at least one of CNAME/A/AAAA record points to our servers properly
-        $targetA = System::getEnv('_APP_DOMAIN_TARGET_A', '');
-        if ((new IP(IP::V4))->isValid($targetA)) {
-            $validator = new $dnsValidatorClass($targetA, Record::TYPE_A, $dnsServers);
-            $validators[] = $validator;
+        foreach (\explode(',', System::getEnv('_APP_DOMAIN_TARGET_A', '')) as $targetA) {
+            if (empty($targetA)) {
+                continue;
+            }
+            if ((new IP(IP::V4))->isValid($targetA)) {
+                $validator = new $dnsValidatorClass($targetA, Record::TYPE_A, $dnsServers);
+                $validators[] = $validator;
 
-            if (\is_null($mainValidator)) {
-                $mainValidator = $validator;
+                if (\is_null($mainValidator)) {
+                    $mainValidator = $validator;
+                }
             }
         }
 
