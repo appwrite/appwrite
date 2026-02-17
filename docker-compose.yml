@@ -748,6 +748,7 @@ services:
     depends_on:
       - redis
       - maildev
+      - ${_APP_DB_HOST:-mariadb}
       # - smtp
     environment:
       - _APP_ENV
@@ -760,6 +761,12 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
       - _APP_SMTP_SECURE

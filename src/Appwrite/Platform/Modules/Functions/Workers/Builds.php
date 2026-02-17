@@ -932,16 +932,6 @@ class Builds extends Action
                 $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
             }
 
-            /** Screenshot site */
-            if ($resource->getCollection() === 'sites') {
-                $queueForScreenshots
-                    ->setDeploymentId($deployment->getId())
-                    ->setProject($project)
-                    ->trigger();
-
-                Console::log('Site screenshot queued');
-            }
-
             /** Set auto deploy */
             $activateBuild = false;
             if ($deployment->getAttribute('activate') === true) {
@@ -1021,6 +1011,16 @@ class Builds extends Action
                 }
 
                 Console::log('Deployment activated');
+            }
+
+            /** Screenshot site */
+            if ($resource->getCollection() === 'sites') {
+                $queueForScreenshots
+                    ->setDeploymentId($deployment->getId())
+                    ->setProject($project)
+                    ->trigger();
+
+                Console::log('Site screenshot queued');
             }
 
             $this->afterDeploymentSuccess(

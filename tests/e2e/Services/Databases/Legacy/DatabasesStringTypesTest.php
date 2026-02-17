@@ -514,6 +514,63 @@ class DatabasesStringTypesTest extends Scope
     /**
      * @depends testCreateLongtextAttribute
      */
+    public function testListStringTypeAttributes(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+        $collectionId = $data['collectionId'];
+
+        // Wait for attributes to be created
+        sleep(2);
+
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $attributes = $response['body']['attributes'];
+        $types = array_column($attributes, 'type');
+
+        $this->assertContains('varchar', $types);
+        $this->assertContains('text', $types);
+        $this->assertContains('mediumtext', $types);
+        $this->assertContains('longtext', $types);
+
+        return $data;
+    }
+
+    /**
+     * @depends testListStringTypeAttributes
+     */
+    public function testGetCollectionWithStringTypeAttributes(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+        $collectionId = $data['collectionId'];
+
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $attributes = $response['body']['attributes'];
+        $types = array_column($attributes, 'type');
+
+        $this->assertContains('varchar', $types);
+        $this->assertContains('text', $types);
+        $this->assertContains('mediumtext', $types);
+        $this->assertContains('longtext', $types);
+
+        return $data;
+    }
+
+    /**
+     * @depends testGetCollectionWithStringTypeAttributes
+     */
     public function testUpdateVarcharAttribute(array $data): array
     {
         $this->markTestSkipped('Skipped until utopia-php/database updateAttribute supports VARCHAR type');

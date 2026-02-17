@@ -735,6 +735,7 @@ class Migrations extends Action
         ];
 
         $queueForMails
+            ->setProject($project)
             ->setSubject($subject)
             ->setPreview($preview)
             ->setBody($emailBody)
