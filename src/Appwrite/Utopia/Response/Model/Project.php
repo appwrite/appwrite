@@ -283,6 +283,12 @@ class Project extends Model
                 'example' => ['vip'],
                 'array' => true,
             ])
+            ->addRule('status', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Project status.',
+                'default' => 'active',
+                'example' => 'active',
+            ])
         ;
 
         $services = Config::getParam('services', []);
