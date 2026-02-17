@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "90a81fe7def09b16d16e279e060376a2",
+    "content-hash": "dd9887a50fb434887461a99413007573",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3656,16 +3656,16 @@
         },
         {
             "name": "utopia-php/compression",
-            "version": "dev-feat-rename-identity-to-none",
+            "version": "0.1.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/compression.git",
-                "reference": "171e37f6fe663991448fcf06acf830f7eb0b05de"
+                "reference": "68045cb9d714c1259582d2dfd0e76bd34f83e713"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/compression/zipball/171e37f6fe663991448fcf06acf830f7eb0b05de",
-                "reference": "171e37f6fe663991448fcf06acf830f7eb0b05de",
+                "url": "https://api.github.com/repos/utopia-php/compression/zipball/68045cb9d714c1259582d2dfd0e76bd34f83e713",
+                "reference": "68045cb9d714c1259582d2dfd0e76bd34f83e713",
                 "shasum": ""
             },
             "require": {
@@ -3696,9 +3696,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/compression/issues",
-                "source": "https://github.com/utopia-php/compression/tree/feat-rename-identity-to-none"
+                "source": "https://github.com/utopia-php/compression/tree/0.1.4"
             },
-            "time": "2026-02-17T05:15:15+00:00"
+            "time": "2026-02-17T05:53:40+00:00"
         },
         {
             "name": "utopia-php/config",
@@ -4464,16 +4464,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "dev-bump-storage-lib",
+            "version": "1.6.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "75c9b9ac8ee4827163711e1aedced2bafb8f265b"
+                "reference": "c5c7544d02d2418536d41050794050132f247d62"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/75c9b9ac8ee4827163711e1aedced2bafb8f265b",
-                "reference": "75c9b9ac8ee4827163711e1aedced2bafb8f265b",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/c5c7544d02d2418536d41050794050132f247d62",
+                "reference": "c5c7544d02d2418536d41050794050132f247d62",
                 "shasum": ""
             },
             "require": {
@@ -4513,9 +4513,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/bump-storage-lib"
+                "source": "https://github.com/utopia-php/migration/tree/1.6.1"
             },
-            "time": "2026-02-17T05:24:05+00:00"
+            "time": "2026-02-17T05:49:48+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8883,25 +8883,9 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/compression",
-            "version": "dev-feat-rename-identity-to-none",
-            "alias": "0.1.3",
-            "alias_normalized": "0.1.3.0"
-        },
-        {
-            "package": "utopia-php/migration",
-            "version": "dev-bump-storage-lib",
-            "alias": "1.6.0",
-            "alias_normalized": "1.6.0.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/compression": 20,
-        "utopia-php/migration": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
