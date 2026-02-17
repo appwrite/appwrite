@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Modules\Projects\Http\Schedules;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
-use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Task\Validator\Cron;
@@ -76,7 +75,7 @@ class Create extends Action
                 namespace: 'projects',
                 group: 'schedules',
                 name: 'createSchedule',
-                description: '/docs/references/projects/schedules/create.md',
+                description: '/docs/references/projects/create-schedule.md',
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
@@ -84,7 +83,6 @@ class Create extends Action
                         model: Response::MODEL_SCHEDULE,
                     ),
                 ],
-                contentType: ContentType::JSON,
             ))
             ->param('projectId', '', new UID(), 'Project unique ID.')
             ->param('resourceType', '', new WhiteList($resourceTypes, true), 'The resource type for the schedule. Possible values: '.implode(', ', $resourceTypes).'.')

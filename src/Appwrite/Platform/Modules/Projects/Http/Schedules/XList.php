@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Modules\Projects\Http\Schedules;
 
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
-use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Schedules;
@@ -41,7 +40,7 @@ class XList extends Action
                 namespace: 'projects',
                 group: 'schedules',
                 name: 'listSchedules',
-                description: '/docs/references/projects/schedules/list.md',
+                description: '/docs/references/projects/list-schedules.md',
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
@@ -49,7 +48,6 @@ class XList extends Action
                         model: Response::MODEL_SCHEDULE_LIST,
                     )
                 ],
-                contentType: ContentType::JSON,
             ))
             ->param('projectId', '', new UID(), 'Project unique ID.')
             ->param('queries', [], new Schedules(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Schedules::ALLOWED_ATTRIBUTES), true)
