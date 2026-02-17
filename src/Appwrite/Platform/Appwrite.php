@@ -11,7 +11,6 @@ use Appwrite\Platform\Modules\Functions;
 use Appwrite\Platform\Modules\Health;
 use Appwrite\Platform\Modules\Projects;
 use Appwrite\Platform\Modules\Proxy;
-use Appwrite\Platform\Modules\Schedules;
 use Appwrite\Platform\Modules\Sites;
 use Appwrite\Platform\Modules\Storage;
 use Appwrite\Platform\Modules\Tokens;
@@ -29,7 +28,6 @@ class Appwrite extends Platform
         $this->addModule(new Projects\Module());
         $this->addModule(new Functions\Module());
         $this->addModule(new Health\Module());
-        $this->addModule(new Schedules\Module());
         $this->addModule(new Sites\Module());
         $this->addModule(new Console\Module());
         $this->addModule(new Proxy\Module());

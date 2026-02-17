@@ -12,6 +12,9 @@ use Appwrite\Platform\Modules\Projects\Http\Projects\Labels\Update as UpdateProj
 use Appwrite\Platform\Modules\Projects\Http\Projects\Team\Update as UpdateProjectTeam;
 use Appwrite\Platform\Modules\Projects\Http\Projects\Update as UpdateProject;
 use Appwrite\Platform\Modules\Projects\Http\Projects\XList as ListProjects;
+use Appwrite\Platform\Modules\Projects\Http\Schedules\Create as CreateSchedule;
+use Appwrite\Platform\Modules\Projects\Http\Schedules\Get as GetSchedule;
+use Appwrite\Platform\Modules\Projects\Http\Schedules\XList as ListSchedules;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -30,5 +33,9 @@ class Http extends Service
         $this->addAction(ListProjects::getName(), new ListProjects());
         $this->addAction(UpdateProjectLabels::getName(), new UpdateProjectLabels());
         $this->addAction(UpdateProjectTeam::getName(), new UpdateProjectTeam());
+
+        $this->addAction(CreateSchedule::getName(), new CreateSchedule());
+        $this->addAction(GetSchedule::getName(), new GetSchedule());
+        $this->addAction(ListSchedules::getName(), new ListSchedules());
     }
 }
