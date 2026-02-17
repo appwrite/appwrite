@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fe847eccf6ba73bfca1e08d26e9fc7ab",
+    "content-hash": "54a7d2d3c93926e306fbc8012d0c646e",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3656,20 +3656,20 @@
         },
         {
             "name": "utopia-php/compression",
-            "version": "0.1.3",
+            "version": "0.1.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/compression.git",
-                "reference": "66f093557ba66d98245e562036182016c7dcfe8a"
+                "reference": "68045cb9d714c1259582d2dfd0e76bd34f83e713"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/compression/zipball/66f093557ba66d98245e562036182016c7dcfe8a",
-                "reference": "66f093557ba66d98245e562036182016c7dcfe8a",
+                "url": "https://api.github.com/repos/utopia-php/compression/zipball/68045cb9d714c1259582d2dfd0e76bd34f83e713",
+                "reference": "68045cb9d714c1259582d2dfd0e76bd34f83e713",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.0"
+                "php": ">=8.1"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
@@ -3696,9 +3696,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/compression/issues",
-                "source": "https://github.com/utopia-php/compression/tree/0.1.3"
+                "source": "https://github.com/utopia-php/compression/tree/0.1.4"
             },
-            "time": "2025-01-15T15:15:51+00:00"
+            "time": "2026-02-17T05:53:40+00:00"
         },
         {
             "name": "utopia-php/config",
@@ -3797,16 +3797,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "5.2.0",
+            "version": "5.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "5c89b39de00f2b3126d0fbbdea36786341293df7"
+                "reference": "adfdf201144353a1d2ce14bb197ab746079894e0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/5c89b39de00f2b3126d0fbbdea36786341293df7",
-                "reference": "5c89b39de00f2b3126d0fbbdea36786341293df7",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/adfdf201144353a1d2ce14bb197ab746079894e0",
+                "reference": "adfdf201144353a1d2ce14bb197ab746079894e0",
                 "shasum": ""
             },
             "require": {
@@ -3849,9 +3849,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/5.2.0"
+                "source": "https://github.com/utopia-php/database/tree/5.2.1"
             },
-            "time": "2026-02-14T09:37:28+00:00"
+            "time": "2026-02-16T11:01:13+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -8914,5 +8914,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }
