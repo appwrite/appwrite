@@ -4,6 +4,9 @@
 
 * Add `--queries` option to `list-keys` command
 * Add `--key-id` option to `create-key` command
+* Add `encrypt` param support to new string type attributes
+* Fix `bignumber.js` bundler conflict by removing direct dependency in favor of transitive dependency from `json-bigint`
+* Fix missing region in console failUrl for failed deployments
 
 ## 13.3.2
 
