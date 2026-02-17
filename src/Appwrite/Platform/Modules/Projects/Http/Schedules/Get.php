@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Modules\Projects\Http\Schedules;
 
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
-use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
@@ -34,7 +33,7 @@ class Get extends Action
                 namespace: 'projects',
                 group: 'schedules',
                 name: 'getSchedule',
-                description: '/docs/references/projects/schedules/get.md',
+                description: '/docs/references/projects/get-schedule.md',
                 auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
@@ -42,7 +41,6 @@ class Get extends Action
                         model: Response::MODEL_SCHEDULE,
                     )
                 ],
-                contentType: ContentType::JSON,
             ))
             ->param('projectId', '', new UID(), 'Project unique ID.')
             ->param('scheduleId', '', new UID(), 'Schedule ID.')
