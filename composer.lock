@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "54a7d2d3c93926e306fbc8012d0c646e",
+    "content-hash": "dd9887a50fb434887461a99413007573",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4464,16 +4464,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.6.0",
+            "version": "1.6.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "aa07cf9ae8cc4b8df0ab64588e033693b5ad6849"
+                "reference": "c5c7544d02d2418536d41050794050132f247d62"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/aa07cf9ae8cc4b8df0ab64588e033693b5ad6849",
-                "reference": "aa07cf9ae8cc4b8df0ab64588e033693b5ad6849",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/c5c7544d02d2418536d41050794050132f247d62",
+                "reference": "c5c7544d02d2418536d41050794050132f247d62",
                 "shasum": ""
             },
             "require": {
@@ -4484,7 +4484,7 @@
                 "php": ">=8.1",
                 "utopia-php/database": "5.*",
                 "utopia-php/dsn": "0.2.*",
-                "utopia-php/storage": "0.18.*"
+                "utopia-php/storage": "1.0.*"
             },
             "require-dev": {
                 "ext-pdo": "*",
@@ -4513,9 +4513,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.6.0"
+                "source": "https://github.com/utopia-php/migration/tree/1.6.1"
             },
-            "time": "2026-02-16T07:19:27+00:00"
+            "time": "2026-02-17T05:49:48+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -4953,32 +4953,27 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.18.19",
+            "version": "1.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "9c3f9a471250d22de7d405ee19e23e72b14181ca"
+                "reference": "f672e8865938e5d1d6dc3bd149ceba4e5582199e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/9c3f9a471250d22de7d405ee19e23e72b14181ca",
-                "reference": "9c3f9a471250d22de7d405ee19e23e72b14181ca",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/f672e8865938e5d1d6dc3bd149ceba4e5582199e",
+                "reference": "f672e8865938e5d1d6dc3bd149ceba4e5582199e",
                 "shasum": ""
             },
             "require": {
-                "ext-brotli": "*",
                 "ext-curl": "*",
                 "ext-fileinfo": "*",
-                "ext-lz4": "*",
                 "ext-simplexml": "*",
-                "ext-snappy": "*",
-                "ext-xz": "*",
                 "ext-zlib": "*",
-                "ext-zstd": "*",
                 "php": ">=8.1",
-                "utopia-php/framework": "0.*.*",
                 "utopia-php/system": "0.*.*",
-                "utopia-php/telemetry": "0.2.*"
+                "utopia-php/telemetry": "0.2.*",
+                "utopia-php/validators": "0.2.*"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
@@ -5005,9 +5000,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.18.19"
+                "source": "https://github.com/utopia-php/storage/tree/1.0.0"
             },
-            "time": "2025-12-17T13:55:20+00:00"
+            "time": "2026-02-17T04:37:10+00:00"
         },
         {
             "name": "utopia-php/system",
