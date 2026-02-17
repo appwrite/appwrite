@@ -1074,20 +1074,20 @@ Http::init()
    ->inject('queueForCertificates')
    ->inject('platform')
     ->inject('authorization')
-    ->inject('hostnames')
-   ->action(function (Request $request, Document $console, Database $dbForPlatform, Certificate $queueForCertificates, array $platform, Authorization $authorization, Table $hostnames) {
+    ->inject('certifiedDomains')
+   ->action(function (Request $request, Document $console, Database $dbForPlatform, Certificate $queueForCertificates, array $platform, Authorization $authorization, Table $certifiedDomains) {
        $hostname = $request->getHostname();
        $platformHostnames = $platform['hostnames'] ?? [];
 
        // 1. Cache hit
-       if ($hostnames->exists(md5($hostname))) {
+       if ($certifiedDomains->exists(md5($hostname))) {
            return;
        }
 
        // 2. Domain validation
        $domain = new Domain(!empty($hostname) ? $hostname : '');
        if (empty($domain->get()) || !$domain->isKnown() || $domain->isTest()) {
-           $hostnames->set(md5($domain->get()), ['value' => 0]);
+           $certifiedDomains->set(md5($domain->get()), ['value' => 0]);
            return;
        }
 
@@ -1101,7 +1101,7 @@ Http::init()
        }
 
        // 4. Check/create rule (requires DB access)
-       $authorization->skip(function () use ($dbForPlatform, $domain, $console, $queueForCertificates, $hostnames) {
+       $authorization->skip(function () use ($dbForPlatform, $domain, $console, $queueForCertificates, $certifiedDomains) {
            try {
                // TODO: (@Meldiron) Remove after 1.7.x migration
                $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
@@ -1164,7 +1164,7 @@ Http::init()
            } catch (Duplicate $e) {
                Console::info('Certificate already exists');
            } finally {
-               $hostnames->set(md5($domain->get()), ['value' => 1]);
+               $certifiedDomains->set(md5($domain->get()), ['value' => 1]);
            }
        });
    });
