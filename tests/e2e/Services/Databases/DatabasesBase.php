@@ -980,7 +980,7 @@ trait DatabasesBase
         $this->assertEquals($datetime['body']['required'], false);
 
         // to meet mongodb duplicate attributes index limit
-        $integers2 = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $data['moviesId']) . '/integer', array_merge([
+        $integers2 = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $moviesId) . '/integer', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -999,7 +999,7 @@ trait DatabasesBase
             $this->assertEquals($relationship['headers']['status-code'], 202);
             $this->assertEquals($relationship['body']['key'], 'starringActors');
             $this->assertEquals($relationship['body']['type'], 'relationship');
-            $this->assertEquals($relationship['body'][$this->getRelatedResourceKey()], $data['actorsId']);
+            $this->assertEquals($relationship['body'][$this->getRelatedResourceKey()], $actorsId);
             $this->assertEquals($relationship['body']['relationType'], 'oneToMany');
             $this->assertEquals($relationship['body']['twoWay'], true);
             $this->assertEquals($relationship['body']['twoWayKey'], 'movie');
