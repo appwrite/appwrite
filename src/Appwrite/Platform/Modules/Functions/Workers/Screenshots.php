@@ -7,6 +7,7 @@ use Appwrite\Event\Realtime;
 use Appwrite\Permission;
 use Appwrite\Role;
 use Exception;
+use Utopia\Compression\Compression;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -16,7 +17,6 @@ use Utopia\Database\Query;
 use Utopia\Fetch\Client as FetchClient;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
-use Utopia\Storage\Compression\Compression;
 use Utopia\Storage\Device;
 use Utopia\System\System;
 

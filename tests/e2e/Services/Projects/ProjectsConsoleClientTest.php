@@ -57,6 +57,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals('Project Test', $response['body']['name']);
         $this->assertEquals($team['body']['$id'], $response['body']['teamId']);
+        $this->assertEquals(PROJECT_STATUS_ACTIVE, $response['body']['status']);
         $this->assertArrayHasKey('platforms', $response['body']);
         $this->assertArrayHasKey('webhooks', $response['body']);
         $this->assertArrayHasKey('keys', $response['body']);
@@ -76,6 +77,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals('Project Test', $response['body']['name']);
         $this->assertEquals($team['body']['$id'], $response['body']['teamId']);
+        $this->assertEquals(PROJECT_STATUS_ACTIVE, $response['body']['status']);
         $this->assertArrayHasKey('platforms', $response['body']);
         $this->assertArrayHasKey('webhooks', $response['body']);
         $this->assertArrayHasKey('keys', $response['body']);
