@@ -6890,7 +6890,9 @@ trait DatabasesBase
     public function testTimeout(): void
     {
         $data = $this->setupDatabase();
-        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($data['databaseId']), array_merge([
+        $databaseId = $data['databaseId'];
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -6907,7 +6909,7 @@ trait DatabasesBase
 
         $data = [
             '$id' => $collection['body']['$id'],
-            'databaseId' => $collection['body']['databaseId']
+            'databaseId' => $databaseId,
         ];
 
         $longtext = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($data['databaseId'], $data['$id']) . '/string', array_merge([
@@ -6922,6 +6924,8 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals($longtext['headers']['status-code'], 202);
+
+        $this->waitForAttribute($data['databaseId'], $data['$id'], 'longtext');
 
         for ($i = 0; $i < 10; $i++) {
             $this->client->call(Client::METHOD_POST, $this->getRecordUrl($data['databaseId'], $data['$id']), array_merge([
@@ -6952,7 +6956,7 @@ trait DatabasesBase
 
         $this->assertEquals(408, $response['headers']['status-code']);
 
-        $this->client->call(Client::METHOD_DELETE, $this->getDatabaseUrl($data['databaseId']), array_merge([
+        $this->client->call(Client::METHOD_DELETE, $this->getContainerUrl($data['databaseId'], $data['$id']), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
