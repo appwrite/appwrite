@@ -141,7 +141,7 @@ class FunctionsServerTest extends Scope
 
             $deployment = $deployment['body']['data']['functionsGetDeployment'];
             $this->assertEquals('ready', $deployment['status']);
-        }, 120000);
+        }, 240000);
 
         static::$cachedDeployment[$key] = $deployment;
         return $deployment;

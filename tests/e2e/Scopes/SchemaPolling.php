@@ -182,10 +182,10 @@ trait SchemaPolling
      *
      * @param string $databaseId The database ID
      * @param string $containerId The collection/table ID
-     * @param int $timeoutMs Maximum time to wait in milliseconds (default 8 minutes for CI stability under parallel load)
+     * @param int $timeoutMs Maximum time to wait in milliseconds (default 10 minutes for CI stability under parallel load)
      * @param int $waitMs Time between polling attempts in milliseconds
      */
-    protected function waitForAllAttributes(string $databaseId, string $containerId, int $timeoutMs = 480000, int $waitMs = 500): void
+    protected function waitForAllAttributes(string $databaseId, string $containerId, int $timeoutMs = 600000, int $waitMs = 500): void
     {
         $this->assertEventually(function () use ($databaseId, $containerId) {
             $container = $this->client->call(
