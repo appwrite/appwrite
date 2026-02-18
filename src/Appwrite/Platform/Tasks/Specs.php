@@ -80,6 +80,33 @@ class Specs extends Action
     }
 
     /**
+     * Platforms to include in PR creation.
+     * Override in a subclass to exclude specific platforms.
+     *
+     * @return array<string>
+     */
+    public static function getPlatformsForPR(): array
+    {
+        return static::getPlatforms();
+    }
+
+    /**
+     * Build the CLI command used to regenerate SDK examples.
+     * Override in a subclass to customise flags (platform, sdk, mode, etc.).
+     *
+     * @param string $version Spec version being generated
+     * @return string Shell command string (including 2>&1 redirect)
+     */
+    protected function getSdksCommand(string $version): string
+    {
+        $cli = \realpath(__DIR__ . '/../../../../app') . '/cli.php';
+
+        return 'php ' . \escapeshellarg($cli)
+            . ' sdks --platform=* --sdk=* --version=' . \escapeshellarg($version)
+            . ' --git=no --mode=examples 2>&1';
+    }
+
+    /**
      * Number of authentication methods supported by each platform
      * client: 1 (Session or JWT), server: 2 (Key and JWT), console: 1 (Admin)
      *
@@ -432,9 +459,19 @@ class Specs extends Action
             ');
 
             // Copy generated spec files into specs/{version}/ subdirectory
+            $prPlatforms = static::getPlatformsForPR();
+            $prFiles = \array_filter(
+                $generatedFiles,
+                fn (string $file) => \in_array(
+                    \substr(\basename($file, '.json'), \strrpos(\basename($file, '.json'), '-') + 1),
+                    $prPlatforms,
+                    true
+                )
+            );
+
             $specsSubDir = $mocks ? 'mocks' : $version;
             \exec('mkdir -p ' . \escapeshellarg("{$target}/specs/{$specsSubDir}"));
-            foreach ($generatedFiles as $file) {
+            foreach ($prFiles as $file) {
                 $fileName = \basename($file);
                 \exec('cp ' . \escapeshellarg($file) . ' ' . \escapeshellarg("{$target}/specs/{$specsSubDir}/{$fileName}"));
                 Console::success("Copied spec file to repo: specs/{$specsSubDir}/{$fileName}");
@@ -442,9 +479,7 @@ class Specs extends Action
 
             // Regenerate SDK examples for this version
             Console::info("Regenerating SDK examples for version {$version}...");
-            $sdksCommand = 'php ' . \escapeshellarg(\realpath(__DIR__ . '/../../../../app') . '/cli.php')
-                . ' sdks --platform=* --sdk=* --version=' . \escapeshellarg($version)
-                . ' --git=no --mode=examples 2>&1';
+            $sdksCommand = $this->getSdksCommand($version);
             \exec($sdksCommand, $sdksOutput, $sdksReturnCode);
 
             if ($sdksReturnCode !== 0) {
