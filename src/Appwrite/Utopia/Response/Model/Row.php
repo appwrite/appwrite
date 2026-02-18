@@ -82,7 +82,10 @@ class Row extends Any
     {
         $document->removeAttribute('$collection');
         $document->removeAttribute('$tenant');
-        $document->setAttribute('$sequence', (int)$document->getAttribute('$sequence', 0));
+
+        if ($document->offsetExists('$sequence')) {
+            $document->setAttribute('$sequence', (int)$document->getAttribute('$sequence', 0));
+        }
 
         foreach ($document->getAttributes() as $column) {
             if (\is_array($column)) {

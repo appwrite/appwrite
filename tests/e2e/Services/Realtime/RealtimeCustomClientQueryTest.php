@@ -2289,7 +2289,7 @@ class RealtimeCustomClientQueryTest extends Scope
 
         // Test NEW SDK behavior: project=Query array in query param, project ID in header
         // The reserved param logic should use Query array as subscription queries for project channel
-        $queryArray = [Query::select(['*'])->toString()];
+        $queryArray = [Query::select('*')->toString()];
         $clientNewSdk = $this->getWebsocketWithCustomQuery(
             [
                 'channels' => ['project'],
@@ -2365,7 +2365,7 @@ class RealtimeCustomClientQueryTest extends Scope
         $client->close();
 
         // Test: project channel with queries, project ID only in header
-        $queryArray = [Query::select(['*'])->toString()];
+        $queryArray = [Query::select('*')->toString()];
         $clientWithQuery = $this->getWebsocketWithCustomQuery(
             [
                 'channels' => ['project'],

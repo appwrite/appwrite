@@ -353,7 +353,10 @@ class Deletes extends Action
             $queries[] = Query::equal('resourceType', [$resourceType]);
         }
 
-        $queries[] = Query::select($this->selects);
+        foreach ($this->selects as $select) {
+            $queries[] = Query::select($select);
+        }
+
         $queries[] = Query::orderAsc();
 
         $this->deleteByGroup(
@@ -390,11 +393,15 @@ class Deletes extends Action
         );
 
         $queries = [
-            Query::select([...$this->selects, 'accessedAt']),
+            Query::select('accessedAt'),
             Query::lessThan('accessedAt', $datetime),
             Query::orderDesc('accessedAt'),
             Query::orderDesc(),
         ];
+
+        foreach ($this->selects as $select) {
+            $queries[] = Query::select($select);
+        }
 
         $this->deleteByGroup(
             'cache',
@@ -426,27 +433,37 @@ class Deletes extends Action
 
         $selects = [...$this->selects, 'time'];
 
-        // Delete Usage stats from projectDB
-        $this->deleteByGroup('stats', [
-            Query::select($selects),
+        $queries = [
             Query::equal('period', ['1h']),
             Query::lessThan('time', $hourlyUsageRetentionDatetime),
             Query::orderDesc('time'),
             Query::orderDesc(),
-        ], $dbForProject);
+        ];
+
+        foreach ($selects as $select) {
+            $queries[] = Query::select($select);
+        }
+
+        // Delete Usage stats from projectDB
+        $this->deleteByGroup('stats', $queries, $dbForProject);
 
         if ($project->getId() !== 'console') {
             /** @var Database $dbForLogs */
             $dbForLogs = call_user_func($getLogsDB, $project);
 
-            // Delete Usage stats from logsDB
-            $this->deleteByGroup('stats', [
-                Query::select($selects),
+            $queries = [
                 Query::equal('period', ['1h']),
                 Query::lessThan('time', $hourlyUsageRetentionDatetime),
                 Query::orderDesc('time'),
                 Query::orderDesc(),
-            ], $dbForLogs);
+            ];
+
+            foreach ($selects as $select) {
+                $queries[] = Query::select($select);
+            }
+
+            // Delete Usage stats from logsDB
+            $this->deleteByGroup('stats', $queries, $dbForLogs);
         }
     }
 
@@ -753,13 +770,19 @@ class Deletes extends Action
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
-        // Delete Executions
-        $this->deleteByGroup('executions', [
-            Query::select([...$this->selects, '$createdAt']),
+        $queries = [
+            Query::select('$createdAt'),
             Query::lessThan('$createdAt', $datetime),
             Query::orderDesc('$createdAt'),
             Query::orderDesc(),
-        ], $dbForProject);
+        ];
+
+        foreach ($this->selects as $select) {
+            $queries[] = Query::select($select);
+        }
+
+        // Delete Executions
+        $this->deleteByGroup('executions', $queries, $dbForProject);
 
         /* delete based on custom retention, if any */
         $this->deleteExecutionsByLimit($project, $getProjectDB, $executionsRetentionCount);
@@ -792,7 +815,7 @@ class Deletes extends Action
         $delete = function (Database $dbForProject, string $resourceInternalId, string $resourceType) use ($executionsRetentionCount) {
             // get the execution at position `N+1`
             $execution = $dbForProject->findOne('executions', [
-                Query::select(['$createdAt']),
+                Query::select('$createdAt'),
                 Query::equal('resourceInternalId', [$resourceInternalId]),
                 Query::equal('resourceType', [$resourceType]),
                 Query::orderDesc('$createdAt'),
@@ -803,14 +826,19 @@ class Deletes extends Action
                 // delete everything older
                 $cutoffTime = $execution->getAttribute('$createdAt');
 
-                $this->deleteByGroup('executions', [
-                    Query::select([...$this->selects, '$createdAt']),
+                $queries = [
                     Query::equal('resourceInternalId', [$resourceInternalId]),
                     Query::equal('resourceType', [$resourceType]),
                     Query::lessThan('$createdAt', $cutoffTime),
                     Query::orderDesc('$createdAt'),
                     Query::orderDesc(),
-                ], $dbForProject);
+                ];
+
+                foreach ([...$this->selects, '$createdAt'] as $select) {
+                    $queries[] = Query::select($select);
+                }
+
+                $this->deleteByGroup('executions', $queries, $dbForProject);
             }
         };
 
@@ -849,13 +877,19 @@ class Deletes extends Action
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $expired = DateTime::addSeconds(new \DateTime(), -1 * $duration);
 
-        // Delete Sessions
-        $this->deleteByGroup('sessions', [
-            Query::select([...$this->selects, '$createdAt']),
+        $queries = [
+            Query::select('$createdAt'),
             Query::lessThan('$createdAt', $expired),
             Query::orderDesc('$createdAt'),
             Query::orderDesc(),
-        ], $dbForProject);
+        ];
+
+        foreach ($this->selects as $select) {
+            $queries[] = Query::select($select);
+        }
+
+        // Delete Sessions
+        $this->deleteByGroup('sessions', $queries, $dbForProject);
     }
 
     /**
@@ -877,14 +911,22 @@ class Deletes extends Action
 
         Console::info("Deleting CSV export files older than " . $oneWeekAgo);
 
-        $this->deleteByGroup('bucket_' . $bucket->getSequence(), [
-            Query::select([...$this->selects, '$createdAt', 'name', 'path']),
+        $queries = [
+            Query::select('$createdAt'),
+            Query::select('name'),
+            Query::select('path'),
             Query::equal('bucketId', ['default']),
             Query::createdBefore($oneWeekAgo),
             Query::endsWith('name', '.csv'),
             Query::orderDesc('$createdAt'),
             Query::orderDesc(),
-        ], $dbForPlatform, function (Document $file) use ($deviceForFiles) {
+        ];
+
+        foreach ($this->selects as $select) {
+            $queries[] = Query::select($select);
+        }
+
+        $this->deleteByGroup('bucket_' . $bucket->getSequence(), $queries, $dbForPlatform, function (Document $file) use ($deviceForFiles) {
             $path = $file->getAttribute('path');
             if ($deviceForFiles->exists($path)) {
                 $deviceForFiles->delete($path);
@@ -988,12 +1030,18 @@ class Deletes extends Action
          * Delete Logs
          */
         Console::info("Deleting logs for site " . $siteId);
-        $this->deleteByGroup('executions', [
-            Query::select($this->selects),
+
+        $queries = [
             Query::equal('resourceInternalId', [$siteInternalId]),
             Query::equal('resourceType', ['sites']),
             Query::orderAsc()
-        ], $dbForProject);
+        ];
+
+        foreach ($this->selects as $select) {
+            $queries[] = Query::select($select);
+        }
+
+        $this->deleteByGroup('executions', $queries, $dbForProject);
 
         /**
          * Delete VCS Repositories and VCS Comments
@@ -1074,12 +1122,18 @@ class Deletes extends Action
          * Delete Executions
          */
         Console::info("Deleting executions for function " . $functionId);
-        $this->deleteByGroup('executions', [
-            Query::select($this->selects),
+
+        $queries = [
             Query::equal('resourceInternalId', [$functionInternalId]),
             Query::equal('resourceType', ['functions']),
             Query::orderAsc()
-        ], $dbForProject);
+        ];
+
+        foreach ($this->selects as $select) {
+            $queries[] = Query::select($select);
+        }
+
+        $this->deleteByGroup('executions', $queries, $dbForProject);
 
         /**
          * Delete VCS Repositories and VCS Comments
