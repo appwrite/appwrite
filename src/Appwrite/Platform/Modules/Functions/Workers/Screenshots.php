@@ -111,52 +111,28 @@ class Screenshots extends Action
                 throw new \Exception('Bucket not found');
             }
 
-            $routerHost = System::getEnv('_APP_WORKER_SCREENSHOTS_ROUTER', 'http://appwrite');
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+            $routerHost = "$protocol://{$rule->getAttribute('domain')}";
             $configs = [
                 'screenshotLight' => [
-                    'headers' => [ 'x-appwrite-hostname' => $rule->getAttribute('domain') ],
+                    'headers' => [],
                     'url' => $routerHost . '/?appwrite-preview=1&appwrite-theme=light',
                     'theme' => 'light'
                 ],
                 'screenshotDark' => [
-                    'headers' => [ 'x-appwrite-hostname' => $rule->getAttribute('domain') ],
+                    'headers' => [],
                     'url' => $routerHost . '/?appwrite-preview=1&appwrite-theme=dark',
                     'theme' => 'dark'
                 ],
             ];
 
-            $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
-            $apiKey = $jwtObj->encode([
-                'hostnameOverride' => true,
-                'disabledMetrics' => [
-                    METRIC_EXECUTIONS,
-                    METRIC_EXECUTIONS_COMPUTE,
-                    METRIC_EXECUTIONS_MB_SECONDS,
-                    METRIC_NETWORK_REQUESTS,
-                    METRIC_NETWORK_INBOUND,
-                    METRIC_NETWORK_OUTBOUND,
-                    str_replace(["{resourceType}"], [RESOURCE_TYPE_SITES], METRIC_RESOURCE_TYPE_EXECUTIONS),
-                    str_replace(["{resourceType}"], [RESOURCE_TYPE_SITES], METRIC_RESOURCE_TYPE_EXECUTIONS_COMPUTE),
-                    str_replace(["{resourceType}"], [RESOURCE_TYPE_SITES], METRIC_RESOURCE_TYPE_EXECUTIONS_MB_SECONDS),
-                    str_replace(["{resourceType}", "{resourceInternalId}"], [RESOURCE_TYPE_SITES, $site->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS),
-                    str_replace(["{resourceType}", "{resourceInternalId}"], [RESOURCE_TYPE_SITES, $site->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_COMPUTE),
-                    str_replace(["{resourceType}", "{resourceInternalId}"], [RESOURCE_TYPE_SITES, $site->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS),
-                ],
-                'bannerDisabled' => true,
-                'projectCheckDisabled' => true,
-                'previewAuthDisabled' => true,
-                'deploymentStatusIgnored' => true
-            ]);
-
             $screenshotError = null;
-            $screenshots = batch(\array_map(function ($key) use ($configs, $apiKey, $site, $client, &$screenshotError) {
-                return function () use ($key, $configs, $apiKey, $site, $client, &$screenshotError) {
+            $screenshots = batch(\array_map(function ($key) use ($configs, $site, $client, &$screenshotError) {
+                return function () use ($key, $configs, $site, $client, &$screenshotError) {
                     try {
                         $config = $configs[$key];
 
-                        $config['headers'] = \array_merge($config['headers'] ?? [], [
-                            'x-appwrite-key' => API_KEY_DYNAMIC . '_' . $apiKey
-                        ]);
+                        $config['headers'] = $config['headers'] ?? [];
                         $config['sleep'] = 3000;
 
                         $frameworks = Config::getParam('frameworks', []);
