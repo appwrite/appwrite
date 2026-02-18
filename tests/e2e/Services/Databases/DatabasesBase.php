@@ -2090,8 +2090,14 @@ trait DatabasesBase
             $this->getIndexAttributesParam() => ['description', 'tagline'],
         ]);
 
-        $this->assertEquals(400, $tooLong['headers']['status-code']);
-        $this->assertStringContainsString('Index length is longer than the maximum', $tooLong['body']['message']);
+        if ($this->getMaxIndexLength() < 1024) {
+            // Only SQL-based adapters (MariaDB, PostgreSQL) enforce byte-level index length limits
+            $this->assertEquals(400, $tooLong['headers']['status-code']);
+            $this->assertStringContainsString('Index length is longer than the maximum', $tooLong['body']['message']);
+        } else {
+            // MongoDB (maxIndexLength=1024) doesn't exceed the limit with 512+512
+            $this->assertEquals(202, $tooLong['headers']['status-code']);
+        }
 
         $fulltextArray = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
@@ -5222,7 +5228,7 @@ trait DatabasesBase
             $this->getIndexAttributesParam() => [$attribute['body']['key']],
         ]);
 
-        $this->assertEquals(202, $index['headers']['status-code']);
+        $this->assertEquals(202, $index['headers']['status-code'], 'Index creation failed: ' . json_encode($index['body'] ?? []));
         $this->assertEquals('key_attribute', $index['body']['key']);
 
         $this->waitForIndex($databaseId, $collectionId, 'key_attribute');
