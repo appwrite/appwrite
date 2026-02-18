@@ -7552,7 +7552,7 @@ trait DatabasesBase
         $collectionId = $collection['body']['$id'];
 
         // Create multiple attributes
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/string', array_merge([
+        $nameAttr = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -7561,8 +7561,9 @@ trait DatabasesBase
             'size' => 256,
             'required' => true,
         ]);
+        $this->assertEquals(202, $nameAttr['headers']['status-code']);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/point', array_merge([
+        $centerAttr = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/point', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -7570,8 +7571,9 @@ trait DatabasesBase
             'key' => 'center',
             'required' => true,
         ]);
+        $this->assertEquals(202, $centerAttr['headers']['status-code']);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/line', array_merge([
+        $boundaryAttr = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/line', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -7579,8 +7581,9 @@ trait DatabasesBase
             'key' => 'boundary',
             'required' => false,
         ]);
+        $this->assertEquals(202, $boundaryAttr['headers']['status-code']);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/polygon', array_merge([
+        $coverageAttr = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/polygon', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -7588,6 +7591,7 @@ trait DatabasesBase
             'key' => 'coverage',
             'required' => true,
         ]);
+        $this->assertEquals(202, $coverageAttr['headers']['status-code']);
 
         $this->waitForAllAttributes($databaseId, $collectionId);
 
@@ -8983,8 +8987,8 @@ trait DatabasesBase
             $this->getIndexAttributesParam() => ['loc'],
         ]);
 
-        $this->waitForIndex($databaseId, $collectionId, 'idx_loc');
         $this->assertEquals(202, $indexResponse['headers']['status-code']);
+        $this->waitForIndex($databaseId, $collectionId, 'idx_loc');
 
 
         // Two points roughly ~1000 meters apart by latitude delta (~0.009 deg ≈ 1km)
@@ -9567,7 +9571,7 @@ trait DatabasesBase
 
         $this->waitForAllAttributes($databaseId, $books['body']['$id']);
 
-        $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $books['body']['$id']), array_merge([
+        $ftsIndex = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $books['body']['$id']), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -9576,6 +9580,7 @@ trait DatabasesBase
             'type' => Database::INDEX_FULLTEXT,
             $this->getIndexAttributesParam() => ['description'],
         ]);
+        $this->assertEquals(202, $ftsIndex['headers']['status-code']);
 
         $this->waitForIndex($databaseId, $books['body']['$id'], 'fts_description');
 

@@ -71,7 +71,7 @@ trait TransactionsBase
         self::$sharedCollectionId = $collection['body']['$id'];
 
         // Create a standard 'name' attribute
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, self::$sharedCollectionId, "string", null), array_merge([
+        $nameAttr = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, self::$sharedCollectionId, "string", null), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -80,6 +80,7 @@ trait TransactionsBase
             'size' => 256,
             'required' => true,
         ]);
+        $this->assertEquals(202, $nameAttr['headers']['status-code']);
 
         $this->waitForAllAttributes($databaseId, self::$sharedCollectionId);
 
@@ -818,7 +819,7 @@ trait TransactionsBase
         $collectionId = $collection['body']['$id'];
 
         // Create attribute
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "integer", null), array_merge([
+        $counterAttr = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "integer", null), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -828,6 +829,7 @@ trait TransactionsBase
             'min' => 0,
             'max' => 1000000,
         ]);
+        $this->assertEquals(202, $counterAttr['headers']['status-code']);
 
         $this->waitForAllAttributes($databaseId, $collectionId);
 
