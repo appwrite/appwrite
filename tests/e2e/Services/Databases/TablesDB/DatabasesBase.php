@@ -2383,8 +2383,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('Invalid query method: equal', $response['body']['message']);
-
+        $this->assertEquals('Only Select queries are permitted', $response['body']['message']);
 
         // Query by sequence
         $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $row['$tableId'] . '/rows', array_merge([

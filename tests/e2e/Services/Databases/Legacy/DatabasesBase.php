@@ -2456,10 +2456,10 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('Invalid query method: equal', $response['body']['message']);
+        $this->assertEquals('Only Select queries are permitted', $response['body']['message']);
 
         // Query by sequence
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $document['$collectionId'] . '/documents/' . $document['$id'], array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $document['$collectionId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
