@@ -4,9 +4,6 @@ env:
   COMPOSE_FILE: docker-compose.yml
 
 on:
-  pull_request:
-    paths:
-      - 'app/config/specs/*-latest-console.json'
   workflow_dispatch:
     inputs:
       platform:
@@ -42,6 +39,13 @@ jobs:
         run: |
           docker compose build
           docker compose up -d
+
+      - name: Generate Specs
+        run: |
+          docker compose exec appwrite specs --version=latest --mode=normal --git=no
+
+      - name: Generate SDK
+        run: |
           docker compose exec appwrite sdks --platform=${{ steps.set-sdk.outputs.platform }} --sdk=${{ steps.set-sdk.outputs.sdk_type }} --version=latest --git=no
           sudo chown -R $USER:$USER ./app/sdks/${{ steps.set-sdk.outputs.platform }}-${{ steps.set-sdk.outputs.sdk_type }}
           
@@ -50,7 +54,7 @@ jobs:
           node-version: 20
 
       - name: Build and Publish SDK
-        working-directory: ./app/sdks/console-web
+        working-directory: ./app/sdks/${{ steps.set-sdk.outputs.platform }}-${{ steps.set-sdk.outputs.sdk_type }}
         run: |
             npm install
             npm run build
