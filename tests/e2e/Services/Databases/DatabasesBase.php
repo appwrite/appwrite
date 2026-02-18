@@ -1140,6 +1140,8 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $attribute['headers']['status-code']);
+        $maxLength = $this->getMaxIndexLength();
+        $this->assertStringContainsString('Index length is longer than the maximum: '.$maxLength, $attribute['body']['message']);
     }
 
     public function testUpdateAttributeEnum(): void
@@ -1152,10 +1154,6 @@ trait DatabasesBase
             'databaseId' => ID::unique(),
             'name' => 'Test Database 2'
         ]);
-
-        $maxLength = $this->getMaxIndexLength();
-
-        $this->assertStringContainsString('Index length is longer than the maximum: '.$maxLength, $attribute['body']['message']);
 
         $players = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($database['body']['$id']), array_merge([
             'content-type' => 'application/json',
