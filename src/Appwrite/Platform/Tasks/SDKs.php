@@ -77,11 +77,13 @@ class SDKs extends Action
             ->param('release', null, new Nullable(new WhiteList(['yes', 'no'])), 'Should we create releases?', optional: true)
             ->param('commit', null, new Nullable(new WhiteList(['yes', 'no'])), 'Actually create releases (yes) or dry-run (no)?', optional: true)
             ->param('sdks', null, new Nullable(new Text(256)), 'Selected SDKs', optional: true)
+            ->param('mode', 'full', new WhiteList(['full', 'examples']), 'Generation mode: full (default) or examples (only generate and copy examples)', optional: true)
             ->callback($this->action(...));
     }
 
-    public function action(?string $platform, ?string $sdk, ?string $version, ?string $git, ?string $message, ?string $release, ?string $commit, ?string $sdks): void
+    public function action(?string $platform, ?string $sdk, ?string $version, ?string $git, ?string $message, ?string $release, ?string $commit, ?string $sdks, string $mode): void
     {
+        $examplesOnly = ($mode === 'examples');
         $selectedPlatform = $platform;
         $selectedSDK = $sdk;
 
@@ -99,7 +101,7 @@ class SDKs extends Action
         $createRelease = ($release === 'yes');
         $commitRelease =  ($commit === 'yes');
 
-        if (!$createRelease) {
+        if (!$createRelease && !$examplesOnly) {
             $git ??= Console::confirm('Should we use git push? (yes/no)');
             $git = ($git === 'yes');
 
@@ -108,6 +110,9 @@ class SDKs extends Action
             if ($git) {
                 $message ??= Console::confirm('Please enter your commit message:');
             }
+        } elseif ($examplesOnly) {
+            $git = false;
+            $prUrls = [];
         }
 
         if (!\in_array($version, [
@@ -293,7 +298,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         throw new \Exception('Language "' . $language['key'] . '" not supported');
                 }
 
-                if ($createRelease) {
+                if ($createRelease && !$examplesOnly) {
                     $releaseVersion = $language['version'];
 
                     $repoName = $language['gitUserName'] . '/' . $language['gitRepoName'];
@@ -403,7 +408,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     continue;
                 }
 
-                Console::info("Generating {$language['name']} SDK...");
+                Console::info($examplesOnly
+                    ? "Generating examples for {$language['name']} SDK..."
+                    : "Generating {$language['name']} SDK...");
 
                 $sdk = new SDK($config, new Swagger2($spec));
 
