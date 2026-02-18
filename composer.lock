@@ -3797,16 +3797,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "5.2.1",
+            "version": "5.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "adfdf201144353a1d2ce14bb197ab746079894e0"
+                "reference": "5e49f32ebb6e40a78209231564c40e5068810429"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/adfdf201144353a1d2ce14bb197ab746079894e0",
-                "reference": "adfdf201144353a1d2ce14bb197ab746079894e0",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/5e49f32ebb6e40a78209231564c40e5068810429",
+                "reference": "5e49f32ebb6e40a78209231564c40e5068810429",
                 "shasum": ""
             },
             "require": {
@@ -3849,9 +3849,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/5.2.1"
+                "source": "https://github.com/utopia-php/database/tree/5.3.0"
             },
-            "time": "2026-02-16T11:01:13+00:00"
+            "time": "2026-02-17T11:50:01+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -5385,16 +5385,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.9.2",
+            "version": "1.9.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "74de906ea5051030c5299a5d4aa74d963a531130"
+                "reference": "5a8a304e404c84539f3ac6562c736f8c7ef2bef2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/74de906ea5051030c5299a5d4aa74d963a531130",
-                "reference": "74de906ea5051030c5299a5d4aa74d963a531130",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/5a8a304e404c84539f3ac6562c736f8c7ef2bef2",
+                "reference": "5a8a304e404c84539f3ac6562c736f8c7ef2bef2",
                 "shasum": ""
             },
             "require": {
@@ -5430,9 +5430,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.9.2"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.9.3"
             },
-            "time": "2026-02-16T06:59:54+00:00"
+            "time": "2026-02-17T11:48:05+00:00"
         },
         {
             "name": "brianium/paratest",
@@ -6778,16 +6778,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "12.5.11",
+            "version": "12.5.12",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "9b518cb40f9474572c9f0178e96ff3dc1cf02bf1"
+                "reference": "418e06b3b46b0d54bad749ff4907fc7dfb530199"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/9b518cb40f9474572c9f0178e96ff3dc1cf02bf1",
-                "reference": "9b518cb40f9474572c9f0178e96ff3dc1cf02bf1",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/418e06b3b46b0d54bad749ff4907fc7dfb530199",
+                "reference": "418e06b3b46b0d54bad749ff4907fc7dfb530199",
                 "shasum": ""
             },
             "require": {
@@ -6856,7 +6856,7 @@
             "support": {
                 "issues": "https://github.com/sebastianbergmann/phpunit/issues",
                 "security": "https://github.com/sebastianbergmann/phpunit/security/policy",
-                "source": "https://github.com/sebastianbergmann/phpunit/tree/12.5.11"
+                "source": "https://github.com/sebastianbergmann/phpunit/tree/12.5.12"
             },
             "funding": [
                 {
@@ -6880,7 +6880,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-02-10T12:32:02+00:00"
+            "time": "2026-02-16T08:34:36+00:00"
         },
         {
             "name": "psr/cache",

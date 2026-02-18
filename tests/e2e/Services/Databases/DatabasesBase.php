@@ -2198,11 +2198,13 @@ trait DatabasesBase
         ]), []);
 
         $this->assertIsArray($collectionResponse['body']['indexes']);
-        $this->assertCount(4, $collectionResponse['body']['indexes']);
-        $this->assertEquals($titleIndex['body']['key'], $collectionResponse['body']['indexes'][0]['key']);
-        $this->assertEquals($releaseYearIndex['body']['key'], $collectionResponse['body']['indexes'][1]['key']);
-        $this->assertEquals($releaseWithDate1['body']['key'], $collectionResponse['body']['indexes'][2]['key']);
-        $this->assertEquals($releaseWithDate2['body']['key'], $collectionResponse['body']['indexes'][3]['key']);
+        $expectedIndexCount = $this->getMaxIndexLength() < 1024 ? 4 : 5; // MongoDB accepts tooLong index
+        $this->assertCount($expectedIndexCount, $collectionResponse['body']['indexes']);
+        $indexKeys = array_column($collectionResponse['body']['indexes'], 'key');
+        $this->assertContains($titleIndex['body']['key'], $indexKeys);
+        $this->assertContains($releaseYearIndex['body']['key'], $indexKeys);
+        $this->assertContains($releaseWithDate1['body']['key'], $indexKeys);
+        $this->assertContains($releaseWithDate2['body']['key'], $indexKeys);
 
         $this->assertEventually(function () use ($databaseId, $collectionId) {
             $collResp = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $collectionId), array_merge([
