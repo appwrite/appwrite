@@ -8,6 +8,7 @@ use Appwrite\Event\Realtime;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Template\Template;
+use Utopia\Compression\Compression;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -39,7 +40,6 @@ use Utopia\Migration\Sources\Supabase;
 use Utopia\Migration\Transfer;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
-use Utopia\Storage\Compression\Compression;
 use Utopia\Storage\Device;
 use Utopia\System\System;
 
@@ -778,6 +778,7 @@ class Migrations extends Action
         ];
 
         $queueForMails
+            ->setProject($project)
             ->setSubject($subject)
             ->setPreview($preview)
             ->setBody($emailBody)

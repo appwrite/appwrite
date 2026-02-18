@@ -34,6 +34,7 @@ use Appwrite\Utopia\View;
 use Executor\Executor;
 use MaxMind\Db\Reader;
 use Swoole\Http\Request as SwooleRequest;
+use Swoole\Table;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -1073,21 +1074,20 @@ Http::init()
    ->inject('queueForCertificates')
    ->inject('platform')
     ->inject('authorization')
-   ->action(function (Request $request, Document $console, Database $dbForPlatform, Certificate $queueForCertificates, array $platform, Authorization $authorization) {
+    ->inject('certifiedDomains')
+   ->action(function (Request $request, Document $console, Database $dbForPlatform, Certificate $queueForCertificates, array $platform, Authorization $authorization, Table $certifiedDomains) {
        $hostname = $request->getHostname();
-       $cache = Config::getParam('hostnames', []);
        $platformHostnames = $platform['hostnames'] ?? [];
 
        // 1. Cache hit
-       if (array_key_exists($hostname, $cache)) {
+       if ($certifiedDomains->exists(md5($hostname))) {
            return;
        }
 
        // 2. Domain validation
        $domain = new Domain(!empty($hostname) ? $hostname : '');
        if (empty($domain->get()) || !$domain->isKnown() || $domain->isTest()) {
-           $cache[$domain->get()] = false;
-           Config::setParam('hostnames', $cache);
+           $certifiedDomains->set(md5($domain->get()), ['value' => 0]);
            return;
        }
 
@@ -1101,7 +1101,7 @@ Http::init()
        }
 
        // 4. Check/create rule (requires DB access)
-       $authorization->skip(function () use ($dbForPlatform, $domain, $console, $queueForCertificates, &$cache) {
+       $authorization->skip(function () use ($dbForPlatform, $domain, $console, $queueForCertificates, $certifiedDomains) {
            try {
                // TODO: (@Meldiron) Remove after 1.7.x migration
                $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
@@ -1164,8 +1164,7 @@ Http::init()
            } catch (Duplicate $e) {
                Console::info('Certificate already exists');
            } finally {
-               $cache[$domain->get()] = true;
-               Config::setParam('hostnames', $cache);
+               $certifiedDomains->set(md5($domain->get()), ['value' => 1]);
            }
        });
    });

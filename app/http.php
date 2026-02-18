@@ -37,11 +37,19 @@ use Utopia\System\System;
 
 const DOMAIN_SYNC_TIMER = 30; // 30 seconds
 
-$files = null;
+$files = new Files();
+$files->load(__DIR__ . '/../public');
 
-$domains = new Table(1_000_000); // 1 million rows
-$domains->column('value', Table::TYPE_INT, 1);
-$domains->create();
+$riskyDomains = new Table(100_000);
+$riskyDomains->column('value', Table::TYPE_INT, 1);
+$riskyDomains->create();
+
+$certifiedDomains = new Table(100_000);
+$certifiedDomains->column('value', Table::TYPE_INT, 1);
+$certifiedDomains->create();
+
+Http::setResource('riskyDomains', fn () => $riskyDomains);
+Http::setResource('certifiedDomains', fn () => $certifiedDomains);
 
 $http = new Server(
     host: "0.0.0.0",
@@ -70,7 +78,7 @@ $totalWorkers = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intva
 function dispatch(Server $server, int $fd, int $type, $data = null): int
 {
     $resolveWorkerId = function (Server $server, $data = null) {
-        global $totalWorkers, $domains;
+        global $totalWorkers, $riskyDomains;
 
         // If data is not set we can send request to any worker
         // first we try to pick idle worker, if not we randomly pick a worker
@@ -102,7 +110,7 @@ function dispatch(Server $server, int $fd, int $type, $data = null): int
         $risky = false;
         if (str_starts_with($request, 'POST') && str_contains($request, '/executions')) {
             $risky = true;
-        } elseif ($domains->get(md5($domain), 'value') === 1) {
+        } elseif ($riskyDomains->get(md5($domain), 'value') === 1) {
             // executions request coming from custom domain
             $risky = true;
         } else {
@@ -164,11 +172,7 @@ $http
         Constant::OPTION_TASK_WORKER_NUM => 1, // required for the task to fetch domains background
     ]);
 
-$http->on(Constant::EVENT_WORKER_START, function ($server, $workerId) use (&$files) {
-    if (!$server->taskworker) {
-        $files = new Files();
-        $files->load(__DIR__ . '/../public');
-    }
+$http->on(Constant::EVENT_WORKER_START, function ($server, $workerId) {
 });
 
 $http->on(Constant::EVENT_WORKER_STOP, function ($server, $workerId) {
@@ -497,7 +501,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $tot
     });
 });
 
-$http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register, &$files) {
+$http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register, $files) {
     Span::init('http.request');
 
     Http::setResource('swooleRequest', fn () => $swooleRequest);
@@ -508,7 +512,7 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
 
     Span::add('http.method', $request->getMethod());
 
-    if ($files instanceof Files && $files->isFileLoaded($request->getURI())) {
+    if ($files->isFileLoaded($request->getURI())) {
         $time = (60 * 60 * 24 * 45); // 45 days cache
 
         $response
@@ -627,7 +631,7 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
 });
 
 // Fetch domains every `DOMAIN_SYNC_TIMER` seconds and update in the memory
-$http->on(Constant::EVENT_TASK, function () use ($register, $domains) {
+$http->on(Constant::EVENT_TASK, function () use ($register) {
     $lastSyncUpdate = null;
     $pools = $register->get('pools');
     Http::setResource('pools', fn () => $pools);
@@ -636,7 +640,10 @@ $http->on(Constant::EVENT_TASK, function () use ($register, $domains) {
     /** @var Utopia\Database\Database $dbForPlatform */
     $dbForPlatform = $app->getResource('dbForPlatform');
 
-    Timer::tick(DOMAIN_SYNC_TIMER * 1000, function () use ($dbForPlatform, $domains, &$lastSyncUpdate, $app) {
+    /** @var Table $riskyDomains */
+    $riskyDomains = $app->getResource('riskyDomains');
+
+    Timer::tick(DOMAIN_SYNC_TIMER * 1000, function () use ($dbForPlatform, $riskyDomains, &$lastSyncUpdate, $app) {
         try {
             $time = DateTime::now();
             $limit = 1000;
@@ -689,7 +696,7 @@ $http->on(Constant::EVENT_TASK, function () use ($register, $domains) {
                         continue;
                     }
 
-                    $domains->set(md5($domain), ['value' => 1]);
+                    $riskyDomains->set(md5($domain), ['value' => 1]);
                 }
                 $latestDocument = !empty(array_key_last($results)) ? $results[array_key_last($results)] : null;
             }

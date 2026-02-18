@@ -466,6 +466,8 @@ class Response extends SwooleResponse
 
                 foreach ($data[$key] as $index => $item) {
                     if ($item instanceof Document) {
+                        $ruleType = null;
+
                         if (\is_array($rule['type'])) {
                             foreach ($rule['type'] as $type) {
                                 $condition = false;
@@ -484,7 +486,7 @@ class Response extends SwooleResponse
                             $ruleType = $rule['type'];
                         }
 
-                        if (!self::hasModel($ruleType)) {
+                        if ($ruleType === null || !self::hasModel($ruleType)) {
                             throw new Exception('Missing model for rule: ' . $ruleType);
                         }
 
