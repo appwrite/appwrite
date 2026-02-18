@@ -37,7 +37,7 @@ class Row extends Any
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('$sequence', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_ID,
                 'description' => 'Row sequence ID.',
                 'default' => '',
                 'example' => '1',
@@ -83,7 +83,7 @@ class Row extends Any
         $document->removeAttribute('$collection');
         $document->removeAttribute('$tenant');
         $sequence = $document->getAttribute('$sequence', '');
-        $document->setAttribute('$sequence', (string)$sequence);
+        $document->setAttribute('$sequence', $sequence);
 
         foreach ($document->getAttributes() as $column) {
             if (\is_array($column)) {

@@ -37,7 +37,7 @@ class Document extends Any
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('$sequence', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_ID,
                 'description' => 'Document sequence ID.',
                 'default' => '',
                 'example' => '1',
@@ -85,7 +85,7 @@ class Document extends Any
 
         if (!$document->isEmpty()) {
             $sequence = $document->getAttribute('$sequence', '');
-            $document->setAttribute('$sequence', (string)$sequence);
+            $document->setAttribute('$sequence', $sequence);
         }
 
         foreach ($document->getAttributes() as $attribute) {
