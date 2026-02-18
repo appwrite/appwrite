@@ -111,7 +111,12 @@ class Screenshots extends Action
                 throw new \Exception('Bucket not found');
             }
 
-            $routerHost = System::getEnv('_APP_WORKER_SCREENSHOTS_ROUTER', 'http://appwrite');
+            $routerHost = System::getEnv('_APP_WORKER_SCREENSHOTS_ROUTER', '');
+            if (empty($routerHost)) {
+                $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+                $routerHost = "$protocol://{$rule->getAttribute('domain')}";
+            }
+
             $configs = [
                 'screenshotLight' => [
                     'headers' => [ 'x-appwrite-hostname' => $rule->getAttribute('domain') ],

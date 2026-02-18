@@ -1013,16 +1013,6 @@ class Builds extends Action
                 Console::log('Deployment activated');
             }
 
-            /** Screenshot site */
-            if ($resource->getCollection() === 'sites') {
-                $queueForScreenshots
-                    ->setDeploymentId($deployment->getId())
-                    ->setProject($project)
-                    ->trigger();
-
-                Console::log('Site screenshot queued');
-            }
-
             $this->afterDeploymentSuccess(
                 $project,
                 $deployment,
@@ -1121,6 +1111,16 @@ class Builds extends Action
                     ->setAttribute('schedule', $resource->getAttribute('schedule'))
                     ->setAttribute('active', !empty($resource->getAttribute('schedule')) && !empty($resource->getAttribute('deploymentId')));
                 $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule);
+            }
+
+            /** Screenshot site */
+            if ($resource->getCollection() === 'sites') {
+                $queueForScreenshots
+                    ->setDeploymentId($deployment->getId())
+                    ->setProject($project)
+                    ->trigger();
+
+                Console::log('Site screenshot queued');
             }
 
             Console::info('Deployment action finished');
