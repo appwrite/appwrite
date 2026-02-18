@@ -72,6 +72,7 @@ class Create extends Action
 
     public function action(string $domain, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform, array $platform, Log $log)
     {
+        $domain = \strtolower($domain);
         $this->validateDomainRestrictions($domain, $platform);
 
         // TODO: (@Meldiron) Remove after 1.7.x migration

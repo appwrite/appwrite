@@ -77,6 +77,7 @@ class Create extends Action
 
     public function action(string $domain, string $functionId, string $branch, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform, Database $dbForProject, array $platform, Log $log)
     {
+        $domain = \strtolower($domain);
         $this->validateDomainRestrictions($domain, $platform);
 
         $function = $dbForProject->getDocument('functions', $functionId);
