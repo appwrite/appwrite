@@ -3811,6 +3811,11 @@ interface RowEditDrawerProps {
   isSaving?: boolean
 }
 
+function formatDateTimeLocalForInput(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
 function RowEditDrawer({
   open,
   onOpenChange,
@@ -3877,6 +3882,8 @@ function RowEditDrawer({
         // Explicitly preserve null values
         initialData[key] = value === null || value === undefined ? null : value
       })
+      initialData['$createdAt'] = row.$createdAt ?? null
+      initialData['$updatedAt'] = row.$updatedAt ?? null
       setFormData(initialData)
       fieldRefs.current = {}
       // Reset custom row ID when editing existing row
@@ -3903,6 +3910,8 @@ function RowEditDrawer({
           }
         }
       })
+      initialData['$createdAt'] = new Date().toISOString()
+      initialData['$updatedAt'] = new Date().toISOString()
       setFormData(initialData)
       fieldRefs.current = {}
       // Reset custom row ID when creating new row
@@ -4033,7 +4042,23 @@ function RowEditDrawer({
         ? rowPermissions
         : undefined
       : rowPermissions // Always pass for updates, even if empty
-    onSave(idToSave, formData, customRowId, permissionsToSave)
+    const now = new Date().toISOString()
+    const payload = { ...formData }
+    if (
+      payload['$createdAt'] === null ||
+      payload['$createdAt'] === undefined ||
+      payload['$createdAt'] === ''
+    ) {
+      payload['$createdAt'] = now
+    }
+    if (
+      payload['$updatedAt'] === null ||
+      payload['$updatedAt'] === undefined ||
+      payload['$updatedAt'] === ''
+    ) {
+      payload['$updatedAt'] = now
+    }
+    onSave(idToSave, payload, customRowId, permissionsToSave)
     // Don't close drawer here - wait for mutation to complete
   }
 
@@ -4042,6 +4067,7 @@ function RowEditDrawer({
     value: string | number | boolean | unknown[] | null,
     columnInfo?: unknown,
   ): string => {
+    if (key === '$createdAt' || key === '$updatedAt') return 'datetime'
     // Use column type from metadata if available
     if (columnInfo?.type) {
       return columnInfo.type
@@ -4256,12 +4282,24 @@ function RowEditDrawer({
                     </h4>
                     <div className="space-y-4">
                       {(isCreateMode
-                        ? Object.keys(formData)
-                        : Object.keys(row.data)
+                        ? [
+                            '$createdAt',
+                            '$updatedAt',
+                            ...Object.keys(formData).filter(
+                              (k) => k !== '$createdAt' && k !== '$updatedAt',
+                            ),
+                          ]
+                        : [
+                            '$createdAt',
+                            '$updatedAt',
+                            ...Object.keys(row.data),
+                          ]
                       ).map((key) => {
                         const value = isCreateMode
                           ? formData[key]
-                          : row.data[key]
+                          : key === '$createdAt' || key === '$updatedAt'
+                            ? (row as RowData)[key as keyof RowData]
+                            : row.data[key]
                         const columnInfo = getColumnInfo(key)
                         const fieldType = getFieldType(
                           key,
@@ -4600,9 +4638,9 @@ function RowEditDrawer({
                                 type="datetime-local"
                                 value={
                                   currentValue
-                                    ? new Date(currentValue as string)
-                                        .toISOString()
-                                        .slice(0, 16)
+                                    ? formatDateTimeLocalForInput(
+                                        new Date(currentValue as string),
+                                      )
                                     : ''
                                 }
                                 ref={(el) => {
