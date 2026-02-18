@@ -489,11 +489,20 @@ class Specs extends Action
                 Console::success("Regenerated SDK examples for version {$version}");
             }
 
-            // Copy SDK examples for this version
+            // Copy SDK examples for this version, filtered by PR platforms
             if (\is_dir($examplesDir)) {
-                \exec('mkdir -p ' . \escapeshellarg("{$target}/examples/{$version}") . ' && \
-                    cp -r ' . \escapeshellarg($examplesDir) . '/. ' . \escapeshellarg("{$target}/examples/{$version}/"));
-                Console::success("Copied SDK examples for version {$version} to repo: examples/{$version}/");
+                \exec('mkdir -p ' . \escapeshellarg("{$target}/examples/{$version}"));
+                $exampleFolders = \glob($examplesDir . '/*', GLOB_ONLYDIR);
+                foreach ($exampleFolders as $folder) {
+                    $folderName = \basename($folder);
+                    $platform = \strstr($folderName, '-', true);
+                    if (!\in_array($platform, $prPlatforms, true)) {
+                        Console::info("Skipping SDK examples for platform '{$platform}': examples/{$version}/{$folderName}");
+                        continue;
+                    }
+                    \exec('cp -r ' . \escapeshellarg($folder) . ' ' . \escapeshellarg("{$target}/examples/{$version}/"));
+                    Console::success("Copied SDK examples to repo: examples/{$version}/{$folderName}");
+                }
             } else {
                 Console::warning("No SDK examples found at: {$examplesDir}. Skipping examples copy.");
             }
