@@ -2726,7 +2726,7 @@ trait DatabasesBase
             ]);
 
             $this->assertEquals(1, $documents['body']['total']);
-            $this->assertEquals('Library 1', $documents['body']['documents'][0]['library']['libraryName']);
+            $this->assertEquals('Library 1', $documents['body'][$this->getRecordResource()][0]['library']['libraryName']);
 
 
             $person1 = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $person['body']['$id'], $documentId), array_merge([
@@ -2764,7 +2764,7 @@ trait DatabasesBase
             ]);
 
             $this->assertEquals(1, $documents['body']['total']);
-            $this->assertEquals('Library 2', $documents['body']['documents'][0]['library']['libraryName']);
+            $this->assertEquals('Library 2', $documents['body'][$this->getRecordResource()][0]['library']['libraryName']);
 
 
             // data should get added
@@ -2961,12 +2961,13 @@ trait DatabasesBase
                     ],
                 ]);
                 $this->assertGreaterThanOrEqual(1, $documents['body']['total']);
-                $documentsDetails = $documents['body']['documents'];
+                $recordResource = $this->getRecordResource();
+                $documentsDetails = $documents['body'][$recordResource];
                 foreach ($documentsDetails as $doc) {
                     $this->assertCount(3, $doc['$permissions']);
                 }
                 $found = false;
-                foreach ($documents['body']['documents'] as $doc) {
+                foreach ($documents['body'][$recordResource] as $doc) {
                     if (isset($doc['library']['libraryName']) && $doc['library']['libraryName'] === 'Library 3') {
                         $found = true;
                         break;
