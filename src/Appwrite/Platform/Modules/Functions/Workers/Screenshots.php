@@ -7,6 +7,7 @@ use Appwrite\Event\Realtime;
 use Appwrite\Permission;
 use Appwrite\Role;
 use Exception;
+use Utopia\Compression\Compression;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -16,7 +17,6 @@ use Utopia\Database\Query;
 use Utopia\Fetch\Client as FetchClient;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
-use Utopia\Storage\Compression\Compression;
 use Utopia\Storage\Device;
 use Utopia\System\System;
 
@@ -111,15 +111,16 @@ class Screenshots extends Action
                 throw new \Exception('Bucket not found');
             }
 
+            $routerHost = System::getEnv('_APP_WORKER_SCREENSHOTS_ROUTER', 'http://appwrite');
             $configs = [
                 'screenshotLight' => [
                     'headers' => [ 'x-appwrite-hostname' => $rule->getAttribute('domain') ],
-                    'url' => 'http://appwrite/?appwrite-preview=1&appwrite-theme=light',
+                    'url' => $routerHost . '/?appwrite-preview=1&appwrite-theme=light',
                     'theme' => 'light'
                 ],
                 'screenshotDark' => [
                     'headers' => [ 'x-appwrite-hostname' => $rule->getAttribute('domain') ],
-                    'url' => 'http://appwrite/?appwrite-preview=1&appwrite-theme=dark',
+                    'url' => $routerHost . '/?appwrite-preview=1&appwrite-theme=dark',
                     'theme' => 'dark'
                 ],
             ];

@@ -35,6 +35,7 @@ use Appwrite\Utopia\View;
 use Executor\Executor;
 use MaxMind\Db\Reader;
 use Swoole\Http\Request as SwooleRequest;
+use Swoole\Table;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -53,6 +54,7 @@ use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Service;
+use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Validator;
 use Utopia\Validator\Text;
@@ -631,8 +633,15 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 $headerOverrides['x-appwrite-log-id'] = $execution->getId();
             }
 
+            // Headers that must have single values (RFC 7230)
+            $singleValueHeaders = ['content-length', 'content-type'];
+
             foreach ($headerOverrides as $key => $value) {
-                if (\array_key_exists($key, $executionResponse['headers'])) {
+                $keyLower = \strtolower($key);
+                if (\in_array($keyLower, $singleValueHeaders)) {
+                    // Single-value headers must replace, not append
+                    $executionResponse['headers'][$key] = $value;
+                } elseif (\array_key_exists($key, $executionResponse['headers'])) {
                     if (\is_array($executionResponse['headers'][$key])) {
                         $executionResponse['headers'][$key][] = $value;
                     } else {
@@ -1069,21 +1078,20 @@ Http::init()
    ->inject('queueForCertificates')
    ->inject('platform')
     ->inject('authorization')
-   ->action(function (Request $request, Document $console, Database $dbForPlatform, Certificate $queueForCertificates, array $platform, Authorization $authorization) {
+    ->inject('certifiedDomains')
+   ->action(function (Request $request, Document $console, Database $dbForPlatform, Certificate $queueForCertificates, array $platform, Authorization $authorization, Table $certifiedDomains) {
        $hostname = $request->getHostname();
-       $cache = Config::getParam('hostnames', []);
        $platformHostnames = $platform['hostnames'] ?? [];
 
        // 1. Cache hit
-       if (array_key_exists($hostname, $cache)) {
+       if ($certifiedDomains->exists(md5($hostname))) {
            return;
        }
 
        // 2. Domain validation
        $domain = new Domain(!empty($hostname) ? $hostname : '');
        if (empty($domain->get()) || !$domain->isKnown() || $domain->isTest()) {
-           $cache[$domain->get()] = false;
-           Config::setParam('hostnames', $cache);
+           $certifiedDomains->set(md5($domain->get()), ['value' => 0]);
            return;
        }
 
@@ -1097,7 +1105,7 @@ Http::init()
        }
 
        // 4. Check/create rule (requires DB access)
-       $authorization->skip(function () use ($dbForPlatform, $domain, $console, $queueForCertificates, &$cache) {
+       $authorization->skip(function () use ($dbForPlatform, $domain, $console, $queueForCertificates, $certifiedDomains) {
            try {
                // TODO: (@Meldiron) Remove after 1.7.x migration
                $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
@@ -1160,8 +1168,7 @@ Http::init()
            } catch (Duplicate $e) {
                Console::info('Certificate already exists');
            } finally {
-               $cache[$domain->get()] = true;
-               Config::setParam('hostnames', $cache);
+               $certifiedDomains->set(md5($domain->get()), ['value' => 1]);
            }
        });
    });
@@ -1242,17 +1249,7 @@ Http::error()
         $trace = $error->getTrace();
 
         if (php_sapi_name() === 'cli') {
-            Console::error('[Error] Timestamp: ' . date('c', time()));
-
-            if ($route) {
-                Console::error('[Error] Method: ' . $route->getMethod());
-                Console::error('[Error] URL: ' . $route->getPath());
-            }
-
-            Console::error('[Error] Type: ' . get_class($error));
-            Console::error('[Error] Message: ' . $message);
-            Console::error('[Error] File: ' . $file);
-            Console::error('[Error] Line: ' . $line);
+            Span::error($error);
         }
 
         switch ($class) {

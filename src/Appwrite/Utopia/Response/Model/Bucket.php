@@ -4,7 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
-use Utopia\Storage\Compression\Compression;
+use Utopia\Compression\Compression;
 
 class Bucket extends Model
 {

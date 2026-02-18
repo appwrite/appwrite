@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\SDK\Language\AgentSkills;
 use Appwrite\SDK\Language\Android;
 use Appwrite\SDK\Language\Apple;
 use Appwrite\SDK\Language\CLI;
@@ -51,6 +52,7 @@ class SDKs extends Action
         'graphql',
         'rest',
         'markdown',
+        'agent-skills'
     ];
 
     public static function getName(): string
@@ -75,11 +77,13 @@ class SDKs extends Action
             ->param('release', null, new Nullable(new WhiteList(['yes', 'no'])), 'Should we create releases?', optional: true)
             ->param('commit', null, new Nullable(new WhiteList(['yes', 'no'])), 'Actually create releases (yes) or dry-run (no)?', optional: true)
             ->param('sdks', null, new Nullable(new Text(256)), 'Selected SDKs', optional: true)
+            ->param('mode', 'full', new WhiteList(['full', 'examples']), 'Generation mode: full (default) or examples (only generate and copy examples)', optional: true)
             ->callback($this->action(...));
     }
 
-    public function action(?string $platform, ?string $sdk, ?string $version, ?string $git, ?string $message, ?string $release, ?string $commit, ?string $sdks): void
+    public function action(?string $platform, ?string $sdk, ?string $version, ?string $git, ?string $message, ?string $release, ?string $commit, ?string $sdks, string $mode): void
     {
+        $examplesOnly = ($mode === 'examples');
         $selectedPlatform = $platform;
         $selectedSDK = $sdk;
 
@@ -97,7 +101,7 @@ class SDKs extends Action
         $createRelease = ($release === 'yes');
         $commitRelease =  ($commit === 'yes');
 
-        if (!$createRelease) {
+        if (!$createRelease && !$examplesOnly) {
             $git ??= Console::confirm('Should we use git push? (yes/no)');
             $git = ($git === 'yes');
 
@@ -106,6 +110,9 @@ class SDKs extends Action
             if ($git) {
                 $message ??= Console::confirm('Please enter your commit message:');
             }
+        } elseif ($examplesOnly) {
+            $git = false;
+            $prUrls = [];
         }
 
         if (!\in_array($version, [
@@ -284,11 +291,14 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $config = new Markdown();
                         $config->setNPMPackage('@appwrite.io/docs');
                         break;
+                    case 'agent-skills':
+                        $config = new AgentSkills();
+                        break;
                     default:
                         throw new \Exception('Language "' . $language['key'] . '" not supported');
                 }
 
-                if ($createRelease) {
+                if ($createRelease && !$examplesOnly) {
                     $releaseVersion = $language['version'];
 
                     $repoName = $language['gitUserName'] . '/' . $language['gitRepoName'];
@@ -398,7 +408,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     continue;
                 }
 
-                Console::info("Generating {$language['name']} SDK...");
+                Console::info($examplesOnly
+                    ? "Generating examples for {$language['name']} SDK..."
+                    : "Generating {$language['name']} SDK...");
 
                 $sdk = new SDK($config, new Swagger2($spec));
 
@@ -576,9 +588,16 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
                 foreach ($docDirectories as $languageTitle => $path) {
                     $languagePath = strtolower($languageTitle !== 0 ? '/' . $languageTitle : '');
+                    $examplesSource = $result . '/docs/examples' . $languagePath;
+
+                    if (!\is_dir($examplesSource)) {
+                        Console::warning("No code examples found for {$language['name']} SDK at: {$examplesSource}. Skipping copy.");
+                        continue;
+                    }
+
                     \exec(
                         'mkdir -p ' . $resultExamples . $languagePath . ' && \
-                        cp -r ' . $result . '/docs/examples' . $languagePath . ' ' . $resultExamples
+                        cp -r ' . $examplesSource . ' ' . $resultExamples
                     );
                     Console::success("Copied code examples for {$language['name']} SDK to: {$resultExamples}");
                 }

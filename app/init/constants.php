@@ -390,3 +390,6 @@ const COOKIE_NAME_PREVIEW = 'a_jwt_console';
 // Cache Reconnect
 const CACHE_RECONNECT_MAX_RETRIES = 2;
 const CACHE_RECONNECT_RETRY_DELAY = 1000;
+
+// Project status
+const PROJECT_STATUS_ACTIVE = 'active';

@@ -31,6 +31,8 @@ mutation {
             lengths
             orders
         }
+        bytesMax
+        bytesUsed
     }
 }
 ```
