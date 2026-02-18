@@ -58,7 +58,8 @@ class Get extends Action
         $isCNAMEValid = !empty(System::getEnv('_APP_DOMAIN_TARGET_CNAME', '')) && $validator->isKnown() && !$validator->isTest();
 
         $validator = new IP(IP::V4);
-        $isAValid = !empty(System::getEnv('_APP_DOMAIN_TARGET_A', '')) && ($validator->isValid(System::getEnv('_APP_DOMAIN_TARGET_A')));
+        $targetA = \explode(',', System::getEnv('_APP_DOMAIN_TARGET_A', ''))[0];
+        $isAValid = !empty($targetA) && ($validator->isValid($targetA));
 
         $validator = new IP(IP::V6);
         $isAAAAValid = !empty(System::getEnv('_APP_DOMAIN_TARGET_AAAA', '')) && $validator->isValid(System::getEnv('_APP_DOMAIN_TARGET_AAAA'));
@@ -78,7 +79,7 @@ class Get extends Action
         $variables = new Document([
             '_APP_DOMAIN_TARGET_CNAME' => System::getEnv('_APP_DOMAIN_TARGET_CNAME'),
             '_APP_DOMAIN_TARGET_AAAA' => System::getEnv('_APP_DOMAIN_TARGET_AAAA'),
-            '_APP_DOMAIN_TARGET_A' => System::getEnv('_APP_DOMAIN_TARGET_A'),
+            '_APP_DOMAIN_TARGET_A' => $targetA,
             '_APP_DOMAIN_TARGET_CAA' => '0 issue "' . System::getEnv('_APP_DOMAIN_TARGET_CAA') . '"',
             '_APP_STORAGE_LIMIT' => +System::getEnv('_APP_STORAGE_LIMIT'),
             '_APP_COMPUTE_BUILD_TIMEOUT' => +System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT'),
