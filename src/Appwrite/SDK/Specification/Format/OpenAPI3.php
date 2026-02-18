@@ -839,7 +839,6 @@ class OpenAPI3 extends Format
                     case 'string':
                     case 'datetime':
                     case 'payload':
-                    case 'id':
                         $type = 'string';
                         break;
 
