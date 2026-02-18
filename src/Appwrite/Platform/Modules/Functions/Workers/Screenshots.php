@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
-use Ahc\Jwt\JWT;
 use Appwrite\Event\Realtime;
 use Appwrite\Permission;
 use Appwrite\Role;
