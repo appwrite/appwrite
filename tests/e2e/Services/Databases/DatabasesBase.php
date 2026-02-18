@@ -31,6 +31,7 @@ trait DatabasesBase
     private static array $documentsCache = [];
     private static array $oneToOneCache = [];
     private static array $oneToManyCache = [];
+    private static array $fulltextDocsCache = [];
 
     /**
      * Get cache key for current test instance (based on project ID)
@@ -111,10 +112,26 @@ trait DatabasesBase
 
         $this->assertEquals(201, $actors['headers']['status-code']);
 
+        $books = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Books',
+            $this->getSecurityParam() => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        $this->assertEquals(201, $books['headers']['status-code']);
+
         self::$collectionCache[$cacheKey] = [
             'databaseId' => $databaseId,
             'moviesId' => $movies['body']['$id'],
             'actorsId' => $actors['body']['$id'],
+            'booksId' => $books['body']['$id'],
         ];
         return self::$collectionCache[$cacheKey];
     }
@@ -240,8 +257,33 @@ trait DatabasesBase
         $this->assertEquals(202, $relationship['headers']['status-code']);
         $this->assertEquals(202, $integers['headers']['status-code']);
 
+        // Books collection attributes (for fulltext search tests)
+        $bookTitle = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $data['booksId']) . '/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'title',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $bookDescription = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $data['booksId']) . '/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'description',
+            'size' => 2048,
+            'required' => true,
+        ]);
+
+        $this->assertEquals(202, $bookTitle['headers']['status-code']);
+        $this->assertEquals(202, $bookDescription['headers']['status-code']);
+
         // wait for database worker to create attributes
         $this->waitForAllAttributes($databaseId, $data['moviesId']);
+        $this->waitForAllAttributes($databaseId, $data['booksId']);
 
         self::$attributesCache[$cacheKey] = $data;
         return self::$attributesCache[$cacheKey];
@@ -301,12 +343,25 @@ trait DatabasesBase
             $this->getIndexAttributesParam() => ['birthDay'],
         ]);
 
+        // Fulltext index on Books.description (for testNotSearch)
+        $booksFtsIndex = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $data['booksId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'fts_description',
+            'type' => Database::INDEX_FULLTEXT,
+            $this->getIndexAttributesParam() => ['description'],
+        ]);
+
         $this->assertEquals(202, $titleIndex['headers']['status-code']);
         $this->assertEquals(202, $releaseYearIndex['headers']['status-code']);
         $this->assertEquals(202, $releaseWithDate1['headers']['status-code']);
         $this->assertEquals(202, $releaseWithDate2['headers']['status-code']);
+        $this->assertEquals(202, $booksFtsIndex['headers']['status-code']);
 
         $this->waitForAllIndexes($databaseId, $data['moviesId']);
+        $this->waitForAllIndexes($databaseId, $data['booksId']);
 
         self::$indexesCache[$cacheKey] = $data;
         return self::$indexesCache[$cacheKey];
@@ -604,6 +659,74 @@ trait DatabasesBase
 
         self::$oneToManyCache[$cacheKey] = ['databaseId' => $databaseId, 'personCollection' => $personCollection, 'libraryCollection' => $libraryCollection];
         return self::$oneToManyCache[$cacheKey];
+    }
+
+    /**
+     * Setup: Insert fulltext search test documents into the cached Books collection.
+     * Uses static caching to avoid inserting duplicate documents when multiple
+     * test classes share the same worker process in ParaTest --functional mode.
+     */
+    protected function setupFulltextSearchDocuments(): array
+    {
+        $cacheKey = $this->getCacheKey();
+        if (!empty(self::$fulltextDocsCache[$cacheKey])) {
+            return self::$fulltextDocsCache[$cacheKey];
+        }
+
+        $data = $this->setupIndexes();
+        $databaseId = $data['databaseId'];
+        $booksId = $data['booksId'];
+
+        $row1 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $booksId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => [
+                'title' => 'Science Fiction Adventures',
+                'description' => 'A thrilling journey through space and time',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ]
+        ]);
+        $this->assertEquals(201, $row1['headers']['status-code']);
+
+        $row2 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $booksId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => [
+                'title' => 'Romance Novel',
+                'description' => 'A love story set in modern times',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ]
+        ]);
+        $this->assertEquals(201, $row2['headers']['status-code']);
+
+        $row3 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $booksId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => [
+                'title' => 'Mystery Thriller',
+                'description' => 'A detective solves complex crimes',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ]
+        ]);
+        $this->assertEquals(201, $row3['headers']['status-code']);
+
+        self::$fulltextDocsCache[$cacheKey] = $data;
+        return self::$fulltextDocsCache[$cacheKey];
     }
 
     /**
@@ -9512,132 +9635,19 @@ trait DatabasesBase
      */
     public function testNotSearch(): void
     {
-        // Create database
-        $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [
-            'databaseId' => ID::unique(),
-            'name' => 'NotSearch test'
-        ]);
-
-        $this->assertNotEmpty($database['body']['$id']);
-        $this->assertEquals(201, $database['headers']['status-code']);
-        $this->assertEquals('NotSearch test', $database['body']['name']);
-
-        $databaseId = $database['body']['$id'];
-
-        // Create Collection
-        $books = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            $this->getContainerIdParam() => ID::unique(),
-            'name' => 'Books',
-            $this->getSecurityParam() => true,
-            'permissions' => [
-                Permission::create(Role::user($this->getUser()['$id'])),
-            ],
-        ]);
-
-        $this->assertEquals(201, $books['headers']['status-code']);
-        $this->assertEquals($books['body']['name'], 'Books');
-
-        // Create Attributes
-        $title = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $books['body']['$id']) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'title',
-            'size' => 256,
-            'required' => true,
-        ]);
-        $this->assertEquals(202, $title['headers']['status-code']);
-
-        $description = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $books['body']['$id']) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'description',
-            'size' => 2048,
-            'required' => true,
-        ]);
-
-        $this->assertEquals(202, $description['headers']['status-code']);
-
-        $this->waitForAllAttributes($databaseId, $books['body']['$id']);
-
-        $ftsIndex = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $books['body']['$id']), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'fts_description',
-            'type' => Database::INDEX_FULLTEXT,
-            $this->getIndexAttributesParam() => ['description'],
-        ]);
-        $this->assertEquals(202, $ftsIndex['headers']['status-code']);
-
-        $this->waitForIndex($databaseId, $books['body']['$id'], 'fts_description');
-
-        $row1 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $books['body']['$id']), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
-            'data' => [
-                'title' => 'Science Fiction Adventures',
-                'description' => 'A thrilling journey through space and time',
-            ],
-            'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-            ]
-        ]);
-        $this->assertEquals(201, $row1['headers']['status-code']);
-
-        $row2 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $books['body']['$id']), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
-            'data' => [
-                'title' => 'Romance Novel',
-                'description' => 'A love story set in modern times',
-            ],
-            'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-            ]
-        ]);
-        $this->assertEquals(201, $row2['headers']['status-code']);
-
-        $row3 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $books['body']['$id']), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
-            'data' => [
-                'title' => 'Mystery Thriller',
-                'description' => 'A detective solves complex crimes',
-            ],
-            'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-            ]
-        ]);
-
-        $this->assertEquals(201, $row3['headers']['status-code']);
+        $data = $this->setupFulltextSearchDocuments();
+        $databaseId = $data['databaseId'];
+        $booksId = $data['booksId'];
 
         // Test notSearch query - should return books that don't have "space" in the description
         $rows = $this->client->call(
             Client::METHOD_GET,
-            $this->getRecordUrl($databaseId, $books['body']['$id']),
+            $this->getRecordUrl($databaseId, $booksId),
             array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()),
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]),
             [
                 'queries' => [
                     Query::notSearch('description', 'space')->toString(),
