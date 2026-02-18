@@ -1028,25 +1028,26 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $this->assertIsArray($movies['body']['attributes']);
-        $this->assertCount($this->getSupportForRelationships() ? 10 : 9, $movies['body']['attributes']);
+        $schemaResource = $this->getSchemaResource();
+        $this->assertIsArray($movies['body'][$schemaResource]);
+        $this->assertCount($this->getSupportForRelationships() ? 10 : 9, $movies['body'][$schemaResource]);
         $this->assertArrayHasKey('bytesMax', $movies['body']);
         $this->assertArrayHasKey('bytesUsed', $movies['body']);
         $this->assertGreaterThanOrEqual(0, $movies['body']['bytesUsed']);
-        $this->assertEquals($movies['body']['attributes'][0]['key'], $title['body']['key']);
-        $this->assertEquals($movies['body']['attributes'][1]['key'], $description['body']['key']);
-        $this->assertEquals($movies['body']['attributes'][2]['key'], $tagline['body']['key']);
-        $this->assertEquals($movies['body']['attributes'][3]['key'], $releaseYear['body']['key']);
-        $this->assertEquals($movies['body']['attributes'][4]['key'], $duration['body']['key']);
-        $this->assertEquals($movies['body']['attributes'][5]['key'], $actors['body']['key']);
-        $this->assertEquals($movies['body']['attributes'][6]['key'], $datetime['body']['key']);
+        $this->assertEquals($movies['body'][$schemaResource][0]['key'], $title['body']['key']);
+        $this->assertEquals($movies['body'][$schemaResource][1]['key'], $description['body']['key']);
+        $this->assertEquals($movies['body'][$schemaResource][2]['key'], $tagline['body']['key']);
+        $this->assertEquals($movies['body'][$schemaResource][3]['key'], $releaseYear['body']['key']);
+        $this->assertEquals($movies['body'][$schemaResource][4]['key'], $duration['body']['key']);
+        $this->assertEquals($movies['body'][$schemaResource][5]['key'], $actorsAttr['body']['key']);
+        $this->assertEquals($movies['body'][$schemaResource][6]['key'], $datetime['body']['key']);
         if (!$this->getSupportForRelationships()) {
-            $this->assertEquals($movies['body']['attributes'][7]['key'], $integers['body']['key']);
-            $this->assertEquals($movies['body']['attributes'][8]['key'], $integers2['body']['key']);
+            $this->assertEquals($movies['body'][$schemaResource][7]['key'], $integers['body']['key']);
+            $this->assertEquals($movies['body'][$schemaResource][8]['key'], $integers2['body']['key']);
         } else {
-            $this->assertEquals($movies['body']['attributes'][7]['key'], $relationship['body']['key']);
-            $this->assertEquals($movies['body']['attributes'][8]['key'], $integers['body']['key']);
-            $this->assertEquals($movies['body']['attributes'][9]['key'], $integers2['body']['key']);
+            $this->assertEquals($movies['body'][$schemaResource][7]['key'], $relationship['body']['key']);
+            $this->assertEquals($movies['body'][$schemaResource][8]['key'], $integers['body']['key']);
+            $this->assertEquals($movies['body'][$schemaResource][9]['key'], $integers2['body']['key']);
         }
     }
 
@@ -2517,6 +2518,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'data' => $upsertData,
             'permissions' => [
                 Permission::read(Role::users()),
                 Permission::update(Role::users()),
