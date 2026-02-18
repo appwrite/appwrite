@@ -10,7 +10,7 @@ trait RealtimeBase
     private function getWebsocket(
         array $channels = [],
         array $headers = [],
-        string $projectId = null,
+        ?string $projectId = null,
         ?array $queries = null
     ): WebSocketClient {
         if (is_null($projectId)) {
@@ -63,7 +63,7 @@ trait RealtimeBase
             "ws://appwrite.test/v1/realtime?" . $queryString,
             [
                 "headers" => $headers,
-                "timeout" => 120,
+                "timeout" => 30,
             ]
         );
     }

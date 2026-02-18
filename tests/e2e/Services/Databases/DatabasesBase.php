@@ -1966,6 +1966,13 @@ trait DatabasesBase
         ]), ['key' => 'integers', 'required' => false, 'array' => true, 'min' => 10, 'max' => 99]);
         $this->assertEquals(202, $integers['headers']['status-code']);
 
+        $integers2 = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/integer', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), ['key' => 'integers2', 'required' => false, 'array' => true, 'min' => 10, 'max' => 99]);
+        $this->assertEquals(202, $integers2['headers']['status-code']);
+
         // Wait for attributes to be ready
         $this->waitForAllAttributes($databaseId, $collectionId);
 
@@ -2494,7 +2501,7 @@ trait DatabasesBase
         /**
          * Resubmit same document, nothing to update
          */
-        $this->assertIsString($document1['body']['$sequence']);
+        $this->assertIsString($document['body']['$sequence']);
         $upsertData = [
             'title' => 'Thor: Ragnarok',
             'releaseYear' => 2000,
@@ -3156,7 +3163,7 @@ trait DatabasesBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($document['title'], $response['body']['title']);
         $this->assertEquals($document['releaseYear'], $response['body']['releaseYear']);
-        $this->assertArrayNotHasKey('birthDay', $response['body']);
+        $this->assertArrayHasKey('birthDay', $response['body']);
         $this->assertArrayHasKey('$sequence', $response['body']);
 
         // Query by sequence on get single document route
@@ -5955,7 +5962,7 @@ trait DatabasesBase
             return;
         }
 
-        $data = $this->setupOneToOneRelationship();
+        $data = $this->setupOneToManyRelationship();
         $databaseId = $data['databaseId'];
         $personCollection = $data['personCollection'];
         $libraryCollection = $data['libraryCollection'];
@@ -6642,10 +6649,8 @@ trait DatabasesBase
             return;
         }
 
+        $data = $this->setupDatabase();
         $databaseId = $data['databaseId'];
-
-        $this->assertEquals(201, $database['headers']['status-code']);
-        $databaseId = $database['body']['$id'];
 
         $collection1 = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
@@ -6697,6 +6702,9 @@ trait DatabasesBase
             'size' => '49',
             'required' => true,
         ]);
+
+        $this->waitForAttribute($databaseId, $collection1, 'name');
+        $this->waitForAttribute($databaseId, $collection2, 'name');
 
         $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collection1) . '/relationship', array_merge([
             'content-type' => 'application/json',

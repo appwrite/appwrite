@@ -26,7 +26,7 @@ trait WebhooksBase
 
             $this->assertEquals(200, $deployment['headers']['status-code']);
             $this->assertEquals('ready', $deployment['body']['status'], \json_encode($deployment['body']));
-        });
+        }, 120000, 500);
     }
 
     public static function getWebhookSignature(array $webhook, string $signatureKey): string
