@@ -2994,7 +2994,7 @@ trait DatabasesBase
                 ], $this->getHeaders()), [
                     'data' => [
                         '$id' => 'some-other-id',
-                        '$collectionId' => 'some-other-collection',
+                        $this->getContainerIdResponseKey() => 'some-other-collection',
                         '$databaseId' => 'some-other-database',
                         '$createdAt' => '2024-01-01T00:00:00Z',
                         '$updatedAt' => '2024-01-01T00:00:00Z',
