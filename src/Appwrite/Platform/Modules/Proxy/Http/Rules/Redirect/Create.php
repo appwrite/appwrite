@@ -80,7 +80,6 @@ class Create extends Action
 
     public function action(string $domain, string $url, int $statusCode, string $resourceId, string $resourceType, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform, Database $dbForProject, array $platform, Log $log)
     {
-        $domain = \strtolower($domain);
         $this->validateDomainRestrictions($domain, $platform);
 
         $collection = match ($resourceType) {
@@ -93,7 +92,7 @@ class Create extends Action
         }
 
         // TODO: (@Meldiron) Remove after 1.7.x migration
-        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
+        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5(\strtolower($domain)) : ID::unique();
         $status = RULE_STATUS_CREATED;
         $owner = '';
 

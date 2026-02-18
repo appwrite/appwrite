@@ -77,7 +77,6 @@ class Create extends Action
 
     public function action(string $domain, string $siteId, string $branch, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform, Database $dbForProject, array $platform, Log $log)
     {
-        $domain = \strtolower($domain);
         $this->validateDomainRestrictions($domain, $platform);
 
         $site = $dbForProject->getDocument('sites', $siteId);
@@ -88,7 +87,7 @@ class Create extends Action
         $deployment = $dbForProject->getDocument('deployments', $site->getAttribute('deploymentId', ''));
 
         // TODO: (@Meldiron) Remove after 1.7.x migration
-        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
+        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5(\strtolower($domain)) : ID::unique();
         $status = RULE_STATUS_CREATED;
         $owner = '';
 
