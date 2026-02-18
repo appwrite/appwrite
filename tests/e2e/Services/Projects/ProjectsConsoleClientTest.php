@@ -57,6 +57,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals('Project Test', $response['body']['name']);
         $this->assertEquals($team['body']['$id'], $response['body']['teamId']);
+        $this->assertEquals(PROJECT_STATUS_ACTIVE, $response['body']['status']);
         $this->assertArrayHasKey('platforms', $response['body']);
         $this->assertArrayHasKey('webhooks', $response['body']);
         $this->assertArrayHasKey('keys', $response['body']);
@@ -76,6 +77,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals('Project Test', $response['body']['name']);
         $this->assertEquals($team['body']['$id'], $response['body']['teamId']);
+        $this->assertEquals(PROJECT_STATUS_ACTIVE, $response['body']['status']);
         $this->assertArrayHasKey('platforms', $response['body']);
         $this->assertArrayHasKey('webhooks', $response['body']);
         $this->assertArrayHasKey('keys', $response['body']);
@@ -5376,7 +5378,7 @@ class ProjectsConsoleClientTest extends Scope
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        /** Test oauth2 with devKey and now get oauth2 is disabled */
+        /** Test oauth2 with devKey and now flow works with untrusted URL too */
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -5384,8 +5386,37 @@ class ProjectsConsoleClientTest extends Scope
         ], [
             'success' => 'https://example.com',
             'failure' => 'https://example.com'
-        ]);
-        $this->assertEquals(200, $response['headers']['status-code']);
+        ], followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertArrayHasKey('location', $response['headers']);
+
+        $location = $response['headers']['location'];
+
+
+        $locationClient = new Client();
+        $locationClient->setEndpoint('');
+        $locationClient->addHeader('x-appwrite-dev-key', $devKey['secret']);
+
+        $response = $locationClient->call(Client::METHOD_GET, $location, followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertArrayHasKey('location', $response['headers']);
+
+        $location = $response['headers']['location'];
+        $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/callback/mock/', $response['headers']['location']);
+
+        $response = $locationClient->call(Client::METHOD_GET, $location, followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertArrayHasKey('location', $response['headers']);
+
+        $location = $response['headers']['location'];
+        $this->assertStringStartsWith('http://appwrite:/v1/account/sessions/oauth2/mock/redirect', $response['headers']['location']);
+
+        $response = $locationClient->call(Client::METHOD_GET, $location, followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertSame('https://example.com/#', $response['headers']['location']);
 
         /** Ensure any hostname is allowed */
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [

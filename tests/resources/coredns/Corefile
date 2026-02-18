@@ -19,7 +19,7 @@ webapp.com {
 
     template IN CNAME {
         match "^stage-function\.webapp\.com\.$"
-        answer "{{ .Name }} 60 IN CNAME functions.localhost."
+        answer "{{ .Name }} 60 IN CNAME cname.localhost."
         fallthrough
     }
 

@@ -18,3 +18,4 @@ dev/yasd_init.php
 Makefile
 appwrite.config.json
 /.zed/
+/app/config/specs/
