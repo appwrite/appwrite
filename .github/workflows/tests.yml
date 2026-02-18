@@ -263,8 +263,6 @@ jobs:
 
       - name: Run ${{ matrix.service }} tests with Project table mode
         uses: itznotabug/php-retry@v3
-        env:
-          _APP_DB_SCHEMA: appwrite
         with:
           max_attempts: 3
           timeout_minutes: 30
@@ -273,35 +271,7 @@ jobs:
           test_dir: tests/e2e/Services/${{ matrix.service }}
           command: |
             echo "Using project tables"
-
-            elif [ "${{ matrix.db_adapter }}" = "MONGODB" ]; then
-              export _APP_DB_ADAPTER=mongodb
-              export _APP_DB_HOST=mongodb
-              export _APP_DB_PORT=27017
-              export _APP_DB_SCHEMA=appwrite
-            else
             SERVICE_PATH="/usr/src/code/tests/e2e/Services/${{ matrix.service }}"
-
-            # Set DB Adapter Specific ENV Vars using if-elif
-            if [ "${{ matrix.db_adapter }}" = "MARIADB" ]; then
-              export _APP_DB_ADAPTER=mariadb
-              export _APP_DB_HOST=mariadb
-              export _APP_DB_PORT=3306
-              export _APP_DB_SCHEMA=appwrite
-           elif [ "${{ matrix.db_adapter }}" = "MONGODB" ]; then
-              export _APP_DB_ADAPTER=mongodb
-              export _APP_DB_HOST=mongodb
-              export _APP_DB_PORT=5432
-              export _APP_DB_SCHEMA=appwrite
-            elif [ "${{ matrix.db_adapter }}" = "POSTGRESQL" ]; then
-              export _APP_DB_ADAPTER=postgresql
-              export _APP_DB_HOST=postgresql
-              export _APP_DB_PORT=5432
-              export _APP_DB_SCHEMA=appwrite
-            else
-              echo "Unknown DB adapter: ${{ matrix.db_adapter }}"
-              exit 1
-            fi
 
             echo "Running with paratest (parallel) for: ${{ matrix.service }}"
             docker compose exec -T \
@@ -310,7 +280,7 @@ jobs:
               -e _APP_DB_ADAPTER="${{ env._APP_DB_ADAPTER }}" \
               -e _APP_DB_HOST="${{ env._APP_DB_HOST }}" \
               -e _APP_DB_PORT="${{ env._APP_DB_PORT }}" \
-              -e _APP_DB_SCHEMA="${{ env._APP_DB_SCHEMA }}" \
+              -e _APP_DB_SCHEMA=appwrite \
               -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
               appwrite vendor/bin/paratest --processes $(nproc) --functional "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots
 
