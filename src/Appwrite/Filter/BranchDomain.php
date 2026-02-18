@@ -1,11 +1,10 @@
 <?php
 
-namespace Appwrite\Filter\Adapter;
+namespace Appwrite\Filter;
 
-use Appwrite\Filter\Adapter;
 use Utopia\Validator\Text;
 
-class BranchDomain extends Adapter
+class BranchDomain implements Filter
 {
     /**
      * Maximum length for branch prefix in domain name
@@ -17,20 +16,6 @@ class BranchDomain extends Adapter
      */
     public const HASH_SUFFIX_LENGTH = 7;
 
-    public function isValid(mixed $input): bool
-    {
-        $branch = $input['branch'] ?? '';
-        $resourceId = $input['resourceId'] ?? '';
-        $projectId = $input['projectId'] ?? '';
-        $sitesDomain = $input['sitesDomain'] ?? '';
-
-        if (empty($branch) || empty($resourceId) || empty($projectId) || empty($sitesDomain)) {
-            return false;
-        }
-
-        return true;
-    }
-
     /**
      * Pre-process branch name to a valid domain name.
      *
@@ -40,17 +25,17 @@ class BranchDomain extends Adapter
      * - 'projectId' (string): The project ID
      * - 'sitesDomain' (string): The base sites domain
      */
-    public function filter(): self
+    public function apply(mixed $input): mixed
     {
-        $branch = $this->input['branch'] ?? '';
-        $resourceId = $this->input['resourceId'] ?? '';
-        $projectId = $this->input['projectId'] ?? '';
-        $sitesDomain = $this->input['sitesDomain'] ?? '';
+        $branch = $input['branch'] ?? '';
+        $resourceId = $input['resourceId'] ?? '';
+        $projectId = $input['projectId'] ?? '';
+        $sitesDomain = $input['sitesDomain'] ?? '';
 
         $branchPrefix = $this->generateBranchPrefix($branch);
         $resourceProjectHash = substr(hash('sha256', $resourceId . $projectId), 0, self::HASH_SUFFIX_LENGTH);
-        $this->output = strtolower("branch-{$branchPrefix}-{$resourceProjectHash}.{$sitesDomain}");
-        return $this;
+        $domain = \strtolower("branch-{$branchPrefix}-{$resourceProjectHash}.{$sitesDomain}");
+        return $domain;
     }
 
     /**

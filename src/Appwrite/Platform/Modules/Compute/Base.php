@@ -4,8 +4,7 @@ namespace Appwrite\Platform\Modules\Compute;
 
 use Appwrite\Event\Build;
 use Appwrite\Extend\Exception;
-use Appwrite\Filter\Adapter\BranchDomain as FilterBranchDomain;
-use Appwrite\Filter\Filter;
+use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Compute\Validator\Specification as SpecificationValidator;
 use Utopia\Config\Config;
@@ -328,16 +327,12 @@ class Base extends Action
 
         // VCS branch preview
         if (!empty($providerBranch)) {
-            $filter = new Filter([new FilterBranchDomain()]);
-            $filter
-                ->setInput([
-                    'branch' => $providerBranch,
-                    'resourceId' => $site->getId(),
-                    'projectId' => $project->getId(),
-                    'sitesDomain' => $sitesDomain,
-                ])
-                ->filter();
-            $domain = $filter->getOutput();
+            $domain = (new BranchDomainFilter())->apply([
+                'branch' => $providerBranch,
+                'resourceId' => $site->getId(),
+                'projectId' => $project->getId(),
+                'sitesDomain' => $sitesDomain,
+            ]);
             $ruleId = md5($domain);
             try {
                 $authorization->skip(

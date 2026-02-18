@@ -9,8 +9,7 @@ use Appwrite\Event\Realtime;
 use Appwrite\Event\Screenshot;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
-use Appwrite\Filter\Adapter\BranchDomain as FilterBranchDomain;
-use Appwrite\Filter\Filter;
+use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
 use Exception;
@@ -1029,16 +1028,12 @@ class Builds extends Action
                 // VCS branch
                 $branchName = $deployment->getAttribute('providerBranch');
                 if (!empty($branchName)) {
-                    $filter = new Filter([new FilterBranchDomain()]);
-                    $filter
-                        ->setInput([
-                            'branch' => $branchName,
-                            'resourceId' => $resource->getId(),
-                            'projectId' => $project->getId(),
-                            'sitesDomain' => $platform['sitesDomain'],
-                        ])
-                        ->filter();
-                    $domain = $filter->getOutput();
+                    $domain = (new BranchDomainFilter())->apply([
+                        'branch' => $branchName,
+                        'resourceId' => $resource->getId(),
+                        'projectId' => $project->getId(),
+                        'sitesDomain' => $platform['sitesDomain'],
+                    ]);
                     $ruleId = md5($domain);
 
                     try {

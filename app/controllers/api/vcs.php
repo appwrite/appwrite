@@ -2,8 +2,7 @@
 
 use Appwrite\Event\Build;
 use Appwrite\Extend\Exception;
-use Appwrite\Filter\Adapter\BranchDomain as FilterBranchDomain;
-use Appwrite\Filter\Filter;
+use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -318,16 +317,12 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
                 // VCS branch preview
                 if (!empty($providerBranch)) {
-                    $filter = new Filter([new FilterBranchDomain()]);
-                    $filter
-                        ->setInput([
-                            'branch' => $providerBranch,
-                            'resourceId' => $resource->getId(),
-                            'projectId' => $project->getId(),
-                            'sitesDomain' => $sitesDomain,
-                        ])
-                        ->filter();
-                    $domain = $filter->getOutput();
+                    $domain = (new BranchDomainFilter())->apply([
+                        'branch' => $providerBranch,
+                        'resourceId' => $resource->getId(),
+                        'projectId' => $project->getId(),
+                        'sitesDomain' => $sitesDomain,
+                    ]);
                     $ruleId = md5($domain);
                     try {
                         $authorization->skip(
