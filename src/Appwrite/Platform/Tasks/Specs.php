@@ -492,10 +492,10 @@ class Specs extends Action
             // Copy SDK examples for this version, filtered by PR platforms
             if (\is_dir($examplesDir)) {
                 \exec('mkdir -p ' . \escapeshellarg("{$target}/examples/{$version}"));
-                $exampleFolders = \glob($examplesDir . '/*', GLOB_ONLYDIR);
+                $exampleFolders = \glob($examplesDir . '/*', GLOB_ONLYDIR) ?: [];
                 foreach ($exampleFolders as $folder) {
                     $folderName = \basename($folder);
-                    $platform = \strstr($folderName, '-', true);
+                    $platform = \strstr($folderName, '-', true) ?: $folderName;
                     if (!\in_array($platform, $prPlatforms, true)) {
                         Console::info("Skipping SDK examples for platform '{$platform}': examples/{$version}/{$folderName}");
                         continue;
