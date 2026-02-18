@@ -294,6 +294,36 @@ class RealtimeConsoleClientTest extends Scope
 
     public function testAttributesCollectionsAPI(): void
     {
+        /**
+         * Create database and collection BEFORE opening WebSocket
+         * to avoid their creation events interfering with attribute events.
+         */
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'databaseId' => ID::unique(),
+            'name' => 'Actors DB',
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        $actors = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'collectionId' => ID::unique(),
+            'name' => 'Actors',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $actorsId = $actors['body']['$id'];
+
         $projectId = 'console';
 
         $client = $this->getWebsocket(['console'], [
@@ -312,36 +342,8 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertNotEmpty($response['data']['user']);
 
         /**
-         * Create database
-         */
-        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'databaseId' => ID::unique(),
-            'name' => 'Actors DB',
-        ]);
-
-        $databaseId = $database['body']['$id'];
-        /**
          * Test Attributes
          */
-        $actors = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'collectionId' => ID::unique(),
-            'name' => 'Actors',
-            'permissions' => [
-                Permission::read(Role::any()),
-                Permission::create(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
-            ],
-        ]);
-
-        $actorsId = $actors['body']['$id'];
-
         $name = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actorsId . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -406,6 +408,36 @@ class RealtimeConsoleClientTest extends Scope
 
     public function testAttributesTablesAPI(): void
     {
+        /**
+         * Create database and table BEFORE opening WebSocket
+         * to avoid their creation events interfering with column events.
+         */
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'databaseId' => ID::unique(),
+            'name' => 'Actors DB',
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        $actors = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'tableId' => ID::unique(),
+            'name' => 'Actors',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $actorsId = $actors['body']['$id'];
+
         $projectId = 'console';
 
         $client = $this->getWebsocket(['console'], [
@@ -424,37 +456,8 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertNotEmpty($response['data']['user']);
 
         /**
-         * Create database
-         */
-        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'databaseId' => ID::unique(),
-            'name' => 'Actors DB',
-        ]);
-
-        $databaseId = $database['body']['$id'];
-
-        /**
          * Test Attributes
          */
-        $actors = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'tableId' => ID::unique(),
-            'name' => 'Actors',
-            'permissions' => [
-                Permission::read(Role::any()),
-                Permission::create(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
-            ],
-        ]);
-
-        $actorsId = $actors['body']['$id'];
-
         $name = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $actorsId . '/columns/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

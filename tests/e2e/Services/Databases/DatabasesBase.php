@@ -914,12 +914,12 @@ trait DatabasesBase
 
         $relationship = null;
         if ($this->getSupportForRelationships()) {
-            $relationship = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $data['moviesId']) . '/relationship', array_merge([
+            $relationship = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $moviesId) . '/relationship', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]), [
-                $this->getRelatedIdParam() => $data['actorsId'],
+                $this->getRelatedIdParam() => $actorsId,
                 'type' => 'oneToMany',
                 'twoWay' => true,
                 'key' => 'starringActors',
@@ -3030,7 +3030,7 @@ trait DatabasesBase
         }
     }
 
-    public function testListDocuments(): array
+    public function testListDocuments(): void
     {
         $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
@@ -5364,6 +5364,11 @@ trait DatabasesBase
         // that may add duplicate titles to the shared movies collection in the same process
         $data = $this->setupDatabase();
         $databaseId = $data['databaseId'];
+        $serverHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
 
         // Create a dedicated collection for unique index testing
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $serverHeaders, [
@@ -6414,6 +6419,8 @@ trait DatabasesBase
             return;
         }
 
+        $data = $this->setupOneToManyRelationship();
+
         $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($data['databaseId'], $data['personCollection']), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -6458,6 +6465,8 @@ trait DatabasesBase
             $this->expectNotToPerformAssertions();
             return;
         }
+
+        $data = $this->setupOneToManyRelationship();
 
         $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($data['databaseId'], $data['personCollection']), array_merge([
             'content-type' => 'application/json',
