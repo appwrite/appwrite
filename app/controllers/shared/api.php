@@ -301,15 +301,17 @@ Http::init()
                 $projectId = explode('/', $uri)[3];
             }
 
-            $scopes = isset($roles['analyst']) ? $roles['analyst']['scopes'] : []; // Base scope for admin users
-            foreach ($adminRoles as $role) {
-                $isTeamWideRole = !str_starts_with($role, 'project-');
-                $isProjectSpecificRole = $projectId !== 'console' && str_starts_with($role, 'project-' . $projectId);
+            // Base scopes for admin users to allow listing teams and projects.
+            // Useful for those who have project-specific roles but don't have team-wide role.
+            $scopes = ['teams.read', 'projects.read'];
+            foreach ($adminRoles as $adminRole) {
+                $isTeamWideRole = !str_starts_with($adminRole, 'project-');
+                $isProjectSpecificRole = $projectId !== 'console' && str_starts_with($adminRole, 'project-' . $projectId);
 
                 if ($isTeamWideRole || $isProjectSpecificRole) {
-                    $role = match (str_starts_with($role, 'project-')) {
-                        true => substr($role, strrpos($role, '-') + 1),
-                        false => $role,
+                    $role = match (str_starts_with($adminRole, 'project-')) {
+                        true => substr($adminRole, strrpos($adminRole, '-') + 1),
+                        false => $adminRole,
                     };
                     $scopes = \array_merge($scopes, $roles[$role]['scopes']);
                     $authorization->addRole($role);
