@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Projects;
 
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Role;
 use Utopia\System\System;
 
 trait ProjectsBase

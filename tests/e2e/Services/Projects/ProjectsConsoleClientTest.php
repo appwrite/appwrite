@@ -6009,9 +6009,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
     }
 
-    /**
-     * @group ciIgnore
-     */
+    #[Group('ciIgnore')]
     public function testProjectSpecificPermissionsForListProjects(): void
     {
         $teamId = ID::unique();
@@ -6097,9 +6095,7 @@ class ProjectsConsoleClientTest extends Scope
         }
     }
 
-    /**
-     * @group ciIgnore
-     */
+    #[Group('ciIgnore')]
     public function testProjectSpecificPermissionsForUpdateProject(): void
     {
         $teamId = ID::unique();
@@ -6206,9 +6202,7 @@ class ProjectsConsoleClientTest extends Scope
         }
     }
 
-    /**
-     * @group ciIgnore
-     */
+    #[Group('ciIgnore')]
     public function testProjectSpecificPermissionsForDeleteProject(): void
     {
         $teamId = ID::unique();
@@ -6305,9 +6299,9 @@ class ProjectsConsoleClientTest extends Scope
     }
 
     /**
-     * @group ciIgnore
      * Test project specific permissions for project resources, in this case 'function variables'.
      */
+    #[Group('ciIgnore')]
     public function testProjectSpecificPermissionsForProjectResources(): void
     {
         $teamId = ID::unique();
