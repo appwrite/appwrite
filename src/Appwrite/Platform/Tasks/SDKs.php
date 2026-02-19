@@ -97,10 +97,10 @@ class SDKs extends Action
         $selectedSDK = $sdk;
 
         if (! $sdks) {
-            $selectedPlatform ??= Console::confirm('Choose Platform ("'.implode('", "', static::getPlatforms()).'" or "*" for all):');
+            $selectedPlatform ??= Console::confirm('Choose Platform ("' . implode('", "', static::getPlatforms()) . '" or "*" for all):');
             $selectedSDK ??= \strtolower(Console::confirm('Choose SDK ("*" for all):'));
             if ($selectedSDK !== '*' && ! \in_array($selectedSDK, $this->supportedSDKS)) {
-                throw new \Exception('Unknown SDK "'.$selectedSDK.'" given. Options are: '.implode(', ', $this->supportedSDKS));
+                throw new \Exception('Unknown SDK "' . $selectedSDK . '" given. Options are: ' . implode(', ', $this->supportedSDKS));
             }
         } else {
             $sdks = explode(',', $sdks);
@@ -161,30 +161,30 @@ class SDKs extends Action
                 }
 
                 if (! $language['enabled']) {
-                    Console::warning($language['name'].' for '.$platform['name'].' is disabled');
+                    Console::warning($language['name'] . ' for ' . $platform['name'] . ' is disabled');
 
                     continue;
                 }
 
-                Console::info('Fetching API Spec for '.$language['name'].' for '.$platform['name'].' (version: '.$version.')');
+                Console::info('Fetching API Spec for ' . $language['name'] . ' for ' . $platform['name'] . ' (version: ' . $version . ')');
 
-                $spec = file_get_contents(__DIR__.'/../../../../app/config/specs/swagger2-'.$version.'-'.$language['family'].'.json');
+                $spec = file_get_contents(__DIR__ . '/../../../../app/config/specs/swagger2-' . $version . '-' . $language['family'] . '.json');
 
                 $cover = 'https://github.com/appwrite/appwrite/raw/main/public/images/github.png';
-                $result = \realpath(__DIR__.'/../../../../app').'/sdks/'.$key.'-'.$language['key'];
-                $resultExamples = \realpath(__DIR__.'/../../../..').'/docs/examples/'.$version.'/'.$key.'-'.$language['key'];
-                $target = \realpath(__DIR__.'/../../../../app').'/sdks/git/'.$language['key'].'/';
-                $readme = \realpath(__DIR__.'/../../../../docs/sdks/'.$language['key'].'/README.md');
+                $result = \realpath(__DIR__ . '/../../../../app') . '/sdks/' . $key . '-' . $language['key'];
+                $resultExamples = \realpath(__DIR__ . '/../../../..') . '/docs/examples/' . $version . '/' . $key . '-' . $language['key'];
+                $target = \realpath(__DIR__ . '/../../../../app') . '/sdks/git/' . $language['key'] . '/';
+                $readme = \realpath(__DIR__ . '/../../../../docs/sdks/' . $language['key'] . '/README.md');
                 $readme = ($readme) ? \file_get_contents($readme) : '';
-                $gettingStarted = $language['gettingStarted'] ?? \realpath(__DIR__.'/../../../../docs/sdks/'.$language['key'].'/GETTING_STARTED.md');
+                $gettingStarted = $language['gettingStarted'] ?? \realpath(__DIR__ . '/../../../../docs/sdks/' . $language['key'] . '/GETTING_STARTED.md');
                 $gettingStarted = ($gettingStarted) ? \file_get_contents($gettingStarted) : '';
-                $examples = \realpath(__DIR__.'/../../../../docs/sdks/'.$language['key'].'/EXAMPLES.md');
+                $examples = \realpath(__DIR__ . '/../../../../docs/sdks/' . $language['key'] . '/EXAMPLES.md');
                 $examples = ($examples) ? \file_get_contents($examples) : '';
                 $changelog = $language['changelog'] ?? '';
                 $changelog = ($changelog) ? \file_get_contents($changelog) : '# Change Log';
-                $warning = '**This SDK is compatible with Appwrite server version '.$version.'. For older versions, please check [previous releases]('.$language['url'].'/releases).**';
+                $warning = '**This SDK is compatible with Appwrite server version ' . $version . '. For older versions, please check [previous releases](' . $language['url'] . '/releases).**';
                 $license = 'BSD-3-Clause';
-                $licenseContent = 'Copyright (c) '.date('Y').' Appwrite (https://appwrite.io) and individual contributors.
+                $licenseContent = 'Copyright (c) ' . date('Y') . ' Appwrite (https://appwrite.io) and individual contributors.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -238,7 +238,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $config = new Node();
                         $config->setNPMPackage('node-appwrite');
                         $config->setBowerPackage('appwrite');
-                        $warning = $warning."\n\n > This is the Node.js SDK for integrating with Appwrite from your Node.js server-side code.
+                        $warning = $warning . "\n\n > This is the Node.js SDK for integrating with Appwrite from your Node.js server-side code.
                             If you're looking to integrate from the browser, you should check [appwrite/sdk-for-web](https://github.com/appwrite/sdk-for-web)";
                         break;
                     case 'deno':
@@ -268,14 +268,14 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     case 'dart':
                         $config = new Dart();
                         $config->setPackageName('dart_appwrite');
-                        $warning = $warning."\n\n > This is the Dart SDK for integrating with Appwrite from your Dart server-side code. If you're looking for the Flutter SDK you should check [appwrite/sdk-for-flutter](https://github.com/appwrite/sdk-for-flutter)";
+                        $warning = $warning . "\n\n > This is the Dart SDK for integrating with Appwrite from your Dart server-side code. If you're looking for the Flutter SDK you should check [appwrite/sdk-for-flutter](https://github.com/appwrite/sdk-for-flutter)";
                         break;
                     case 'go':
                         $config = new Go();
                         break;
                     case 'swift':
                         $config = new Swift();
-                        $warning = $warning."\n\n > This is the Swift SDK for integrating with Appwrite from your Swift server-side code. If you're looking for the Apple SDK you should check [appwrite/sdk-for-apple](https://github.com/appwrite/sdk-for-apple)";
+                        $warning = $warning . "\n\n > This is the Swift SDK for integrating with Appwrite from your Swift server-side code. If you're looking for the Apple SDK you should check [appwrite/sdk-for-apple](https://github.com/appwrite/sdk-for-apple)";
                         break;
                     case 'apple':
                         $config = new Apple();
@@ -289,7 +289,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         break;
                     case 'kotlin':
                         $config = new Kotlin();
-                        $warning = $warning."\n\n > This is the Kotlin SDK for integrating with Appwrite from your Kotlin server-side code. If you're looking for the Android SDK you should check [appwrite/sdk-for-android](https://github.com/appwrite/sdk-for-android)";
+                        $warning = $warning . "\n\n > This is the Kotlin SDK for integrating with Appwrite from your Kotlin server-side code. If you're looking for the Android SDK you should check [appwrite/sdk-for-android](https://github.com/appwrite/sdk-for-android)";
                         break;
                     case 'graphql':
                         $config = new GraphQL();
@@ -305,11 +305,11 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $config = new AgentSkills();
                         break;
                     default:
-                        throw new \Exception('Language "'.$language['key'].'" not supported');
+                        throw new \Exception('Language "' . $language['key'] . '" not supported');
                 }
 
                 if ($createRelease && ! $examplesOnly) {
-                    $repoName = $language['gitUserName'].'/'.$language['gitRepoName'];
+                    $repoName = $language['gitUserName'] . '/' . $language['gitRepoName'];
                     $releaseVersion = $language['version'];
                     $releaseNotes = $this->extractReleaseNotes($changelog, $releaseVersion);
 
@@ -327,7 +327,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     }
 
                     // Check if release already exists
-                    $checkReleaseCommand = 'gh release view "'.$releaseVersion.'" --repo "'.$repoName.'" --json url --jq ".url" 2>/dev/null';
+                    $checkReleaseCommand = 'gh release view "' . $releaseVersion . '" --repo "' . $repoName . '" --json url --jq ".url" 2>/dev/null';
                     $existingReleaseUrl = trim(\shell_exec($checkReleaseCommand) ?? '');
 
                     if (! empty($existingReleaseUrl)) {
@@ -338,15 +338,15 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     }
 
                     // Check if the latest commit on the target branch already has a release
-                    $latestCommitCommand = 'gh api repos/'.$repoName.'/commits/'.$releaseTarget.' --jq ".sha" 2>/dev/null';
+                    $latestCommitCommand = 'gh api repos/' . $repoName . '/commits/' . $releaseTarget . ' --jq ".sha" 2>/dev/null';
                     $latestCommitSha = trim(\shell_exec($latestCommitCommand) ?? '');
 
                     if (! empty($latestCommitSha)) {
-                        $latestReleaseTagCommand = 'gh api repos/'.$repoName.'/releases --jq ".[0] | .tag_name" 2>/dev/null';
+                        $latestReleaseTagCommand = 'gh api repos/' . $repoName . '/releases --jq ".[0] | .tag_name" 2>/dev/null';
                         $latestReleaseTag = trim(\shell_exec($latestReleaseTagCommand) ?? '');
 
                         if (! empty($latestReleaseTag)) {
-                            $tagCommitCommand = 'gh api repos/'.$repoName.'/git/ref/tags/'.$latestReleaseTag.' --jq ".object.sha" 2>/dev/null';
+                            $tagCommitCommand = 'gh api repos/' . $repoName . '/git/ref/tags/' . $latestReleaseTag . ' --jq ".object.sha" 2>/dev/null';
                             $tagCommitSha = trim(\shell_exec($tagCommitCommand) ?? '');
 
                             if (! empty($tagCommitSha) && $latestCommitSha === $tagCommitSha) {
@@ -358,16 +358,16 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     }
 
                     $previousVersion = '';
-                    $tagListCommand = 'gh release list --repo "'.$repoName.'" --limit 1 --json tagName --jq ".[0].tagName" 2>&1';
+                    $tagListCommand = 'gh release list --repo "' . $repoName . '" --limit 1 --json tagName --jq ".[0].tagName" 2>&1';
                     $previousVersion = trim(\shell_exec($tagListCommand) ?? '');
 
                     $formattedNotes = "## What's Changed\n\n";
-                    $formattedNotes .= $releaseNotes."\n\n";
+                    $formattedNotes .= $releaseNotes . "\n\n";
 
                     if (! empty($previousVersion)) {
-                        $formattedNotes .= '**Full Changelog**: https://github.com/'.$repoName.'/compare/'.$previousVersion.'...'.$releaseVersion;
+                        $formattedNotes .= '**Full Changelog**: https://github.com/' . $repoName . '/compare/' . $previousVersion . '...' . $releaseVersion;
                     } else {
-                        $formattedNotes .= '**Full Changelog**: https://github.com/'.$repoName.'/releases/tag/'.$releaseVersion;
+                        $formattedNotes .= '**Full Changelog**: https://github.com/' . $repoName . '/releases/tag/' . $releaseVersion;
                     }
 
                     if (! $commitRelease) {
@@ -376,9 +376,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         Console::log("  Version: {$releaseVersion}");
                         Console::log("  Title: {$releaseTitle}");
                         Console::log("  Target Branch: {$releaseTarget}");
-                        Console::log('  Previous Version: '.($previousVersion ?: 'N/A'));
+                        Console::log('  Previous Version: ' . ($previousVersion ?: 'N/A'));
                         Console::log('  Release Notes:');
-                        Console::log('  '.str_replace("\n", "\n  ", $formattedNotes));
+                        Console::log('  ' . str_replace("\n", "\n  ", $formattedNotes));
                         Console::log('');
                     } else {
                         Console::info("Creating release {$releaseVersion} for {$language['name']} SDK...");
@@ -386,11 +386,11 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $tempNotesFile = \tempnam(\sys_get_temp_dir(), 'release_notes_');
                         \file_put_contents($tempNotesFile, $formattedNotes);
 
-                        $releaseCommand = 'gh release create "'.$releaseVersion.'" \
-                            --repo "'.$repoName.'" \
-                            --title "'.$releaseTitle.'" \
-                            --notes-file "'.$tempNotesFile.'" \
-                            --target "'.$releaseTarget.'" \
+                        $releaseCommand = 'gh release create "' . $releaseVersion . '" \
+                            --repo "' . $repoName . '" \
+                            --title "' . $releaseTitle . '" \
+                            --notes-file "' . $tempNotesFile . '" \
+                            --target "' . $releaseTarget . '" \
                             2>&1';
 
                         $releaseOutput = [];
@@ -415,7 +415,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                             }
                         } else {
                             $errorMessage = implode("\n", $releaseOutput);
-                            Console::error("Failed to create release for {$language['name']} SDK: ".$errorMessage);
+                            Console::error("Failed to create release for {$language['name']} SDK: " . $errorMessage);
                         }
                     }
 
@@ -463,7 +463,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 // Make sure we have a clean slate.
                 // Otherwise, all files in this dir will be pushed,
                 // regardless of whether they were just generated or not.
-                \exec('chmod -R u+w '.$result.' 2>/dev/null; rm -rf '.$result);
+                \exec('chmod -R u+w ' . $result . ' 2>/dev/null; rm -rf ' . $result);
 
                 try {
                     $sdk->generate($result);
@@ -476,7 +476,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 $useAi = ($ai !== 'no');
                 $apiKey = $useAi ? System::getEnv('_APP_ASSISTANT_OPENAI_API_KEY', '') : '';
                 $aiChangelog = ''; // Track AI-generated changelog for PR description
-                Console::info('Checking for _APP_ASSISTANT_OPENAI_API_KEY... ['.(! empty($apiKey) ? 'FOUND' : 'NOT FOUND').']');
+                Console::info('Checking for _APP_ASSISTANT_OPENAI_API_KEY... [' . (! empty($apiKey) ? 'FOUND' : 'NOT FOUND') . ']');
                 if (! empty($apiKey) && ! $examplesOnly) {
                     Console::info("Using AI to determine version bump and changelog for {$language['name']} SDK...");
                     $aiResult = $this->generateVersionAndChangelog($language, $result);
@@ -514,44 +514,44 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
                 $repoBranch = $language['repoBranch'] ?? 'main';
                 if ($git && ! empty($gitUrl)) {
-                    \exec('rm -rf '.$target.' && \
-                        mkdir -p '.$target.' && \
-                        cd '.$target.' && \
+                    \exec('rm -rf ' . $target . ' && \
+                        mkdir -p ' . $target . ' && \
+                        cd ' . $target . ' && \
                         git init && \
                         git config core.ignorecase false && \
                         git config pull.rebase false && \
-                        git remote add origin '.$gitUrl.' && \
+                        git remote add origin ' . $gitUrl . ' && \
                         git fetch origin && \
-                        (git checkout -f '.$repoBranch.' 2>/dev/null || git checkout -b '.$repoBranch.') && \
-                        git pull origin '.$repoBranch.' && \
-                        (git checkout -f '.$gitBranch.' 2>/dev/null || git checkout -b '.$gitBranch.') && \
-                        (git fetch origin '.$gitBranch.' 2>/dev/null || git push -u origin '.$gitBranch.') && \
-                        git reset --hard origin/'.$gitBranch.' 2>/dev/null || true && \
+                        (git checkout -f ' . $repoBranch . ' 2>/dev/null || git checkout -b ' . $repoBranch . ') && \
+                        git pull origin ' . $repoBranch . ' && \
+                        (git checkout -f ' . $gitBranch . ' 2>/dev/null || git checkout -b ' . $gitBranch . ') && \
+                        (git fetch origin ' . $gitBranch . ' 2>/dev/null || git push -u origin ' . $gitBranch . ') && \
+                        git reset --hard origin/' . $gitBranch . ' 2>/dev/null || true && \
                         (test -d .github && cp -r .github /tmp/.github-backup-$$ || true) && \
                         git rm -rf --cached . && \
                         git clean -fdx -e .git -e .github && \
-                        cp -r '.$result.'/. '.$target.'/ && \
+                        cp -r ' . $result . '/. ' . $target . '/ && \
                         (test -d /tmp/.github-backup-$$ && cp -rn /tmp/.github-backup-$$/.github . && rm -rf /tmp/.github-backup-$$ || true) && \
                         git add -A && \
-                        git commit -m "'.$message.'" && \
-                        git push -u origin '.$gitBranch.'
+                        git commit -m "' . $message . '" && \
+                        git push -u origin ' . $gitBranch . '
                     ');
 
                     Console::success("Pushed {$language['name']} SDK to {$gitUrl}");
                     if ($git) {
                         $prTitle = "feat: {$language['name']} SDK update for version {$language['version']}";
-                        $prBody = "This PR contains updates to the {$language['name']} SDK for version {$language['version']}.";
-                        $repoName = $language['gitUserName'].'/'.$language['gitRepoName'];
+                        $prBody = "This PR contains updates to the {$language['name']} SDK for version {$language['version']} . ";
+                        $repoName = $language['gitUserName'] . '/' . $language['gitRepoName'];
 
                         Console::info("Creating pull request for {$language['name']} SDK...");
 
-                        $prCommand = 'cd '.$target.' && \
+                        $prCommand = 'cd ' . $target . ' && \
                             gh pr create \
-                            --repo "'.$repoName.'" \
-                            --title "'.$prTitle.'" \
-                            --body "'.$prBody.'" \
-                            --base "'.$repoBranch.'" \
-                            --head "'.$gitBranch.'" \
+                            --repo "' . $repoName . '" \
+                            --title "' . $prTitle . '" \
+                            --body "' . $prBody . '" \
+                            --base "' . $repoBranch . '" \
+                            --head "' . $gitBranch . '" \
                             2>&1';
 
                         $prOutput = [];
@@ -567,10 +567,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                             $errorMessage = implode("\n", $prOutput);
                             if (strpos($errorMessage, 'already exists') !== false) {
                                 Console::warning("Pull request already exists for {$language['name']} SDK, updating title and body...");
-                                $prNumberCommand = 'cd '.$target.' && \
+                                $prNumberCommand = 'cd ' . $target . ' && \
                                     gh pr list \
-                                    --repo "'.$repoName.'" \
-                                    --head "'.$gitBranch.'" \
+                                    --repo "' . $repoName . '" \
+                                    --head "' . $gitBranch . '" \
                                     --json number \
                                     --jq ".[0].number" \
                                     2>&1';
@@ -583,14 +583,14 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                                     $prNumber = trim($prNumberOutput[0]);
 
                                     // Use API directly to update PR to avoid deprecated projectCards field
-                                    $updateCommand = 'cd '.$target.' && \
+                                    $updateCommand = 'cd ' . $target . ' && \
                                         gh api \
                                         --method PATCH \
                                         -H "Accept: application/vnd.github+json" \
                                         -H "X-GitHub-Api-Version: 2022-11-28" \
-                                        /repos/'.$repoName.'/pulls/'.$prNumber.' \
-                                        -f title="'.$prTitle.'" \
-                                        -f body="'.$prBody.'" \
+                                        /repos/' . $repoName . '/pulls/' . $prNumber . ' \
+                                        -f title="' . $prTitle . '" \
+                                        -f body="' . $prBody . '" \
                                         2>&1';
 
                                     $updateOutput = [];
@@ -600,10 +600,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                                     if ($updateReturnCode === 0) {
                                         Console::success("Successfully updated pull request for {$language['name']} SDK");
 
-                                        $prUrlCommand = 'cd '.$target.' && \
+                                        $prUrlCommand = 'cd ' . $target . ' && \
                                             gh pr list \
-                                            --repo "'.$repoName.'" \
-                                            --head "'.$gitBranch.'" \
+                                            --repo "' . $repoName . '" \
+                                            --head "' . $gitBranch . '" \
                                             --json url \
                                             --jq ".[0].url" \
                                             2>&1';
@@ -617,18 +617,18 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                                         }
                                     } else {
                                         $updateErrorMessage = implode("\n", $updateOutput);
-                                        Console::error("Failed to update pull request for {$language['name']} SDK: ".$updateErrorMessage);
+                                        Console::error("Failed to update pull request for {$language['name']} SDK: " . $updateErrorMessage);
                                     }
                                 } else {
                                     Console::error("Failed to get PR number for {$language['name']} SDK");
                                 }
                             } else {
-                                Console::error("Failed to create pull request for {$language['name']} SDK: ".$errorMessage);
+                                Console::error("Failed to create pull request for {$language['name']} SDK: " . $errorMessage);
                             }
                         }
                     }
 
-                    \exec('chmod -R u+w '.$target.' && rm -rf '.$target);
+                    \exec('chmod -R u+w ' . $target . ' && rm -rf ' . $target);
                     Console::success("Remove temp directory '{$target}' for {$language['name']} SDK");
                 }
 
@@ -639,8 +639,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 }
 
                 foreach ($docDirectories as $languageTitle => $path) {
-                    $languagePath = strtolower($languageTitle !== 0 ? '/'.$languageTitle : '');
-                    $examplesSource = $result.'/docs/examples'.$languagePath;
+                    $languagePath = strtolower($languageTitle !== 0 ? '/' . $languageTitle : '');
+                    $examplesSource = $result . '/docs/examples' . $languagePath;
 
                     if (! \is_dir($examplesSource)) {
                         Console::warning("No code examples found for {$language['name']} SDK at: {$examplesSource}. Skipping copy.");
@@ -649,8 +649,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     }
 
                     \exec(
-                        'mkdir -p '.$resultExamples.$languagePath.' && \
-                        cp -r '.$examplesSource.' '.$resultExamples
+                        'mkdir -p ' . $resultExamples . $languagePath . ' && \
+                        cp -r ' . $examplesSource . ' ' . $resultExamples
                     );
                     Console::success("Copied code examples for {$language['name']} SDK to: {$resultExamples}");
                 }
@@ -677,7 +677,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
         }
 
         // Changelog version header pattern: ## 0.14.0
-        $pattern = '/^##\s+'.preg_quote($version, '/').'\s*$/m';
+        $pattern = '/^##\s+' . preg_quote($version, '/') . '\s*$/m';
         $startPos = false;
         if (preg_match($pattern, $changelog, $matches, PREG_OFFSET_CAPTURE)) {
             $startPos = $matches[0][1];
@@ -716,7 +716,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
     private function generateVersionAndChangelog(array $language, string $generatedSdkPath): ?array
     {
         $tempDir = sys_get_temp_dir();
-        $repoClonePath = $tempDir.'/appwrite-sdk-repo-'.$language['key'].'-'.uniqid();
+        $repoClonePath = $tempDir . '/appwrite-sdk-repo-' . $language['key'] . '-' . uniqid();
 
         try {
             // Clone the existing SDK repo
@@ -734,7 +734,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
             exec($cloneCommand, $cloneOutput, $cloneReturnCode);
 
             if ($cloneReturnCode !== 0) {
-                Console::error("Failed to clone {$language['name']} SDK repository: ".implode("\n", $cloneOutput));
+                Console::error("Failed to clone {$language['name']} SDK repository: " . implode("\n", $cloneOutput));
 
                 return null;
             }
@@ -746,7 +746,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
             exec("cp -r {$generatedSdkPath}/* {$repoClonePath}/ 2>&1", $copyOutput, $copyReturnCode);
 
             if ($copyReturnCode !== 0) {
-                Console::error('Failed to copy generated SDK: '.implode("\n", $copyOutput));
+                Console::error('Failed to copy generated SDK: ' . implode("\n", $copyOutput));
                 exec("rm -rf {$repoClonePath}");
 
                 return null;
@@ -776,7 +776,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
             return $this->analyzeDiffWithAI($diff, $language['version'], $language['name']);
 
         } catch (\Throwable $e) {
-            Console::error('Error generating version and changelog: '.$e->getMessage());
+            Console::error('Error generating version and changelog: ' . $e->getMessage());
             // Clean up on error (don't remove generatedSdkPath as it's the main result dir)
             exec("rm -rf {$repoClonePath}");
 
@@ -867,8 +867,8 @@ PROMPT;
             try {
                 $response = $conversation->send();
             } catch (\Throwable $e) {
-                Console::error('AI API call failed: '.$e->getMessage());
-                Console::log('Exception trace: '.$e->getTraceAsString());
+                Console::error('AI API call failed: ' . $e->getMessage());
+                Console::log('Exception trace: ' . $e->getTraceAsString());
 
                 return null;
             }
@@ -888,7 +888,7 @@ PROMPT;
             $result = json_decode($responseContent, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
-                Console::warning('Failed to parse AI response as JSON: '.json_last_error_msg());
+                Console::warning('Failed to parse AI response as JSON: ' . json_last_error_msg());
                 Console::log('Raw response that failed to parse:');
                 Console::log($responseContent);
 
@@ -910,7 +910,7 @@ PROMPT;
             ];
 
         } catch (\Throwable $e) {
-            Console::error('AI analysis failed: '.$e->getMessage());
+            Console::error('AI analysis failed: ' . $e->getMessage());
 
             return null;
         }
@@ -926,7 +926,7 @@ PROMPT;
      */
     private function updateSdkVersion(string $platform, string $sdkKey, string $newVersion): bool
     {
-        $configPath = __DIR__.'/../../../../app/config/sdks.php';
+        $configPath = __DIR__ . '/../../../../app/config/sdks.php';
 
         if (! file_exists($configPath)) {
             Console::error("Config file not found: {$configPath}");
@@ -938,11 +938,11 @@ PROMPT;
 
         // Find and replace the version for this specific SDK
         // Pattern matches the version line in the SDK array
-        $pattern = '/(\[\s*[\'"]key[\'"]\s*=>\s*[\'"]'.preg_quote($sdkKey, '/').'[\'"]\s*,[\s\S]*?[\'"]version[\'"]\s*=>\s*[\'"])([^\'"]+)([\'"])/m';
+        $pattern = '/(\[\s*[\'"]key[\'"]\s*=>\s*[\'"]' . preg_quote($sdkKey, '/') . '[\'"]\s*,[\s\S]*?[\'"]version[\'"]\s*=>\s*[\'"])([^\'"]+)([\'"])/m';
 
         if (preg_match($pattern, $content, $matches)) {
             $oldVersion = $matches[2];
-            $newContent = preg_replace($pattern, '${1}'.$newVersion.'${3}', $content);
+            $newContent = preg_replace($pattern, '${1}' . $newVersion . '${3}', $content);
 
             if (file_put_contents($configPath, $newContent) !== false) {
                 Console::success("Updated {$sdkKey} version from {$oldVersion} to {$newVersion} in config");
