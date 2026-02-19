@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Graphql
@@ -10,4 +11,4 @@ val graphql = Graphql(client)
 
 val result = graphql.mutation(
     query = mapOf( "a" to "b" ), 
-)
+)```

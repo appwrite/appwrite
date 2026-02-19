@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -9,7 +10,8 @@ const sites = new sdk.Sites(client);
 
 const result = await sites.createVcsDeployment({
     siteId: '<SITE_ID>',
-    type: sdk.VCSDeploymentType.Branch,
+    type: sdk.VCSReferenceType.Branch,
     reference: '<REFERENCE>',
     activate: false // optional
 });
+```

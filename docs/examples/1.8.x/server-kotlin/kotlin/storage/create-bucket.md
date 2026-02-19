@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Storage
@@ -20,8 +21,9 @@ val response = storage.createBucket(
     enabled = false, // optional
     maximumFileSize = 1, // optional
     allowedFileExtensions = listOf(), // optional
-    compression = "none", // optional
+    compression = Compression.NONE, // optional
     encryption = false, // optional
     antivirus = false, // optional
     transformations = false // optional
 )
+```

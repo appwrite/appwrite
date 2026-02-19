@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -12,7 +13,8 @@ functions = Functions.new(client)
 
 result = functions.create_vcs_deployment(
     function_id: '<FUNCTION_ID>',
-    type: VCSDeploymentType::BRANCH,
+    type: VCSReferenceType::BRANCH,
     reference: '<REFERENCE>',
     activate: false # optional
 )
+```

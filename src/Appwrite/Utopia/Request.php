@@ -2,13 +2,14 @@
 
 namespace Appwrite\Utopia;
 
-use Appwrite\Auth\Auth;
 use Appwrite\SDK\Method;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request\Filter;
 use Swoole\Http\Request as SwooleRequest;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Route;
-use Utopia\Swoole\Request as UtopiaRequest;
+use Utopia\Http\Adapter\Swoole\Request as UtopiaRequest;
+use Utopia\Http\Route;
+use Utopia\System\System;
 
 class Request extends UtopiaRequest
 {
@@ -20,6 +21,9 @@ class Request extends UtopiaRequest
 
     public function __construct(SwooleRequest $request)
     {
+        $trustedHeaders = System::getEnv('_APP_TRUSTED_HEADERS', 'x-forwarded-for');
+        $this->setTrustedIpHeaders(explode(',', $trustedHeaders));
+
         parent::__construct($request);
     }
 
@@ -199,19 +203,19 @@ class Request extends UtopiaRequest
     }
 
     /**
-    * Get User Agent
-    *
-    * Method for getting User Agent. Preferring forwarded agent for privileged users; otherwise returns default.
-    *
-    * @param  string  $default
-    * @return string
-    */
+     * Get User Agent
+     *
+     * Method for getting User Agent. Preferring forwarded agent for privileged users; otherwise returns default.
+     *
+     * @param  string  $default
+     * @return string
+     */
     public function getUserAgent(string $default = ''): string
     {
         $forwardedUserAgent = $this->getHeader('x-forwarded-user-agent');
         if (!empty($forwardedUserAgent)) {
-            $roles = $this->authorization->getRoles() ?? [];
-            $isAppUser = Auth::isAppUser($roles);
+            $roles = $this->authorization->getRoles();
+            $isAppUser = User::isApp($roles);
 
             if ($isAppUser) {
                 return $forwardedUserAgent;

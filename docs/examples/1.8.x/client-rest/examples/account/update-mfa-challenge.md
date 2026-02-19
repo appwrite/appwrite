@@ -1,4 +1,5 @@
-PUT /v1/account/mfa/challenge HTTP/1.1
+```http
+PUT /v1/account/mfa/challenges HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
 X-Appwrite-Response-Format: 1.8.0
@@ -10,3 +11,4 @@ X-Appwrite-JWT: <YOUR_JWT>
   "challengeId": "<CHALLENGE_ID>",
   "otp": "<OTP>"
 }
+```

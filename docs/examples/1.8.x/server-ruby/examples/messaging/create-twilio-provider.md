@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -17,3 +18,4 @@ result = messaging.create_twilio_provider(
     auth_token: '<AUTH_TOKEN>', # optional
     enabled: false # optional
 )
+```

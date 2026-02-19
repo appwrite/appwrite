@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -8,3 +9,4 @@ Client client = Client()
 Account account = Account(client);
 
 await account.deleteSessions();
+```

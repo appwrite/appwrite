@@ -1,3 +1,4 @@
+```graphql
 mutation {
     functionsUpdateVariable(
         functionId: "<FUNCTION_ID>",
@@ -16,3 +17,4 @@ mutation {
         resourceId
     }
 }
+```

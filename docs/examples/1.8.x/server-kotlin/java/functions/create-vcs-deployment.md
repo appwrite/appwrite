@@ -1,7 +1,8 @@
+```java
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Functions;
-import io.appwrite.enums.VCSDeploymentType;
+import io.appwrite.enums.VCSReferenceType;
 
 Client client = new Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -12,7 +13,7 @@ Functions functions = new Functions(client);
 
 functions.createVcsDeployment(
     "<FUNCTION_ID>", // functionId
-    VCSDeploymentType.BRANCH, // type
+    VCSReferenceType.BRANCH, // type
     "<REFERENCE>", // reference
     false, // activate (optional)
     new CoroutineCallback<>((result, error) -> {
@@ -25,3 +26,4 @@ functions.createVcsDeployment(
     })
 );
 
+```

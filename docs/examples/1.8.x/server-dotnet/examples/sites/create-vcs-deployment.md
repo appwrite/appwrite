@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Enums;
 using Appwrite.Models;
@@ -12,7 +13,7 @@ Sites sites = new Sites(client);
 
 Deployment result = await sites.CreateVcsDeployment(
     siteId: "<SITE_ID>",
-    type: VCSDeploymentType.Branch,
+    type: VCSReferenceType.Branch,
     reference: "<REFERENCE>",
     activate: false // optional
-);
+);```

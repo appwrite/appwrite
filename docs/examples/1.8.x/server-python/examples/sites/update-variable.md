@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.sites import Sites
 
@@ -15,3 +16,4 @@ result = sites.update_variable(
     value = '<VALUE>', # optional
     secret = False # optional
 )
+```

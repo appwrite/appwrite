@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -13,3 +14,4 @@ let siteList = try await sites.list(
     total: false // optional
 )
 
+```

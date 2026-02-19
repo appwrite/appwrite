@@ -2,12 +2,13 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Env;
 use Appwrite\Utopia\View;
-use Utopia\CLI\Console;
+use Utopia\Auth\Proofs\Password;
+use Utopia\Auth\Proofs\Token;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Platform\Action;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
@@ -31,10 +32,11 @@ class Install extends Action
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
+            ->param('database', 'mariadb', new Text(0), 'Database to use (mariadb|postgresql)', true)
             ->callback($this->action(...));
     }
 
-    public function action(string $httpPort, string $httpsPort, string $organization, string $image, string $interactive, bool $noStart): void
+    public function action(string $httpPort, string $httpsPort, string $organization, string $image, string $interactive, bool $noStart, string $database): void
     {
         $config = Config::getParam('variables');
         $defaultHTTPPort = '80';
@@ -137,6 +139,7 @@ class Install extends Action
             }
         }
 
+
         if (empty($httpPort)) {
             $httpPort = Console::confirm('Choose your server HTTP port: (default: ' . $defaultHTTPPort . ')');
             $httpPort = ($httpPort) ? $httpPort : $defaultHTTPPort;
@@ -147,9 +150,63 @@ class Install extends Action
             $httpsPort = ($httpsPort) ? $httpsPort : $defaultHTTPSPort;
         }
 
+        $enableAssistant = false;
+        $assistantExistsInOldCompose = false;
+
+        if ($data !== false && isset($compose)) {
+            try {
+                $assistantService = $compose->getService('appwrite-assistant');
+                $assistantExistsInOldCompose = $assistantService !== null;
+            } catch (\Throwable) {
+                // assistant service doesn't exist, keep default false
+            }
+        }
+
+        if ($interactive == 'Y' && Console::isInteractive()) {
+            $prompt = 'Add Appwrite Assistant? (Y/n)' . ($assistantExistsInOldCompose ? ' [Currently enabled]' : '');
+            $answer = Console::confirm($prompt);
+
+            if (empty($answer)) {
+                $enableAssistant = $assistantExistsInOldCompose;
+            } else {
+                $enableAssistant = \strtolower($answer) === 'y';
+            }
+        } elseif ($assistantExistsInOldCompose) {
+            $enableAssistant = true;
+        }
+
         $input = [];
 
+        $password = new Password();
+        $token = new Token();
         foreach ($vars as $var) {
+            if ($var['name'] === '_APP_ASSISTANT_OPENAI_API_KEY') {
+                if (!$enableAssistant) {
+                    $input[$var['name']] = '';
+                    continue;
+                }
+
+                // key already exists
+                if (!empty($var['default'])) {
+                    $input[$var['name']] = $var['default'];
+                    continue;
+                }
+
+                // if assistant enabled and no key, ask for it
+                if (Console::isInteractive() && $interactive === 'Y') {
+                    $input[$var['name']] = Console::confirm('Enter your OpenAI API key for Appwrite Assistant:');
+                    if (empty($input[$var['name']])) {
+                        Console::warning('No API key provided. Assistant will be disabled.');
+                        $enableAssistant = false;
+                        $input[$var['name']] = '';
+                    }
+                    continue;
+                }
+
+                $input[$var['name']] = '';
+                continue;
+            }
+
             if (!empty($var['filter']) && ($interactive !== 'Y' || !Console::isInteractive())) {
                 if ($data && $var['default'] !== null) {
                     $input[$var['name']] = $var['default'];
@@ -157,17 +214,22 @@ class Install extends Action
                 }
 
                 if ($var['filter'] === 'token') {
-                    $input[$var['name']] = Auth::tokenGenerator();
+                    $input[$var['name']] = $token->generate();
                     continue;
                 }
 
                 if ($var['filter'] === 'password') {
-                    $input[$var['name']] = Auth::passwordGenerator();
+                    $input[$var['name']] = $password->generate();
                     continue;
                 }
             }
             if (!$var['required'] || !Console::isInteractive() || $interactive !== 'Y') {
                 $input[$var['name']] = $var['default'];
+                continue;
+            }
+
+            if ($var['name'] === '_APP_DB_ADAPTER' && $data !== false) {
+                $input[$var['name']] = $database;
                 continue;
             }
 
@@ -187,16 +249,25 @@ class Install extends Action
                 }
             }
         }
+        $database = $input['_APP_DB_ADAPTER'];
+        if ($database === 'postgresql') {
+            $input['_APP_DB_HOST'] = 'postgresql';
+            $input['_APP_DB_PORT'] = 5432;
+        } elseif ($database === 'mariadb') {
+            $input['_APP_DB_HOST'] = 'mariadb';
+            $input['_APP_DB_PORT'] = 3306;
+        }
 
         $templateForCompose = new View(__DIR__ . '/../../../../app/views/install/compose.phtml');
         $templateForEnv = new View(__DIR__ . '/../../../../app/views/install/env.phtml');
-
         $templateForCompose
             ->setParam('httpPort', $httpPort)
             ->setParam('httpsPort', $httpsPort)
             ->setParam('version', APP_VERSION_STABLE)
             ->setParam('organization', $organization)
-            ->setParam('image', $image);
+            ->setParam('image', $image)
+            ->setParam('enableAssistant', $enableAssistant)
+            ->setParam('database', $database);
 
         $templateForEnv->setParam('vars', $input);
 

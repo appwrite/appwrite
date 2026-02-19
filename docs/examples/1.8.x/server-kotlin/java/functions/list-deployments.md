@@ -1,3 +1,4 @@
+```java
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Functions;
@@ -11,7 +12,7 @@ Functions functions = new Functions(client);
 
 functions.listDeployments(
     "<FUNCTION_ID>", // functionId
-    listOf(), // queries (optional)
+    List.of(), // queries (optional)
     "<SEARCH>", // search (optional)
     false, // total (optional)
     new CoroutineCallback<>((result, error) -> {
@@ -24,3 +25,4 @@ functions.listDeployments(
     })
 );
 
+```

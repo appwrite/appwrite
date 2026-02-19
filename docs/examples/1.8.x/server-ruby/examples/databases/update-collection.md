@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -14,8 +15,9 @@ databases = Databases.new(client)
 result = databases.update_collection(
     database_id: '<DATABASE_ID>',
     collection_id: '<COLLECTION_ID>',
-    name: '<NAME>',
+    name: '<NAME>', # optional
     permissions: [Permission.read(Role.any())], # optional
     document_security: false, # optional
     enabled: false # optional
 )
+```

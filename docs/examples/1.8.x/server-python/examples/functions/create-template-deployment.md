@@ -1,6 +1,7 @@
+```python
 from appwrite.client import Client
 from appwrite.services.functions import Functions
-from appwrite.enums import 
+from appwrite.enums import TemplateReferenceType
 
 client = Client()
 client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
@@ -14,7 +15,8 @@ result = functions.create_template_deployment(
     repository = '<REPOSITORY>',
     owner = '<OWNER>',
     root_directory = '<ROOT_DIRECTORY>',
-    type = .COMMIT,
+    type = TemplateReferenceType.COMMIT,
     reference = '<REFERENCE>',
     activate = False # optional
 )
+```

@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -15,7 +16,8 @@ result = functions.create_template_deployment(
     repository: '<REPOSITORY>',
     owner: '<OWNER>',
     root_directory: '<ROOT_DIRECTORY>',
-    type: ::COMMIT,
+    type: TemplateReferenceType::COMMIT,
     reference: '<REFERENCE>',
     activate: false # optional
 )
+```

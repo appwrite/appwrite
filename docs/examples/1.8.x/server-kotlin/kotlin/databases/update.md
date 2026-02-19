@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Databases
@@ -11,6 +12,7 @@ val databases = Databases(client)
 
 val response = databases.update(
     databaseId = "<DATABASE_ID>",
-    name = "<NAME>",
+    name = "<NAME>", // optional
     enabled = false // optional
 )
+```

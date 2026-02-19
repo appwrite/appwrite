@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -12,4 +13,4 @@ $tokens = new Tokens($client);
 
 $result = $tokens->get(
     tokenId: '<TOKEN_ID>'
-);
+);```

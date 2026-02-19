@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.messaging import Messaging
 
@@ -16,3 +17,4 @@ result = messaging.create_msg91_provider(
     auth_key = '<AUTH_KEY>', # optional
     enabled = False # optional
 )
+```

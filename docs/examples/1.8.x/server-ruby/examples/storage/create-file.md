@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -17,3 +18,4 @@ result = storage.create_file(
     file: InputFile.from_path('dir/file.png'),
     permissions: [Permission.read(Role.any())] # optional
 )
+```

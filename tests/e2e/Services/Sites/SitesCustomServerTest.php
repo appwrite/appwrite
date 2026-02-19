@@ -9,7 +9,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
@@ -155,7 +155,7 @@ class SitesCustomServerTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
                 'queries' => [
-                    Query::equal('deploymentResourceId', [$siteId])
+                    Query::equal('deploymentResourceId', [$siteId])->toString()
                 ]
             ]);
 
@@ -1810,11 +1810,12 @@ class SitesCustomServerTest extends Scope
 
         $siteId2 = $site2['body']['$id'];
 
+        $sitesDomain = \explode(',', System::getEnv('_APP_DOMAIN_SITES', ''))[0];
         $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/site', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'domain' => $subdomain . '.' . System::getEnv('_APP_DOMAIN_SITES', ''),
+            'domain' => $subdomain . '.' . $sitesDomain,
             'siteId' => $siteId2,
         ]);
 
@@ -1962,7 +1963,7 @@ class SitesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'referer' => $url,
-            'origin' => $url
+            'origin' => $url,
         ]));
 
         $this->assertEquals($url, $response['headers']['access-control-allow-origin']);
@@ -1971,11 +1972,10 @@ class SitesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => 'unknown',
             'referer' => $url,
-            'origin' => $url
+            'origin' => $url,
         ]));
 
-        $this->assertNotEquals($url, $response['headers']['access-control-allow-origin']);
-        $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
+        $this->assertArrayNotHasKey('access-control-allow-origin', $response['headers']);
 
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'content-type' => 'application/json',
@@ -1984,8 +1984,7 @@ class SitesCustomServerTest extends Scope
             'origin' => 'http://unknown.com'
         ]));
 
-        $this->assertNotEquals($url, $response['headers']['access-control-allow-origin']);
-        $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
+        $this->assertArrayNotHasKey('access-control-allow-origin', $response['headers']);
     }
 
     public function testSiteDownload(): void
@@ -2411,7 +2410,8 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertArrayHasKey('set-cookie', $response['headers']);
         $this->assertStringContainsString('a_jwt_console=', $response['headers']['set-cookie']);
-        $this->assertStringContainsString('httponly', $response['headers']['set-cookie']);
+        // due to swoole update; no more httponly
+        $this->assertStringContainsString('HttpOnly', $response['headers']['set-cookie']);
         $this->assertStringContainsString('domain=' . $domain, $response['headers']['set-cookie']);
         $this->assertStringContainsString('path=/', $response['headers']['set-cookie']);
         $this->assertNotEmpty($response['cookies']['a_jwt_console']);
@@ -2552,7 +2552,7 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
-    public function testDomainForFailedDeloyment(): void
+    public function testDomainForFailedDeployment(): void
     {
         $siteId = $this->setupSite([
             'siteId' => ID::unique(),

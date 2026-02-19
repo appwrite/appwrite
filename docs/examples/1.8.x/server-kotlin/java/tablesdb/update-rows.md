@@ -1,3 +1,4 @@
+```java
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.TablesDB;
@@ -12,8 +13,14 @@ TablesDB tablesDB = new TablesDB(client);
 tablesDB.updateRows(
     "<DATABASE_ID>", // databaseId
     "<TABLE_ID>", // tableId
-    mapOf( "a" to "b" ), // data (optional)
-    listOf(), // queries (optional)
+    Map.of(
+        "username", "walter.obrien",
+        "email", "walter.obrien@example.com",
+        "fullName", "Walter O'Brien",
+        "age", 33,
+        "isAdmin", false
+    ), // data (optional)
+    List.of(), // queries (optional)
     "<TRANSACTION_ID>", // transactionId (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
@@ -25,3 +32,4 @@ tablesDB.updateRows(
     })
 );
 
+```

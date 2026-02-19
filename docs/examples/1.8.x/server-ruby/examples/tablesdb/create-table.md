@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -17,5 +18,8 @@ result = tables_db.create_table(
     name: '<NAME>',
     permissions: [Permission.read(Role.any())], # optional
     row_security: false, # optional
-    enabled: false # optional
+    enabled: false, # optional
+    columns: [], # optional
+    indexes: [] # optional
 )
+```

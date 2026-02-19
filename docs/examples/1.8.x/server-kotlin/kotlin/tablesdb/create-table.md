@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.TablesDB
@@ -17,5 +18,8 @@ val response = tablesDB.createTable(
     name = "<NAME>",
     permissions = listOf(Permission.read(Role.any())), // optional
     rowSecurity = false, // optional
-    enabled = false // optional
+    enabled = false, // optional
+    columns = listOf(), // optional
+    indexes = listOf() // optional
 )
+```

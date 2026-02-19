@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -14,3 +15,4 @@ result = tables_db.create(
     name: '<NAME>',
     enabled: false # optional
 )
+```

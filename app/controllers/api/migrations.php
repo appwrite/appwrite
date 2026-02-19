@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Auth\Auth;
 use Appwrite\Event\Event;
 use Appwrite\Event\Migration;
 use Appwrite\Extend\Exception;
@@ -12,7 +11,9 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CompoundUID;
 use Appwrite\Utopia\Database\Validator\Queries\Migrations;
 use Appwrite\Utopia\Response;
-use Utopia\App;
+use Utopia\Compression\Algorithms\GZIP;
+use Utopia\Compression\Algorithms\Zstd;
+use Utopia\Compression\Compression;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Order as OrderException;
@@ -23,6 +24,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Queries\Documents;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
+use Utopia\Http\Http;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\Appwrite;
 use Utopia\Migration\Sources\CSV;
@@ -30,9 +32,6 @@ use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
 use Utopia\Migration\Transfer;
-use Utopia\Storage\Compression\Algorithms\GZIP;
-use Utopia\Storage\Compression\Algorithms\Zstd;
-use Utopia\Storage\Compression\Compression;
 use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
@@ -44,7 +43,7 @@ use Utopia\Validator\WhiteList;
 
 include_once __DIR__ . '/../shared/api.php';
 
-App::post('/v1/migrations/appwrite')
+Http::post('/v1/migrations/appwrite')
     ->groups(['api', 'migrations'])
     ->desc('Create Appwrite migration')
     ->label('scope', 'migrations.write')
@@ -70,10 +69,11 @@ App::post('/v1/migrations/appwrite')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
+    ->inject('platform')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForMigrations')
-    ->action(function (array $resources, string $endpoint, string $projectId, string $apiKey, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
+    ->action(function (array $resources, string $endpoint, string $projectId, string $apiKey, Response $response, Database $dbForProject, Document $project, array $platform, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
@@ -97,6 +97,7 @@ App::post('/v1/migrations/appwrite')
         $queueForMigrations
             ->setMigration($migration)
             ->setProject($project)
+            ->setPlatform($platform)
             ->setUser($user)
             ->trigger();
 
@@ -105,7 +106,7 @@ App::post('/v1/migrations/appwrite')
             ->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
-App::post('/v1/migrations/firebase')
+Http::post('/v1/migrations/firebase')
     ->groups(['api', 'migrations'])
     ->desc('Create Firebase migration')
     ->label('scope', 'migrations.write')
@@ -129,10 +130,11 @@ App::post('/v1/migrations/firebase')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
+    ->inject('platform')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForMigrations')
-    ->action(function (array $resources, string $serviceAccount, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
+    ->action(function (array $resources, string $serviceAccount, Response $response, Database $dbForProject, Document $project, array $platform, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
         $serviceAccountData = json_decode($serviceAccount, true);
 
         if (empty($serviceAccountData)) {
@@ -164,6 +166,7 @@ App::post('/v1/migrations/firebase')
         $queueForMigrations
             ->setMigration($migration)
             ->setProject($project)
+            ->setPlatform($platform)
             ->setUser($user)
             ->trigger();
 
@@ -172,7 +175,7 @@ App::post('/v1/migrations/firebase')
             ->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
-App::post('/v1/migrations/supabase')
+Http::post('/v1/migrations/supabase')
     ->groups(['api', 'migrations'])
     ->desc('Create Supabase migration')
     ->label('scope', 'migrations.write')
@@ -201,10 +204,11 @@ App::post('/v1/migrations/supabase')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
+    ->inject('platform')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForMigrations')
-    ->action(function (array $resources, string $endpoint, string $apiKey, string $databaseHost, string $username, string $password, int $port, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
+    ->action(function (array $resources, string $endpoint, string $apiKey, string $databaseHost, string $username, string $password, int $port, Response $response, Database $dbForProject, Document $project, array $platform, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
@@ -231,6 +235,7 @@ App::post('/v1/migrations/supabase')
         $queueForMigrations
             ->setMigration($migration)
             ->setProject($project)
+            ->setPlatform($platform)
             ->setUser($user)
             ->trigger();
 
@@ -239,7 +244,7 @@ App::post('/v1/migrations/supabase')
             ->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
-App::post('/v1/migrations/nhost')
+Http::post('/v1/migrations/nhost')
     ->groups(['api', 'migrations'])
     ->desc('Create NHost migration')
     ->label('scope', 'migrations.write')
@@ -269,10 +274,11 @@ App::post('/v1/migrations/nhost')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
+    ->inject('platform')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForMigrations')
-    ->action(function (array $resources, string $subdomain, string $region, string $adminSecret, string $database, string $username, string $password, int $port, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
+    ->action(function (array $resources, string $subdomain, string $region, string $adminSecret, string $database, string $username, string $password, int $port, Response $response, Database $dbForProject, Document $project, array $platform, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
@@ -300,6 +306,7 @@ App::post('/v1/migrations/nhost')
         $queueForMigrations
             ->setMigration($migration)
             ->setProject($project)
+            ->setPlatform($platform)
             ->setUser($user)
             ->trigger();
 
@@ -308,7 +315,7 @@ App::post('/v1/migrations/nhost')
             ->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
-App::post('/v1/migrations/csv/imports')
+Http::post('/v1/migrations/csv/imports')
     ->alias('/v1/migrations/csv')
     ->groups(['api', 'migrations'])
     ->desc('Import documents from a CSV')
@@ -337,16 +344,27 @@ App::post('/v1/migrations/csv/imports')
     ->inject('dbForPlatform')
     ->inject('authorization')
     ->inject('project')
+    ->inject('platform')
     ->inject('deviceForFiles')
     ->inject('deviceForMigrations')
     ->inject('queueForEvents')
     ->inject('queueForMigrations')
-    ->action(function (string $bucketId, string $fileId, string $resourceId, bool $internalFile, Response $response, Database $dbForProject, Database $dbForPlatform, Authorization $authorization, Document $project, Device $deviceForFiles, Device $deviceForMigrations, Event $queueForEvents, Migration $queueForMigrations) {
-        $isAPIKey = Auth::isAppUser($authorization->getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser($authorization->getRoles());
-        if ($internalFile && !$isPrivilegedUser) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        }
+    ->action(function (
+        string $bucketId,
+        string $fileId,
+        string $resourceId,
+        bool $internalFile,
+        Response $response,
+        Database $dbForProject,
+        Database $dbForPlatform,
+        Authorization $authorization,
+        Document $project,
+        array $platform,
+        Device $deviceForFiles,
+        Device $deviceForMigrations,
+        Event $queueForEvents,
+        Migration $queueForMigrations
+    ) {
         $bucket = $authorization->skip(function () use ($internalFile, $dbForPlatform, $dbForProject, $bucketId) {
             if ($internalFile) {
                 return $dbForPlatform->getDocument('buckets', 'default');
@@ -435,6 +453,7 @@ App::post('/v1/migrations/csv/imports')
         $queueForMigrations
             ->setMigration($migration)
             ->setProject($project)
+            ->setProject($project)
             ->trigger();
 
         $response
@@ -442,7 +461,7 @@ App::post('/v1/migrations/csv/imports')
             ->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
-App::post('/v1/migrations/csv/exports')
+Http::post('/v1/migrations/csv/exports')
     ->groups(['api', 'migrations'])
     ->desc('Export documents to CSV')
     ->label('scope', 'migrations.write')
@@ -476,6 +495,7 @@ App::post('/v1/migrations/csv/exports')
     ->inject('dbForPlatform')
     ->inject('authorization')
     ->inject('project')
+    ->inject('platform')
     ->inject('queueForEvents')
     ->inject('queueForMigrations')
     ->action(function (
@@ -494,6 +514,7 @@ App::post('/v1/migrations/csv/exports')
         Database $dbForPlatform,
         Authorization $authorization,
         Document $project,
+        array $platform,
         Event $queueForEvents,
         Migration $queueForMigrations
     ) {
@@ -567,6 +588,7 @@ App::post('/v1/migrations/csv/exports')
         $queueForMigrations
             ->setMigration($migration)
             ->setProject($project)
+            ->setPlatform($platform)
             ->trigger();
 
         $response
@@ -574,7 +596,7 @@ App::post('/v1/migrations/csv/exports')
             ->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
-App::get('/v1/migrations')
+Http::get('/v1/migrations')
     ->groups(['api', 'migrations'])
     ->desc('List migrations')
     ->label('scope', 'migrations.read')
@@ -607,16 +629,10 @@ App::get('/v1/migrations')
             $queries[] = Query::search('search', $search);
         }
 
-        /**
-         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
-         */
-        $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
-        });
-        $cursor = reset($cursor);
-        if ($cursor) {
-            /** @var Query $cursor */
+        $cursor = Query::getCursorQueries($queries, false);
+        $cursor = \reset($cursor);
 
+        if ($cursor !== false) {
             $validator = new Cursor();
             if (!$validator->isValid($cursor)) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
@@ -645,7 +661,7 @@ App::get('/v1/migrations')
         ]), Response::MODEL_MIGRATION_LIST);
     });
 
-App::get('/v1/migrations/:migrationId')
+Http::get('/v1/migrations/:migrationId')
     ->groups(['api', 'migrations'])
     ->desc('Get migration')
     ->label('scope', 'migrations.read')
@@ -675,7 +691,7 @@ App::get('/v1/migrations/:migrationId')
         $response->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
-App::get('/v1/migrations/appwrite/report')
+Http::get('/v1/migrations/appwrite/report')
     ->groups(['api', 'migrations'])
     ->desc('Get Appwrite migration report')
     ->label('scope', 'migrations.write')
@@ -724,7 +740,7 @@ App::get('/v1/migrations/appwrite/report')
             ->dynamic(new Document($report), Response::MODEL_MIGRATION_REPORT);
     });
 
-App::get('/v1/migrations/firebase/report')
+Http::get('/v1/migrations/firebase/report')
     ->groups(['api', 'migrations'])
     ->desc('Get Firebase migration report')
     ->label('scope', 'migrations.write')
@@ -777,7 +793,7 @@ App::get('/v1/migrations/firebase/report')
             ->dynamic(new Document($report), Response::MODEL_MIGRATION_REPORT);
     });
 
-App::get('/v1/migrations/supabase/report')
+Http::get('/v1/migrations/supabase/report')
     ->groups(['api', 'migrations'])
     ->desc('Get Supabase migration report')
     ->label('scope', 'migrations.write')
@@ -826,7 +842,7 @@ App::get('/v1/migrations/supabase/report')
             ->dynamic(new Document($report), Response::MODEL_MIGRATION_REPORT);
     });
 
-App::get('/v1/migrations/nhost/report')
+Http::get('/v1/migrations/nhost/report')
     ->groups(['api', 'migrations'])
     ->desc('Get NHost migration report')
     ->label('scope', 'migrations.write')
@@ -875,7 +891,7 @@ App::get('/v1/migrations/nhost/report')
             ->dynamic(new Document($report), Response::MODEL_MIGRATION_REPORT);
     });
 
-App::patch('/v1/migrations/:migrationId')
+Http::patch('/v1/migrations/:migrationId')
     ->groups(['api', 'migrations'])
     ->desc('Update retry migration')
     ->label('scope', 'migrations.write')
@@ -899,9 +915,10 @@ App::patch('/v1/migrations/:migrationId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
+    ->inject('platform')
     ->inject('user')
     ->inject('queueForMigrations')
-    ->action(function (string $migrationId, Response $response, Database $dbForProject, Document $project, Document $user, Migration $queueForMigrations) {
+    ->action(function (string $migrationId, Response $response, Database $dbForProject, Document $project, array $platform, Document $user, Migration $queueForMigrations) {
         $migration = $dbForProject->getDocument('migrations', $migrationId);
 
         if ($migration->isEmpty()) {
@@ -920,13 +937,14 @@ App::patch('/v1/migrations/:migrationId')
         $queueForMigrations
             ->setMigration($migration)
             ->setProject($project)
+            ->setPlatform($platform)
             ->setUser($user)
             ->trigger();
 
         $response->noContent();
     });
 
-App::delete('/v1/migrations/:migrationId')
+Http::delete('/v1/migrations/:migrationId')
     ->groups(['api', 'migrations'])
     ->desc('Delete migration')
     ->label('scope', 'migrations.write')

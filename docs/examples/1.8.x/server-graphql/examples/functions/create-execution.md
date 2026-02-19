@@ -1,3 +1,4 @@
+```graphql
 mutation {
     functionsCreateExecution(
         functionId: "<FUNCTION_ID>",
@@ -34,3 +35,4 @@ mutation {
         scheduledAt
     }
 }
+```

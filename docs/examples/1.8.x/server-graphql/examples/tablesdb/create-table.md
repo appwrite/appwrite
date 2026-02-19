@@ -1,3 +1,4 @@
+```graphql
 mutation {
     tablesDBCreateTable(
         databaseId: "<DATABASE_ID>",
@@ -5,7 +6,9 @@ mutation {
         name: "<NAME>",
         permissions: ["read("any")"],
         rowSecurity: false,
-        enabled: false
+        enabled: false,
+        columns: [],
+        indexes: []
     ) {
         _id
         _createdAt
@@ -28,5 +31,8 @@ mutation {
             lengths
             orders
         }
+        bytesMax
+        bytesUsed
     }
 }
+```

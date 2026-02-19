@@ -1,3 +1,4 @@
+```java
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Users;
@@ -11,7 +12,7 @@ Users users = new Users(client);
 
 users.listLogs(
     "<USER_ID>", // userId
-    listOf(), // queries (optional)
+    List.of(), // queries (optional)
     false, // total (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
@@ -23,3 +24,4 @@ users.listLogs(
     })
 );
 
+```

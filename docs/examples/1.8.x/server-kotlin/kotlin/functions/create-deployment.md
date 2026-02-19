@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.models.InputFile
@@ -17,3 +18,4 @@ val response = functions.createDeployment(
     entrypoint = "<ENTRYPOINT>", // optional
     commands = "<COMMANDS>" // optional
 )
+```

@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -23,3 +23,4 @@ response, error := service.CreateScryptModifiedUser(
     "<PASSWORD_SIGNER_KEY>",
     users.WithCreateScryptModifiedUserName("<NAME>"),
 )
+```

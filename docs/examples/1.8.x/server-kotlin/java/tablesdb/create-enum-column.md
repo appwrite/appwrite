@@ -1,3 +1,4 @@
+```java
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.TablesDB;
@@ -13,7 +14,7 @@ tablesDB.createEnumColumn(
     "<DATABASE_ID>", // databaseId
     "<TABLE_ID>", // tableId
     "", // key
-    listOf(), // elements
+    List.of(), // elements
     false, // required
     "<DEFAULT>", // default (optional)
     false, // array (optional)
@@ -27,3 +28,4 @@ tablesDB.createEnumColumn(
     })
 );
 
+```

@@ -1,3 +1,4 @@
+```javascript
 import { Client, Functions, ExecutionMethod } from "appwrite";
 
 const client = new Client()
@@ -17,3 +18,4 @@ const result = await functions.createExecution({
 });
 
 console.log(result);
+```

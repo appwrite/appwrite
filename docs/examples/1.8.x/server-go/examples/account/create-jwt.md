@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -9,8 +9,12 @@ import (
 client := client.New(
     client.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     client.WithProject("<YOUR_PROJECT_ID>")
+    client.WithSession("")
 )
 
 service := account.New(client)
 
-response, error := service.CreateJWT())
+response, error := service.CreateJWT(
+    account.WithCreateJWTDuration(0),
+)
+```

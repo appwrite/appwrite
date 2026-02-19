@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -14,4 +15,4 @@ $result = $teams->updateMembership(
     teamId: '<TEAM_ID>',
     membershipId: '<MEMBERSHIP_ID>',
     roles: []
-);
+);```

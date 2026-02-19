@@ -1,3 +1,4 @@
+```java
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Functions;
@@ -16,7 +17,7 @@ functions.createExecution(
     false, // async (optional)
     "<PATH>", // path (optional)
     ExecutionMethod.GET, // method (optional)
-    mapOf( "a" to "b" ), // headers (optional)
+    Map.of("a", "b"), // headers (optional)
     "<SCHEDULED_AT>", // scheduledAt (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
@@ -28,3 +29,4 @@ functions.createExecution(
     })
 );
 
+```

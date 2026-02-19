@@ -1,3 +1,4 @@
+```java
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Messaging;
@@ -11,17 +12,17 @@ Messaging messaging = new Messaging(client);
 
 messaging.updateEmail(
     "<MESSAGE_ID>", // messageId
-    listOf(), // topics (optional)
-    listOf(), // users (optional)
-    listOf(), // targets (optional)
+    List.of(), // topics (optional)
+    List.of(), // users (optional)
+    List.of(), // targets (optional)
     "<SUBJECT>", // subject (optional)
     "<CONTENT>", // content (optional)
     false, // draft (optional)
     false, // html (optional)
-    listOf(), // cc (optional)
-    listOf(), // bcc (optional)
+    List.of(), // cc (optional)
+    List.of(), // bcc (optional)
     "", // scheduledAt (optional)
-    listOf(), // attachments (optional)
+    List.of(), // attachments (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -32,3 +33,4 @@ messaging.updateEmail(
     })
 );
 
+```

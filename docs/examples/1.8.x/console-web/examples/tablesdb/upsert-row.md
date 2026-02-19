@@ -1,3 +1,4 @@
+```javascript
 import { Client, TablesDB, Permission, Role } from "@appwrite.io/console";
 
 const client = new Client()
@@ -10,9 +11,16 @@ const result = await tablesDB.upsertRow({
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     rowId: '<ROW_ID>',
-    data: {}, // optional
+    data: {
+        "username": "walter.obrien",
+        "email": "walter.obrien@example.com",
+        "fullName": "Walter O'Brien",
+        "age": 33,
+        "isAdmin": false
+    }, // optional
     permissions: [Permission.read(Role.any())], // optional
     transactionId: '<TRANSACTION_ID>' // optional
 });
 
 console.log(result);
+```

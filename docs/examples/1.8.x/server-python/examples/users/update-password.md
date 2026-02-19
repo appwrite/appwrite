@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.users import Users
 
@@ -12,3 +13,4 @@ result = users.update_password(
     user_id = '<USER_ID>',
     password = ''
 )
+```

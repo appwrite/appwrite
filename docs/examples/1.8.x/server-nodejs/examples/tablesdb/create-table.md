@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -13,5 +14,8 @@ const result = await tablesDB.createTable({
     name: '<NAME>',
     permissions: [sdk.Permission.read(sdk.Role.any())], // optional
     rowSecurity: false, // optional
-    enabled: false // optional
+    enabled: false, // optional
+    columns: [], // optional
+    indexes: [] // optional
 });
+```

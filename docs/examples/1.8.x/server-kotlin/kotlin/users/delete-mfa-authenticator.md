@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Users
@@ -12,5 +13,6 @@ val users = Users(client)
 
 val response = users.deleteMFAAuthenticator(
     userId = "<USER_ID>",
-    type =  AuthenticatorType.TOTP
+    type = AuthenticatorType.TOTP
 )
+```

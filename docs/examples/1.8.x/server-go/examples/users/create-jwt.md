@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -19,3 +19,4 @@ response, error := service.CreateJWT(
     users.WithCreateJWTSessionId("<SESSION_ID>"),
     users.WithCreateJWTDuration(0),
 )
+```

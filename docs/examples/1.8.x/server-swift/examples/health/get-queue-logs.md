@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -11,3 +12,4 @@ let healthQueue = try await health.getQueueLogs(
     threshold: 0 // optional
 )
 
+```

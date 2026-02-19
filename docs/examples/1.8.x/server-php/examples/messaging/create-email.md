@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -23,4 +24,4 @@ $result = $messaging->createEmail(
     draft: false, // optional
     html: false, // optional
     scheduledAt: '' // optional
-);
+);```

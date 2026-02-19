@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Enums;
 using Appwrite.Models;
@@ -15,7 +16,7 @@ Deployment result = await sites.CreateTemplateDeployment(
     repository: "<REPOSITORY>",
     owner: "<OWNER>",
     rootDirectory: "<ROOT_DIRECTORY>",
-    type: .Branch,
+    type: TemplateReferenceType.Branch,
     reference: "<REFERENCE>",
     activate: false // optional
-);
+);```

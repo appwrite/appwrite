@@ -6,7 +6,7 @@ use Appwrite\ID;
 use Appwrite\Tests\Async;
 use CURLFile;
 use Tests\E2E\Client;
-use Utopia\CLI\Console;
+use Utopia\Console;
 
 trait ProxyBase
 {

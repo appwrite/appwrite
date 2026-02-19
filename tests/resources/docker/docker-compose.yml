@@ -1,6 +1,6 @@
 services:
   traefik:
-    image: traefik:2.2
+    image: traefik:3.6
     container_name: appwrite-traefik
     command:
       - --log.level=DEBUG
@@ -212,6 +212,27 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
 
+  appwrite-worker-executions:
+    entrypoint: worker-executions
+    container_name: appwrite-worker-executions
+    build:
+      context: .
+    restart: unless-stopped
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+      - mariadb
+    environment:
+      - _APP_ENV
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+
   appwrite-worker-functions:
     entrypoint: worker-functions
     container_name: appwrite-worker-functions
@@ -258,6 +279,12 @@ services:
       - _APP_ENV
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
 

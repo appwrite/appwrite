@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 import AppwriteEnums
 
@@ -13,3 +14,4 @@ let healthQueue = try await health.getFailedJobs(
     threshold: 0 // optional
 )
 
+```

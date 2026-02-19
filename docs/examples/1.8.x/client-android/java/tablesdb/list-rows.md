@@ -1,3 +1,4 @@
+```java
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.TablesDB;
@@ -11,7 +12,7 @@ TablesDB tablesDB = new TablesDB(client);
 tablesDB.listRows(
     "<DATABASE_ID>", // databaseId 
     "<TABLE_ID>", // tableId 
-    listOf(), // queries (optional)
+    List.of(), // queries (optional)
     "<TRANSACTION_ID>", // transactionId (optional)
     false, // total (optional)
     new CoroutineCallback<>((result, error) -> {
@@ -24,3 +25,4 @@ tablesDB.listRows(
     })
 );
 
+```

@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -12,3 +13,4 @@ sites = Sites.new(client)
 result = sites.list_variables(
     site_id: '<SITE_ID>'
 )
+```

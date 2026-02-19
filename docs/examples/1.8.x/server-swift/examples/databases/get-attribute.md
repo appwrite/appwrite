@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -7,9 +8,10 @@ let client = Client()
 
 let databases = Databases(client)
 
-let result = try await databases.getAttribute(
+let attributeBoolean = try await databases.getAttribute(
     databaseId: "<DATABASE_ID>",
     collectionId: "<COLLECTION_ID>",
     key: ""
 )
 
+```

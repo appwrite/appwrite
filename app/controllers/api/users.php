@@ -1,7 +1,6 @@
 <?php
 
 use Ahc\Jwt\JWT;
-use Appwrite\Auth\Auth;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Auth\Validator\Password;
@@ -30,8 +29,20 @@ use Appwrite\Utopia\Database\Validator\Queries\Targets;
 use Appwrite\Utopia\Database\Validator\Queries\Users;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Utopia\App;
+use MaxMind\Db\Reader;
 use Utopia\Audit\Audit;
+use Utopia\Auth\Hash;
+use Utopia\Auth\Hashes\Argon2;
+use Utopia\Auth\Hashes\Bcrypt;
+use Utopia\Auth\Hashes\MD5;
+use Utopia\Auth\Hashes\PHPass;
+use Utopia\Auth\Hashes\Plaintext;
+use Utopia\Auth\Hashes\Scrypt;
+use Utopia\Auth\Hashes\ScryptModified;
+use Utopia\Auth\Hashes\Sha;
+use Utopia\Auth\Proofs\Password as ProofsPassword;
+use Utopia\Auth\Proofs\Token;
+use Utopia\Auth\Store;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -50,6 +61,7 @@ use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
 use Utopia\Emails\Email;
+use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
@@ -62,10 +74,9 @@ use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
 /** TODO: Remove function when we move to using utopia/platform */
-function createUser(string $hash, mixed $hashOptions, string $userId, ?string $email, ?string $password, ?string $phone, string $name, Document $project, Database $dbForProject, Hooks $hooks): Document
+function createUser(Hash $hash, string $userId, ?string $email, ?string $password, ?string $phone, string $name, Document $project, Database $dbForProject, Hooks $hooks): Document
 {
     $plaintextPassword = $password;
-    $hashOptionsObject = (\is_string($hashOptions)) ? \json_decode($hashOptions, true) : $hashOptions; // Cast to JSON array
     $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
 
     if (!empty($email)) {
@@ -104,8 +115,24 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
         } catch (Throwable) {
             $emailCanonical = null;
         }
+        $hashedPassword = null;
 
-        $password = (!empty($password)) ? ($hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password) : null;
+        $isHashed = !$hash instanceof Plaintext;
+
+        $defaultHash = new ProofsPassword();
+        if (!empty($password)) {
+            if (!$isHashed) { // Password was never hashed, hash it with the default hash
+                $hashedPassword = $defaultHash->hash($password);
+                $hash = $defaultHash->getHash();
+            } else {
+                $hashedPassword = $password;
+            }
+        } else {
+            // when password is not provided, plaintext was set as the default hash causing the issue
+            $hash = $defaultHash->getHash();
+            $isHashed = !$hash instanceof Plaintext;
+        }
+
         $user = new Document([
             '$id' => $userId,
             '$permissions' => [
@@ -119,11 +146,11 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             'phoneVerification' => false,
             'status' => true,
             'labels' => [],
-            'password' => $password,
-            'passwordHistory' => is_null($password) || $passwordHistory === 0 ? [] : [$password],
-            'passwordUpdate' => (!empty($password)) ? DateTime::now() : null,
-            'hash' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO : $hash,
-            'hashOptions' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO_OPTIONS : $hashOptionsObject + ['type' => $hash],
+            'password' => $hashedPassword,
+            'passwordHistory' => is_null($hashedPassword) || $passwordHistory === 0 ? [] : [$hashedPassword],
+            'passwordUpdate' => (!empty($hashedPassword)) ? DateTime::now() : null,
+            'hash' => $hash->getName(),
+            'hashOptions' => $hash->getOptions(),
             'registration' => DateTime::now(),
             'reset' => false,
             'name' => $name,
@@ -139,7 +166,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             'emailIsFree' => $emailCanonical?->isFree(),
         ]);
 
-        if ($hash === 'plaintext') {
+        if (!$isHashed && !empty($password)) {
             $hooks->trigger('passwordValidator', [$dbForProject, $project, $plaintextPassword, &$user, true]);
         }
 
@@ -201,7 +228,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
     return $user;
 }
 
-App::post('/v1/users')
+Http::post('/v1/users')
     ->desc('Create user')
     ->groups(['api', 'users'])
     ->label('scope', 'users.write')
@@ -212,7 +239,7 @@ App::post('/v1/users')
         group: 'users',
         name: 'create',
         description: '/docs/references/users/create-user.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -230,13 +257,15 @@ App::post('/v1/users')
     ->inject('dbForProject')
     ->inject('hooks')
     ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
-        $user = createUser('plaintext', '{}', $userId, $email, $password, $phone, $name, $project, $dbForProject, $hooks);
+        $plaintext = new Plaintext();
+
+        $user = createUser($plaintext, $userId, $email, $password, $phone, $name, $project, $dbForProject, $hooks);
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($user, Response::MODEL_USER);
     });
 
-App::post('/v1/users/bcrypt')
+Http::post('/v1/users/bcrypt')
     ->desc('Create user with bcrypt password')
     ->groups(['api', 'users'])
     ->label('scope', 'users.write')
@@ -247,7 +276,7 @@ App::post('/v1/users/bcrypt')
         group: 'users',
         name: 'createBcryptUser',
         description: '/docs/references/users/create-bcrypt-user.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -264,14 +293,17 @@ App::post('/v1/users/bcrypt')
     ->inject('dbForProject')
     ->inject('hooks')
     ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
-        $user = createUser('bcrypt', '{}', $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
+        $bcrypt = new Bcrypt();
+        $bcrypt->setCost(8); // Default cost
+
+        $user = createUser($bcrypt, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($user, Response::MODEL_USER);
     });
 
-App::post('/v1/users/md5')
+Http::post('/v1/users/md5')
     ->desc('Create user with MD5 password')
     ->groups(['api', 'users'])
     ->label('scope', 'users.write')
@@ -282,7 +314,7 @@ App::post('/v1/users/md5')
         group: 'users',
         name: 'createMD5User',
         description: '/docs/references/users/create-md5-user.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -299,14 +331,16 @@ App::post('/v1/users/md5')
     ->inject('dbForProject')
     ->inject('hooks')
     ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
-        $user = createUser('md5', '{}', $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
+        $md5 = new MD5();
+
+        $user = createUser($md5, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($user, Response::MODEL_USER);
     });
 
-App::post('/v1/users/argon2')
+Http::post('/v1/users/argon2')
     ->desc('Create user with Argon2 password')
     ->groups(['api', 'users'])
     ->label('scope', 'users.write')
@@ -317,7 +351,7 @@ App::post('/v1/users/argon2')
         group: 'users',
         name: 'createArgon2User',
         description: '/docs/references/users/create-argon2-user.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -334,14 +368,16 @@ App::post('/v1/users/argon2')
     ->inject('dbForProject')
     ->inject('hooks')
     ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
-        $user = createUser('argon2', '{}', $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
+        $argon2 = new Argon2();
+
+        $user = createUser($argon2, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($user, Response::MODEL_USER);
     });
 
-App::post('/v1/users/sha')
+Http::post('/v1/users/sha')
     ->desc('Create user with SHA password')
     ->groups(['api', 'users'])
     ->label('scope', 'users.write')
@@ -352,7 +388,7 @@ App::post('/v1/users/sha')
         group: 'users',
         name: 'createSHAUser',
         description: '/docs/references/users/create-sha-user.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -370,20 +406,19 @@ App::post('/v1/users/sha')
     ->inject('dbForProject')
     ->inject('hooks')
     ->action(function (string $userId, string $email, string $password, string $passwordVersion, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
-        $options = '{}';
-
+        $sha = new Sha();
         if (!empty($passwordVersion)) {
-            $options = '{"version":"' . $passwordVersion . '"}';
+            $sha->setVersion($passwordVersion);
         }
 
-        $user = createUser('sha', $options, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
+        $user = createUser($sha, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($user, Response::MODEL_USER);
     });
 
-App::post('/v1/users/phpass')
+Http::post('/v1/users/phpass')
     ->desc('Create user with PHPass password')
     ->groups(['api', 'users'])
     ->label('scope', 'users.write')
@@ -394,7 +429,7 @@ App::post('/v1/users/phpass')
         group: 'users',
         name: 'createPHPassUser',
         description: '/docs/references/users/create-phpass-user.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -411,14 +446,16 @@ App::post('/v1/users/phpass')
     ->inject('dbForProject')
     ->inject('hooks')
     ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
-        $user = createUser('phpass', '{}', $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
+        $phpass = new PHPass();
+
+        $user = createUser($phpass, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($user, Response::MODEL_USER);
     });
 
-App::post('/v1/users/scrypt')
+Http::post('/v1/users/scrypt')
     ->desc('Create user with Scrypt password')
     ->groups(['api', 'users'])
     ->label('scope', 'users.write')
@@ -429,7 +466,7 @@ App::post('/v1/users/scrypt')
         group: 'users',
         name: 'createScryptUser',
         description: '/docs/references/users/create-scrypt-user.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -451,22 +488,22 @@ App::post('/v1/users/scrypt')
     ->inject('dbForProject')
     ->inject('hooks')
     ->action(function (string $userId, string $email, string $password, string $passwordSalt, int $passwordCpu, int $passwordMemory, int $passwordParallel, int $passwordLength, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
-        $options = [
-            'salt' => $passwordSalt,
-            'costCpu' => $passwordCpu,
-            'costMemory' => $passwordMemory,
-            'costParallel' => $passwordParallel,
-            'length' => $passwordLength
-        ];
+        $scrypt = new Scrypt();
+        $scrypt
+            ->setSalt($passwordSalt)
+            ->setCpuCost($passwordCpu)
+            ->setMemoryCost($passwordMemory)
+            ->setParallelCost($passwordParallel)
+            ->setLength($passwordLength);
 
-        $user = createUser('scrypt', \json_encode($options), $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
+        $user = createUser($scrypt, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($user, Response::MODEL_USER);
     });
 
-App::post('/v1/users/scrypt-modified')
+Http::post('/v1/users/scrypt-modified')
     ->desc('Create user with Scrypt modified password')
     ->groups(['api', 'users'])
     ->label('scope', 'users.write')
@@ -477,7 +514,7 @@ App::post('/v1/users/scrypt-modified')
         group: 'users',
         name: 'createScryptModifiedUser',
         description: '/docs/references/users/create-scrypt-modified-user.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -497,14 +534,20 @@ App::post('/v1/users/scrypt-modified')
     ->inject('dbForProject')
     ->inject('hooks')
     ->action(function (string $userId, string $email, string $password, string $passwordSalt, string $passwordSaltSeparator, string $passwordSignerKey, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
-        $user = createUser('scryptMod', '{"signerKey":"' . $passwordSignerKey . '","saltSeparator":"' . $passwordSaltSeparator . '","salt":"' . $passwordSalt . '"}', $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
+        $scryptModified = new ScryptModified();
+        $scryptModified
+            ->setSalt($passwordSalt)
+            ->setSaltSeparator($passwordSaltSeparator)
+            ->setSignerKey($passwordSignerKey);
+
+        $user = createUser($scryptModified, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($user, Response::MODEL_USER);
     });
 
-App::post('/v1/users/:userId/targets')
+Http::post('/v1/users/:userId/targets')
     ->desc('Create user target')
     ->groups(['api', 'users'])
     ->label('audits.event', 'target.create')
@@ -599,7 +642,7 @@ App::post('/v1/users/:userId/targets')
             ->dynamic($target, Response::MODEL_TARGET);
     });
 
-App::get('/v1/users')
+Http::get('/v1/users')
     ->desc('List users')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
@@ -608,7 +651,7 @@ App::get('/v1/users')
         group: 'users',
         name: 'list',
         description: '/docs/references/users/list-users.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -633,16 +676,10 @@ App::get('/v1/users')
             $queries[] = Query::search('search', $search);
         }
 
-        /**
-         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
-         */
-        $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
-        });
-        $cursor = reset($cursor);
-        if ($cursor) {
-            /** @var Query $cursor */
+        $cursor = Query::getCursorQueries($queries, false);
+        $cursor = \reset($cursor);
 
+        if ($cursor !== false) {
             $validator = new Cursor();
             if (!$validator->isValid($cursor)) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
@@ -678,7 +715,7 @@ App::get('/v1/users')
         ]), Response::MODEL_USER_LIST);
     });
 
-App::get('/v1/users/:userId')
+Http::get('/v1/users/:userId')
     ->desc('Get user')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
@@ -687,7 +724,7 @@ App::get('/v1/users/:userId')
         group: 'users',
         name: 'get',
         description: '/docs/references/users/get-user.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -709,7 +746,7 @@ App::get('/v1/users/:userId')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::get('/v1/users/:userId/prefs')
+Http::get('/v1/users/:userId/prefs')
     ->desc('Get user preferences')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
@@ -718,7 +755,7 @@ App::get('/v1/users/:userId/prefs')
         group: 'users',
         name: 'getPrefs',
         description: '/docs/references/users/get-user-prefs.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -742,7 +779,7 @@ App::get('/v1/users/:userId/prefs')
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
-App::get('/v1/users/:userId/targets/:targetId')
+Http::get('/v1/users/:userId/targets/:targetId')
     ->desc('Get user target')
     ->groups(['api', 'users'])
     ->label('scope', 'targets.read')
@@ -780,7 +817,7 @@ App::get('/v1/users/:userId/targets/:targetId')
         $response->dynamic($target, Response::MODEL_TARGET);
     });
 
-App::get('/v1/users/:userId/sessions')
+Http::get('/v1/users/:userId/sessions')
     ->desc('List user sessions')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
@@ -789,7 +826,7 @@ App::get('/v1/users/:userId/sessions')
         group: 'sessions',
         name: 'listSessions',
         description: '/docs/references/users/list-user-sessions.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -809,16 +846,12 @@ App::get('/v1/users/:userId/sessions')
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
-
         $sessions = $user->getAttribute('sessions', []);
-
         foreach ($sessions as $key => $session) {
             /** @var Document $session */
-
             $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
             $session->setAttribute('countryName', $countryName);
             $session->setAttribute('current', false);
-
             $sessions[$key] = $session;
         }
 
@@ -828,7 +861,7 @@ App::get('/v1/users/:userId/sessions')
         ]), Response::MODEL_SESSION_LIST);
     });
 
-App::get('/v1/users/:userId/memberships')
+Http::get('/v1/users/:userId/memberships')
     ->desc('List user memberships')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
@@ -837,7 +870,7 @@ App::get('/v1/users/:userId/memberships')
         group: 'memberships',
         name: 'listMemberships',
         description: '/docs/references/users/list-user-memberships.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -858,28 +891,22 @@ App::get('/v1/users/:userId/memberships')
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
-
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
-
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
         }
-
         // Set internal queries
         $queries[] = Query::equal('userInternalId', [$user->getSequence()]);
-
         $memberships = array_map(function ($membership) use ($dbForProject, $user) {
             $team = $dbForProject->getDocument('teams', $membership->getAttribute('teamId'));
-
             $membership
                 ->setAttribute('teamName', $team->getAttribute('name'))
                 ->setAttribute('userName', $user->getAttribute('name'))
                 ->setAttribute('userEmail', $user->getAttribute('email'));
-
             return $membership;
         }, $dbForProject->find('memberships', $queries));
 
@@ -889,7 +916,7 @@ App::get('/v1/users/:userId/memberships')
         ]), Response::MODEL_MEMBERSHIP_LIST);
     });
 
-App::get('/v1/users/:userId/logs')
+Http::get('/v1/users/:userId/logs')
     ->desc('List user logs')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
@@ -898,7 +925,7 @@ App::get('/v1/users/:userId/logs')
         group: 'logs',
         name: 'listLogs',
         description: '/docs/references/users/list-user-logs.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -912,42 +939,35 @@ App::get('/v1/users/:userId/logs')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('geoRecord')
-    ->action(function (string $userId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, GeoRecord $geoRecord) {
+    ->inject('locale')
+    ->inject('geodb')
+    ->inject('audit')
+    ->action(function (string $userId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, GeoRecord $geoRecord, Locale $locale, Reader $geodb, Audit $audit) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
-
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        // Temp fix for logs
-        $queries[] = Query::or([
-            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
-            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
-        ]);
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? 25;
+        $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject);
-
-        $logs = $audit->getLogsByUser($user->getSequence(), $queries);
-
+        $logs = $audit->getLogsByUser($user->getSequence(), limit: $limit, offset: $offset);
         $output = [];
-
         foreach ($logs as $i => &$log) {
             $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
-
             $detector = new Detector($log['userAgent']);
             $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
-
             $os = $detector->getOS();
             $client = $detector->getClient();
             $device = $detector->getDevice();
-
             $output[$i] = new Document([
                 'event' => $log['event'],
                 'userId' => ID::custom($log['data']['userId']),
@@ -969,17 +989,23 @@ App::get('/v1/users/:userId/logs')
                 'deviceModel' => $device['deviceModel']
             ]);
 
-            $output[$i]['countryCode'] = $geoRecord->getCountryCode();
-            $output[$i]['countryName'] = $geoRecord->getCountryName();
+            $record = $geodb->get($log['ip']);
+            if ($record) {
+                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
+            } else {
+                $output[$i]['countryCode'] = '--';
+                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
+            }
         }
 
         $response->dynamic(new Document([
-            'total' => $includeTotal ? $audit->countLogsByUser($user->getSequence(), $queries) : 0,
+            'total' => $includeTotal ? $audit->countLogsByUser($user->getSequence()) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
 
-App::get('/v1/users/:userId/targets')
+Http::get('/v1/users/:userId/targets')
     ->desc('List user targets')
     ->groups(['api', 'users'])
     ->label('scope', 'targets.read')
@@ -1007,36 +1033,26 @@ App::get('/v1/users/:userId/targets')
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
-
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
-
         $queries[] = Query::equal('userId', [$userId]);
 
-        /**
-         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
-         */
-        $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
-        });
-        $cursor = reset($cursor);
+        $cursor = Query::getCursorQueries($queries, false);
+        $cursor = \reset($cursor);
 
-        if ($cursor) {
+        if ($cursor !== false) {
             $validator = new Cursor();
             if (!$validator->isValid($cursor)) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
             }
-
             $targetId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('targets', $targetId);
-
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Target '{$targetId}' for the 'cursor' value not found.");
             }
-
             $cursor->setValue($cursorDocument);
         }
         try {
@@ -1051,7 +1067,7 @@ App::get('/v1/users/:userId/targets')
         ]), Response::MODEL_TARGET_LIST);
     });
 
-App::get('/v1/users/identities')
+Http::get('/v1/users/identities')
     ->desc('List identities')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
@@ -1060,7 +1076,7 @@ App::get('/v1/users/identities')
         group: 'identities',
         name: 'listIdentities',
         description: '/docs/references/users/list-identities.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -1085,28 +1101,19 @@ App::get('/v1/users/identities')
             $queries[] = Query::search('search', $search);
         }
 
-        /**
-         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
-         */
-        $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
-        });
-        $cursor = reset($cursor);
-        if ($cursor) {
-            /** @var Query $cursor */
+        $cursor = Query::getCursorQueries($queries, false);
+        $cursor = \reset($cursor);
 
+        if ($cursor !== false) {
             $validator = new Cursor();
             if (!$validator->isValid($cursor)) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
             }
-
             $identityId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('identities', $identityId);
-
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "User '{$identityId}' for the 'cursor' value not found.");
             }
-
             $cursor->setValue($cursorDocument);
         }
 
@@ -1122,7 +1129,7 @@ App::get('/v1/users/identities')
         ]), Response::MODEL_IDENTITY_LIST);
     });
 
-App::patch('/v1/users/:userId/status')
+Http::patch('/v1/users/:userId/status')
     ->desc('Update user status')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.status')
@@ -1135,7 +1142,7 @@ App::patch('/v1/users/:userId/status')
         group: 'users',
         name: 'updateStatus',
         description: '/docs/references/users/update-user-status.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -1164,7 +1171,7 @@ App::patch('/v1/users/:userId/status')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::put('/v1/users/:userId/labels')
+Http::put('/v1/users/:userId/labels')
     ->desc('Update user labels')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.labels')
@@ -1176,7 +1183,7 @@ App::put('/v1/users/:userId/labels')
         group: 'users',
         name: 'updateLabels',
         description: '/docs/references/users/update-user-labels.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -1207,7 +1214,7 @@ App::put('/v1/users/:userId/labels')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::patch('/v1/users/:userId/verification/phone')
+Http::patch('/v1/users/:userId/verification/phone')
     ->desc('Update phone verification')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.verification')
@@ -1219,7 +1226,7 @@ App::patch('/v1/users/:userId/verification/phone')
         group: 'users',
         name: 'updatePhoneVerification',
         description: '/docs/references/users/update-user-phone-verification.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -1248,7 +1255,7 @@ App::patch('/v1/users/:userId/verification/phone')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::patch('/v1/users/:userId/name')
+Http::patch('/v1/users/:userId/name')
     ->desc('Update name')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.name')
@@ -1261,7 +1268,7 @@ App::patch('/v1/users/:userId/name')
         group: 'users',
         name: 'updateName',
         description: '/docs/references/users/update-user-name.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -1291,7 +1298,7 @@ App::patch('/v1/users/:userId/name')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::patch('/v1/users/:userId/password')
+Http::patch('/v1/users/:userId/password')
     ->desc('Update password')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.password')
@@ -1304,7 +1311,7 @@ App::patch('/v1/users/:userId/password')
         group: 'users',
         name: 'updatePassword',
         description: '/docs/references/users/update-user-password.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -1346,12 +1353,17 @@ App::patch('/v1/users/:userId/password')
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
 
-        $newPassword = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
+        // Create Argon2 hasher with default settings
+        $hasher = new Argon2();
 
+        $newPassword = $hasher->hash($password);
+
+        $hash = ProofsPassword::createHash($user->getAttribute('hash'), $user->getAttribute('hashOptions'));
         $historyLimit = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
         $history = $user->getAttribute('passwordHistory', []);
+
         if ($historyLimit > 0) {
-            $validator = new PasswordHistory($history, $user->getAttribute('hash'), $user->getAttribute('hashOptions'));
+            $validator = new PasswordHistory($history, $hash);
             if (!$validator->isValid($password)) {
                 throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED);
             }
@@ -1364,8 +1376,8 @@ App::patch('/v1/users/:userId/password')
             ->setAttribute('password', $newPassword)
             ->setAttribute('passwordHistory', $history)
             ->setAttribute('passwordUpdate', DateTime::now())
-            ->setAttribute('hash', Auth::DEFAULT_ALGO)
-            ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS);
+            ->setAttribute('hash', $hasher->getName())
+            ->setAttribute('hashOptions', $hasher->getOptions());
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
@@ -1385,7 +1397,7 @@ App::patch('/v1/users/:userId/password')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::patch('/v1/users/:userId/email')
+Http::patch('/v1/users/:userId/email')
     ->desc('Update email')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.email')
@@ -1398,7 +1410,7 @@ App::patch('/v1/users/:userId/email')
         group: 'users',
         name: 'updateEmail',
         description: '/docs/references/users/update-user-email.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -1497,7 +1509,7 @@ App::patch('/v1/users/:userId/email')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::patch('/v1/users/:userId/phone')
+Http::patch('/v1/users/:userId/phone')
     ->desc('Update phone')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.phone')
@@ -1509,7 +1521,7 @@ App::patch('/v1/users/:userId/phone')
         group: 'users',
         name: 'updatePhone',
         description: '/docs/references/users/update-user-phone.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -1586,7 +1598,7 @@ App::patch('/v1/users/:userId/phone')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::patch('/v1/users/:userId/verification')
+Http::patch('/v1/users/:userId/verification')
     ->desc('Update email verification')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.verification')
@@ -1599,7 +1611,7 @@ App::patch('/v1/users/:userId/verification')
         group: 'users',
         name: 'updateEmailVerification',
         description: '/docs/references/users/update-user-email-verification.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -1627,7 +1639,7 @@ App::patch('/v1/users/:userId/verification')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::patch('/v1/users/:userId/prefs')
+Http::patch('/v1/users/:userId/prefs')
     ->desc('Update user preferences')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.prefs')
@@ -1637,7 +1649,7 @@ App::patch('/v1/users/:userId/prefs')
         group: 'users',
         name: 'updatePrefs',
         description: '/docs/references/users/update-user-prefs.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
@@ -1666,7 +1678,7 @@ App::patch('/v1/users/:userId/prefs')
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
-App::patch('/v1/users/:userId/targets/:targetId')
+Http::patch('/v1/users/:userId/targets/:targetId')
     ->desc('Update user target')
     ->groups(['api', 'users'])
     ->label('audits.event', 'target.update')
@@ -1769,7 +1781,7 @@ App::patch('/v1/users/:userId/targets/:targetId')
             ->dynamic($target, Response::MODEL_TARGET);
     });
 
-App::patch('/v1/users/:userId/mfa')
+Http::patch('/v1/users/:userId/mfa')
     ->desc('Update MFA')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.mfa')
@@ -1784,7 +1796,7 @@ App::patch('/v1/users/:userId/mfa')
             group: 'users',
             name: 'updateMfa',
             description: '/docs/references/users/update-user-mfa.md',
-            auth: [AuthType::KEY],
+            auth: [AuthType::ADMIN, AuthType::KEY],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_OK,
@@ -1795,13 +1807,14 @@ App::patch('/v1/users/:userId/mfa')
                 since: '1.8.0',
                 replaceWith: 'users.updateMFA',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'users',
             group: 'users',
             name: 'updateMFA',
             description: '/docs/references/users/update-user-mfa.md',
-            auth: [AuthType::KEY],
+            auth: [AuthType::ADMIN, AuthType::KEY],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_OK,
@@ -1832,7 +1845,7 @@ App::patch('/v1/users/:userId/mfa')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::get('/v1/users/:userId/mfa/factors')
+Http::get('/v1/users/:userId/mfa/factors')
     ->desc('List factors')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
@@ -1843,7 +1856,7 @@ App::get('/v1/users/:userId/mfa/factors')
             group: 'mfa',
             name: 'listMfaFactors',
             description: '/docs/references/users/list-mfa-factors.md',
-            auth: [AuthType::KEY],
+            auth: [AuthType::ADMIN, AuthType::KEY],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_OK,
@@ -1854,13 +1867,14 @@ App::get('/v1/users/:userId/mfa/factors')
                 since: '1.8.0',
                 replaceWith: 'users.listMFAFactors',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'users',
             group: 'mfa',
             name: 'listMFAFactors',
             description: '/docs/references/users/list-mfa-factors.md',
-            auth: [AuthType::KEY],
+            auth: [AuthType::ADMIN, AuthType::KEY],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_OK,
@@ -1890,7 +1904,7 @@ App::get('/v1/users/:userId/mfa/factors')
         $response->dynamic($factors, Response::MODEL_MFA_FACTORS);
     });
 
-App::get('/v1/users/:userId/mfa/recovery-codes')
+Http::get('/v1/users/:userId/mfa/recovery-codes')
     ->desc('Get MFA recovery codes')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
@@ -1901,7 +1915,7 @@ App::get('/v1/users/:userId/mfa/recovery-codes')
             group: 'mfa',
             name: 'getMfaRecoveryCodes',
             description: '/docs/references/users/get-mfa-recovery-codes.md',
-            auth: [AuthType::KEY],
+            auth: [AuthType::ADMIN, AuthType::KEY],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_OK,
@@ -1912,13 +1926,14 @@ App::get('/v1/users/:userId/mfa/recovery-codes')
                 since: '1.8.0',
                 replaceWith: 'users.getMFARecoveryCodes',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'users',
             group: 'mfa',
             name: 'getMFARecoveryCodes',
             description: '/docs/references/users/get-mfa-recovery-codes.md',
-            auth: [AuthType::KEY],
+            auth: [AuthType::ADMIN, AuthType::KEY],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_OK,
@@ -1950,7 +1965,7 @@ App::get('/v1/users/:userId/mfa/recovery-codes')
         $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
     });
 
-App::patch('/v1/users/:userId/mfa/recovery-codes')
+Http::patch('/v1/users/:userId/mfa/recovery-codes')
     ->desc('Create MFA recovery codes')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create.mfa.recovery-codes')
@@ -1965,7 +1980,7 @@ App::patch('/v1/users/:userId/mfa/recovery-codes')
             group: 'mfa',
             name: 'createMfaRecoveryCodes',
             description: '/docs/references/users/create-mfa-recovery-codes.md',
-            auth: [AuthType::KEY],
+            auth: [AuthType::ADMIN, AuthType::KEY],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_CREATED,
@@ -1976,13 +1991,14 @@ App::patch('/v1/users/:userId/mfa/recovery-codes')
                 since: '1.8.0',
                 replaceWith: 'users.createMFARecoveryCodes',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'users',
             group: 'mfa',
             name: 'createMFARecoveryCodes',
             description: '/docs/references/users/create-mfa-recovery-codes.md',
-            auth: [AuthType::KEY],
+            auth: [AuthType::ADMIN, AuthType::KEY],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_CREATED,
@@ -2021,7 +2037,7 @@ App::patch('/v1/users/:userId/mfa/recovery-codes')
         $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
     });
 
-App::put('/v1/users/:userId/mfa/recovery-codes')
+Http::put('/v1/users/:userId/mfa/recovery-codes')
     ->desc('Update MFA recovery codes (regenerate)')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.mfa.recovery-codes')
@@ -2036,7 +2052,7 @@ App::put('/v1/users/:userId/mfa/recovery-codes')
             group: 'mfa',
             name: 'updateMfaRecoveryCodes',
             description: '/docs/references/users/update-mfa-recovery-codes.md',
-            auth: [AuthType::KEY],
+            auth: [AuthType::ADMIN, AuthType::KEY],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_OK,
@@ -2047,19 +2063,21 @@ App::put('/v1/users/:userId/mfa/recovery-codes')
                 since: '1.8.0',
                 replaceWith: 'users.updateMFARecoveryCodes',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'users',
             group: 'mfa',
             name: 'updateMFARecoveryCodes',
             description: '/docs/references/users/update-mfa-recovery-codes.md',
-            auth: [AuthType::KEY],
+            auth: [AuthType::ADMIN, AuthType::KEY],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_OK,
                     model: Response::MODEL_MFA_RECOVERY_CODES,
                 )
-            ]
+            ],
+            public: false,
         )
     ])
     ->param('userId', '', new UID(), 'User ID.')
@@ -2091,7 +2109,7 @@ App::put('/v1/users/:userId/mfa/recovery-codes')
         $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
     });
 
-App::delete('/v1/users/:userId/mfa/authenticators/:type')
+Http::delete('/v1/users/:userId/mfa/authenticators/:type')
     ->desc('Delete authenticator')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].delete.mfa')
@@ -2106,7 +2124,7 @@ App::delete('/v1/users/:userId/mfa/authenticators/:type')
             group: 'mfa',
             name: 'deleteMfaAuthenticator',
             description: '/docs/references/users/delete-mfa-authenticator.md',
-            auth: [AuthType::KEY],
+            auth: [AuthType::ADMIN, AuthType::KEY],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_NOCONTENT,
@@ -2118,13 +2136,14 @@ App::delete('/v1/users/:userId/mfa/authenticators/:type')
                 since: '1.8.0',
                 replaceWith: 'users.deleteMFAAuthenticator',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'users',
             group: 'mfa',
             name: 'deleteMFAAuthenticator',
             description: '/docs/references/users/delete-mfa-authenticator.md',
-            auth: [AuthType::KEY],
+            auth: [AuthType::ADMIN, AuthType::KEY],
             responses: [
                 new SDKResponse(
                     code: Response::STATUS_CODE_NOCONTENT,
@@ -2160,7 +2179,7 @@ App::delete('/v1/users/:userId/mfa/authenticators/:type')
         $response->noContent();
     });
 
-App::post('/v1/users/:userId/sessions')
+Http::post('/v1/users/:userId/sessions')
     ->desc('Create session')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].sessions.[sessionId].create')
@@ -2173,7 +2192,7 @@ App::post('/v1/users/:userId/sessions')
         group: 'sessions',
         name: 'createSession',
         description: '/docs/references/users/create-session.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -2189,15 +2208,17 @@ App::post('/v1/users/:userId/sessions')
     ->inject('locale')
     ->inject('geoRecord')
     ->inject('queueForEvents')
-    ->action(function (string $userId, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, GeoRecord $geoRecord, Event $queueForEvents) {
+    ->inject('store')
+    ->inject('proofForToken')
+    ->action(function (string $userId, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, GeoRecord $geoRecord, Event $queueForEvents, Store $store, Token $proofForToken) {
         $user = $dbForProject->getDocument('users', $userId);
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $secret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
+        $secret = $proofForToken->generate();
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
-        $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $session = new Document(array_merge(
@@ -2205,8 +2226,8 @@ App::post('/v1/users/:userId/sessions')
                 '$id' => ID::unique(),
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getSequence(),
-                'provider' => Auth::SESSION_PROVIDER_SERVER,
-                'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
+                'provider' => SESSION_PROVIDER_SERVER,
+                'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'factors' => ['server'],
                 'ip' => $request->getIP(),
@@ -2230,8 +2251,13 @@ App::post('/v1/users/:userId/sessions')
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
+        $encoded = $store
+            ->setProperty('id', $user->getId())
+            ->setProperty('secret', $secret)
+            ->encode();
+
         $session
-            ->setAttribute('secret', Auth::encodeSession($user->getId(), $secret))
+            ->setAttribute('secret', $encoded)
             ->setAttribute('countryName', $countryName);
 
         $queueForEvents
@@ -2244,7 +2270,7 @@ App::post('/v1/users/:userId/sessions')
             ->dynamic($session, Response::MODEL_SESSION);
     });
 
-App::post('/v1/users/:userId/tokens')
+Http::post('/v1/users/:userId/tokens')
     ->desc('Create token')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].tokens.[tokenId].create')
@@ -2256,7 +2282,7 @@ App::post('/v1/users/:userId/tokens')
         group: 'sessions',
         name: 'createToken',
         description: '/docs/references/users/create-token.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -2266,7 +2292,7 @@ App::post('/v1/users/:userId/tokens')
     ))
     ->param('userId', '', new UID(), 'User ID.')
     ->param('length', 6, new Range(4, 128), 'Token length in characters. The default length is 6 characters', true)
-    ->param('expire', Auth::TOKEN_EXPIRATION_GENERIC, new Range(60, Auth::TOKEN_EXPIRATION_LOGIN_LONG), 'Token expiration period in seconds. The default expiration is 15 minutes.', true)
+    ->param('expire', TOKEN_EXPIRATION_GENERIC, new Range(60, TOKEN_EXPIRATION_LOGIN_LONG), 'Token expiration period in seconds. The default expiration is 15 minutes.', true)
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
@@ -2278,15 +2304,17 @@ App::post('/v1/users/:userId/tokens')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $secret = Auth::tokenGenerator($length);
+        $proofForToken = new Token($length);
+        $proofForToken->setHash(new Sha());
+        $secret = $proofForToken->generate();
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 
         $token = new Document([
             '$id' => ID::unique(),
             'userId' => $user->getId(),
             'userInternalId' => $user->getSequence(),
-            'type' => Auth::TOKEN_TYPE_GENERIC,
-            'secret' => Auth::hash($secret),
+            'type' => TOKEN_TYPE_GENERIC,
+            'secret' => $proofForToken->hash($secret),
             'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP()
@@ -2307,7 +2335,7 @@ App::post('/v1/users/:userId/tokens')
             ->dynamic($token, Response::MODEL_TOKEN);
     });
 
-App::delete('/v1/users/:userId/sessions/:sessionId')
+Http::delete('/v1/users/:userId/sessions/:sessionId')
     ->desc('Delete user session')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].sessions.[sessionId].delete')
@@ -2319,7 +2347,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
         group: 'sessions',
         name: 'deleteSession',
         description: '/docs/references/users/delete-user-session.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
@@ -2358,7 +2386,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
         $response->noContent();
     });
 
-App::delete('/v1/users/:userId/sessions')
+Http::delete('/v1/users/:userId/sessions')
     ->desc('Delete user sessions')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].sessions.delete')
@@ -2370,7 +2398,7 @@ App::delete('/v1/users/:userId/sessions')
         group: 'sessions',
         name: 'deleteSessions',
         description: '/docs/references/users/delete-user-sessions.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
@@ -2408,7 +2436,7 @@ App::delete('/v1/users/:userId/sessions')
         $response->noContent();
     });
 
-App::delete('/v1/users/:userId')
+Http::delete('/v1/users/:userId')
     ->desc('Delete user')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].delete')
@@ -2420,7 +2448,7 @@ App::delete('/v1/users/:userId')
         group: 'users',
         name: 'delete',
         description: '/docs/references/users/delete.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
@@ -2460,7 +2488,7 @@ App::delete('/v1/users/:userId')
         $response->noContent();
     });
 
-App::delete('/v1/users/:userId/targets/:targetId')
+Http::delete('/v1/users/:userId/targets/:targetId')
     ->desc('Delete user target')
     ->groups(['api', 'users'])
     ->label('audits.event', 'target.delete')
@@ -2518,7 +2546,7 @@ App::delete('/v1/users/:userId/targets/:targetId')
         $response->noContent();
     });
 
-App::delete('/v1/users/identities/:identityId')
+Http::delete('/v1/users/identities/:identityId')
     ->desc('Delete identity')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].identities.[identityId].delete')
@@ -2530,7 +2558,7 @@ App::delete('/v1/users/identities/:identityId')
         group: 'identities',
         name: 'deleteIdentity',
         description: '/docs/references/users/delete-identity.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
@@ -2561,7 +2589,7 @@ App::delete('/v1/users/identities/:identityId')
         return $response->noContent();
     });
 
-App::post('/v1/users/:userId/jwts')
+Http::post('/v1/users/:userId/jwts')
     ->desc('Create user JWT')
     ->groups(['api', 'users'])
     ->label('scope', 'users.write')
@@ -2570,7 +2598,7 @@ App::post('/v1/users/:userId/jwts')
         group: 'sessions',
         name: 'createJWT',
         description: '/docs/references/users/create-user-jwt.md',
-        auth: [AuthType::KEY],
+        auth: [AuthType::ADMIN, AuthType::KEY],
         responses: [
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
@@ -2618,7 +2646,7 @@ App::post('/v1/users/:userId/jwts')
             ])]), Response::MODEL_JWT);
     });
 
-App::get('/v1/users/usage')
+Http::get('/v1/users/usage')
     ->desc('Get users usage stats')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')

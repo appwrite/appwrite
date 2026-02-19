@@ -1,3 +1,4 @@
+```graphql
 mutation {
     databasesCreateCollection(
         databaseId: "<DATABASE_ID>",
@@ -5,7 +6,9 @@ mutation {
         name: "<NAME>",
         permissions: ["read("any")"],
         documentSecurity: false,
-        enabled: false
+        enabled: false,
+        attributes: [],
+        indexes: []
     ) {
         _id
         _createdAt
@@ -28,5 +31,8 @@ mutation {
             lengths
             orders
         }
+        bytesMax
+        bytesUsed
     }
 }
+```

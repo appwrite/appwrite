@@ -1,3 +1,4 @@
+```http
 POST /v1/account/targets/push HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
@@ -10,3 +11,4 @@ X-Appwrite-Session:
   "identifier": "<IDENTIFIER>",
   "providerId": "<PROVIDER_ID>"
 }
+```

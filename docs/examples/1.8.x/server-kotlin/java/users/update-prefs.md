@@ -1,3 +1,4 @@
+```java
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Users;
@@ -11,7 +12,7 @@ Users users = new Users(client);
 
 users.updatePrefs(
     "<USER_ID>", // userId
-    mapOf( "a" to "b" ), // prefs
+    Map.of("a", "b"), // prefs
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -22,3 +23,4 @@ users.updatePrefs(
     })
 );
 
+```

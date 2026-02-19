@@ -1,3 +1,4 @@
+```java
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Account;
@@ -13,7 +14,7 @@ account.createOAuth2Token(
     OAuthProvider.AMAZON, // provider 
     "https://example.com", // success (optional)
     "https://example.com", // failure (optional)
-    listOf(), // scopes (optional)
+    List.of(), // scopes (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -24,3 +25,4 @@ account.createOAuth2Token(
     })
 );
 
+```

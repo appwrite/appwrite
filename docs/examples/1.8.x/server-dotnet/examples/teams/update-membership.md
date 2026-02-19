@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -13,4 +14,4 @@ Membership result = await teams.UpdateMembership(
     teamId: "<TEAM_ID>",
     membershipId: "<MEMBERSHIP_ID>",
     roles: new List<string>()
-);
+);```

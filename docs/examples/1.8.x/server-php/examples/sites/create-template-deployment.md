@@ -1,8 +1,9 @@
+```php
 <?php
 
 use Appwrite\Client;
 use Appwrite\Services\Sites;
-use Appwrite\Enums\Type;
+use Appwrite\Enums\TemplateReferenceType;
 
 $client = (new Client())
     ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -16,7 +17,7 @@ $result = $sites->createTemplateDeployment(
     repository: '<REPOSITORY>',
     owner: '<OWNER>',
     rootDirectory: '<ROOT_DIRECTORY>',
-    type: Type::BRANCH(),
+    type: TemplateReferenceType::BRANCH(),
     reference: '<REFERENCE>',
     activate: false // optional
-);
+);```

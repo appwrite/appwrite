@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -16,4 +17,4 @@ $result = $databases->createLineAttribute(
     key: '',
     required: false,
     default: [[1, 2], [3, 4], [5, 6]] // optional
-);
+);```

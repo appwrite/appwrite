@@ -1,7 +1,9 @@
+```java
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Functions;
 import io.appwrite.enums.Runtime;
+import io.appwrite.enums.Scopes;
 
 Client client = new Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -14,15 +16,15 @@ functions.update(
     "<FUNCTION_ID>", // functionId
     "<NAME>", // name
     Runtime.NODE_14_5, // runtime (optional)
-    listOf("any"), // execute (optional)
-    listOf(), // events (optional)
+    List.of("any"), // execute (optional)
+    List.of(), // events (optional)
     "", // schedule (optional)
     1, // timeout (optional)
     false, // enabled (optional)
     false, // logging (optional)
     "<ENTRYPOINT>", // entrypoint (optional)
     "<COMMANDS>", // commands (optional)
-    listOf(), // scopes (optional)
+    List.of(Scopes.SESSIONS_WRITE), // scopes (optional)
     "<INSTALLATION_ID>", // installationId (optional)
     "<PROVIDER_REPOSITORY_ID>", // providerRepositoryId (optional)
     "<PROVIDER_BRANCH>", // providerBranch (optional)
@@ -39,3 +41,4 @@ functions.update(
     })
 );
 
+```

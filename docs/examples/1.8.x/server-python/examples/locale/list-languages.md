@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.locale import Locale
 
@@ -9,3 +10,4 @@ client.set_session('') # The user session to authenticate with
 locale = Locale(client)
 
 result = locale.list_languages()
+```

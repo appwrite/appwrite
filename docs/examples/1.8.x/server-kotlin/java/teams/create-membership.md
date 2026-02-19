@@ -1,3 +1,4 @@
+```java
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Teams;
@@ -11,7 +12,7 @@ Teams teams = new Teams(client);
 
 teams.createMembership(
     "<TEAM_ID>", // teamId
-    listOf(), // roles
+    List.of(), // roles
     "email@example.com", // email (optional)
     "<USER_ID>", // userId (optional)
     "+12065550100", // phone (optional)
@@ -27,3 +28,4 @@ teams.createMembership(
     })
 );
 
+```

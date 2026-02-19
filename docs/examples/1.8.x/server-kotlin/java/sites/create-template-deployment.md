@@ -1,7 +1,8 @@
+```java
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Sites;
-import io.appwrite.enums.Type;
+import io.appwrite.enums.TemplateReferenceType;
 
 Client client = new Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -15,7 +16,7 @@ sites.createTemplateDeployment(
     "<REPOSITORY>", // repository
     "<OWNER>", // owner
     "<ROOT_DIRECTORY>", // rootDirectory
-    .BRANCH, // type
+    TemplateReferenceType.BRANCH, // type
     "<REFERENCE>", // reference
     false, // activate (optional)
     new CoroutineCallback<>((result, error) -> {
@@ -28,3 +29,4 @@ sites.createTemplateDeployment(
     })
 );
 
+```

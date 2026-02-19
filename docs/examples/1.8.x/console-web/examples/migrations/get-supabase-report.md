@@ -1,4 +1,5 @@
-import { Client, Migrations } from "@appwrite.io/console";
+```javascript
+import { Client, Migrations, Resources } from "@appwrite.io/console";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -7,7 +8,7 @@ const client = new Client()
 const migrations = new Migrations(client);
 
 const result = await migrations.getSupabaseReport({
-    resources: [],
+    resources: [Resources.User],
     endpoint: 'https://example.com',
     apiKey: '<API_KEY>',
     databaseHost: '<DATABASE_HOST>',
@@ -17,3 +18,4 @@ const result = await migrations.getSupabaseReport({
 });
 
 console.log(result);
+```

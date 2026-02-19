@@ -1,3 +1,4 @@
+```http
 PATCH /v1/databases/{databaseId}/collections/{collectionId}/attributes/float/{key} HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
@@ -12,3 +13,4 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "default": 0,
   "newKey": ""
 }
+```

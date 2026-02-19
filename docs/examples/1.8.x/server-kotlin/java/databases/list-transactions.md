@@ -1,3 +1,4 @@
+```java
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Databases;
@@ -10,7 +11,7 @@ Client client = new Client()
 Databases databases = new Databases(client);
 
 databases.listTransactions(
-    listOf(), // queries (optional)
+    List.of(), // queries (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -21,3 +22,4 @@ databases.listTransactions(
     })
 );
 
+```

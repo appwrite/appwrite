@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -23,3 +23,4 @@ response, error := service.IncrementDocumentAttribute(
     databases.WithIncrementDocumentAttributeMax(0),
     databases.WithIncrementDocumentAttributeTransactionId("<TRANSACTION_ID>"),
 )
+```

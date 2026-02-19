@@ -1,3 +1,4 @@
+```java
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Graphql;
@@ -9,7 +10,7 @@ Client client = new Client(context)
 Graphql graphql = new Graphql(client);
 
 graphql.query(
-    mapOf( "a" to "b" ), // query 
+    Map.of("a", "b"), // query 
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +21,4 @@ graphql.query(
     })
 );
 
+```

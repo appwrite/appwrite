@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -23,4 +24,4 @@ $result = $tablesDB->createOperations(
 	        }
 	    }
 	] // optional
-);
+);```

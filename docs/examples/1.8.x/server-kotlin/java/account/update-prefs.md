@@ -1,3 +1,4 @@
+```java
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Account;
@@ -10,10 +11,10 @@ Client client = new Client()
 Account account = new Account(client);
 
 account.updatePrefs(
-    mapOf(
-        "language" to "en",
-        "timezone" to "UTC",
-        "darkTheme" to true
+    Map.of(
+        "language", "en",
+        "timezone", "UTC",
+        "darkTheme", true
     ), // prefs
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
@@ -25,3 +26,4 @@ account.updatePrefs(
     })
 );
 
+```

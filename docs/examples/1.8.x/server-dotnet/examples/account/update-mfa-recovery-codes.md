@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -10,3 +11,4 @@ Client client = new Client()
 Account account = new Account(client);
 
 MfaRecoveryCodes result = await account.UpdateMFARecoveryCodes();
+```

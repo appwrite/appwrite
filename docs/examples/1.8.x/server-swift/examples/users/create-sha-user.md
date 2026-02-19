@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 import AppwriteEnums
 
@@ -16,3 +17,4 @@ let user = try await users.createSHAUser(
     name: "<NAME>" // optional
 )
 
+```

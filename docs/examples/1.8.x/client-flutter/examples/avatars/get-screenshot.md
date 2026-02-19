@@ -1,4 +1,6 @@
+```dart
 import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/enums.dart' as enums;
 
 Client client = Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -9,25 +11,28 @@ Avatars avatars = Avatars(client);
 // Downloading file
 Uint8List bytes = await avatars.getScreenshot(
     url: 'https://example.com',
-    headers: {}, // optional
-    viewportWidth: 1, // optional
-    viewportHeight: 1, // optional
-    scale: 0.1, // optional
-    theme: Theme.light, // optional
-    userAgent: '<USER_AGENT>', // optional
-    fullpage: false, // optional
-    locale: '<LOCALE>', // optional
-    timezone: Timezone.africaAbidjan, // optional
-    latitude: -90, // optional
-    longitude: -180, // optional
-    accuracy: 0, // optional
-    touch: false, // optional
-    permissions: [], // optional
-    sleep: 0, // optional
-    width: 0, // optional
-    height: 0, // optional
-    quality: -1, // optional
-    output: Output.jpg, // optional
+    headers: {
+        "Authorization": "Bearer token123",
+        "X-Custom-Header": "value"
+    }, // optional
+    viewportWidth: 1920, // optional
+    viewportHeight: 1080, // optional
+    scale: 2, // optional
+    theme: enums.Theme.dark, // optional
+    userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15', // optional
+    fullpage: true, // optional
+    locale: 'en-US', // optional
+    timezone: enums.Timezone.americaNewYork, // optional
+    latitude: 37.7749, // optional
+    longitude: -122.4194, // optional
+    accuracy: 100, // optional
+    touch: true, // optional
+    permissions: [enums.BrowserPermission.geolocation, enums.BrowserPermission.notifications], // optional
+    sleep: 3, // optional
+    width: 800, // optional
+    height: 600, // optional
+    quality: 85, // optional
+    output: enums.ImageFormat.jpeg, // optional
 )
 
 final file = File('path_to_file/filename.ext');
@@ -37,25 +42,28 @@ file.writeAsBytesSync(bytes);
 FutureBuilder(
     future: avatars.getScreenshot(
     url:'https://example.com' ,
-    headers:{} , // optional
-    viewportWidth:1 , // optional
-    viewportHeight:1 , // optional
-    scale:0.1 , // optional
-    theme: Theme.light, // optional
-    userAgent:'<USER_AGENT>' , // optional
-    fullpage:false , // optional
-    locale:'<LOCALE>' , // optional
-    timezone: Timezone.africaAbidjan, // optional
-    latitude:-90 , // optional
-    longitude:-180 , // optional
-    accuracy:0 , // optional
-    touch:false , // optional
-    permissions:[] , // optional
-    sleep:0 , // optional
-    width:0 , // optional
-    height:0 , // optional
-    quality:-1 , // optional
-    output: Output.jpg, // optional
+    headers:{
+        "Authorization": "Bearer token123",
+        "X-Custom-Header": "value"
+    } , // optional
+    viewportWidth:1920 , // optional
+    viewportHeight:1080 , // optional
+    scale:2 , // optional
+    theme: enums.Theme.dark, // optional
+    userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15' , // optional
+    fullpage:true , // optional
+    locale:'en-US' , // optional
+    timezone: enums.Timezone.americaNewYork, // optional
+    latitude:37.7749 , // optional
+    longitude:-122.4194 , // optional
+    accuracy:100 , // optional
+    touch:true , // optional
+    permissions: [enums.BrowserPermission.geolocation, enums.BrowserPermission.notifications], // optional
+    sleep:3 , // optional
+    width:800 , // optional
+    height:600 , // optional
+    quality:85 , // optional
+    output: enums.ImageFormat.jpeg, // optional
 ), // Works for both public file and private file, for private files you need to be logged in
     builder: (context, snapshot) {
       return snapshot.hasData && snapshot.data != null
@@ -63,3 +71,4 @@ FutureBuilder(
           : CircularProgressIndicator();
     }
 );
+```

@@ -1,3 +1,4 @@
+```java
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.TablesDB;
@@ -14,7 +15,7 @@ tablesDB.createPointColumn(
     "<TABLE_ID>", // tableId
     "", // key
     false, // required
-    listOf(1, 2), // default (optional)
+    List.of(1, 2), // default (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -25,3 +26,4 @@ tablesDB.createPointColumn(
     })
 );
 
+```

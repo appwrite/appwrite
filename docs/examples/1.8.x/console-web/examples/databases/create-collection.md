@@ -1,3 +1,4 @@
+```javascript
 import { Client, Databases, Permission, Role } from "@appwrite.io/console";
 
 const client = new Client()
@@ -12,7 +13,10 @@ const result = await databases.createCollection({
     name: '<NAME>',
     permissions: [Permission.read(Role.any())], // optional
     documentSecurity: false, // optional
-    enabled: false // optional
+    enabled: false, // optional
+    attributes: [], // optional
+    indexes: [] // optional
 });
 
 console.log(result);
+```

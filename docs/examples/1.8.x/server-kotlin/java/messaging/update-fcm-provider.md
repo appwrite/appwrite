@@ -1,3 +1,4 @@
+```java
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Messaging;
@@ -13,7 +14,7 @@ messaging.updateFCMProvider(
     "<PROVIDER_ID>", // providerId
     "<NAME>", // name (optional)
     false, // enabled (optional)
-    mapOf( "a" to "b" ), // serviceAccountJSON (optional)
+    Map.of("a", "b"), // serviceAccountJSON (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -24,3 +25,4 @@ messaging.updateFCMProvider(
     })
 );
 
+```

@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.users import Users
 
@@ -19,3 +20,4 @@ result = users.create_scrypt_user(
     password_length = None,
     name = '<NAME>' # optional
 )
+```

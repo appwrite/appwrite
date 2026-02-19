@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -10,9 +11,10 @@ let tablesDB = TablesDB(client)
 let table = try await tablesDB.updateTable(
     databaseId: "<DATABASE_ID>",
     tableId: "<TABLE_ID>",
-    name: "<NAME>",
+    name: "<NAME>", // optional
     permissions: [Permission.read(Role.any())], // optional
     rowSecurity: false, // optional
     enabled: false // optional
 )
 
+```

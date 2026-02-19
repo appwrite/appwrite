@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Teams
@@ -13,3 +14,4 @@ val response = teams.updatePrefs(
     teamId = "<TEAM_ID>",
     prefs = mapOf( "a" to "b" )
 )
+```

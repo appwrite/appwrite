@@ -1,1 +1,3 @@
+```bash
 appwrite locale get
+```

@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -13,3 +14,4 @@ result = tables_db.delete_table(
     database_id: '<DATABASE_ID>',
     table_id: '<TABLE_ID>'
 )
+```

@@ -1,7 +1,8 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Functions
-import io.appwrite.enums.VCSDeploymentType
+import io.appwrite.enums.VCSReferenceType
 
 val client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -12,7 +13,8 @@ val functions = Functions(client)
 
 val response = functions.createVcsDeployment(
     functionId = "<FUNCTION_ID>",
-    type =  VCSDeploymentType.BRANCH,
+    type = VCSReferenceType.BRANCH,
     reference = "<REFERENCE>",
     activate = false // optional
 )
+```

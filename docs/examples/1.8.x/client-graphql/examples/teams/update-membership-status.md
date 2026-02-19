@@ -1,3 +1,4 @@
+```graphql
 mutation {
     teamsUpdateMembershipStatus(
         teamId: "<TEAM_ID>",
@@ -20,3 +21,4 @@ mutation {
         roles
     }
 }
+```

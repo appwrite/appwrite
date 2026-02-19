@@ -1,5 +1,22 @@
 # Change Log
 
+## 12.1.0
+
+* Add `queries` parameter to Realtime subscriptions for filtering events
+* Add `subscriptions` field to `RealtimeCallback` and `RealtimeResponseEvent` types
+* Fix `Roles` enum removed from Teams service; `roles` parameter now accepts `List<String>`
+
+## 12.0.0
+
+* Add array-based enum parameters (e.g., `permissions: List<BrowserPermission>`).
+* Breaking change: `Output` enum has been removed; use `ImageFormat` instead.
+* Add `Channel` helpers for Realtime.
+
+## 11.4.0
+
+* Add `getScreenshot` method to `Avatars` service
+* Add `Theme`, `Timezone` and `Output` enums
+
 ## 11.3.0
 
 * Add `total` parameter to list queries allowing skipping counting rows in a table for improved performance

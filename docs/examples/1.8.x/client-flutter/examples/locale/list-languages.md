@@ -1,3 +1,4 @@
+```dart
 import 'package:appwrite/appwrite.dart';
 
 Client client = Client()
@@ -7,3 +8,4 @@ Client client = Client()
 Locale locale = Locale(client);
 
 LanguageList result = await locale.listLanguages();
+```

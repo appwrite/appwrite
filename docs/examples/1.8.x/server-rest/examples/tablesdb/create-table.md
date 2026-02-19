@@ -1,3 +1,4 @@
+```http
 POST /v1/tablesdb/{databaseId}/tables HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
@@ -10,5 +11,8 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "name": "<NAME>",
   "permissions": ["read(\"any\")"],
   "rowSecurity": false,
-  "enabled": false
+  "enabled": false,
+  "columns": [],
+  "indexes": []
 }
+```

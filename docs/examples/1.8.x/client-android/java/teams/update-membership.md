@@ -1,3 +1,4 @@
+```java
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Teams;
@@ -11,7 +12,7 @@ Teams teams = new Teams(client);
 teams.updateMembership(
     "<TEAM_ID>", // teamId 
     "<MEMBERSHIP_ID>", // membershipId 
-    listOf(), // roles 
+    List.of(), // roles 
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -22,3 +23,4 @@ teams.updateMembership(
     })
 );
 
+```

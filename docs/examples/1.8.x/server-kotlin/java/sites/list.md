@@ -1,3 +1,4 @@
+```java
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Sites;
@@ -10,7 +11,7 @@ Client client = new Client()
 Sites sites = new Sites(client);
 
 sites.list(
-    listOf(), // queries (optional)
+    List.of(), // queries (optional)
     "<SEARCH>", // search (optional)
     false, // total (optional)
     new CoroutineCallback<>((result, error) -> {
@@ -23,3 +24,4 @@ sites.list(
     })
 );
 
+```

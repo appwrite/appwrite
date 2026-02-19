@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Account
@@ -14,4 +15,4 @@ account.createOAuth2Token(
     success = "https://example.com", // (optional)
     failure = "https://example.com", // (optional)
     scopes = listOf(), // (optional)
-)
+)```

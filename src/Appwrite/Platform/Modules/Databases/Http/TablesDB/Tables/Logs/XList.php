@@ -11,7 +11,7 @@ use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 
 class XList extends CollectionLogXList
 {
@@ -51,6 +51,7 @@ class XList extends CollectionLogXList
             ->inject('locale')
             ->inject('geoRecord')
             ->inject('authorization')
+            ->inject('audit')
             ->callback($this->action(...));
     }
 }

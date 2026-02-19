@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -12,7 +13,8 @@ sites = Sites.new(client)
 
 result = sites.create_vcs_deployment(
     site_id: '<SITE_ID>',
-    type: VCSDeploymentType::BRANCH,
+    type: VCSReferenceType::BRANCH,
     reference: '<REFERENCE>',
     activate: false # optional
 )
+```

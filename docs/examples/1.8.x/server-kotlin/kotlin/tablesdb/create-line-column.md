@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.TablesDB
@@ -14,5 +15,6 @@ val response = tablesDB.createLineColumn(
     tableId = "<TABLE_ID>",
     key = "",
     required = false,
-    default = listOf([1, 2], [3, 4], [5, 6]) // optional
+    default = listOf(listOf(1, 2), listOf(3, 4), listOf(5, 6)) // optional
 )
+```

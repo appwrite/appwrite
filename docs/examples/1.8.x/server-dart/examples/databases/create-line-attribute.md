@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -14,3 +15,4 @@ AttributeLine result = await databases.createLineAttribute(
     xrequired: false,
     xdefault: [[1, 2], [3, 4], [5, 6]], // (optional)
 );
+```

@@ -1,8 +1,10 @@
+```python
 from appwrite.client import Client
 from appwrite.services.avatars import Avatars
 from appwrite.enums import Theme
 from appwrite.enums import Timezone
-from appwrite.enums import Output
+from appwrite.enums import BrowserPermission
+from appwrite.enums import ImageFormat
 
 client = Client()
 client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
@@ -13,23 +15,27 @@ avatars = Avatars(client)
 
 result = avatars.get_screenshot(
     url = 'https://example.com',
-    headers = {}, # optional
-    viewport_width = 1, # optional
-    viewport_height = 1, # optional
-    scale = 0.1, # optional
-    theme = Theme.LIGHT, # optional
-    user_agent = '<USER_AGENT>', # optional
-    fullpage = False, # optional
-    locale = '<LOCALE>', # optional
-    timezone = Timezone.AFRICA_ABIDJAN, # optional
-    latitude = -90, # optional
-    longitude = -180, # optional
-    accuracy = 0, # optional
-    touch = False, # optional
-    permissions = [], # optional
-    sleep = 0, # optional
-    width = 0, # optional
-    height = 0, # optional
-    quality = -1, # optional
-    output = Output.JPG # optional
+    headers = {
+        "Authorization": "Bearer token123",
+        "X-Custom-Header": "value"
+    }, # optional
+    viewport_width = 1920, # optional
+    viewport_height = 1080, # optional
+    scale = 2, # optional
+    theme = Theme.DARK, # optional
+    user_agent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15', # optional
+    fullpage = True, # optional
+    locale = 'en-US', # optional
+    timezone = Timezone.AMERICA_NEW_YORK, # optional
+    latitude = 37.7749, # optional
+    longitude = -122.4194, # optional
+    accuracy = 100, # optional
+    touch = True, # optional
+    permissions = [BrowserPermission.GEOLOCATION, BrowserPermission.NOTIFICATIONS], # optional
+    sleep = 3, # optional
+    width = 800, # optional
+    height = 600, # optional
+    quality = 85, # optional
+    output = ImageFormat.JPEG # optional
 )
+```

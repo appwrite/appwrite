@@ -2,10 +2,9 @@
 
 namespace Tests\Unit\Messaging;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Utopia\Database\Documents\User;
 use PHPUnit\Framework\TestCase;
-use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
@@ -64,7 +63,7 @@ class MessagingChannelsTest extends TestCase
          */
         for ($i = 0; $i < $this->connectionsPerChannel; $i++) {
             foreach ($this->allChannels as $index => $channel) {
-                $user = new Document([
+                $user = new User([
                     '$id' => ID::custom('user' . $this->connectionsCount),
                     'memberships' => [
                         [
@@ -73,20 +72,22 @@ class MessagingChannelsTest extends TestCase
                             'confirm' => true,
                             'roles' => [
                                 empty($index % 2)
-                                    ? Auth::USER_ROLE_ADMIN
+                                    ? User::ROLE_ADMIN
                                     : 'member',
                             ]
                         ]
                     ]
                 ]);
 
-                $roles = Auth::getRoles($user, $this->getAuthorization());
+                $roles = $user->getRoles($this->getAuthorization());
 
-                $parsedChannels = Realtime::convertChannels([0 => $channel], $user->getId());
+                // Normalize channels to the format Realtime::subscribe expects (plain channel names)
+                $parsedChannels = array_keys(Realtime::convertChannels([0 => $channel], $user->getId()));
 
                 $this->realtime->subscribe(
                     '1',
                     $this->connectionsCount,
+                    ID::unique(),
                     $roles,
                     $parsedChannels
                 );
@@ -100,17 +101,19 @@ class MessagingChannelsTest extends TestCase
          */
         for ($i = 0; $i < $this->connectionsPerChannel; $i++) {
             foreach ($this->allChannels as $index => $channel) {
-                $user = new Document([
+                $user = new User([
                     '$id' => ''
                 ]);
 
-                $roles = Auth::getRoles($user, $this->getAuthorization());
+                $roles = $user->getRoles($this->getAuthorization());
 
-                $parsedChannels = Realtime::convertChannels([0 => $channel], $user->getId());
+                // Normalize channels to the format Realtime::subscribe expects (plain channel names)
+                $parsedChannels = array_keys(Realtime::convertChannels([0 => $channel], $user->getId()));
 
                 $this->realtime->subscribe(
                     '1',
                     $this->connectionsCount,
+                    ID::unique(),
                     $roles,
                     $parsedChannels
                 );
@@ -195,11 +198,12 @@ class MessagingChannelsTest extends TestCase
              */
             $this->assertCount($this->connectionsTotal / count($this->allChannels), $receivers, $channel);
 
-            foreach ($receivers as $receiver) {
+            foreach ($receivers as $receiverId => $queryKeys) {
                 /**
                  * Making sure the right clients receive the event.
                  */
-                $this->assertStringEndsWith($index, $receiver);
+                $this->assertStringEndsWith($index, $receiverId);
+                $this->assertIsArray($queryKeys);
             }
         }
     }
@@ -231,11 +235,12 @@ class MessagingChannelsTest extends TestCase
                  */
                 $this->assertCount($this->connectionsPerChannel, $receivers, $channel);
 
-                foreach ($receivers as $receiver) {
+                foreach ($receivers as $receiverId => $queryKeys) {
                     /**
                      * Making sure the right clients receive the event.
                      */
-                    $this->assertStringEndsWith($index, $receiver);
+                    $this->assertStringEndsWith($index, $receiverId);
+                    $this->assertIsArray($queryKeys);
                 }
             }
         }
@@ -258,7 +263,7 @@ class MessagingChannelsTest extends TestCase
                 ]
             ];
 
-            $receivers = $this->realtime->getSubscribers($event);
+            $receivers = array_keys($this->realtime->getSubscribers($event));
 
             /**
              * Every Client subscribed to a Channel should receive this event.
@@ -293,7 +298,7 @@ class MessagingChannelsTest extends TestCase
                 ]
             ];
 
-            $receivers = $this->realtime->getSubscribers($event);
+            $receivers = array_keys($this->realtime->getSubscribers($event));
 
             /**
              * Every Team Member should receive this event.
@@ -308,7 +313,7 @@ class MessagingChannelsTest extends TestCase
             }
 
             $role = empty($index % 2)
-                ? Auth::USER_ROLE_ADMIN
+                ? User::ROLE_ADMIN
                 : 'member';
 
             $permissions = [
@@ -326,7 +331,7 @@ class MessagingChannelsTest extends TestCase
                 ]
             ];
 
-            $receivers = $this->realtime->getSubscribers($event);
+            $receivers = array_keys($this->realtime->getSubscribers($event));
 
             /**
              * Only 1 Team Member of a role should have access to a specific channel.

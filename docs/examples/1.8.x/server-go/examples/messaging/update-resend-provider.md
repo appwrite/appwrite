@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -24,3 +24,4 @@ response, error := service.UpdateResendProvider(
     messaging.WithUpdateResendProviderReplyToName("<REPLY_TO_NAME>"),
     messaging.WithUpdateResendProviderReplyToEmail("<REPLY_TO_EMAIL>"),
 )
+```

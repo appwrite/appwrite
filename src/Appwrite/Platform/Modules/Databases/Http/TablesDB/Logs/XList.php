@@ -12,7 +12,6 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use DeviceDetector\DeviceDetector as Detector;
 use Utopia\Audit\Audit;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
@@ -21,9 +20,9 @@ use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Locale\Locale;
 use Utopia\Platform\Action;
-use Utopia\Swoole\Response as SwooleResponse;
 
 class XList extends Action
 {
@@ -62,15 +61,16 @@ class XList extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('geoRecord')
+            ->inject('audit')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, array $queries, UtopiaResponse $response, Database $dbForProject, GeoRecord $geoRecord): void
+    public function action(string $databaseId, array $queries, UtopiaResponse $response, Database $dbForProject, GeoRecord $geoRecord, Audit $audit): void
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
 
         if ($database->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
         try {
@@ -79,15 +79,12 @@ class XList extends Action
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        // Temp fix for logs
-        $queries[] = Query::or([
-            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
-            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
-        ]);
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? 25;
+        $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject);
         $resource = 'database/' . $databaseId;
-        $logs = $audit->getLogsByResource($resource, $queries);
+        $logs = $audit->getLogsByResource($resource, limit: $limit, offset: $offset);
 
         $output = [];
 
@@ -127,7 +124,7 @@ class XList extends Action
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource, $queries),
+            'total' => $audit->countLogsByResource($resource),
             'logs' => $output,
         ]), UtopiaResponse::MODEL_LOG_LIST);
     }

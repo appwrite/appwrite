@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Databases
@@ -18,3 +19,4 @@ val response = databases.updateEnumAttribute(
     default = "<DEFAULT>",
     newKey = "" // optional
 )
+```

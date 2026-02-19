@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -8,3 +9,4 @@ const client = new sdk.Client()
 const sites = new sdk.Sites(client);
 
 const result = await sites.listFrameworks();
+```

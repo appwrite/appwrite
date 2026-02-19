@@ -1,3 +1,4 @@
+```http
 PUT /v1/storage/buckets/{bucketId}/files/{fileId} HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
@@ -11,3 +12,4 @@ X-Appwrite-JWT: <YOUR_JWT>
   "name": "<NAME>",
   "permissions": ["read(\"any\")"]
 }
+```

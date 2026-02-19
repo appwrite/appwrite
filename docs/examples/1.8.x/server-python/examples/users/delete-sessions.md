@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.users import Users
 
@@ -11,3 +12,4 @@ users = Users(client)
 result = users.delete_sessions(
     user_id = '<USER_ID>'
 )
+```

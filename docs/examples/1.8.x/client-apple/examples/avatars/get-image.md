@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -12,3 +13,4 @@ let bytes = try await avatars.getImage(
     height: 0 // optional
 )
 
+```

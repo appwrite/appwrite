@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -13,3 +14,4 @@ let deployment = try await functions.createDuplicateDeployment(
     buildId: "<BUILD_ID>" // optional
 )
 
+```

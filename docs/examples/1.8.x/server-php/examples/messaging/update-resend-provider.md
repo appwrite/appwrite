@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -19,4 +20,4 @@ $result = $messaging->updateResendProvider(
     fromEmail: 'email@example.com', // optional
     replyToName: '<REPLY_TO_NAME>', // optional
     replyToEmail: '<REPLY_TO_EMAIL>' // optional
-);
+);```
