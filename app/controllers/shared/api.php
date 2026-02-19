@@ -313,7 +313,8 @@ Http::init()
                         true => substr($adminRole, strrpos($adminRole, '-') + 1),
                         false => $adminRole,
                     };
-                    $scopes = \array_merge($scopes, $roles[$role]['scopes']);
+                    $roleScopes = $roles[$role]['scopes'] ?? [];
+                    $scopes = \array_merge($scopes, $roleScopes);
                     $authorization->addRole($role);
                 }
             }
