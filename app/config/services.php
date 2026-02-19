@@ -160,7 +160,7 @@ return [
         'name' => 'Teams',
         'subtitle' => 'The Teams service allows you to group users of your project and to enable them to share read and write access to your project resources',
         'description' => '/docs/services/teams.md',
-        'controller' => 'api/teams.php',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/client/teams',

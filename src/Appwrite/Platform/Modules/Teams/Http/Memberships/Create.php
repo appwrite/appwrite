@@ -296,7 +296,7 @@ class Create extends Action
                 $subject = $locale->getText("emails.invitation.subject");
                 $customTemplate = $project->getAttribute('templates', [])['email.invitation-' . $locale->default] ?? [];
 
-                $message = Template::fromFile(APP_CONFIG_DIR . '/locale/templates/email-inner-base.tpl');
+                $message = Template::fromFile(APP_CE_CONFIG_DIR . '/locale/templates/email-inner-base.tpl');
                 $message
                     ->setParam('{{body}}', $body, escapeHtml: false)
                     ->setParam('{{hello}}', $locale->getText("emails.invitation.hello"))
@@ -375,7 +375,7 @@ class Create extends Action
                     throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
                 }
 
-                $message = Template::fromFile(APP_CONFIG_DIR . '/locale/templates/sms-base.tpl');
+                $message = Template::fromFile(APP_CE_CONFIG_DIR . '/locale/templates/sms-base.tpl');
 
                 $customTemplate = $project->getAttribute('templates', [])['sms.invitation-' . $locale->default] ?? [];
                 if (!empty($customTemplate)) {
