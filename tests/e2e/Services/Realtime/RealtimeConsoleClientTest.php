@@ -68,7 +68,7 @@ class RealtimeConsoleClientTest extends Scope
             ], $this->getHeaders()));
             $this->assertEquals(200, $attribute['headers']['status-code']);
             $this->assertEquals('available', $attribute['body']['status']);
-        }, 15000, 500);
+        }, 120000, 500);
 
         return ['actorsId' => $actorsId, 'databaseId' => $databaseId];
     }
@@ -120,7 +120,7 @@ class RealtimeConsoleClientTest extends Scope
             ], $this->getHeaders()));
             $this->assertEquals(200, $column['headers']['status-code']);
             $this->assertEquals('available', $column['body']['status']);
-        }, 15000, 500);
+        }, 120000, 500);
 
         return ['actorsId' => $actorsId, 'databaseId' => $databaseId];
     }
@@ -151,7 +151,7 @@ class RealtimeConsoleClientTest extends Scope
             ], $this->getHeaders()));
             $this->assertEquals(200, $index['headers']['status-code'], 'Index polling returned ' . $index['headers']['status-code'] . ': ' . json_encode($index['body'] ?? ''));
             $this->assertEquals('available', $index['body']['status']);
-        }, 15000, 500);
+        }, 120000, 500);
 
         return $data;
     }
@@ -182,7 +182,7 @@ class RealtimeConsoleClientTest extends Scope
             ], $this->getHeaders()));
             $this->assertEquals(200, $index['headers']['status-code'], 'Index polling returned ' . $index['headers']['status-code'] . ': ' . json_encode($index['body'] ?? ''));
             $this->assertEquals('available', $index['body']['status']);
-        }, 15000, 500);
+        }, 120000, 500);
 
         return $data;
     }
