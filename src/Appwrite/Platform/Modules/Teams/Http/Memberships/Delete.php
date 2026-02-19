@@ -87,7 +87,7 @@ class Delete extends Action
             throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
         }
 
-        $this->ensureUserIsNotAssociatedWithBilling();
+        $this->ensureUserIsNotAssociatedWithBilling($team, $profile, $dbForProject);
 
         if ($project->getId() === 'console') {
             // Quick check:
@@ -153,7 +153,7 @@ class Delete extends Action
         $response->noContent();
     }
 
-    protected function ensureUserIsNotAssociatedWithBilling(): void
+    protected function ensureUserIsNotAssociatedWithBilling(Document $team, Document $profile, Database $dbForProject): void
     {
         // Overriden on Cloud to ensure the user is not associated with any payment methods.
         return;
