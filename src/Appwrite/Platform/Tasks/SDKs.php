@@ -848,6 +848,12 @@ Analyze the following git diff for the {$sdkName} SDK and determine:
 
 3. A changelog describing the changes in a clear, user-friendly format
 
+Changelog rules:
+- Include only user-facing SDK changes.
+- Exclude internal/project-infra changes (e.g. `.github/workflows/**`, `.github/ISSUE_TEMPLATE/**`, CI/release automation/template cleanup).
+- Never add "Internal housekeeping" style entries.
+- If only excluded changes exist, return exactly: `* No user-facing SDK changes.`
+
 Git diff (truncated to 500 lines):
 ```diff
 {$diff}
