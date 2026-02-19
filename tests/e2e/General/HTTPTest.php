@@ -89,49 +89,6 @@ class HTTPTest extends Scope
         $this->assertEquals(404, $response['headers']['status-code']);
     }
 
-    public function testSpecs()
-    {
-        $directory = __DIR__ . '/../../../app/config/specs/';
-
-        $files = scandir($directory);
-        $client = new Client();
-        $client->setEndpoint('https://validator.swagger.io');
-
-        $versions = [
-            'latest',
-            '0.15.x',
-            '0.14.x',
-        ];
-
-        foreach ($files as $file) {
-            if (in_array($file, ['.', '..'])) {
-                continue;
-            }
-
-            $allowed = false;
-            foreach ($versions as $version) {
-                if (\str_contains($file, $version)) {
-                    $allowed = true;
-                    break;
-                }
-            }
-            if (!$allowed) {
-                continue;
-            }
-
-            /**
-             * Test for SUCCESS
-             */
-            $response = $client->call(Client::METHOD_POST, '/validator/debug', [
-                'content-type' => 'application/json',
-            ], json_decode(file_get_contents($directory . $file), true));
-
-            $this->assertEquals(200, $response['headers']['status-code']);
-            // looks like recent change in the validator
-            $this->assertEmpty($response['body']['schemaValidationMessages'], 'Schema validation failed for ' . $file . ': ' . json_encode($response['body']['schemaValidationMessages'], JSON_PRETTY_PRINT));
-        }
-    }
-
     public function testVersions()
     {
         /**

@@ -6008,4 +6008,420 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(204, $response['headers']['status-code']);
     }
+
+    /**
+     * @group ciIgnore
+     */
+    public function testProjectSpecificPermissionsForListProjects(): void
+    {
+        $teamId = ID::unique();
+        $projectIdA = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Test A',
+        ], $teamId);
+        $projectIdB = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Test B',
+        ], $teamId, false);
+
+        $testUserEmail = 'test-' . ID::unique() . '@localhost.test';
+        $testUserName = 'Test User';
+
+        [ 'membershipId' => $testUserMembershipId ] = $this->setupUserMembership([
+            'teamId' => $teamId,
+            'email' => $testUserEmail,
+            'name' => $testUserName,
+            'roles' => ["owner"],
+        ]);
+
+        $testCases = [
+            [
+                'roles' => ["owner"],
+                'successProjectIds' => [$projectIdA, $projectIdB],
+            ],
+            [
+                'roles' => ["developer"],
+                'successProjectIds' => [$projectIdA, $projectIdB],
+            ],
+            [
+                'roles' => ["project-$projectIdA-owner"],
+                'successProjectIds' => [$projectIdA],
+            ],
+            [
+                'roles' => ["project-$projectIdB-owner"],
+                'successProjectIds' => [$projectIdB],
+            ],
+            [
+                'roles' => ["project-$projectIdA-developer"],
+                'successProjectIds' => [$projectIdA],
+            ],
+            [
+                'roles' => ["project-$projectIdB-developer"],
+                'successProjectIds' => [$projectIdB],
+            ],
+            [
+                'roles' => ["developer", "project-$projectIdA-owner"],
+                'successProjectIds' => [$projectIdA, $projectIdB],
+            ]
+        ];
+
+        // Setup session
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => $testUserEmail,
+            'password' => 'password',
+        ]);
+        $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
+
+        foreach ($testCases as $testCase) {
+            $this->updateMembershipRole($teamId, $testUserMembershipId, $testCase['roles']);
+
+            $response = $this->client->call(Client::METHOD_GET, '/projects', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertNotEmpty($response['body']);
+            $this->assertCount(\count($testCase['successProjectIds']), $response['body']['projects']);
+
+            $returnedProjectIds = \array_column($response['body']['projects'], '$id');
+            foreach ($testCase['successProjectIds'] as $projectId) {
+                $this->assertContains($projectId, $returnedProjectIds);
+            }
+        }
+    }
+
+    /**
+     * @group ciIgnore
+     */
+    public function testProjectSpecificPermissionsForUpdateProject(): void
+    {
+        $teamId = ID::unique();
+        $projectIdA = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Test A',
+        ], $teamId);
+        $projectIdB = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Test B',
+        ], $teamId, false);
+
+        $testUserEmail = 'test-' . ID::unique() . '@localhost.test';
+        $testUserName = 'Test User';
+
+        [ 'membershipId' => $testUserMembershipId ] = $this->setupUserMembership([
+            'teamId' => $teamId,
+            'email' => $testUserEmail,
+            'name' => $testUserName,
+            'roles' => ["owner"],
+        ]);
+
+        $testCases = [
+            [
+                'roles' => ["owner"],
+                'successProjectIds' => [$projectIdA, $projectIdB],
+                'failureProjectIds' => [],
+            ],
+            [
+                'roles' => ["developer"],
+                'successProjectIds' => [$projectIdA, $projectIdB],
+                'failureProjectIds' => [],
+            ],
+            [
+                'roles' => ["project-$projectIdA-owner"],
+                'successProjectIds' => [$projectIdA],
+                'failureProjectIds' => [$projectIdB],
+            ],
+            [
+                'roles' => ["project-$projectIdB-owner"],
+                'successProjectIds' => [$projectIdB],
+                'failureProjectIds' => [$projectIdA],
+            ],
+            [
+                'roles' => ["project-$projectIdA-developer"],
+                'successProjectIds' => [$projectIdA],
+                'failureProjectIds' => [$projectIdB],
+            ],
+            [
+                'roles' => ["project-$projectIdB-developer"],
+                'successProjectIds' => [$projectIdB],
+                'failureProjectIds' => [$projectIdA],
+            ],
+            [
+                'roles' => ["developer", "project-$projectIdA-owner"],
+                'successProjectIds' => [$projectIdA, $projectIdB],
+                'failureProjectIds' => [],
+            ]
+        ];
+
+        // Setup session
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => $testUserEmail,
+            'password' => 'password',
+        ]);
+        $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
+
+        foreach ($testCases as $testCase) {
+            $this->updateMembershipRole($teamId, $testUserMembershipId, $testCase['roles']);
+
+            foreach ($testCase['successProjectIds'] as $projectId) {
+                $newProjectName = 'Updated Project Name ' . ID::unique();
+                // Success: User should be able to update the project they have access to.
+                $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId, [
+                    'origin' => 'http://localhost',
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+                ], [
+                    'name' => $newProjectName,
+                ]);
+                $this->assertEquals(200, $response['headers']['status-code']);
+                $this->assertNotEmpty($response['body']);
+                $this->assertEquals($newProjectName, $response['body']['name']);
+            }
+
+            foreach ($testCase['failureProjectIds'] as $projectId) {
+                $newProjectName = 'Updated Project Name ' . ID::unique();
+                // Failure: User should not be able to update the project they do not have access to.
+                $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId, [
+                    'origin' => 'http://localhost',
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+                ], [
+                    'name' => $newProjectName,
+                ]);
+                $this->assertTrue($response['headers']['status-code'] === 401 || $response['headers']['status-code'] === 404);
+            }
+        }
+    }
+
+    /**
+     * @group ciIgnore
+     */
+    public function testProjectSpecificPermissionsForDeleteProject(): void
+    {
+        $teamId = ID::unique();
+        $projectIdA = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Test A',
+        ], $teamId);
+        $projectIdB = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Test B',
+        ], $teamId, false);
+        $projectIdC = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Test C',
+        ], $teamId, false);
+        $projectIdD = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Test D',
+        ], $teamId, false);
+        $projectIdE = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Test E',
+        ], $teamId, false);
+
+        $testUserEmail = 'test-' . ID::unique() . '@localhost.test';
+        $testUserName = 'Test User';
+
+        [ 'membershipId' => $testUserMembershipId ] = $this->setupUserMembership([
+            'teamId' => $teamId,
+            'email' => $testUserEmail,
+            'name' => $testUserName,
+            'roles' => ["owner"],
+        ]);
+
+        $testCases = [
+            [
+                'roles' => ["owner"],
+                'successProjectIds' => [$projectIdA],
+                'failureProjectIds' => [],
+            ],
+            [
+                'roles' => ["developer"],
+                'successProjectIds' => [$projectIdB, $projectIdC],
+                'failureProjectIds' => [],
+            ],
+            [
+                'roles' => ["project-$projectIdD-owner"],
+                'successProjectIds' => [$projectIdD],
+                'failureProjectIds' => [$projectIdE],
+            ],
+            [
+                'roles' => ["project-$projectIdE-owner"],
+                'successProjectIds' => [$projectIdE],
+                'failureProjectIds' => [],
+            ],
+        ];
+
+        // Setup session
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => $testUserEmail,
+            'password' => 'password',
+        ]);
+        $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
+
+        foreach ($testCases as $testCase) {
+            $this->updateMembershipRole($teamId, $testUserMembershipId, $testCase['roles']);
+
+            foreach ($testCase['successProjectIds'] as $projectId) {
+                // Success: User should be able to delete the project they have access to.
+                $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId, [
+                    'origin' => 'http://localhost',
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+                ]);
+                $this->assertEquals(204, $response['headers']['status-code']);
+            }
+
+            foreach ($testCase['failureProjectIds'] as $projectId) {
+                // Failure: User should not be able to delete the project they do not have access to.
+                $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId, [
+                    'origin' => 'http://localhost',
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+                ]);
+                $this->assertTrue($response['headers']['status-code'] === 401 || $response['headers']['status-code'] === 404);
+            }
+        }
+    }
+
+    /**
+     * @group ciIgnore
+     * Test project specific permissions for project resources, in this case 'function variables'.
+     */
+    public function testProjectSpecificPermissionsForProjectResources(): void
+    {
+        $teamId = ID::unique();
+        $projectIdA = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Test A',
+        ], $teamId);
+        $projectIdB = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Test B',
+        ], $teamId, false);
+
+        $testUserEmail = 'test-' . ID::unique() . '@localhost.test';
+        $testUserName = 'Test User';
+
+        [ 'membershipId' => $testUserMembershipId ] = $this->setupUserMembership([
+            'teamId' => $teamId,
+            'email' => $testUserEmail,
+            'name' => $testUserName,
+            'roles' => ["owner"],
+        ]);
+
+        $testCases = [
+            [
+                'roles' => ["owner"],
+                'successProjectIds' => [$projectIdA, $projectIdB],
+                'failureProjectIds' => [],
+            ],
+            [
+                'roles' => ["developer"],
+                'successProjectIds' => [$projectIdA, $projectIdB],
+                'failureProjectIds' => [],
+            ],
+            [
+                'roles' => ["project-$projectIdA-owner"],
+                'successProjectIds' => [$projectIdA],
+                'failureProjectIds' => [$projectIdB],
+            ],
+            [
+                'roles' => ["project-$projectIdB-owner"],
+                'successProjectIds' => [$projectIdB],
+                'failureProjectIds' => [$projectIdA],
+            ],
+            [
+                'roles' => ["project-$projectIdA-developer"],
+                'successProjectIds' => [$projectIdA],
+                'failureProjectIds' => [$projectIdB],
+            ],
+            [
+                'roles' => ["project-$projectIdB-developer"],
+                'successProjectIds' => [$projectIdB],
+                'failureProjectIds' => [$projectIdA],
+            ],
+            [
+                'roles' => ["developer", "project-$projectIdA-owner"],
+                'successProjectIds' => [$projectIdA, $projectIdB],
+                'failureProjectIds' => [],
+            ]
+        ];
+
+        // Setup session
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => $testUserEmail,
+            'password' => 'password',
+        ]);
+        $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
+
+        // Setup functions
+        $functionId = ID::unique();
+        $this->setupFunction($projectIdA, $functionId, $token);
+        $this->setupFunction($projectIdB, $functionId, $token);
+
+        foreach ($testCases as $testCase) {
+            $this->updateMembershipRole($teamId, $testUserMembershipId, $testCase['roles']);
+
+            foreach ($testCase['successProjectIds'] as $projectId) {
+                $variableId = ID::unique();
+                $response = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', [
+                    'origin' => 'http://localhost',
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $projectId,
+                    'x-appwrite-mode' => 'admin',
+                    'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+                ], [
+                    'key' => 'APP_TEST_' . $variableId,
+                    'value' => 'TESTINGVALUE',
+                    'secret' => false
+                ]);
+
+                $this->assertEquals(201, $response['headers']['status-code']);
+                $this->assertEquals('APP_TEST_' . $variableId, $response['body']['key']);
+                $this->assertEquals('TESTINGVALUE', $response['body']['value']);
+            }
+
+            foreach ($testCase['failureProjectIds'] as $projectId) {
+                $variableId = ID::unique();
+                $response = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', [
+                    'origin' => 'http://localhost',
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $projectId,
+                    'x-appwrite-mode' => 'admin',
+                    'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+                ], [
+                    'key' => 'APP_TEST_' . $variableId,
+                    'value' => 'TESTINGVALUE',
+                    'secret' => false
+                ]);
+
+                $this->assertTrue($response['headers']['status-code'] === 401 || $response['headers']['status-code'] === 404);
+            }
+        }
+    }
 }
