@@ -87,6 +87,8 @@ class Delete extends Action
             throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
         }
 
+        $this->ensureUserIsNotAssociatedWithBilling();
+
         if ($project->getId() === 'console') {
             // Quick check:
             // fetch up to 2 owners to determine if only one exists
@@ -105,7 +107,12 @@ class Delete extends Action
                 $membership->getAttribute('userInternalId') === $user->getSequence();
 
             if ($ownersCount === 1 && $isSelfOwner) {
-                /* Prevent removal if the user is the only owner. */
+                /**
+                 * Prevent removal if the user is the only owner, this is because -
+                 *
+                 * 1. Other roles [if exists] can neither add a new owner nor delete the organization.
+                 * 2. If the only owner is removed, while there were no other members, the organization isn't marked for deletion and stays in a limbo.
+                 */
                 throw new Exception(Exception::MEMBERSHIP_DELETION_PROHIBITED, 'There must be at least one owner in the organization.');
             }
         }
@@ -120,6 +127,19 @@ class Delete extends Action
 
         $dbForProject->purgeCachedDocument('users', $profile->getId());
 
+        // This membership is primary for the team, update the primary to next member.
+        if ($team->getAttribute('userInternalId') === $membership->getAttribute('userInternalId')) {
+            $membership = $dbForProject->findOne('memberships', [
+                Query::equal('teamInternalId', [$team->getSequence()]),
+            ]);
+
+            if (!$membership->isEmpty()) {
+                $team->setAttribute('userId', $membership->getAttribute('userId'));
+                $team->setAttribute('userInternalId', $membership->getAttribute('userInternalId'));
+                $dbForProject->updateDocument('teams', $team->getId(), $team);
+            }
+        }
+
         if ($membership->getAttribute('confirm')) { // Count only confirmed members
             $authorization->skip(fn () => $dbForProject->decreaseDocumentAttribute('teams', $team->getId(), 'total', 1, 0));
         }
@@ -128,9 +148,14 @@ class Delete extends Action
             ->setParam('teamId', $team->getId())
             ->setParam('userId', $profile->getId())
             ->setParam('membershipId', $membership->getId())
-            ->setPayload($response->output($membership, Response::MODEL_MEMBERSHIP))
-        ;
+            ->setPayload($response->output($membership, Response::MODEL_MEMBERSHIP));
 
         $response->noContent();
+    }
+
+    protected function ensureUserIsNotAssociatedWithBilling(): void
+    {
+        // Overriden on Cloud to ensure the user is not associated with any payment methods.
+        return;
     }
 }
