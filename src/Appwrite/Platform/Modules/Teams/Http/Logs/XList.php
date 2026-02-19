@@ -38,30 +38,30 @@ class XList extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/teams/:teamId/logs')
             ->desc('List team logs')
-    ->groups(['api', 'teams'])
-    ->label('scope', 'teams.read')
-    ->label('sdk', new Method(
-        namespace: 'teams',
-        group: 'logs',
-        name: 'listLogs',
-        description: '/docs/references/teams/get-team-logs.md',
-        auth: [AuthType::ADMIN],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_LOG_LIST,
-            )
-        ]
-    ))
-    ->param('teamId', '', new UID(), 'Team ID.')
-    ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
-    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
-    ->inject('response')
-    ->inject('dbForProject')
-    ->inject('locale')
-    ->inject('geodb')
-    ->inject('audit')
-    ->callback($this->action(...));
+            ->groups(['api', 'teams'])
+            ->label('scope', 'teams.read')
+            ->label('sdk', new Method(
+                namespace: 'teams',
+                group: 'logs',
+                name: 'listLogs',
+                description: '/docs/references/teams/get-team-logs.md',
+                auth: [AuthType::ADMIN],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_OK,
+                        model: Response::MODEL_LOG_LIST,
+                    )
+                ]
+            ))
+            ->param('teamId', '', new UID(), 'Team ID.')
+            ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+            ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
+            ->inject('response')
+            ->inject('dbForProject')
+            ->inject('locale')
+            ->inject('geodb')
+            ->inject('audit')
+            ->callback($this->action(...));
     }
 
     public function action(string $teamId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audit)

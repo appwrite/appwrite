@@ -29,25 +29,25 @@ class Get extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/teams/:teamId/prefs')
             ->desc('Get team preferences')
-        ->groups(['api', 'teams'])
-        ->label('scope', 'teams.read')
-        ->label('sdk', new Method(
-            namespace: 'teams',
-            group: 'teams',
-            name: 'getPrefs',
-            description: '/docs/references/teams/get-team-prefs.md',
-            auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
-            responses: [
-                new SDKResponse(
-                    code: Response::STATUS_CODE_OK,
-                    model: Response::MODEL_PREFERENCES,
-                )
-            ]
-        ))
-        ->param('teamId', '', new UID(), 'Team ID.')
-        ->inject('response')
-        ->inject('dbForProject')
-        ->callback($this->action(...));
+            ->groups(['api', 'teams'])
+            ->label('scope', 'teams.read')
+            ->label('sdk', new Method(
+                namespace: 'teams',
+                group: 'teams',
+                name: 'getPrefs',
+                description: '/docs/references/teams/get-team-prefs.md',
+                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_OK,
+                        model: Response::MODEL_PREFERENCES,
+                    )
+                ]
+            ))
+            ->param('teamId', '', new UID(), 'Team ID.')
+            ->inject('response')
+            ->inject('dbForProject')
+            ->callback($this->action(...));
     }
 
     public function action(string $teamId, Response $response, Database $dbForProject)
