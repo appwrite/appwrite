@@ -123,11 +123,29 @@ export function ApiKeysList({
                     <p className="text-[14px] font-medium text-foreground truncate min-w-0">
                       {apiKey.name}
                     </p>
-                    <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground shrink-0">
+                    {expirationStatus?.isExpired ? (
+                      <Badge
+                        variant="error"
+                        className="text-[10px] shrink-0"
+                      >
+                        Expired
+                      </Badge>
+                    ) : expirationStatus?.isExpiringSoon ? (
+                      <Badge
+                        variant="warning"
+                        className="text-[10px] shrink-0"
+                      >
+                        Expires soon
+                      </Badge>
+                    ) : null}
+                    <Badge
+                      variant="info"
+                      className="text-[10px] shrink-0"
+                    >
                       {apiKey.scopes.length === 0
                         ? 'No scopes'
                         : `${apiKey.scopes.length} scope${apiKey.scopes.length !== 1 ? 's' : ''}`}
-                    </span>
+                    </Badge>
                   </div>
                   <div className="mt-1.5 flex items-center gap-2 min-w-0 overflow-hidden">
                     <code className="rounded bg-muted px-2 py-0.5 font-mono text-[12px] text-muted-foreground truncate max-w-[200px] sm:max-w-none">
@@ -164,7 +182,7 @@ export function ApiKeysList({
                       <span className="text-[12px] text-muted-foreground whitespace-nowrap hidden md:inline">
                         {apiKey.expire ? (
                           <>
-                            Expires{' '}
+                            {expirationStatus?.isExpired ? 'Expired' : 'Expires'}{' '}
                             <DateTooltip
                               date={apiKey.expire}
                               className="text-[12px] text-muted-foreground"
@@ -174,22 +192,6 @@ export function ApiKeysList({
                           'No expiration'
                         )}
                       </span>
-                      {expirationStatus && expirationStatus.isExpired ? (
-                        <Badge
-                          variant="secondary"
-                          className="text-[10px] shrink-0"
-                        >
-                          Expired
-                        </Badge>
-                      ) : expirationStatus &&
-                        expirationStatus.isExpiringSoon ? (
-                        <Badge
-                          variant="warning"
-                          className="text-[10px] shrink-0"
-                        >
-                          Expires soon
-                        </Badge>
-                      ) : null}
                     </div>
                   </div>
                 </div>

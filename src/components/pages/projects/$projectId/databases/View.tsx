@@ -3800,7 +3800,7 @@ interface RowEditDrawerProps {
   tableName: string
   focusedField?: string | null
   /** When set, drawer opens with this tab selected (e.g. 'data' for Update row, 'permissions' from context menu) */
-  initialTab?: 'overview' | 'data' | 'permissions'
+  initialTab?: 'data' | 'permissions'
   columns?: unknown[]
   onSave: (
     rowId: string | null,
@@ -3850,7 +3850,7 @@ function RowEditDrawer({
     index: number
   } | null>(null)
   const [linkCopied, setLinkCopied] = useState(false)
-  const [activeTab, setActiveTab] = useState('overview')
+  const [activeTab, setActiveTab] = useState('data')
   const [rowPermissions, setRowPermissions] = useState<string[]>([])
 
   // When drawer opens with initialTab (e.g. from "Update permissions" context menu), switch to that tab
@@ -3926,11 +3926,9 @@ function RowEditDrawer({
     if (focusedField) {
       setActiveTab('data')
     } else if (open && !initialTab) {
-      // Reset to overview when opening without a focused field (only in edit mode)
-      // In create mode, default to data tab. Don't override when initialTab is set.
-      setActiveTab(isCreateMode ? 'data' : 'overview')
+      setActiveTab('data')
     }
-  }, [focusedField, open, isCreateMode, initialTab])
+  }, [focusedField, open, initialTab])
 
   // Focus the requested field when drawer opens
   useEffect(() => {
@@ -4129,34 +4127,15 @@ function RowEditDrawer({
 
         <div className="flex flex-col flex-1 min-h-0">
           <div
-            className="flex gap-0 overflow-x-auto border-b border-border px-6"
+            className="flex gap-0 overflow-x-auto border-b border-border px-6 pt-4"
             role="tablist"
           >
-            {!isCreateMode && (
-              <button
-                role="tab"
-                aria-selected={activeTab === 'overview'}
-                onClick={() => setActiveTab('overview')}
-                className={cn(
-                  'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors',
-                  'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
-                  activeTab === 'overview'
-                    ? 'text-foreground'
-                    : 'text-muted-foreground hover:text-foreground/80',
-                )}
-              >
-                Overview
-                {activeTab === 'overview' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground" />
-                )}
-              </button>
-            )}
             <button
               role="tab"
               aria-selected={activeTab === 'data'}
               onClick={() => setActiveTab('data')}
               className={cn(
-                'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors',
+                'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors cursor-pointer',
                 'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
                 activeTab === 'data'
                   ? 'text-foreground'
@@ -4173,7 +4152,7 @@ function RowEditDrawer({
               aria-selected={activeTab === 'permissions'}
               onClick={() => setActiveTab('permissions')}
               className={cn(
-                'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors',
+                'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors cursor-pointer',
                 'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
                 activeTab === 'permissions'
                   ? 'text-foreground'
@@ -4191,70 +4170,36 @@ function RowEditDrawer({
             ref={scrollContainerRef}
             className="flex-1 overflow-y-auto min-h-0"
           >
-            {activeTab === 'overview' && !isCreateMode && (
-              <div className="px-6 py-6">
-                <div className="space-y-5">
-                  {/* System fields (read-only) */}
-                  <div className="space-y-3">
-                    <h4 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                      System Fields
-                    </h4>
-                    <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-3">
-                      <div>
-                        <Label className="text-[11px] text-muted-foreground">
-                          $id
-                        </Label>
-                        <div className="mt-1">
-                          <code className="font-mono text-[12px] text-foreground">
-                            {row.$id}
-                          </code>
-                        </div>
-                      </div>
-                      <div>
-                        <Label className="text-[11px] text-muted-foreground">
-                          Row #
-                        </Label>
-                        <div className="mt-1">
-                          <span className="text-[12px] text-foreground">
-                            {row.$sequence ?? row.rowNumber}
-                          </span>
-                        </div>
-                      </div>
-                      {row.$createdAt && (
-                        <div>
-                          <Label className="text-[11px] text-muted-foreground">
-                            Created
-                          </Label>
-                          <div className="mt-1">
-                            <DateTooltip
-                              date={new Date(row.$createdAt)}
-                              className="text-[12px] text-foreground"
-                            />
-                          </div>
-                        </div>
-                      )}
-                      {row.$updatedAt && (
-                        <div>
-                          <Label className="text-[11px] text-muted-foreground">
-                            Updated
-                          </Label>
-                          <div className="mt-1">
-                            <DateTooltip
-                              date={new Date(row.$updatedAt)}
-                              className="text-[12px] text-foreground"
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
             {activeTab === 'data' && (
               <div className="px-6 py-6">
                 <div className="space-y-5">
+                  {/* System fields (read-only) - only when updating a row */}
+                  {!isCreateMode && row && (
+                    <div className="space-y-3">
+                      <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-3">
+                        <div>
+                          <Label className="text-[11px] text-muted-foreground">
+                            $id
+                          </Label>
+                          <div className="mt-1">
+                            <CopyableId id={row.$id} size="sm" />
+                          </div>
+                        </div>
+                        <div>
+                          <Label className="text-[11px] text-muted-foreground">
+                            Row #
+                          </Label>
+                          <div className="mt-1">
+                            <CopyableId
+                              id={String(row.$sequence ?? row.rowNumber ?? '')}
+                              size="sm"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* ID Input - Only shown in create mode */}
                   {isCreateMode && (
                     <div className="space-y-2">
@@ -4990,7 +4935,7 @@ function RowsSpreadsheet({
   const [pageSize, setPageSize] = useState(25)
   const [editDrawerOpen, setEditDrawerOpen] = useState(false)
   const [drawerInitialTab, setDrawerInitialTab] = useState<
-    'overview' | 'data' | 'permissions' | null
+    'data' | 'permissions' | null
   >(null)
   const [selectedRowForEdit, setSelectedRowForEdit] = useState<RowData | null>(
     null,

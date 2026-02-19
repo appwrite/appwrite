@@ -273,7 +273,7 @@ All tables must use consistent styling matching the users table pattern for visu
           <span className="text-[13px] font-medium">{item.name}</span>
         </TableCell>
         <TableCell className="px-4 py-3">
-          <Badge variant="secondary">{item.status}</Badge>
+          <Badge variant="success">{item.status}</Badge>
         </TableCell>
         <TableCell className="px-4 py-3 text-right">
           <DateTooltip date={item.$createdAt} />
@@ -379,6 +379,16 @@ Reference: `src/components/pages/projects/$projectId/storage/View.tsx`, `SiteLog
 - **Service avatars**: Always neutral (`bg-muted text-muted-foreground`), never colored
 - **Button icon spacing**: Use `mr-1.5` or `gap-1.5`, not `mr-2` or larger
 - **Date tooltips**: Always include when showing dates for timezone clarity
+
+### Badge style
+
+Use the status-style badge variants so all badges share the same design (tinted background, colored text, subtle border) and differ only by color. Do not mix in solid variants like `destructive` or `secondary` for status/labels when a status variant exists.
+
+- **Same design**: Use `variant="error"` | `variant="warning"` | `variant="success"` | `variant="info"` (and other status variants in `badge.tsx`) so the visual treatment is consistent.
+- **Semantics**: Use `error` for negative/expired/failed, `warning` for expiring soon/pending, `success` for positive/completed/verified, `info` for neutral/informational (e.g. scope count).
+- **Inline with text**: When badges sit next to labels or in tight rows, use `className="text-[10px] shrink-0"` for consistent size.
+
+**Reference:** `src/components/pages/projects/$projectId/shared/ApiKeysList.tsx` (Expired, Expires soon, scopes badges).
 
 ---
 
@@ -913,6 +923,7 @@ Follow the modal structure pattern above. For no-content modals, skip content se
 | Button during action   | Keep text, use `disabled` state                                                                                                                                       |
 | Unavailable action     | Disable button with tooltip, don't hide                                                                                                                               |
 | Service avatar         | `bg-muted text-muted-foreground` (never colored)                                                                                                                      |
+| Badge style            | Use status variants (`error`, `warning`, `success`, `info`) for same design; `text-[10px] shrink-0` when inline with text                                               |
 | Icon spacing           | `mr-1.5` or `gap-1.5`                                                                                                                                                 |
 | Date display           | Always include DateTooltip                                                                                                                                            |
 | Route prefetch         | All crucial data at route level                                                                                                                                       |
