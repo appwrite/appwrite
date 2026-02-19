@@ -392,7 +392,7 @@ trait ProjectsBase
         return self::$cachedProjectWithServicesDisabled;
     }
 
-    protected function setupProject(mixed $params): string
+    protected function setupProject(mixed $params, ?string $teamId = null, bool $newTeam = true): string
     {
         if ($newTeam) {
             $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([

@@ -2068,12 +2068,14 @@ class SitesCustomServerTest extends Scope
         $this->assertStringContainsString("Inline logs printed.", $response['body']);
 
         // Poll for execution logs to be written (async)
+        // Filter by requestPath to avoid picking up screenshot worker executions
         $logs = null;
         $timeout = 120;
         $start = \time();
         while (\time() - $start < $timeout) {
             $logs = $this->listLogs($siteId, [
                 Query::orderDesc('$createdAt')->toString(),
+                Query::equal('requestPath', ['/logs-inline'])->toString(),
                 Query::limit(1)->toString(),
             ]);
             if (!empty($logs['body']['executions'])) {
@@ -2117,6 +2119,7 @@ class SitesCustomServerTest extends Scope
 
         $logs = $this->listLogs($siteId, [
             Query::orderDesc('$createdAt')->toString(),
+            Query::equal('requestPath', ['/logs-action'])->toString(),
             Query::limit(1)->toString(),
         ]);
         $this->assertEquals(200, $logs['headers']['status-code']);
@@ -2153,6 +2156,7 @@ class SitesCustomServerTest extends Scope
 
         $logs = $this->listLogs($siteId, [
             Query::orderDesc('$createdAt')->toString(),
+            Query::equal('requestPath', ['/logs-inline'])->toString(),
             Query::limit(1)->toString(),
         ]);
         $this->assertEquals(200, $logs['headers']['status-code']);
@@ -2171,6 +2175,7 @@ class SitesCustomServerTest extends Scope
 
         $logs = $this->listLogs($siteId, [
             Query::orderDesc('$createdAt')->toString(),
+            Query::equal('requestPath', ['/logs-action'])->toString(),
             Query::limit(1)->toString(),
         ]);
         $this->assertEquals(200, $logs['headers']['status-code']);
