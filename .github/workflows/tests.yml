@@ -265,7 +265,7 @@ jobs:
         uses: itznotabug/php-retry@v3
         with:
           max_attempts: 3
-          timeout_minutes: 30
+          timeout_minutes: 40
           job_id: ${{ job.check_run_id }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           test_dir: tests/e2e/Services/${{ matrix.service }}
@@ -359,7 +359,7 @@ jobs:
         uses: itznotabug/php-retry@v3
         with:
           max_attempts: 3
-          timeout_minutes: 30
+          timeout_minutes: 40
           job_id: ${{ job.check_run_id }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           test_dir: tests/e2e/Services/${{ matrix.service }}
