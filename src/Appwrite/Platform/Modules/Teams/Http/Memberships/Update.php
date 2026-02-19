@@ -36,34 +36,34 @@ class Update extends Action
             ->setHttpPath('/v1/teams/:teamId/memberships/:membershipId')
             ->desc('Update team membership')
             ->groups(['api', 'teams'])
-    ->label('event', 'teams.[teamId].memberships.[membershipId].update')
-    ->label('scope', 'teams.write')
-    ->label('audits.event', 'membership.update')
-    ->label('audits.resource', 'team/{request.teamId}')
-    ->label('sdk', new Method(
-        namespace: 'teams',
-        group: 'memberships',
-        name: 'updateMembership',
-        description: '/docs/references/teams/update-team-membership.md',
-        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_MEMBERSHIP,
-            )
-        ]
-    ))
-    ->param('teamId', '', new UID(), 'Team ID.')
-    ->param('membershipId', '', new UID(), 'Membership ID.')
-    ->param('roles', [], new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings. Use this param to set the user\'s roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', false, ['project'])
-    ->inject('request')
-    ->inject('response')
-    ->inject('user')
-    ->inject('project')
-    ->inject('dbForProject')
-    ->inject('authorization')
-    ->inject('queueForEvents')
-    ->callback($this->action(...));
+            ->label('event', 'teams.[teamId].memberships.[membershipId].update')
+            ->label('scope', 'teams.write')
+            ->label('audits.event', 'membership.update')
+            ->label('audits.resource', 'team/{request.teamId}')
+            ->label('sdk', new Method(
+                namespace: 'teams',
+                group: 'memberships',
+                name: 'updateMembership',
+                description: '/docs/references/teams/update-team-membership.md',
+                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_OK,
+                        model: Response::MODEL_MEMBERSHIP,
+                    )
+                ]
+            ))
+            ->param('teamId', '', new UID(), 'Team ID.')
+            ->param('membershipId', '', new UID(), 'Membership ID.')
+            ->param('roles', [], new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings. Use this param to set the user\'s roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', false, ['project'])
+            ->inject('request')
+            ->inject('response')
+            ->inject('user')
+            ->inject('project')
+            ->inject('dbForProject')
+            ->inject('authorization')
+            ->inject('queueForEvents')
+            ->callback($this->action(...));
     }
 
     public function action(string $teamId, string $membershipId, array $roles, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Authorization $authorization, Event $queueForEvents)

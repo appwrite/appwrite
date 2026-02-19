@@ -42,39 +42,39 @@ class Update extends Action
             ->setHttpPath('/v1/teams/:teamId/memberships/:membershipId/status')
             ->desc('Update team membership status')
             ->groups(['api', 'teams'])
-    ->label('event', 'teams.[teamId].memberships.[membershipId].update.status')
-    ->label('scope', 'public')
-    ->label('audits.event', 'membership.update')
-    ->label('audits.resource', 'team/{request.teamId}')
-    ->label('audits.userId', '{request.userId}')
-    ->label('sdk', new Method(
-        namespace: 'teams',
-        group: 'memberships',
-        name: 'updateMembershipStatus',
-        description: '/docs/references/teams/update-team-membership-status.md',
-        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_MEMBERSHIP,
-            )
-        ]
-    ))
-    ->param('teamId', '', new UID(), 'Team ID.')
-    ->param('membershipId', '', new UID(), 'Membership ID.')
-    ->param('userId', '', new UID(), 'User ID.')
-    ->param('secret', '', new Text(256), 'Secret key.')
-    ->inject('request')
-    ->inject('response')
-    ->inject('user')
-    ->inject('dbForProject')
-    ->inject('authorization')
-    ->inject('project')
-    ->inject('geodb')
-    ->inject('queueForEvents')
-    ->inject('store')
-    ->inject('proofForToken')
-    ->callback($this->action(...));
+            ->label('event', 'teams.[teamId].memberships.[membershipId].update.status')
+            ->label('scope', 'public')
+            ->label('audits.event', 'membership.update')
+            ->label('audits.resource', 'team/{request.teamId}')
+            ->label('audits.userId', '{request.userId}')
+            ->label('sdk', new Method(
+                namespace: 'teams',
+                group: 'memberships',
+                name: 'updateMembershipStatus',
+                description: '/docs/references/teams/update-team-membership-status.md',
+                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_OK,
+                        model: Response::MODEL_MEMBERSHIP,
+                    )
+                ]
+            ))
+            ->param('teamId', '', new UID(), 'Team ID.')
+            ->param('membershipId', '', new UID(), 'Membership ID.')
+            ->param('userId', '', new UID(), 'User ID.')
+            ->param('secret', '', new Text(256), 'Secret key.')
+            ->inject('request')
+            ->inject('response')
+            ->inject('user')
+            ->inject('dbForProject')
+            ->inject('authorization')
+            ->inject('project')
+            ->inject('geodb')
+            ->inject('queueForEvents')
+            ->inject('store')
+            ->inject('proofForToken')
+            ->callback($this->action(...));
     }
 
     public function action(string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Authorization $authorization, $project, Reader $geodb, Event $queueForEvents, Store $store, Token $proofForToken)

@@ -39,29 +39,29 @@ class XList extends Action
             ->setHttpPath('/v1/teams/:teamId/memberships')
             ->desc('List team memberships')
             ->groups(['api', 'teams'])
-    ->label('scope', 'teams.read')
-    ->label('sdk', new Method(
-        namespace: 'teams',
-        group: 'memberships',
-        name: 'listMemberships',
-        description: '/docs/references/teams/list-team-members.md',
-        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_MEMBERSHIP_LIST,
-            )
-        ]
-    ))
-    ->param('teamId', '', new UID(), 'Team ID.')
-    ->param('queries', [], new Memberships(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Memberships::ALLOWED_ATTRIBUTES), true)
-    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
-    ->inject('response')
-    ->inject('project')
-    ->inject('dbForProject')
-    ->inject('authorization')
-    ->callback($this->action(...));
+            ->label('scope', 'teams.read')
+            ->label('sdk', new Method(
+                namespace: 'teams',
+                group: 'memberships',
+                name: 'listMemberships',
+                description: '/docs/references/teams/list-team-members.md',
+                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_OK,
+                        model: Response::MODEL_MEMBERSHIP_LIST,
+                    )
+                ]
+            ))
+            ->param('teamId', '', new UID(), 'Team ID.')
+            ->param('queries', [], new Memberships(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Memberships::ALLOWED_ATTRIBUTES), true)
+            ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+            ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
+            ->inject('response')
+            ->inject('project')
+            ->inject('dbForProject')
+            ->inject('authorization')
+            ->callback($this->action(...));
     }
 
     public function action(string $teamId, array $queries, string $search, bool $includeTotal, Response $response, Document $project, Database $dbForProject, Authorization $authorization)

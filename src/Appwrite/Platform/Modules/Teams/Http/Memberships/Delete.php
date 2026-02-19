@@ -34,33 +34,33 @@ class Delete extends Action
             ->setHttpPath('/v1/teams/:teamId/memberships/:membershipId')
             ->desc('Delete team membership')
             ->groups(['api', 'teams'])
-    ->label('event', 'teams.[teamId].memberships.[membershipId].delete')
-    ->label('scope', 'teams.write')
-    ->label('audits.event', 'membership.delete')
-    ->label('audits.resource', 'team/{request.teamId}')
-    ->label('sdk', new Method(
-        namespace: 'teams',
-        group: 'memberships',
-        name: 'deleteMembership',
-        description: '/docs/references/teams/delete-team-membership.md',
-        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_NOCONTENT,
-                model: Response::MODEL_NONE,
-            )
-        ],
-        contentType: ContentType::NONE
-    ))
-    ->param('teamId', '', new UID(), 'Team ID.')
-    ->param('membershipId', '', new UID(), 'Membership ID.')
-    ->inject('user')
-    ->inject('project')
-    ->inject('response')
-    ->inject('dbForProject')
-    ->inject('authorization')
-    ->inject('queueForEvents')
-    ->callback($this->action(...));
+            ->label('event', 'teams.[teamId].memberships.[membershipId].delete')
+            ->label('scope', 'teams.write')
+            ->label('audits.event', 'membership.delete')
+            ->label('audits.resource', 'team/{request.teamId}')
+            ->label('sdk', new Method(
+                namespace: 'teams',
+                group: 'memberships',
+                name: 'deleteMembership',
+                description: '/docs/references/teams/delete-team-membership.md',
+                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_NOCONTENT,
+                        model: Response::MODEL_NONE,
+                    )
+                ],
+                contentType: ContentType::NONE
+            ))
+            ->param('teamId', '', new UID(), 'Team ID.')
+            ->param('membershipId', '', new UID(), 'Membership ID.')
+            ->inject('user')
+            ->inject('project')
+            ->inject('response')
+            ->inject('dbForProject')
+            ->inject('authorization')
+            ->inject('queueForEvents')
+            ->callback($this->action(...));
     }
 
     public function action(string $teamId, string $membershipId, Document $user, Document $project, Response $response, Database $dbForProject, Authorization $authorization, Event $queueForEvents)

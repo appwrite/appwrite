@@ -53,49 +53,49 @@ class Create extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/teams/:teamId/memberships')
             ->desc('Create team membership')
-    ->groups(['api', 'teams', 'auth'])
-    ->label('event', 'teams.[teamId].memberships.[membershipId].create')
-    ->label('scope', 'teams.write')
-    ->label('auth.type', 'invites')
-    ->label('audits.event', 'membership.create')
-    ->label('audits.resource', 'team/{request.teamId}')
-    ->label('audits.userId', '{request.userId}')
-    ->label('sdk', new Method(
-        namespace: 'teams',
-        group: 'memberships',
-        name: 'createMembership',
-        description: '/docs/references/teams/create-team-membership.md',
-        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_CREATED,
-                model: Response::MODEL_MEMBERSHIP,
-            )
-        ]
-    ))
-    ->label('abuse-limit', 10)
-    ->param('teamId', '', new UID(), 'Team ID.')
-    ->param('email', '', new EmailValidator(), 'Email of the new team member.', true)
-    ->param('userId', '', new UID(), 'ID of the user to be added to a team.', true)
-    ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
-    ->param('roles', [], new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', false, ['project'])
-    ->param('url', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect the user back to your app from the invitation email. This parameter is not required when an API key is supplied. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator']) // TODO add our own built-in confirm page
-    ->param('name', '', new Text(128), 'Name of the new team member. Max length: 128 chars.', true)
-    ->inject('response')
-    ->inject('project')
-    ->inject('user')
-    ->inject('dbForProject')
-    ->inject('authorization')
-    ->inject('locale')
-    ->inject('queueForMails')
-    ->inject('queueForMessaging')
-    ->inject('queueForEvents')
-    ->inject('timelimit')
-    ->inject('queueForStatsUsage')
-    ->inject('plan')
-    ->inject('proofForPassword')
-    ->inject('proofForToken')
-    ->callback($this->action(...));
+            ->groups(['api', 'teams', 'auth'])
+            ->label('event', 'teams.[teamId].memberships.[membershipId].create')
+            ->label('scope', 'teams.write')
+            ->label('auth.type', 'invites')
+            ->label('audits.event', 'membership.create')
+            ->label('audits.resource', 'team/{request.teamId}')
+            ->label('audits.userId', '{request.userId}')
+            ->label('sdk', new Method(
+                namespace: 'teams',
+                group: 'memberships',
+                name: 'createMembership',
+                description: '/docs/references/teams/create-team-membership.md',
+                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_CREATED,
+                        model: Response::MODEL_MEMBERSHIP,
+                    )
+                ]
+            ))
+            ->label('abuse-limit', 10)
+            ->param('teamId', '', new UID(), 'Team ID.')
+            ->param('email', '', new EmailValidator(), 'Email of the new team member.', true)
+            ->param('userId', '', new UID(), 'ID of the user to be added to a team.', true)
+            ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
+            ->param('roles', [], new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', false, ['project'])
+            ->param('url', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect the user back to your app from the invitation email. This parameter is not required when an API key is supplied. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator']) // TODO add our own built-in confirm page
+            ->param('name', '', new Text(128), 'Name of the new team member. Max length: 128 chars.', true)
+            ->inject('response')
+            ->inject('project')
+            ->inject('user')
+            ->inject('dbForProject')
+            ->inject('authorization')
+            ->inject('locale')
+            ->inject('queueForMails')
+            ->inject('queueForMessaging')
+            ->inject('queueForEvents')
+            ->inject('timelimit')
+            ->inject('queueForStatsUsage')
+            ->inject('plan')
+            ->inject('proofForPassword')
+            ->inject('proofForToken')
+            ->callback($this->action(...));
     }
 
     public function action(string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Authorization $authorization, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, Password $proofForPassword, Token $proofForToken)
@@ -296,7 +296,7 @@ class Create extends Action
                 $subject = $locale->getText("emails.invitation.subject");
                 $customTemplate = $project->getAttribute('templates', [])['email.invitation-' . $locale->default] ?? [];
 
-                $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
+                $message = Template::fromFile(APP_CONFIG_DIR . '/locale/templates/email-inner-base.tpl');
                 $message
                     ->setParam('{{body}}', $body, escapeHtml: false)
                     ->setParam('{{hello}}', $locale->getText("emails.invitation.hello"))
@@ -375,7 +375,7 @@ class Create extends Action
                     throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
                 }
 
-                $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
+                $message = Template::fromFile(APP_CONFIG_DIR . '/locale/templates/sms-base.tpl');
 
                 $customTemplate = $project->getAttribute('templates', [])['sms.invitation-' . $locale->default] ?? [];
                 if (!empty($customTemplate)) {

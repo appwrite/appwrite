@@ -31,28 +31,28 @@ class Get extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/teams/:teamId/memberships/:membershipId')
             ->desc('Get team membership')
-    ->groups(['api', 'teams'])
-    ->label('scope', 'teams.read')
-    ->label('sdk', new Method(
-        namespace: 'teams',
-        group: 'memberships',
-        name: 'getMembership',
-        description: '/docs/references/teams/get-team-member.md',
-        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_MEMBERSHIP,
-            )
-        ]
-    ))
-    ->param('teamId', '', new UID(), 'Team ID.')
-    ->param('membershipId', '', new UID(), 'Membership ID.')
-    ->inject('response')
-    ->inject('project')
-    ->inject('dbForProject')
-    ->inject('authorization')
-    ->callback($this->action(...));
+            ->groups(['api', 'teams'])
+            ->label('scope', 'teams.read')
+            ->label('sdk', new Method(
+                namespace: 'teams',
+                group: 'memberships',
+                name: 'getMembership',
+                description: '/docs/references/teams/get-team-member.md',
+                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_OK,
+                        model: Response::MODEL_MEMBERSHIP,
+                    )
+                ]
+            ))
+            ->param('teamId', '', new UID(), 'Team ID.')
+            ->param('membershipId', '', new UID(), 'Membership ID.')
+            ->inject('response')
+            ->inject('project')
+            ->inject('dbForProject')
+            ->inject('authorization')
+            ->callback($this->action(...));
     }
 
     public function action(string $teamId, string $membershipId, Response $response, Document $project, Database $dbForProject, Authorization $authorization)
