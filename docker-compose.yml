@@ -1154,6 +1154,8 @@ services:
     container_name: appwrite-assistant
     build:
       context: ../assistant
+      args:
+        SKIP_FETCH_SOURCES: "true"
     env_file:
       - path: ../assistant/.env
         required: false
