@@ -141,6 +141,7 @@ class Create extends CreateDocumentAction
             ->dynamic($embeddings, $this->getBulkResponseModel());
 
         $queueForStatsUsage
+            ->setProject($project)
             ->addMetric(METRIC_EMBEDDINGS_TEXT, \count($texts))
             ->addMetric(\str_replace('{embeddingModel}', $model, METRIC_EMBEDDINGS_MODEL_TEXT), \count($texts))
             ->addMetric(METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS, $totalTokens)

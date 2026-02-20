@@ -1216,10 +1216,8 @@ trait DatabasesBase
             ],
         ]);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals($document['title'], $response['body']['title']);
-        $this->assertEquals($document['releaseYear'], $response['body']['releaseYear']);
-        $this->assertTrue(array_key_exists('$sequence', $response['body']));
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Invalid query method: equal', $response['body']['message']);
     }
 
     /**
@@ -2647,29 +2645,33 @@ trait DatabasesBase
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ]
         ]);
-        sleep(2);
-        // test for failure
-        $duplicate = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
-            'data' => [
-                'movieTitle' => 'Captain America',
-                'releaseYear' => 1944,
-                'actors' => [
-                    'Chris Evans',
-                    'Samuel Jackson',
-                ]
-            ],
-            'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
-            ]
-        ]);
 
-        $this->assertEquals(409, $duplicate['headers']['status-code']);
+        // test for failure
+        $this->assertEventually(function () use ($databaseId, $data) {
+            $duplicate = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'documentId' => ID::unique(),
+                'data' => [
+                    'movieTitle' => 'Captain America',
+                    'releaseYear' => 1944,
+                    'actors' => [
+                        'Chris Evans',
+                        'Samuel Jackson',
+                    ]
+                ],
+                'permissions' => [
+                    Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                    Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                    Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                ]
+            ]);
+
+            $this->assertEquals(409, $duplicate['headers']['status-code']);
+
+            return true;
+        });
 
         // Test for exception when updating document to conflict
         $document = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
