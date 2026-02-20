@@ -1387,6 +1387,33 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
+            ],
+            [
+                'name' => '_APP_ASSISTANT_LANGFUSE_PUBLIC_KEY',
+                'description' => 'Langfuse public key for assistant observability tracing. Optional.',
+                'introduction' => '1.7.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_ASSISTANT_LANGFUSE_SECRET_KEY',
+                'description' => 'Langfuse secret key for assistant observability tracing. Optional.',
+                'introduction' => '1.7.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_ASSISTANT_LANGFUSE_HOST',
+                'description' => 'Langfuse host URL for assistant observability tracing. Optional.',
+                'introduction' => '1.7.0',
+                'default' => 'https://cloud.langfuse.com',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ]
         ]
     ]

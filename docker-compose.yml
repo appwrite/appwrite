@@ -1147,13 +1147,18 @@ services:
 
   appwrite-assistant:
     container_name: appwrite-assistant
-    image: appwrite/assistant:0.8.4
+    build:
+      context: ../assistant
+    volumes:
+      - ../assistant/sources:/usr/src/app/sources
     networks:
       - appwrite
     environment:
-      - _APP_ASSISTANT_HOST
       - _APP_ASSISTANT_ANTHROPIC_API_KEY
       - _APP_ASSISTANT_OPENAI_API_KEY
+      - _APP_ASSISTANT_LANGFUSE_PUBLIC_KEY
+      - _APP_ASSISTANT_LANGFUSE_SECRET_KEY
+      - _APP_ASSISTANT_LANGFUSE_HOST
 
   appwrite-browser:
     container_name: appwrite-browser
