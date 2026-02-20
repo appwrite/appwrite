@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Functions;
 
 use Appwrite\Tests\Async;
+use Appwrite\Tests\Async\Exceptions\Critical;
 use CURLFile;
 use Tests\E2E\Client;
 use Utopia\Console;
@@ -81,7 +82,13 @@ trait FunctionsBase
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertNotEquals(401, $deployment['headers']['status-code'], 'Auth failed while polling deployment status');
-            $this->assertEquals('ready', $deployment['body']['status'] ?? '', 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
+
+            $status = $deployment['body']['status'] ?? '';
+            if ($status === 'failed') {
+                throw new Critical('Deployment build failed: ' . ($deployment['body']['buildLogs'] ?? 'no logs'));
+            }
+
+            $this->assertEquals('ready', $status, 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
         }, 240000, 500);
 
         // Not === so multipart/form-data works fine too

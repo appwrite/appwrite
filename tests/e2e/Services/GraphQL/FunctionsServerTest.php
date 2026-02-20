@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\GraphQL;
 
 use Appwrite\Tests\Async;
+use Appwrite\Tests\Async\Exceptions\Critical;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -140,6 +141,11 @@ class FunctionsServerTest extends Scope
             $this->assertArrayNotHasKey('errors', $deployment['body']);
 
             $deployment = $deployment['body']['data']['functionsGetDeployment'];
+
+            if ($deployment['status'] === 'failed') {
+                throw new Critical('Deployment build failed: ' . ($deployment['buildLogs'] ?? 'no logs'));
+            }
+
             $this->assertEquals('ready', $deployment['status']);
         }, 240000);
 

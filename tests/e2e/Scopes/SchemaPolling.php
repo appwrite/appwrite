@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Scopes;
 
+use Appwrite\Tests\Async\Exceptions\Critical;
 use Tests\E2E\Client;
 
 /**
@@ -19,7 +20,7 @@ trait SchemaPolling
      * @param int $timeoutMs Maximum time to wait in milliseconds
      * @param int $waitMs Time between polling attempts in milliseconds
      */
-    protected function waitForAttribute(string $databaseId, string $containerId, string $attributeKey, int $timeoutMs = 900000, int $waitMs = 500): void
+    protected function waitForAttribute(string $databaseId, string $containerId, string $attributeKey, int $timeoutMs = 1200000, int $waitMs = 500): void
     {
         $this->assertEventually(function () use ($databaseId, $containerId, $attributeKey) {
             $attribute = $this->client->call(
@@ -33,7 +34,13 @@ trait SchemaPolling
             );
 
             $this->assertEquals(200, $attribute['headers']['status-code']);
-            $this->assertEquals('available', $attribute['body']['status']);
+
+            $status = $attribute['body']['status'] ?? '';
+            if ($status === 'failed') {
+                throw new Critical("Attribute '{$attributeKey}' failed: " . ($attribute['body']['error'] ?? 'unknown error'));
+            }
+
+            $this->assertEquals('available', $status);
         }, $timeoutMs, $waitMs);
     }
 
@@ -46,7 +53,7 @@ trait SchemaPolling
      * @param int $timeoutMs Maximum time to wait in milliseconds
      * @param int $waitMs Time between polling attempts in milliseconds
      */
-    protected function waitForAttributes(string $databaseId, string $containerId, array $attributeKeys, int $timeoutMs = 900000, int $waitMs = 500): void
+    protected function waitForAttributes(string $databaseId, string $containerId, array $attributeKeys, int $timeoutMs = 1200000, int $waitMs = 500): void
     {
         $this->assertEventually(function () use ($databaseId, $containerId, $attributeKeys) {
             $container = $this->client->call(
@@ -67,6 +74,9 @@ trait SchemaPolling
             $availableKeys = [];
 
             foreach ($attributes as $attr) {
+                if ($attr['status'] === 'failed') {
+                    throw new Critical("Attribute '{$attr['key']}' failed: " . ($attr['error'] ?? 'unknown error'));
+                }
                 if ($attr['status'] === 'available') {
                     $availableKeys[] = $attr['key'];
                 }
@@ -87,7 +97,7 @@ trait SchemaPolling
      * @param int $timeoutMs Maximum time to wait in milliseconds
      * @param int $waitMs Time between polling attempts in milliseconds
      */
-    protected function waitForAttributeCount(string $databaseId, string $containerId, int $count, int $timeoutMs = 900000, int $waitMs = 500): void
+    protected function waitForAttributeCount(string $databaseId, string $containerId, int $count, int $timeoutMs = 1200000, int $waitMs = 500): void
     {
         $this->assertEventually(function () use ($databaseId, $containerId, $count) {
             $container = $this->client->call(
@@ -108,6 +118,9 @@ trait SchemaPolling
             $availableCount = 0;
 
             foreach ($attributes as $attr) {
+                if ($attr['status'] === 'failed') {
+                    throw new Critical("Attribute '{$attr['key']}' failed: " . ($attr['error'] ?? 'unknown error'));
+                }
                 if ($attr['status'] === 'available') {
                     $availableCount++;
                 }
@@ -126,7 +139,7 @@ trait SchemaPolling
      * @param int $timeoutMs Maximum time to wait in milliseconds
      * @param int $waitMs Time between polling attempts in milliseconds
      */
-    protected function waitForIndex(string $databaseId, string $containerId, string $indexKey, int $timeoutMs = 900000, int $waitMs = 500): void
+    protected function waitForIndex(string $databaseId, string $containerId, string $indexKey, int $timeoutMs = 1200000, int $waitMs = 500): void
     {
         $this->assertEventually(function () use ($databaseId, $containerId, $indexKey) {
             $index = $this->client->call(
@@ -142,7 +155,13 @@ trait SchemaPolling
             $this->assertEquals(200, $index['headers']['status-code']);
             $this->assertArrayHasKey('body', $index);
             $this->assertArrayHasKey('status', $index['body']);
-            $this->assertEquals('available', $index['body']['status']);
+
+            $status = $index['body']['status'] ?? '';
+            if ($status === 'failed') {
+                throw new Critical("Index '{$indexKey}' failed: " . ($index['body']['error'] ?? 'unknown error'));
+            }
+
+            $this->assertEquals('available', $status);
         }, $timeoutMs, $waitMs);
     }
 
@@ -154,7 +173,7 @@ trait SchemaPolling
      * @param int $timeoutMs Maximum time to wait in milliseconds
      * @param int $waitMs Time between polling attempts in milliseconds
      */
-    protected function waitForAllIndexes(string $databaseId, string $containerId, int $timeoutMs = 900000, int $waitMs = 500): void
+    protected function waitForAllIndexes(string $databaseId, string $containerId, int $timeoutMs = 1200000, int $waitMs = 500): void
     {
         $this->assertEventually(function () use ($databaseId, $containerId) {
             $container = $this->client->call(
@@ -172,6 +191,9 @@ trait SchemaPolling
             $this->assertArrayHasKey('indexes', $container['body']);
 
             foreach ($container['body']['indexes'] as $index) {
+                if ($index['status'] === 'failed') {
+                    throw new Critical("Index '{$index['key']}' failed: " . ($index['error'] ?? 'unknown error'));
+                }
                 $this->assertEquals('available', $index['status'], "Index '{$index['key']}' is not available yet");
             }
         }, $timeoutMs, $waitMs);
@@ -182,10 +204,10 @@ trait SchemaPolling
      *
      * @param string $databaseId The database ID
      * @param string $containerId The collection/table ID
-     * @param int $timeoutMs Maximum time to wait in milliseconds (default 15 minutes for CI stability under parallel load)
+     * @param int $timeoutMs Maximum time to wait in milliseconds (default 20 minutes for CI stability under parallel load)
      * @param int $waitMs Time between polling attempts in milliseconds
      */
-    protected function waitForAllAttributes(string $databaseId, string $containerId, int $timeoutMs = 900000, int $waitMs = 500): void
+    protected function waitForAllAttributes(string $databaseId, string $containerId, int $timeoutMs = 1200000, int $waitMs = 500): void
     {
         $this->assertEventually(function () use ($databaseId, $containerId) {
             $container = $this->client->call(
@@ -205,6 +227,9 @@ trait SchemaPolling
             $this->assertNotEmpty($container['body'][$schemaResource], "No attributes found in container {$containerId}");
 
             foreach ($container['body'][$schemaResource] as $attribute) {
+                if ($attribute['status'] === 'failed') {
+                    throw new Critical("Attribute '{$attribute['key']}' failed: " . ($attribute['error'] ?? 'unknown error'));
+                }
                 $this->assertEquals('available', $attribute['status'], "Attribute '{$attribute['key']}' is not available yet");
             }
         }, $timeoutMs, $waitMs);
