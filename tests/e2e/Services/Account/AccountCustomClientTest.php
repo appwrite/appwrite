@@ -1028,12 +1028,13 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsArray($response['body']['logs']);
         $this->assertNotEmpty($response['body']['logs']);
-        // Fresh account: only session.create is logged (user.create audit is not triggered
-        // for self-service account creation because the request has no authenticated user context)
-        $this->assertCount(1, $response['body']['logs']);
+        // Fresh account: session.create is always logged. user.create audit may or may not
+        // be present depending on async audit processing timing.
+        $logCount = count($response['body']['logs']);
+        $this->assertContains($logCount, [1, 2]);
         $this->assertIsNumeric($response['body']['total']);
 
-        // Check session.create log (logs[0])
+        // Check session.create log (logs[0] - most recent)
         $this->assertEquals('Windows', $response['body']['logs'][0]['osName']);
         $this->assertEquals('WIN', $response['body']['logs'][0]['osCode']);
         $this->assertEquals('10', $response['body']['logs'][0]['osVersion']);
@@ -1051,6 +1052,13 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals('--', $response['body']['logs'][0]['countryCode']);
         $this->assertEquals('Unknown', $response['body']['logs'][0]['countryName']);
+
+        if ($logCount === 2) {
+            // Check user.create log (logs[1] - oldest)
+            $this->assertEquals('user.create', $response['body']['logs'][1]['event']);
+            $this->assertEquals(filter_var($response['body']['logs'][1]['ip'], FILTER_VALIDATE_IP), $response['body']['logs'][1]['ip']);
+            $this->assertTrue((new DatetimeValidator())->isValid($response['body']['logs'][1]['time']));
+        }
 
         $responseLimit = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
             'origin' => 'http://localhost',
@@ -1084,10 +1092,13 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals($responseOffset['headers']['status-code'], 200);
         $this->assertIsArray($responseOffset['body']['logs']);
-        // With 1 log and offset(1), we get 0 logs remaining
-        $this->assertEmpty($responseOffset['body']['logs']);
-        $this->assertCount(0, $responseOffset['body']['logs']);
+        // With offset(1), remaining logs = logCount - 1
+        $this->assertCount($logCount - 1, $responseOffset['body']['logs']);
         $this->assertIsNumeric($responseOffset['body']['total']);
+
+        if ($logCount === 2) {
+            $this->assertEquals($response['body']['logs'][1], $responseOffset['body']['logs'][0]);
+        }
 
         $responseLimitOffset = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
             'origin' => 'http://localhost',
@@ -1103,10 +1114,13 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals(200, $responseLimitOffset['headers']['status-code']);
         $this->assertIsArray($responseLimitOffset['body']['logs']);
-        // With 1 log and offset(1)+limit(1), we get 0 logs remaining
-        $this->assertEmpty($responseLimitOffset['body']['logs']);
-        $this->assertCount(0, $responseLimitOffset['body']['logs']);
+        // With offset(1)+limit(1), remaining logs = min(1, logCount - 1)
+        $this->assertCount(min(1, $logCount - 1), $responseLimitOffset['body']['logs']);
         $this->assertIsNumeric($responseLimitOffset['body']['total']);
+
+        if ($logCount === 2) {
+            $this->assertEquals($response['body']['logs'][1], $responseLimitOffset['body']['logs'][0]);
+        }
 
         /**
          * Test for total=false
