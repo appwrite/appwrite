@@ -1,11 +1,5 @@
 # Change Log
 
-## 12.2.0
-
-* Added Channel<_Document>.upsert() and Channel<_Row>.upsert() API methods to upsert documents and rows in channels.
-* Added new query filters: containsAny(attribute, List<Any>) and containsAll(attribute, List<Any>) for advanced matching on array/relationship attributes.
-* Realtime improvements: improved WebSocket lifecycle and connection handling. Introduced generation-based checks to avoid processing messages from stale sockets and ensure sequential socket recreation on reconnects.
-
 ## 12.1.0
 
 * Add `queries` parameter to Realtime subscriptions for filtering events

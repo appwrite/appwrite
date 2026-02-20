@@ -1,10 +1,5 @@
 # Change Log
 
-## 13.5.0
-
-* New: Added CLI commands under projects: `list-schedules`, `create-schedule`, and `get-schedule` for managing project schedules.
-* Packaging/build: Updated packaging to support explicit ESM/CJS outputs with exports. main now points to dist/index.cjs, module to dist/index.js, and exports include type and entry-point mappings. This enables better compatibility for both ESM and CommonJS users.
-
 ## 13.4.0
 
 * Add `--queries` option to `list-keys` command

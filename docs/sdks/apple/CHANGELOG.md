@@ -1,11 +1,5 @@
 # Change Log
 
-## 14.3.0
-
-* Added upsert() support for RealtimeChannel on both Document and Row variants to perform upsert operations over real-time channels.
-* Introduced new Query filter methods: contains(_:, value:), containsAny(_:, value: [Any]), containsAll(_:, value: [Any]) for enhanced querying capabilities (substring and multi-value containment).
-* Documentation and packaging updates to align with the new release: README dependency example updated from 14.2.0 to 14.1.0, and server compatibility note updated to indicate Appwrite server version 1.8.x compatibility.
-
 ## 14.1.0
 
 * Add `queries` parameter to Realtime subscriptions for filtering events
