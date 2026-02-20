@@ -2111,7 +2111,16 @@ Http::post('/v1/account/tokens/magic-url')
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
-        $url = htmlentities($url);
+
+        $url = \parse_url($url);
+        $url['path'] = \htmlentities($url['path'] ?? '');
+        $url = (isset($url['scheme']) ? $url['scheme'] . '://' : '') .
+               (isset($url['user']) ? $url['user'] . (isset($url['pass']) ? ':' . $url['pass'] : '') . '@' : '') .
+               (isset($url['host']) ? $url['host'] : '') .
+               (isset($url['port']) ? ':' . $url['port'] : '') .
+               (isset($url['path']) ? $url['path'] : '') .
+               (isset($url['query']) ? '?' . $url['query'] : '') .
+               (isset($url['fragment']) ? '#' . $url['fragment'] : '');
 
         if ($phrase === true) {
             $phrase = Phrase::generate();
@@ -3573,7 +3582,16 @@ Http::post('/v1/account/recovery')
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
 
-        $url = htmlentities($url);
+        $url = \parse_url($url);
+        $url['path'] = \htmlentities($url['path'] ?? '');
+        $url = (isset($url['scheme']) ? $url['scheme'] . '://' : '') .
+               (isset($url['user']) ? $url['user'] . (isset($url['pass']) ? ':' . $url['pass'] : '') . '@' : '') .
+               (isset($url['host']) ? $url['host'] : '') .
+               (isset($url['port']) ? ':' . $url['port'] : '') .
+               (isset($url['path']) ? $url['path'] : '') .
+               (isset($url['query']) ? '?' . $url['query'] : '') .
+               (isset($url['fragment']) ? '#' . $url['fragment'] : '');
+
         $email = \strtolower($email);
 
         $profile = $dbForProject->findOne('users', [
@@ -3889,7 +3907,16 @@ Http::post('/v1/account/verifications/email')
             throw new Exception(Exception::USER_EMAIL_NOT_FOUND);
         }
 
-        $url = htmlentities($url);
+        $url = \parse_url($url);
+        $url['path'] = \htmlentities($url['path'] ?? '');
+        $url = (isset($url['scheme']) ? $url['scheme'] . '://' : '') .
+               (isset($url['user']) ? $url['user'] . (isset($url['pass']) ? ':' . $url['pass'] : '') . '@' : '') .
+               (isset($url['host']) ? $url['host'] : '') .
+               (isset($url['port']) ? ':' . $url['port'] : '') .
+               (isset($url['path']) ? $url['path'] : '') .
+               (isset($url['query']) ? '?' . $url['query'] : '') .
+               (isset($url['fragment']) ? '#' . $url['fragment'] : '');
+
         if ($user->getAttribute('emailVerification')) {
             throw new Exception(Exception::USER_EMAIL_ALREADY_VERIFIED);
         }
