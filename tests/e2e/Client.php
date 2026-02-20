@@ -67,11 +67,11 @@ class Client
     /**
      * Set Key
      *
-     * Your Appwrite project secret key. You can can create a new API key from your Appwrite console API keys dashboard.
+     * Your Appwrite project secret key. You can create a new API key from your Appwrite console API keys dashboard.
      *
-     * @param string $value
+     * @param string $value The API key for authentication
      *
-     * @return self $this
+     * @return self $this Returns the current instance for method chaining
      */
     public function setKey(string $value): self
     {
@@ -83,9 +83,11 @@ class Client
     /**
      * Set Locale
      *
-     * @param string $value
+     * Sets the locale for internationalization and localization purposes.
      *
-     * @return self $this
+     * @param string $value The locale code (e.g., 'en-US', 'fr-FR')
+     *
+     * @return self $this Returns the current instance for method chaining
      */
     public function setLocale(string $value): self
     {
@@ -97,9 +99,11 @@ class Client
     /**
      * Set Mode
      *
-     * @param string $value
+     * Sets the execution mode for the SDK (e.g., 'development', 'production').
      *
-     * @return self $this
+     * @param string $value The mode to set
+     *
+     * @return self $this Returns the current instance for method chaining
      */
     public function setMode(string $value): self
     {
@@ -111,9 +115,11 @@ class Client
     /**
      * Set Response Format
      *
-     * @param string $value
+     * Sets the desired response format for API responses.
      *
-     * @return self $this
+     * @param string $value The response format (e.g., 'json', 'xml')
+     *
+     * @return self $this Returns the current instance for method chaining
      */
     public function setResponseFormat(string $value): self
     {
@@ -123,8 +129,13 @@ class Client
     }
 
     /**
-     * @param bool $status true
-     * @return self $this
+     * Set Self Signed Certificates
+     *
+     * Enable or disable SSL certificate verification for self-signed certificates.
+     * Use this only in development environments.
+     *
+     * @param bool $status Whether to allow self-signed certificates (default: true)
+     * @return self $this Returns the current instance for method chaining
      */
     public function setSelfSigned(bool $status = true): self
     {
@@ -134,8 +145,12 @@ class Client
     }
 
     /**
-     * @param string $endpoint
-     * @return self $this
+     * Set Endpoint
+     *
+     * Sets the API endpoint URL for all subsequent requests.
+     *
+     * @param string $endpoint The base URL for the Appwrite API
+     * @return self $this Returns the current instance for method chaining
      */
     public function setEndpoint(string $endpoint): self
     {
@@ -145,7 +160,11 @@ class Client
     }
 
     /**
-     * @return string
+     * Get Endpoint
+     *
+     * Returns the currently configured API endpoint URL.
+     *
+     * @return string The current endpoint URL
      */
     public function getEndpoint(): string
     {
@@ -153,10 +172,14 @@ class Client
     }
 
     /**
-     * @param string $key
-     * @param string $value
+     * Add Header
      *
-     * @return self $this
+     * Adds a custom header to all subsequent requests.
+     *
+     * @param string $key The header name
+     * @param string $value The header value
+     *
+     * @return self $this Returns the current instance for method chaining
      */
     public function addHeader(string $key, string $value): self
     {
@@ -168,15 +191,16 @@ class Client
     /**
      * Call
      *
-     * Make an API call
+     * Make an API call to the Appwrite server.
      *
-     * @param string $method
-     * @param string $path
-     * @param array $params
-     * @param array $headers
-     * @param bool $decode
-     * @return array
-     * @throws Exception
+     * @param string $method HTTP method (GET, POST, PUT, PATCH, DELETE, etc.)
+     * @param string $path API endpoint path (relative to base URL)
+     * @param array $headers Additional headers for this request
+     * @param mixed $params Request parameters or body content
+     * @param bool $decode Whether to decode the response body (default: true)
+     * @param bool $followRedirects Whether to follow HTTP redirects (default: true)
+     * @return array Response containing headers, cookies, and body
+     * @throws Exception When the request fails or response is invalid
      */
     public function call(string $method, string $path = '', array $headers = [], mixed $params = [], bool $decode = true, bool $followRedirects = true): array
     {
@@ -232,13 +256,14 @@ class Client
 
 
         if ($method === self::METHOD_HEAD) {
-            curl_setopt($ch, CURLOPT_NOBODY, true); // This is crucial for HEAD requests
+            curl_setopt($ch, CURLOPT_NOBODY, true);
             curl_setopt($ch, CURLOPT_HEADER, false);
         } else {
             curl_setopt($ch, CURLOPT_NOBODY, false);
         }
 
-        if ($method != self::METHOD_GET && $method != self::METHOD_HEAD) {
+        // if ($method != self::METHOD_GET && $method != self::METHOD_HEAD) {
+        if (!in_array($method, [self::METHOD_GET, self::METHOD_HEAD], true)) {
             curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
         }
 
@@ -291,7 +316,8 @@ class Client
         $responseHeaders['status-code'] = $responseStatus;
 
         if ($responseStatus === 500) {
-            echo 'Server error(' . $method . ': ' . $path . '. Params: ' . json_encode($params) . '): ' . json_encode($responseBody) . '\n';
+            // echo 'Server error(' . $method . ': ' . $path . '. Params: ' . json_encode($params) . '): ' . json_encode($responseBody) . '\n';
+            error_log('Server error(' . $method . ': ' . $path . '. Params: ' . json_encode($params) . '): ' . json_encode($responseBody));
         }
 
         return [
@@ -304,8 +330,10 @@ class Client
     /**
      * Parse Cookie String
      *
-     * @param string $cookie
-     * @return array
+     * Parses a cookie header string into an associative array.
+     *
+     * @param string $cookie The cookie string to parse
+     * @return array Parsed cookie data as associative array
      */
     public function parseCookie(string $cookie): array
     {
@@ -319,9 +347,12 @@ class Client
     /**
      * Flatten params array to PHP multiple format
      *
-     * @param array $data
-     * @param string $prefix
-     * @return array
+     * Converts nested arrays into PHP-compatible multipart format.
+     * Handles name collision prevention for nested structures.
+     *
+     * @param array $data The data array to flatten
+     * @param string $prefix The prefix for nested keys (used internally)
+     * @return array Flattened array suitable for HTTP requests
      */
     protected function flatten(array $data, string $prefix = ''): array
     {
@@ -331,7 +362,7 @@ class Client
             $finalKey = $prefix ? "{$prefix}[{$key}]" : $key;
 
             if (is_array($value)) {
-                $output += $this->flatten($value, $finalKey); // @todo: handle name collision here if needed
+                $output += $this->flatten($value, $finalKey);
             } else {
                 $output[$finalKey] = $value;
             }

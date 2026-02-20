@@ -7,7 +7,7 @@ use Utopia\Auth\Proofs\Token;
 
 abstract class Type
 {
-    protected OTP $instance;
+    protected ?OTP $instance = null;
 
     public const TOTP = 'totp';
     public const EMAIL = 'email';
@@ -16,36 +16,40 @@ abstract class Type
 
     public function setLabel(string $label): self
     {
-        $this->instance->setLabel($label);
+        if ($this->instance !== null) {
+            $this->instance->setLabel($label);
+        }
 
         return $this;
     }
 
     public function getLabel(): ?string
     {
-        return $this->instance->getLabel();
+        return $this->instance?->getLabel();
     }
 
     public function setIssuer(string $issuer): self
     {
-        $this->instance->setIssuer($issuer);
+        if ($this->instance !== null) {
+            $this->instance->setIssuer($issuer);
+        }
 
         return $this;
     }
 
     public function getIssuer(): ?string
     {
-        return $this->instance->getIssuer();
+        return $this->instance?->getIssuer();
     }
 
     public function getSecret(): string
     {
-        return $this->instance->getSecret();
+        return $this->instance?->getSecret() ?? '';
     }
 
     public function getProvisioningUri(): string
     {
-        return $this->instance->getProvisioningUri();
+        return $this->instance->getProvisioningUri() ?? '';
     }
 
     public static function generateBackupCodes(int $length = 10, int $total = 6): array

@@ -225,7 +225,7 @@ return [
                 '$id' => ID::custom('templates'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 1_000_000, // TODO make sure size fits
+                'size' => 2_000_000, // Optimized size for email templates with ample headroom
                 'signed' => true,
                 'required' => false,
                 'default' => [],
@@ -893,7 +893,7 @@ return [
                 '$id' => ID::custom('httpPass'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => Database::LENGTH_KEY, // TODO will the length suffice after encryption?
+                'size' => 1024, // Increased size to accommodate encrypted password (256 chars base64 + padding)
                 'signed' => true,
                 'required' => false,
                 'default' => null,
@@ -1100,7 +1100,7 @@ return [
                 'required' => true,
                 'default' => null,
                 'array' => false,
-                'filters' => [], //TODO: use json filter
+                'filters' => ['json'], // Added JSON filter for proper data validation
             ]
         ],
         'indexes' => [

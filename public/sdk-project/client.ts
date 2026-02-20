@@ -180,15 +180,15 @@ class Client {
 
 
     private realtime: Realtime = {
-        socket: undefined,
-        timeout: undefined,
+        // socket: undefined,
+        // timeout: undefined,
         url: '',
         channels: new Set(),
         subscriptions: new Map(),
         subscriptionsCounter: 0,
         reconnect: true,
         reconnectAttempts: 0,
-        lastMessage: undefined,
+        // lastMessage: undefined,
         connect: () => {
             clearTimeout(this.realtime.timeout);
             this.realtime.timeout = window?.setTimeout(() => {
@@ -302,7 +302,7 @@ class Client {
         cleanUp: channels => {
             this.realtime.channels.forEach(channel => {
                 if (channels.includes(channel)) {
-                    let found = Array.from(this.realtime.subscriptions).some(([_key, subscription] )=> {
+                    let found = Array.from(this.realtime.subscriptions).some(([_key, subscription]) => {
                         return subscription.channels.includes(channel);
                     })
 

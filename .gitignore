@@ -1,6 +1,6 @@
 /.vscode/
 /vendor/
-/node_modules/
+node_modules/
 /tests/resources/storage/
 /tests/resources/functions/**/code.tar.gz
 /tests/resources/sites/**/code.tar.gz
@@ -18,3 +18,7 @@ dev/yasd_init.php
 Makefile
 appwrite.config.json
 /.zed/
+
+package-lock.json
+
+.astro
