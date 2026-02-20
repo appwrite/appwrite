@@ -596,6 +596,7 @@ services:
       # Specific
       - _APP_BROWSER_HOST
       - _APP_WORKER_SCREENSHOTS_ROUTER
+      - _APP_OPTIONS_FORCE_HTTPS
       # Basic
       - _APP_ENV
       - _APP_WORKER_PER_CORE
