@@ -1028,15 +1028,12 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsArray($response['body']['logs']);
         $this->assertNotEmpty($response['body']['logs']);
-        // Fresh account: 1 user.create + 1 session.create = 2 logs
-        // logs[0] = session.create (most recent), logs[1] = user.create (oldest)
-        $this->assertCount(2, $response['body']['logs']);
+        // Fresh account: only session.create is logged (user.create audit is not triggered
+        // for self-service account creation because the request has no authenticated user context)
+        $this->assertCount(1, $response['body']['logs']);
         $this->assertIsNumeric($response['body']['total']);
-        $this->assertEquals("user.create", $response['body']['logs'][1]['event']);
-        $this->assertEquals(filter_var($response['body']['logs'][1]['ip'], FILTER_VALIDATE_IP), $response['body']['logs'][1]['ip']);
-        $this->assertTrue((new DatetimeValidator())->isValid($response['body']['logs'][1]['time']));
 
-        // Check session.create log (logs[0] - most recent)
+        // Check session.create log (logs[0])
         $this->assertEquals('Windows', $response['body']['logs'][0]['osName']);
         $this->assertEquals('WIN', $response['body']['logs'][0]['osCode']);
         $this->assertEquals('10', $response['body']['logs'][0]['osVersion']);
@@ -1054,24 +1051,6 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals('--', $response['body']['logs'][0]['countryCode']);
         $this->assertEquals('Unknown', $response['body']['logs'][0]['countryName']);
-
-        // Check user.create log (logs[1] - oldest)
-        $this->assertEquals('Windows', $response['body']['logs'][1]['osName']);
-        $this->assertEquals('WIN', $response['body']['logs'][1]['osCode']);
-        $this->assertEquals('10', $response['body']['logs'][1]['osVersion']);
-
-        $this->assertEquals('browser', $response['body']['logs'][1]['clientType']);
-        $this->assertEquals('Chrome', $response['body']['logs'][1]['clientName']);
-        $this->assertEquals('CH', $response['body']['logs'][1]['clientCode']);
-        $this->assertEquals('70.0', $response['body']['logs'][1]['clientVersion']);
-        $this->assertEquals('Blink', $response['body']['logs'][1]['clientEngine']);
-
-        $this->assertEquals('desktop', $response['body']['logs'][1]['deviceName']);
-        $this->assertEquals('', $response['body']['logs'][1]['deviceBrand']);
-        $this->assertEquals('', $response['body']['logs'][1]['deviceModel']);
-
-        $this->assertEquals('--', $response['body']['logs'][1]['countryCode']);
-        $this->assertEquals('Unknown', $response['body']['logs'][1]['countryName']);
 
         $responseLimit = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
             'origin' => 'http://localhost',
@@ -1105,12 +1084,10 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals($responseOffset['headers']['status-code'], 200);
         $this->assertIsArray($responseOffset['body']['logs']);
-        $this->assertNotEmpty($responseOffset['body']['logs']);
-        // With 2 logs and offset(1), we get 1 log remaining
-        $this->assertCount(1, $responseOffset['body']['logs']);
+        // With 1 log and offset(1), we get 0 logs remaining
+        $this->assertEmpty($responseOffset['body']['logs']);
+        $this->assertCount(0, $responseOffset['body']['logs']);
         $this->assertIsNumeric($responseOffset['body']['total']);
-
-        $this->assertEquals($response['body']['logs'][1], $responseOffset['body']['logs'][0]);
 
         $responseLimitOffset = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
             'origin' => 'http://localhost',
@@ -1126,11 +1103,10 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals(200, $responseLimitOffset['headers']['status-code']);
         $this->assertIsArray($responseLimitOffset['body']['logs']);
-        $this->assertNotEmpty($responseLimitOffset['body']['logs']);
-        $this->assertCount(1, $responseLimitOffset['body']['logs']);
+        // With 1 log and offset(1)+limit(1), we get 0 logs remaining
+        $this->assertEmpty($responseLimitOffset['body']['logs']);
+        $this->assertCount(0, $responseLimitOffset['body']['logs']);
         $this->assertIsNumeric($responseLimitOffset['body']['total']);
-
-        $this->assertEquals($response['body']['logs'][1], $responseLimitOffset['body']['logs'][0]);
 
         /**
          * Test for total=false

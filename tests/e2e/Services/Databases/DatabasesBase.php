@@ -3980,6 +3980,11 @@ trait DatabasesBase
 
     public function testOperators(): void
     {
+        if (!$this->getSupportForOperators()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         // Create database
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
             'content-type' => 'application/json',
@@ -4038,11 +4043,6 @@ trait DatabasesBase
             'key' => 'duration',
             'required' => false,
         ]);
-
-        if (!$this->getSupportForOperators()) {
-            $this->expectNotToPerformAssertions();
-            return;
-        }
 
 
         $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/string', [
@@ -4234,6 +4234,11 @@ trait DatabasesBase
 
     public function testBulkOperators(): void
     {
+        if (!$this->getSupportForOperators()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         // Create database
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
             'content-type' => 'application/json',
@@ -4283,10 +4288,6 @@ trait DatabasesBase
             'key' => 'releaseYear',
             'required' => true,
         ]);
-        if (!$this->getSupportForOperators()) {
-            $this->expectNotToPerformAssertions();
-            return;
-        }
 
 
         $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/string', [
