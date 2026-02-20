@@ -25,10 +25,9 @@ use Appwrite\SDK\Language\Web;
 use Appwrite\SDK\SDK;
 use Appwrite\Spec\Swagger2;
 use Utopia\Agents\Adapters\OpenAI;
-use Utopia\Agents\Agent;
-use Utopia\Agents\Conversation;
-use Utopia\Agents\Messages\Text as AgentText;
-use Utopia\Agents\Roles\User;
+use Utopia\Agents\DiffCheck\DiffCheck;
+use Utopia\Agents\DiffCheck\Options as DiffCheckOptions;
+use Utopia\Agents\DiffCheck\Repository as DiffCheckRepository;
 use Utopia\Agents\Schema;
 use Utopia\Agents\Schema\SchemaObject;
 use Utopia\Config\Config;
@@ -715,87 +714,16 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
      */
     private function generateVersionAndChangelog(array $language, string $generatedSdkPath): ?array
     {
-        $tempDir = sys_get_temp_dir();
-        $repoClonePath = $tempDir . '/appwrite-sdk-repo-' . $language['key'] . '-' . uniqid();
+        $gitUrl = $language['gitUrl'] ?? '';
+        $repoBranch = $language['repoBranch'] ?? 'main';
 
-        try {
-            // Clone the existing SDK repo
-            $repoBranch = $language['repoBranch'] ?? 'main';
-            $gitUrl = $language['gitUrl'];
-
-            if (empty($gitUrl)) {
-                Console::warning("No git URL for {$language['name']} SDK, skipping AI analysis");
-
-                return null;
-            }
-
-            Console::info("Cloning {$language['name']} SDK repository...");
-            $cloneCommand = "git clone --depth 1 --branch {$repoBranch} {$gitUrl} {$repoClonePath} 2>&1";
-            exec($cloneCommand, $cloneOutput, $cloneReturnCode);
-
-            if ($cloneReturnCode !== 0) {
-                Console::error("Failed to clone {$language['name']} SDK repository: " . implode("\n", $cloneOutput));
-
-                return null;
-            }
-
-            // Copy generated SDK into the cloned repo to see actual changes
-            Console::info('Copying generated SDK into cloned repo...');
-            // Remove all files except .git directory, then copy generated files
-            exec("cd {$repoClonePath} && find . -not -path './.git/*' -not -path './.git' -delete 2>/dev/null");
-            exec("cp -r {$generatedSdkPath}/* {$repoClonePath}/ 2>&1", $copyOutput, $copyReturnCode);
-
-            if ($copyReturnCode !== 0) {
-                Console::error('Failed to copy generated SDK: ' . implode("\n", $copyOutput));
-                exec("rm -rf {$repoClonePath}");
-
-                return null;
-            }
-
-            // Generate diff using git diff within the repo
-            Console::info("Generating diff for {$language['name']} SDK...");
-            $diffCommand = "cd {$repoClonePath} && git diff --ignore-all-space --ignore-blank-lines 2>&1 | head -n 500";
-            exec($diffCommand, $diffOutput, $diffReturnCode);
-            $diff = implode("\n", $diffOutput);
-
-            // Log diff size for debugging
-            $diffSize = strlen($diff);
-            $diffLines = count($diffOutput);
-            Console::log("Diff size: {$diffSize} bytes, {$diffLines} lines");
-
-            // Clean up temp repo clone (don't remove generatedSdkPath as it's the main result dir)
-            exec("rm -rf {$repoClonePath}");
-
-            if (empty($diff)) {
-                Console::warning("No changes detected for {$language['name']} SDK");
-
-                return null;
-            }
-
-            // Use AI to analyze the diff and determine version/changelog
-            return $this->analyzeDiffWithAI($diff, $language['version'], $language['name']);
-
-        } catch (\Throwable $e) {
-            Console::error('Error generating version and changelog: ' . $e->getMessage());
-            // Clean up on error (don't remove generatedSdkPath as it's the main result dir)
-            exec("rm -rf {$repoClonePath}");
+        if (empty($gitUrl)) {
+            Console::warning("No git URL for {$language['name']} SDK, skipping AI analysis");
 
             return null;
         }
-    }
 
-    /**
-     * Use AI to analyze diff and determine version bump and changelog
-     *
-     * @param  string  $diff  Git diff between current SDK and generated SDK
-     * @param  string  $currentVersion  Current SDK version
-     * @param  string  $sdkName  SDK name
-     * @return array|null ['version' => string, 'changelog' => string] or null on failure
-     */
-    private function analyzeDiffWithAI(string $diff, string $currentVersion, string $sdkName): ?array
-    {
         $apiKey = System::getEnv('_APP_ASSISTANT_OPENAI_API_KEY', '');
-
         if (empty($apiKey)) {
             Console::warning('_APP_ASSISTANT_OPENAI_API_KEY not set, cannot use AI for version analysis');
 
@@ -803,11 +731,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
         }
 
         try {
-            // Use larger maxTokens to handle large diffs
+            // Reuse existing adapter/model config while delegating repo diffing to DiffCheck
             $adapter = new OpenAI($apiKey, OpenAI::MODEL_GPT_5_NANO, maxTokens: 8192);
-            $agent = new Agent($adapter);
 
-            // Define schema for structured output
             $object = new SchemaObject();
             $object->addProperty('version', [
                 'type' => SchemaObject::TYPE_STRING,
@@ -830,68 +756,79 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 required: $object->getNames()
             );
 
-            $agent->setSchema($schema);
-            $agent->setInstructions([
-                'description' => 'You are an expert software engineer analyzing SDK code changes to determine semantic versioning and generate changelogs.',
-                'tone' => 'professional and technical',
-            ]);
-
             $prompt = <<<PROMPT
-Analyze the following git diff for the {$sdkName} SDK and determine:
+                Analyze the following git diff for the {$language['name']} SDK and determine:
 
-1. The appropriate version bump (major, minor, or patch) based on semantic versioning rules:
-   - MAJOR: Breaking changes that are not backward compatible
-   - MINOR: New features that are backward compatible
-   - PATCH: Bug fixes and minor improvements that are backward compatible
+                Required output:
+                1. The appropriate version bump (`major`, `minor`, or `patch`) using semantic versioning.
+                2. The new version number (current version: {$language['version']}).
+                3. A clear, user-facing changelog.
 
-2. The new version number (current version is {$currentVersion})
+                Semantic versioning rules:
+                - `major`: breaking, non-backward-compatible changes.
+                - `minor`: backward-compatible new features.
+                - `patch`: backward-compatible fixes or small improvements.
 
-3. A changelog describing the changes in a clear, user-friendly format
+                Changelog rules:
+                - Include only user-facing SDK changes.
+                - Exclude internal/project-infra changes (for example `.github/workflows/**`, `.github/ISSUE_TEMPLATE/**`, CI/release automation/template cleanup).
+                - Never add "Internal housekeeping" style entries.
+                - If only excluded changes exist, return exactly: `* No user-facing SDK changes.`
 
-Changelog rules:
-- Include only user-facing SDK changes.
-- Exclude internal/project-infra changes (e.g. `.github/workflows/**`, `.github/ISSUE_TEMPLATE/**`, CI/release automation/template cleanup).
-- Never add "Internal housekeeping" style entries.
-- If only excluded changes exist, return exactly: `* No user-facing SDK changes.`
+                Diff context:
+                - Stats: {{diff_stats}}
+                - Base repository: {{base}}
+                - Generated SDK path: {{target}}
 
-Git diff (truncated to 500 lines):
-```diff
-{$diff}
-```
+                Git diff (truncated to 500 lines):
+                ```diff
+                {{diff}}
+                ```
 
-Provide your analysis in the requested JSON format.
-PROMPT;
+                Provide your analysis in the requested JSON format.
+                PROMPT;
 
-            $user = new User('sdk-analyst');
-            $conversation = new Conversation($agent);
-            $conversation->message($user, new AgentText($prompt));
+            $options = (new DiffCheckOptions())
+                ->setSchema($schema)
+                ->setDescription('You are an expert software engineer analyzing SDK code changes to determine semantic versioning and generate changelogs.')
+                ->setInstructions([
+                    'tone' => 'professional and technical',
+                ])
+                ->setExcludePaths([
+                    '.github/workflows/**',
+                    '.github/ISSUE_TEMPLATE/**',
+                ])
+                ->setMaxDiffLines(500)
+                ->setUserId('sdk-analyst');
 
-            // Log prompt size for debugging
-            $promptSize = strlen($prompt);
-            Console::log("Sending prompt to AI (size: {$promptSize} bytes)...");
+            Console::info("Running DiffCheck for {$language['name']} SDK...");
+            $result = (new DiffCheck())->run(
+                runner: $adapter,
+                base: DiffCheckRepository::remote($gitUrl, $repoBranch),
+                target: DiffCheckRepository::local($generatedSdkPath),
+                prompt: $prompt,
+                options: $options
+            );
 
-            try {
-                $response = $conversation->send();
-            } catch (\Throwable $e) {
-                Console::error('AI API call failed: ' . $e->getMessage());
-                Console::log('Exception trace: ' . $e->getTraceAsString());
+            if (! $result['hasChanges']) {
+                Console::warning("No changes detected for {$language['name']} SDK");
 
                 return null;
             }
 
-            if (empty($response)) {
+            $responseContent = $result['response'];
+
+            if (empty(trim($responseContent))) {
                 Console::warning('AI returned empty response');
 
                 return null;
             }
 
-            // Get the content from the Message object and parse the response
-            $responseContent = $response->getContent();
             Console::log('AI raw response:');
             Console::log($responseContent);
             Console::log('--- End of AI response ---');
 
-            $result = json_decode($responseContent, true);
+            $parsed = json_decode($responseContent, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
                 Console::warning('Failed to parse AI response as JSON: ' . json_last_error_msg());
@@ -901,22 +838,21 @@ PROMPT;
                 return null;
             }
 
-            if (empty($result['version']) || empty($result['changelog'])) {
+            if (empty($parsed['version']) || empty($parsed['changelog']) || empty($parsed['versionBump'])) {
                 Console::warning('AI response missing required fields');
 
                 return null;
             }
 
-            Console::info("AI analysis complete - Version bump: {$result['versionBump']}, New version: {$result['version']}");
+            Console::info("AI analysis complete - Version bump: {$parsed['versionBump']}, New version: {$parsed['version']}");
 
             return [
-                'version' => $result['version'],
-                'changelog' => $result['changelog'],
-                'versionBump' => $result['versionBump'],
+                'version' => $parsed['version'],
+                'changelog' => $parsed['changelog'],
+                'versionBump' => $parsed['versionBump'],
             ];
-
         } catch (\Throwable $e) {
-            Console::error('AI analysis failed: ' . $e->getMessage());
+            Console::error('Error generating version and changelog: ' . $e->getMessage());
 
             return null;
         }

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9ca31842e86c899e310497c38abb72c2",
+    "content-hash": "f3abdb016468ee2d5983022513d5ef62",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3403,16 +3403,16 @@
         },
         {
             "name": "utopia-php/agents",
-            "version": "1.1.1",
+            "version": "dev-diffcheck-agent",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/agents.git",
-                "reference": "77ec73c02f91a571aabee3f72ac5cd49a1d1f39c"
+                "reference": "e9aa384898e43f4546feb691f1ec0bfa31a321d8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/agents/zipball/77ec73c02f91a571aabee3f72ac5cd49a1d1f39c",
-                "reference": "77ec73c02f91a571aabee3f72ac5cd49a1d1f39c",
+                "url": "https://api.github.com/repos/utopia-php/agents/zipball/e9aa384898e43f4546feb691f1ec0bfa31a321d8",
+                "reference": "e9aa384898e43f4546feb691f1ec0bfa31a321d8",
                 "shasum": ""
             },
             "require": {
@@ -3451,9 +3451,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/agents/issues",
-                "source": "https://github.com/utopia-php/agents/tree/1.1.1"
+                "source": "https://github.com/utopia-php/agents/tree/diffcheck-agent"
             },
-            "time": "2026-02-19T08:42:23+00:00"
+            "time": "2026-02-20T10:22:41+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -4002,16 +4002,16 @@
         },
         {
             "name": "utopia-php/dns",
-            "version": "1.6.3",
+            "version": "1.6.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/dns.git",
-                "reference": "c46a13c42bc19365985264a6fdaaaf7d8e736d3e"
+                "reference": "574327f0f5fabefa7048030c5634cde33ad10640"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/dns/zipball/c46a13c42bc19365985264a6fdaaaf7d8e736d3e",
-                "reference": "c46a13c42bc19365985264a6fdaaaf7d8e736d3e",
+                "url": "https://api.github.com/repos/utopia-php/dns/zipball/574327f0f5fabefa7048030c5634cde33ad10640",
+                "reference": "574327f0f5fabefa7048030c5634cde33ad10640",
                 "shasum": ""
             },
             "require": {
@@ -4053,9 +4053,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/dns/issues",
-                "source": "https://github.com/utopia-php/dns/tree/1.6.3"
+                "source": "https://github.com/utopia-php/dns/tree/1.6.5"
             },
-            "time": "2026-02-17T10:45:46+00:00"
+            "time": "2026-02-19T16:06:46+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -4268,16 +4268,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.33.39",
+            "version": "0.33.40",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "409a258814d664d3a50fa2f48b6695679334d30b"
+                "reference": "0ba25e1282c6a2f849053f7ccf28d567c2c321b1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/409a258814d664d3a50fa2f48b6695679334d30b",
-                "reference": "409a258814d664d3a50fa2f48b6695679334d30b",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/0ba25e1282c6a2f849053f7ccf28d567c2c321b1",
+                "reference": "0ba25e1282c6a2f849053f7ccf28d567c2c321b1",
                 "shasum": ""
             },
             "require": {
@@ -4311,9 +4311,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/0.33.39"
+                "source": "https://github.com/utopia-php/http/tree/0.33.40"
             },
-            "time": "2026-02-11T06:33:42+00:00"
+            "time": "2026-02-19T13:00:08+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -5439,16 +5439,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.10.0",
+            "version": "1.10.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "6c8384a43c7676bc388096e5646acfe6ee35d83d"
+                "reference": "fd08ddfefc7b07870b0fa8616c6d13714b2481c8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/6c8384a43c7676bc388096e5646acfe6ee35d83d",
-                "reference": "6c8384a43c7676bc388096e5646acfe6ee35d83d",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/fd08ddfefc7b07870b0fa8616c6d13714b2481c8",
+                "reference": "fd08ddfefc7b07870b0fa8616c6d13714b2481c8",
                 "shasum": ""
             },
             "require": {
@@ -5484,9 +5484,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.10.0"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.10.1"
             },
-            "time": "2026-02-19T10:20:01+00:00"
+            "time": "2026-02-20T07:22:19+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -8939,7 +8939,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/agents": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
