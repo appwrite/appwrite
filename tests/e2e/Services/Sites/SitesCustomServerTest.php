@@ -842,9 +842,113 @@ class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
-    // public function testCreateDeploymentFromCLI() {
-    //     // TODO: Implement testCreateDeploymentFromCLI() later
-    // }
+// hamza
+    public function testCreateDeploymentFromCLI(): void
+    {
+        // Create a test site for CLI deployment
+        $siteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'CLI Test Site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+
+        $this->assertNotNull($siteId);
+
+        // Create a temporary directory for CLI deployment
+        $tempDir = sys_get_temp_dir() . '/cli-site-test-' . uniqid();
+        mkdir($tempDir, 0755, true);
+
+        // Create basic site files
+        $indexHtml = '<!DOCTYPE html><html><head><title>CLI Test</title></head><body><h1>Deployed via CLI</h1></body></html>';
+        file_put_contents($tempDir . '/index.html', $indexHtml);
+
+        // Create package.json for Node.js site
+        $packageJson = json_encode([
+            'name' => 'cli-test-site',
+            'version' => '1.0.0',
+            'scripts' => [
+                'build' => 'echo "Build completed"'
+            ]
+        ]);
+        file_put_contents($tempDir . '/package.json', $packageJson);
+
+        // Create appwrite.config.json for CLI configuration
+        $config = [
+            'projectId' => $this->getProject()['$id'],
+            'siteId' => $siteId,
+            'endpoint' => $this->client->getEndpoint(),
+            'key' => $this->getProject()['apiKey']
+        ];
+        file_put_contents($tempDir . '/appwrite.config.json', json_encode($config, JSON_PRETTY_PRINT));
+
+        // Simulate CLI deployment by creating deployment via API
+        // This mimics what "appwrite push sites" would do
+        $deployment = $this->createDeployment($siteId, [
+            'siteId' => $siteId,
+            'code' => $this->packageSiteFromDirectory($tempDir),
+            'activate' => true,
+        ]);
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $this->assertNotEmpty($deployment['body']['$id']);
+
+        $deploymentId = $deployment['body']['$id'];
+
+        // Wait for deployment to be processed
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $deploymentStatus = $this->getDeployment($siteId, $deploymentId);
+            $this->assertEquals(200, $deploymentStatus['headers']['status-code']);
+            $this->assertEquals('ready', $deploymentStatus['body']['status']);
+        }, 50000, 500);
+
+        // Verify deployment was created successfully
+        $deployment = $this->getDeployment($siteId, $deploymentId);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertEquals('ready', $deployment['body']['status']);
+        $this->assertNotEmpty($deployment['body']['buildId']);
+        $this->assertNotEmpty($deployment['body']['buildstdout']);
+
+        // Clean up temporary directory
+        $this->cleanupDirectory($tempDir);
+        $this->cleanupSite($siteId);
+    }
+
+// hamza
+    protected function packageSiteFromDirectory(string $directory): string
+    {
+        $tarPath = $directory . '/code.tar.gz';
+
+        // Create tar.gz from directory
+        $command = "cd " . escapeshellarg($directory) . " && tar --exclude code.tar.gz -czf code.tar.gz .";
+        Console::execute($command, '', $stdout, $stderr);
+
+        if (!file_exists($tarPath)) {
+            throw new \Exception("Failed to create deployment package: $stderr");
+        }
+
+        return new \CURLFile($tarPath, 'application/x-gzip', 'code.tar.gz');
+    }
+// hamza
+    protected function cleanupDirectory(string $directory): void
+    {
+        if (is_dir($directory)) {
+            $files = array_diff(scandir($directory), ['.', '..']);
+            foreach ($files as $file) {
+                $path = $directory . '/' . $file;
+                if (is_dir($path)) {
+                    $this->cleanupDirectory($path);
+                } else {
+                    unlink($path);
+                }
+            }
+            rmdir($directory);
+        }
+    }
 
     public function testCreateDeployment()
     {

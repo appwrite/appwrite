@@ -49,7 +49,12 @@ abstract class Type
 
     public function getProvisioningUri(): string
     {
-        return $this->instance->getProvisioningUri() ?? '';
+        if ($this->instance === null) {
+            return '';
+        }
+// ‼️ IMPORTANT
+// Carefully review the code before committing. Ensure that it accurately replaces the highlighted code, contains no missing lines, and has no issues with indentation. Thoroughly test & benchmark the code to ensure it meets the requirements.
+        return $this->instance?->getProvisioningUri();
     }
 
     public static function generateBackupCodes(int $length = 10, int $total = 6): array

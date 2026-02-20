@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\MFA\Authenticators;
 
-use Appwrite\Auth\MFA\Type;
+use Appwrite\Auth\MFA\Type; // use Type.php
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;

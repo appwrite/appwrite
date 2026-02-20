@@ -20,5 +20,7 @@ appwrite.config.json
 /.zed/
 
 package-lock.json
+**/*ignore*
+!.gitignore
 
 .astro

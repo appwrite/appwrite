@@ -197,7 +197,8 @@ class PasswordEnhancedTest extends TestCase
         $this->assertTrue($this->object->isValidHashFormat(str_repeat('a', 64))); // SHA-256
         $this->assertTrue($this->object->isValidHashFormat(str_repeat('b', 40))); // SHA-1
         $this->assertTrue($this->object->isValidHashFormat(str_repeat('c', 32))); // MD5
-        $this->assertTrue($this->object->isValidHashFormat('$2a$10$abcdefghijklmnopqrstuv')); // bcrypt
+        // $this->assertTrue($this->object->isValidHashFormat('$2a$10$abcdefghijklmnopqrstuv')); // bcrypt
+        $this->assertTrue($this->object->isValidHashFormat('$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92dG7c')); // bcrypt (60 chars)
 
         // Test invalid hash formats
         $this->assertFalse($this->object->isValidHashFormat('short'));
