@@ -7538,7 +7538,7 @@ trait DatabasesBase
         $collectionId = $collection['body']['$id'];
 
         // Create boolean attribute
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/boolean', array_merge([
+        $boolResponse = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/boolean', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -7547,8 +7547,10 @@ trait DatabasesBase
             'required' => true,
         ]);
 
+        $this->assertEquals(202, $boolResponse['headers']['status-code']);
+
         // Create polygon attribute
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/polygon', array_merge([
+        $polyResponse = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/polygon', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -7556,6 +7558,8 @@ trait DatabasesBase
             'key' => 'area',
             'required' => true,
         ]);
+
+        $this->assertEquals(202, $polyResponse['headers']['status-code']);
 
         $this->waitForAllAttributes($databaseId, $collectionId);
 
@@ -9101,7 +9105,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(202, $response['headers']['status-code']);
-        $this->waitForAttribute($databaseId, $collectionId, 'loc');
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create spatial index
         $indexResponse = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
