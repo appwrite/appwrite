@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Console\Services;
 
 use Appwrite\Platform\Modules\Console\Http\Assistant\Create as CreateAssistantQuery;
+use Appwrite\Platform\Modules\Console\Http\Assistant\Feedback as CreateAssistantFeedback;
 use Appwrite\Platform\Modules\Console\Http\Init\API;
 use Appwrite\Platform\Modules\Console\Http\Init\Web;
 use Appwrite\Platform\Modules\Console\Http\Redirects\Auth\Get as RedirectAuth;
@@ -29,6 +30,7 @@ class Http extends Service
 
         $this->addAction(GetVariables::getName(), new GetVariables());
         $this->addAction(CreateAssistantQuery::getName(), new CreateAssistantQuery());
+        $this->addAction(CreateAssistantFeedback::getName(), new CreateAssistantFeedback());
         $this->addAction(GetResourceAvailability::getName(), new GetResourceAvailability());
 
         // web redirects to /console

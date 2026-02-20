@@ -70,7 +70,7 @@ class Get extends Action
             && !empty(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''))
             && !empty(System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''));
 
-        $isAssistantEnabled = !empty(System::getEnv('_APP_ASSISTANT_OPENAI_API_KEY', ''));
+        $isAssistantEnabled = !empty(System::getEnv('_APP_ASSISTANT_ANTHROPIC_API_KEY', ''));
 
         $variables = new Document([
             '_APP_DOMAIN_TARGET_CNAME' => System::getEnv('_APP_DOMAIN_TARGET_CNAME'),

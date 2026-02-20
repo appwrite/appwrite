@@ -217,6 +217,8 @@ services:
       - _APP_VCS_GITHUB_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
+      - _APP_ASSISTANT_HOST
+      - _APP_ASSISTANT_ANTHROPIC_API_KEY
       - _APP_ASSISTANT_OPENAI_API_KEY
       - _APP_MESSAGE_SMS_TEST_DSN
       - _APP_MESSAGE_EMAIL_TEST_DSN
@@ -1149,6 +1151,8 @@ services:
     networks:
       - appwrite
     environment:
+      - _APP_ASSISTANT_HOST
+      - _APP_ASSISTANT_ANTHROPIC_API_KEY
       - _APP_ASSISTANT_OPENAI_API_KEY
 
   appwrite-browser:

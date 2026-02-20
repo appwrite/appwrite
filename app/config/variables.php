@@ -1361,8 +1361,27 @@ return [
         'description' => '',
         'variables' => [
             [
+                'name' => '_APP_ASSISTANT_HOST',
+                'description' => 'The host used by Appwrite to communicate with the AI assistant service.',
+                'introduction' => '1.7.0',
+                'default' => 'http://appwrite-assistant:3003',
+                'required' => false,
+                'overwrite' => true,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_ASSISTANT_ANTHROPIC_API_KEY',
+                'description' => 'Anthropic API key used by the assistant service for LLM generation. You can find it in your Anthropic console.',
+                'introduction' => '1.7.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_ASSISTANT_OPENAI_API_KEY',
-                'description' => 'OpenAI API key. You can find it in your OpenAI application settings.',
+                'description' => 'OpenAI API key used by the assistant service for document embeddings (RAG). You can find it in your OpenAI application settings.',
                 'introduction' => '1.4.0',
                 'default' => '',
                 'required' => false,
