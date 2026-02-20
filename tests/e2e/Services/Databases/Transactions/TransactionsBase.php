@@ -27,17 +27,21 @@ trait TransactionsBase
             return self::$sharedDatabaseId;
         }
 
-        $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'databaseId' => ID::unique(),
-            'name' => 'SharedTransactionTestDB'
-        ]);
+        $cached = $this->withFileCache('txn_database_' . static::class, function () {
+            $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'databaseId' => ID::unique(),
+                'name' => 'SharedTransactionTestDB'
+            ]);
 
-        $this->assertEquals(201, $database['headers']['status-code']);
-        self::$sharedDatabaseId = $database['body']['$id'];
+            $this->assertEquals(201, $database['headers']['status-code']);
+            return ['databaseId' => $database['body']['$id']];
+        });
+
+        self::$sharedDatabaseId = $cached['databaseId'];
         return self::$sharedDatabaseId;
     }
 
@@ -50,40 +54,46 @@ trait TransactionsBase
             return self::$sharedCollectionId;
         }
 
-        $databaseId = $this->getSharedDatabase();
+        $cached = $this->withFileCache('txn_collection_' . static::class, function () {
+            $databaseId = $this->getSharedDatabase();
 
-        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            $this->getContainerIdParam() => ID::unique(),
-            'name' => 'SharedTestCollection',
-            'permissions' => [
-                Permission::create(Role::any()),
-                Permission::read(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
-            ],
-        ]);
+            $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                $this->getContainerIdParam() => ID::unique(),
+                'name' => 'SharedTestCollection',
+                'permissions' => [
+                    Permission::create(Role::any()),
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
+            ]);
 
-        $this->assertEquals(201, $collection['headers']['status-code']);
-        self::$sharedCollectionId = $collection['body']['$id'];
+            $this->assertEquals(201, $collection['headers']['status-code']);
 
-        // Create a standard 'name' attribute
-        $nameAttr = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, self::$sharedCollectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'name',
-            'size' => 256,
-            'required' => true,
-        ]);
-        $this->assertEquals(202, $nameAttr['headers']['status-code']);
+            $collectionId = $collection['body']['$id'];
 
-        $this->waitForAllAttributes($databaseId, self::$sharedCollectionId);
+            // Create a standard 'name' attribute
+            $nameAttr = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'name',
+                'size' => 256,
+                'required' => true,
+            ]);
+            $this->assertEquals(202, $nameAttr['headers']['status-code']);
 
+            $this->waitForAllAttributes($databaseId, $collectionId);
+
+            return ['collectionId' => $collectionId];
+        });
+
+        self::$sharedCollectionId = $cached['collectionId'];
         return self::$sharedCollectionId;
     }
 

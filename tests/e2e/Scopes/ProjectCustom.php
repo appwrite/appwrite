@@ -24,6 +24,22 @@ trait ProjectCustom
             return self::$project;
         }
 
+        if ($fresh) {
+            return $this->createNewProject();
+        }
+
+        self::$project = $this->withFileCache('project_' . static::class, function () {
+            return $this->createNewProject();
+        });
+
+        return self::$project;
+    }
+
+    /**
+     * Create a new project with team, API key, dev key, webhook, and SMTP config.
+     */
+    protected function createNewProject(): array
+    {
         // Small delay to ensure session is fully propagated under parallel load
         usleep(100000); // 100ms
 
@@ -201,7 +217,7 @@ trait ProjectCustom
             'password' => System::getEnv('_APP_SMTP_PASSWORD', 'password'),
         ]);
 
-        $project = [
+        return [
             '$id' => $project['body']['$id'],
             'name' => $project['body']['name'],
             'apiKey' => $key['body']['secret'],
@@ -209,13 +225,6 @@ trait ProjectCustom
             'webhookId' => $webhook['body']['$id'],
             'signatureKey' => $webhook['body']['signatureKey'],
         ];
-
-        if ($fresh) {
-            return $project;
-        }
-        self::$project = $project;
-
-        return self::$project;
     }
 
     public function getNewKey(array $scopes)

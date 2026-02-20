@@ -33,17 +33,21 @@ trait TransactionPermissionsBase
             return;
         }
 
-        $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'databaseId' => ID::unique(),
-            'name' => 'PermissionsTestDB'
-        ]);
+        $cached = $this->withFileCache('txn_perms_db_' . static::class, function () {
+            $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'databaseId' => ID::unique(),
+                'name' => 'PermissionsTestDB'
+            ]);
 
-        $this->assertEquals(201, $database['headers']['status-code']);
-        self::$permissionsDatabase = $database['body']['$id'];
+            $this->assertEquals(201, $database['headers']['status-code']);
+            return ['databaseId' => $database['body']['$id']];
+        });
+
+        self::$permissionsDatabase = $cached['databaseId'];
     }
 
     /**
