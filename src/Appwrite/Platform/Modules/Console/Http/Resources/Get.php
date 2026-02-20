@@ -137,6 +137,7 @@ class Get extends Action
             }
 
             $response->noContent();
+            return;
         }
 
         // Only occurs if type is added into whitelist, but not supported in action
