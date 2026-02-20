@@ -30,6 +30,7 @@ class Update extends Action
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PUT)
             ->setHttpPath('/v1/teams/:teamId/prefs')
+            ->desc('Update team preferences')
             ->groups(['api', 'teams'])
             ->label('event', 'teams.[teamId].update.prefs')
             ->label('scope', 'teams.write')
