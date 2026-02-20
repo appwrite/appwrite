@@ -239,7 +239,12 @@ services:
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: appwrite/console:7.5.7
+    build:
+      context: ../console
+      args:
+        PUBLIC_APPWRITE_ENDPOINT: ''
+        PUBLIC_CONSOLE_MODE: ''
+        PUBLIC_CONSOLE_FEATURE_FLAGS: ''
     restart: unless-stopped
     networks:
       - appwrite
