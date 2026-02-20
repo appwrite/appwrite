@@ -25,10 +25,36 @@ trait TransactionPermissionsBase
     }
 
     /**
+     * Ensure all Transaction permission test methods share the same project and user via file cache.
+     */
+    protected function ensureSharedProject(): void
+    {
+        if (!empty(self::$project)) {
+            return;
+        }
+
+        $cached = $this->withFileCache('db_project_' . static::class, function () {
+            $project = $this->createNewProject();
+            self::$project = $project;
+            $user = $this->getUser();
+            return [
+                '_project' => $project,
+                '_user' => $user,
+            ];
+        });
+
+        self::$project = $cached['_project'];
+        $projectId = self::$project['$id'];
+        self::$user[$projectId] = $cached['_user'];
+    }
+
+    /**
      * Initialize the permissions database if not already done
      */
     protected function ensurePermissionsDatabase(): void
     {
+        $this->ensureSharedProject();
+
         if (!empty(self::$permissionsDatabase)) {
             return;
         }

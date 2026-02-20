@@ -125,18 +125,16 @@ abstract class Scope extends TestCase
             return self::$consoleVariables;
         }
 
-        self::$consoleVariables = $this->withFileCache('console_variables', function () {
-            $root = $this->getRoot();
+        $root = $this->getRoot();
 
-            $response = $this->client->call(Client::METHOD_GET, '/console/variables', [
-                'origin' => 'http://localhost',
-                'content-type' => 'application/json',
-                'x-appwrite-project' => 'console',
-                'cookie' => 'a_session_console=' . $root['session'],
-            ]);
+        $response = $this->client->call(Client::METHOD_GET, '/console/variables', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $root['session'],
+        ]);
 
-            return $response['body'] ?? [];
-        });
+        self::$consoleVariables = $response['body'] ?? [];
 
         return self::$consoleVariables;
     }
@@ -468,41 +466,39 @@ abstract class Scope extends TestCase
             return self::$root;
         }
 
-        self::$root = $this->withFileCache('root_' . static::class, function () {
-            // Use more entropy to avoid collisions in parallel test execution
-            $email = uniqid('', true) . getmypid() . bin2hex(random_bytes(4)) . '@localhost.test';
-            $password = 'password';
-            $name = 'User Name';
+        // Use more entropy to avoid collisions in parallel test execution
+        $email = uniqid('', true) . getmypid() . bin2hex(random_bytes(4)) . '@localhost.test';
+        $password = 'password';
+        $name = 'User Name';
 
-            $root = $this->client->call(Client::METHOD_POST, '/account', [
-                'origin' => 'http://localhost',
-                'content-type' => 'application/json',
-                'x-appwrite-project' => 'console',
-            ], [
-                'userId' => ID::unique(),
-                'email' => $email,
-                'password' => $password,
-                'name' => $name,
-            ]);
+        $root = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
 
-            $this->assertEquals(201, $root['headers']['status-code']);
+        $this->assertEquals(201, $root['headers']['status-code']);
 
-            $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
-                'origin' => 'http://localhost',
-                'content-type' => 'application/json',
-                'x-appwrite-project' => 'console',
-            ], [
-                'email' => $email,
-                'password' => $password,
-            ]);
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], [
+            'email' => $email,
+            'password' => $password,
+        ]);
 
-            return [
-                '$id' => ID::custom($root['body']['$id']),
-                'name' => $root['body']['name'],
-                'email' => $root['body']['email'],
-                'session' => $session['cookies']['a_session_console'],
-            ];
-        });
+        self::$root = [
+            '$id' => ID::custom($root['body']['$id']),
+            'name' => $root['body']['name'],
+            'email' => $root['body']['email'],
+            'session' => $session['cookies']['a_session_console'],
+        ];
 
         return self::$root;
     }
@@ -523,48 +519,40 @@ abstract class Scope extends TestCase
             return self::$user[$projectId];
         }
 
-        $createUser = function () use ($projectId) {
-            // Use more entropy to avoid collisions in parallel test execution
-            $email = uniqid('', true) . getmypid() . bin2hex(random_bytes(4)) . '@localhost.test';
-            $password = 'password';
-            $name = 'User Name';
+        // Use more entropy to avoid collisions in parallel test execution
+        $email = uniqid('', true) . getmypid() . bin2hex(random_bytes(4)) . '@localhost.test';
+        $password = 'password';
+        $name = 'User Name';
 
-            $user = $this->client->call(Client::METHOD_POST, '/account', [
-                'origin' => 'http://localhost',
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $projectId,
-            ], [
-                'userId' => ID::unique(),
-                'email' => $email,
-                'password' => $password,
-                'name' => $name,
-            ]);
+        $user = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
 
-            $this->assertEquals(201, $user['headers']['status-code']);
+        $this->assertEquals(201, $user['headers']['status-code']);
 
-            $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
-                'origin' => 'http://localhost',
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $projectId,
-            ], [
-                'email' => $email,
-                'password' => $password,
-            ]);
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $email,
+            'password' => $password,
+        ]);
 
-            return [
-                '$id' => ID::custom($user['body']['$id']),
-                'name' => $user['body']['name'],
-                'email' => $user['body']['email'],
-                'session' => $session['cookies']['a_session_' . $projectId],
-                'sessionId' => $session['body']['$id'],
-            ];
-        };
-
-        if ($fresh) {
-            self::$user[$projectId] = $createUser();
-        } else {
-            self::$user[$projectId] = $this->withFileCache('user_' . static::class, $createUser);
-        }
+        self::$user[$projectId] = [
+            '$id' => ID::custom($user['body']['$id']),
+            'name' => $user['body']['name'],
+            'email' => $user['body']['email'],
+            'session' => $session['cookies']['a_session_' . $projectId],
+            'sessionId' => $session['body']['$id'],
+        ];
 
         return self::$user[$projectId];
     }

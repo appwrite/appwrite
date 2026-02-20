@@ -28,9 +28,7 @@ trait ProjectCustom
             return $this->createNewProject();
         }
 
-        self::$project = $this->withFileCache('project_' . static::class, function () {
-            return $this->createNewProject();
-        });
+        self::$project = $this->createNewProject();
 
         return self::$project;
     }

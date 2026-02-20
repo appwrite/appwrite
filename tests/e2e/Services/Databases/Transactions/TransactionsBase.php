@@ -19,10 +19,36 @@ trait TransactionsBase
     protected static bool $sharedSetupDone = false;
 
     /**
+     * Ensure all Transaction test methods share the same project and user via file cache.
+     */
+    protected function ensureSharedProject(): void
+    {
+        if (!empty(self::$project)) {
+            return;
+        }
+
+        $cached = $this->withFileCache('db_project_' . static::class, function () {
+            $project = $this->createNewProject();
+            self::$project = $project;
+            $user = $this->getUser();
+            return [
+                '_project' => $project,
+                '_user' => $user,
+            ];
+        });
+
+        self::$project = $cached['_project'];
+        $projectId = self::$project['$id'];
+        self::$user[$projectId] = $cached['_user'];
+    }
+
+    /**
      * Get or create a shared database for tests that don't need isolation
      */
     protected function getSharedDatabase(): string
     {
+        $this->ensureSharedProject();
+
         if (!empty(self::$sharedDatabaseId)) {
             return self::$sharedDatabaseId;
         }

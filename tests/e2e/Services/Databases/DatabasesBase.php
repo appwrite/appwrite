@@ -34,6 +34,37 @@ trait DatabasesBase
     private static array $fulltextDocsCache = [];
 
     /**
+     * Ensure all Database test methods share the same project and user via file cache.
+     * In ParaTest --functional mode, each test method runs in its own process.
+     * Without this, each process would create a new project, and the file-cached
+     * database/collection/attribute IDs would be invalid for the new project.
+     * The user is also cached because collection permissions reference the user's ID.
+     */
+    protected function ensureSharedProject(): void
+    {
+        // If we already have a project in static cache, use it
+        if (!empty(self::$project)) {
+            return;
+        }
+
+        // File-cache the project + user so all methods in this test class share them
+        $cached = $this->withFileCache('db_project_' . static::class, function () {
+            $project = $this->createNewProject();
+            // Temporarily set the project so getUser() can create a user in this project
+            self::$project = $project;
+            $user = $this->getUser();
+            return [
+                '_project' => $project,
+                '_user' => $user,
+            ];
+        });
+
+        self::$project = $cached['_project'];
+        $projectId = self::$project['$id'];
+        self::$user[$projectId] = $cached['_user'];
+    }
+
+    /**
      * Get cache key for current test instance (based on project ID)
      */
     protected function getCacheKey(): string
@@ -47,6 +78,8 @@ trait DatabasesBase
      */
     protected function setupDatabase(): array
     {
+        $this->ensureSharedProject();
+
         $cacheKey = $this->getCacheKey();
         if (!empty(self::$databaseCache[$cacheKey])) {
             return self::$databaseCache[$cacheKey];
