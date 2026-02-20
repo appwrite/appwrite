@@ -32,6 +32,7 @@ use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
 use Utopia\Logger\Log;
@@ -724,6 +725,9 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
 
         // Get authorization from connection (stored during onOpen)
         $authorization = $realtime->connections[$connection]['authorization'] ?? null;
+        if ($authorization === null) {
+            $authorization = new Authorization('');
+        }
 
         $database = getConsoleDB();
         $database->setAuthorization($authorization);
