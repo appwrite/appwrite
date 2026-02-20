@@ -22,6 +22,11 @@ class Delete extends Action
 {
     use HTTP;
 
+    protected Database $dbForProject;
+    protected Document $team;
+    protected Document $profile;
+    protected Document $membership;
+
     public static function getName()
     {
         return 'deleteTeamMembership';
@@ -87,6 +92,7 @@ class Delete extends Action
         $this->dbForProject = $dbForProject;
         $this->team = $team;
         $this->profile = $profile;
+        $this->membership = $membership;
         $this->verifyUser();
 
         if ($project->getId() === 'console') {
