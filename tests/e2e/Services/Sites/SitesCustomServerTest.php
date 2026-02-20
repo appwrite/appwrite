@@ -2150,41 +2150,68 @@ class SitesCustomServerTest extends Scope
             ]
         );
         $this->assertEquals(200, $site['headers']['status-code']);
+
+        // Wait for the logging config change to propagate to the site runtime
+        \sleep(5);
+
         $response = $proxyClient->call(Client::METHOD_GET, '/logs-inline');
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString("Inline logs printed.", $response['body']);
 
-        $logs = $this->listLogs($siteId, [
-            Query::orderDesc('$createdAt')->toString(),
-            Query::equal('requestPath', ['/logs-inline'])->toString(),
-            Query::limit(1)->toString(),
-        ]);
-        $this->assertEquals(200, $logs['headers']['status-code']);
-        $this->assertEquals("GET", $logs['body']['executions'][0]['requestMethod']);
-        $this->assertEquals("/logs-inline", $logs['body']['executions'][0]['requestPath']);
-        $this->assertEmpty($logs['body']['executions'][0]['logs']);
-        $this->assertEmpty($logs['body']['executions'][0]['logs']);
-        $this->assertEmpty($logs['body']['executions'][0]['errors']);
-        $this->assertEmpty($logs['body']['executions'][0]['errors']);
-        $log1Id = $logs['body']['executions'][0]['$id'];
+        // Poll for the NEW log entry (after logging was disabled) to appear
+        $timeout = 30;
+        $start = \time();
+        $newLog = null;
+        while (\time() - $start < $timeout) {
+            $logs = $this->listLogs($siteId, [
+                Query::orderDesc('$createdAt')->toString(),
+                Query::equal('requestPath', ['/logs-inline'])->toString(),
+                Query::limit(1)->toString(),
+            ]);
+            if (
+                !empty($logs['body']['executions']) &&
+                $logs['body']['executions'][0]['$id'] !== $log1Id
+            ) {
+                $newLog = $logs['body']['executions'][0];
+                break;
+            }
+            \sleep(1);
+        }
+        $this->assertNotNull($newLog, 'New log entry should appear after logging-disabled request');
+        $this->assertEquals("GET", $newLog['requestMethod']);
+        $this->assertEquals("/logs-inline", $newLog['requestPath']);
+        $this->assertEmpty($newLog['logs']);
+        $this->assertEmpty($newLog['errors']);
+        $log1Id = $newLog['$id'];
         $this->assertNotEmpty($log1Id);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/logs-action');
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString("Action logs printed.", $response['body']);
 
-        $logs = $this->listLogs($siteId, [
-            Query::orderDesc('$createdAt')->toString(),
-            Query::equal('requestPath', ['/logs-action'])->toString(),
-            Query::limit(1)->toString(),
-        ]);
-        $this->assertEquals(200, $logs['headers']['status-code']);
-        $this->assertEquals("GET", $logs['body']['executions'][0]['requestMethod']);
-        $this->assertEquals("/logs-action", $logs['body']['executions'][0]['requestPath']);
-        $this->assertEmpty($logs['body']['executions'][0]['logs']);
-        $this->assertEmpty($logs['body']['executions'][0]['logs']);
-        $this->assertEmpty($logs['body']['executions'][0]['errors']);
-        $this->assertEmpty($logs['body']['executions'][0]['errors']);
+        // Poll for the NEW log entry for /logs-action
+        $start = \time();
+        $newLog = null;
+        while (\time() - $start < $timeout) {
+            $logs = $this->listLogs($siteId, [
+                Query::orderDesc('$createdAt')->toString(),
+                Query::equal('requestPath', ['/logs-action'])->toString(),
+                Query::limit(1)->toString(),
+            ]);
+            if (
+                !empty($logs['body']['executions']) &&
+                $logs['body']['executions'][0]['$id'] !== $log2Id
+            ) {
+                $newLog = $logs['body']['executions'][0];
+                break;
+            }
+            \sleep(1);
+        }
+        $this->assertNotNull($newLog, 'New log entry should appear after logging-disabled /logs-action request');
+        $this->assertEquals("GET", $newLog['requestMethod']);
+        $this->assertEquals("/logs-action", $newLog['requestPath']);
+        $this->assertEmpty($newLog['logs']);
+        $this->assertEmpty($newLog['errors']);
         $log2Id = $logs['body']['executions'][0]['$id'];
         $this->assertNotEmpty($log2Id);
 
