@@ -3407,12 +3407,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/agents.git",
-                "reference": "e9aa384898e43f4546feb691f1ec0bfa31a321d8"
+                "reference": "d7552466777c67309535d61a5f95737be2558b11"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/agents/zipball/e9aa384898e43f4546feb691f1ec0bfa31a321d8",
-                "reference": "e9aa384898e43f4546feb691f1ec0bfa31a321d8",
+                "url": "https://api.github.com/repos/utopia-php/agents/zipball/d7552466777c67309535d61a5f95737be2558b11",
+                "reference": "d7552466777c67309535d61a5f95737be2558b11",
                 "shasum": ""
             },
             "require": {
@@ -3453,7 +3453,7 @@
                 "issues": "https://github.com/utopia-php/agents/issues",
                 "source": "https://github.com/utopia-php/agents/tree/diffcheck-agent"
             },
-            "time": "2026-02-20T10:22:41+00:00"
+            "time": "2026-02-20T10:52:19+00:00"
         },
         {
             "name": "utopia-php/analytics",

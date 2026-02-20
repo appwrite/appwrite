@@ -719,19 +719,16 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
         if (empty($gitUrl)) {
             Console::warning("No git URL for {$language['name']} SDK, skipping AI analysis");
-
             return null;
         }
 
         $apiKey = System::getEnv('_APP_ASSISTANT_OPENAI_API_KEY', '');
         if (empty($apiKey)) {
             Console::warning('_APP_ASSISTANT_OPENAI_API_KEY not set, cannot use AI for version analysis');
-
             return null;
         }
 
         try {
-            // Reuse existing adapter/model config while delegating repo diffing to DiffCheck
             $adapter = new OpenAI($apiKey, OpenAI::MODEL_GPT_5_NANO, maxTokens: 8192);
 
             $object = new SchemaObject();
@@ -810,9 +807,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 options: $options
             );
 
-            if (! $result['hasChanges']) {
+            if (!$result['hasChanges']) {
                 Console::warning("No changes detected for {$language['name']} SDK");
-
                 return null;
             }
 
@@ -840,7 +836,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
             if (empty($parsed['version']) || empty($parsed['changelog']) || empty($parsed['versionBump'])) {
                 Console::warning('AI response missing required fields');
-
                 return null;
             }
 
