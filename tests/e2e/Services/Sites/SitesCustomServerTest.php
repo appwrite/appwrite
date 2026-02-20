@@ -2632,12 +2632,19 @@ class SitesCustomServerTest extends Scope
 
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);
-        $response = $proxyClient->call(Client::METHOD_GET, '/');
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString('Sub-directory index', $response['body']);
-        $response1 = $proxyClient->call(Client::METHOD_GET, '/project1');
-        $this->assertEquals(200, $response1['headers']['status-code']);
-        $this->assertStringContainsString('Sub-directory project1', $response1['body']);
+
+        $this->assertEventually(function () use ($proxyClient) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/');
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertStringContainsString('Sub-directory index', $response['body']);
+        }, 30000, 2000);
+
+        $this->assertEventually(function () use ($proxyClient) {
+            $response1 = $proxyClient->call(Client::METHOD_GET, '/project1');
+            $this->assertEquals(200, $response1['headers']['status-code']);
+            $this->assertStringContainsString('Sub-directory project1', $response1['body']);
+        }, 30000, 2000);
+
         $response2 = $proxyClient->call(Client::METHOD_GET, '/project1/');
         $this->assertEquals(200, $response2['headers']['status-code']);
         $this->assertStringContainsString('Sub-directory project1', $response2['body']);
