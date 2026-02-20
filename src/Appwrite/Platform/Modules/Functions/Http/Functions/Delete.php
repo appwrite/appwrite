@@ -86,10 +86,12 @@ class Delete extends Base
 
         // Inform scheduler to no longer run function
         $schedule = $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId'));
-        $schedule
-            ->setAttribute('resourceUpdatedAt', DateTime::now())
-            ->setAttribute('active', false);
-        $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
+        if (!$schedule->isEmpty()) {
+            $schedule
+                ->setAttribute('resourceUpdatedAt', DateTime::now())
+                ->setAttribute('active', false);
+            $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
+        }
 
         $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)

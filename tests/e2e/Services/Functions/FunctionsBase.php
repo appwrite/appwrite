@@ -102,11 +102,22 @@ trait FunctionsBase
 
     protected function cleanupFunction(string $functionId): void
     {
-        $function = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]));
+        $maxRetries = 3;
+        for ($i = 0; $i < $maxRetries; $i++) {
+            $function = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+
+            if ($function['headers']['status-code'] === 204) {
+                return;
+            }
+
+            if ($i < $maxRetries - 1) {
+                \sleep(1);
+            }
+        }
 
         $this->assertEquals(204, $function['headers']['status-code']);
     }
