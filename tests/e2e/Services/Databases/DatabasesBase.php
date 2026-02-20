@@ -110,6 +110,7 @@ trait DatabasesBase
      */
     protected function setupCollection(): array
     {
+        $this->ensureSharedProject();
         $cacheKey = $this->getCacheKey();
         if (!empty(self::$collectionCache[$cacheKey])) {
             return self::$collectionCache[$cacheKey];
@@ -181,6 +182,7 @@ trait DatabasesBase
      */
     protected function setupAttributes(): array
     {
+        $this->ensureSharedProject();
         $cacheKey = $this->getCacheKey();
         if (!empty(self::$attributesCache[$cacheKey])) {
             return self::$attributesCache[$cacheKey];
@@ -337,6 +339,7 @@ trait DatabasesBase
      */
     protected function setupIndexes(): array
     {
+        $this->ensureSharedProject();
         $cacheKey = $this->getCacheKey();
         if (!empty(self::$indexesCache[$cacheKey])) {
             return self::$indexesCache[$cacheKey];
@@ -418,6 +421,7 @@ trait DatabasesBase
      */
     protected function setupDocuments(): array
     {
+        $this->ensureSharedProject();
         $cacheKey = $this->getCacheKey();
         if (!empty(self::$documentsCache[$cacheKey])) {
             return self::$documentsCache[$cacheKey];
@@ -516,6 +520,7 @@ trait DatabasesBase
      */
     protected function setupOneToOneRelationship(): array
     {
+        $this->ensureSharedProject();
         $cacheKey = $this->getCacheKey();
         if (!empty(self::$oneToOneCache[$cacheKey])) {
             return self::$oneToOneCache[$cacheKey];
@@ -601,6 +606,7 @@ trait DatabasesBase
      */
     protected function setupOneToManyRelationship(): array
     {
+        $this->ensureSharedProject();
         $cacheKey = $this->getCacheKey();
         if (!empty(self::$oneToManyCache[$cacheKey])) {
             return self::$oneToManyCache[$cacheKey];
@@ -722,6 +728,7 @@ trait DatabasesBase
      */
     protected function setupFulltextSearchDocuments(): array
     {
+        $this->ensureSharedProject();
         $cacheKey = $this->getCacheKey();
         if (!empty(self::$fulltextDocsCache[$cacheKey])) {
             return self::$fulltextDocsCache[$cacheKey];
