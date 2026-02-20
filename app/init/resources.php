@@ -565,10 +565,6 @@ Http::setResource('dbForProject', function (Group $pools, Database $dbForPlatfor
         return $dbForPlatform;
     }
 
-    if ($project->isEmpty()) {
-        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Project is not configured');
-    }
-    
     $database = $project->getAttribute('database', '');
     if (empty($database)) {
         throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Project database is not configured');
