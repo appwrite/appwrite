@@ -66,19 +66,16 @@ class Delete extends Action
     public function action(string $teamId, string $membershipId, Document $user, Document $project, Response $response, Database $dbForProject, Authorization $authorization, Event $queueForEvents)
     {
         $membership = $dbForProject->getDocument('memberships', $membershipId);
-
         if ($membership->isEmpty()) {
             throw new Exception(Exception::TEAM_INVITE_NOT_FOUND);
         }
 
         $profile = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
-
         if ($profile->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $team = $dbForProject->getDocument('teams', $teamId);
-
         if ($team->isEmpty()) {
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
@@ -87,7 +84,10 @@ class Delete extends Action
             throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
         }
 
-        $this->ensureUserIsNotAssociatedWithBilling($team, $profile, $dbForProject);
+        $this->dbForProject = $dbForProject;
+        $this->team = $team;
+        $this->profile = $profile;
+        $this->verifyUser();
 
         if ($project->getId() === 'console') {
             // Quick check:
@@ -153,9 +153,8 @@ class Delete extends Action
         $response->noContent();
     }
 
-    protected function ensureUserIsNotAssociatedWithBilling(Document $team, Document $profile, Database $dbForProject): void
+    protected function verifyUser(): void
     {
-        // Overriden on Cloud to ensure the user is not associated with any payment methods.
         return;
     }
 }
