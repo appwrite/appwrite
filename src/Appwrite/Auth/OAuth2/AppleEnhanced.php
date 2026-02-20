@@ -172,9 +172,15 @@ class Apple extends OAuth2
 
     protected function getAppSecret(): string
     {
-        try {
-            $secret = \json_decode($this->appSecret, true);
-        } catch (\Throwable $th) {
+        // try {
+        //     $secret = \json_decode($this->appSecret, true);
+        // } catch (\Throwable $th) {
+        //     throw new Exception('Invalid secret');
+        // }
+
+      $secret = \json_decode($this->appSecret, true);
+
+        if (!\is_array($secret)) {
             throw new Exception('Invalid secret');
         }
 
@@ -213,9 +219,9 @@ class Apple extends OAuth2
             \openssl_free_key($pkey); // @phpstan-ignore-line
         }
 
-        if (!$success) {
-            return '';
-        }
+        // if (!$success) {
+        //     return '';
+        // }
 
         return $payload . '.' . $this->encode($this->fromDER($signature, 64));
     }

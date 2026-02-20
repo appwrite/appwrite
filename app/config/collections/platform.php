@@ -225,7 +225,7 @@ return [
                 '$id' => ID::custom('templates'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 2_000_000, // Optimized size for email templates with ample headroom
+                'size' => 1_000_000, // TODO make sure size fits
                 'signed' => true,
                 'required' => false,
                 'default' => [],

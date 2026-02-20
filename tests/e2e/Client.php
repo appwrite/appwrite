@@ -17,33 +17,18 @@ class Client
     public const METHOD_CONNECT = 'CONNECT';
     public const METHOD_TRACE = 'TRACE';
 
-    /**
-     * Is Self Signed Certificates Allowed?
-     *
-     * @var bool
-     */
+    
     protected $selfSigned = false;
 
-    /**
-     * Service host name
-     *
-     * @var string
-     */
     protected $endpoint = 'https://appwrite.test/v1';
 
-    /**
-     * Global Headers
-     *
-     * @var array
-     */
+    
     protected $headers = [
         'content-type' => '',
         'x-sdk-version' => 'appwrite:php:v1.0.7',
     ];
 
-    /**
-     * SDK constructor.
-     */
+    
     public function __construct()
     {
     }
