@@ -19,16 +19,14 @@ trait FunctionsBase
     protected string $stderr = '';
 
     /**
-     * Retry an API call on transient 401 auth errors and connection failures.
+     * Retry an API call on transient 401 auth errors.
      * CI can intermittently fail API key lookups under load,
      * especially on MongoDB when the database is recovering.
-     * Also retries on TCP connection errors (EOF, timeout) common with multipart uploads.
      */
     protected function callWithAuthRetry(string $method, string $path, array $headers, mixed $params = []): array
     {
         $maxRetries = 10;
         $response = null;
-        $lastException = null;
 
         for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
             // Refresh project credentials after several failed attempts
@@ -38,16 +36,7 @@ trait FunctionsBase
                 $headers['x-appwrite-key'] = $project['apiKey'];
             }
 
-            try {
-                $response = $this->client->call($method, $path, array_merge($headers), $params);
-                $lastException = null;
-            } catch (\Exception $e) {
-                $lastException = $e;
-                if ($attempt < $maxRetries) {
-                    \sleep(\min($attempt * 2, 10));
-                }
-                continue;
-            }
+            $response = $this->client->call($method, $path, array_merge($headers), $params);
 
             if ($response['headers']['status-code'] !== 401) {
                 return $response;
@@ -56,10 +45,6 @@ trait FunctionsBase
             if ($attempt < $maxRetries) {
                 \sleep(\min($attempt * 2, 10));
             }
-        }
-
-        if ($lastException !== null) {
-            throw $lastException;
         }
 
         return $response;

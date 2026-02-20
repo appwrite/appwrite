@@ -19,55 +19,25 @@ trait TransactionsBase
     protected static bool $sharedSetupDone = false;
 
     /**
-     * Ensure all Transaction test methods share the same project and user via file cache.
-     */
-    protected function ensureSharedProject(): void
-    {
-        if (!empty(self::$project)) {
-            return;
-        }
-
-        $cached = $this->withFileCache('db_project_' . static::class, function () {
-            $project = $this->createNewProject();
-            self::$project = $project;
-            $user = $this->getUser();
-            return [
-                '_project' => $project,
-                '_user' => $user,
-            ];
-        });
-
-        self::$project = $cached['_project'];
-        $projectId = self::$project['$id'];
-        self::$user[$projectId] = $cached['_user'];
-    }
-
-    /**
      * Get or create a shared database for tests that don't need isolation
      */
     protected function getSharedDatabase(): string
     {
-        $this->ensureSharedProject();
-
         if (!empty(self::$sharedDatabaseId)) {
             return self::$sharedDatabaseId;
         }
 
-        $cached = $this->withFileCache('txn_database_' . static::class, function () {
-            $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
-            ]), [
-                'databaseId' => ID::unique(),
-                'name' => 'SharedTransactionTestDB'
-            ]);
+        $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'SharedTransactionTestDB'
+        ]);
 
-            $this->assertEquals(201, $database['headers']['status-code']);
-            return ['databaseId' => $database['body']['$id']];
-        });
-
-        self::$sharedDatabaseId = $cached['databaseId'];
+        $this->assertEquals(201, $database['headers']['status-code']);
+        self::$sharedDatabaseId = $database['body']['$id'];
         return self::$sharedDatabaseId;
     }
 
@@ -80,46 +50,40 @@ trait TransactionsBase
             return self::$sharedCollectionId;
         }
 
-        $cached = $this->withFileCache('txn_collection_' . static::class, function () {
-            $databaseId = $this->getSharedDatabase();
+        $databaseId = $this->getSharedDatabase();
 
-            $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
-            ]), [
-                $this->getContainerIdParam() => ID::unique(),
-                'name' => 'SharedTestCollection',
-                'permissions' => [
-                    Permission::create(Role::any()),
-                    Permission::read(Role::any()),
-                    Permission::update(Role::any()),
-                    Permission::delete(Role::any()),
-                ],
-            ]);
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'SharedTestCollection',
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
 
-            $this->assertEquals(201, $collection['headers']['status-code']);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        self::$sharedCollectionId = $collection['body']['$id'];
 
-            $collectionId = $collection['body']['$id'];
+        // Create a standard 'name' attribute
+        $nameAttr = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, self::$sharedCollectionId, "string", null), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+        $this->assertEquals(202, $nameAttr['headers']['status-code']);
 
-            // Create a standard 'name' attribute
-            $nameAttr = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
-            ]), [
-                'key' => 'name',
-                'size' => 256,
-                'required' => true,
-            ]);
-            $this->assertEquals(202, $nameAttr['headers']['status-code']);
+        $this->waitForAllAttributes($databaseId, self::$sharedCollectionId);
 
-            $this->waitForAllAttributes($databaseId, $collectionId);
-
-            return ['collectionId' => $collectionId];
-        });
-
-        self::$sharedCollectionId = $cached['collectionId'];
         return self::$sharedCollectionId;
     }
 
