@@ -919,7 +919,7 @@ class SitesCustomServerTest extends Scope
     }
 
 // hamza
-    protected function packageSiteFromDirectory(string $directory): string
+    protected function packageSiteFromDirectory(string $directory): \CURLFile
     {
         $tarPath = $directory . '/code.tar.gz';
 
@@ -932,6 +932,7 @@ class SitesCustomServerTest extends Scope
         }
 
         return new \CURLFile($tarPath, 'application/x-gzip', 'code.tar.gz');
+    }
     }
 // hamza
     protected function cleanupDirectory(string $directory): void
