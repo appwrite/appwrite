@@ -1,0 +1,6 @@
+query {
+    healthGet {
+        ping
+        status
+    }
+}

@@ -1,0 +1,1 @@
+Get a user by its unique ID.

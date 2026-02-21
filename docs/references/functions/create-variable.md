@@ -1,0 +1,1 @@
+Create a new function environment variable. These variables can be accessed in the function at runtime as environment variables.

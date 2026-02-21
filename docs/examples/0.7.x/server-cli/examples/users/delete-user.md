@@ -1,0 +1,1 @@
+appwrite users deleteUser --userId="[USER_ID]" 

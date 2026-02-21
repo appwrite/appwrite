@@ -1,0 +1,1 @@
+Get a file by its unique ID. This endpoint response returns a JSON object with the file metadata.

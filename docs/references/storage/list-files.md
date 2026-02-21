@@ -1,0 +1,1 @@
+Get a list of all the user files. You can use the query params to filter your results.

@@ -1,0 +1,1 @@
+Update how long sessions created within a project should stay active for.

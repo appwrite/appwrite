@@ -1,0 +1,26 @@
+tasks:
+  - name: Run Appwrite Docker Stack
+    init: |
+      git submodule update --init
+      docker compose build
+      docker compose pull
+      docker pull composer
+    command: |
+      docker run --rm --interactive --tty \
+      --user "$(id -u):$(id -g)" \
+      --volume $PWD:/app \
+      composer install \
+      --ignore-platform-reqs \
+      --optimize-autoloader \
+      --no-plugins \
+      --no-scripts \
+      --prefer-dist
+
+ports:
+  - port: 8080
+    visibility: public
+
+vscode:
+  extensions:
+    - ms-azuretools.vscode-docker
+    - zobo.php-intellisense

@@ -1,0 +1,1 @@
+appwrite teams deleteMembership --teamId="[TEAM_ID]" --inviteId="[INVITE_ID]" 

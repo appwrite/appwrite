@@ -1,0 +1,1 @@
+Delete a team using its ID. Only team members with the owner role can delete the team.

@@ -1,0 +1,9 @@
+parameters:
+  level: 8
+  paths:
+    - src/Appwrite/Transformation
+  scanDirectories:
+    - vendor/swoole/ide-helper
+  excludePaths:
+    - tests/resources
+    - app/sdks

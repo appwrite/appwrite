@@ -1,0 +1,542 @@
+<?php
+use Utopia\Config\Config;
+use Utopia\System\System;
+
+$development = $this->getParam('development', false);
+$type = $this->getParam('type', 'general_server_error');
+$code = $this->getParam('code', 500);
+$message = $this->getParam('message', '');
+$trace = $this->getParam('trace', []);
+$title = $this->getParam('title', 'Error'); 
+$exception = $this->getParam('exception', null);
+
+$isSimpleMessage = true;
+$label = '';
+$labelClass = '';
+$buttons = [];
+
+$protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+$platform = Config::getParam('platform', []);
+$hostname = $platform['consoleHostname'] ?? '';
+// TODO: remove this later
+if (System::getEnv('_APP_ENV') === 'development') {
+    $hostname = 'localhost';
+}
+
+$url = $protocol . '://' . $hostname;
+
+if($exception !== null && method_exists($exception, 'getCTAs')) {
+    foreach ($exception->getCTAs() as $index => $cta) {
+        $class = ($index === 0) ? 'bordered-button' : 'button';
+    
+        $buttons[] = [
+            'text' => $cta['label'],
+            'url' => $cta['url'],
+            'class' => $class
+        ];
+    }
+}
+
+switch ($type) {
+    case 'proxy_error_override':
+        $type = '';
+        $label = 'Error ' . $code;
+        
+        $message = $code >= 500 ? 'An unexpected server error occured.' : 'An unexpected client error occured.';
+        switch($code) {
+            case 401:
+                $message = 'You must sign in to access this page.';
+                break;
+            case 403:
+                $message = 'You are not authorized to access this page.';
+                break;
+            case 404:
+                $message = 'The page you are looking for does not exist.';
+                break;
+            case 504:
+                $message = 'The server did not respond in time.';
+                break;
+            case 501:
+                $message = 'This page is not implemented yet.';
+                break;
+        }
+        
+        break;
+    case 'function_execute_permission_missing':
+        $label = 'Execution not permitted';
+        $labelClass = 'warning';
+        break;
+    case 'build_not_ready':
+        $label = 'Deployment is still building';
+        $message = 'The page will update after the build completes.';
+        $labelClass = 'warning';
+        break;
+    case 'build_failed':
+        $label = 'Deployment build failed';
+        $message = 'An error occurred during the build process.';
+        $labelClass = 'error';
+        break;
+    case 'rule_not_found':
+        $label = 'Nothing is here yet';
+        $message = 'This page is empty, but you can make it yours.';
+        break;
+    case 'deployment_not_found':
+        $label = 'No active deployments';
+        $message = 'This page is empty, activate a deployment to make it live.';
+        break;
+    case 'build_canceled':
+        $label = 'Deployment build canceled';
+        $message = 'This build was canceled and won\'t be deployed.';
+        break;
+    case 'general_route_not_found':
+        $label = 'Page not found';
+        $message = 'The page you\'re looking for doesn\'t exist.';
+        break;
+    default:
+        $label = 'Error ' . $code;
+        $message = $message;
+        $isSimpleMessage = false;
+        break;
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="<?php echo $url; ?>/images/logos/appwrite-icon.svg" />
+    <link rel="mask-icon" type="image/png" href="<?php echo $url; ?>/images/logos/appwrite-icon.png" />
+
+    <link rel="preconnect" href="https://assets.appwrite.io/" crossorigin>
+    <style>
+        @font-face {
+            font-family: 'Inter';
+            src: url('https://assets.appwrite.io/fonts/inter/Inter-Regular.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Inter';
+            src: url('https://assets.appwrite.io/fonts/inter/Inter-Medium.woff2') format('woff2');
+            font-weight: 500;
+            font-style: normal;
+            font-display: swap;
+        }
+        
+        @font-face {
+            font-family: 'Fira Code';
+            src: url('https://assets.appwrite.io/fonts/fira-code/FiraCode-Regular.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+    </style>
+
+    <title><?php echo $this->print($title); ?></title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #FFFFFF;
+        }
+
+        .main {
+            display: flex;
+            min-height: 100vh;
+            width: 100vw;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .content {
+            margin-left: auto;
+            margin-right: auto;
+            max-width: 400px;
+        }
+
+        span {
+            padding: var(--space-1, 2px) var(--space-3, 6px);
+            border-radius: var(--border-radius-XS, 6px);
+            background: var(--color-overlay-on-neutral, rgba(0, 0, 0, 0.06));
+            color: var(--color-fgColor-neutral-secondary, #56565C);
+            text-align: center;
+            font-family: var(--font-family-sansSerif, Inter), sans-serif;
+            font-size: var(--font-size-S, 14px);
+            font-style: normal;
+            font-weight: 400;
+            line-height: 140%;
+            letter-spacing: -0.063px;
+        }
+
+        h1 {
+            color: var(--color-fgColor-neutral-primary, #2D2D31);
+            text-align: center;
+            font-family: var(--font-family-sansSerif, Inter), sans-serif;
+            font-size: var(--font-size-XXXL, 32px);
+            font-style: normal;
+            font-weight: 400;
+            line-height: 140%;
+            letter-spacing: -0.144px;
+            margin-top: 8px;
+            margin-bottom: 32px;
+        }
+    
+        .content h1 {
+            margin-bottom: 20px;
+        }
+
+        .content.small-error h1 {
+            font-size: var(--font-size-M, 20px);
+        }
+        
+        .content.large-error h1 {
+            font-size: var(--font-size-XXXL, 32px);
+        }
+
+        .bordered-button {
+            border-radius: var(--border-radius-S, 8px);
+            font-family: var(--font-family-sansSerif, Inter), sans-serif;
+            font-size: var(--font-size-S, 14px);
+            font-style: normal;
+            font-weight: 500;
+            line-height: 140%;
+            letter-spacing: -0.063px;
+            padding: var(--space-3, 6px) var(--space-5, 10px);
+            cursor: pointer;
+            border: var(--border-width-S, 1px) solid var(--color-border-neutral-strong, #D8D8DB);
+            background: var(--color-bgColor-neutral-primary, #FFF);
+            color: var(--color-fgColor-neutral-secondary, #56565C);
+        }
+
+        button {
+            border-radius: var(--border-radius-S, 8px);
+            font-family: var(--font-family-sansSerif, Inter), sans-serif;
+            font-size: var(--font-size-S, 14px);
+            font-style: normal;
+            font-weight: 500;
+            line-height: 140%;
+            letter-spacing: -0.063px;
+            padding: var(--space-3, 6px) var(--space-5, 10px);
+            cursor: pointer;
+            border: var(--border-width-S, 1px) solid transparent;
+            background: var(--color-bgColor-neutral-primary, #FFF);
+            color: var(--color-fgColor-neutral-secondary, #56565C);
+        }
+
+        .center {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .brand {
+            position: absolute;
+            width: 100%;
+            bottom: 32px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .brand p {
+            font-family: var(--font-family-monospace, "Fira Code"), monospace;
+            font-size: var(--font-size-XS, 12px);
+            font-style: normal;
+            font-weight: 400;
+            line-height: 130%;
+            letter-spacing: 0.96px;
+            text-transform: uppercase;
+            color: var(--color-fgColor-neutral-secondary, #56565C);
+        }
+
+        .brand svg {
+            height: 20px;
+        }
+
+        .warning {
+            background: var(--color-overlay-on-neutral, rgba(254, 124, 67, 0.16));
+            color: var(--color-fgColor-neutral-secondary, #61250A);
+        }
+
+        .error {
+            background: var(--color-overlay-on-neutral, rgba(255, 69, 58, 0.16));
+            color: var(--color-fgColor-neutral-secondary, #B31212);
+        }
+
+        .logo-dark {
+            display: none;
+        }
+
+        .logo-light {
+            display: block;
+        }
+
+        .type {
+            padding: var(--space-1, 2px) var(--space-3, 6px);
+            border-radius: var(--border-radius-XS, 6px);
+            border: var(--border-width-S, 1px) solid var(--color-border-neutral-strong, #EDEDF0);
+            background: var(--color-overlay-on-neutral, rgba(250, 250, 251, 1));
+            color: var(--color-fgColor-neutral-secondary, #56565C);
+            text-align: center;
+            font-family: var(--font-family-monospace, "Fira Code"), monospace;
+            font-size: var(--font-size-XS, 12px);
+            font-style: normal;
+            font-weight: 400;
+            line-height: 140%;
+            letter-spacing: 0px;
+        }
+
+        .error-trace {
+            max-width: 900px;
+            padding: 20px;
+            font-family: var(--font-family-sansSerif, Inter), sans-serif;
+        }
+
+        .back-button {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--color-fgColor-neutral-secondary, #56565C);
+            font-family: var(--font-family-sansSerif, Inter), sans-serif;
+            font-size: var(--font-size-S, 14px);
+            font-style: normal;
+            font-weight: 500;
+            line-height: 140%;
+            letter-spacing: -0.45px;
+        }
+        
+        .back-button:hover {
+            text-decoration: underline;
+        }
+
+        .trace-grid {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 16px;
+            background: var(--color-bgColor-neutral-secondary, #FFFFFF);
+            padding: 10px 12px;
+            border: var(--border-width-S, 1px) solid var(--color-border-neutral-strong, #EDEDF0);
+        }
+
+        .trace-grid-header {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            background: var(--color-bgColor-neutral-secondary, #FAFAFB);
+            border-radius: 8px 8px 0 0;
+            border: var(--border-width-S, 1px) solid var(--color-border-neutral-strong, #EDEDF0);
+            font-family: var(--font-family-sansSerif, Inter), sans-serif;
+            font-size: var(--font-size-S, 14px);
+            font-weight: 400;
+            line-height: 140%;
+            letter-spacing: -0.45px;
+            color: var(--color-fgColor-neutral-secondary, #56565C);
+        }
+
+        .trace-label {
+            font-family: var(--font-family-sansSerif, Inter), sans-serif;
+            font-size: var(--font-size-S, 14px);
+            font-weight: 400;
+            line-height: 140%;
+            letter-spacing: -0.45px;
+            color: var(--color-fgColor-neutral-secondary, #56565C);
+        }
+
+        .trace-value {
+            color: var(--color-fgColor-neutral-secondary, #56565C);
+            font-family: var(--font-family-monospace, "Fira Code"), monospace;
+            font-size: var(--font-size-S, 14px);
+            font-weight: 400;
+            line-height: 140%;
+            letter-spacing: 0px;
+        }
+
+        .trace-args {
+            /* grid-column: 1 / -1; */
+            padding: 10px 12px;
+            /* white-space: pre-wrap; */
+            overflow-x: auto;
+            font-family: var(--font-family-monospace, "Fira Code"), monospace;
+            font-size: var(--font-size-S, 14px);
+            font-weight: 400;
+            line-height: 140%;
+            color: var(--color-fgColor-neutral-secondary, #56565C);
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                margin-left: 16px;
+                margin-right: 16px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #1D1D21;
+            }
+
+            h1 {
+                color: var(--color-fgColor-neutral-primary, #EDEDF0);
+            }
+
+            span {
+                background: var(--color-overlay-on-neutral, rgba(255, 255, 255, 0.2));
+                color: var(--color-fgColor-neutral-secondary, #C3C3C6);
+            }
+
+            .bordered-button {
+                border: var(--border-width-S, 1px) solid var(--color-border-neutral-strong, #414146);
+                background: var(--color-bgColor-neutral-primary, #1D1D21);
+                color: var(--color-fgColor-neutral-secondary, #C3C3C6);
+            }
+
+            button {
+                background: var(--color-bgColor-neutral-primary, #1D1D21);
+                color: var(--color-fgColor-neutral-secondary, #C3C3C6);
+            }
+
+            .brand p {
+                color: var(--color-fgColor-neutral-secondary, #C3C3C6);
+            }
+
+            .warning {
+                background: var(--color-overlay-on-neutral, rgba(254, 124, 67, 0.24));
+                color: var(--color-fgColor-neutral-secondary, #FFD5C2);
+            }
+
+            .error {
+                background: var(--color-overlay-on-neutral, rgba(255, 69, 58, 0.28));
+                color: var(--color-fgColor-neutral-secondary, #FFD5D4);
+            }
+
+            .logo-light {
+                display: none;
+            }
+
+            .logo-dark {
+                display: block;
+            }
+
+            .type {
+                background: var(--color-overlay-on-neutral, rgba(25, 25, 28, 1));
+                color: var(--color-fgColor-neutral-secondary, #C3C3C6);
+                border: var(--border-width-S, 1px) solid var(--color-border-neutral-strong, #414146);
+            }
+
+            .back-button {
+                color: var(--color-fgColor-neutral-secondary, #C3C3C6);
+            }
+
+            .trace-grid {
+                background: var(--color-bgColor-neutral-secondary, #1D1D21);
+                border: var(--border-width-S, 1px) solid var(--color-border-neutral-strong, #2D2D31);
+            }
+
+            .trace-grid-header {
+                background: var(--color-bgColor-neutral-secondary, #19191C);
+                border: var(--border-width-S, 1px) solid var(--color-border-neutral-strong, #2D2D31);
+                color: var(--color-fgColor-neutral-secondary, #C3C3C6);
+            }
+
+            .trace-label {
+                color: var(--color-fgColor-neutral-secondary, #C3C3C6);
+            }
+
+            .trace-value {
+                color: var(--color-fgColor-neutral-secondary, #C3C3C6);
+            }
+
+            .trace-args {
+                color: var(--color-fgColor-neutral-secondary, #C3C3C6);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main">
+        <div id="views-error" class="content <?php echo $isSimpleMessage ? 'large-error' : 'small-error' ?>">
+            <div class="center"><span class="<?php echo $this->print($labelClass); ?>"><?php echo $this->print($label); ?></span></div>
+            <h1><?php echo $this->print($message); ?></h1>
+            <?php if (!empty($type)): ?>
+                <div class="center">
+                    <span class='type'><?php echo $this->print($type); ?></span>
+                </div>
+            <?php endif; ?>
+            <div class="center" style="margin-top: 20px;">
+                <?php if (!empty($buttons)): ?>
+                    <?php foreach ($buttons as $button): ?>
+                        <a href="<?php echo htmlspecialchars($button['url']); ?>">
+                            <button class="<?php echo htmlspecialchars($button['class']); ?>">
+                                <?php echo htmlspecialchars($button['text']); ?>
+                            </button>
+                        </a>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+                    
+                <?php if ($development) : ?>
+                        <button class="<?php echo count($buttons) === 0 ? 'bordered-button' : 'button' ?>" onclick="openTraceView()">View error trace</button>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <?php if ($development) : ?>
+            <div id="views-trace" style="display: none;" class="error-trace">
+                <button class="back-button" onclick="openErrorView()">
+                    Back
+                </button>
+                <div class="trace-grid-header">Error trace</div>
+                <?php foreach ($trace as $index => $traceItem): ?>
+                    <div class="trace-grid">
+                        <?php if (isset($traceItem['file'])): ?>
+                            <div class="trace-label">file</div>
+                            <div class="trace-value"><?php echo $this->print($traceItem['file']); ?></div>
+                        <?php endif; ?>
+
+                        <?php if (isset($traceItem['line'])): ?>
+                            <div class="trace-label">line</div>
+                            <div class="trace-value"><?php echo $this->print($traceItem['line']); ?></div>
+                        <?php endif; ?>
+
+                        <?php if (isset($traceItem['function'])): ?>
+                            <div class="trace-label">function</div>
+                            <div class="trace-value"><?php echo $this->print($traceItem['function']); ?></div>
+                        <?php endif; ?>
+
+                        <?php if (isset($traceItem['args'])): ?>
+                            <div class="trace-label">args</div>
+                            <div class="trace-args"><pre><?php echo $this->print(\var_export($traceItem['args'], true)); ?></pre></div>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+    </div>
+
+    <script>
+        function openErrorView() {
+            document.getElementById('views-trace').style.display = 'none';
+            document.getElementById('views-error').style.display = 'block';
+        }
+
+        function openTraceView() {
+            document.getElementById('views-trace').style.display = 'block';
+            document.getElementById('views-error').style.display = 'none';
+        }
+    </script>
+</body>
+
+</html>

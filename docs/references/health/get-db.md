@@ -1,0 +1,1 @@
+Check the Appwrite database servers are up and connection is successful.

@@ -1,0 +1,64 @@
+## 0.3.2
+
+- Fixed package namespaces
+
+## 0.3.1
+
+- Downgraded meta package version to 1.1.8
+
+## 0.3.0
+
+- Updated package dependencies (@lohanidamodar)
+- Added Flutter for Web compatibility (@lohanidamodar)
+
+## 0.2.3
+
+- Fixed OAuth2 cookie bug, where a new session cookie couldn't overwrite an old cookie
+
+## 0.2.2
+
+- Fixed an error that happened when the OAuth session creation request was sent before any other API call
+- Fixed a bug in the Avatars service where location URL generation had syntax error
+
+## 0.2.1
+
+- Fixed callback scheme
+
+## 0.2.0
+
+- Updated flutter_web_auth plugin to version 0.2.4
+- Added per project unique callback for OAuth2 redirects to avoid conflicts between multiple Appwrite projects
+
+## 0.1.1
+
+- Updated flutter_web_auth version
+
+## 0.1.0
+
+- Added examples file
+- Some minor style fixes
+
+## 0.0.14
+
+- Using MultipartFile for file uploads
+
+## 0.0.13
+
+- Fix for file upload method
+
+## 0.0.12
+
+- Added file upload support for storage service
+
+## 0.0.11
+
+- Added integration with web auth plugin to support Appwrite OAuth API
+
+## 0.0.9
+
+- Updated default params
+
+## 0.0.8
+
+- Fixed compilation error in Client class
+- Shorter description for package

@@ -1,0 +1,1 @@
+Use this endpoint to log out the currently logged in user from their account. When successful this endpoint will delete the user session and remove the session secret cookie from the user client.

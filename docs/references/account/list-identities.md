@@ -1,0 +1,1 @@
+Get the list of identities for the currently logged in user.

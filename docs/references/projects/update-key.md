@@ -1,0 +1,1 @@
+Update a key by its unique ID. Use this endpoint to update the name, scopes, or expiration time of an API key. 

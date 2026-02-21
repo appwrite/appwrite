@@ -1,0 +1,1 @@
+Delete a function by its unique ID.
