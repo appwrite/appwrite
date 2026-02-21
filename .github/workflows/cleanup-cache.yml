@@ -5,6 +5,10 @@ on:
     types:
       - closed
 
+permissions:
+  actions: write
+  contents: read
+
 jobs:
   cleanup:
     runs-on: ubuntu-latest

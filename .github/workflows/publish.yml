@@ -5,6 +5,9 @@ on:
     tags:
       - cl-*
 
+permissions:
+  contents: read
+
 jobs:
   build-publish:
     name: Build and Publish
