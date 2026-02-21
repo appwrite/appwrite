@@ -19,6 +19,7 @@ abstract class Action extends UtopiaAction
         'building' => 70,
         'waiting' => 70,
         'failed' => 60,
+        'canceled' => 80,
     ];
     protected const COLOR_BRIGHTGREEN = '#4c1';
     protected const COLOR_GREEN = '#97ca00';

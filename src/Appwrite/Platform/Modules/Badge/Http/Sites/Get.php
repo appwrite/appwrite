@@ -78,6 +78,10 @@ class Get extends Action
                         $message = 'failed';
                         $color = 'red';
                         break;
+                    case 'canceled':
+                        $message = 'canceled';
+                        $color = 'orange';
+                        break;
                     case '':
                         $message = 'no deployment';
                         $color = 'lightgrey';
