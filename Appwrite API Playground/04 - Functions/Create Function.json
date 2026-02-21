@@ -1,0 +1,46 @@
+{
+  "name": "Create Function",
+  "rank": "auntit17716954696771",
+  "request": {
+    "type": "http",
+    "url": "http://localhost:9501/v1/functions",
+    "scripts": {
+      "preRequest": "",
+      "postResponse": ""
+    },
+    "method": "POST",
+    "queryParams": [],
+    "headers": [
+      {
+        "id": 1771695523107,
+        "key": "content-type",
+        "value": "application/json",
+        "isEnabled": true,
+        "description": "",
+        "dataType": "string"
+      },
+      {
+        "id": 1771695534130,
+        "key": "X-Appwrite-Project",
+        "value": "6998a62f001b23ac94ed",
+        "isEnabled": true,
+        "description": "",
+        "dataType": "string"
+      },
+      {
+        "id": 1771695534732,
+        "key": "X-Appwrite-Key",
+        "value": "standard_e946cabf760940792e7ea5f8e8835bdfccb29dc59d9b3d1cb5d5568890282a163376def5a86b02263f584942713b32db829bd7fd736c9b8c1ff34fb3fb1028a11328971f3962a45916191a2370cd8a6941c7590395ce64031c437f816b29f624598550907835d66ebec8a9f4df9dc54d60a5808b3d95a2c85de462c6b843e8df",
+        "isEnabled": true,
+        "description": "",
+        "dataType": "string"
+      }
+    ],
+    "body": "{\n  \"functionId\": \"fn-001\",\n  \"name\": \"Test Function\",\n  \"runtime\": \"dotnet-8.0\"\n}",
+    "contentType": "application/json",
+    "auth": {
+      "currentAuthType": "INHERIT",
+      "authConfigStore": {}
+    }
+  }
+}

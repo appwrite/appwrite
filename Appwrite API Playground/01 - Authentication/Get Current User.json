@@ -1,0 +1,45 @@
+{
+  "name": "Get Current User",
+  "rank": "aw",
+  "request": {
+    "type": "http",
+    "url": "http://localhost:9501/v1/account",
+    "scripts": {
+      "preRequest": "",
+      "postResponse": ""
+    },
+    "method": "GET",
+    "queryParams": [],
+    "headers": [
+      {
+        "id": 1771613934057,
+        "key": "content-type",
+        "value": "application/json",
+        "isEnabled": true,
+        "description": "",
+        "dataType": "string"
+      },
+      {
+        "id": 1771613948741,
+        "key": "X-Appwrite-Project",
+        "value": "6998a62f001b23ac94ed",
+        "isEnabled": true,
+        "description": "",
+        "dataType": "string"
+      },
+      {
+        "id": 1771613959728,
+        "key": "X-Appwrite-Session",
+        "value": "6999d5734f8491116b89",
+        "isEnabled": true,
+        "description": "",
+        "dataType": "string"
+      }
+    ],
+    "contentType": "text/plain",
+    "auth": {
+      "currentAuthType": "INHERIT",
+      "authConfigStore": {}
+    }
+  }
+}

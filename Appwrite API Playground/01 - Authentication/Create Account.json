@@ -1,0 +1,38 @@
+{
+  "name": "Create Account",
+  "rank": "auntit17716132685361",
+  "request": {
+    "type": "http",
+    "url": "http://localhost:9501/v1/account ",
+    "scripts": {
+      "preRequest": "",
+      "postResponse": ""
+    },
+    "method": "POST",
+    "queryParams": [],
+    "headers": [
+      {
+        "id": 1771613299937,
+        "key": "content-type",
+        "value": "application/json",
+        "isEnabled": true,
+        "description": "",
+        "dataType": "string"
+      },
+      {
+        "id": 1771613313955,
+        "key": "X-Appwrite-Project",
+        "value": "6998a62f001b23ac94ed",
+        "isEnabled": true,
+        "description": "",
+        "dataType": "string"
+      }
+    ],
+    "body": "{\n  \"userId\": \"user-01\",\n  \"email\": \"test1@example.com\",\n  \"password\": \"Password1234!\",\n  \"name\": \"Test User 1\"\n}",
+    "contentType": "text/plain",
+    "auth": {
+      "currentAuthType": "INHERIT",
+      "authConfigStore": {}
+    }
+  }
+}

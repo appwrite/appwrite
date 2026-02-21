@@ -1,0 +1,38 @@
+{
+  "name": "Login (Email Session)",
+  "rank": "av",
+  "request": {
+    "type": "http",
+    "url": "http://localhost:9501/v1/account/sessions/email",
+    "scripts": {
+      "preRequest": "",
+      "postResponse": ""
+    },
+    "method": "POST",
+    "queryParams": [],
+    "headers": [
+      {
+        "id": 1771618215551,
+        "key": "content-type",
+        "value": "application/json",
+        "isEnabled": true,
+        "description": "",
+        "dataType": "string"
+      },
+      {
+        "id": 1771618267066,
+        "key": "X-Appwrite-Project",
+        "value": "6998a62f001b23ac94ed",
+        "isEnabled": true,
+        "description": "",
+        "dataType": "string"
+      }
+    ],
+    "body": "{\n  \"email\": \"test1@example.com\",\n  \"password\": \"Password1234!\"\n}",
+    "contentType": "text/plain",
+    "auth": {
+      "currentAuthType": "INHERIT",
+      "authConfigStore": {}
+    }
+  }
+}

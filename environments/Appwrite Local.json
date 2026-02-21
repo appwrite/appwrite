@@ -1,0 +1,59 @@
+{
+  "name": "Appwrite Local",
+  "variables": {
+    "APPWRITE_ENDPOINT": {
+      "value": "",
+      "type": "string",
+      "id": "20e6cc14-e189-4b20-a106-b110348201f0",
+      "isSecret": false
+    },
+    "APPWRITE_PROJECT_ID": {
+      "value": "",
+      "type": "string",
+      "id": "d10cc12e-596d-4d3b-95ac-51a343f26848",
+      "isSecret": false
+    },
+    "DATABASE_ID": {
+      "value": "",
+      "type": "string",
+      "id": "3d6b5308-213e-4891-aa64-83d953675ca6",
+      "isSecret": false
+    },
+    "COLLECTION_ID": {
+      "value": "",
+      "type": "string",
+      "id": "7a9abacb-20a0-4154-90fc-3a4c29576bc2",
+      "isSecret": false
+    },
+    "USER_PASSWORD": {
+      "value": "",
+      "type": "string",
+      "id": "ef47cb5a-89fe-4f10-bde9-b0ec55f517f8",
+      "isSecret": false
+    },
+    "SESSION_ID": {
+      "value": "",
+      "type": "string",
+      "id": "f83ef17e-56c0-4878-8405-d63f32ab9b9d",
+      "isSecret": false
+    },
+    "APPWRITE_API_KEY": {
+      "value": "",
+      "type": "string",
+      "id": "ff172b7d-fd8a-4ad9-9b6e-97e38ea3a709",
+      "isSecret": false
+    },
+    "USER_EMAIL": {
+      "value": "",
+      "type": "string",
+      "id": "9d3fff1a-643a-466e-93c2-04919a263977",
+      "isSecret": false
+    },
+    "BUCKET_ID": {
+      "value": "",
+      "type": "string",
+      "id": "ad9bf161-70ec-4c3b-993d-ee1ebd91a853",
+      "isSecret": false
+    }
+  }
+}
