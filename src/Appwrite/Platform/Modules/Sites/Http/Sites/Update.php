@@ -75,6 +75,7 @@ class Update extends Base
             ->param('buildRuntime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Runtime to use during build step.', true)
             ->param('adapter', '', new WhiteList(['static', 'ssr']), 'Framework adapter defining rendering strategy. Allowed values are: static, ssr', true)
             ->param('fallbackFile', '', new Text(255, 0), 'Fallback file for single page application sites.', true)
+            ->param('deploymentBadge', null, new Boolean(), 'Whether to display deployment badge for this site.', true)
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Control System) deployment.', true)
             ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the site.', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the site.', true)
@@ -111,6 +112,7 @@ class Update extends Base
         string $buildRuntime,
         string $adapter,
         string $fallbackFile,
+        ?bool $deploymentBadge,
         string $installationId,
         ?string $providerRepositoryId,
         string $providerBranch,
@@ -159,6 +161,10 @@ class Update extends Base
 
         if (empty($framework)) {
             $framework = $site->getAttribute('framework');
+        }
+
+        if ($request->getPayload('deploymentBadge', null) === null) {
+            $deploymentBadge = $site->getAttribute('deploymentBadge', true);
         }
 
         $enabled ??= $site->getAttribute('enabled', true);
@@ -264,6 +270,7 @@ class Update extends Base
             'buildRuntime' => $buildRuntime,
             'adapter' => $adapter,
             'fallbackFile' => $fallbackFile,
+            'deploymentBadge' => $deploymentBadge,
         ])));
 
         // Redeploy logic

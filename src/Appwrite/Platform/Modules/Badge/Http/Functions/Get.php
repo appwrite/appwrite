@@ -6,23 +6,15 @@ use Appwrite\Platform\Modules\Badge\Http\Action;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Validator\Text;
+use Utopia\Database\Validator\UID;
 
 class Get extends Action
 {
     private const LABEL = 'appwrite functions';
     private const LABEL_WIDTH = 137;
-    private const MESSAGE_WIDTHS = [
-        'not found' => 75,
-        'disabled' => 75,
-        'no deployment' => 112,
-        'unknown' => 74,
-        'ready' => 60,
-        'building' => 76,
-        'waiting' => 70,
-        'failed' => 60,
-    ];
 
     public static function getName(): string
     {
@@ -40,7 +32,7 @@ class Get extends Action
             ->label('sdk.auth', [])
             ->label('sdk.namespace', 'badge')
             ->label('sdk.method', 'getFunction')
-            ->param('functionId', '', new Text(36), 'Function ID')
+            ->param('functionId', '', new UID(), 'Function ID')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('authorization')
@@ -49,7 +41,11 @@ class Get extends Action
 
     public function action(string $functionId, Response $response, Database $dbForProject, Authorization $authorization): void
     {
-        $function = $authorization->skip(fn () => $dbForProject->getDocument('functions', $functionId));
+        try {
+            $function = $authorization->skip(fn () => $dbForProject->getDocument('functions', $functionId));
+        } catch (NotFoundException) {
+            $function = new Document();
+        }
         $label = self::LABEL;
 
         switch (true) {

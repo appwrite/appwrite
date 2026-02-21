@@ -1120,7 +1120,7 @@ return [
                 'format' => '',
                 'filters' => [],
                 'required' => false,
-                'default' => true,
+                'default' => false,
                 'array' => false,
             ],
             [

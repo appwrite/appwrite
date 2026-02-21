@@ -10,6 +10,16 @@ abstract class Action extends UtopiaAction
     protected const LABEL_TEXT_X = 260;
     protected const TEXT_PADDING = 10;
     protected const FALLBACK_CHAR_WIDTH = 7;
+    protected const MESSAGE_WIDTHS = [
+        'not found' => 75,
+        'disabled' => 75,
+        'no deployment' => 112,
+        'unknown' => 74,
+        'ready' => 55,
+        'building' => 70,
+        'waiting' => 70,
+        'failed' => 60,
+    ];
     protected const COLOR_BRIGHTGREEN = '#4c1';
     protected const COLOR_GREEN = '#97ca00';
     protected const COLOR_YELLOW = '#dfb317';
