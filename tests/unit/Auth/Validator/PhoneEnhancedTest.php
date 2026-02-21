@@ -241,10 +241,10 @@ class PhoneEnhancedTest extends TestCase
         $codes = $this->object->getCountryCallingCodes();
         
         $this->assertIsArray($codes);
-        $this->assertContains('1', $codes); // US/Canada
-        $this->assertContains('44', $codes); // UK
-        $this->assertContains('49', $codes); // Germany
-        $this->assertContains('33', $codes); // France
+        $this->assertContains(1, $codes); // US/Canada
+        $this->assertContains(44, $codes); // UK
+        $this->assertContains(49, $codes); // Germany
+        $this->assertContains(33, $codes); // France
     }
 
     public function testNormalize(): void
