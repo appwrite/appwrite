@@ -11,6 +11,19 @@ use Utopia\Validator\Text;
 
 class Get extends Action
 {
+    private const LABEL = 'appwrite functions';
+    private const LABEL_WIDTH = 137;
+    private const MESSAGE_WIDTHS = [
+        'not found' => 75,
+        'disabled' => 75,
+        'no deployment' => 112,
+        'unknown' => 74,
+        'ready' => 60,
+        'building' => 76,
+        'waiting' => 70,
+        'failed' => 60,
+    ];
+
     public static function getName(): string
     {
         return 'getFunctionBadge';
@@ -37,6 +50,7 @@ class Get extends Action
     public function action(string $functionId, Response $response, Database $dbForProject, Authorization $authorization): void
     {
         $function = $authorization->skip(fn () => $dbForProject->getDocument('functions', $functionId));
+        $label = self::LABEL;
 
         switch (true) {
             case $function->isEmpty():
@@ -81,13 +95,20 @@ class Get extends Action
         }
 
         $colorCode = self::COLOR_BY_NAME[$color] ?? self::COLOR_LIGHTGREY;
-        $totalWidth = self::LABEL_WIDTH + (\strlen($message) * 6) + 10;
+        $messageWidth = self::MESSAGE_WIDTHS[$message] ?? ((\strlen($message) * self::FALLBACK_CHAR_WIDTH) + (self::TEXT_PADDING * 2));
+        $totalWidth = self::LABEL_WIDTH + $messageWidth;
+        $messageTextX = (self::LABEL_WIDTH + self::TEXT_PADDING) * 10;
 
         $templatePath = \dirname(__DIR__, 7) . '/app/config/locale/templates/badge.svg.tpl';
         $template = Template::fromFile($templatePath);
         $template
+            ->setParam('{{label}}', $label)
             ->setParam('{{message}}', $message)
             ->setParam('{{colorCode}}', $colorCode)
+            ->setParam('{{labelWidth}}', (string)self::LABEL_WIDTH)
+            ->setParam('{{labelFontSize}}', (string)self::LABEL_FONT_SIZE)
+            ->setParam('{{labelTextX}}', (string)self::LABEL_TEXT_X)
+            ->setParam('{{messageTextX}}', (string)$messageTextX)
             ->setParam('{{totalWidth}}', (string) $totalWidth);
 
         $svg = $template->render();

@@ -6,7 +6,10 @@ use Utopia\Platform\Action as UtopiaAction;
 
 abstract class Action extends UtopiaAction
 {
-    protected const LABEL_WIDTH = 77;
+    protected const LABEL_FONT_SIZE = 110;
+    protected const LABEL_TEXT_X = 260;
+    protected const TEXT_PADDING = 10;
+    protected const FALLBACK_CHAR_WIDTH = 7;
     protected const COLOR_BRIGHTGREEN = '#4c1';
     protected const COLOR_GREEN = '#97ca00';
     protected const COLOR_YELLOW = '#dfb317';
