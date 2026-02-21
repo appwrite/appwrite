@@ -771,7 +771,7 @@ class WebhooksCustomServerTest extends Scope
      */
     public function testExecutions($data): array
     {
-        $id = $data['functionId'] ?? '';
+        $id = $data['function'] ?? '';
 
         /**
          * Test for SUCCESS
