@@ -4,7 +4,7 @@ namespace Appwrite\Platform\Modules\Databases\Workers;
 
 use Appwrite\Event\Realtime;
 use Exception;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception as DatabaseException;
@@ -578,7 +578,7 @@ class Databases extends Action
      * @return void
      * @throws Exception
      */
-    protected function deleteByGroup(string $collectionId, array $queries, Database $database, callable $callback = null): void
+    protected function deleteByGroup(string $collectionId, array $queries, Database $database, ?callable $callback = null): void
     {
         $start = \microtime(true);
 

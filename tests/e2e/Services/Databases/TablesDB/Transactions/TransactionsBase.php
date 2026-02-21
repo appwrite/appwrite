@@ -3963,6 +3963,7 @@ trait TransactionsBase
         $this->assertArrayHasKey('$tableId', $decrementResponse['body'], 'Response should contain $tableId for TablesDB API');
         $this->assertArrayNotHasKey('$collectionId', $decrementResponse['body'], 'Response should not contain $collectionId for TablesDB API');
         $this->assertEquals($tableId, $decrementResponse['body']['$tableId']);
+        $this->assertEquals($databaseId, $decrementResponse['body']['$databaseId']);
 
         // Test increment endpoint
         $incrementResponse = $this->client->call(
@@ -3982,6 +3983,7 @@ trait TransactionsBase
         $this->assertArrayHasKey('$tableId', $incrementResponse['body'], 'Response should contain $tableId for TablesDB API');
         $this->assertArrayNotHasKey('$collectionId', $incrementResponse['body'], 'Response should not contain $collectionId for TablesDB API');
         $this->assertEquals($tableId, $incrementResponse['body']['$tableId']);
+        $this->assertEquals($databaseId, $incrementResponse['body']['$databaseId']);
 
         // Commit transaction - this will fail if transaction log has 'attribute' instead of 'column'
         $commitResponse = $this->client->call(Client::METHOD_PATCH, "/tablesdb/transactions/{$transactionId}", array_merge([

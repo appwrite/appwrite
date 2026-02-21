@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -22,3 +22,4 @@ response, error := service.UpdateMsg91Provider(
     messaging.WithUpdateMsg91ProviderSenderId("<SENDER_ID>"),
     messaging.WithUpdateMsg91ProviderAuthKey("<AUTH_KEY>"),
 )
+```

@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -21,4 +22,4 @@ $result = $tablesDB->createRelationshipColumn(
     key: '', // optional
     twoWayKey: '', // optional
     onDelete: RelationMutate::CASCADE() // optional
-);
+);```

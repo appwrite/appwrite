@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -14,3 +15,4 @@ AttributePoint result = await databases.createPointAttribute(
     xrequired: false,
     xdefault: [1, 2], // (optional)
 );
+```

@@ -1,3 +1,4 @@
+```javascript
 import { Client, Functions, TemplateReferenceType } from "@appwrite.io/console";
 
 const client = new Client()
@@ -17,3 +18,4 @@ const result = await functions.createTemplateDeployment({
 });
 
 console.log(result);
+```

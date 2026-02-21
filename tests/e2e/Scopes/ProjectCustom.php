@@ -60,6 +60,7 @@ trait ProjectCustom
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
+            'keyId' => ID::unique(),
             'name' => 'Demo Project Key',
             'scopes' => [
                 'users.read',
@@ -161,9 +162,9 @@ trait ProjectCustom
             'senderEmail' => 'mailer@appwrite.io',
             'senderName' => 'Mailer',
             'host' => 'maildev',
-            'port' => 1025,
-            'username' => '',
-            'password' => '',
+            'port' => intval(System::getEnv('_APP_SMTP_PORT', "1025")),
+            'username' => System::getEnv('_APP_SMTP_USERNAME', 'user'),
+            'password' => System::getEnv('_APP_SMTP_PASSWORD', 'password'),
         ]);
 
         $project = [
@@ -194,6 +195,7 @@ trait ProjectCustom
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
+            'keyId' => ID::unique(),
             'name' => 'Demo Project Key',
             'scopes' => $scopes,
         ]);

@@ -3,14 +3,13 @@
 namespace Appwrite\Utopia\Request;
 
 use Utopia\Database\Database;
-use Utopia\Route;
 
 abstract class Filter
 {
     private array $params;
     private ?Database $dbForProject;
 
-    public function __construct(Database $dbForProject = null, array $params = [])
+    public function __construct(?Database $dbForProject = null, array $params = [])
     {
         $this->params = $params;
         $this->dbForProject = $dbForProject;

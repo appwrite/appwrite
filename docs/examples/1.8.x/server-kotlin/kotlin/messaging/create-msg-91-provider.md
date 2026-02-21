@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Messaging
@@ -17,3 +18,4 @@ val response = messaging.createMsg91Provider(
     authKey = "<AUTH_KEY>", // optional
     enabled = false // optional
 )
+```

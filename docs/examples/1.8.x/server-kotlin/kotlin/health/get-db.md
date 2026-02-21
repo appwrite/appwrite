@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Health
@@ -10,3 +11,4 @@ val client = Client()
 val health = Health(client)
 
 val response = health.getDB()
+```

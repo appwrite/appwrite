@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Enums;
 using Appwrite.Models;
@@ -13,4 +14,4 @@ Users users = new Users(client);
 await users.DeleteMFAAuthenticator(
     userId: "<USER_ID>",
     type: AuthenticatorType.Totp
-);
+);```

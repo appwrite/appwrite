@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -13,3 +14,4 @@ result = sites.get_log(
     site_id: '<SITE_ID>',
     log_id: '<LOG_ID>'
 )
+```

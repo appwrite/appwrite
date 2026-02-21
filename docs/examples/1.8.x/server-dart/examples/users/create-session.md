@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -10,3 +11,4 @@ Users users = Users(client);
 Session result = await users.createSession(
     userId: '<USER_ID>',
 );
+```

@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -17,4 +18,4 @@ Membership result = await teams.CreateMembership(
     phone: "+12065550100", // optional
     url: "https://example.com", // optional
     name: "<NAME>" // optional
-);
+);```

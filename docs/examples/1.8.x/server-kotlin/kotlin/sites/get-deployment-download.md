@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Sites
@@ -13,5 +14,6 @@ val sites = Sites(client)
 val result = sites.getDeploymentDownload(
     siteId = "<SITE_ID>",
     deploymentId = "<DEPLOYMENT_ID>",
-    type = "source" // optional
+    type = DeploymentDownloadType.SOURCE // optional
 )
+```

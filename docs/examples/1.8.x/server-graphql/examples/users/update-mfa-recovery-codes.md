@@ -1,3 +1,4 @@
+```graphql
 mutation {
     usersUpdateMFARecoveryCodes(
         userId: "<USER_ID>"
@@ -5,3 +6,4 @@ mutation {
         recoveryCodes
     }
 }
+```

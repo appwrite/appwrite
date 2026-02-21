@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -11,4 +12,4 @@ Avatars avatars = new Avatars(client);
 
 byte[] result = await avatars.GetFavicon(
     url: "https://example.com"
-);
+);```

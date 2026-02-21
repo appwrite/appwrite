@@ -1,3 +1,4 @@
+```bash
 appwrite databases update-enum-attribute \
     --database-id <DATABASE_ID> \
     --collection-id <COLLECTION_ID> \
@@ -5,3 +6,4 @@ appwrite databases update-enum-attribute \
     --elements one two three \
     --required false \
     --default <DEFAULT>
+```

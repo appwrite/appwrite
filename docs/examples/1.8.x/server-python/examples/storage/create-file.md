@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.storage import Storage
 from appwrite.input_file import InputFile
@@ -17,3 +18,4 @@ result = storage.create_file(
     file = InputFile.from_path('file.png'),
     permissions = [Permission.read(Role.any())] # optional
 )
+```

@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -13,4 +14,4 @@ $account = new Account($client);
 $result = $account->listIdentities(
     queries: [], // optional
     total: false // optional
-);
+);```

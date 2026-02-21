@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.tokens import Tokens
 
@@ -11,3 +12,4 @@ tokens = Tokens(client)
 result = tokens.delete(
     token_id = '<TOKEN_ID>'
 )
+```

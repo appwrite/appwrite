@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -13,3 +14,4 @@ result = functions.delete_variable(
     function_id: '<FUNCTION_ID>',
     variable_id: '<VARIABLE_ID>'
 )
+```

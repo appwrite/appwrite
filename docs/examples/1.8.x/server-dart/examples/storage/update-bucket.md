@@ -1,4 +1,6 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/enums.dart' as enums;
 import 'package:dart_appwrite/permission.dart';
 import 'package:dart_appwrite/role.dart';
 
@@ -17,8 +19,9 @@ Bucket result = await storage.updateBucket(
     enabled: false, // (optional)
     maximumFileSize: 1, // (optional)
     allowedFileExtensions: [], // (optional)
-    compression: Compression.none, // (optional)
+    compression: enums.Compression.none, // (optional)
     encryption: false, // (optional)
     antivirus: false, // (optional)
     transformations: false, // (optional)
 );
+```

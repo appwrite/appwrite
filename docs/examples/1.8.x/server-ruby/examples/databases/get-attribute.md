@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -14,3 +15,4 @@ result = databases.get_attribute(
     collection_id: '<COLLECTION_ID>',
     key: ''
 )
+```

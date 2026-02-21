@@ -1,3 +1,4 @@
+```javascript
 import { Client, Locale } from "appwrite";
 
 const client = new Client()
@@ -9,3 +10,4 @@ const locale = new Locale(client);
 const result = await locale.listCurrencies();
 
 console.log(result);
+```

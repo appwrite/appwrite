@@ -1,3 +1,4 @@
+```javascript
 import { Client, Messaging, SmtpEncryption } from "@appwrite.io/console";
 
 const client = new Client()
@@ -24,3 +25,4 @@ const result = await messaging.updateSMTPProvider({
 });
 
 console.log(result);
+```

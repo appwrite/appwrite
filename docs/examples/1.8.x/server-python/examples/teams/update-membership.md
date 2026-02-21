@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.teams import Teams
 
@@ -13,3 +14,4 @@ result = teams.update_membership(
     membership_id = '<MEMBERSHIP_ID>',
     roles = []
 )
+```

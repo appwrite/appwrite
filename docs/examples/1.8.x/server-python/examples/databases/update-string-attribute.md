@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.databases import Databases
 
@@ -17,3 +18,4 @@ result = databases.update_string_attribute(
     size = 1, # optional
     new_key = '' # optional
 )
+```

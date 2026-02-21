@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -20,4 +21,4 @@ $result = $users->createScryptUser(
     passwordParallel: null,
     passwordLength: null,
     name: '<NAME>' // optional
-);
+);```

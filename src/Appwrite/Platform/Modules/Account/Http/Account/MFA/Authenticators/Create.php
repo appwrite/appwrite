@@ -48,7 +48,7 @@ class Create extends Action
                     group: 'mfa',
                     name: 'createMfaAuthenticator',
                     description: '/docs/references/account/create-mfa-authenticator.md',
-                    auth: [AuthType::SESSION, AuthType::JWT],
+                    auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_OK,
@@ -60,13 +60,14 @@ class Create extends Action
                         since: '1.8.0',
                         replaceWith: 'account.createMFAAuthenticator',
                     ),
+                    public: false,
                 ),
                 new Method(
                     namespace: 'account',
                     group: 'mfa',
                     name: 'createMFAAuthenticator',
                     description: '/docs/references/account/create-mfa-authenticator.md',
-                    auth: [AuthType::SESSION, AuthType::JWT],
+                    auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_OK,

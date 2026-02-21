@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -17,4 +18,4 @@ $result = $tablesDB->createBooleanColumn(
     required: false,
     default: false, // optional
     array: false // optional
-);
+);```

@@ -45,7 +45,7 @@ class Delete extends Action
                     group: 'mfa',
                     name: 'deleteMfaAuthenticator',
                     description: '/docs/references/account/delete-mfa-authenticator.md',
-                    auth: [AuthType::SESSION, AuthType::JWT],
+                    auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_NOCONTENT,
@@ -57,13 +57,14 @@ class Delete extends Action
                         since: '1.8.0',
                         replaceWith: 'account.deleteMFAAuthenticator',
                     ),
+                    public: false,
                 ),
                 new Method(
                     namespace: 'account',
                     group: 'mfa',
                     name: 'deleteMFAAuthenticator',
                     description: '/docs/references/account/delete-mfa-authenticator.md',
-                    auth: [AuthType::SESSION, AuthType::JWT],
+                    auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_NOCONTENT,

@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -15,3 +16,4 @@ result = functions.get_deployment_download(
     deployment_id: '<DEPLOYMENT_ID>',
     type: DeploymentDownloadType::SOURCE # optional
 )
+```

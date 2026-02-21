@@ -54,15 +54,22 @@ class SitesConsoleClientTest extends Scope
         $this->assertStringContainsString("Themed website", $response['body']);
         $this->assertStringContainsString("@media (prefers-color-scheme: dark)", $response['body']);
 
-        $deployment = $this->getDeployment($siteId, $deploymentId);
-        $this->assertEquals(200, $deployment['headers']['status-code']);
-        $this->assertNotEmpty($deployment['body']['screenshotLight']);
-        $this->assertNotEmpty($deployment['body']['screenshotDark']);
+        $deployment = null;
+        $site = null;
+        $this->assertEventually(function () use ($siteId, $deploymentId, &$deployment, &$site) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+            $this->assertEquals(200, $deployment['headers']['status-code']);
+            $this->assertNotEmpty($deployment['body']['screenshotLight']);
+            $this->assertNotEmpty($deployment['body']['screenshotDark']);
 
-        $site = $this->getSite($siteId);
-        $this->assertEquals(200, $site['headers']['status-code']);
-        $this->assertEquals($deployment['body']['screenshotLight'], $site['body']['deploymentScreenshotLight']);
-        $this->assertEquals($deployment['body']['screenshotDark'], $site['body']['deploymentScreenshotDark']);
+            $site = $this->getSite($siteId);
+            $this->assertEquals(200, $site['headers']['status-code']);
+            $this->assertEquals($deployment['body']['screenshotLight'], $site['body']['deploymentScreenshotLight']);
+            $this->assertEquals($deployment['body']['screenshotDark'], $site['body']['deploymentScreenshotDark']);
+        });
+
+        $this->assertNotNull($site);
+        $this->assertNotNull($deployment);
 
         $screenshotId = $deployment['body']['screenshotLight'];
         $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/view?project=console", array_merge($this->getHeaders(), [

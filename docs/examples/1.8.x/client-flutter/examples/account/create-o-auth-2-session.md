@@ -1,4 +1,6 @@
+```dart
 import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/enums.dart' as enums;
 
 Client client = Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -7,8 +9,9 @@ Client client = Client()
 Account account = Account(client);
 
 await account.createOAuth2Session(
-    provider: OAuthProvider.amazon,
+    provider: enums.OAuthProvider.amazon,
     success: 'https://example.com', // optional
     failure: 'https://example.com', // optional
     scopes: [], // optional
 );
+```

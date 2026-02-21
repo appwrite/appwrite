@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -19,3 +20,4 @@ result = messaging.update_apns_provider(
     bundle_id: '<BUNDLE_ID>', # optional
     sandbox: false # optional
 )
+```

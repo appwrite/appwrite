@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -12,3 +13,4 @@ MessageList result = await messaging.listMessages(
     search: '<SEARCH>', // (optional)
     total: false, // (optional)
 );
+```

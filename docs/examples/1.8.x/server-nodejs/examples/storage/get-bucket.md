@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -10,3 +11,4 @@ const storage = new sdk.Storage(client);
 const result = await storage.getBucket({
     bucketId: '<BUCKET_ID>'
 });
+```

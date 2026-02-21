@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.sites import Sites
 from appwrite.enums import TemplateReferenceType
@@ -18,3 +19,4 @@ result = sites.create_template_deployment(
     reference = '<REFERENCE>',
     activate = False # optional
 )
+```

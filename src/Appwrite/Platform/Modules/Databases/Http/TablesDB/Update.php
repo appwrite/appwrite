@@ -9,7 +9,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Validator\UID;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
@@ -37,7 +37,7 @@ class Update extends DatabaseUpdate
                 group: 'tablesdb',
                 name: 'update',
                 description: '/docs/references/tablesdb/update.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
@@ -47,7 +47,7 @@ class Update extends DatabaseUpdate
                 contentType: ContentType::JSON
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('name', null, new Text(128), 'Database name. Max length: 128 chars.')
+            ->param('name', null, new Text(128), 'Database name. Max length: 128 chars.', true)
             ->param('enabled', true, new Boolean(), 'Is database enabled? When set to \'disabled\', users cannot access the database but Server SDKs with an API key can still read and write to the database. No data is lost when this is toggled.', true)
             ->inject('response')
             ->inject('dbForProject')

@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.users import Users
 
@@ -13,3 +14,4 @@ result = users.create_jwt(
     session_id = '<SESSION_ID>', # optional
     duration = 0 # optional
 )
+```

@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -9,8 +10,8 @@ Client client = new Client()
 
 Databases databases = new Databases(client);
 
- result = await databases.GetAttribute(
+AttributeBoolean result = await databases.GetAttribute(
     databaseId: "<DATABASE_ID>",
     collectionId: "<COLLECTION_ID>",
     key: ""
-);
+);```

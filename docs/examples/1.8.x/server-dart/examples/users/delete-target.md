@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -11,3 +12,4 @@ await users.deleteTarget(
     userId: '<USER_ID>',
     targetId: '<TARGET_ID>',
 );
+```

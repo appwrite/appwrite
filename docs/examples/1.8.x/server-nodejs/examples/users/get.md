@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -10,3 +11,4 @@ const users = new sdk.Users(client);
 const result = await users.get({
     userId: '<USER_ID>'
 });
+```

@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -19,3 +20,4 @@ result = databases.create_string_attribute(
     array: false, # optional
     encrypt: false # optional
 )
+```

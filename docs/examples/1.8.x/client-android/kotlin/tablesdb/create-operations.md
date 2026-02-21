@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.TablesDB
@@ -19,4 +20,4 @@ val result = tablesDB.createOperations(
             "name" to "Walter O'Brien"
         )
     )), // (optional)
-)
+)```

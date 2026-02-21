@@ -104,47 +104,50 @@ class Webhooks extends Action
         $httpPass = $webhook->getAttribute('httpPass');
         $ch = \curl_init($webhook->getAttribute('url'));
 
-        \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-        \curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
-        \curl_setopt($ch, CURLOPT_HEADER, 0);
-        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        \curl_setopt($ch, CURLOPT_TIMEOUT, 15);
-        \curl_setopt($ch, CURLOPT_MAXFILESIZE, self::MAX_FILE_SIZE);
-        \curl_setopt($ch, CURLOPT_USERAGENT, \sprintf(
-            APP_USERAGENT,
-            System::getEnv('_APP_VERSION', 'UNKNOWN'),
-            System::getEnv('_APP_EMAIL_SECURITY', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY))
-        ));
-        \curl_setopt(
-            $ch,
-            CURLOPT_HTTPHEADER,
-            [
-                'Content-Type: application/json',
-                'Content-Length: ' . \strlen($payload),
-                'X-' . APP_NAME . '-Webhook-Id: ' . $webhook->getId(),
-                'X-' . APP_NAME . '-Webhook-Events: ' . implode(',', $events),
-                'X-' . APP_NAME . '-Webhook-Name: ' . $webhook->getAttribute('name', ''),
-                'X-' . APP_NAME . '-Webhook-User-Id: ' . $user->getId(),
-                'X-' . APP_NAME . '-Webhook-Project-Id: ' . $project->getId(),
-                'X-' . APP_NAME . '-Webhook-Signature: ' . $signature,
-            ]
-        );
-        curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
+        try {
+            \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
+            \curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+            \curl_setopt($ch, CURLOPT_HEADER, 0);
+            \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            \curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+            \curl_setopt($ch, CURLOPT_MAXFILESIZE, self::MAX_FILE_SIZE);
+            \curl_setopt($ch, CURLOPT_USERAGENT, \sprintf(
+                APP_USERAGENT,
+                System::getEnv('_APP_VERSION', 'UNKNOWN'),
+                System::getEnv('_APP_EMAIL_SECURITY', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY))
+            ));
+            \curl_setopt(
+                $ch,
+                CURLOPT_HTTPHEADER,
+                [
+                    'Content-Type: application/json',
+                    'Content-Length: ' . \strlen($payload),
+                    'X-' . APP_NAME . '-Webhook-Id: ' . $webhook->getId(),
+                    'X-' . APP_NAME . '-Webhook-Events: ' . implode(',', $events),
+                    'X-' . APP_NAME . '-Webhook-Name: ' . $webhook->getAttribute('name', ''),
+                    'X-' . APP_NAME . '-Webhook-User-Id: ' . $user->getId(),
+                    'X-' . APP_NAME . '-Webhook-Project-Id: ' . $project->getId(),
+                    'X-' . APP_NAME . '-Webhook-Signature: ' . $signature,
+                ]
+            );
+            \curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
 
-        if (!$webhook->getAttribute('security', true)) {
-            \curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-            \curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            if (!$webhook->getAttribute('security', true)) {
+                \curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+                \curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            }
+
+            if (!empty($httpUser) && !empty($httpPass)) {
+                \curl_setopt($ch, CURLOPT_USERPWD, "$httpUser:$httpPass");
+                \curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+            }
+
+            $responseBody = \curl_exec($ch);
+            $curlError = \curl_error($ch);
+            $statusCode = \curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        } finally {
+            \curl_close($ch);
         }
-
-        if (!empty($httpUser) && !empty($httpPass)) {
-            \curl_setopt($ch, CURLOPT_USERPWD, "$httpUser:$httpPass");
-            \curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-        }
-
-        $responseBody = \curl_exec($ch);
-        $curlError = \curl_error($ch);
-        $statusCode = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
-        \curl_close($ch);
 
         if (!empty($curlError) || $statusCode >= 400) {
             $dbForPlatform->increaseDocumentAttribute('webhooks', $webhook->getId(), 'attempts', 1);
@@ -250,6 +253,7 @@ class Webhooks extends Action
             ->setParam('{{year}}', date("Y"));
 
         $queueForMails
+            ->setProject($project)
             ->setSubject($subject)
             ->setPreview($preview)
             ->setBody($body->render());

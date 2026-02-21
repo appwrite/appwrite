@@ -1,3 +1,4 @@
+```javascript
 import { Client, Tokens } from "@appwrite.io/console";
 
 const client = new Client()
@@ -12,3 +13,4 @@ const result = await tokens.update({
 });
 
 console.log(result);
+```

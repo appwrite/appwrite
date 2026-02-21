@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Enums;
 using Appwrite.Models;
@@ -22,4 +23,4 @@ Bucket result = await storage.CreateBucket(
     encryption: false, // optional
     antivirus: false, // optional
     transformations: false // optional
-);
+);```

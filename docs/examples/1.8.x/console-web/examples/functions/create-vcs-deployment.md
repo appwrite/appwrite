@@ -1,3 +1,4 @@
+```javascript
 import { Client, Functions, VCSReferenceType } from "@appwrite.io/console";
 
 const client = new Client()
@@ -14,3 +15,4 @@ const result = await functions.createVcsDeployment({
 });
 
 console.log(result);
+```

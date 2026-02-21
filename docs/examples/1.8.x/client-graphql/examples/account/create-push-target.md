@@ -1,3 +1,4 @@
+```graphql
 mutation {
     accountCreatePushTarget(
         targetId: "<TARGET_ID>",
@@ -15,3 +16,4 @@ mutation {
         expired
     }
 }
+```

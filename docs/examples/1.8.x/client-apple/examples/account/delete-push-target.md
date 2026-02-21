@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -10,3 +11,4 @@ let result = try await account.deletePushTarget(
     targetId: "<TARGET_ID>"
 )
 
+```

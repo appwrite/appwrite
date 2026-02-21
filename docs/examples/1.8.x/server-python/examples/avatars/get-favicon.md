@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.avatars import Avatars
 
@@ -11,3 +12,4 @@ avatars = Avatars(client)
 result = avatars.get_favicon(
     url = 'https://example.com'
 )
+```

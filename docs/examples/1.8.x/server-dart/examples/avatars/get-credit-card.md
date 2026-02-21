@@ -1,4 +1,6 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/enums.dart' as enums;
 
 Client client = Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -8,8 +10,9 @@ Client client = Client()
 Avatars avatars = Avatars(client);
 
 Uint8List result = await avatars.getCreditCard(
-    code: CreditCard.americanExpress,
+    code: enums.CreditCard.americanExpress,
     width: 0, // (optional)
     height: 0, // (optional)
     quality: -1, // (optional)
 );
+```

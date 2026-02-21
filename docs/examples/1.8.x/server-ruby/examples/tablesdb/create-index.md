@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -16,6 +17,7 @@ result = tables_db.create_index(
     key: '',
     type: IndexType::KEY,
     columns: [],
-    orders: [], # optional
+    orders: [OrderBy::ASC], # optional
     lengths: [] # optional
 )
+```

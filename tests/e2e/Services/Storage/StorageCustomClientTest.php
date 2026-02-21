@@ -1447,4 +1447,117 @@ class StorageCustomClientTest extends Scope
         ]);
         $this->assertEquals(204, $response['headers']['status-code']);
     }
+
+    public function testFileEncryptionAndCompression(): void
+    {
+        // Create bucket
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket',
+            'permissions' => [
+                Permission::read(Role::any())
+            ],
+            'encryption' => true,
+            'compression' => 'gzip'
+        ]);
+        $this->assertSame(201, $bucket['headers']['status-code']);
+
+        // Create file
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket['body']['$id'] . '/files', [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'transformations.png'),
+        ]);
+        $this->assertSame(201, $file['headers']['status-code']);
+        $this->assertSame('gzip', $file['body']['compression']);
+        $this->assertSame(true, $file['body']['encryption']);
+
+        // Get file
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucket['body']['$id'] . '/files/' . $file['body']['$id'], [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertSame(200, $file['headers']['status-code']);
+        $this->assertSame('gzip', $file['body']['compression']);
+        $this->assertSame(true, $file['body']['encryption']);
+
+        // List files
+        $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucket['body']['$id'] . '/files', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertSame(200, $files['headers']['status-code']);
+        $this->assertSame(1, $files['body']['total']);
+        $this->assertSame('gzip', $files['body']['files'][0]['compression']);
+        $this->assertSame(true, $files['body']['files'][0]['encryption']);
+
+        // Update the bucket
+        $bucket = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucket['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'name' => 'Test Bucket',
+            'encryption' => false,
+            'compression' => 'none'
+        ]);
+
+        // Existing file did not update
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucket['body']['$id'] . '/files/' . $file['body']['$id'], [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertSame(200, $file['headers']['status-code']);
+        $this->assertSame('gzip', $file['body']['compression']);
+        $this->assertSame(true, $file['body']['encryption']);
+
+        // Create 2nd file
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket['body']['$id'] . '/files', [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'transformations.png'),
+        ]);
+        $this->assertSame(201, $file['headers']['status-code']);
+        $this->assertSame('none', $file['body']['compression']);
+        $this->assertSame(false, $file['body']['encryption']);
+
+        // Get file
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucket['body']['$id'] . '/files/' . $file['body']['$id'], [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertSame(200, $file['headers']['status-code']);
+        $this->assertSame('none', $file['body']['compression']);
+        $this->assertSame(false, $file['body']['encryption']);
+
+        // List files
+        $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucket['body']['$id'] . '/files', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertSame(200, $files['headers']['status-code']);
+        $this->assertSame(2, $files['body']['total']);
+        $this->assertSame('none', $files['body']['files'][1]['compression']);
+        $this->assertSame(false, $files['body']['files'][1]['encryption']);
+        $this->assertSame('gzip', $files['body']['files'][0]['compression']);
+        $this->assertSame(true, $files['body']['files'][0]['encryption']);
+
+        // Delete the bucket
+        $response = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucket['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
 }

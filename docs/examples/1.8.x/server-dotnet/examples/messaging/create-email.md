@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -22,4 +23,4 @@ Message result = await messaging.CreateEmail(
     draft: false, // optional
     html: false, // optional
     scheduledAt: "" // optional
-);
+);```

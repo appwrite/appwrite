@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Teams
@@ -10,4 +11,4 @@ val teams = Teams(client)
 
 val result = teams.delete(
     teamId = "<TEAM_ID>", 
-)
+)```

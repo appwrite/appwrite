@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.databases import Databases
 from appwrite.enums import RelationMutate
@@ -16,3 +17,4 @@ result = databases.update_relationship_attribute(
     on_delete = RelationMutate.CASCADE, # optional
     new_key = '' # optional
 )
+```

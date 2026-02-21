@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -9,3 +10,4 @@ let account = Account(client)
 
 let mfaFactors = try await account.listMFAFactors()
 
+```

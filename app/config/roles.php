@@ -58,6 +58,8 @@ $admins = [
     'projects.write',
     'keys.read',
     'keys.write',
+    'devKeys.read',
+    'devKeys.write',
     'webhooks.read',
     'webhooks.write',
     'locale.read',
@@ -89,6 +91,8 @@ $admins = [
     'subscribers.read',
     'tokens.read',
     'tokens.write',
+    'schedules.read',
+    'schedules.write',
 ];
 
 return [

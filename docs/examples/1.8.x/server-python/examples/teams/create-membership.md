@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.teams import Teams
 
@@ -17,3 +18,4 @@ result = teams.create_membership(
     url = 'https://example.com', # optional
     name = '<NAME>' # optional
 )
+```

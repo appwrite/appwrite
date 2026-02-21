@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -22,3 +22,4 @@ response, error := service.UpdateLineAttribute(
     databases.WithUpdateLineAttributeDefault(interface{}{[1, 2], [3, 4], [5, 6]}),
     databases.WithUpdateLineAttributeNewKey(""),
 )
+```

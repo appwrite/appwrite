@@ -1,3 +1,4 @@
+```java
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.Permission;
@@ -14,7 +15,7 @@ Databases databases = new Databases(client);
 databases.updateCollection(
     "<DATABASE_ID>", // databaseId
     "<COLLECTION_ID>", // collectionId
-    "<NAME>", // name
+    "<NAME>", // name (optional)
     List.of(Permission.read(Role.any())), // permissions (optional)
     false, // documentSecurity (optional)
     false, // enabled (optional)
@@ -28,3 +29,4 @@ databases.updateCollection(
     })
 );
 
+```

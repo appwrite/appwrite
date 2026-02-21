@@ -1,3 +1,4 @@
+```javascript
 import { Client, Projects } from "@appwrite.io/console";
 
 const client = new Client()
@@ -8,7 +9,9 @@ const projects = new Projects(client);
 
 const result = await projects.listKeys({
     projectId: '<PROJECT_ID>',
+    queries: [], // optional
     total: false // optional
 });
 
 console.log(result);
+```

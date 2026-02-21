@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -15,3 +16,4 @@ result = tables_db.list_columns(
     queries: [], # optional
     total: false # optional
 )
+```

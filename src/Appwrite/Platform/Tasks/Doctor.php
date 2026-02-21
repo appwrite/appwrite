@@ -5,13 +5,13 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\ClamAV\Network;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use PHPMailer\PHPMailer\PHPMailer;
-use Utopia\App;
 use Utopia\Cache\Adapter\Pool as CachePool;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
+use Utopia\Http\Http;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
@@ -63,10 +63,11 @@ class Doctor extends Action
         }
 
         $ipv4 = new IP(IP::V4);
-        if (!$ipv4->isValid(System::getEnv('_APP_DOMAIN_TARGET_A'))) {
-            Console::log('🔴 A record target is not valid (' . System::getEnv('_APP_DOMAIN_TARGET_A') . ')');
+        $targetA = \explode(',', System::getEnv('_APP_DOMAIN_TARGET_A', ''))[0];
+        if (!$ipv4->isValid($targetA)) {
+            Console::log('🔴 A record target is not valid (' . $targetA . ')');
         } else {
-            Console::log('🟢 A record target is valid (' . System::getEnv('_APP_DOMAIN_TARGET_A') . ')');
+            Console::log('🟢 A record target is valid (' . $targetA . ')');
         }
 
         $ipv6 = new IP(IP::V6);
@@ -281,7 +282,7 @@ class Doctor extends Action
         }
 
         try {
-            if (App::isProduction()) {
+            if (Http::isProduction()) {
                 Console::log('');
                 $version = \json_decode(@\file_get_contents(System::getEnv('_APP_HOME', 'http://localhost') . '/version'), true);
 

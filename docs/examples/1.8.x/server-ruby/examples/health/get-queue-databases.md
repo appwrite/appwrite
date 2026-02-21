@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -13,3 +14,4 @@ result = health.get_queue_databases(
     name: '<NAME>', # optional
     threshold: null # optional
 )
+```

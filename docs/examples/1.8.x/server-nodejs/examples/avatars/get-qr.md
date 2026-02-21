@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -13,3 +14,4 @@ const result = await avatars.getQR({
     margin: 0, // optional
     download: false // optional
 });
+```

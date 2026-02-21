@@ -1,3 +1,4 @@
+```graphql
 mutation {
     storageDeleteBucket(
         bucketId: "<BUCKET_ID>"
@@ -5,3 +6,4 @@ mutation {
         status
     }
 }
+```
