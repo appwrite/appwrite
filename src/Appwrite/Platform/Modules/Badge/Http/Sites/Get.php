@@ -7,12 +7,31 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Text;
 
 class Get extends Action
 {
-    use HTTP;
+    private const LABEL_WIDTH = 77;
+    private const COLOR_BRIGHTGREEN = '#4c1';
+    private const COLOR_GREEN = '#97ca00';
+    private const COLOR_YELLOW = '#dfb317';
+    private const COLOR_YELLOWGREEN = '#a4a61d';
+    private const COLOR_ORANGE = '#fe7d37';
+    private const COLOR_RED = '#e05d44';
+    private const COLOR_BLUE = '#007ec6';
+    private const COLOR_LIGHTGREY = '#9f9f9f';
+    private const COLOR_GREY = '#555';
+    private const COLOR_BY_NAME = [
+        'brightgreen' => self::COLOR_BRIGHTGREEN,
+        'green' => self::COLOR_GREEN,
+        'yellow' => self::COLOR_YELLOW,
+        'yellowgreen' => self::COLOR_YELLOWGREEN,
+        'orange' => self::COLOR_ORANGE,
+        'red' => self::COLOR_RED,
+        'blue' => self::COLOR_BLUE,
+        'lightgrey' => self::COLOR_LIGHTGREY,
+        'grey' => self::COLOR_GREY,
+    ];
 
     public static function getName(): string
     {
@@ -41,74 +60,57 @@ class Get extends Action
     {
         $site = $authorization->skip(fn () => $dbForProject->getDocument('sites', $siteId));
 
-        if ($site->isEmpty()) {
-            $status = 'not found';
-            $color = 'lightgrey';
-        } elseif (!$site->getAttribute('deploymentBadge', true)) {
-            $status = 'disabled';
-            $color = 'lightgrey';
-        } else {
-            $status = $site->getAttribute('latestDeploymentStatus', 'unknown');
+        switch (true) {
+            case $site->isEmpty():
+                $message = 'not found';
+                $color = 'lightgrey';
+                break;
+            case !$site->getAttribute('deploymentBadge', true):
+                $message = 'disabled';
+                $color = 'lightgrey';
+                break;
+            default:
+                $status = $site->getAttribute('latestDeploymentStatus', 'unknown');
 
-            $color = match ($status) {
-                'ready' => 'brightgreen',
-                'building', 'processing' => 'yellow',
-                'waiting' => 'blue',
-                'failed' => 'red',
-                default => 'lightgrey',
-            };
-
-            $status = match ($status) {
-                'processing' => 'building',
-                '' => 'no deployment',
-                default => $status,
-            };
+                switch ($status) {
+                    case 'ready':
+                        $message = 'ready';
+                        $color = 'brightgreen';
+                        break;
+                    case 'building':
+                    case 'processing':
+                        $message = 'building';
+                        $color = 'yellow';
+                        break;
+                    case 'waiting':
+                        $message = 'waiting';
+                        $color = 'blue';
+                        break;
+                    case 'failed':
+                        $message = 'failed';
+                        $color = 'red';
+                        break;
+                    case '':
+                        $message = 'no deployment';
+                        $color = 'lightgrey';
+                        break;
+                    default:
+                        $message = $status;
+                        $color = 'lightgrey';
+                        break;
+                }
+                break;
         }
 
-        $colors = [
-            'brightgreen' => '#4c1',
-            'green' => '#97ca00',
-            'yellow' => '#dfb317',
-            'yellowgreen' => '#a4a61d',
-            'orange' => '#fe7d37',
-            'red' => '#e05d44',
-            'blue' => '#007ec6',
-            'lightgrey' => '#9f9f9f',
-            'grey' => '#555',
-        ];
-
-        $colorCode = $colors[$color] ?? $colors['lightgrey'];
-        $labelColor = '#FD366E';
-
-        $label = 'appwrite';
-        $logoWidth = 14;
-        $logoPadding = 5;
-        $textWidth = \strlen($label) * 6 + 10;
-        $labelWidth = $logoWidth + $logoPadding + $textWidth;
-        $messageWidth = \strlen($status) * 6 + 10;
-        $totalWidth = $labelWidth + $messageWidth;
-
-        $textAreaStart = $logoPadding + $logoWidth + $logoPadding;
-        $textAreaWidth = $labelWidth - $textAreaStart;
-        $labelTextX = ($textAreaStart + $textAreaWidth / 2) * 10 - 20;
-        $messageX = ($labelWidth + $messageWidth / 2) * 10;
-        $labelTextLength = \strlen($label) * 60;
-        $messageTextLength = ($messageWidth - 10) * 10;
+        $colorCode = self::COLOR_BY_NAME[$color] ?? self::COLOR_LIGHTGREY;
+        $totalWidth = self::LABEL_WIDTH + (\strlen($message) * 6) + 10;
 
         $templatePath = \dirname(__DIR__, 7) . '/app/config/locale/templates/badge.svg.tpl';
         $template = Template::fromFile($templatePath);
         $template
-            ->setParam('{{label}}', $label)
-            ->setParam('{{message}}', $status)
-            ->setParam('{{labelColor}}', $labelColor)
+            ->setParam('{{message}}', $message)
             ->setParam('{{colorCode}}', $colorCode)
-            ->setParam('{{totalWidth}}', (string) $totalWidth)
-            ->setParam('{{labelWidth}}', (string) $labelWidth)
-            ->setParam('{{messageWidth}}', (string) $messageWidth)
-            ->setParam('{{labelTextX}}', (string) $labelTextX)
-            ->setParam('{{messageX}}', (string) $messageX)
-            ->setParam('{{labelTextLength}}', (string) $labelTextLength)
-            ->setParam('{{messageTextLength}}', (string) $messageTextLength);
+            ->setParam('{{totalWidth}}', (string) $totalWidth);
 
         $svg = $template->render();
 
