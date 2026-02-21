@@ -164,7 +164,7 @@ class Update extends Base
         }
 
         if ($request->getPayload('deploymentBadge', null) === null) {
-            $deploymentBadge = $site->getAttribute('deploymentBadge', true);
+            $deploymentBadge = $site->getAttribute('deploymentBadge', false);
         }
 
         $enabled ??= $site->getAttribute('enabled', true);

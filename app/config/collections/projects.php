@@ -831,6 +831,17 @@ return [
                 'array' => true,
                 'filters' => [],
             ],
+            [
+                '$id' => ID::custom('deploymentBadge'),
+                'type' => Database::VAR_BOOLEAN,
+                'signed' => true,
+                'size' => 0,
+                'format' => '',
+                'filters' => [],
+                'required' => false,
+                'default' => false,
+                'array' => false,
+            ],
         ],
         'indexes' => [
             [

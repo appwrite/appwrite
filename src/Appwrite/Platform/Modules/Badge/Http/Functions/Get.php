@@ -53,7 +53,7 @@ class Get extends Action
                 $message = 'not found';
                 $color = 'lightgrey';
                 break;
-            case !$function->getAttribute('deploymentBadge', true):
+            case !$function->getAttribute('deploymentBadge', false):
                 $message = 'disabled';
                 $color = 'lightgrey';
                 break;

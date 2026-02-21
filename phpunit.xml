@@ -38,6 +38,7 @@
             <file>./tests/e2e/Services/Functions/FunctionsBase.php</file>
             <file>./tests/e2e/Services/Functions/FunctionsCustomServerTest.php</file>
             <file>./tests/e2e/Services/Functions/FunctionsCustomClientTest.php</file>
+            <directory>./tests/e2e/Services/Badge</directory>
         </testsuite>
     </testsuites>
 </phpunit>
