@@ -1,0 +1,46 @@
+{
+  "name": "Create Bucket",
+  "rank": "auntit17716947182111",
+  "request": {
+    "type": "http",
+    "url": "http://localhost:9501/v1/storage/buckets",
+    "scripts": {
+      "preRequest": "",
+      "postResponse": ""
+    },
+    "method": "POST",
+    "queryParams": [],
+    "headers": [
+      {
+        "id": 1771694980784,
+        "key": "content-type",
+        "value": "application/json",
+        "isEnabled": true,
+        "description": "",
+        "dataType": "string"
+      },
+      {
+        "id": 1771694992293,
+        "key": "X-Appwrite-Project",
+        "value": "6998a62f001b23ac94ed",
+        "isEnabled": true,
+        "description": "",
+        "dataType": "string"
+      },
+      {
+        "id": 1771694992944,
+        "key": "X-Appwrite-Key",
+        "value": "standard_e946cabf760940792e7ea5f8e8835bdfccb29dc59d9b3d1cb5d5568890282a163376def5a86b02263f584942713b32db829bd7fd736c9b8c1ff34fb3fb1028a11328971f3962a45916191a2370cd8a6941c7590395ce64031c437f816b29f624598550907835d66ebec8a9f4df9dc54d60a5808b3d95a2c85de462c6b843e8df",
+        "isEnabled": true,
+        "description": "",
+        "dataType": "string"
+      }
+    ],
+    "body": "{\n  \"bucketId\": \"bucket-001\",\n  \"name\": \"Test Bucket\"\n}",
+    "contentType": "text/plain",
+    "auth": {
+      "currentAuthType": "INHERIT",
+      "authConfigStore": {}
+    }
+  }
+}
