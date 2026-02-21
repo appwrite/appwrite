@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Badge\Http\Sites;
+namespace Appwrite\Platform\Modules\Badge\Http\Functions;
 
 use Appwrite\Platform\Modules\Badge\Http\Action;
 use Appwrite\Template\Template;
@@ -13,42 +13,42 @@ class Get extends Action
 {
     public static function getName(): string
     {
-        return 'getSiteBadge';
+        return 'getFunctionBadge';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/badge/sites/:siteId')
-            ->desc('Get site deployment status badge')
+            ->setHttpPath('/v1/badge/functions/:functionId')
+            ->desc('Get function deployment status badge')
             ->groups(['api', 'badge'])
             ->label('scope', 'public')
             ->label('sdk.auth', [])
             ->label('sdk.namespace', 'badge')
-            ->label('sdk.method', 'getSite')
-            ->param('siteId', '', new Text(36), 'Site ID')
+            ->label('sdk.method', 'getFunction')
+            ->param('functionId', '', new Text(36), 'Function ID')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $siteId, Response $response, Database $dbForProject, Authorization $authorization): void
+    public function action(string $functionId, Response $response, Database $dbForProject, Authorization $authorization): void
     {
-        $site = $authorization->skip(fn () => $dbForProject->getDocument('sites', $siteId));
+        $function = $authorization->skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
         switch (true) {
-            case $site->isEmpty():
+            case $function->isEmpty():
                 $message = 'not found';
                 $color = 'lightgrey';
                 break;
-            case !$site->getAttribute('deploymentBadge', true):
+            case !$function->getAttribute('deploymentBadge', true):
                 $message = 'disabled';
                 $color = 'lightgrey';
                 break;
             default:
-                $status = $site->getAttribute('latestDeploymentStatus', 'unknown');
+                $status = $function->getAttribute('latestDeploymentStatus', 'unknown');
 
                 switch ($status) {
                     case 'ready':
