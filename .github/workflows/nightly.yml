@@ -4,6 +4,10 @@ on:
     - cron: '0 0 * * *'  # 12am UTC daily runtime
   workflow_dispatch:
 
+permissions:
+  contents: read
+  security-events: write
+
 jobs:
   scan-image:
     name: Scan Docker Image
