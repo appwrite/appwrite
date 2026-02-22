@@ -66,7 +66,7 @@
         "utopia-php/locale": "0.8.*",
         "utopia-php/logger": "0.6.*",
         "utopia-php/messaging": "0.20.*",
-        "utopia-php/migration": "1.6.x-dev",
+        "utopia-php/migration": "dev-feat-message-migration",
         "utopia-php/platform": "0.7.*",
         "utopia-php/pools": "1.*",
         "utopia-php/span": "1.1.*",
@@ -112,15 +112,9 @@
     },
     "repositories": [
         {
-            "type": "path",
-            "url": "../utopia-migration",
-            "options": {
-                "versions": {
-                    "utopia-php/migration": "1.6.x-dev"
-                }
-            }
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/migration.git"
         }
     ],
-    "minimum-stability": "dev",
     "prefer-stable": true
 }

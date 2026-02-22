@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9e05c1a1869d52d4e7679f99fb04b51b",
+    "content-hash": "95fd9283a2ec896710a360bf90b91757",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4464,11 +4464,17 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.6.x-dev",
+            "version": "dev-feat-message-migration",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/migration.git",
+                "reference": "69c3eb0f2ebe256863ea394692279665b84b9e10"
+            },
             "dist": {
-                "type": "path",
-                "url": "../utopia-migration",
-                "reference": "0152f6ddf33c1c9e359c32f8021691c4e7c124b5"
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/69c3eb0f2ebe256863ea394692279665b84b9e10",
+                "reference": "69c3eb0f2ebe256863ea394692279665b84b9e10",
+                "shasum": ""
             },
             "require": {
                 "appwrite/appwrite": "19.*",
@@ -4523,9 +4529,11 @@
                 "upf",
                 "utopia"
             ],
-            "transport-options": {
-                "relative": true
-            }
+            "support": {
+                "source": "https://github.com/utopia-php/migration/tree/feat-message-migration",
+                "issues": "https://github.com/utopia-php/migration/issues"
+            },
+            "time": "2026-02-20T08:14:06+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8894,7 +8902,7 @@
         }
     ],
     "aliases": [],
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "stability-flags": {
         "utopia-php/migration": 20
     },

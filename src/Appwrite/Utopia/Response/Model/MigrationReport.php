@@ -71,6 +71,30 @@ class MigrationReport extends Model
                 'default' => 0,
                 'example' => 10,
             ])
+            ->addRule(Resource::TYPE_PROVIDER, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of messaging providers to be migrated.',
+                'default' => 0,
+                'example' => 5,
+            ])
+            ->addRule(Resource::TYPE_TOPIC, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of messaging topics to be migrated.',
+                'default' => 0,
+                'example' => 10,
+            ])
+            ->addRule(Resource::TYPE_SUBSCRIBER, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of messaging subscribers to be migrated.',
+                'default' => 0,
+                'example' => 50,
+            ])
+            ->addRule(Resource::TYPE_MESSAGE, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of messages to be migrated.',
+                'default' => 0,
+                'example' => 100,
+            ])
             ->addRule('size', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Size of files to be migrated in mb.',
