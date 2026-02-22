@@ -35,7 +35,6 @@ import { getPlatformDisplayName } from '@/lib/utils/platform'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ApiKeysList } from '../shared/ApiKeysList'
 import { ApiKeyDrawer } from '../api-keys/ApiKeyDrawer'
-import { useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
@@ -136,8 +135,6 @@ export function View({ projectId }: ViewProps) {
   const [selectedKeyId, setSelectedKeyId] = useState<string | null>(null)
   const [connectDialogOpen, setConnectDialogOpen] = useState(false)
   const [connectInitialSdk, setConnectInitialSdk] = useState<string>('web')
-  const navigate = useNavigate()
-
   const handleConnectPlatform = (platform?: string) => {
     const sdkMap: Record<string, string> = {
       web: 'web',
@@ -261,14 +258,6 @@ export function View({ projectId }: ViewProps) {
       return projectEndpoint.replace(/^https?:\/\//, '')
     }
   }, [projectEndpoint])
-
-  const handleViewApiKey = () => {
-    // Navigate to API keys page to view/manage
-    navigate({
-      to: '/projects/$projectId/api-keys',
-      params: { projectId },
-    })
-  }
 
   const copyToClipboard = (text: string, field?: string) => {
     navigator.clipboard.writeText(text)
@@ -766,7 +755,6 @@ export function View({ projectId }: ViewProps) {
             <ApiKeysList
               apiKeys={apiKeys}
               isLoading={false}
-              onView={handleViewApiKey}
               onUpdate={handleUpdate}
               onDelete={handleDelete}
               onCopy={copyToClipboard}

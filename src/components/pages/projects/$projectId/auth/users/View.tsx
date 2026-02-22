@@ -600,7 +600,7 @@ function UserStatusCard({
 
   const getStatusBadge = () => {
     if (isBlocked) {
-      return { label: 'blocked', variant: 'warning' as const }
+      return { label: 'blocked', variant: 'error' as const }
     }
     if (emailVerified && phoneVerified) {
       return { label: 'verified', variant: 'success' as const }
@@ -611,7 +611,7 @@ function UserStatusCard({
     if (phoneVerified) {
       return { label: 'verified phone', variant: 'success' as const }
     }
-    return { label: 'unverified', variant: 'secondary' as const }
+    return { label: 'unverified', variant: 'warning' as const }
   }
 
   const statusBadge = getStatusBadge()
@@ -676,7 +676,7 @@ function UserStatusCard({
               </p>
               <Badge
                 variant={statusBadge.variant}
-                className="text-[12px] font-medium border shrink-0"
+                className="text-[10px] shrink-0"
               >
                 {statusBadge.label}
               </Badge>
@@ -1185,11 +1185,11 @@ function UpdateLabelsSection({
                       : '',
                   )}
                 >
-                  {labels.map((label) => (
+                    {labels.map((label) => (
                     <Badge
                       key={label}
-                      variant="secondary"
-                      className="gap-1 h-6 text-[11px] px-1.5 py-0 bg-muted border-border"
+                      variant="info"
+                      className="gap-1 h-6 text-[10px] shrink-0 pr-1"
                     >
                       {label}
                       <button
@@ -1551,8 +1551,8 @@ function UpdateMFASection({
                     </h4>
                     {hasTOTP && (
                       <Badge
-                        variant="secondary"
-                        className="h-5 gap-1 px-1.5 text-[11px]"
+                        variant="success"
+                        className="text-[10px] shrink-0 gap-1"
                       >
                         <CheckCircle2 className="h-3 w-3" />
                         connected
@@ -1918,7 +1918,7 @@ function MembershipsTab({
                 >
                   <Badge
                     variant={membership.confirm ? 'active' : 'pending'}
-                    className="text-[12px] font-medium"
+                    className="text-[10px] shrink-0"
                   >
                     {membership.confirm ? 'Active' : 'Pending'}
                   </Badge>
@@ -1938,16 +1938,16 @@ function MembershipsTab({
                           {visible.map((role) => (
                             <Badge
                               key={role}
-                              variant="outline"
-                              className="text-[12px] font-medium border-border"
+                              variant="info"
+                              className="text-[10px] shrink-0"
                             >
                               {role}
                             </Badge>
                           ))}
                           {remaining > 0 && (
                             <Badge
-                              variant="secondary"
-                              className="text-[12px] font-medium"
+                              variant="info"
+                              className="text-[10px] shrink-0"
                             >
                               +{remaining}
                             </Badge>
@@ -2238,8 +2238,8 @@ function TargetsTab({
                       </TableCell>
                       <TableCell className="px-4 py-3">
                         <Badge
-                          variant="outline"
-                          className="text-[12px] font-medium border-border"
+                          variant="info"
+                          className="text-[10px] shrink-0"
                         >
                           {target.providerType}
                         </Badge>

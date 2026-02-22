@@ -264,8 +264,8 @@ function UserRoleDisplay({ userId, projectId }: UserRoleDisplayProps) {
             {displayName}
           </span>
           <Badge
-            variant="secondary"
-            className="text-[10px] px-1.5 py-0 shrink-0"
+            variant="info"
+            className="text-[10px] shrink-0"
           >
             User
           </Badge>
@@ -304,8 +304,8 @@ function TeamRoleDisplay({ teamId, projectId }: TeamRoleDisplayProps) {
             {displayName}
           </span>
           <Badge
-            variant="secondary"
-            className="text-[10px] px-1.5 py-0 shrink-0"
+            variant="info"
+            className="text-[10px] shrink-0"
           >
             Team
           </Badge>
@@ -337,8 +337,8 @@ function LabelRoleDisplay({ labelName }: LabelRoleDisplayProps) {
             {labelName}
           </span>
           <Badge
-            variant="secondary"
-            className="text-[10px] px-1.5 py-0 shrink-0"
+            variant="info"
+            className="text-[10px] shrink-0"
           >
             Label
           </Badge>
@@ -367,8 +367,8 @@ function CustomRoleDisplay({ role }: CustomRoleDisplayProps) {
             {role}
           </span>
           <Badge
-            variant="secondary"
-            className="text-[10px] px-1.5 py-0 shrink-0"
+            variant="info"
+            className="text-[10px] shrink-0"
           >
             Custom
           </Badge>

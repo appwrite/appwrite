@@ -153,7 +153,7 @@ export function ApiKeysList({
                     </code>
                     <button
                       onClick={() => handleView(apiKey.id)}
-                      className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground shrink-0"
+                      className="cursor-pointer rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground shrink-0"
                       title="View key"
                     >
                       <Eye className="h-3.5 w-3.5" />
@@ -162,7 +162,7 @@ export function ApiKeysList({
                       onClick={() =>
                         handleCopy(apiKey.key, `apiKey-${apiKey.id}`)
                       }
-                      className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground shrink-0"
+                      className="cursor-pointer rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground shrink-0"
                       title="Copy key"
                     >
                       {copiedField === `apiKey-${apiKey.id}` ? (
@@ -198,7 +198,7 @@ export function ApiKeysList({
                 {showActions && (onUpdate || onDelete) && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground shrink-0">
+                      <button className="cursor-pointer rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground shrink-0">
                         <MoreHorizontal className="h-4 w-4" />
                       </button>
                     </DropdownMenuTrigger>

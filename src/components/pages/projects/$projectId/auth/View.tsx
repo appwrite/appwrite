@@ -846,8 +846,8 @@ export function View() {
                                   <div className="flex items-center justify-center gap-2 flex-wrap">
                                     {isBlocked ? (
                                       <Badge
-                                        variant="destructive"
-                                        className="text-[11px] font-medium border px-2 py-0.5"
+                                        variant="error"
+                                        className="text-[10px] shrink-0"
                                       >
                                         Blocked
                                       </Badge>
@@ -860,9 +860,9 @@ export function View() {
                                                 variant={
                                                   emailVerified
                                                     ? 'success'
-                                                    : 'secondary'
+                                                    : 'warning'
                                                 }
-                                                className="text-[11px] font-medium border px-2 py-0.5"
+                                                className="text-[10px] shrink-0"
                                               >
                                                 {emailVerified ? (
                                                   <CheckCircle2 className="h-3 w-3" />
@@ -889,9 +889,9 @@ export function View() {
                                                 variant={
                                                   phoneVerified
                                                     ? 'success'
-                                                    : 'secondary'
+                                                    : 'warning'
                                                 }
-                                                className="text-[11px] font-medium border px-2 py-0.5"
+                                                className="text-[10px] shrink-0"
                                               >
                                                 {phoneVerified ? (
                                                   <CheckCircle2 className="h-3 w-3" />

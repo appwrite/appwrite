@@ -310,7 +310,7 @@ export function TeamMembers({
                       >
                         <Badge
                           variant={membership.confirm ? 'active' : 'pending'}
-                          className="text-[12px] font-medium"
+                          className="text-[10px] shrink-0"
                         >
                           {membership.confirm ? 'Active' : 'Pending'}
                         </Badge>
@@ -325,16 +325,16 @@ export function TeamMembers({
                               {roles.slice(0, 2).map((role, idx) => (
                                 <Badge
                                   key={idx}
-                                  variant="outline"
-                                  className="text-[12px] font-medium border-border"
+                                  variant="info"
+                                  className="text-[10px] shrink-0"
                                 >
                                   {role}
                                 </Badge>
                               ))}
                               {roles.length > 2 && (
                                 <Badge
-                                  variant="secondary"
-                                  className="text-[12px] font-medium"
+                                  variant="info"
+                                  className="text-[10px] shrink-0"
                                 >
                                   +{roles.length - 2}
                                 </Badge>
@@ -546,14 +546,14 @@ function CreateMembershipDialog({
                     {roles.map((role) => (
                       <Badge
                         key={role}
-                        variant="secondary"
-                        className="text-[12px] font-medium"
+                        variant="info"
+                        className="text-[10px] shrink-0 pr-1"
                       >
                         {role}
                         <button
                           type="button"
                           onClick={() => handleRemoveRole(role)}
-                          className="ml-1.5 hover:text-destructive"
+                          className="ml-0.5 hover:text-destructive rounded p-0.5"
                         >
                           <X className="h-3 w-3" />
                         </button>

@@ -136,7 +136,7 @@ export function MembershipUpdateDrawer({
                               variant={
                                 membership.confirm ? 'active' : 'pending'
                               }
-                              className="text-[12px] font-medium w-fit"
+                              className="text-[10px] shrink-0 w-fit"
                             >
                               {membership.confirm ? 'Active' : 'Pending'}
                             </Badge>
@@ -279,8 +279,8 @@ export function MembershipUpdateDrawer({
                         {roles.map((role) => (
                           <Badge
                             key={role}
-                            variant="outline"
-                            className="text-[12px] font-medium border-border gap-1 pr-1"
+                            variant="info"
+                            className="text-[10px] shrink-0 gap-1 pr-1"
                           >
                             {role}
                             <button
