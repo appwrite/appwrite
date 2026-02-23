@@ -22,10 +22,11 @@ class Delete extends Action
 {
     use HTTP;
 
+    protected string $membershipId;
+    protected string $teamId;
+    protected Document $user;
+    protected Document $project;
     protected Database $dbForProject;
-    protected Document $team;
-    protected Document $profile;
-    protected Document $membership;
 
     public static function getName()
     {
@@ -70,58 +71,16 @@ class Delete extends Action
 
     public function action(string $teamId, string $membershipId, Document $user, Document $project, Response $response, Database $dbForProject, Authorization $authorization, Event $queueForEvents)
     {
-        $membership = $dbForProject->getDocument('memberships', $membershipId);
-        if ($membership->isEmpty()) {
-            throw new Exception(Exception::TEAM_INVITE_NOT_FOUND);
-        }
-
-        $profile = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
-        if ($profile->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND);
-        }
-
-        $team = $dbForProject->getDocument('teams', $teamId);
-        if ($team->isEmpty()) {
-            throw new Exception(Exception::TEAM_NOT_FOUND);
-        }
-
-        if ($membership->getAttribute('teamInternalId') !== $team->getSequence()) {
-            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
-        }
-
+        $this->membershipId = $membershipId;
+        $this->user = $user;
+        $this->project = $project;
         $this->dbForProject = $dbForProject;
-        $this->team = $team;
-        $this->profile = $profile;
-        $this->membership = $membership;
-        $this->verifyUser();
 
-        if ($project->getId() === 'console') {
-            // Quick check:
-            // fetch up to 2 owners to determine if only one exists
-            $ownersCount = $dbForProject->count(
-                collection: 'memberships',
-                queries: [
-                    Query::contains('roles', ['owner']),
-                    Query::equal('teamInternalId', [$team->getSequence()])
-                ],
-                max: 2
-            );
-
-            // Is the deletion being requested by the user on their own membership and they are also the owner?
-            $isSelfOwner =
-                in_array('owner', $membership->getAttribute('roles')) &&
-                $membership->getAttribute('userInternalId') === $user->getSequence();
-
-            if ($ownersCount === 1 && $isSelfOwner) {
-                /**
-                 * Prevent removal if the user is the only owner, this is because -
-                 *
-                 * 1. Other roles [if exists] can neither add a new owner nor delete the organization.
-                 * 2. If the only owner is removed, while there were no other members, the organization isn't marked for deletion and stays in a limbo.
-                 */
-                throw new Exception(Exception::MEMBERSHIP_DELETION_PROHIBITED, 'There must be at least one owner in the organization.');
-            }
-        }
+        [
+            'membership' => $membership,
+            'profile' => $profile,
+            'team' => $team,
+        ] = $this->loadAndValidateResources();
 
         try {
             $dbForProject->deleteDocument('memberships', $membership->getId());
@@ -159,8 +118,59 @@ class Delete extends Action
         $response->noContent();
     }
 
-    protected function verifyUser(): void
+    protected function loadAndValidateResources(): array
     {
-        return;
+        $membership = $this->dbForProject->getDocument('memberships', $this->membershipId);
+        if ($membership->isEmpty()) {
+            throw new Exception(Exception::TEAM_INVITE_NOT_FOUND);
+        }
+
+        $profile = $this->dbForProject->getDocument('users', $membership->getAttribute('userId'));
+        if ($profile->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $team = $this->dbForProject->getDocument('teams', $this->teamId);
+        if ($team->isEmpty()) {
+            throw new Exception(Exception::TEAM_NOT_FOUND);
+        }
+
+        if ($membership->getAttribute('teamInternalId') !== $team->getSequence()) {
+            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
+        }
+
+        if ($this->project->getId() === 'console') {
+            // Quick check:
+            // fetch up to 2 owners to determine if only one exists
+            $ownersCount = $this->dbForProject->count(
+                collection: 'memberships',
+                queries: [
+                    Query::contains('roles', ['owner']),
+                    Query::equal('teamInternalId', [$team->getSequence()])
+                ],
+                max: 2
+            );
+
+            // Is the deletion being requested by the user on their own membership and they are also the owner?
+            $isSelfOwner =
+                in_array('owner', $membership->getAttribute('roles')) &&
+                $membership->getAttribute('userInternalId') === $this->user->getSequence();
+
+            if ($ownersCount === 1 && $isSelfOwner) {
+                /**
+                 * Prevent removal if the user is the only owner, this is because -
+                 *
+                 * 1. Other roles [if exists] can neither add a new owner nor delete the organization.
+                 * 2. If the only owner is removed, while there were no other members, the organization isn't marked for deletion and stays in a limbo.
+                 */
+                throw new Exception(Exception::MEMBERSHIP_DELETION_PROHIBITED, 'There must be at least one owner in the organization.');
+            }
+        }
+
+        return [
+            'membership' => $membership,
+            'profile' => $profile,
+            'team' => $team,
+        ];
     }
 }
