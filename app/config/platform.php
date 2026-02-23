@@ -24,6 +24,7 @@ return [
         System::getEnv('_APP_CONSOLE_DOMAIN', 'localhost'),
         System::getEnv('_APP_MIGRATION_HOST'),
     ])),
+    'schemas' => \explode(',', System::getEnv('_APP_CONSOLE_SCHEMA', '')),
     'platformName' => APP_EMAIL_PLATFORM_NAME,
     'logoUrl' => APP_EMAIL_LOGO_URL,
     'accentColor' => APP_EMAIL_ACCENT_COLOR,

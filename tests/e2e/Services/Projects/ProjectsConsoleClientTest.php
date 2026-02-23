@@ -6631,8 +6631,71 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertStringContainsString($expectedUrl, $lastEmail['html']);
 
+        // With search params, with mobile backlink
+        $url = 'appwriteio://signin?id=abcd1234&tenant=efgh5678&domain=example.com&referred=0';
+
+        $response = $this->client->call(
+            Client::METHOD_POST,
+            '/account/recovery',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'userId' => ID::unique(),
+                'email' => $this->getUser()['email'],
+                'url' => $url,
+            ]
+        );
+
+        \var_dump($response);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['userId']);
+
+        $userId = $response['body']['userId'];
+
+        $lastEmail = $this->getLastEmail();
+
+        $this->assertEquals($this->getUser()['email'], $lastEmail['to'][0]['address']);
+        $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
+
+        $expectedUrl = $url . "&userId=" . $userId . "&secret=";
+
+        $this->assertStringContainsString($expectedUrl, $lastEmail['html']);
+
         // Without search params
         $url = 'http://localhost/auth/signin';
+
+        $response = $this->client->call(
+            Client::METHOD_POST,
+            '/account/recovery',
+            array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'userId' => ID::unique(),
+                'email' => $this->getUser()['email'],
+                'url' => $url,
+            ]
+        );
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['userId']);
+
+        $userId = $response['body']['userId'];
+
+        $lastEmail = $this->getLastEmail();
+
+        $this->assertEquals($this->getUser()['email'], $lastEmail['to'][0]['address']);
+        $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
+
+        $expectedUrl = $url . "?userId=" . $userId . "&secret=";
+
+        $this->assertStringContainsString($expectedUrl, $lastEmail['html']);
+
+        // Without search params, with mobile backlink
+        $url = 'appwriteio://signin';
 
         $response = $this->client->call(
             Client::METHOD_POST,
