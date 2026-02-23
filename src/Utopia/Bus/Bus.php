@@ -46,6 +46,7 @@ class Bus
             foreach ($resolved as [$listener, $deps]) {
                 $action = 'listener.' . $listener::getName();
                 Span::init($action);
+                Span::add('bus.event', $event::class);
                 try {
                     ($listener->getCallback())($event, ...$deps);
                 } catch (\Throwable $e) {
