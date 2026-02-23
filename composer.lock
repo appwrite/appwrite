@@ -8989,15 +8989,9 @@
         }
     ],
     "aliases": [],
-<<<<<<< feat-mongodb
     "minimum-stability": "dev",
     "stability-flags": {},
     "prefer-stable": true,
-=======
-    "minimum-stability": "stable",
-    "stability-flags": {},
-    "prefer-stable": false,
->>>>>>> 1.8.x
     "prefer-lowest": false,
     "platform": {
         "php": ">=8.3.0",
