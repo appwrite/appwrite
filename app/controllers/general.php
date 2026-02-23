@@ -10,7 +10,6 @@ use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete as DeleteEvent;
 use Appwrite\Event\Event;
 use Appwrite\Bus\RequestCompleted;
-use Appwrite\Bus\SiteRequestCompleted;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Network\Cors;
 use Appwrite\Platform\Appwrite;
@@ -758,20 +757,12 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             ->setStatusCode($execution['responseStatusCode'] ?? 200)
             ->send($body);
 
-        if ($deployment->getAttribute('resourceType') === 'sites') {
-            $bus->dispatch(new SiteRequestCompleted(
-                project: $project->getArrayCopy(),
-                request: $request,
-                response: $response,
-                siteInternalId: $resource->getSequence(),
-            ));
-        } else {
-            $bus->dispatch(new RequestCompleted(
-                project: $project->getArrayCopy(),
-                request: $request,
-                response: $response,
-            ));
-        }
+        $bus->dispatch(new RequestCompleted(
+            project: $project->getArrayCopy(),
+            request: $request,
+            response: $response,
+            deployment: $deployment->getArrayCopy(),
+        ));
 
         /* cleanup */
         if ($executionsRetentionCount > 0 && ENABLE_EXECUTIONS_LIMIT_ON_ROUTE) {
