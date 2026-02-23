@@ -231,6 +231,7 @@ class Response extends SwooleResponse
     public const MODEL_MIGRATION = 'migration';
     public const MODEL_MIGRATION_LIST = 'migrationList';
     public const MODEL_MIGRATION_REPORT = 'migrationReport';
+    public const MODEL_MIGRATION_KEY = 'migrationKey';
     public const MODEL_MIGRATION_FIREBASE_PROJECT = 'firebaseProject';
     public const MODEL_MIGRATION_FIREBASE_PROJECT_LIST = 'firebaseProjectList';
 

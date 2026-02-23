@@ -246,6 +246,8 @@ class Migrations extends Action
                 $credentials['destinationApiKey'],
                 $this->dbForProject,
                 Config::getParam('collections', [])['databases']['collections'],
+                $this->dbForPlatform,
+                $this->project->getSequence(),
             ),
             DestinationCSV::getName() => new DestinationCSV(
                 $this->deviceForFiles,
@@ -286,9 +288,6 @@ class Migrations extends Action
         );
     }
 
-    /**
-     * @throws Exception
-     */
     protected function generateAPIKey(Document $project): string
     {
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400, 0);

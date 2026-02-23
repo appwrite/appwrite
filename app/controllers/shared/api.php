@@ -333,6 +333,23 @@ Http::init()
 
         $scopes = \array_unique($scopes);
 
+        // Migration-sourced keys are scoped to a single project's console
+        // endpoints (e.g. /v1/projects/:projectId/platforms). Verify the
+        // URL :projectId matches the token's scopedProjectId.
+        if (!empty($apiKey) && $apiKey->getSource() === KEY_SOURCE_MIGRATION) {
+            $scopedProjectId = $apiKey->getScopedProjectId();
+
+            if (empty($scopedProjectId)) {
+                throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE);
+            }
+
+            $pathValues = $route->getPathValues($request);
+
+            if (($pathValues['projectId'] ?? '') !== $scopedProjectId) {
+                throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE);
+            }
+        }
+
         $authorization->addRole($role);
         foreach ($user->getRoles($authorization) as $authRole) {
             $authorization->addRole($authRole);

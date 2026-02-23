@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e5bf52cb0b8495109c364c0577ebe58f",
+    "content-hash": "2268f4823b3e7a9009753d028bb0fcd8",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3851,16 +3851,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "5.3.2",
+            "version": "5.3.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "19305fc487df4f7b990350463914c1113cc6dab1"
+                "reference": "396aea467ccd105646f22b5bbb839e76700e031d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/19305fc487df4f7b990350463914c1113cc6dab1",
-                "reference": "19305fc487df4f7b990350463914c1113cc6dab1",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/396aea467ccd105646f22b5bbb839e76700e031d",
+                "reference": "396aea467ccd105646f22b5bbb839e76700e031d",
                 "shasum": ""
             },
             "require": {
@@ -3903,9 +3903,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/5.3.2"
+                "source": "https://github.com/utopia-php/database/tree/5.3.3"
             },
-            "time": "2026-02-18T11:59:15+00:00"
+            "time": "2026-02-23T12:57:06+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4518,16 +4518,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.6.1",
+            "version": "dev-feat-platform-key-migration",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "c5c7544d02d2418536d41050794050132f247d62"
+                "reference": "15bf0f9afa8cdfb21fa6556434fe4d32e40ecd05"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/c5c7544d02d2418536d41050794050132f247d62",
-                "reference": "c5c7544d02d2418536d41050794050132f247d62",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/15bf0f9afa8cdfb21fa6556434fe4d32e40ecd05",
+                "reference": "15bf0f9afa8cdfb21fa6556434fe4d32e40ecd05",
                 "shasum": ""
             },
             "require": {
@@ -4567,9 +4567,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.6.1"
+                "source": "https://github.com/utopia-php/migration/tree/feat-platform-key-migration"
             },
-            "time": "2026-02-17T05:49:48+00:00"
+            "time": "2026-02-23T18:35:27+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8937,9 +8937,18 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/migration",
+            "version": "dev-feat-platform-key-migration",
+            "alias": "1.5.0",
+            "alias_normalized": "1.5.0.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/migration": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

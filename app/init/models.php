@@ -98,6 +98,7 @@ use Appwrite\Utopia\Response\Model\MFARecoveryCodes;
 use Appwrite\Utopia\Response\Model\MFAType;
 use Appwrite\Utopia\Response\Model\Migration;
 use Appwrite\Utopia\Response\Model\MigrationFirebaseProject;
+use Appwrite\Utopia\Response\Model\MigrationKey;
 use Appwrite\Utopia\Response\Model\MigrationReport;
 use Appwrite\Utopia\Response\Model\Mock;
 use Appwrite\Utopia\Response\Model\MockNumber;
@@ -357,6 +358,7 @@ Response::setModel(new Subscriber());
 Response::setModel(new Target());
 Response::setModel(new Migration());
 Response::setModel(new MigrationReport());
+Response::setModel(new MigrationKey());
 Response::setModel(new MigrationFirebaseProject());
 
 // Tests (keep last)

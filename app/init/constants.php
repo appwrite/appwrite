@@ -254,6 +254,8 @@ const API_KEY_STANDARD = 'standard';
 const API_KEY_DYNAMIC = 'dynamic';
 const API_KEY_ORGANIZATION = 'organization';
 const API_KEY_ACCOUNT = 'account';
+// API key source identifiers
+const KEY_SOURCE_MIGRATION = 'migration';
 // Usage metrics
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';
