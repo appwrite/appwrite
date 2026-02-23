@@ -35,6 +35,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
+use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
 use Utopia\Locale\Locale;
 use Utopia\Pools\Group;
@@ -43,6 +44,7 @@ use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
 use Utopia\Validator\Integer;
+use Utopia\Validator\Multiple;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
@@ -1178,7 +1180,20 @@ App::post('/v1/projects/:projectId/webhooks')
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, string $name, bool $enabled, array $events, string $url, bool $security, string $httpUser, string $httpPass, Response $response, Database $dbForPlatform) {
+    ->action(/**
+     * @param string $projectId
+     * @param string $name
+     * @param bool $enabled
+     * @param array $events
+     * @param string $url
+     * @param bool $security
+     * @param string $httpUser
+     * @param string $httpPass
+     * @param Response $response
+     * @param Database $dbForPlatform
+     * @return void
+     */
+    function (string $projectId, string $name, bool $enabled, array $events, string $url, bool $security, string $httpUser, string $httpPass, Response $response, Database $dbForPlatform) {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -1325,7 +1340,21 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, string $webhookId, string $name, bool $enabled, array $events, string $url, bool $security, string $httpUser, string $httpPass, Response $response, Database $dbForPlatform) {
+    ->action(/**
+     * @param string $projectId
+     * @param string $webhookId
+     * @param string $name
+     * @param bool $enabled
+     * @param array $events
+     * @param string $url
+     * @param bool $security
+     * @param string $httpUser
+     * @param string $httpPass
+     * @param Response $response
+     * @param Database $dbForPlatform
+     * @return void
+     */
+    function (string $projectId, string $webhookId, string $name, bool $enabled, array $events, string $url, bool $security, string $httpUser, string $httpPass, Response $response, Database $dbForPlatform) {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
