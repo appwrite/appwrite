@@ -4,13 +4,13 @@ namespace Appwrite\Platform\Workers;
 
 use Exception;
 use Throwable;
-use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Registry\Registry;
+use Utopia\Span\Span;
 use Utopia\System\System;
 
 class StatsUsage extends Action
@@ -143,9 +143,15 @@ class StatsUsage extends Action
         }
         //Todo Figure out way to preserve keys when the container is being recreated @shimonewman
 
-        $aggregationInterval = (int) System::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '20');
+        $aggregationInterval = (int) System::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '30');
         $project = new Document($payload['project'] ?? []);
         $projectId = $project->getSequence();
+
+        if (empty($projectId)) {
+            Span::add('stats_usage.skipped', 'missing_project');
+            return;
+        }
+
         foreach ($payload['reduce'] ?? [] as $document) {
             if (empty($document)) {
                 continue;
@@ -171,12 +177,19 @@ class StatsUsage extends Action
             $this->stats[$projectId]['keys'][$metric['key']] += $metric['value'];
         }
 
+        Span::add('project.id', $project->getId());
+        Span::add('project.internal_id', $project->getSequence());
+        Span::add('project.database', $project->getAttribute('database'));
+        Span::add('stats_usage.metrics_count', count($payload['metrics'] ?? []));
+        Span::add('stats_usage.keys_total', $this->keys);
+
         // If keys crossed threshold or X time passed since the last send and there are some keys in the array ($this->stats)
         if (
             $this->keys >= $this->getBatchSize() ||
             (time() - $this->lastTriggeredTime > $aggregationInterval  && $this->keys > 0)
         ) {
-            Console::warning('[' . DateTime::now() . '] Aggregated ' . $this->keys . ' keys');
+            Span::add('stats_usage.committed', true);
+            Span::add('stats_usage.committed_keys', $this->keys);
 
             $this->commitToDB($getProjectDB);
 
@@ -357,7 +370,7 @@ class StatsUsage extends Action
                     break;
             }
         } catch (Throwable $e) {
-            Console::error("[reducer] " . " {DateTime::now()} " . " {$project->getSequence()} " . " {$e->getMessage()}");
+            Span::error($e);
         }
     }
 
@@ -375,8 +388,6 @@ class StatsUsage extends Action
             if ($numberOfKeys === 0) {
                 continue;
             }
-
-            Console::log('['.DateTime::now().'] Id: '.$project->getId(). ' InternalId: '.$project->getSequence(). ' Db: '.$project->getAttribute('database').' ReceivedAt: '.$receivedAt. ' Keys: '.$numberOfKeys);
 
             try {
                 foreach ($stats['keys'] ?? [] as $key => $value) {
@@ -413,9 +424,12 @@ class StatsUsage extends Action
                     }
                 }
             } catch (Exception $e) {
-                Console::error('[' . DateTime::now() . '] project [' . $project->getSequence() . '] database [' . $project['database'] . '] ' . ' ' . $e->getMessage());
+                Span::error($e);
             }
         }
+
+        $projectsCount = 0;
+        $totalStats = 0;
 
         foreach ($this->projects as $sequence => $projectStats) {
             if (empty($sequence)) {
@@ -423,7 +437,8 @@ class StatsUsage extends Action
             }
             try {
                 $dbForProject = $getProjectDB($projectStats['project']);
-                Console::log('Processing batch with ' . count($projectStats['stats']) . ' stats');
+                $projectsCount++;
+                $totalStats += count($projectStats['stats']);
 
                 /**
                  * Sort by unique index key reduce locks/deadlocks
@@ -453,13 +468,15 @@ class StatsUsage extends Action
                 });
 
                 $dbForProject->upsertDocumentsWithIncrease('stats', 'value', $projectStats['stats']);
-                Console::success('Batch successfully written to DB');
             } catch (Throwable $e) {
-                Console::error('Error processing stats: ' . $e->getMessage());
+                Span::error($e);
             } finally {
                 unset($this->projects[$sequence]);
             }
         }
+
+        Span::add('stats_usage.commit.projects_count', $projectsCount);
+        Span::add('stats_usage.commit.stats_count', $totalStats);
 
         $this->writeToLogsDB();
 
@@ -486,16 +503,18 @@ class StatsUsage extends Action
     protected function writeToLogsDB(): void
     {
         if (System::getEnv('_APP_STATS_USAGE_DUAL_WRITING', 'disabled') === 'disabled') {
-            Console::log('Dual Writing is disabled. Skipping...');
+            Span::add('stats_usage.dual_writing', false);
             return;
         }
+
+        Span::add('stats_usage.dual_writing', true);
 
         $dbForLogs = ($this->getLogsDB)()
             ->setTenant(null)
             ->setTenantPerDocument(true);
 
         try {
-            Console::log('Processing batch with ' . count($this->statDocuments) . ' stats');
+            Span::add('stats_usage.logs_db.stats_count', count($this->statDocuments));
 
             /**
              * Sort by UNIQUE KEY "_key_metric_period_time" ("_tenant","metric" DESC,"period","time")
@@ -537,9 +556,8 @@ class StatsUsage extends Action
                 'value',
                 $this->statDocuments
             );
-            Console::success('Usage logs pushed to Logs DB');
         } catch (Throwable $th) {
-            Console::error($th->getMessage());
+            Span::error($th);
         } finally {
             // Clear statDocuments to prevent memory accumulation across batches
             $this->statDocuments = [];
