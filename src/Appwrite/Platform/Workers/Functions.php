@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Workers;
 
 use Ahc\Jwt\JWT;
-use Appwrite\Bus\ExecutionCompleted;
+use Appwrite\Bus\Events\ExecutionCompleted;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Realtime;

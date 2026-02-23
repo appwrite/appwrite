@@ -2,7 +2,7 @@
 
 use Appwrite\Auth\Key;
 use Appwrite\Auth\MFA\Type\TOTP;
-use Appwrite\Bus\RequestCompleted;
+use Appwrite\Bus\Events\RequestCompleted;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Build;
 use Appwrite\Event\Database as EventDatabase;

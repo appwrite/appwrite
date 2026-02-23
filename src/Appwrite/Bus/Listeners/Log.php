@@ -2,7 +2,7 @@
 
 namespace Appwrite\Bus\Listeners;
 
-use Appwrite\Bus\ExecutionCompleted;
+use Appwrite\Bus\Events\ExecutionCompleted;
 use Appwrite\Event\Execution;
 use Utopia\Bus\Listener;
 use Utopia\Database\Document;

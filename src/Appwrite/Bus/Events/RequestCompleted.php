@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Bus;
+namespace Appwrite\Bus\Events;
 
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -10,11 +10,13 @@ class RequestCompleted implements Event
 {
     /**
      * @param array<string, mixed> $project
+     * @param array<string, mixed> $deployment
      */
     public function __construct(
         public readonly array $project,
         public readonly Request $request,
         public readonly Response $response,
+        public readonly array $deployment = [],
     ) {
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Bus;
+namespace Appwrite\Bus\Events;
 
 use Utopia\Bus\Event;
 
