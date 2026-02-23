@@ -6648,7 +6648,6 @@ class ProjectsConsoleClientTest extends Scope
             ]
         );
 
-        \var_dump($response);
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['userId']);
 
