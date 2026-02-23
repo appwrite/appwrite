@@ -9,7 +9,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Queue\Message;
-use Utopia\Telemetry\Span;
+use Utopia\Span\Span;
 
 class StatsResources extends Action
 {
