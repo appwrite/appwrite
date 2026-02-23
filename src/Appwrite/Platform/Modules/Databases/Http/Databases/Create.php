@@ -30,6 +30,22 @@ class Create extends Action
         return 'createDatabase';
     }
 
+    protected function getDatabaseDSN(Document $project): string
+    {
+        return match ($this->getDatabaseType()) {
+            DOCUMENTSDB => $project->getAttribute('documentsDatabase'),
+            VECTORDB => $project->getAttribute('vectorDatabase'),
+            default => $project->getAttribute('database'),
+        };
+    }
+
+    protected function getDatabaseCollection()
+    {
+        return match ($this->getDatabaseType()) {
+            'vectordb' => (Config::getParam('collections', [])['vectordb'] ?? [])['collections'] ?? [],
+            default => (Config::getParam('collections', [])['databases'] ?? [])['collections'] ?? [],
+        };
+    }
     public function __construct()
     {
         $this
@@ -62,16 +78,18 @@ class Create extends Action
                     )
                 )
             ])
-            ->param('databaseId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+            ->param('databaseId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Database name. Max length: 128 chars.')
             ->param('enabled', true, new Boolean(), 'Is the database enabled? When set to \'disabled\', users cannot access the database but Server SDKs with an API key can still read and write to the database. No data is lost when this is toggled.', true)
+            ->inject('project')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('queueForEvents')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $name, bool $enabled, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents): void
+    public function action(string $databaseId, string $name, bool $enabled, Document $project, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents): void
     {
         $databaseId = $databaseId == 'unique()' ? ID::unique() : $databaseId;
 
@@ -82,6 +100,7 @@ class Create extends Action
                 'enabled' => $enabled,
                 'search' => implode(' ', [$databaseId, $name]),
                 'type' => $this->getDatabaseType(),
+                'database' => $this->getDatabaseDSN($project)
             ]));
         } catch (DuplicateException) {
             throw new Exception(Exception::DATABASE_ALREADY_EXISTS, params: [$databaseId]);
@@ -91,7 +110,7 @@ class Create extends Action
 
         $database = $dbForProject->getDocument('databases', $databaseId);
 
-        $collections = (Config::getParam('collections', [])['databases'] ?? [])['collections'] ?? [];
+        $collections = $this->getDatabaseCollection();
         if (empty($collections)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'The "collections" collection is not configured.');
         }

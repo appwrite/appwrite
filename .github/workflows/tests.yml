@@ -173,10 +173,8 @@ jobs:
       - name: Failure Logs
         if: failure()
         run: |
-          echo "=== Appwrite Worker Builds Logs ==="
-          docker compose logs appwrite-worker-builds
-          echo "=== OpenRuntimes Executor Logs ==="
-          docker compose logs openruntimes-executor
+          echo "=== Appwrite Logs ==="
+          docker compose logs
 
   e2e_service_test:
     name: E2E Service Test
@@ -190,15 +188,17 @@ jobs:
       matrix:
         db_adapter: [
           MARIADB,
-          POSTGRESQL
+          POSTGRESQL,
+          # MONGODB
         ]
-
         service: [
           Account,
           Avatars,
           Console,
           Databases/Legacy,
           Databases/TablesDB,
+          Databases/DocumentsDB,
+          Databases/VectorDB,
           Functions,
           FunctionsSchedule,
           GraphQL,
@@ -232,6 +232,18 @@ jobs:
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           sed -i 's|^_APP_BROWSER_HOST=.*|_APP_BROWSER_HOST=http://invalid-browser/v1|' .env
+
+          # Set DB Adapter in .env before starting services
+          if [ "${{ matrix.db_adapter }}" = "MARIADB" ]; then
+            sed -i 's|^_APP_DB_ADAPTER=.*|_APP_DB_ADAPTER=mariadb|' .env
+            sed -i 's|^_APP_DB_HOST=.*|_APP_DB_HOST=mariadb|' .env
+            sed -i 's|^_APP_DB_PORT=.*|_APP_DB_PORT=3306|' .env
+          elif [ "${{ matrix.db_adapter }}" = "MONGODB" ]; then
+            sed -i 's|^_APP_DB_ADAPTER=.*|_APP_DB_ADAPTER=mongodb|' .env
+            sed -i 's|^_APP_DB_HOST=.*|_APP_DB_HOST=mongodb|' .env
+            sed -i 's|^_APP_DB_PORT=.*|_APP_DB_PORT=27017|' .env
+          fi
+
           docker compose up -d
           sleep 30
 

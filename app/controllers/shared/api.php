@@ -460,6 +460,12 @@ Http::init()
     ->action(function (Http $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Mail $queueForMails, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform, Authorization $authorization) {
 
         $route = $utopia->getRoute();
+        $path = $route->getMatchedPath();
+        $databaseType = match (true) {
+            str_contains($path, '/documentsdb') => DATABASE_TYPE_DOCUMENTSDB,
+            str_contains($path, '/vectordb') => DATABASE_TYPE_VECTORDB,
+            default => '',
+        };
 
         if (
             array_key_exists('rest', $project->getAttribute('apis', []))
@@ -472,6 +478,7 @@ Http::init()
         /*
         * Abuse Check
         */
+
         $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
         $timeLimitArray = [];
 
@@ -507,6 +514,7 @@ Http::init()
 
             $abuse = new Abuse($timeLimit);
             $remaining = $timeLimit->remaining();
+
             $limit = $timeLimit->limit();
             $time = $timeLimit->time() + $route->getLabel('abuse-time', 3600);
 

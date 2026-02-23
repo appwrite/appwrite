@@ -43,6 +43,15 @@ use Utopia\Validator\WhiteList;
 
 include_once __DIR__ . '/../shared/api.php';
 
+function getDatabaseTransferResourceServices(string $databaseType)
+{
+    return match($databaseType) {
+        DATABASE_TYPE_LEGACY,
+        DATABASE_TYPE_TABLESDB => Transfer::GROUP_DATABASES_TABLES_DB,
+        DATABASE_TYPE_VECTORDB => Transfer::GROUP_DATABASES_VECTOR_DB
+    };
+}
+
 Http::post('/v1/migrations/appwrite')
     ->groups(['api', 'migrations'])
     ->desc('Create Appwrite migration')
@@ -64,7 +73,7 @@ Http::post('/v1/migrations/appwrite')
     ))
     ->param('resources', [], new ArrayList(new WhiteList(Appwrite::getSupportedResources())), 'List of resources to migrate')
     ->param('endpoint', '', new URL(), 'Source Appwrite endpoint')
-    ->param('projectId', '', new UID(), 'Source Project ID')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Source Project ID', false, ['dbForProject'])
     ->param('apiKey', '', new Text(512), 'Source API Key')
     ->inject('response')
     ->inject('dbForProject')
@@ -335,8 +344,8 @@ Http::post('/v1/migrations/csv/imports')
             )
         ]
     ))
-    ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
-    ->param('fileId', '', new UID(), 'File ID.')
+    ->param('bucketId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).', false, ['dbForProject'])
+    ->param('fileId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'File ID.', false, ['dbForProject'])
     ->param('resourceId', null, new CompoundUID(), 'Composite ID in the format {databaseId:collectionId}, identifying a collection within a database.')
     ->param('internalFile', false, new Boolean(), 'Is the file stored in an internal bucket?', true)
     ->inject('response')
@@ -427,8 +436,16 @@ Http::post('/v1/migrations/csv/imports')
             throw new \Exception('Unable to copy file');
         }
 
+        // getting databasetype
+        $resources = explode(':', $resourceId);
+        $databaseId = $resources[0];
+        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $databaseType = $database->getAttribute('type');
+        if (!in_array($databaseType, CSV_ALLOWED_DATABASE_TYPES)) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Database type not supported for csv');
+        }
         $fileSize = $deviceForMigrations->getFileSize($newPath);
-        $resources = Transfer::extractServices([Transfer::GROUP_DATABASES]);
+        $resources = Transfer::extractServices([getDatabaseTransferResourceServices($databaseType)]);
 
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => $migrationId,
@@ -557,13 +574,23 @@ Http::post('/v1/migrations/csv/exports')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
         }
 
+        // getting databasetype
+        $resources = explode(':', $resourceId);
+        $databaseId = $resources[0];
+        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $databaseType = $database->getAttribute('type');
+        if (!in_array($databaseType, CSV_ALLOWED_DATABASE_TYPES)) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Database type not supported for csv');
+        }
+        $resources = Transfer::extractServices([getDatabaseTransferResourceServices($databaseType)]);
+
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
             'stage' => 'init',
             'source' => Appwrite::getName(),
             'destination' => CSV::getName(),
-            'resources' => Transfer::extractServices([Transfer::GROUP_DATABASES]),
+            'resources' => $resources,
             'resourceId' => $resourceId,
             'resourceType' => Resource::TYPE_DATABASE,
             'statusCounters' => '{}',
@@ -678,7 +705,7 @@ Http::get('/v1/migrations/:migrationId')
             )
         ]
     ))
-    ->param('migrationId', '', new UID(), 'Migration unique ID.')
+    ->param('migrationId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Migration unique ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $migrationId, Response $response, Database $dbForProject) {
@@ -713,12 +740,10 @@ Http::get('/v1/migrations/appwrite/report')
     ->param('projectID', '', new Text(512), "Source's Project ID")
     ->param('key', '', new Text(512), "Source's API Key")
     ->inject('response')
-    ->inject('dbForProject')
-    ->inject('project')
-    ->inject('user')
-    ->action(function (array $resources, string $endpoint, string $projectID, string $key, Response $response) {
+    ->inject('getDatabasesDB')
+    ->action(function (array $resources, string $endpoint, string $projectID, string $key, Response $response, callable $getDatabasesDB) {
 
-        $appwrite = new Appwrite($projectID, $endpoint, $key);
+        $appwrite = new Appwrite($projectID, $endpoint, $key, $getDatabasesDB);
 
         try {
             $report = $appwrite->report($resources);
@@ -911,7 +936,7 @@ Http::patch('/v1/migrations/:migrationId')
             )
         ]
     ))
-    ->param('migrationId', '', new UID(), 'Migration unique ID.')
+    ->param('migrationId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Migration unique ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
@@ -965,7 +990,7 @@ Http::delete('/v1/migrations/:migrationId')
         ],
         contentType: ContentType::NONE
     ))
-    ->param('migrationId', '', new UID(), 'Migration ID.')
+    ->param('migrationId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Migration ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')

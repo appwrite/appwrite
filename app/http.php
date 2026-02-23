@@ -192,8 +192,8 @@ include __DIR__ . '/controllers/general.php';
 
 function createDatabase(Http $app, string $resourceKey, string $dbName, array $collections, mixed $pools, ?callable $extraSetup = null): void
 {
-    $max = 10;
-    $sleep = 1;
+    $max = 15;
+    $sleep = 2;
     $attempts = 0;
 
     while (true) {
@@ -203,7 +203,7 @@ function createDatabase(Http $app, string $resourceKey, string $dbName, array $c
             /* @var $database Database */
             $database = is_callable($resource) ? $resource() : $resource;
             break; // exit loop on success
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Console::warning("  └── Database not ready. Retrying connection ({$attempts})...");
             if ($attempts >= $max) {
                 throw new \Exception('  └── Failed to connect to database: ' . $e->getMessage());
@@ -215,11 +215,26 @@ function createDatabase(Http $app, string $resourceKey, string $dbName, array $c
     Span::init("database.setup");
     Span::add('database.name', $dbName);
 
-    // Attempt to create the database
-    try {
-        $database->create();
-    } catch (\Exception $e) {
-        Span::add('database.exists', true);
+    $attempts = 0;
+    while (true) {
+        try {
+            $attempts++;
+            $database->create();
+            break; // exit loop on success
+        } catch (\Exception $e) {
+            if ($e instanceof DuplicateException) {
+                Console::info("  └── Skip: metadata table already exists");
+                Span::add('database.exists', true);
+                break;
+            }
+
+            Console::warning("  └── Database create failed. Retrying ({$attempts})...");
+            if ($attempts >= $max) {
+                throw new \Exception('  └── Failed to create database: ' . $e->getMessage());
+            }
+
+            \sleep($sleep);
+        }
     }
 
     // Process collections
@@ -389,13 +404,29 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $tot
         });
 
         $projectCollections = $collections['projects'];
+
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
         $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
         $sharedTablesV2 = \array_diff($sharedTables, $sharedTablesV1);
 
+        $documentsSharedTables = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES', ''));
+        $documentsSharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES_V1', ''));
+        $documentsSharedTablesV2 = \array_diff($documentsSharedTables, $documentsSharedTablesV1);
+
+        $vectorSharedTables = \explode(',', System::getEnv('_APP_DATABASE_VECTORDB_SHARED_TABLES', ''));
+        $vectorSharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_VECTORDB_SHARED_TABLES_V1', ''));
+        $vectorSharedTablesV2 = \array_diff($vectorSharedTables, $vectorSharedTablesV1);
+
         $cache = $app->getResource('cache');
 
-        foreach ($sharedTablesV2 as $hostname) {
+        // All shared tables V2 pools that need project metadata collections
+        $sharedTablesV2All = \array_values(\array_unique(\array_filter([
+            ...$sharedTablesV2,
+            ...$documentsSharedTablesV2,
+            ...$vectorSharedTablesV2,
+        ])));
+
+        foreach ($sharedTablesV2All as $hostname) {
             Span::init('database.setup');
             Span::add('database.hostname', $hostname);
 
@@ -406,10 +437,24 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $tot
                 ->setTenant(null)
                 ->setNamespace(System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', ''));
 
-            try {
-                $dbForProject->create();
-            } catch (DuplicateException) {
-                Span::add('database.exists', true);
+            $max = 15;
+            $sleep = 2;
+            $attempts = 0;
+            while (true) {
+                try {
+                    $attempts++;
+                    $dbForProject->create();
+                    break; // exit loop on success
+                } catch (DuplicateException) {
+                    Span::add('database.exists', true);
+                    break;
+                } catch (\Throwable $e) {
+                    Console::warning("  └── Project database create failed. Retrying ({$attempts})...");
+                    if ($attempts >= $max) {
+                        throw new \Exception('  └── Failed to create project database: ' . $e->getMessage());
+                    }
+                    sleep($sleep);
+                }
             }
 
             if ($dbForProject->getCollection(AuditAdapterSQL::COLLECTION)->isEmpty()) {
@@ -610,7 +655,7 @@ $http->on(Constant::EVENT_TASK, function () use ($register) {
                 if ($latestDocument !== null) {
                     $queries[] =  Query::cursorAfter($latestDocument);
                 }
-                if ($lastSyncUpdate != null) {
+                if ($lastSyncUpdate !== null) {
                     $queries[] = Query::greaterThanEqual('$updatedAt', $lastSyncUpdate);
                 }
                 $results = [];
@@ -618,7 +663,7 @@ $http->on(Constant::EVENT_TASK, function () use ($register) {
                     $authorization = $app->getResource('authorization');
                     $results = $authorization->skip(fn () =>  $dbForPlatform->find('rules', $queries));
                 } catch (Throwable $th) {
-                    Console::error($th->getMessage());
+                    Console::error('rules ' . $th->getMessage());
                 }
 
                 $sum = count($results);

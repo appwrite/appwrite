@@ -73,15 +73,16 @@ class Increment extends Action
                     replaceWith: 'tablesDB.incrementRowColumn',
                 ),
             ))
-            ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('collectionId', '', new UID(), 'Collection ID.')
-            ->param('documentId', '', new UID(), 'Document ID.')
-            ->param('attribute', '', new Key(), 'Attribute key.')
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
+            ->param('documentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Document ID.', false, ['dbForProject'])
+            ->param('attribute', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Attribute key.', false, ['dbForProject'])
             ->param('value', 1, new Numeric(), 'Value to increment the attribute by. The value must be a number.', true)
             ->param('max', null, new Nullable(new Numeric()), 'Maximum value for the attribute. If the current value is greater than this value, an error will be thrown.', true)
             ->param('transactionId', null, new Nullable(new UID()), 'Transaction ID for staging the operation.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
             ->inject('plan')
@@ -89,7 +90,7 @@ class Increment extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $max, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage, array $plan, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $max, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, array $plan, Authorization $authorization): void
     {
         $isAPIKey = User::isApp($authorization->getRoles());
         $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
@@ -170,8 +171,9 @@ class Increment extends Action
             return;
         }
 
+        $dbForDatabases = $getDatabasesDB($database);
         try {
-            $document = $dbForProject->increaseDocumentAttribute(
+            $document = $dbForDatabases->increaseDocumentAttribute(
                 collection: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                 id: $documentId,
                 attribute: $attribute,
@@ -201,8 +203,8 @@ class Increment extends Action
         );
 
         $queueForStatsUsage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, 1)
-            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), 1);
+            ->addMetric($this->getDatabasesOperationWriteMetric(), 1)
+            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationWriteMetric()), 1);
 
         $queueForEvents
             ->setParam('databaseId', $databaseId)

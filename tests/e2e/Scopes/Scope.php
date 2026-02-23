@@ -17,6 +17,10 @@ abstract class Scope extends TestCase
     public const REQUEST_TYPE_WEBHOOK = 'webhook';
     public const REQUEST_TYPE_SMS = 'sms';
 
+    // Database adapter constants
+    public const DB_ADAPTER_MONGODB = 'mongodb';
+    public const DB_ADAPTER_ENV_KEY = '_APP_DB_ADAPTER';
+
     protected ?Client $client = null;
     protected string $endpoint = 'http://appwrite/v1';
     protected string $webEndpoint = 'http://appwrite.test/v1';
@@ -41,6 +45,14 @@ abstract class Scope extends TestCase
     protected function tearDown(): void
     {
         $this->client = null;
+    }
+
+    /**
+     * Check if the current database adapter is MongoDB
+     */
+    protected function isMongoDB(): bool
+    {
+        return self::DB_ADAPTER_MONGODB === strtolower(System::getEnv(self::DB_ADAPTER_ENV_KEY, self::DB_ADAPTER_MONGODB));
     }
 
     protected function getLastEmail(int $limit = 1): array

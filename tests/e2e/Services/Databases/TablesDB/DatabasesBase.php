@@ -222,7 +222,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'key' => 'description',
-            'size' => 512,
+            'size' => 500,
             'required' => false,
             'default' => '',
         ]);
@@ -233,7 +233,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'key' => 'tagline',
-            'size' => 512,
+            'size' => 600,
             'required' => false,
             'default' => '',
         ]);
@@ -303,6 +303,20 @@ trait DatabasesBase
             'max' => 99,
         ]);
 
+        //Since mongodb does not allow multiple indexes on the same field, we need to create a second index.
+        $integers2 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/columns/integer', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'integers2',
+            'required' => false,
+            'array' => true,
+            'min' => 10,
+            'max' => 99,
+        ]);
+
+
         $this->assertEquals(202, $title['headers']['status-code']);
         $this->assertEquals($title['body']['key'], 'title');
         $this->assertEquals($title['body']['type'], 'string');
@@ -312,14 +326,14 @@ trait DatabasesBase
         $this->assertEquals(202, $description['headers']['status-code']);
         $this->assertEquals($description['body']['key'], 'description');
         $this->assertEquals($description['body']['type'], 'string');
-        $this->assertEquals($description['body']['size'], 512);
+        $this->assertEquals($description['body']['size'], 500);
         $this->assertEquals($description['body']['required'], false);
         $this->assertEquals($description['body']['default'], '');
 
         $this->assertEquals(202, $tagline['headers']['status-code']);
         $this->assertEquals($tagline['body']['key'], 'tagline');
         $this->assertEquals($tagline['body']['type'], 'string');
-        $this->assertEquals($tagline['body']['size'], 512);
+        $this->assertEquals($tagline['body']['size'], 600); // to match the index max length in mongo also.
         $this->assertEquals($tagline['body']['required'], false);
         $this->assertEquals($tagline['body']['default'], '');
 
@@ -360,6 +374,12 @@ trait DatabasesBase
         $this->assertEquals($integers['body']['required'], false);
         $this->assertEquals($integers['body']['array'], true);
 
+        $this->assertEquals(202, $integers2['headers']['status-code']);
+        $this->assertEquals($integers2['body']['key'], 'integers2');
+        $this->assertEquals($integers2['body']['type'], 'integer');
+        $this->assertArrayNotHasKey('size', $integers2['body']);
+        $this->assertEquals($integers2['body']['required'], false);
+        $this->assertEquals($integers2['body']['array'], true);
         // wait for database worker to create attributes
         sleep(2);
 
@@ -370,7 +390,7 @@ trait DatabasesBase
         ]));
 
         $this->assertIsArray($movies['body']['columns']);
-        $this->assertCount(9, $movies['body']['columns']);
+        $this->assertCount(10, $movies['body']['columns']);
         $this->assertArrayHasKey('bytesMax', $movies['body']);
         $this->assertArrayHasKey('bytesUsed', $movies['body']);
         $this->assertGreaterThanOrEqual(0, $movies['body']['bytesUsed']);
@@ -383,6 +403,7 @@ trait DatabasesBase
         $this->assertEquals($movies['body']['columns'][6]['key'], $datetime['body']['key']);
         $this->assertEquals($movies['body']['columns'][7]['key'], $relationship['body']['key']);
         $this->assertEquals($movies['body']['columns'][8]['key'], $integers['body']['key']);
+        $this->assertEquals($movies['body']['columns'][9]['key'], $integers2['body']['key']);
 
         return $data;
     }
@@ -475,13 +496,13 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'size' => 1000,
+            'size' => 2000, // to match the index max length in mongo also.
             'required' => true,
             'default' => null,
         ]);
 
         $this->assertEquals(400, $attribute['headers']['status-code']);
-        $this->assertStringContainsString('Index length is longer than the maximum: 76', $attribute['body']['message']);
+        $this->assertStringContainsString('Index length is longer than the maximum', $attribute['body']['message']); //to  match mongdb length limit. also
     }
 
     public function testUpdateColumnEnum(): void
@@ -1293,7 +1314,13 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $fulltextReleaseYear['headers']['status-code']);
-        $this->assertEquals($fulltextReleaseYear['body']['message'], 'Attribute "releaseYear" cannot be part of a fulltext index, must be of type string');
+
+        // MongoDB only allows one fulltext index per collection, so it returns a different error
+        if ($this->isMongoDB()) {
+            $this->assertEquals('There is already a fulltext index in the collection', $fulltextReleaseYear['body']['message']);
+        } else {
+            $this->assertEquals('Attribute "releaseYear" cannot be part of a fulltext index, must be of type string', $fulltextReleaseYear['body']['message']);
+        }
 
         $noAttributes = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1345,6 +1372,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $fulltextArray['headers']['status-code']);
+
         $this->assertEquals('Creating indexes on array attributes is not currently supported.', $fulltextArray['body']['message']);
 
         $actorsArray = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/indexes', array_merge([
@@ -1408,7 +1436,7 @@ trait DatabasesBase
         ]), [
             'key' => 'integers-size',
             'type' => 'key',
-            'columns' => ['integers'], // array column
+            'columns' => ['integers2'], // array column
         ]);
 
         $this->assertEquals(400, $index2['headers']['status-code']);
@@ -1482,7 +1510,8 @@ trait DatabasesBase
         ]);
         $this->assertEquals(400, $create['headers']['status-code']);
 
-        // Test case for lengths exceeding total of 768
+        // Test case for lengths exceeding total of 768(or 1024 in mongodb)
+        $maxLength = $this->isMongoDB() ? 1024 : 768;
         $create = $this->client->call(Client::METHOD_POST, "/tablesdb/{$databaseId}/tables/{$tableId}/indexes", [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1491,7 +1520,7 @@ trait DatabasesBase
             'key' => 'lengthTooLargeIndex',
             'type' => 'key',
             'columns' => ['title','description','tagline','actors'],
-            'lengths' => [256,256,256,20]
+            'lengths' => [$maxLength,$maxLength,$maxLength,20]
         ]);
 
         $this->assertEquals(400, $create['headers']['status-code']);
@@ -1642,7 +1671,11 @@ trait DatabasesBase
         $this->assertEquals($row1['body']['actors'][1], 'Samuel Jackson');
         $this->assertEquals($row1['body']['birthDay'], '1975-06-12T12:12:55.000+00:00');
         $this->assertTrue(array_key_exists('$sequence', $row1['body']));
-        $this->assertIsInt($row1['body']['$sequence']);
+        if ($this->isMongoDB()) {
+            $this->assertIsString($row1['body']['$sequence']);
+        } else {
+            $this->assertIsInt($row1['body']['$sequence']);
+        }
 
         $this->assertEquals(201, $row2['headers']['status-code']);
         $this->assertEquals($data['moviesId'], $row2['body']['$tableId']);
@@ -3056,6 +3089,9 @@ trait DatabasesBase
 
     public function testOperators(): void
     {
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
         // Create database
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
             'content-type' => 'application/json',
@@ -3304,6 +3340,9 @@ trait DatabasesBase
 
     public function testBulkOperators(): void
     {
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
         // Create database
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
             'content-type' => 'application/json',
@@ -4586,7 +4625,15 @@ trait DatabasesBase
 
         $this->assertEquals(202, $uniqueIndex['headers']['status-code']);
 
-        sleep(2);
+        $index = null;
+        $this->assertEventually(function () use ($databaseId, $data, &$index) {
+            $index = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/indexes/unique_title', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]));
+            $this->assertEquals('available', $index['body']['status']);
+        }, 30000, 500);
 
         // test for failure
         $duplicate = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/rows', array_merge([
@@ -4895,6 +4942,11 @@ trait DatabasesBase
      */
     public function testOneToOneRelationship(array $data): array
     {
+
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $databaseId = $data['databaseId'];
 
         $person = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
@@ -5141,6 +5193,11 @@ trait DatabasesBase
      */
     public function testOneToManyRelationship(array $data): array
     {
+
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $databaseId = $data['databaseId'];
         $personCollection = $data['personCollection'];
         $libraryCollection = $data['libraryCollection'];
@@ -5296,6 +5353,11 @@ trait DatabasesBase
      */
     public function testManyToOneRelationship(array $data): array
     {
+
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $databaseId = $data['databaseId'];
 
         // Create album table
@@ -5448,6 +5510,11 @@ trait DatabasesBase
      */
     public function testManyToManyRelationship(array $data): array
     {
+
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $databaseId = $data['databaseId'];
 
         // Create sports table
@@ -7574,6 +7641,11 @@ trait DatabasesBase
      */
     public function testUpdateWithExistingRelationships(array $data): void
     {
+
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $databaseId = $data['databaseId'];
 
         $table1 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
@@ -8227,6 +8299,11 @@ trait DatabasesBase
 
     public function testSpatialPointColumns(): void
     {
+
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -8365,6 +8442,11 @@ trait DatabasesBase
 
     public function testSpatialLineColumns(): void
     {
+
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -8499,6 +8581,11 @@ trait DatabasesBase
 
     public function testSpatialPolygonColumns(): void
     {
+
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -8631,6 +8718,11 @@ trait DatabasesBase
 
     public function testSpatialColumnsMixedTable(): void
     {
+
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -8785,6 +8877,11 @@ trait DatabasesBase
 
     public function testSpatialQuery(): void
     {
+
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -9174,6 +9271,11 @@ trait DatabasesBase
 
     public function testSpatialIndex(): void
     {
+
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -9290,6 +9392,11 @@ trait DatabasesBase
 
     public function testUpdateSpatialColumns(): void
     {
+
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -9447,6 +9554,11 @@ trait DatabasesBase
     }
     public function testSpatialDistanceInMeter(): void
     {
+
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $headers = [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -9543,6 +9655,11 @@ trait DatabasesBase
 
     public function testSpatialColCreateOnExistingData(): void
     {
+
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -9673,6 +9790,11 @@ trait DatabasesBase
 
     public function testSpatialColCreateOnExistingDataWithDefaults(): void
     {
+
+        if ($this->isMongoDB()) {
+            $this->markTestSkipped('MongoDB is not supported for this test');
+        }
+
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

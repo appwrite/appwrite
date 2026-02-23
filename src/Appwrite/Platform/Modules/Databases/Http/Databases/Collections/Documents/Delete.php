@@ -72,13 +72,14 @@ class Delete extends Action
                     replaceWith: 'tablesDB.deleteRow',
                 ),
             ))
-            ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-            ->param('documentId', '', new UID(), 'Document ID.')
-            ->param('transactionId', null, new Nullable(new UID()), 'Transaction ID for staging the operation.', true)
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).', false, ['dbForProject'])
+            ->param('documentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Document ID.', false, ['dbForProject'])
+            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('requestTimestamp')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
             ->inject('transactionState')
@@ -95,6 +96,7 @@ class Delete extends Action
         ?\DateTime $requestTimestamp,
         UtopiaResponse $response,
         Database $dbForProject,
+        callable $getDatabasesDB,
         Event $queueForEvents,
         StatsUsage $queueForStatsUsage,
         TransactionState $transactionState,
@@ -116,14 +118,15 @@ class Delete extends Action
             throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
+        $dbForDatabases = $getDatabasesDB($database);
         // Read permission should not be required for delete
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
         if ($transactionId !== null) {
             // Use transaction-aware document retrieval to see changes from same transaction
-            $document = $transactionState->getDocument($collectionTableId, $documentId, $transactionId);
+            $document = $transactionState->getDocument($database, $collectionTableId, $documentId, $transactionId);
         } else {
-            $document = $authorization->skip(fn () => $dbForProject->getDocument($collectionTableId, $documentId));
+            $document = $authorization->skip(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId));
         }
 
         if ($document->isEmpty()) {
@@ -187,8 +190,8 @@ class Delete extends Action
         }
 
         try {
-            $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $database, $collection, $documentId) {
-                $dbForProject->deleteDocument(
+            $dbForDatabases->withRequestTimestamp($requestTimestamp, function () use ($dbForDatabases, $database, $collection, $documentId) {
+                $dbForDatabases->deleteDocument(
                     'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                     $documentId
                 );
@@ -211,8 +214,8 @@ class Delete extends Action
         );
 
         $queueForStatsUsage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, 1)
-            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), 1); // per collection
+            ->addMetric($this->getDatabasesOperationWriteMetric(), 1)
+            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationWriteMetric()), 1); // per collection
 
         $response->addHeader('X-Debug-Operations', 1);
 

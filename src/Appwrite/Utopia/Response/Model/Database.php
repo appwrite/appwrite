@@ -45,9 +45,8 @@ class Database extends Model
                 'description' => 'Database type.',
                 'default' => 'legacy',
                 'example' => 'legacy',
-                'enum' => ['legacy', 'tablesdb'],
-            ])
-        ;
+                'enum' => ['legacy', 'tablesdb', 'documentsdb'],
+            ]);
     }
 
     /**

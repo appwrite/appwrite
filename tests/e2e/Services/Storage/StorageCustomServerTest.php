@@ -224,7 +224,13 @@ class StorageCustomServerTest extends Scope
                 $this->getHeaders()
             )
         );
-        $this->assertEquals(400, $response['headers']['status-code']);
+        // MariaDB/MySQL have shorter max UID length (36), so validation catches this and returns 400
+        // MongoDB supports longer UIDs (255), so it passes validation and returns 404 when not found
+        if ($this->isMongoDB()) {
+            $this->assertEquals(404, $response['headers']['status-code']);
+        } else {
+            $this->assertEquals(400, $response['headers']['status-code']);
+        }
 
         return $data;
     }

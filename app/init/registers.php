@@ -12,6 +12,7 @@ use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Adapter\Mongo;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Adapter\Postgres;
 use Utopia\Database\Adapter\SQL;
@@ -24,6 +25,7 @@ use Utopia\Logger\Adapter\LogOwl;
 use Utopia\Logger\Adapter\Raygun;
 use Utopia\Logger\Adapter\Sentry;
 use Utopia\Logger\Logger;
+use Utopia\Mongo\Client as MongoClient;
 use Utopia\Pools\Adapter\Stack as StackPool;
 use Utopia\Pools\Adapter\Swoole as SwoolePool;
 use Utopia\Pools\Group;
@@ -166,24 +168,53 @@ $register->set('pools', function () {
         'pass' => System::getEnv('_APP_REDIS_PASS', ''),
     ]);
 
+    $fallbackForDocumentsDB = 'db_main=' . AppwriteURL::unparse([
+        'scheme' => System::getEnv('_APP_DB_ADAPTER_DOCUMENTSDB', 'mongodb'),
+        'host' => System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb'),
+        'port' => System::getEnv('_APP_DB_PORT_DOCUMENTSDB', '27017'),
+        'user' => System::getEnv('_APP_DB_USER', ''),
+        'pass' => System::getEnv('_APP_DB_PASS', ''),
+        'path' => System::getEnv('_APP_DB_SCHEMA', ''),
+    ]);
+    $fallbackForVectorDB = 'db_main=' . AppwriteURL::unparse([
+        'scheme' => System::getEnv('_APP_DB_ADAPTER_VECTORDB', 'postgresql'),
+        'host' => System::getEnv('_APP_DB_HOST_VECTORDB', 'postgresql'),
+        'port' => System::getEnv('_APP_DB_PORT_VECTORDB', '5432'),
+        'user' => System::getEnv('_APP_DB_USER', ''),
+        'pass' => System::getEnv('_APP_DB_PASS', ''),
+        'path' => System::getEnv('_APP_DB_SCHEMA', ''),
+    ]);
+
     $connections = [
         'console' => [
             'type' => 'database',
             'dsns' => $fallbackForDB,
             'multiple' => false,
-            'schemes' => ['mariadb', 'mysql','postgresql'],
+            'schemes' => ['mongodb','mariadb', 'mysql','postgresql'],
         ],
         'database' => [
             'type' => 'database',
             'dsns' => $fallbackForDB,
             'multiple' => true,
-            'schemes' => ['mariadb', 'mysql','postgresql'],
+            'schemes' => ['mongodb','mariadb', 'mysql','postgresql'],
+        ],
+        'documentsdb' => [
+            'type' => 'database',
+            'dsns' => System::getEnv('_APP_CONNECTIONS_DATABASE_DOCUMENTSDB', $fallbackForDocumentsDB),
+            'multiple' => true,
+            'schemes' => ['mongodb'],
+        ],
+        'vectordb' => [
+            'type' => 'database',
+            'dsns' => System::getEnv('_APP_CONNECTIONS_DATABASE_VECTORDB', $fallbackForVectorDB),
+            'multiple' => true,
+            'schemes' => ['postgresql'],
         ],
         'logs' => [
             'type' => 'database',
             'dsns' => System::getEnv('_APP_CONNECTIONS_DB_LOGS', $fallbackForDB),
             'multiple' => false,
-            'schemes' => ['mariadb', 'mysql','postgresql'],
+            'schemes' => ['mongodb','mariadb', 'mysql','postgresql'],
         ],
         'publisher' => [
             'type' => 'publisher',
@@ -263,6 +294,7 @@ $register->set('pools', function () {
              *
              * Resource assignment to an adapter will happen below.
              */
+
             $resource = match ($dsnScheme) {
                 'mysql',
                 'mariadb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
@@ -275,6 +307,27 @@ $register->set('pools', function () {
                             \PDO::ATTR_STRINGIFY_FETCHES => true
                         ]);
                     });
+                },
+                'postgresql' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
+                    return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
+                        return new PDO("pgsql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase}", $dsnUser, $dsnPass, array(
+                            \PDO::ATTR_TIMEOUT => 3, // Seconds
+                            \PDO::ATTR_PERSISTENT => false,
+                            \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+                            \PDO::ATTR_EMULATE_PREPARES => true,
+                            \PDO::ATTR_STRINGIFY_FETCHES => true
+                        ));
+                    });
+                },
+                'mongodb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase, $dsn) {
+                    try {
+                        $mongo = new MongoClient($dsnDatabase, $dsnHost, (int)$dsnPort, $dsnUser, $dsnPass, false);
+                        @$mongo->connect();
+
+                        return $mongo;
+                    } catch (\Throwable $e) {
+                        throw new Exception(Exception::GENERAL_SERVER_ERROR, "MongoDB connection failed: " . $e->getMessage());
+                    }
                 },
                 'postgresql' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
                     return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
@@ -302,7 +355,7 @@ $register->set('pools', function () {
 
             $poolAdapter = System::getEnv('_APP_POOL_ADAPTER', default: 'stack') === 'swoole' ? new SwoolePool() : new StackPool();
 
-            $pool = new Pool($poolAdapter, $name, $poolSize, function () use ($type, $resource, $dsn) {
+            $pool = new Pool($poolAdapter, $name, $poolSize, function () use ($type, $resource, $dsn, $key) {
                 // Get Adapter
                 switch ($type) {
                     case 'database':
@@ -310,10 +363,14 @@ $register->set('pools', function () {
                             'mariadb' => new MariaDB($resource()),
                             'mysql' => new MySQL($resource()),
                             'postgresql' => new Postgres($resource()),
+                            'mongodb' => new Mongo($resource()),
                             default => null
                         };
 
                         $adapter->setDatabase($dsn->getPath());
+                        if ($key === 'documentsdb') {
+                            $adapter->setSupportForAttributes(false);
+                        }
                         return $adapter;
                     case 'pubsub':
                         return match ($dsn->getScheme()) {
@@ -364,11 +421,21 @@ $register->set('db', function () {
     $dbPort = System::getEnv('_APP_DB_PORT', '');
     $dbUser = System::getEnv('_APP_DB_USER', '');
     $dbPass = System::getEnv('_APP_DB_PASS', '');
-    $dbSchema = System::getEnv('_APP_DB_SCHEMA', '');
-    $dbAdapter = System::getEnv('_APP_DB_ADAPTER', 'mariadb');
+    $dbScheme = System::getEnv('_APP_DB_SCHEMA', '');
+    $dbAdapter = System::getEnv('_APP_DB_ADAPTER', 'mongodb');
     $dsn = '';
 
     switch ($dbAdapter) {
+        case 'mongodb':
+            try {
+                $mongo = new MongoClient($dbScheme, $dbHost, (int)$dbPort, $dbUser, $dbPass, false);
+                @$mongo->connect();
+
+                return $mongo;
+            } catch (\Throwable $e) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, "MongoDB connection failed: " . $e->getMessage());
+            }
+
         case 'postgresql':
             $dsn = "pgsql:host={$dbHost};port={$dbPort};dbname={$dbSchema}";
             break;
@@ -376,17 +443,9 @@ $register->set('db', function () {
         case 'mysql':
         case 'mariadb':
         default:
-            $dsn = "mysql:host={$dbHost};port={$dbPort};dbname={$dbSchema};charset=utf8mb4";
-            break;
+            $dsn = "mysql:host={$dbHost};port={$dbPort};dbname={$dbScheme};charset=utf8mb4";
+            return new PDO($dsn, $dbUser, $dbPass, SQL::getPDOAttributes());
     }
-
-
-    return new PDO(
-        $dsn,
-        $dbUser,
-        $dbPass,
-        SQL::getPDOAttributes()
-    );
 });
 
 $register->set('smtp', function () {

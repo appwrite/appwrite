@@ -29,6 +29,8 @@
             "Appwrite\\Tests\\": "tests/extensions"
         }
     },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "require": {
         "php": ">=8.3.0",
         "ext-curl": "*",
@@ -55,6 +57,7 @@
         "utopia-php/config": "1.*",
         "utopia-php/console": "0.1.*",
         "utopia-php/database": "5.*",
+        "utopia-php/agents": "1.*",
         "utopia-php/detector": "0.2.*",
         "utopia-php/domains": "1.*",
         "utopia-php/emails": "0.6.*",
@@ -66,7 +69,7 @@
         "utopia-php/locale": "0.8.*",
         "utopia-php/logger": "0.6.*",
         "utopia-php/messaging": "0.20.*",
-        "utopia-php/migration": "1.6.*",
+        "utopia-php/migration": "dev-improve-columns-setup as 1.6.1",
         "utopia-php/platform": "0.7.*",
         "utopia-php/pools": "1.*",
         "utopia-php/span": "1.1.*",
@@ -81,11 +84,11 @@
         "matomo/device-detector": "6.4.*",
         "dragonmantank/cron-expression": "3.4.*",
         "phpmailer/phpmailer": "6.9.*",
-        "chillerlan/php-qrcode": "4.4.*",
+        "chillerlan/php-qrcode": "4.3.*",
         "adhocore/jwt": "1.1.*",
         "spomky-labs/otphp": "^11.4.2",
         "webonyx/graphql-php": "14.11.*",
-        "league/csv": "9.24.*",
+        "league/csv": "9.14.*",
         "enshrined/svg-sanitize": "0.22.*"
     },
     "require-dev": {
@@ -103,7 +106,6 @@
     },
     "config": {
         "platform": {
-            "php": "8.3"
         },
         "allow-plugins": {
             "php-http/discovery": true,

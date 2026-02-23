@@ -491,6 +491,9 @@ class Realtime extends MessagingAdapter
                 $roles = [Role::team(ID::custom($parts[1]))->toString()];
                 break;
             case 'databases':
+            case 'tablesdb':
+            case 'documentsdb':
+            case 'vectordb':
                 $resource = $parts[4] ?? '';
                 if (in_array($resource, ['columns', 'attributes', 'indexes'])) {
                     $channels[] = 'console';
@@ -508,14 +511,25 @@ class Realtime extends MessagingAdapter
                     $tableId = $payload->getAttribute('$tableId', '');
                     $collectionId = $payload->getAttribute('$collectionId', '');
                     $resourceId = $tableId ?: $collectionId;
+                    $channels = [];
+                    // backward compat(tablesdb will have databases channels + tablesdb prefixed channels)
+                    if ($parts[0] === 'databases' || $parts[0] === 'tablesdb') {
+                        $prefix = 'databases';
 
-                    $channels[] = 'rows';
-                    $channels[] = 'databases.' . $database->getId() .  '.tables.' . $resourceId . '.rows';
-                    $channels[] = 'databases.' . $database->getId() . '.tables.' . $resourceId . '.rows.' . $payload->getId();
+                        $channels = self::getDatabaseChannels('legacy', $database->getId(), $resourceId, $payload->getId(), $prefix);
 
-                    $channels[] = 'documents';
-                    $channels[] = 'databases.' . $database->getId() .  '.collections.' . $resourceId . '.documents';
-                    $channels[] = 'databases.' . $database->getId() . '.collections.' . $resourceId . '.documents.' . $payload->getId();
+                        $channels = array_unique([
+                            ...$channels,
+                            ...self::getDatabaseChannels('tablesdb', $database->getId(), $resourceId, $payload->getId(), $prefix)
+                        ]);
+                    }
+                    // prefixed channels -> tablesdb, documentsdb,etc
+                    if ($parts[0] !== 'databases') {
+                        $channels = array_unique([
+                            ...$channels,
+                            ...self::getDatabaseChannels($parts[0], $database->getId(), $resourceId, $payload->getId()),
+                        ]);
+                    }
 
                     $roles = $collection->getAttribute('documentSecurity', false)
                         ? \array_merge($collection->getRead(), $payload->getRead())
@@ -571,5 +585,65 @@ class Realtime extends MessagingAdapter
             'permissionsChanged' => $permissionsChanged,
             'projectId' => $projectId
         ];
+    }
+
+    /**
+     * Generate realtime channels for database events
+     *
+     * @param string $type The database API type
+     * @param string $databaseId The database ID
+     * @param string $resourceId The collection/table ID
+     * @param string $payloadId The document/row ID
+     * @param string $prefixOverride Override the channel prefix when different API types share the same terminology but need different prefixes
+     * (e.g., 'databases' and 'documentsdb' use same terminology but need different prefixes)
+     * @return array Array of channel names
+     */
+    private static function getDatabaseChannels(
+        string $type = 'databases',
+        string $databaseId = '',
+        string $resourceId = '',
+        string $payloadId = '',
+        string $prefixOverride = '',
+    ): array {
+        $basePrefix = $prefixOverride ?: $type;
+
+        if (!$databaseId || !$resourceId || !$payloadId) {
+            return [];
+        }
+
+        $channels = [];
+
+        switch ($type) {
+            case 'legacy':
+                if (empty($prefixOverride)) {
+                    $basePrefix = 'databases';
+                }
+                $channels[] = 'documents';
+                $channels[] = "{$basePrefix}.{$databaseId}.collections.{$resourceId}.documents";
+                $channels[] = "{$basePrefix}.{$databaseId}.collections.{$resourceId}.documents.{$payloadId}";
+                break;
+            case 'tablesdb':
+                $channels[] = 'rows';
+                $channels[] = "{$basePrefix}.{$databaseId}.tables.{$resourceId}.rows";
+                $channels[] = "{$basePrefix}.{$databaseId}.tables.{$resourceId}.rows.{$payloadId}";
+                break;
+
+            case 'documentsdb':
+            case 'vectordb':
+                $channels[] = 'documents';
+                $channels[] = "{$basePrefix}.{$databaseId}.collections.{$resourceId}.documents";
+                $channels[] = "{$basePrefix}.{$databaseId}.collections.{$resourceId}.documents.{$payloadId}";
+                break;
+
+            default:
+                $basePrefix = 'databases';
+                $channels[] = 'documents';
+                $channels[] = "{$basePrefix}.{$databaseId}.collections.{$resourceId}.documents";
+                $channels[] = "{$basePrefix}.{$databaseId}.collections.{$resourceId}.documents.{$payloadId}";
+                break;
+
+        }
+
+        return $channels;
     }
 }

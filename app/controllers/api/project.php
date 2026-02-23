@@ -62,16 +62,33 @@ Http::get('/v1/project/usage')
                 METRIC_EXECUTIONS_MB_SECONDS,
                 METRIC_BUILDS_MB_SECONDS,
                 METRIC_DOCUMENTS,
+                METRIC_DOCUMENTS_DOCUMENTSDB,
                 METRIC_DATABASES,
+                METRIC_DATABASES_DOCUMENTSDB,
                 METRIC_USERS,
                 METRIC_BUCKETS,
                 METRIC_FILES_STORAGE,
                 METRIC_DATABASES_STORAGE,
+                METRIC_DATABASES_STORAGE_DOCUMENTSDB,
                 METRIC_DEPLOYMENTS_STORAGE,
                 METRIC_BUILDS_STORAGE,
                 METRIC_DATABASES_OPERATIONS_READS,
+                METRIC_DATABASES_OPERATIONS_READS_DOCUMENTSDB,
                 METRIC_DATABASES_OPERATIONS_WRITES,
+                METRIC_DATABASES_OPERATIONS_WRITES_DOCUMENTSDB,
                 METRIC_FILES_IMAGES_TRANSFORMED,
+                // VectorDB totals
+                METRIC_DATABASES_VECTORDB,
+                METRIC_COLLECTIONS_VECTORDB,
+                METRIC_DOCUMENTS_VECTORDB,
+                METRIC_DATABASES_STORAGE_VECTORDB,
+                METRIC_DATABASES_OPERATIONS_READS_VECTORDB,
+                METRIC_DATABASES_OPERATIONS_WRITES_VECTORDB,
+                // Embeddings totals
+                METRIC_EMBEDDINGS_TEXT,
+                METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS,
+                METRIC_EMBEDDINGS_TEXT_TOTAL_DURATION,
+                METRIC_EMBEDDINGS_TEXT_TOTAL_ERROR
             ],
             'period' => [
                 METRIC_NETWORK_REQUESTS,
@@ -80,11 +97,26 @@ Http::get('/v1/project/usage')
                 METRIC_USERS,
                 METRIC_EXECUTIONS,
                 METRIC_DATABASES_STORAGE,
+                METRIC_DATABASES_STORAGE_DOCUMENTSDB,
                 METRIC_EXECUTIONS_MB_SECONDS,
                 METRIC_BUILDS_MB_SECONDS,
                 METRIC_DATABASES_OPERATIONS_READS,
+                METRIC_DATABASES_OPERATIONS_READS_DOCUMENTSDB,
                 METRIC_DATABASES_OPERATIONS_WRITES,
+                METRIC_DATABASES_OPERATIONS_WRITES_DOCUMENTSDB,
                 METRIC_FILES_IMAGES_TRANSFORMED,
+                // VectorDB time series
+                METRIC_DATABASES_VECTORDB,
+                METRIC_COLLECTIONS_VECTORDB,
+                METRIC_DOCUMENTS_VECTORDB,
+                METRIC_DATABASES_STORAGE_VECTORDB,
+                METRIC_DATABASES_OPERATIONS_READS_VECTORDB,
+                METRIC_DATABASES_OPERATIONS_WRITES_VECTORDB,
+                // Embeddings time series
+                METRIC_EMBEDDINGS_TEXT,
+                METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS,
+                METRIC_EMBEDDINGS_TEXT_TOTAL_DURATION,
+                METRIC_EMBEDDINGS_TEXT_TOTAL_ERROR
             ]
         ];
 
@@ -357,8 +389,11 @@ Http::get('/v1/project/usage')
             'buildsMbSecondsTotal' => $total[METRIC_BUILDS_MB_SECONDS],
             'documentsTotal' => $total[METRIC_DOCUMENTS],
             'rowsTotal' => $total[METRIC_DOCUMENTS],
+            'documentsdbDocumentsTotal' => $total[METRIC_DOCUMENTS_DOCUMENTSDB],
             'databasesTotal' => $total[METRIC_DATABASES],
+            'documentsdbTotal' => $total[METRIC_DATABASES_DOCUMENTSDB],
             'databasesStorageTotal' => $total[METRIC_DATABASES_STORAGE],
+            'documentsdbDatabasesStorageTotal' => $total[METRIC_DATABASES_STORAGE_DOCUMENTSDB],
             'usersTotal' => $total[METRIC_USERS],
             'bucketsTotal' => $total[METRIC_BUCKETS],
             'filesStorageTotal' => $total[METRIC_FILES_STORAGE],
@@ -367,10 +402,27 @@ Http::get('/v1/project/usage')
             'deploymentsStorageTotal' => $total[METRIC_DEPLOYMENTS_STORAGE],
             'databasesReadsTotal' => $total[METRIC_DATABASES_OPERATIONS_READS],
             'databasesWritesTotal' => $total[METRIC_DATABASES_OPERATIONS_WRITES],
+            'documentsdbDatabasesReadsTotal' => $total[METRIC_DATABASES_OPERATIONS_READS_DOCUMENTSDB],
+            'documentsdbDatabasesWritesTotal' => $total[METRIC_DATABASES_OPERATIONS_WRITES_DOCUMENTSDB],
+            'vectordbDatabasesTotal' => $total[METRIC_DATABASES_VECTORDB] ?? 0,
+            'vectordbCollectionsTotal' => $total[METRIC_COLLECTIONS_VECTORDB] ?? 0,
+            'vectordbDocumentsTotal' => $total[METRIC_DOCUMENTS_VECTORDB] ?? 0,
+            'vectordbDatabasesStorageTotal' => $total[METRIC_DATABASES_STORAGE_VECTORDB] ?? 0,
+            'vectordbDatabasesReadsTotal' => $total[METRIC_DATABASES_OPERATIONS_READS_VECTORDB] ?? 0,
+            'vectordbDatabasesWritesTotal' => $total[METRIC_DATABASES_OPERATIONS_WRITES_VECTORDB] ?? 0,
             'executionsBreakdown' => $executionsBreakdown,
             'bucketsBreakdown' => $bucketsBreakdown,
             'databasesReads' => $usage[METRIC_DATABASES_OPERATIONS_READS],
             'databasesWrites' => $usage[METRIC_DATABASES_OPERATIONS_WRITES],
+            'documentsdbDatabasesReads' => $usage[METRIC_DATABASES_OPERATIONS_READS_DOCUMENTSDB],
+            'documentsdbDatabasesWrites' => $usage[METRIC_DATABASES_OPERATIONS_WRITES_DOCUMENTSDB],
+            'documentsdbDatabasesStorage' => $usage[METRIC_DATABASES_STORAGE_DOCUMENTSDB],
+            'vectordbDatabases' => $usage[METRIC_DATABASES_VECTORDB] ?? [],
+            'vectordbCollections' => $usage[METRIC_COLLECTIONS_VECTORDB] ?? [],
+            'vectordbDocuments' => $usage[METRIC_DOCUMENTS_VECTORDB] ?? [],
+            'vectordbDatabasesStorage' => $usage[METRIC_DATABASES_STORAGE_VECTORDB] ?? [],
+            'vectordbDatabasesReads' => $usage[METRIC_DATABASES_OPERATIONS_READS_VECTORDB] ?? [],
+            'vectordbDatabasesWrites' => $usage[METRIC_DATABASES_OPERATIONS_WRITES_VECTORDB] ?? [],
             'databasesStorageBreakdown' => $databasesStorageBreakdown,
             'executionsMbSecondsBreakdown' => $executionsMbSecondsBreakdown,
             'buildsMbSecondsBreakdown' => $buildsMbSecondsBreakdown,
@@ -380,6 +432,14 @@ Http::get('/v1/project/usage')
             'authPhoneCountryBreakdown' => $authPhoneCountryBreakdown,
             'imageTransformations' => $usage[METRIC_FILES_IMAGES_TRANSFORMED],
             'imageTransformationsTotal' => $total[METRIC_FILES_IMAGES_TRANSFORMED],
+            'embeddingsText' => $usage[METRIC_EMBEDDINGS_TEXT] ?? [],
+            'embeddingsTextTokens' => $usage[METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS] ?? [],
+            'embeddingsTextDuration' => $usage[METRIC_EMBEDDINGS_TEXT_TOTAL_DURATION] ?? [],
+            'embeddingsTextErrors' => $usage[METRIC_EMBEDDINGS_TEXT_TOTAL_ERROR] ?? [],
+            'embeddingsTextTotal' => $total[METRIC_EMBEDDINGS_TEXT] ?? 0,
+            'embeddingsTextTokensTotal' => $total[METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS] ?? 0,
+            'embeddingsTextDurationTotal' => $total[METRIC_EMBEDDINGS_TEXT_TOTAL_DURATION] ?? 0,
+            'embeddingsTextErrorsTotal' => $total[METRIC_EMBEDDINGS_TEXT_TOTAL_ERROR] ?? 0,
         ]), Response::MODEL_USAGE_PROJECT);
     });
 
@@ -496,7 +556,7 @@ Http::get('/v1/project/variables/:variableId')
             )
         ]
     ))
-    ->param('variableId', '', new UID(), 'Variable unique ID.', false)
+    ->param('variableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Variable unique ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
@@ -526,7 +586,7 @@ Http::put('/v1/project/variables/:variableId')
             )
         ]
     ))
-    ->param('variableId', '', new UID(), 'Variable unique ID.', false)
+    ->param('variableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Variable unique ID.', false, ['dbForProject'])
     ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', false)
     ->param('value', null, new Nullable(new Text(8192, 0)), 'Variable value. Max length: 8192 chars.', true)
     ->param('secret', null, new Nullable(new Boolean()), 'Secret variables can be updated or deleted, but only projects can read them during build and runtime.', true)
@@ -585,7 +645,7 @@ Http::delete('/v1/project/variables/:variableId')
         ],
         contentType: ContentType::NONE
     ))
-    ->param('variableId', '', new UID(), 'Variable unique ID.', false)
+    ->param('variableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Variable unique ID.', false, ['dbForProject'])
     ->inject('project')
     ->inject('response')
     ->inject('dbForProject')

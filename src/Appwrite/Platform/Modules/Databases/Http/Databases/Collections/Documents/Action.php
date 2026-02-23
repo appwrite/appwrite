@@ -17,6 +17,7 @@ abstract class Action extends DatabasesAction
      * @var string|null The current context (either 'row' or 'document')
      */
     private ?string $context = DOCUMENTS;
+    private ?string $databaseType = DATABASE_TYPE_LEGACY;
 
     /**
      * Get the response model used in the SDK and HTTP responses.
@@ -27,6 +28,10 @@ abstract class Action extends DatabasesAction
     {
         if (str_contains($path, '/tablesdb/')) {
             $this->context = ROWS;
+        } elseif (str_contains($path, '/documentsdb/')) {
+            $this->databaseType = DATABASE_TYPE_DOCUMENTSDB;
+        } elseif (str_contains($path, '/vectordb/')) {
+            $this->databaseType = DATABASE_TYPE_VECTORDB;
         }
 
         $contextId = '$' . $this->getCollectionsEventsContext() . 'Id';
@@ -43,6 +48,39 @@ abstract class Action extends DatabasesAction
         ];
 
         return parent::setHttpPath($path);
+    }
+
+    protected function getDatabasesOperationReadMetric(): string
+    {
+        if ($this->databaseType === DATABASE_TYPE_LEGACY || $this->databaseType === DATABASE_TYPE_TABLESDB) {
+            return METRIC_DATABASES_OPERATIONS_READS;
+        }
+        return $this->databaseType.'.'.METRIC_DATABASES_OPERATIONS_READS;
+    }
+
+    protected function getDatabasesIdOperationReadMetric(): string
+    {
+        if ($this->databaseType === DATABASE_TYPE_LEGACY || $this->databaseType === DATABASE_TYPE_TABLESDB) {
+            return METRIC_DATABASE_ID_OPERATIONS_READS;
+        }
+        return $this->databaseType.'.'.METRIC_DATABASE_ID_OPERATIONS_READS;
+    }
+
+    protected function getDatabasesOperationWriteMetric(): string
+    {
+        if ($this->databaseType === DATABASE_TYPE_LEGACY || $this->databaseType === DATABASE_TYPE_TABLESDB) {
+            return METRIC_DATABASES_OPERATIONS_WRITES;
+        }
+        return $this->databaseType.'.'.METRIC_DATABASES_OPERATIONS_WRITES;
+
+    }
+
+    protected function getDatabasesIdOperationWriteMetric(): string
+    {
+        if ($this->databaseType === DATABASE_TYPE_LEGACY || $this->databaseType === DATABASE_TYPE_TABLESDB) {
+            return METRIC_DATABASE_ID_OPERATIONS_WRITES;
+        }
+        return $this->databaseType.'.'.METRIC_DATABASE_ID_OPERATIONS_WRITES;
     }
 
     /**
