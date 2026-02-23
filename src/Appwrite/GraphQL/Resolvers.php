@@ -258,6 +258,9 @@ class Resolvers
         ?callable $beforeResolve = null,
         ?callable $beforeReject = null,
     ): void {
+        $response->setStatusCode(Response::STATUS_CODE_OK);
+        $response->setPayload([]);
+
         // Drop json content type so post args are used directly
         if (\str_starts_with($request->getHeader('content-type'), 'application/json')) {
             $request->removeHeader('content-type');
@@ -266,7 +269,6 @@ class Resolvers
         $request = clone $request;
         $utopia->setResource('request', static fn () => $request);
         $response->setContentType(Response::CONTENT_TYPE_NULL);
-        $response->setStatusCode(Response::STATUS_CODE_OK);
 
         try {
             $route = $utopia->match($request, fresh: true);
