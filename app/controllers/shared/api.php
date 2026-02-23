@@ -343,7 +343,7 @@ Http::init()
          * But, for actions on resources (sites, functions, etc.) in a non-console project, we explicitly check
          * whether the admin user has necessary permission on the project (sites, functions, etc. don't have permissions associated to them).
          */
-        if (empty($apiKey) && $project->getId() !== 'console' && $mode === APP_MODE_ADMIN) {
+        if (empty($apiKey) && !$user->isEmpty() && $project->getId() !== 'console' && $mode === APP_MODE_ADMIN) {
             $input = new Input(Database::PERMISSION_READ, $project->getPermissionsByType(Database::PERMISSION_READ));
             $initialStatus = $authorization->getStatus();
             $authorization->enable();
