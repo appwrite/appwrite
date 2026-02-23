@@ -1,5 +1,0 @@
-query {
-    healthGetQueueMails {
-        size
-    }
-}

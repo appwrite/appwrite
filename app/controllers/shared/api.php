@@ -295,12 +295,40 @@ Http::init()
                 throw new Exception(Exception::USER_UNAUTHORIZED);
             }
 
-            $scopes = []; // Reset scope if admin
-            foreach ($adminRoles as $role) {
-                $scopes = \array_merge($scopes, $roles[$role]['scopes']);
+            $projectId = $project->getId();
+            if ($projectId === 'console' && str_starts_with($route->getPath(), '/v1/projects/:projectId')) {
+                $uri = $request->getURI();
+                $projectId = explode('/', $uri)[3];
             }
 
-            $authorization->setDefaultStatus(false);  // Cancel security segmentation for admin users.
+            // Base scopes for admin users to allow listing teams and projects.
+            // Useful for those who have project-specific roles but don't have team-wide role.
+            $scopes = ['teams.read', 'projects.read'];
+            foreach ($adminRoles as $adminRole) {
+                $isTeamWideRole = !str_starts_with($adminRole, 'project-');
+                $isProjectSpecificRole = $projectId !== 'console' && str_starts_with($adminRole, 'project-' . $projectId);
+
+                if ($isTeamWideRole || $isProjectSpecificRole) {
+                    $role = match (str_starts_with($adminRole, 'project-')) {
+                        true => substr($adminRole, strrpos($adminRole, '-') + 1),
+                        false => $adminRole,
+                    };
+                    $roleScopes = $roles[$role]['scopes'] ?? [];
+                    $scopes = \array_merge($scopes, $roleScopes);
+                    $authorization->addRole($role);
+                }
+            }
+
+            /**
+             * For console projects resource, we use platform DB.
+             * Enabling authorization restricts admin user to the projects they have access to.
+             */
+            if ($project->getId() === 'console' && ($route->getPath() === '/v1/projects' || $route->getPath() === '/v1/projects/:projectId')) {
+                $authorization->setDefaultStatus(true);
+            } else {
+                // Otherwise, disable authorization checks.
+                $authorization->setDefaultStatus(false);
+            }
         }
 
         $scopes = \array_unique($scopes);
@@ -308,6 +336,21 @@ Http::init()
         $authorization->addRole($role);
         foreach ($user->getRoles($authorization) as $authRole) {
             $authorization->addRole($authRole);
+        }
+
+        /**
+         * We disable authorization checks above to ensure other endpoints (list teams, members, etc.) will continue working.
+         * But, for actions on resources (sites, functions, etc.) in a non-console project, we explicitly check
+         * whether the admin user has necessary permission on the project (sites, functions, etc. don't have permissions associated to them).
+         */
+        if (empty($apiKey) && !$user->isEmpty() && $project->getId() !== 'console' && $mode === APP_MODE_ADMIN) {
+            $input = new Input(Database::PERMISSION_READ, $project->getPermissionsByType(Database::PERMISSION_READ));
+            $initialStatus = $authorization->getStatus();
+            $authorization->enable();
+            if (!$authorization->isValid($input)) {
+                throw new Exception(Exception::PROJECT_NOT_FOUND);
+            }
+            $authorization->setStatus($initialStatus);
         }
 
         // Step 6: Update project and user last activity
@@ -324,10 +367,10 @@ Http::init()
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
                 $user->setAttribute('accessedAt', DateTime::now());
 
-                if (APP_MODE_ADMIN !== $mode) {
+                if ($project->getId() !== 'console' && APP_MODE_ADMIN !== $mode) {
                     $dbForProject->updateDocument('users', $user->getId(), $user);
                 } else {
-                    $dbForPlatform->updateDocument('users', $user->getId(), $user);
+                    $authorization->skip(fn () => $dbForPlatform->updateDocument('users', $user->getId(), $user));
                 }
             }
         }
