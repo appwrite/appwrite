@@ -535,7 +535,7 @@ trait DatabasesBase
     }
 
     /**
-     * @depends testCreateIndexes
+     * @depends testCreateCollection
      */
     public function testCreateDocument(array $data): array
     {
