@@ -565,11 +565,16 @@ Http::setResource('dbForProject', function (Group $pools, Database $dbForPlatfor
         return $dbForPlatform;
     }
 
+    $database = $project->getAttribute('database', '');
+    if (empty($database)) {
+        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Project database is not configured');
+    }
+
     try {
-        $dsn = new DSN($project->getAttribute('database'));
+        $dsn = new DSN($database);
     } catch (\InvalidArgumentException) {
         // TODO: Temporary until all projects are using shared tables
-        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+        $dsn = new DSN('mysql://' . $database);
     }
 
     $adapter = new DatabasePool($pools->get($dsn->getHost()));
@@ -829,11 +834,16 @@ Http::setResource('getProjectDB', function (Group $pools, Database $dbForPlatfor
             return $dbForPlatform;
         }
 
+        $database = $project->getAttribute('database', '');
+        if (empty($database)) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Project database is not configured');
+        }
+
         try {
-            $dsn = new DSN($project->getAttribute('database'));
+            $dsn = new DSN($database);
         } catch (\InvalidArgumentException) {
             // TODO: Temporary until all projects are using shared tables
-            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+            $dsn = new DSN('mysql://' . $database);
         }
 
         $configure = (function (Database $database) use ($project, $dsn, $authorization) {

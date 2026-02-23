@@ -1,7 +1,0 @@
-appwrite storage listBuckets \
-
-
-
-
-
-

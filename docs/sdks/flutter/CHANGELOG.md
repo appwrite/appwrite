@@ -1,5 +1,14 @@
 # Change Log
 
+## 21.4.0
+
+* Added upsert() to DocumentChannel and RowChannel to support upsert operations on documents and rows.
+* Added Query.contains, Query.containsAny, and Query.containsAll for enhanced filtering capabilities.
+
+## 21.3.0
+
+* Added memberships realtime channel helper
+
 ## 21.1.0
 
 * Add `queries` parameter to Realtime subscriptions for filtering events
