@@ -251,9 +251,15 @@ class Messaging extends Action
                     default => throw new \Exception('Provider with the requested ID is of the incorrect type')
                 };
 
+                if ($provider->getAttribute('type') === MESSAGE_TYPE_EMAIL) {
+                    $maxMessagesPerRequest = 1;
+                } else {
+                    $maxMessagesPerRequest = $adapter->getMaxMessagesPerRequest();
+                }
+
                 $batches = \array_chunk(
                     \array_keys($identifiersForProvider),
-                    $adapter->getMaxMessagesPerRequest()
+                    $maxMessagesPerRequest
                 );
 
                 return batch(\array_map(function ($batch) use ($message, $provider, $adapter, $dbForProject, $deviceForFiles, $project, $queueForStatsUsage) {
@@ -596,26 +602,12 @@ class Messaging extends Action
         $content = $data['content'];
         $html = $data['html'] ?? false;
 
-        // Move recipients to BCC to prevent exposing email addresses
-        // to other recipients. This applies to all providers, not just SMTP.
-        if (\count($to) > 1) {
-            // Use sender as the TO address to satisfy API requirements
-            // and keep recipients hidden
-            if (!empty($fromEmail)) {
-                foreach ($to as $recipient) {
-                    $bcc[] = ['email' => $recipient];
-                }
-                $to = [$fromEmail];
-            } else {
-                // Should not happen if provider is configured correctly,
-                // but as a fallback, use the first recipient as TO
-                // and move the rest to BCC.
-                $first = \array_shift($to);
-                foreach ($to as $recipient) {
-                    $bcc[] = ['email' => $recipient];
-                }
-                $to = [$first];
+        // For SMTP, move all recipients to BCC and use default recipient in TO field
+        if ($provider->getAttribute('provider') === 'smtp') {
+            foreach ($to as $recipient) {
+                $bcc[] = ['email' => $recipient];
             }
+            $to = [];
         }
 
         return new Email(
