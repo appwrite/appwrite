@@ -2626,26 +2626,6 @@ trait DatabasesBase
         ]);
         $this->assertEquals(400, $uniqueIndex['headers']['status-code']);
 
-        $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
-            'data' => [
-                'movieTitle' => 'Captain America',
-                'releaseYear' => 1944,
-                'actors' => [
-                    'Chris Evans',
-                    'Samuel Jackson',
-                ]
-            ],
-            'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
-            ]
-        ]);
-
         // test for failure
         $this->assertEventually(function () use ($databaseId, $data) {
             $duplicate = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([

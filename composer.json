@@ -57,7 +57,7 @@
         "utopia-php/config": "1.*",
         "utopia-php/console": "0.1.*",
         "utopia-php/database": "5.*",
-        "utopia-php/agents": "dev-chore-bump-fetch as 0.4.7",
+        "utopia-php/agents": "1.*",
         "utopia-php/detector": "0.2.*",
         "utopia-php/domains": "1.*",
         "utopia-php/emails": "0.6.*",
@@ -106,7 +106,6 @@
     },
     "config": {
         "platform": {
-            "php": "8.3"
         },
         "allow-plugins": {
             "php-http/discovery": true,
