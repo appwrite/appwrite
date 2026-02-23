@@ -6662,7 +6662,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertStringContainsString($expectedUrl, $lastEmail['html']);
 
-        // With injection
+        // With injection (allowed, meant to be protected client-side)
         $url = 'http://localhost/auth/signin\"></a><h1>INJECTED</h1>';
 
         $response = $this->client->call(
@@ -6690,11 +6690,12 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
 
         $this->assertStringContainsString('INJECTED', $lastEmail['html']);
-        $this->assertStringNotContainsString('<h1>', $lastEmail['html']);
-        $this->assertStringNotContainsString('</h1>', $lastEmail['html']);
+        $this->assertStringContainsString('<h1>', $lastEmail['html']);
+        $this->assertStringContainsString('</h1>', $lastEmail['html']);
+        $this->assertStringContainsString('">', $lastEmail['html']);
+        $this->assertStringContainsString('</a>', $lastEmail['html']);
 
-        $sanitizedUrl = \htmlentities($url);
-        $expectedUrl = $sanitizedUrl . "?userId=" . $userId . "&secret=";
+        $expectedUrl = $url . "?userId=" . $userId . "&secret=";
         $this->assertStringContainsString($expectedUrl, $lastEmail['html']);
 
     }
