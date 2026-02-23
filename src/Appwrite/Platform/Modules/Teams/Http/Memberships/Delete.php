@@ -22,8 +22,8 @@ class Delete extends Action
 {
     use HTTP;
 
-    protected string $membershipId;
     protected string $teamId;
+    protected string $membershipId;
     protected Document $user;
     protected Document $project;
     protected Database $dbForProject;
@@ -71,6 +71,7 @@ class Delete extends Action
 
     public function action(string $teamId, string $membershipId, Document $user, Document $project, Response $response, Database $dbForProject, Authorization $authorization, Event $queueForEvents)
     {
+        $this->teamId = $teamId;
         $this->membershipId = $membershipId;
         $this->user = $user;
         $this->project = $project;
