@@ -2111,7 +2111,7 @@ Http::post('/v1/account/tokens/magic-url')
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
-        $url = htmlentities($url);
+
 
         if ($phrase === true) {
             $phrase = Phrase::generate();
@@ -3573,7 +3573,6 @@ Http::post('/v1/account/recovery')
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
 
-        $url = htmlentities($url);
         $email = \strtolower($email);
 
         $profile = $dbForProject->findOne('users', [
@@ -3889,7 +3888,6 @@ Http::post('/v1/account/verifications/email')
             throw new Exception(Exception::USER_EMAIL_NOT_FOUND);
         }
 
-        $url = htmlentities($url);
         if ($user->getAttribute('emailVerification')) {
             throw new Exception(Exception::USER_EMAIL_ALREADY_VERIFIED);
         }
