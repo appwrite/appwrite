@@ -5486,7 +5486,7 @@
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
                 "source": "https://github.com/appwrite/sdk-generator/tree/1.10.2"
             },
-            "time": "2026-02-17T11:48:05+00:00"
+            "time": "2026-02-23T04:04:15+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -8937,10 +8937,19 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [],
-    "minimum-stability": "stable",
-    "stability-flags": [],
-    "prefer-stable": false,
+    "aliases": [
+        {
+            "package": "utopia-php/migration",
+            "version": "dev-improve-columns-setup",
+            "alias": "1.6.1",
+            "alias_normalized": "1.6.1.0"
+        }
+    ],
+    "minimum-stability": "dev",
+    "stability-flags": {
+        "utopia-php/migration": 20
+    },
+    "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": ">=8.3.0",
