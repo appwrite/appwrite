@@ -87,8 +87,6 @@ class Delete extends Action
             $dbForProject->deleteDocument('memberships', $membership->getId());
         } catch (AuthorizationException $exception) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
-        } catch (\Throwable $exception) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove membership from DB');
         }
 
         $dbForProject->purgeCachedDocument('users', $profile->getId());
