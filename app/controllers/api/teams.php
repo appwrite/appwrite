@@ -498,18 +498,6 @@ Http::post('/v1/teams/:teamId/memberships')
         $isAppUser = User::isApp($authorization->getRoles());
         $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
 
-        if (!empty($url)) {
-            $url = \parse_url($url);
-            $url['path'] = \htmlentities($url['path'] ?? '');
-            $url = (isset($url['scheme']) ? $url['scheme'] . '://' : '') .
-                   (isset($url['user']) ? $url['user'] . (isset($url['pass']) ? ':' . $url['pass'] : '') . '@' : '') .
-                   (isset($url['host']) ? $url['host'] : '') .
-                   (isset($url['port']) ? ':' . $url['port'] : '') .
-                   (isset($url['path']) ? $url['path'] : '') .
-                   (isset($url['query']) ? '?' . $url['query'] : '') .
-                   (isset($url['fragment']) ? '#' . $url['fragment'] : '');
-
-        }
         if (empty($url)) {
             if (!$isAppUser && !$isPrivilegedUser) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'URL is required');
