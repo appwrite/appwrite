@@ -281,11 +281,14 @@ trait DatabasesBase
         $this->assertEquals(202, $bookTitle['headers']['status-code']);
         $this->assertEquals(202, $bookDescription['headers']['status-code']);
 
+        // Cache before waiting so that if waitForAllAttributes times out,
+        // subsequent calls don't try to re-create the same attributes (causing 409)
+        self::$attributesCache[$cacheKey] = $data;
+
         // wait for database worker to create attributes
         $this->waitForAllAttributes($databaseId, $data['moviesId']);
         $this->waitForAllAttributes($databaseId, $data['booksId']);
 
-        self::$attributesCache[$cacheKey] = $data;
         return self::$attributesCache[$cacheKey];
     }
 
@@ -360,10 +363,13 @@ trait DatabasesBase
         $this->assertEquals(202, $releaseWithDate2['headers']['status-code']);
         $this->assertEquals(202, $booksFtsIndex['headers']['status-code']);
 
+        // Cache before waiting so that if waitForAllIndexes times out,
+        // subsequent calls don't try to re-create the same indexes (causing 409)
+        self::$indexesCache[$cacheKey] = $data;
+
         $this->waitForAllIndexes($databaseId, $data['moviesId']);
         $this->waitForAllIndexes($databaseId, $data['booksId']);
 
-        self::$indexesCache[$cacheKey] = $data;
         return self::$indexesCache[$cacheKey];
     }
 
