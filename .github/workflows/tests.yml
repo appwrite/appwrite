@@ -567,6 +567,14 @@ jobs:
             sleep 2
           done
 
+      - name: Wait for Open Runtimes
+        timeout-minutes: 3
+        run: |
+          while ! docker compose logs openruntimes-executor | grep -q "Executor is ready."; do
+            echo "Waiting for Executor to come online"
+            sleep 1
+          done
+
       - name: Run Site tests with browser connected in dedicated table mode
         uses: itznotabug/php-retry@v3
         with:
@@ -630,6 +638,14 @@ jobs:
           until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
             echo "Waiting for Appwrite to be ready..."
             sleep 2
+          done
+
+      - name: Wait for Open Runtimes
+        timeout-minutes: 3
+        run: |
+          while ! docker compose logs openruntimes-executor | grep -q "Executor is ready."; do
+            echo "Waiting for Executor to come online"
+            sleep 1
           done
 
       - name: Run Site tests with browser connected in ${{ matrix.tables-mode }} table mode
