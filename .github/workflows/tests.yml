@@ -114,6 +114,7 @@ jobs:
         uses: itznotabug/php-retry@v3
         with:
           max_attempts: 2
+          retry_wait_seconds: 300
           timeout_minutes: 15
           job_id: ${{ job.check_run_id }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -163,6 +164,7 @@ jobs:
         uses: itznotabug/php-retry@v3
         with:
           max_attempts: 2
+          retry_wait_seconds: 300
           timeout_minutes: 15
           job_id: ${{ job.check_run_id }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -271,6 +273,7 @@ jobs:
         uses: itznotabug/php-retry@v3
         with:
           max_attempts: 2
+          retry_wait_seconds: 300
           timeout_minutes: 20
           job_id: ${{ job.check_run_id }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -375,6 +378,7 @@ jobs:
         uses: itznotabug/php-retry@v3
         with:
           max_attempts: 2
+          retry_wait_seconds: 300
           timeout_minutes: 20
           job_id: ${{ job.check_run_id }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -445,6 +449,7 @@ jobs:
         uses: itznotabug/php-retry@v3
         with:
           max_attempts: 2
+          retry_wait_seconds: 300
           timeout_minutes: 15
           job_id: ${{ job.check_run_id }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -509,6 +514,7 @@ jobs:
         uses: itznotabug/php-retry@v3
         with:
           max_attempts: 2
+          retry_wait_seconds: 300
           timeout_minutes: 15
           job_id: ${{ job.check_run_id }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -579,6 +585,7 @@ jobs:
         uses: itznotabug/php-retry@v3
         with:
           max_attempts: 2
+          retry_wait_seconds: 300
           timeout_minutes: 15
           job_id: ${{ job.check_run_id }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -652,6 +659,7 @@ jobs:
         uses: itznotabug/php-retry@v3
         with:
           max_attempts: 2
+          retry_wait_seconds: 300
           timeout_minutes: 15
           job_id: ${{ job.check_run_id }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
