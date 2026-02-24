@@ -129,13 +129,15 @@ class DatabasesStringTypesTest extends Scope
             'key' => 'longtext_array', 'required' => false, 'array' => true,
         ]);
 
-        // Wait for all columns to be available
-        $this->waitForAllAttributes($databaseId, $tableId);
-
+        // Cache before waiting so that if waitForAllAttributes times out,
+        // subsequent calls don't try to re-create the same columns (causing 409)
         static::$setupCache[$cacheKey] = [
             'databaseId' => $databaseId,
             'tableId' => $tableId,
         ];
+
+        // Wait for all columns to be available
+        $this->waitForAllAttributes($databaseId, $tableId);
 
         return static::$setupCache[$cacheKey];
     }
