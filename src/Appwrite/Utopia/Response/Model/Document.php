@@ -37,10 +37,10 @@ class Document extends Any
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('$sequence', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Document automatically incrementing ID.',
-                'default' => 0,
-                'example' => 1,
+                'type' => self::TYPE_ID,
+                'description' => 'Document sequence ID.',
+                'default' => '',
+                'example' => '1',
                 'readOnly' => true,
             ])
             ->addRule('$collectionId', [
@@ -84,7 +84,8 @@ class Document extends Any
         $document->removeAttribute('$tenant');
 
         if (!$document->isEmpty()) {
-            $document->setAttribute('$sequence', (int)$document->getAttribute('$sequence', 0));
+            $sequence = $document->getAttribute('$sequence', '');
+            $document->setAttribute('$sequence', $sequence);
         }
 
         foreach ($document->getAttributes() as $attribute) {

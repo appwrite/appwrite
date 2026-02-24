@@ -192,8 +192,8 @@ include __DIR__ . '/controllers/general.php';
 
 function createDatabase(Http $app, string $resourceKey, string $dbName, array $collections, mixed $pools, ?callable $extraSetup = null): void
 {
-    $max = 10;
-    $sleep = 1;
+    $max = 15;
+    $sleep = 2;
     $attempts = 0;
 
     while (true) {
@@ -203,8 +203,8 @@ function createDatabase(Http $app, string $resourceKey, string $dbName, array $c
             /* @var $database Database */
             $database = is_callable($resource) ? $resource() : $resource;
             break; // exit loop on success
-        } catch (\Exception $e) {
-            Console::warning("  └── Database not ready. Retrying connection ({$attempts})...");
+        } catch (\Throwable $e) {
+            Console::warning("  └── Database not ready ({$dbName}). Retrying connection ({$attempts}): " . $e->getMessage());
             if ($attempts >= $max) {
                 throw new \Exception('  └── Failed to connect to database: ' . $e->getMessage());
             }
@@ -215,11 +215,27 @@ function createDatabase(Http $app, string $resourceKey, string $dbName, array $c
     Span::init("database.setup");
     Span::add('database.name', $dbName);
 
-    // Attempt to create the database
-    try {
-        $database->create();
-    } catch (\Exception $e) {
-        Span::add('database.exists', true);
+    $attempts = 0;
+    while (true) {
+        try {
+            $attempts++;
+            Console::info("  └── Creating database: $dbName...");
+            $database->create();
+            break; // exit loop on success
+        } catch (\Exception $e) {
+            if ($e instanceof DuplicateException) {
+                Span::add('database.exists', true);
+                Console::info("  └── Skip: metadata table already exists");
+                break;
+            }
+
+            Console::warning("  └── Database create failed. Retrying ({$attempts})...");
+            if ($attempts >= $max) {
+                throw new \Exception('  └── Failed to create database: ' . $e->getMessage());
+            }
+
+            \sleep($sleep);
+        }
     }
 
     // Process collections
@@ -406,10 +422,26 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $tot
                 ->setTenant(null)
                 ->setNamespace(System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', ''));
 
-            try {
-                $dbForProject->create();
-            } catch (DuplicateException) {
-                Span::add('database.exists', true);
+            $max = 15;
+            $sleep = 2;
+            $attempts = 0;
+            while (true) {
+                try {
+                    $attempts++;
+                    Console::success('[Setup] - Creating project database: ' . $hostname . '...');
+                    $dbForProject->create();
+                    break; // exit loop on success
+                } catch (DuplicateException) {
+                    Span::add('database.exists', true);
+                    Console::success('[Setup] - Skip: metadata table already exists');
+                    break;
+                } catch (\Throwable $e) {
+                    Console::warning("  └── Project database create failed. Retrying ({$attempts})...");
+                    if ($attempts >= $max) {
+                        throw new \Exception('  └── Failed to create project database: ' . $e->getMessage());
+                    }
+                    sleep($sleep);
+                }
             }
 
             if ($dbForProject->getCollection(AuditAdapterSQL::COLLECTION)->isEmpty()) {
@@ -613,7 +645,7 @@ $http->on(Constant::EVENT_TASK, function () use ($register) {
                 if ($latestDocument !== null) {
                     $queries[] =  Query::cursorAfter($latestDocument);
                 }
-                if ($lastSyncUpdate != null) {
+                if ($lastSyncUpdate !== null) {
                     $queries[] = Query::greaterThanEqual('$updatedAt', $lastSyncUpdate);
                 }
                 $results = [];
@@ -621,7 +653,7 @@ $http->on(Constant::EVENT_TASK, function () use ($register) {
                     $authorization = $app->getResource('authorization');
                     $results = $authorization->skip(fn () =>  $dbForPlatform->find('rules', $queries));
                 } catch (Throwable $th) {
-                    Console::error($th->getMessage());
+                    Console::error('rules ' . $th->getMessage());
                 }
 
                 $sum = count($results);

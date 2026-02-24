@@ -34,7 +34,7 @@ class AttributeList extends Model
                     Response::MODEL_ATTRIBUTE_TEXT,
                     Response::MODEL_ATTRIBUTE_MEDIUMTEXT,
                     Response::MODEL_ATTRIBUTE_LONGTEXT,
-                    Response::MODEL_ATTRIBUTE_STRING // needs to be last, since its condition would dominate any other string attribute
+                    Response::MODEL_ATTRIBUTE_STRING, // needs to be last, since its condition would dominate any other string attribute
                 ],
                 'description' => 'List of attributes.',
                 'default' => [],
