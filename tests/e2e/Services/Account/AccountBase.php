@@ -247,7 +247,10 @@ trait AccountBase
 
         $phrase = $response['body']['phrase'];
 
-        $lastEmail = $this->getLastEmailByAddress($otpEmail);
+        $lastEmail = $this->getLastEmailByAddress($otpEmail, function ($email) use ($phrase) {
+            $this->assertStringContainsStringIgnoringCase('security phrase', $email['text']);
+            $this->assertStringContainsStringIgnoringCase($phrase, $email['text']);
+        });
         $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $otpEmail);
         $this->assertEquals('OTP for ' . $this->getProject()['name'] . ' Login', $lastEmail['subject']);
         $this->assertStringContainsStringIgnoringCase('security phrase', $lastEmail['text']);

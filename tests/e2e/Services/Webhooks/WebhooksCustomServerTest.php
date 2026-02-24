@@ -137,7 +137,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals(200, $actors['headers']['status-code']);
         $this->assertNotEmpty($actors['body']['$id']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.collections.{$id}.update"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals('POST', $webhook['method']);
@@ -181,7 +181,7 @@ class WebhooksCustomServerTest extends Scope
 
         // wait for database worker to create index
         $this->assertEventually(function () use ($databaseId, $actorsId) {
-            $webhook = $this->getLastRequest();
+            $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.collections.{$actorsId}.indexes.*.create"));
             $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
             $this->assertEquals('POST', $webhook['method']);
@@ -207,7 +207,7 @@ class WebhooksCustomServerTest extends Scope
         ]));
 
         // // wait for database worker to remove index
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.collections.{$actorsId}.indexes.*.update"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         // $this->assertEquals($webhook['method'], 'DELETE');
@@ -273,7 +273,7 @@ class WebhooksCustomServerTest extends Scope
 
         $this->assertEquals(204, $actors['headers']['status-code']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.collections.{$id}.delete"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals('POST', $webhook['method']);
@@ -316,7 +316,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals(200, $actors['headers']['status-code']);
         $this->assertNotEmpty($actors['body']['$id']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.tables.{$id}.update"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals('POST', $webhook['method']);
@@ -359,7 +359,7 @@ class WebhooksCustomServerTest extends Scope
 
         // wait for database worker to create index
         $this->assertEventually(function () use ($databaseId, $actorsId) {
-            $webhook = $this->getLastRequest();
+            $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.tables.{$actorsId}.indexes.*.create"));
             $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
             $this->assertEquals('POST', $webhook['method']);
@@ -385,7 +385,7 @@ class WebhooksCustomServerTest extends Scope
         ]));
 
         // // wait for database worker to remove index
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.tables.{$actorsId}.indexes.*.update"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         // $this->assertEquals($webhook['method'], 'DELETE');
@@ -451,7 +451,7 @@ class WebhooksCustomServerTest extends Scope
 
         $this->assertEquals(204, $actors['headers']['status-code']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.tables.{$id}.delete"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals('POST', $webhook['method']);
@@ -495,7 +495,7 @@ class WebhooksCustomServerTest extends Scope
 
         $id = $user['body']['$id'];
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.create"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals('POST', $webhook['method']);
@@ -537,7 +537,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals(200, $user['headers']['status-code']);
         $this->assertEquals('b', $user['body']['a']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.update.prefs"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals('POST', $webhook['method']);
@@ -575,21 +575,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals(200, $user['headers']['status-code']);
         $this->assertNotEmpty($user['body']['$id']);
 
-        // Use probe to find the specific status update webhook for this user (parallel-safe)
-        $webhook = $this->getLastRequestForProject(
-            $this->getProject()['$id'],
-            self::REQUEST_TYPE_WEBHOOK,
-            [],
-            10,
-            500,
-            function ($request) use ($id) {
-                // Verify this is the status update event for our specific user
-                $events = $request['headers']['X-Appwrite-Webhook-Events'] ?? '';
-                if (!str_contains($events, "users.{$id}.update.status")) {
-                    throw new \Exception('Not the status update event for this user');
-                }
-            }
-        );
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.update.status"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals('POST', $webhook['method']);
@@ -629,21 +615,7 @@ class WebhooksCustomServerTest extends Scope
 
         $this->assertEquals(204, $user['headers']['status-code']);
 
-        // Use probe to find the specific delete webhook for this user (parallel-safe)
-        $webhook = $this->getLastRequestForProject(
-            $this->getProject()['$id'],
-            self::REQUEST_TYPE_WEBHOOK,
-            [],
-            10,
-            500,
-            function ($request) use ($id) {
-                // Verify this is the delete event for our specific user
-                $events = $request['headers']['X-Appwrite-Webhook-Events'] ?? '';
-                if (!str_contains($events, "users.{$id}.delete")) {
-                    throw new \Exception('Not the delete event for this user');
-                }
-            }
-        );
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.delete"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals('POST', $webhook['method']);
@@ -688,7 +660,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals(201, $function['headers']['status-code']);
         $this->assertNotEmpty($function['body']['$id']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("functions.{$id}.create"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals('POST', $webhook['method']);
@@ -735,7 +707,7 @@ class WebhooksCustomServerTest extends Scope
 
         $this->assertEquals(201, $variable['headers']['status-code']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("functions.{$id}.update"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals('POST', $webhook['method']);
@@ -779,7 +751,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals(202, $deployment['headers']['status-code']);
         $this->assertNotEmpty($deployment['body']['$id']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("functions.{$functionId}.deployments.{$deploymentId}.create"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals('POST', $webhook['method']);
@@ -819,7 +791,7 @@ class WebhooksCustomServerTest extends Scope
 
         // Wait for deployment to be built.
         $this->assertEventually(function () use ($deploymentId, $id) {
-            $webhook = $this->getLastRequest();
+            $webhook = $this->getLastRequest($this->webhookEventProbe("functions.{$id}.deployments.{$deploymentId}.update"));
             $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
             $this->assertEquals('POST', $webhook['method']);
@@ -864,7 +836,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals(202, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("functions.{$id}.executions.{$executionId}.create"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
         $this->assertEquals('POST', $webhook['method']);
         $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
@@ -885,7 +857,7 @@ class WebhooksCustomServerTest extends Scope
 
         // wait for timeout function to complete
         $this->assertEventually(function () use ($executionId, $id) {
-            $webhook = $this->getLastRequest();
+            $webhook = $this->getLastRequest($this->webhookEventProbe("functions.{$id}.executions.{$executionId}.update"));
             $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
             $this->assertEquals('POST', $webhook['method']);
@@ -925,7 +897,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals(204, $deployment['headers']['status-code']);
         $this->assertEmpty($deployment['body']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("functions.{$id}.deployments.{$deploymentId}.delete"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals('POST', $webhook['method']);
@@ -963,7 +935,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals(204, $function['headers']['status-code']);
         $this->assertEmpty($function['body']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("functions.{$id}.delete"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals('POST', $webhook['method']);

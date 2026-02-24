@@ -463,7 +463,9 @@ trait ProjectsBase
         $membershipId = $response['body']['$id'];
 
 
-        $lastEmail = $this->getLastEmail();
+        $lastEmail = $this->getLastEmailByAddress($params['email'], function ($email) {
+            $this->assertStringContainsString('/join-us', $email['html'] ?? '');
+        });
         $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
         $userId = $tokens['userId'];
         $secret = $tokens['secret'];
@@ -498,7 +500,9 @@ trait ProjectsBase
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEmpty($response['body']['secret']);
 
-        $lastEmail = $this->getLastEmail();
+        $lastEmail = $this->getLastEmailByAddress($params['email'], function ($email) {
+            $this->assertStringContainsString('Password Reset', $email['subject']);
+        });
         $this->assertEquals($params['email'], $lastEmail['to'][0]['address']);
         $this->assertEquals($params['name'], $lastEmail['to'][0]['name']);
         $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);

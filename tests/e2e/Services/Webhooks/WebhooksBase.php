@@ -29,6 +29,19 @@ trait WebhooksBase
         }, 120000, 500);
     }
 
+    /**
+     * Create a probe callback that filters webhooks by event pattern.
+     */
+    private function webhookEventProbe(string $eventPattern): callable
+    {
+        return function (array $request) use ($eventPattern) {
+            $this->assertStringContainsString(
+                $eventPattern,
+                $request['headers']['X-Appwrite-Webhook-Events'] ?? ''
+            );
+        };
+    }
+
     public static function getWebhookSignature(array $webhook, string $signatureKey): string
     {
         $payload = json_encode($webhook['data']);
@@ -399,7 +412,7 @@ trait WebhooksBase
         $this->assertEquals($actors['headers']['status-code'], 201);
         $this->assertNotEmpty($actors['body']['$id']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.collections.{$actorsId}.create"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
@@ -497,7 +510,7 @@ trait WebhooksBase
 
         // wait for database worker to kick in
         $this->assertEventually(function () use ($databaseId, $actorsId) {
-            $webhook = $this->getLastRequest();
+            $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.collections.{$actorsId}.attributes.*.create"));
             $this->assertNotEmpty($webhook);
             $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
             $this->assertEquals($webhook['method'], 'POST');
@@ -524,7 +537,7 @@ trait WebhooksBase
 
         $this->assertEquals(204, $removed['headers']['status-code']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.collections.{$actorsId}.attributes.*.update"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         // $this->assertEquals($webhook['method'], 'DELETE');
@@ -574,7 +587,7 @@ trait WebhooksBase
         $this->assertEquals($document['headers']['status-code'], 201);
         $this->assertNotEmpty($document['body']['$id']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}.create"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
@@ -633,7 +646,7 @@ trait WebhooksBase
         $this->assertEquals($document['headers']['status-code'], 200);
         $this->assertNotEmpty($document['body']['$id']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}.update"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
@@ -700,7 +713,7 @@ trait WebhooksBase
 
         $this->assertEquals($document['headers']['status-code'], 204);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}.delete"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
@@ -768,7 +781,7 @@ trait WebhooksBase
         $this->assertEquals($actors['headers']['status-code'], 201);
         $this->assertNotEmpty($actors['body']['$id']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.tables.{$actorsId}.create"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
@@ -864,7 +877,7 @@ trait WebhooksBase
 
         // wait for database worker to kick in
         $this->assertEventually(function () use ($databaseId, $actorsId) {
-            $webhook = $this->getLastRequest();
+            $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.tables.{$actorsId}.columns.*.create"));
             $this->assertNotEmpty($webhook);
             $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
             $this->assertEquals($webhook['method'], 'POST');
@@ -891,7 +904,7 @@ trait WebhooksBase
 
         $this->assertEquals(204, $removed['headers']['status-code']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.tables.{$actorsId}.columns.*.update"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         // $this->assertEquals($webhook['method'], 'DELETE');
@@ -941,7 +954,7 @@ trait WebhooksBase
         $this->assertEquals($row['headers']['status-code'], 201);
         $this->assertNotEmpty($row['body']['$id']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.tables.{$actorsId}.rows.{$documentId}.create"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
@@ -1000,7 +1013,7 @@ trait WebhooksBase
         $this->assertEquals($document['headers']['status-code'], 200);
         $this->assertNotEmpty($document['body']['$id']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.tables.{$actorsId}.rows.{$rowId}.update"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
@@ -1067,7 +1080,7 @@ trait WebhooksBase
 
         $this->assertEquals($row['headers']['status-code'], 204);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.tables.{$actorsId}.rows.{$rowId}.delete"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
@@ -1119,7 +1132,7 @@ trait WebhooksBase
         $this->assertEquals($bucket['headers']['status-code'], 201);
         $this->assertNotEmpty($bucket['body']['$id']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("buckets.{$bucketId}.create"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
@@ -1161,7 +1174,7 @@ trait WebhooksBase
         $this->assertEquals($bucket['headers']['status-code'], 200);
         $this->assertNotEmpty($bucket['body']['$id']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("buckets.{$bucketId}.update"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
@@ -1209,7 +1222,7 @@ trait WebhooksBase
         $this->assertEquals($file['headers']['status-code'], 201);
         $this->assertNotEmpty($file['body']['$id']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("buckets.{$bucketId}.files.{$fileId}.create"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
@@ -1263,7 +1276,7 @@ trait WebhooksBase
         $this->assertEquals($file['headers']['status-code'], 200);
         $this->assertNotEmpty($file['body']['$id']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("buckets.{$bucketId}.files.{$fileId}.update"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
@@ -1311,7 +1324,7 @@ trait WebhooksBase
         $this->assertEquals(204, $file['headers']['status-code']);
         $this->assertEmpty($file['body']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("buckets.{$bucketId}.files.{$fileId}.delete"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
@@ -1369,7 +1382,7 @@ trait WebhooksBase
         $this->assertEquals($bucket['headers']['status-code'], 204);
         $this->assertEmpty($bucket['body']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("buckets.{$bucketId}.delete"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
@@ -1407,7 +1420,7 @@ trait WebhooksBase
         $this->assertEquals(201, $team['headers']['status-code']);
         $this->assertNotEmpty($team['body']['$id']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("teams.{$teamId}.create"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
@@ -1446,7 +1459,7 @@ trait WebhooksBase
         $this->assertEquals(200, $team['headers']['status-code']);
         $this->assertNotEmpty($team['body']['$id']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("teams.{$teamId}.update"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
@@ -1486,7 +1499,7 @@ trait WebhooksBase
         $this->assertEquals($team['headers']['status-code'], 200);
         $this->assertIsArray($team['body']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("teams.{$id}.update.prefs"));
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
         $url     = $webhook['url'];
@@ -1534,7 +1547,7 @@ trait WebhooksBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("teams.{$teamId}.delete"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
@@ -1596,7 +1609,7 @@ trait WebhooksBase
         $secret = $tokens['secret'] ?? '';
         $membershipId = $team['body']['$id'];
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("teams.{$teamId}.memberships.{$membershipId}.create"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
@@ -1657,7 +1670,7 @@ trait WebhooksBase
 
         $this->assertEquals(204, $team['headers']['status-code']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("teams.{$teamId}.memberships.{$membershipId}.delete"));
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');

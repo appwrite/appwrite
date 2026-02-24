@@ -90,7 +90,7 @@ class FunctionsScheduleTest extends Scope
 
         // Schedule execution for the future
         \date_default_timezone_set('UTC');
-        $futureTime = (new \DateTime())->add(new \DateInterval('PT1M')); // 1 minute in the future
+        $futureTime = (new \DateTime())->add(new \DateInterval('PT2M')); // 2 minutes in the future
         $futureTime->setTime($futureTime->format('H'), $futureTime->format('i'), 0, 0);
 
 

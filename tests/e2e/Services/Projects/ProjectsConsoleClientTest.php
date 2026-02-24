@@ -6441,7 +6441,9 @@ class ProjectsConsoleClientTest extends Scope
 
         $userId = $response['body']['userId'];
 
-        $lastEmail = $this->getLastEmail();
+        $lastEmail = $this->getLastEmail(1, function ($email) use ($userId) {
+            $this->assertStringContainsString($userId, $email['html'] ?? '');
+        });
 
         $this->assertEquals($this->getUser()['email'], $lastEmail['to'][0]['address']);
         $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
@@ -6472,7 +6474,9 @@ class ProjectsConsoleClientTest extends Scope
 
         $userId = $response['body']['userId'];
 
-        $lastEmail = $this->getLastEmail();
+        $lastEmail = $this->getLastEmail(1, function ($email) use ($userId) {
+            $this->assertStringContainsString($userId, $email['html'] ?? '');
+        });
 
         $this->assertEquals($this->getUser()['email'], $lastEmail['to'][0]['address']);
         $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
@@ -6503,7 +6507,9 @@ class ProjectsConsoleClientTest extends Scope
 
         $userId = $response['body']['userId'];
 
-        $lastEmail = $this->getLastEmail();
+        $lastEmail = $this->getLastEmail(1, function ($email) use ($userId) {
+            $this->assertStringContainsString($userId, $email['html'] ?? '');
+        });
 
         $this->assertEquals($this->getUser()['email'], $lastEmail['to'][0]['address']);
         $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
@@ -6534,7 +6540,9 @@ class ProjectsConsoleClientTest extends Scope
 
         $userId = $response['body']['userId'];
 
-        $lastEmail = $this->getLastEmail();
+        $lastEmail = $this->getLastEmail(1, function ($email) use ($userId) {
+            $this->assertStringContainsString($userId, $email['html'] ?? '');
+        });
 
         $this->assertEquals($this->getUser()['email'], $lastEmail['to'][0]['address']);
         $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
@@ -6565,7 +6573,9 @@ class ProjectsConsoleClientTest extends Scope
 
         $userId = $response['body']['userId'];
 
-        $lastEmail = $this->getLastEmail();
+        $lastEmail = $this->getLastEmail(1, function ($email) use ($userId) {
+            $this->assertStringContainsString($userId, $email['html'] ?? '');
+        });
 
         $this->assertEquals($this->getUser()['email'], $lastEmail['to'][0]['address']);
         $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);

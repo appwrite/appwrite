@@ -382,7 +382,9 @@ class AccountCustomClientTest extends Scope
             'url' => 'http://localhost/recovery',
         ]);
 
-        $lastEmail = $this->getLastEmailByAddress($email);
+        $lastEmail = $this->getLastEmailByAddress($email, function ($email) {
+            $this->assertStringContainsString('Password Reset', $email['subject']);
+        });
         $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
         $recovery = $tokens['secret'];
 
@@ -1909,7 +1911,9 @@ class AccountCustomClientTest extends Scope
         $this->assertEmpty($response['body']['secret']);
         $this->assertTrue((new DatetimeValidator())->isValid($response['body']['expire']));
 
-        $lastEmail = $this->getLastEmailByAddress($email);
+        $lastEmail = $this->getLastEmailByAddress($email, function ($email) {
+            $this->assertStringContainsString('Password Reset', $email['subject']);
+        });
 
         $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
         $this->assertEquals($name, $lastEmail['to'][0]['name']);
@@ -3722,9 +3726,12 @@ class AccountCustomClientTest extends Scope
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['phrase']);
 
-        $lastEmail = $this->getLastEmailByAddress($email);
+        $phrase = $response['body']['phrase'];
+        $lastEmail = $this->getLastEmailByAddress($email, function ($email) use ($phrase) {
+            $this->assertStringContainsStringIgnoringCase($phrase, $email['text']);
+        });
         $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
-        $this->assertStringContainsStringIgnoringCase($response['body']['phrase'], $lastEmail['text']);
+        $this->assertStringContainsStringIgnoringCase($phrase, $lastEmail['text']);
     }
 
     public function testCreateSessionWithMagicUrl(): void

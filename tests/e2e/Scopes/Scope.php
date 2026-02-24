@@ -143,16 +143,27 @@ abstract class Scope extends TestCase
         return $this->getConsoleVariables()['maxIndexLength'] ?? 768;
     }
 
-    protected function getLastEmail(int $limit = 1): array
+    protected function getLastEmail(int $limit = 1, ?callable $probe = null): array
     {
         $result = [];
-        $this->assertEventually(function () use (&$result, $limit) {
+        $this->assertEventually(function () use (&$result, $limit, $probe) {
             $emails = json_decode(file_get_contents('http://maildev:1080/email'), true);
 
             $this->assertNotEmpty($emails, 'Maildev should have at least one email');
             $this->assertIsArray($emails);
 
-            if ($limit === 1) {
+            if ($probe !== null && $limit === 1) {
+                for ($i = count($emails) - 1; $i >= 0; $i--) {
+                    try {
+                        $probe($emails[$i]);
+                        $result = $emails[$i];
+                        return;
+                    } catch (\Throwable) {
+                        continue;
+                    }
+                }
+                $this->fail('No email matching probe found');
+            } elseif ($limit === 1) {
                 $result = end($emails);
             } else {
                 $result = array_slice($emails, -1 * $limit);
@@ -168,10 +179,10 @@ abstract class Scope extends TestCase
      * Get the last email sent to a specific address.
      * This is more reliable than getLastEmail() when tests run in parallel.
      */
-    protected function getLastEmailByAddress(string $address): array
+    protected function getLastEmailByAddress(string $address, ?callable $probe = null): array
     {
         $result = [];
-        $this->assertEventually(function () use (&$result, $address) {
+        $this->assertEventually(function () use (&$result, $address, $probe) {
             $emails = json_decode(file_get_contents('http://maildev:1080/email'), true);
 
             $this->assertNotEmpty($emails, 'Maildev should have at least one email');
@@ -183,6 +194,13 @@ abstract class Scope extends TestCase
                 if (isset($email['to']) && is_array($email['to'])) {
                     foreach ($email['to'] as $recipient) {
                         if (isset($recipient['address']) && $recipient['address'] === $address) {
+                            if ($probe !== null) {
+                                try {
+                                    $probe($email);
+                                } catch (\Throwable) {
+                                    continue 2;
+                                }
+                            }
                             $result = $email;
                             return;
                         }
@@ -190,7 +208,7 @@ abstract class Scope extends TestCase
                 }
             }
 
-            $this->fail("No email found for address: {$address}");
+            $this->fail("No email found for address: {$address}" . ($probe !== null ? ' matching probe' : ''));
         }, 15_000, 500);
 
         return $result;
@@ -264,11 +282,11 @@ abstract class Scope extends TestCase
     /**
      * @deprecated Use getLastRequestForProject instead. Used only historically in webhook tests
      */
-    protected function getLastRequest(): array
+    protected function getLastRequest(?callable $probe = null): array
     {
         $project = $this->getProject();
         $this->assertArrayHasKey('$id', $project, 'Project must have an $id');
-        return $this->getLastRequestForProject($project['$id']);
+        return $this->getLastRequestForProject($project['$id'], self::REQUEST_TYPE_WEBHOOK, [], 10, 500, $probe);
     }
 
     /**

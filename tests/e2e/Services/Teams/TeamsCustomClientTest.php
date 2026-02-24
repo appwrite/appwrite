@@ -154,8 +154,8 @@ class TeamsCustomClientTest extends Scope
         // injection allowed, meant to be protected client-side
         $encoded = 'http://localhost:5000/join-us\"></a><h1>INJECTED</h1>';
 
-        $this->assertStringContainsString('<h1>INJECTED</h1>', $email['html']);
-        $this->assertStringContainsString($encoded, $email['html']);
+        $this->assertStringContainsString('<h1>INJECTED</h1>', $lastEmail['html']);
+        $this->assertStringContainsString($encoded, $lastEmail['html']);
 
         $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamUid . '/memberships/'.$response['body']['$id'], array_merge([
             'content-type' => 'application/json',

@@ -89,7 +89,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($account['headers']['status-code'], 201);
         $this->assertNotEmpty($account['body']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.create"));
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
         $url = $webhook['url'];
@@ -158,7 +158,7 @@ class WebhooksCustomClientTest extends Scope
 
         $this->assertEquals($account['headers']['status-code'], 200);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.update.status"));
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
         $url = $webhook['url'];
@@ -223,7 +223,7 @@ class WebhooksCustomClientTest extends Scope
         $sessionId = $accountSession['body']['$id'];
         $session = $accountSession['cookies']['a_session_' . $this->getProject()['$id']];
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.sessions.{$sessionId}.create"));
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
         $url = $webhook['url'];
@@ -305,7 +305,7 @@ class WebhooksCustomClientTest extends Scope
 
         $this->assertEquals($accountSession['headers']['status-code'], 204);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.sessions.{$sessionId}.delete"));
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
         $url = $webhook['url'];
@@ -387,7 +387,7 @@ class WebhooksCustomClientTest extends Scope
 
         $this->assertEquals($accountSession['headers']['status-code'], 204);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.sessions.{$sessionId}.delete"));
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
         $url = $webhook['url'];
@@ -457,7 +457,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($account['headers']['status-code'], 200);
         $this->assertIsArray($account['body']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.update.name"));
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
         $url = $webhook['url'];
@@ -519,7 +519,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($account['headers']['status-code'], 200);
         $this->assertIsArray($account['body']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.update.password"));
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
         $url = $webhook['url'];
@@ -581,7 +581,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($account['headers']['status-code'], 200);
         $this->assertIsArray($account['body']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.update.email"));
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
         $url = $webhook['url'];
@@ -643,7 +643,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($account['headers']['status-code'], 200);
         $this->assertIsArray($account['body']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.update.prefs"));
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
         $url = $webhook['url'];
@@ -696,7 +696,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals(201, $verification['headers']['status-code']);
         $this->assertIsArray($verification['body']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.verification.{$verificationId}.create"));
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
         $url = $webhook['url'];
@@ -744,7 +744,7 @@ class WebhooksCustomClientTest extends Scope
         ]);
 
         // Get secret from webhook
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.verification.*.create"));
         $secret = $webhook['data']['secret'];
 
         $verification = $this->client->call(Client::METHOD_PUT, '/account/verification', array_merge([
@@ -762,7 +762,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals(200, $verification['headers']['status-code']);
         $this->assertIsArray($verification['body']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.verification.{$verificationId}.update"));
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
         $url = $webhook['url'];
@@ -812,7 +812,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals(201, $recovery['headers']['status-code']);
         $this->assertIsArray($recovery['body']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.recovery.{$recoveryId}.create"));
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
         $url = $webhook['url'];
@@ -861,7 +861,7 @@ class WebhooksCustomClientTest extends Scope
         ]);
 
         // Get secret from webhook
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.recovery.*.create"));
         $secret = $webhook['data']['secret'];
 
         $recovery = $this->client->call(Client::METHOD_PUT, '/account/recovery', array_merge([
@@ -879,7 +879,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals(200, $recovery['headers']['status-code']);
         $this->assertIsArray($recovery['body']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.recovery.{$recoveryId}.update"));
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
         $url = $webhook['url'];
@@ -933,7 +933,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals(200, $team['headers']['status-code']);
         $this->assertNotEmpty($team['body']['$id']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("teams.{$teamUid}.memberships.{$membershipUid}.update.status"));
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
         $url = $webhook['url'];
