@@ -396,7 +396,8 @@ $dbService = $this->getParam('database');
       - _APP_LOGGING_CONFIG
       - _APP_QUEUE_NAME=database_db_main-<?= $i."\n" ?>
 
-<?php } ?>  appwrite-worker-builds:
+<?php } ?>
+  appwrite-worker-builds:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: worker-builds
     <<: *x-logging
