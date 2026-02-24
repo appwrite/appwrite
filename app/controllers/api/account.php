@@ -902,13 +902,13 @@ Http::patch('/v1/account/sessions/:sessionId')
         // Refresh OAuth access token
         $provider = $session->getAttribute('provider', '');
         $refreshToken = $session->getAttribute('providerRefreshToken', '');
-        $oAuthProviders = Config::getParam('oAuthProviders');
-        $className = $oAuthProviders[$provider]['class'];
-        if (!\class_exists($className)) {
+        $oAuthProviders = Config::getParam('oAuthProviders') ?? [];
+        $className = $oAuthProviders[$provider]['class'] ?? null;
+        if (!empty($provider) && ($className === null || !\class_exists($className))) {
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
-        if (!empty($provider) && \class_exists($className)) {
+        if (!empty($provider) && $className !== null && \class_exists($className)) {
             $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
             $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
 
@@ -1340,9 +1340,9 @@ Http::get('/v1/account/sessions/oauth2/:provider')
             throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please configure the provider app ID and app secret key from your ' . APP_NAME . ' console to continue.');
         }
 
-        $oAuthProviders = Config::getParam('oAuthProviders');
-        $className = $oAuthProviders[$provider]['class'];
-        if (!\class_exists($className)) {
+        $oAuthProviders = Config::getParam('oAuthProviders') ?? [];
+        $className = $oAuthProviders[$provider]['class'] ?? null;
+        if ($className === null || !\class_exists($className)) {
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
@@ -1492,13 +1492,13 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
         $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider . 'Enabled'] ?? false;
 
-        $oAuthProviders = Config::getParam('oAuthProviders');
-        $className = $oAuthProviders[$provider]['class'];
-        if (!\class_exists($className)) {
+        $oAuthProviders = Config::getParam('oAuthProviders') ?? [];
+        $className = $oAuthProviders[$provider]['class'] ?? null;
+        if ($className === null || !\class_exists($className)) {
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
-        $providers = Config::getParam('oAuthProviders');
+        $providers = Config::getParam('oAuthProviders') ?? [];
         $providerName = $providers[$provider]['name'] ?? '';
 
         /** @var Appwrite\Auth\OAuth2 $oauth2 */
@@ -2035,9 +2035,9 @@ Http::get('/v1/account/tokens/oauth2/:provider')
             throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please configure the provider app ID and app secret key from your ' . APP_NAME . ' console to continue.');
         }
 
-        $oAuthProviders = Config::getParam('oAuthProviders');
-        $className = $oAuthProviders[$provider]['class'];
-        if (!\class_exists($className)) {
+        $oAuthProviders = Config::getParam('oAuthProviders') ?? [];
+        $className = $oAuthProviders[$provider]['class'] ?? null;
+        if ($className === null || !\class_exists($className)) {
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
