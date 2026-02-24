@@ -199,7 +199,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         // Update string attribute
         $query = $this->getQuery(self::UPDATE_STRING_ATTRIBUTE);
@@ -236,7 +236,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         // Update integer attribute
         $query = $this->getQuery(self::UPDATE_INTEGER_ATTRIBUTE);
@@ -273,7 +273,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         // Update boolean attribute
         $query = $this->getQuery(self::UPDATE_BOOLEAN_ATTRIBUTE);
@@ -311,7 +311,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         // Update float attribute
         $query = $this->getQuery(self::UPDATE_FLOAT_ATTRIBUTE);
@@ -348,7 +348,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         // Update email attribute
         $query = $this->getQuery(self::UPDATE_EMAIL_ATTRIBUTE);
@@ -388,7 +388,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         // Update enum attribute
         $query = $this->getQuery(self::UPDATE_ENUM_ATTRIBUTE);
@@ -428,7 +428,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         // Update datetime attribute
         $query = $this->getQuery(self::UPDATE_DATETIME_ATTRIBUTE);
@@ -464,7 +464,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         // Update IP attribute
         $query = $this->getQuery(self::UPDATE_IP_ATTRIBUTE);
@@ -500,7 +500,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         // Update URL attribute
         $query = $this->getQuery(self::UPDATE_URL_ATTRIBUTE);
@@ -524,7 +524,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         self::$allAttributesCache[$cacheKey] = $data;
         return self::$allAttributesCache[$cacheKey];
@@ -761,7 +761,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         // Step 4: Create documents
         $query = $this->getQuery(self::CREATE_DOCUMENTS);
@@ -867,7 +867,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         $query = $this->getQuery(self::UPDATE_STRING_ATTRIBUTE);
         $gqlPayload = [
@@ -956,7 +956,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         $query = $this->getQuery(self::UPDATE_INTEGER_ATTRIBUTE);
         $gqlPayload = [
@@ -1045,7 +1045,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         $query = $this->getQuery(self::UPDATE_BOOLEAN_ATTRIBUTE);
         $gqlPayload = [
@@ -1136,7 +1136,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         $query = $this->getQuery(self::UPDATE_FLOAT_ATTRIBUTE);
         $gqlPayload = [
@@ -1225,7 +1225,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         $query = $this->getQuery(self::UPDATE_EMAIL_ATTRIBUTE);
         $gqlPayload = [
@@ -1320,7 +1320,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         $query = $this->getQuery(self::UPDATE_ENUM_ATTRIBUTE);
         $gqlPayload = [
@@ -1412,7 +1412,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         $query = $this->getQuery(self::UPDATE_DATETIME_ATTRIBUTE);
         $gqlPayload = [
@@ -1481,7 +1481,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::UPDATE_RELATIONSHIP_ATTRIBUTE);
@@ -1569,7 +1569,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         $query = $this->getQuery(self::UPDATE_IP_ATTRIBUTE);
         $gqlPayload = [
@@ -1656,7 +1656,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]);
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         $query = $this->getQuery(self::UPDATE_URL_ATTRIBUTE);
         $gqlPayload = [

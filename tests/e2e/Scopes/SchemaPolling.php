@@ -20,7 +20,7 @@ trait SchemaPolling
      * @param int $timeoutMs Maximum time to wait in milliseconds
      * @param int $waitMs Time between polling attempts in milliseconds
      */
-    protected function waitForAttribute(string $databaseId, string $containerId, string $attributeKey, int $timeoutMs = 120000, int $waitMs = 500): void
+    protected function waitForAttribute(string $databaseId, string $containerId, string $attributeKey, int $timeoutMs = 240000, int $waitMs = 500): void
     {
         $this->assertEventually(function () use ($databaseId, $containerId, $attributeKey) {
             $attribute = $this->client->call(
@@ -53,7 +53,7 @@ trait SchemaPolling
      * @param int $timeoutMs Maximum time to wait in milliseconds
      * @param int $waitMs Time between polling attempts in milliseconds
      */
-    protected function waitForAttributes(string $databaseId, string $containerId, array $attributeKeys, int $timeoutMs = 120000, int $waitMs = 500): void
+    protected function waitForAttributes(string $databaseId, string $containerId, array $attributeKeys, int $timeoutMs = 240000, int $waitMs = 500): void
     {
         $this->assertEventually(function () use ($databaseId, $containerId, $attributeKeys) {
             $container = $this->client->call(
@@ -97,7 +97,7 @@ trait SchemaPolling
      * @param int $timeoutMs Maximum time to wait in milliseconds
      * @param int $waitMs Time between polling attempts in milliseconds
      */
-    protected function waitForAttributeCount(string $databaseId, string $containerId, int $count, int $timeoutMs = 120000, int $waitMs = 500): void
+    protected function waitForAttributeCount(string $databaseId, string $containerId, int $count, int $timeoutMs = 240000, int $waitMs = 500): void
     {
         $this->assertEventually(function () use ($databaseId, $containerId, $count) {
             $container = $this->client->call(
@@ -139,7 +139,7 @@ trait SchemaPolling
      * @param int $timeoutMs Maximum time to wait in milliseconds
      * @param int $waitMs Time between polling attempts in milliseconds
      */
-    protected function waitForIndex(string $databaseId, string $containerId, string $indexKey, int $timeoutMs = 120000, int $waitMs = 500): void
+    protected function waitForIndex(string $databaseId, string $containerId, string $indexKey, int $timeoutMs = 240000, int $waitMs = 500): void
     {
         $this->assertEventually(function () use ($databaseId, $containerId, $indexKey) {
             $index = $this->client->call(
@@ -173,7 +173,7 @@ trait SchemaPolling
      * @param int $timeoutMs Maximum time to wait in milliseconds
      * @param int $waitMs Time between polling attempts in milliseconds
      */
-    protected function waitForAllIndexes(string $databaseId, string $containerId, int $timeoutMs = 120000, int $waitMs = 500): void
+    protected function waitForAllIndexes(string $databaseId, string $containerId, int $timeoutMs = 240000, int $waitMs = 500): void
     {
         $this->assertEventually(function () use ($databaseId, $containerId) {
             $container = $this->client->call(
@@ -207,7 +207,7 @@ trait SchemaPolling
      * @param int $timeoutMs Maximum time to wait in milliseconds
      * @param int $waitMs Time between polling attempts in milliseconds
      */
-    protected function waitForAllAttributes(string $databaseId, string $containerId, int $timeoutMs = 180000, int $waitMs = 500): void
+    protected function waitForAllAttributes(string $databaseId, string $containerId, int $timeoutMs = 240000, int $waitMs = 500): void
     {
         $this->assertEventually(function () use ($databaseId, $containerId) {
             $container = $this->client->call(

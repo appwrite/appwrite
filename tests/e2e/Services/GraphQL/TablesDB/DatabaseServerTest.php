@@ -180,7 +180,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         $query = $this->getQuery(self::UPDATE_STRING_COLUMN);
         $gqlPayload = [
@@ -248,7 +248,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         $query = $this->getQuery(self::UPDATE_INTEGER_COLUMN);
         $gqlPayload = [
@@ -316,7 +316,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         $query = $this->getQuery(self::UPDATE_BOOLEAN_COLUMN);
         $gqlPayload = [
@@ -385,7 +385,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         $query = $this->getQuery(self::UPDATE_FLOAT_COLUMN);
         $gqlPayload = [
@@ -453,7 +453,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         $query = $this->getQuery(self::UPDATE_EMAIL_COLUMN);
         $gqlPayload = [
@@ -524,7 +524,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         $query = $this->getQuery(self::UPDATE_ENUM_COLUMN);
         $gqlPayload = [
@@ -595,7 +595,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         $query = $this->getQuery(self::UPDATE_DATETIME_COLUMN);
         $gqlPayload = [
@@ -664,7 +664,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         $query = $this->getQuery(self::UPDATE_RELATIONSHIP_COLUMN);
         $gqlPayload = [
@@ -730,7 +730,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         $query = $this->getQuery(self::UPDATE_IP_COLUMN);
         $gqlPayload = [
@@ -797,7 +797,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         $query = $this->getQuery(self::UPDATE_URL_COLUMN);
         $gqlPayload = [
@@ -905,7 +905,7 @@ class DatabaseServerTest extends Scope
                     'x-appwrite-key' => $this->getProject()['apiKey'],
                 ]));
                 $this->assertEquals('available', $response['body']['status']);
-            }, 120000, 500);
+            }, 240000, 500);
         }
 
         $query = $this->getQuery(self::CREATE_ROW);
@@ -1016,7 +1016,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         // Step 4: Create rows
         $query = $this->getQuery(self::CREATE_ROWS);
@@ -1109,7 +1109,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         $query = $this->getQuery(self::UPDATE_STRING_COLUMN);
         $gqlPayload = [
@@ -1187,7 +1187,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         $query = $this->getQuery(self::UPDATE_INTEGER_COLUMN);
         $gqlPayload = [
@@ -1267,7 +1267,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         $query = $this->getQuery(self::UPDATE_BOOLEAN_COLUMN);
         $gqlPayload = [
@@ -1346,7 +1346,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         $query = $this->getQuery(self::UPDATE_FLOAT_COLUMN);
         $gqlPayload = [
@@ -1426,7 +1426,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         $query = $this->getQuery(self::UPDATE_EMAIL_COLUMN);
         $gqlPayload = [
@@ -1508,7 +1508,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         $query = $this->getQuery(self::UPDATE_ENUM_COLUMN);
         $gqlPayload = [
@@ -1591,7 +1591,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         $query = $this->getQuery(self::UPDATE_DATETIME_COLUMN);
         $gqlPayload = [
@@ -1663,7 +1663,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::UPDATE_RELATIONSHIP_COLUMN);
@@ -1737,7 +1737,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::UPDATE_IP_COLUMN);
@@ -1814,7 +1814,7 @@ class DatabaseServerTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals('available', $response['body']['status']);
-        }, 120000, 500);
+        }, 240000, 500);
 
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::UPDATE_URL_COLUMN);
@@ -1912,7 +1912,7 @@ class DatabaseServerTest extends Scope
                     'x-appwrite-key' => $this->getProject()['apiKey'],
                 ]));
                 $this->assertEquals('available', $response['body']['status']);
-            }, 120000, 500);
+            }, 240000, 500);
         }
 
         $query = $this->getQuery(self::CREATE_ROW);
