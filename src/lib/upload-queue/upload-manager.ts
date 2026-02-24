@@ -18,6 +18,7 @@ class UploadManager {
   private uploads = new Map<string, AbortController>()
   private progressCallbacks = new Map<string, Set<UploadProgressCallback>>()
   private processingQueue = false
+  private readonly maxConcurrentUploads = 3
 
   /**
    * Register a progress callback for an upload
@@ -120,15 +121,43 @@ class UploadManager {
       // Get pending uploads
       const pendingUploads = await db.getUploadItems('pending')
 
-      for (const item of pendingUploads) {
-        if (this.uploads.has(item.id)) {
-          continue // Already uploading
-        }
-
-        await this.processUpload(item)
+      if (pendingUploads.length === 0) {
+        return
       }
+
+      let currentIndex = 0
+
+      const runNext = async (): Promise<void> => {
+        while (currentIndex < pendingUploads.length) {
+          const item = pendingUploads[currentIndex]
+          currentIndex += 1
+
+          if (this.uploads.has(item.id)) {
+            continue // Already uploading
+          }
+
+          await this.processUpload(item)
+        }
+      }
+
+      const workerCount = Math.min(
+        this.maxConcurrentUploads,
+        pendingUploads.length,
+      )
+
+      await Promise.all(
+        Array.from({ length: workerCount }, () => runNext()),
+      )
     } finally {
       this.processingQueue = false
+
+      // If new pending uploads were added or retries were queued, resume processing
+      const remainingPending = await db.getUploadItems('pending')
+      if (remainingPending.length > 0) {
+        setTimeout(() => {
+          this.processQueue()
+        }, 0)
+      }
     }
   }
 
