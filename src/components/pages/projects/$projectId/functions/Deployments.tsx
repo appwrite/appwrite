@@ -89,6 +89,8 @@ import { DeploymentDownloadType } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { Route } from '@/routes/_public/projects.$projectId.functions.$functionId.index'
 import { CreateExecutionDrawer } from './CreateExecutionDrawer'
+import { useCreateDeployment } from '../shared/CreateDeploymentContext'
+import { CreateDeploymentDropdown } from '../shared/CreateDeploymentDropdown'
 
 const DEPLOYMENTS_PER_PAGE = 25
 
@@ -413,6 +415,8 @@ export function View() {
   const handleSaveSpecification = () => {
     updateSpecificationMutation.mutate(selectedSpecification)
   }
+
+  const createDeployment = useCreateDeployment()
 
   // Clear selection when navigating between pages
   useEffect(() => {
@@ -1103,9 +1107,16 @@ export function View() {
                 <p className="mb-1 text-[14px] font-medium text-foreground">
                   There is no active deployment
                 </p>
-                <p className="text-[13px] text-muted-foreground">
+                <p className="mb-4 text-[13px] text-muted-foreground">
                   Create your first deployment to activate this function.
                 </p>
+                {createDeployment && (
+                  <CreateDeploymentDropdown
+                    onSelectGit={createDeployment.openGitModal}
+                    onSelectCli={createDeployment.openCliModal}
+                    onSelectManual={createDeployment.openManualModal}
+                  />
+                )}
               </div>
             </div>
           )}
@@ -1584,6 +1595,26 @@ export function View() {
               isEmpty={true}
               variant="card"
               iconSize="md"
+              children={
+                createDeployment ? (
+                  <div className="flex flex-col items-center text-center mt-4">
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                      <Clock className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                    <p className="mb-1 text-[14px] font-medium text-foreground">
+                      No deployments yet
+                    </p>
+                    <p className="mb-4 text-[13px] text-muted-foreground">
+                      Create your first deployment to get started
+                    </p>
+                    <CreateDeploymentDropdown
+                      onSelectGit={createDeployment.openGitModal}
+                      onSelectCli={createDeployment.openCliModal}
+                      onSelectManual={createDeployment.openManualModal}
+                    />
+                  </div>
+                ) : undefined
+              }
             />
           )}
         </div>

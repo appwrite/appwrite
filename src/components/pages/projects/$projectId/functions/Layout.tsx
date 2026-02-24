@@ -17,6 +17,11 @@ import {
   useRefresh,
 } from '@/components/global/shared/RefreshContext'
 import { CreateExecutionDrawer } from './CreateExecutionDrawer'
+import { CreateDeploymentDropdown } from '../shared/CreateDeploymentDropdown'
+import { CreateGitDeploymentModal } from '../shared/CreateGitDeploymentModal'
+import { CreateCliDeploymentModal } from '../shared/CreateCliDeploymentModal'
+import { CreateManualDeploymentModal } from '../shared/CreateManualDeploymentModal'
+import { CreateDeploymentProvider } from '../shared/CreateDeploymentContext'
 
 export function Layout() {
   return (
@@ -145,11 +150,9 @@ function FunctionLayoutContent() {
     })
   }
 
-  const handleCreateDeployment = () => {
-    // TODO: Open create deployment dialog
-    toast.info('Deployment creation coming soon')
-  }
-
+  const [gitDeployOpen, setGitDeployOpen] = useState(false)
+  const [cliDeployOpen, setCliDeployOpen] = useState(false)
+  const [manualDeployOpen, setManualDeployOpen] = useState(false)
   const [executeDrawerOpen, setExecuteDrawerOpen] = useState(false)
 
   const handleCreateExecution = () => {
@@ -283,8 +286,13 @@ function FunctionLayoutContent() {
     ) : undefined
 
   return (
-    <div className="flex flex-col">
-      <ServiceHeader
+    <CreateDeploymentProvider
+      onOpenGit={() => setGitDeployOpen(true)}
+      onOpenCli={() => setCliDeployOpen(true)}
+      onOpenManual={() => setManualDeployOpen(true)}
+    >
+      <div className="flex flex-col">
+        <ServiceHeader
         title={
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" asChild className="h-7 w-7 p-0">
@@ -317,9 +325,18 @@ function FunctionLayoutContent() {
         showRefresh={activeTab === 'executions' && hasRefreshHandler}
         onRefresh={activeTab === 'executions' ? triggerRefresh : undefined}
         isRefreshing={isRefreshing}
+        beforeCreateButtons={
+          activeTab === 'deployments' ? (
+            <CreateDeploymentDropdown
+              onSelectGit={() => setGitDeployOpen(true)}
+              onSelectCli={() => setCliDeployOpen(true)}
+              onSelectManual={() => setManualDeployOpen(true)}
+            />
+          ) : undefined
+        }
         createLabel={
           activeTab === 'deployments'
-            ? 'Create deployment'
+            ? undefined
             : activeTab === 'executions'
               ? 'Create execution'
               : activeTab === 'domains'
@@ -328,7 +345,7 @@ function FunctionLayoutContent() {
         }
         onCreate={
           activeTab === 'deployments'
-            ? handleCreateDeployment
+            ? undefined
             : activeTab === 'executions'
               ? handleCreateExecution
               : activeTab === 'domains'
@@ -345,17 +362,42 @@ function FunctionLayoutContent() {
           ) : undefined
         }
       />
-      <div className="flex-1">
-        <Outlet />
+        <div className="flex-1">
+          <Outlet />
+        </div>
+        {func && functionId && projectId && (
+          <>
+            <CreateExecutionDrawer
+              open={executeDrawerOpen}
+              onOpenChange={setExecuteDrawerOpen}
+              functionId={functionId}
+              func={func}
+            />
+            <CreateGitDeploymentModal
+              open={gitDeployOpen}
+              onOpenChange={setGitDeployOpen}
+              resourceType="function"
+              projectId={projectId}
+              resourceId={functionId}
+              resource={func}
+            />
+            <CreateCliDeploymentModal
+              open={cliDeployOpen}
+              onOpenChange={setCliDeployOpen}
+              resourceType="function"
+              projectId={projectId}
+              resourceId={functionId}
+            />
+            <CreateManualDeploymentModal
+              open={manualDeployOpen}
+              onOpenChange={setManualDeployOpen}
+              resourceType="function"
+              projectId={projectId}
+              resourceId={functionId}
+            />
+          </>
+        )}
       </div>
-      {func && functionId && (
-        <CreateExecutionDrawer
-          open={executeDrawerOpen}
-          onOpenChange={setExecuteDrawerOpen}
-          functionId={functionId}
-          func={func}
-        />
-      )}
-    </div>
+    </CreateDeploymentProvider>
   )
 }

@@ -29,6 +29,7 @@ export type CodeBlockLanguage =
   | 'swift'
   | 'kotlin'
   | 'bash'
+  | 'powershell'
   | 'php'
   | 'python'
   | 'ruby'
@@ -41,6 +42,8 @@ const EXTRA_LANGUAGES: CodeBlockLanguage[] = [
   'dart',
   'swift',
   'kotlin',
+  'bash',
+  'powershell',
   'php',
   'python',
   'ruby',
@@ -53,6 +56,8 @@ const PRISM_LOADERS: Record<string, () => Promise<unknown>> = {
   dart: () => import('prismjs/components/prism-dart'),
   swift: () => import('prismjs/components/prism-swift'),
   kotlin: () => import('prismjs/components/prism-kotlin'),
+  bash: () => import('prismjs/components/prism-bash'),
+  powershell: () => import('prismjs/components/prism-powershell'),
   markup: () => import('prismjs/components/prism-markup'),
   'markup-templating': () =>
     loadLanguage('markup').then(

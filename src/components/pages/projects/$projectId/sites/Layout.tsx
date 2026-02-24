@@ -1,15 +1,20 @@
-import { Outlet, useParams, useNavigate } from '@tanstack/react-router'
+import { useState, useMemo } from 'react'
+import { Outlet, useParams, useNavigate, useLocation } from '@tanstack/react-router'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
-import { useProjectSite } from '@/lib/react-query/hooks'
-import { useMemo } from 'react'
-import { useLocation } from '@tanstack/react-router'
+import { useProjectSite, useSiteDeployment } from '@/lib/react-query/hooks'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Info, ArrowLeft } from 'lucide-react'
 import {
   RefreshProvider,
   useRefresh,
 } from '@/components/global/shared/RefreshContext'
 import { toast } from 'sonner'
+import { CreateDeploymentDropdown } from '../shared/CreateDeploymentDropdown'
+import { CreateGitDeploymentModal } from '../shared/CreateGitDeploymentModal'
+import { CreateCliDeploymentModal } from '../shared/CreateCliDeploymentModal'
+import { CreateManualDeploymentModal } from '../shared/CreateManualDeploymentModal'
+import { CreateDeploymentProvider } from '../shared/CreateDeploymentContext'
 
 export function Layout() {
   return (
@@ -25,6 +30,17 @@ function SiteLayoutContent() {
   const navigate = useNavigate()
   const { isRefreshing, triggerRefresh, hasRefreshHandler } = useRefresh()
   const { data: site } = useProjectSite(projectId, siteId)
+  const { data: activeDeployment } = useSiteDeployment(
+    projectId,
+    siteId,
+    site?.deploymentId ?? undefined,
+  )
+  const isBuilding = useMemo(
+    () =>
+      activeDeployment?.status === 'building' ||
+      activeDeployment?.status === 'processing',
+    [activeDeployment?.status],
+  )
 
   const handleBack = () => {
     navigate({
@@ -32,6 +48,10 @@ function SiteLayoutContent() {
       params: { projectId: projectId! },
     })
   }
+
+  const [gitDeployOpen, setGitDeployOpen] = useState(false)
+  const [cliDeployOpen, setCliDeployOpen] = useState(false)
+  const [manualDeployOpen, setManualDeployOpen] = useState(false)
 
   const handleFilterClick = () => {
     // TODO: Open filters dialog
@@ -82,33 +102,97 @@ function SiteLayoutContent() {
   ]
 
   return (
-    <div className="flex flex-col">
-      <ServiceHeader
-        title={
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 w-7 p-0"
-              onClick={handleBack}
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <span>{site?.name || 'Site'}</span>
-          </div>
-        }
-        tabs={tabs}
-        activeTab={activeTab}
-        fullWidthBorder
-        showFilters={activeTab === 'logs'}
-        onFilterClick={activeTab === 'logs' ? handleFilterClick : undefined}
-        showRefresh={activeTab === 'logs' && hasRefreshHandler}
-        onRefresh={activeTab === 'logs' ? triggerRefresh : undefined}
-        isRefreshing={isRefreshing}
-      />
-      <div className="flex-1 min-h-0">
-        <Outlet />
+    <CreateDeploymentProvider
+      onOpenGit={() => setGitDeployOpen(true)}
+      onOpenCli={() => setCliDeployOpen(true)}
+      onOpenManual={() => setManualDeployOpen(true)}
+    >
+      <div className="flex flex-col">
+        <ServiceHeader
+          title={
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0"
+                onClick={handleBack}
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <span>{site?.name || 'Site'}</span>
+            </div>
+          }
+          tabs={tabs}
+          activeTab={activeTab}
+          fullWidthBorder
+          showFilters={activeTab === 'logs'}
+          onFilterClick={activeTab === 'logs' ? handleFilterClick : undefined}
+          showRefresh={activeTab === 'logs' && hasRefreshHandler}
+          onRefresh={activeTab === 'logs' ? triggerRefresh : undefined}
+          isRefreshing={isRefreshing}
+          beforeCreateButtons={
+            activeTab === 'deployments' ? (
+              <CreateDeploymentDropdown
+                onSelectGit={() => setGitDeployOpen(true)}
+                onSelectCli={() => setCliDeployOpen(true)}
+                onSelectManual={() => setManualDeployOpen(true)}
+              />
+            ) : undefined
+          }
+          contentAfterBorder={
+            isBuilding ? (
+              <div className="border-b border-border bg-blue-500/5">
+                <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
+                  <Alert
+                    variant="default"
+                    className="border-blue-500/30 bg-transparent"
+                  >
+                    <Info className="h-4 w-4 text-blue-500" />
+                    <AlertDescription className="text-[12px] text-blue-600/80 dark:text-blue-400/80">
+                      Your site is currently being deployed.
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              </div>
+            ) : undefined
+          }
+        />
+        <div className="flex-1 min-h-0">
+          <Outlet />
+        </div>
+        {site && siteId && projectId && (
+          <>
+            <CreateGitDeploymentModal
+              open={gitDeployOpen}
+              onOpenChange={setGitDeployOpen}
+              resourceType="site"
+              projectId={projectId}
+              resourceId={siteId}
+              resource={site}
+            />
+            <CreateCliDeploymentModal
+              open={cliDeployOpen}
+              onOpenChange={setCliDeployOpen}
+              resourceType="site"
+              projectId={projectId}
+              resourceId={siteId}
+              siteBuildConfig={{
+                framework: site.framework,
+                buildCommand: site.buildCommand,
+                installCommand: site.installCommand,
+                outputDirectory: site.outputDirectory,
+              }}
+            />
+            <CreateManualDeploymentModal
+              open={manualDeployOpen}
+              onOpenChange={setManualDeployOpen}
+              resourceType="site"
+              projectId={projectId}
+              resourceId={siteId}
+            />
+          </>
+        )}
       </div>
-    </div>
+    </CreateDeploymentProvider>
   )
 }

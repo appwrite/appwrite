@@ -450,7 +450,8 @@ export function ConsoleHeader({
                 <Button
                   asChild
                   size="sm"
-                  className="h-8 shrink-0 cursor-pointer bg-blue-600 px-3 text-[12px] font-semibold text-white hover:bg-blue-700 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-700 relative z-10 rounded-[calc(0.375rem-1px)]"
+                  variant="default"
+                  className="h-8 shrink-0 cursor-pointer px-3 text-[12px] font-semibold relative z-10 rounded-[calc(0.375rem-1px)]"
                 >
                   <Link
                     to="/organizations/$orgId/change-plan"

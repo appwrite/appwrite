@@ -431,21 +431,26 @@ code {
   position: relative;
   padding: 1px;
   border-radius: 0.375rem;
+  background: hsl(var(--primary));
+  overflow: hidden;
+  transition: filter 0.2s ease;
+}
+
+.upgrade-button-wrapper:hover {
   background: linear-gradient(
     90deg,
-    #1e40af 0%,
-    #2563eb 15%,
-    #3b82f6 30%,
-    #60a5fa 45%,
-    #3b82f6 60%,
-    #2563eb 75%,
-    #1e40af 90%,
-    #1e40af 100%
+    color-mix(in oklch, var(--muted-foreground) 25%, var(--border)) 0%,
+    var(--border) 15%,
+    color-mix(in oklch, var(--border) 60%, var(--background)) 30%,
+    var(--muted) 45%,
+    color-mix(in oklch, var(--border) 60%, var(--background)) 60%,
+    var(--border) 75%,
+    color-mix(in oklch, var(--muted-foreground) 25%, var(--border)) 90%,
+    color-mix(in oklch, var(--muted-foreground) 25%, var(--border)) 100%
   );
   background-size: 300% 100%;
   animation: border-rotate 4s ease-in-out infinite;
-  overflow: hidden;
-  filter: drop-shadow(0 2px 4px rgba(37, 99, 235, 0.2));
+  filter: drop-shadow(0 2px 4px color-mix(in oklch, var(--foreground) 12%, transparent));
 }
 
 .upgrade-button-wrapper > * {
@@ -465,25 +470,33 @@ code {
     rgba(255, 255, 255, 0.6) 50%,
     transparent 70%
   );
-  animation: shimmer 3s ease-in-out infinite;
+  animation: none;
   pointer-events: none;
   z-index: 1;
 }
 
+.upgrade-button-wrapper:hover::before {
+  animation: shimmer 3s ease-in-out infinite;
+}
+
 .dark .upgrade-button-wrapper {
+  background: hsl(var(--primary));
+}
+
+.dark .upgrade-button-wrapper:hover {
   background: linear-gradient(
     90deg,
-    #1e40af 0%,
-    #2563eb 15%,
-    #3b82f6 30%,
-    #60a5fa 45%,
-    #3b82f6 60%,
-    #2563eb 75%,
-    #1e40af 90%,
-    #1e40af 100%
+    color-mix(in oklch, var(--muted-foreground) 25%, var(--border)) 0%,
+    var(--border) 15%,
+    color-mix(in oklch, var(--border) 60%, var(--background)) 30%,
+    var(--muted) 45%,
+    color-mix(in oklch, var(--border) 60%, var(--background)) 60%,
+    var(--border) 75%,
+    color-mix(in oklch, var(--muted-foreground) 25%, var(--border)) 90%,
+    color-mix(in oklch, var(--muted-foreground) 25%, var(--border)) 100%
   );
   background-size: 300% 100%;
-  filter: drop-shadow(0 2px 6px rgba(37, 99, 235, 0.3));
+  filter: drop-shadow(0 2px 6px color-mix(in oklch, var(--foreground) 18%, transparent));
 }
 
 .dark .upgrade-button-wrapper::before {
