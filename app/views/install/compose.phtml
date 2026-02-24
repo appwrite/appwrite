@@ -367,7 +367,7 @@ $dbService = $this->getParam('database');
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_EMAIL_CERTIFICATES
 
-<?php for ($i = 0; $i < 4; $i++) { ?>
+<?php for ($i = 0; $i < 1; $i++) { ?>
   appwrite-worker-databases-<?= $i ?>:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: worker-databases

@@ -173,7 +173,7 @@ class Database extends Event
                 $dsn = new DSN("mysql://$database");
             }
 
-            $numWorkers = (int) System::getEnv('_APP_DATABASE_WORKERS', 4);
+            $numWorkers = (int) System::getEnv('_APP_DATABASE_WORKERS', 1);
             $workerIndex = \abs(\crc32($project->getId())) % $numWorkers;
             $this->queue = $dsn->getHost() . '-' . $workerIndex;
         }
