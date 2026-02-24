@@ -69,6 +69,7 @@ import { AuthSettings } from './Settings'
 import { Templates } from './Templates'
 import { toast } from 'sonner'
 import { UserContextMenu } from './_components/UserContextMenu'
+import { TeamContextMenu } from './_components/TeamContextMenu'
 
 export function View() {
   const { projectId } = useParams({
@@ -1222,33 +1223,37 @@ export function View() {
                       </TableHeader>
                       <TableBody>
                         {paginatedTeams.map((team) => (
-                          <TableRow
+                          <TeamContextMenu
                             key={team.id}
-                            className={cn(
-                              'cursor-pointer transition-colors border-b border-border/50',
-                              selectedTeams.has(team.id)
-                                ? 'bg-sky-100 dark:bg-sky-950'
-                                : 'hover:bg-muted/30',
-                            )}
-                            onClick={(e) => {
-                              // Don't navigate if clicking on checkbox, link, or their containers
-                              const target = e.target as HTMLElement
-                              if (
-                                target.closest('button') ||
-                                target.closest('[role="checkbox"]') ||
-                                target.closest('a')
-                              ) {
-                                return
-                              }
-                              navigate({
-                                to: '/projects/$projectId/auth/teams/$teamId',
-                                params: {
-                                  projectId: projectId!,
-                                  teamId: team.id,
-                                },
-                              })
-                            }}
+                            projectId={projectId!}
+                            team={{ id: team.id, name: team.name }}
                           >
+                            <TableRow
+                              className={cn(
+                                'cursor-pointer transition-colors border-b border-border/50',
+                                selectedTeams.has(team.id)
+                                  ? 'bg-sky-100 dark:bg-sky-950'
+                                  : 'hover:bg-muted/30',
+                              )}
+                              onClick={(e) => {
+                                // Don't navigate if clicking on checkbox, link, or their containers
+                                const target = e.target as HTMLElement
+                                if (
+                                  target.closest('button') ||
+                                  target.closest('[role="checkbox"]') ||
+                                  target.closest('a')
+                                ) {
+                                  return
+                                }
+                                navigate({
+                                  to: '/projects/$projectId/auth/teams/$teamId',
+                                  params: {
+                                    projectId: projectId!,
+                                    teamId: team.id,
+                                  },
+                                })
+                              }}
+                            >
                             <TableCell
                               onClick={(e) => e.stopPropagation()}
                               className="px-4 py-3"
@@ -1299,7 +1304,8 @@ export function View() {
                                 />
                               </Link>
                             </TableCell>
-                          </TableRow>
+                            </TableRow>
+                          </TeamContextMenu>
                         ))}
                       </TableBody>
                     </Table>
@@ -1332,28 +1338,33 @@ export function View() {
               <div className="flex flex-col gap-2">
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {paginatedTeams.map((team) => (
-                    <Link
+                    <TeamContextMenu
                       key={team.id}
-                      to="/projects/$projectId/auth/teams/$teamId"
-                      params={{ projectId: projectId!, teamId: team.id }}
+                      projectId={projectId!}
+                      team={{ id: team.id, name: team.name }}
                     >
-                      <ResourceCard
-                        title={team.name || '-'}
-                        resourceId={team.id}
-                        avatar={team.name || '-'}
-                        metadata={[
-                          {
-                            label: 'Created',
-                            value: (
-                              <DateTooltip
-                                date={team.createdAt}
-                                className="text-[11px] font-medium text-muted-foreground"
-                              />
-                            ),
-                          },
-                        ]}
-                      />
-                    </Link>
+                      <Link
+                        to="/projects/$projectId/auth/teams/$teamId"
+                        params={{ projectId: projectId!, teamId: team.id }}
+                      >
+                        <ResourceCard
+                          title={team.name || '-'}
+                          resourceId={team.id}
+                          avatar={team.name || '-'}
+                          metadata={[
+                            {
+                              label: 'Created',
+                              value: (
+                                <DateTooltip
+                                  date={team.createdAt}
+                                  className="text-[11px] font-medium text-muted-foreground"
+                                />
+                              ),
+                            },
+                          ]}
+                        />
+                      </Link>
+                    </TeamContextMenu>
                   ))}
 
                   {paginatedTeams.length === 0 && (

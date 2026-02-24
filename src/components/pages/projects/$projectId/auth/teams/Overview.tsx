@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { useParams, useNavigate } from '@tanstack/react-router'
+import { useParams, useNavigate, useLocation } from '@tanstack/react-router'
 import {
   useTeam,
   useUpdateTeamName,
@@ -21,12 +21,14 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Plus, Trash2 } from 'lucide-react'
+import { useHashScroll } from '@/lib/hooks/useHashScroll'
 
 export function TeamOverview() {
   const { projectId, teamId } = useParams({
     strict: false,
   })
   const navigate = useNavigate()
+  const location = useLocation()
 
   const { data: team, isLoading } = useTeam(projectId, teamId)
   const updateNameMutation = useUpdateTeamName(projectId, teamId)
@@ -166,6 +168,8 @@ export function TeamOverview() {
     setPreferences(newPrefs)
   }
 
+  useHashScroll(!isLoading, location.hash)
+
   if (isLoading || !team) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -213,7 +217,10 @@ export function TeamOverview() {
       </div>
 
       {/* Update Name */}
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div
+        id="team-details"
+        className="rounded-xl border border-border bg-card/50 overflow-hidden"
+      >
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
             Update name
@@ -260,7 +267,10 @@ export function TeamOverview() {
       </div>
 
       {/* Update Preferences */}
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div
+        id="team-preferences"
+        className="rounded-xl border border-border bg-card/50 overflow-hidden"
+      >
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
             Update preferences
