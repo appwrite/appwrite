@@ -172,11 +172,19 @@ export function BucketDetailView() {
   // Handle file upload - queues in background
   const handleFileUpload = async (data: {
     fileId?: string
-    file: File
+    files: File[]
     permissions?: string[]
   }) => {
     try {
-      await queueUpload(data.file, data.fileId, data.permissions)
+      await Promise.all(
+        data.files.map((file) =>
+          queueUpload(
+            file,
+            data.files.length === 1 ? data.fileId : undefined,
+            data.permissions,
+          ),
+        ),
+      )
       // No toast - progress bar shows upload status
       setUploadFileDialogOpen(false)
       // Files list will automatically reload when upload completes (handled by GlobalUploadProgress)

@@ -19,7 +19,7 @@ interface UploadFileProps {
   onOpenChange: (open: boolean) => void
   onUpload: (data: {
     fileId?: string
-    file: File
+    files: File[]
     permissions?: string[]
   }) => void
   bucket?: Models.Bucket
@@ -34,7 +34,10 @@ export function UploadFile({
   isLoading = false,
 }: UploadFileProps) {
   const [fileId, setFileId] = useState<string | undefined>(undefined)
-  const [file, setFile] = useState<File | null>(null)
+  const [files, setFiles] = useState<File[]>([])
+  const [invalidFiles, setInvalidFiles] = useState<
+    { name: string; reason: string }[]
+  >([])
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -51,7 +54,8 @@ export function UploadFile({
 
   const resetForm = () => {
     setFileId(undefined)
-    setFile(null)
+    setFiles([])
+    setInvalidFiles([])
     setErrors({})
     setIsDragging(false)
     if (fileInputRef.current) {
@@ -65,9 +69,7 @@ export function UploadFile({
     }
   }, [open])
 
-  const validateFile = (fileToValidate: File): boolean => {
-    const newErrors: Record<string, string> = {}
-
+  const getFileValidationError = (fileToValidate: File): string | null => {
     // Check file extension if allowed extensions are set
     if (
       bucket?.allowedFileExtensions &&
@@ -78,7 +80,7 @@ export function UploadFile({
         !fileExtension ||
         !bucket.allowedFileExtensions.includes(fileExtension)
       ) {
-        newErrors.file = `Only ${bucket.allowedFileExtensions.join(', ')} files allowed`
+        return `Only ${bucket.allowedFileExtensions.join(', ')} files allowed`
       }
     }
 
@@ -88,23 +90,42 @@ export function UploadFile({
       fileToValidate.size > bucket.maximumFileSize
     ) {
       const maxSizeMB = (bucket.maximumFileSize / (1000 * 1000)).toFixed(2)
-      newErrors.file = `File size exceeds maximum of ${maxSizeMB} MB`
+      return `File size exceeds maximum of ${maxSizeMB} MB`
     }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+    return null
   }
 
-  const handleFileSelect = (selectedFile: File) => {
-    if (validateFile(selectedFile)) {
-      setFile(selectedFile)
+  const validateFiles = (selectedFiles: File[]) => {
+    const valid: File[] = []
+    const invalid: { name: string; reason: string }[] = []
+
+    selectedFiles.forEach((file) => {
+      const error = getFileValidationError(file)
+      if (error) {
+        invalid.push({ name: file.name, reason: error })
+      } else {
+        valid.push(file)
+      }
+    })
+
+    return { valid, invalid }
+  }
+
+  const handleFileSelect = (selectedFiles: File[]) => {
+    const { valid, invalid } = validateFiles(selectedFiles)
+    setFiles(valid)
+    setInvalidFiles(invalid)
+    setErrors({})
+    if (valid.length !== 1) {
+      setFileId(undefined)
     }
   }
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0]
-    if (selectedFile) {
-      handleFileSelect(selectedFile)
+    const selectedFiles = Array.from(e.target.files ?? [])
+    if (selectedFiles.length > 0) {
+      handleFileSelect(selectedFiles)
     }
   }
 
@@ -125,27 +146,23 @@ export function UploadFile({
     e.stopPropagation()
     setIsDragging(false)
 
-    const droppedFile = e.dataTransfer.files?.[0]
-    if (droppedFile) {
-      handleFileSelect(droppedFile)
+    const droppedFiles = Array.from(e.dataTransfer.files ?? [])
+    if (droppedFiles.length > 0) {
+      handleFileSelect(droppedFiles)
     }
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!file) {
-      setErrors({ file: 'Please select a file to upload' })
-      return
-    }
-
-    if (!validateFile(file)) {
+    if (files.length === 0) {
+      setErrors({ file: 'Please select at least one file to upload' })
       return
     }
 
     onUpload({
-      fileId,
-      file,
+      fileId: files.length === 1 ? fileId : undefined,
+      files,
     })
   }
 
@@ -159,21 +176,23 @@ export function UploadFile({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md p-0">
-        <DialogHeader className="px-6 pt-6 text-left">
-          <DialogTitle>Create file</DialogTitle>
+      <DialogContent className="sm:max-w-md p-0 max-h-[85vh] overflow-hidden">
+        <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogTitle>
+            {files.length > 1 ? 'Create files' : 'Create file'}
+          </DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Upload a new file to this bucket.
+            Upload files to this bucket.
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
 
         <form onSubmit={handleSubmit}>
-          <div className="px-6 pb-4 pt-0 space-y-4">
+          <div className="px-6 pb-4 pt-0 space-y-4 max-h-[60vh] overflow-y-auto">
             {/* File Upload */}
             <div className="space-y-2">
               <Label htmlFor="file-upload">
-                File <span className="text-destructive">*</span>
+                Files <span className="text-destructive">*</span>
               </Label>
               <div
                 ref={dropZoneRef}
@@ -192,6 +211,7 @@ export function UploadFile({
                   ref={fileInputRef}
                   id="file-upload"
                   type="file"
+                  multiple
                   onChange={handleFileInputChange}
                   className="hidden"
                   disabled={isLoading}
@@ -202,7 +222,11 @@ export function UploadFile({
                 >
                   <Upload className="h-8 w-8 text-muted-foreground" />
                   <span className="text-[13px] text-foreground">
-                    {file ? file.name : 'Click to upload or drag and drop'}
+                    {files.length === 0
+                      ? 'Click to upload or drag and drop'
+                      : files.length === 1
+                        ? files[0].name
+                        : `${files.length} files selected`}
                   </span>
                   {bucket?.allowedFileExtensions &&
                     bucket.allowedFileExtensions.length > 0 && (
@@ -217,26 +241,51 @@ export function UploadFile({
                   )}
                 </label>
               </div>
-              {file && (
-                <div className="flex items-center gap-2 rounded-md border border-border bg-muted/30 p-2">
-                  <span className="flex-1 truncate text-[12px] text-foreground">
-                    {file.name} ({formatFileSize(file.size)})
-                  </span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0"
-                    onClick={() => {
-                      setFile(null)
-                      if (fileInputRef.current) {
-                        fileInputRef.current.value = ''
-                      }
-                    }}
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </Button>
+              {files.length > 0 && (
+                <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                  {files.map((selectedFile, index) => (
+                    <div
+                      key={`${selectedFile.name}-${selectedFile.size}-${index}`}
+                      className="flex items-center gap-2 rounded-md border border-border bg-muted/30 p-2"
+                    >
+                      <span className="flex-1 truncate text-[12px] text-foreground">
+                        {selectedFile.name} (
+                        {formatFileSize(selectedFile.size)})
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0"
+                        onClick={() => {
+                          setFiles((prev) =>
+                            prev.filter((_, fileIndex) => fileIndex !== index),
+                          )
+                          if (fileInputRef.current) {
+                            fileInputRef.current.value = ''
+                          }
+                        }}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
+              )}
+              {invalidFiles.length > 0 && (
+                <Alert>
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription className="text-[12px]">
+                    {`Skipped ${invalidFiles.length} file${
+                      invalidFiles.length > 1 ? 's' : ''
+                    }: ${invalidFiles
+                      .slice(0, 3)
+                      .map((file) => `${file.name} (${file.reason})`)
+                      .join(', ')}${
+                      invalidFiles.length > 3 ? ', and more.' : '.'
+                    }`}
+                  </AlertDescription>
+                </Alert>
               )}
               {errors.file && (
                 <Alert variant="destructive">
@@ -249,31 +298,24 @@ export function UploadFile({
             </div>
 
             {/* File ID */}
-            <div className="space-y-2">
-              <Label htmlFor="file-id">File ID</Label>
-              <IdInput
-                id="file-id"
-                value={fileId}
-                onChange={setFileId}
-                maxLength={36}
-                disabled={isLoading}
-                placeholder="Leave blank to auto-generate"
-              />
-            </div>
-
-            {/* File Size Warning */}
-            {bucket?.maximumFileSize &&
-              file &&
-              file.size > bucket.maximumFileSize && (
-                <Alert>
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription className="text-[12px]">
-                    The maximum file upload size for this bucket is{' '}
-                    {formatFileSize(bucket.maximumFileSize)}. You can adjust it
-                    in your bucket settings.
-                  </AlertDescription>
-                </Alert>
-              )}
+            {files.length === 1 && (
+              <div className="space-y-2">
+                <Label htmlFor="file-id">File ID</Label>
+                <IdInput
+                  id="file-id"
+                  value={fileId}
+                  onChange={setFileId}
+                  maxLength={36}
+                  disabled={isLoading}
+                  placeholder="Leave blank to auto-generate"
+                />
+              </div>
+            )}
+            {files.length > 1 && (
+              <p className="text-[12px] text-muted-foreground">
+                File IDs will be auto-generated for bulk uploads.
+              </p>
+            )}
           </div>
 
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -285,7 +327,7 @@ export function UploadFile({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading || !file}>
+            <Button type="submit" disabled={isLoading || files.length === 0}>
               Create
             </Button>
           </div>
