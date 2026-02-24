@@ -150,13 +150,13 @@ class Get extends Action
 
             $response
                 ->addHeader('Content-Range', "bytes $start-$end/$size")
+                ->addHeader('Content-Length', (string) ($end - $start + 1))
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
         }
 
         $response
             ->setContentType($contentType)
             ->addHeader('Accept-Ranges', 'bytes')
-            ->addHeader('Content-Length', !empty($rangeHeader) ? (string) ($end - $start + 1) : (string) $size)
             ->addHeader('Content-Security-Policy', 'script-src none;')
             ->addHeader('X-Content-Type-Options', 'nosniff')
             ->addHeader('Content-Disposition', 'inline; filename="' . $file->getAttribute('name', '') . '"')

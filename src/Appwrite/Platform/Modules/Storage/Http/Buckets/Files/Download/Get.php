@@ -141,13 +141,13 @@ class Get extends Action
 
             $response
                 ->addHeader('Content-Range', 'bytes ' . $start . '-' . $end . '/' . $size)
+                ->addHeader('Content-Length', (string) ($end - $start + 1))
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
         }
 
         $response
             ->setContentType($file->getAttribute('mimeType'))
             ->addHeader('Accept-Ranges', 'bytes')
-            ->addHeader('Content-Length', !empty($rangeHeader) ? (string) ($end - $start + 1) : (string) $size)
             ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->addHeader('X-Peak', \memory_get_peak_usage())
             ->addHeader('Content-Disposition', 'attachment; filename="' . $file->getAttribute('name', '') . '"')

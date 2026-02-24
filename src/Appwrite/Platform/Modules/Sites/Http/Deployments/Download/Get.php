@@ -105,12 +105,6 @@ class Get extends Action
         $size = $device->getFileSize($path);
         $rangeHeader = $request->getHeader('range');
 
-        $response
-            ->setContentType('application/gzip')
-            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
-            ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '-' . $type . '.tar.gz"');
-
         if (!empty($rangeHeader)) {
             $start = $request->getRangeStart();
             $end = $request->getRangeEnd();
@@ -120,16 +114,24 @@ class Get extends Action
                 $end = min(($start + MAX_OUTPUT_CHUNK_SIZE - 1), ($size - 1));
             }
 
-            if ($unit !== 'bytes' || $start >= $end || $end >= $size) {
+            if ($unit !== 'bytes' || $start > $end || $end >= $size) {
                 throw new Exception(Exception::STORAGE_INVALID_RANGE);
             }
 
             $response
-                ->addHeader('Accept-Ranges', 'bytes')
                 ->addHeader('Content-Range', 'bytes ' . $start . '-' . $end . '/' . $size)
-                ->addHeader('Content-Length', $end - $start + 1)
+                ->addHeader('Content-Length', (string) ($end - $start + 1))
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
+        }
 
+        $response
+            ->setContentType('application/gzip')
+            ->addHeader('Accept-Ranges', 'bytes')
+            ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
+            ->addHeader('X-Peak', \memory_get_peak_usage())
+            ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '-' . $type . '.tar.gz"');
+
+        if (!empty($rangeHeader)) {
             $response->send($device->read($path, $start, ($end - $start + 1)));
             return;
         }
