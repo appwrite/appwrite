@@ -342,6 +342,17 @@ $platformCollections = [
                 'array' => true,
                 'filters' => [],
             ],
+            [
+                '$id' => 'status',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 100,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [
@@ -633,29 +644,7 @@ $platformCollections = [
         'name' => 'keys',
         'attributes' => [
             [
-                '$id' => ID::custom('projectInternalId'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => true,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => ID::custom('projectId'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => false,
-                'default' => 0,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'resourceType',
+                '$id' => ID::custom('resourceType'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -666,7 +655,7 @@ $platformCollections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'resourceId',
+                '$id' => ID::custom('resourceId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -677,7 +666,7 @@ $platformCollections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'resourceInternalId',
+                '$id' => ID::custom('resourceInternalId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -756,21 +745,14 @@ $platformCollections = [
         ],
         'indexes' => [
             [
-                '$id' => ID::custom('_key_project'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['projectInternalId'],
-                'lengths' => [Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => '_key_resource',
+                '$id' => ID::custom('_key_resource'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['resourceType', 'resourceInternalId'],
-                'lengths' => [Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC],
+                'lengths' => [],
+                'orders' => [],
             ],
             [
-                '$id' => '_key_accessedAt',
+                '$id' => ID::custom('_key_accessedAt'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['accessedAt'],
                 'lengths' => [],

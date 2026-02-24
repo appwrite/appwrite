@@ -5,7 +5,7 @@ namespace Tests\E2E\Services\Functions;
 use Appwrite\Tests\Async;
 use CURLFile;
 use Tests\E2E\Client;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\System\System;
@@ -316,12 +316,13 @@ trait FunctionsBase
 
     protected function setupFunctionDomain(string $functionId, string $subdomain = ''): string
     {
+        $functionsDomain = \explode(',', System::getEnv('_APP_DOMAIN_FUNCTIONS', ''))[0];
         $subdomain = $subdomain ? $subdomain : ID::unique();
         $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/function', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'domain' => $subdomain . '.' . System::getEnv('_APP_DOMAIN_FUNCTIONS', ''),
+            'domain' => $subdomain . '.' . $functionsDomain,
             'functionId' => $functionId,
         ]);
 

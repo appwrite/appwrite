@@ -21,8 +21,8 @@ use Executor\Executor;
 use MaxMind\Db\Reader;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -33,9 +33,9 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
+use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Swoole\Request;
 use Utopia\System\System;
 use Utopia\Validator\AnyOf;
 use Utopia\Validator\Assoc;
@@ -301,7 +301,9 @@ class Create extends Base
 
         if ($async) {
             if (is_null($scheduledAt)) {
-                $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
+                if ($project->getId() != '6862e6a6000cce69f9da') {
+                    $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
+                }
                 $queueForFunctions
                     ->setType('http')
                     ->setExecution($execution)
@@ -342,7 +344,9 @@ class Create extends Base
                     ->setAttribute('scheduleInternalId', $schedule->getSequence())
                     ->setAttribute('scheduledAt', $scheduledAt);
 
-                $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
+                if ($project->getId() != '6862e6a6000cce69f9da') {
+                    $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
+                }
             }
 
             $this->enqueueDeletes(
@@ -501,7 +505,9 @@ class Create extends Base
                 ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
             ;
 
-            $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
+            if ($project->getId() != '6862e6a6000cce69f9da') {
+                $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
+            }
         }
 
         $executionResponse['headers']['x-appwrite-execution-id'] = $execution->getId();

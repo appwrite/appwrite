@@ -1,5 +1,0 @@
-appwrite sites listTemplates \
-
-
-
-

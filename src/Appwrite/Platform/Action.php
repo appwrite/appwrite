@@ -3,7 +3,7 @@
 namespace Appwrite\Platform;
 
 use Swoole\Coroutine as Co;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -44,7 +44,7 @@ class Action extends UtopiaAction
      *
      * @return void
      */
-    protected function foreachDocument(Database $database, string $collection, array $queries = [], callable $callback = null, int $limit = 1000, bool $concurrent = false): void
+    protected function foreachDocument(Database $database, string $collection, array $queries = [], ?callable $callback = null, int $limit = 1000, bool $concurrent = false): void
     {
         $results = [];
         $sum = $limit;

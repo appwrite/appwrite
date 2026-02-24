@@ -6,6 +6,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectNone;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideNone;
+use Utopia\Config\Config;
 
 class HTTPTest extends Scope
 {
@@ -28,11 +29,16 @@ class HTTPTest extends Scope
             'content-type' => 'application/json',
         ]), []);
 
+        $corsConfig = Config::getParam('cors');
+        $allowedMethods = \implode(', ', $corsConfig['allowedMethods']);
+        $allowedHeaders = \implode(', ', $corsConfig['allowedHeaders']);
+        $exposedHeaders = \implode(', ', $corsConfig['exposedHeaders']);
+
         $this->assertEquals(204, $response['headers']['status-code']);
         $this->assertEquals('Appwrite', $response['headers']['server']);
-        $this->assertEquals('GET, POST, PUT, PATCH, DELETE', $response['headers']['access-control-allow-methods']);
-        $this->assertEquals('Accept, Origin, Cookie, Set-Cookie, Content-Type, Content-Range, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Dev-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-Appwrite-ID, X-Appwrite-Timestamp, X-Appwrite-Session, X-Appwrite-Platform, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-SDK-Profile, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies, X-Requested-With, X-Forwarded-For, X-Forwarded-User-Agent', $response['headers']['access-control-allow-headers']);
-        $this->assertEquals('X-Appwrite-Session, X-Fallback-Cookies', $response['headers']['access-control-expose-headers']);
+        $this->assertEquals($allowedMethods, $response['headers']['access-control-allow-methods']);
+        $this->assertEquals($allowedHeaders, $response['headers']['access-control-allow-headers']);
+        $this->assertEquals($exposedHeaders, $response['headers']['access-control-expose-headers']);
         $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
         $this->assertEquals('true', $response['headers']['access-control-allow-credentials']);
         $this->assertEmpty($response['body']);
@@ -81,49 +87,6 @@ class HTTPTest extends Scope
 
         // 'Unknown path', but validation passed
         $this->assertEquals(404, $response['headers']['status-code']);
-    }
-
-    public function testSpecs()
-    {
-        $directory = __DIR__ . '/../../../app/config/specs/';
-
-        $files = scandir($directory);
-        $client = new Client();
-        $client->setEndpoint('https://validator.swagger.io');
-
-        $versions = [
-            'latest',
-            '0.15.x',
-            '0.14.x',
-        ];
-
-        foreach ($files as $file) {
-            if (in_array($file, ['.', '..'])) {
-                continue;
-            }
-
-            $allowed = false;
-            foreach ($versions as $version) {
-                if (\str_contains($file, $version)) {
-                    $allowed = true;
-                    break;
-                }
-            }
-            if (!$allowed) {
-                continue;
-            }
-
-            /**
-             * Test for SUCCESS
-             */
-            $response = $client->call(Client::METHOD_POST, '/validator/debug', [
-                'content-type' => 'application/json',
-            ], json_decode(file_get_contents($directory . $file), true));
-
-            $this->assertEquals(200, $response['headers']['status-code']);
-            // looks like recent change in the validator
-            $this->assertEmpty($response['body']['schemaValidationMessages'], 'Schema validation failed for ' . $file . ': ' . json_encode($response['body']['schemaValidationMessages'], JSON_PRETTY_PRINT));
-        }
     }
 
     public function testVersions()

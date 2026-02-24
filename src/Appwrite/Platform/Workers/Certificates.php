@@ -15,7 +15,7 @@ use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model\Rule;
 use Exception;
 use Throwable;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -153,11 +153,11 @@ class Certificates extends Action
     ): void {
         // Get rule
         $rule = System::getEnv('_APP_RULES_FORMAT') === 'md5'
-            ? $authorization->skip(fn () => $dbForPlatform->getDocument('rules', md5($domain->get())))
-            : $authorization->skip(fn () => $dbForPlatform->findOne('rules', [
+            ? $dbForPlatform->getDocument('rules', md5($domain->get()))
+            : $dbForPlatform->findOne('rules', [
                 Query::equal('domain', [$domain->get()]),
                 Query::limit(1),
-            ]));
+            ]);
 
         // Skip if rule is not desired state (created but not verified yet).
         if ($rule->getAttribute('status', '') !== RULE_STATUS_CREATED) {
@@ -177,7 +177,10 @@ class Certificates extends Action
             Console::success('Domain verification succeeded.');
         } catch (AppwriteException $err) {
             Console::warning('Domain verification failed: ' . $err->getMessage());
-            $rule->setAttribute('logs', $err->getMessage());
+            $date = \date('H:i:s');
+            $logs = "\033[90m[{$date}] \033[31mDNS verification failed: \033[0m\n";
+            $logs .= \mb_strcut($err->getMessage(), 0, 500000); // Limit to 500kb
+            $rule->setAttribute('logs', $logs);
         } finally {
             // Update rule and emit events
             $this->updateRuleAndSendEvents($rule, $dbForPlatform, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime);
@@ -269,14 +272,14 @@ class Certificates extends Action
         // Get rule document for domain
         // TODO: (@Meldiron) Remove after 1.7.x migration
         $rule = System::getEnv('_APP_RULES_FORMAT') === 'md5'
-            ? $authorization->skip(fn () => $dbForPlatform->getDocument('rules', md5($domain->get())))
-            : $authorization->skip(fn () => $dbForPlatform->findOne('rules', [
+            ? $dbForPlatform->getDocument('rules', md5($domain->get()))
+            : $dbForPlatform->findOne('rules', [
                 Query::equal('domain', [$domain->get()]),
                 Query::limit(1),
-            ]));
+            ]);
 
         // Rule not found (or) not in the expected state
-        if ($rule->isEmpty() || $rule->getAttribute('status') !== RULE_STATUS_CERTIFICATE_GENERATING) {
+        if ($rule->isEmpty() || !\in_array($rule->getAttribute('status'), [RULE_STATUS_CERTIFICATE_GENERATING, RULE_STATUS_VERIFIED])) {
             Console::warning('Certificate generation for ' . $domain->get() . ' is skipped as the associated rule is either empty or not in the expected state.');
             return;
         }
@@ -290,9 +293,11 @@ class Certificates extends Action
             $certificate->setAttribute('domain', $domain->get());
         }
 
+        $date = \date('H:i:s');
+        $logs = "\033[90m[{$date}] \033[97mProcessing SSL certificate issuance. \033[0m\n";
+
         try {
-            $date = \date('H:i:s');
-            $certificate->setAttribute('logs', "\033[90m[{$date}] \033[97mCertificate generation started. \033[0m\n");
+            $certificate->setAttribute('logs', $logs);
 
             // Persist ASAP so that logs are reset in retry flow and user can see the latest logs on Console.
             $certificate = $this->upsertCertificate($rule, $certificate, $dbForPlatform);
@@ -314,10 +319,16 @@ class Certificates extends Action
             $certName = ID::unique();
             $renewDate = $certificates->issueCertificate($certName, $domain->get(), $domainType);
 
+            $date = \date('H:i:s');
             // If certificate is generated instantly, we can mark the rule as 'verified'.
             if ($certificates->isInstantGeneration($domain->get(), $domainType)) {
                 $rule->setAttribute('status', RULE_STATUS_VERIFIED);
-                $certificate->setAttribute('logs', 'Certificate successfully generated.');
+                $logs .= "\033[90m[{$date}] \033[97mSSL certificate successfully issued. \033[0m\n";
+                $certificate->setAttribute('logs', $logs);
+            } else {
+                // Delayed generation: third-party handles certificate issuance asynchronously
+                $logs .= "\033[90m[{$date}] \033[97mSSL certificate is being issued. This usually takes a few minutes — no action needed on your end. We'll periodically check and update the status. \033[0m\n";
+                $certificate->setAttribute('logs', $logs);
             }
 
             $certificate->setAttributes([
@@ -326,16 +337,14 @@ class Certificates extends Action
                 'renewDate' => $renewDate,
             ]);
         } catch (Throwable $e) {
-            $logs = $e->getMessage();
-            $currentLogs = $certificate->getAttribute('logs', '');
             $date = \date('H:i:s');
-            $errorMessage = "\033[90m[{$date}] \033[31mCertificate generation failed: \033[0m\n";
+            $logs .= "\033[90m[{$date}] \033[31mSSL certificate issuance failed: \033[0m\n";
+            $logs .= \mb_strcut($e->getMessage(), 0, 500000); // Limit to 500kb
 
             $attempts = $certificate->getAttribute('attempts', 0) + 1; // Increase attempts count
 
             // Update attributes on certificate document
             $certificate->setAttributes([
-                'logs' => $currentLogs . $errorMessage . \mb_strcut($logs, 0, 500000), // Limit to 500kb
                 'attempts' => $attempts,
                 'renewDate' => DateTime::now(), // Store current time as renew date to ensure another attempt in next maintenance cycle.
             ]);
@@ -348,14 +357,13 @@ class Certificates extends Action
 
             throw $e;
         } finally {
-            // All actions result in new 'updated' date
-            $certificate->setAttribute('updated', DateTime::now());
-            // Save certificate document to database
+            // Update certificate document with logs
+            $certificate->setAttribute('logs', $logs);
             $this->upsertCertificate($rule, $certificate, $dbForPlatform);
 
-            // Ensure certificate is associated with the rule
-            $rule->setAttribute('certificateId', $certificate->getId());
             // Update rule and emit events
+            $rule->setAttribute('certificateId', $certificate->getId());
+            $rule->setAttribute('logs', $logs);
             $this->updateRuleAndSendEvents($rule, $dbForPlatform, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime);
         }
     }
@@ -469,11 +477,20 @@ class Certificates extends Action
     {
         $mainDomain = $validationDomain ?? $this->getMainDomain();
         $isMainDomain = !isset($mainDomain) || $domain->get() === $mainDomain;
-        if (!$isMainDomain) {
-            $this->verifyRule($rule, $log);
-        } else {
+
+        if ($isMainDomain) {
             // Main domain validation
             // TODO: Would be awesome to check A/AAAA record here. Maybe dry run?
+            return;
+        }
+
+        try {
+            $this->verifyRule($rule, $log);
+        } catch (AppwriteException $err) {
+            $msg = $err->getMessage() . "\n";
+            $msg .= "Verify your DNS records are correctly configured and try again.\n";
+            $msg .= "If they're correct and it still fails, please retry after sometime. DNS records can take up to 48 hours to propagate.\n";
+            throw new AppwriteException($err->getType(), $msg);
         }
     }
 

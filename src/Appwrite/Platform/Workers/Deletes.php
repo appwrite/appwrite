@@ -13,8 +13,8 @@ use Utopia\Audit\Adapter\SQL;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -23,6 +23,7 @@ use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
@@ -124,6 +125,9 @@ class Deletes extends Action
                         break;
                     case DELETE_TYPE_USERS:
                         $this->deleteUser($getProjectDB, $document, $project);
+                        break;
+                    case DELETE_TYPE_TEAMS:
+                        $this->deleteTeam($getProjectDB, $document, $project);
                         break;
                     case DELETE_TYPE_BUCKETS:
                         $this->deleteBucket($getProjectDB, $deviceForFiles, $document, $project);
@@ -332,7 +336,7 @@ class Deletes extends Action
      * @throws Authorization
      * @throws Exception
      */
-    private function deleteCacheByResource(Document $project, callable $getProjectDB, string $resource, string $resourceType = null): void
+    private function deleteCacheByResource(Document $project, callable $getProjectDB, string $resource, ?string $resourceType = null): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
@@ -530,7 +534,7 @@ class Deletes extends Action
         }
 
         /**
-         * @var $dbForProject Database
+         * @var Database $dbForProject
          */
         $dbForProject = $getProjectDB($document);
 
@@ -661,6 +665,24 @@ class Deletes extends Action
         }
     }
 
+    private function deleteTeam(callable $getProjectDB, Document $document, Document $project): void
+    {
+        $teamId = $document->getId();
+        $teamInternalId = $document->getSequence();
+        $dbForProject = $getProjectDB($project);
+
+        if ($project->getId() === 'console') {
+            // Delete Keys
+            $this->deleteByGroup('keys', [
+                Query::equal('resourceInternalId', [$teamInternalId]),
+                Query::equal('resourceType', ['teams']),
+                Query::orderAsc()
+            ], $dbForProject);
+        }
+
+        $dbForProject->purgeCachedDocument('teams', $teamId);
+    }
+
     /**
      * @param callable $getProjectDB
      * @param Document $document user document
@@ -679,6 +701,15 @@ class Deletes extends Action
             Query::equal('userInternalId', [$userInternalId]),
             Query::orderAsc()
         ], $dbForProject);
+
+        if ($project->getId() === 'console') {
+            // Delete Keys
+            $this->deleteByGroup('keys', [
+                Query::equal('resourceInternalId', [$userInternalId]),
+                Query::equal('resourceType', ['users']),
+                Query::orderAsc()
+            ], $dbForProject);
+        }
 
         $dbForProject->purgeCachedDocument('users', $userId);
 
@@ -943,7 +974,7 @@ class Deletes extends Action
         $deploymentIds = [];
         $this->deleteByGroup('deployments', [
             Query::equal('resourceInternalId', [$siteInternalId]),
-            Query::equal('resourceType', ['site']),
+            Query::equal('resourceType', ['sites']),
             Query::orderAsc()
         ], $dbForProject, function (Document $document) use ($project, $certificates, $deviceForSites, $deviceForBuilds, $deviceForFiles, $dbForPlatform, &$deploymentInternalIds) {
             $deploymentInternalIds[] = $document->getSequence();
@@ -1031,7 +1062,7 @@ class Deletes extends Action
         $deploymentInternalIds = [];
         $this->deleteByGroup('deployments', [
             Query::equal('resourceInternalId', [$functionInternalId]),
-            Query::equal('resourceType', ['function']),
+            Query::equal('resourceType', ['functions']),
             Query::orderAsc()
         ], $dbForProject, function (Document $document) use ($dbForPlatform, $project, $certificates, $deviceForFunctions, $deviceForBuilds, &$deploymentInternalIds) {
             $deploymentInternalIds[] = $document->getSequence();
@@ -1286,7 +1317,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    protected function listByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
+    protected function listByGroup(string $collection, array $queries, Database $database, ?callable $callback = null): void
     {
         $count = 0;
         $limit = 1000;
@@ -1360,31 +1391,37 @@ class Deletes extends Action
     /**
      * @param Database $dbForPlatform
      * @param callable $getProjectDB
-     * @param Document $document
+     * @param Document $installation
      * @param Document $project
      * @return void
      * @throws Exception
      */
-    private function deleteInstallation(Database $dbForPlatform, callable $getProjectDB, Document $document, Document $project): void
+    private function deleteInstallation(Database $dbForPlatform, callable $getProjectDB, Document $installation, Document $project): void
     {
         $dbForProject = $getProjectDB($project);
 
-        $this->listByGroup('functions', [
-            Query::equal('installationInternalId', [$document->getSequence()])
-        ], $dbForProject, function ($function) use ($dbForProject, $dbForPlatform) {
-            $dbForPlatform->deleteDocument('repositories', $function->getAttribute('repositoryId'));
+        // Cleanup sites and functions
+        foreach (['sites', 'functions'] as $collection) {
+            $this->listByGroup($collection, [
+                Query::equal('installationInternalId', [$installation->getSequence()])
+            ], $dbForProject, function ($document) use ($collection, $dbForProject, $dbForPlatform) {
+                $repositoryId = $document->getAttribute('repositoryId', '');
+                if (!empty($repositoryId)) {
+                    $dbForPlatform->deleteDocument('repositories', $repositoryId);
+                }
 
-            $function = $function
-                ->setAttribute('installationId', '')
-                ->setAttribute('installationInternalId', '')
-                ->setAttribute('providerRepositoryId', '')
-                ->setAttribute('providerBranch', '')
-                ->setAttribute('providerSilentMode', false)
-                ->setAttribute('providerRootDirectory', '')
-                ->setAttribute('repositoryId', '')
-                ->setAttribute('repositoryInternalId', '');
-            $dbForProject->updateDocument('functions', $function->getId(), $function);
-        });
+                $document = $document
+                    ->setAttribute('installationId', '')
+                    ->setAttribute('installationInternalId', '')
+                    ->setAttribute('providerRepositoryId', '')
+                    ->setAttribute('providerBranch', '')
+                    ->setAttribute('providerSilentMode', false)
+                    ->setAttribute('providerRootDirectory', '')
+                    ->setAttribute('repositoryId', '')
+                    ->setAttribute('repositoryInternalId', '');
+                $dbForProject->updateDocument($collection, $document->getId(), $document);
+            });
+        }
     }
 
     /**

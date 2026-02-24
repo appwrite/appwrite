@@ -11,7 +11,7 @@ use JsonException;
 use Swoole\Http\Response as SwooleHTTPResponse;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 
 /**
  * @method int getStatusCode()
@@ -75,6 +75,10 @@ class Response extends SwooleResponse
     public const MODEL_ATTRIBUTE_POINT = 'attributePoint';
     public const MODEL_ATTRIBUTE_LINE = 'attributeLine';
     public const MODEL_ATTRIBUTE_POLYGON = 'attributePolygon';
+    public const MODEL_ATTRIBUTE_VARCHAR = 'attributeVarchar';
+    public const MODEL_ATTRIBUTE_TEXT = 'attributeText';
+    public const MODEL_ATTRIBUTE_MEDIUMTEXT = 'attributeMediumtext';
+    public const MODEL_ATTRIBUTE_LONGTEXT = 'attributeLongtext';
 
     // Database Columns
     public const MODEL_COLUMN = 'column';
@@ -92,6 +96,10 @@ class Response extends SwooleResponse
     public const MODEL_COLUMN_POINT = 'columnPoint';
     public const MODEL_COLUMN_LINE = 'columnLine';
     public const MODEL_COLUMN_POLYGON = 'columnPolygon';
+    public const MODEL_COLUMN_VARCHAR = 'columnVarchar';
+    public const MODEL_COLUMN_TEXT = 'columnText';
+    public const MODEL_COLUMN_MEDIUMTEXT = 'columnMediumtext';
+    public const MODEL_COLUMN_LONGTEXT = 'columnLongtext';
 
     // Transactions
     public const MODEL_TRANSACTION = 'transaction';
@@ -215,6 +223,10 @@ class Response extends SwooleResponse
     public const MODEL_PROXY_RULE = 'proxyRule';
     public const MODEL_PROXY_RULE_LIST = 'proxyRuleList';
 
+    // Schedules
+    public const MODEL_SCHEDULE = 'schedule';
+    public const MODEL_SCHEDULE_LIST = 'scheduleList';
+
     // Migrations
     public const MODEL_MIGRATION = 'migration';
     public const MODEL_MIGRATION_LIST = 'migrationList';
@@ -284,8 +296,6 @@ class Response extends SwooleResponse
      */
     protected static array $models = [];
 
-    protected SwooleHTTPResponse $swoole;
-
     /**
      * Response constructor.
      *
@@ -293,7 +303,6 @@ class Response extends SwooleResponse
      */
     public function __construct(SwooleHTTPResponse $response)
     {
-        $this->swoole = $response;
         parent::__construct($response);
     }
 
@@ -451,6 +460,8 @@ class Response extends SwooleResponse
 
                 foreach ($data[$key] as $index => $item) {
                     if ($item instanceof Document) {
+                        $ruleType = null;
+
                         if (\is_array($rule['type'])) {
                             foreach ($rule['type'] as $type) {
                                 $condition = false;
@@ -469,7 +480,7 @@ class Response extends SwooleResponse
                             $ruleType = $rule['type'];
                         }
 
-                        if (!self::hasModel($ruleType)) {
+                        if ($ruleType === null || !self::hasModel($ruleType)) {
                             throw new Exception('Missing model for rule: ' . $ruleType);
                         }
 

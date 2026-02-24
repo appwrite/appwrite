@@ -22,7 +22,9 @@ Config::load('collections', __DIR__ . '/../config/collections.php', $configAdapt
 Config::load('frameworks', __DIR__ . '/../config/frameworks.php', $configAdapter);
 Config::load('usage', __DIR__ . '/../config/usage.php', $configAdapter);
 Config::load('roles', __DIR__ . '/../config/roles.php', $configAdapter);  // User roles and scopes
-Config::load('scopes', __DIR__ . '/../config/scopes.php', $configAdapter);  // User roles and scopes
+Config::load('projectScopes', __DIR__ . '/../config/scopes/project.php', $configAdapter);
+Config::load('organizationScopes', __DIR__ . '/../config/scopes/organization.php', $configAdapter);
+Config::load('accountScopes', __DIR__ . '/../config/scopes/account.php', $configAdapter);
 Config::load('services', __DIR__ . '/../config/services.php', $configAdapter);  // List of services
 Config::load('variables', __DIR__ . '/../config/variables.php', $configAdapter);  // List of env variables
 Config::load('regions', __DIR__ . '/../config/regions.php', $configAdapter); // List of available regions
@@ -44,3 +46,4 @@ Config::load('storage-outputs', __DIR__ . '/../config/storage/outputs.php', $con
 Config::load('specifications', __DIR__ . '/../config/specifications.php', $configAdapter);
 Config::load('templates-function', __DIR__ . '/../config/templates/function.php', $configAdapter);
 Config::load('templates-site', __DIR__ . '/../config/templates/site.php', $configAdapter);
+Config::load('cors', __DIR__ . '/../config/cors.php', $configAdapter);

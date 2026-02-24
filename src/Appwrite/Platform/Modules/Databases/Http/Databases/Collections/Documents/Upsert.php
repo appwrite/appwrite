@@ -26,7 +26,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Nullable;
 
@@ -220,6 +220,9 @@ class Upsert extends Action
                         $relation['$id'] = ID::unique();
                         $relation = new Document($relation);
                     }
+
+                    $this->validateRelationship($relation);
+
                     if ($relation instanceof Document) {
                         $relation = $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser);
 

@@ -89,7 +89,7 @@ trait MigrationsBase
     {
         $response = $this->performMigrationSync([
             'resources' => Appwrite::getSupportedResources(),
-            'endpoint' => $this->endpoint,
+            'endpoint' => $this->webEndpoint,
             'projectId' => $this->getProject()['$id'],
             'apiKey' => $this->getProject()['apiKey'],
         ]);
@@ -126,7 +126,7 @@ trait MigrationsBase
             'resources' => [
                 Resource::TYPE_USER,
             ],
-            'endpoint' => $this->endpoint,
+            'endpoint' => $this->webEndpoint,
             'projectId' => $this->getProject()['$id'],
             'apiKey' => $this->getProject()['apiKey'],
         ]);
@@ -188,7 +188,7 @@ trait MigrationsBase
             'resources' => [
                 Resource::TYPE_USER,
             ],
-            'endpoint' => $this->endpoint,
+            'endpoint' => $this->webEndpoint,
             'projectId' => $this->getProject()['$id'],
             'apiKey' => $this->getProject()['apiKey'],
         ]);
@@ -277,7 +277,7 @@ trait MigrationsBase
                 Resource::TYPE_TEAM,
                 Resource::TYPE_MEMBERSHIP,
             ],
-            'endpoint' => $this->endpoint,
+            'endpoint' => $this->webEndpoint,
             'projectId' => $this->getProject()['$id'],
             'apiKey' => $this->getProject()['apiKey'],
         ]);
@@ -393,7 +393,7 @@ trait MigrationsBase
             'resources' => [
                 Resource::TYPE_DATABASE,
             ],
-            'endpoint' => $this->endpoint,
+            'endpoint' => $this->webEndpoint,
             'projectId' => $this->getProject()['$id'],
             'apiKey' => $this->getProject()['apiKey'],
         ]);
@@ -484,7 +484,7 @@ trait MigrationsBase
                 Resource::TYPE_TABLE,
                 Resource::TYPE_COLUMN,
             ],
-            'endpoint' => $this->endpoint,
+            'endpoint' => $this->webEndpoint,
             'projectId' => $this->getProject()['$id'],
             'apiKey' => $this->getProject()['apiKey'],
         ]);
@@ -571,7 +571,7 @@ trait MigrationsBase
                 Resource::TYPE_COLUMN,
                 Resource::TYPE_ROW,
             ],
-            'endpoint' => $this->endpoint,
+            'endpoint' => $this->webEndpoint,
             'projectId' => $this->getProject()['$id'],
             'apiKey' => $this->getProject()['apiKey'],
         ]);
@@ -651,7 +651,7 @@ trait MigrationsBase
             'resources' => [
                 Resource::TYPE_BUCKET
             ],
-            'endpoint' => $this->endpoint,
+            'endpoint' => $this->webEndpoint,
             'projectId' => $this->getProject()['$id'],
             'apiKey' => $this->getProject()['apiKey'],
         ]);
@@ -747,7 +747,7 @@ trait MigrationsBase
                 Resource::TYPE_BUCKET,
                 Resource::TYPE_FILE
             ],
-            'endpoint' => $this->endpoint,
+            'endpoint' => $this->webEndpoint,
             'projectId' => $this->getProject()['$id'],
             'apiKey' => $this->getProject()['apiKey'],
         ]);
@@ -818,7 +818,7 @@ trait MigrationsBase
                 Resource::TYPE_FUNCTION,
                 Resource::TYPE_DEPLOYMENT
             ],
-            'endpoint' => $this->endpoint,
+            'endpoint' => $this->webEndpoint,
             'projectId' => $this->getProject()['$id'],
             'apiKey' => $this->getProject()['apiKey'],
         ]);
@@ -1119,7 +1119,7 @@ trait MigrationsBase
         // all data exists, pass.
         $migration = $this->performCsvMigration(
             [
-                'endpoint' => $this->endpoint,
+                'endpoint' => $this->webEndpoint,
                 'fileId' => $fileIds['default'],
                 'bucketId' => $bucketIds['default'],
                 'resourceId' => $databaseId . ':' . $tableId,
@@ -1161,7 +1161,7 @@ trait MigrationsBase
         // all data exists and includes internals, pass.
         $migration = $this->performCsvMigration(
             [
-                'endpoint' => $this->endpoint,
+                'endpoint' => $this->webEndpoint,
                 'fileId' => $fileIds['documents-internals'],
                 'bucketId' => $bucketIds['documents-internals'],
                 'resourceId' => $databaseId . ':' . $tableId,
@@ -1253,6 +1253,51 @@ trait MigrationsBase
 
         $this->assertEquals(202, $email['headers']['status-code']);
 
+        $text = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/text', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'regulartext',
+            'required' => false,
+        ]);
+
+        $this->assertEquals(202, $text['headers']['status-code']);
+
+        $varchar = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/varchar', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'varchar',
+            'size' => 1000,
+            'required' => false,
+        ]);
+
+        $this->assertEquals(202, $varchar['headers']['status-code']);
+
+        $mediumtext = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/mediumtext', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'mediumtext',
+            'required' => false,
+        ]);
+
+        $this->assertEquals(202, $mediumtext['headers']['status-code']);
+
+        $longtext = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/longtext', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'longtext',
+            'required' => false,
+        ]);
+
+        $this->assertEquals(202, $longtext['headers']['status-code']);
+
         \sleep(3);
 
         // Create sample documents
@@ -1265,7 +1310,11 @@ trait MigrationsBase
                 'documentId' => ID::unique(),
                 'data' => [
                     'name' => 'Test User ' . $i,
-                    'email' => 'user' . $i . '@appwrite.io'
+                    'email' => 'user' . $i . '@appwrite.io',
+                    'regulartext' => 'regularText',
+                    'mediumtext' => 'mediumText',
+                    'longtext' => 'longText',
+                    'varchar' => 'varchar',
                 ]
             ]);
 
@@ -1344,10 +1393,16 @@ trait MigrationsBase
 
         // Verify the downloaded content is valid CSV
         $csvData = $downloadWithJwt['body'];
+
         $this->assertNotEmpty($csvData, 'CSV export should not be empty');
         $this->assertStringContainsString('name', $csvData, 'CSV should contain the name column header');
         $this->assertStringContainsString('email', $csvData, 'CSV should contain the email column header');
         $this->assertStringContainsString('Test User 1', $csvData, 'CSV should contain test data');
+
+        $this->assertStringContainsString('regularText', $csvData, 'CSV should contain the text column header');
+        $this->assertStringContainsString('mediumText', $csvData, 'CSV should contain the medium column header');
+        $this->assertStringContainsString('longText', $csvData, 'CSV should contain the long text column header');
+        $this->assertStringContainsString('varchar', $csvData, 'CSV should contain the varchar column header');
 
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [

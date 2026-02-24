@@ -46,16 +46,18 @@ class Get extends Action
                 contentType: ContentType::JSON
             ))
             ->inject('response')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
-    public function action(Response $response)
+    public function action(Response $response, array $platform)
     {
         $validator = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME'));
         $isCNAMEValid = !empty(System::getEnv('_APP_DOMAIN_TARGET_CNAME', '')) && $validator->isKnown() && !$validator->isTest();
 
         $validator = new IP(IP::V4);
-        $isAValid = !empty(System::getEnv('_APP_DOMAIN_TARGET_A', '')) && ($validator->isValid(System::getEnv('_APP_DOMAIN_TARGET_A')));
+        $targetA = \explode(',', System::getEnv('_APP_DOMAIN_TARGET_A', ''))[0];
+        $isAValid = !empty($targetA) && ($validator->isValid($targetA));
 
         $validator = new IP(IP::V6);
         $isAAAAValid = !empty(System::getEnv('_APP_DOMAIN_TARGET_AAAA', '')) && $validator->isValid(System::getEnv('_APP_DOMAIN_TARGET_AAAA'));
@@ -73,7 +75,7 @@ class Get extends Action
         $variables = new Document([
             '_APP_DOMAIN_TARGET_CNAME' => System::getEnv('_APP_DOMAIN_TARGET_CNAME'),
             '_APP_DOMAIN_TARGET_AAAA' => System::getEnv('_APP_DOMAIN_TARGET_AAAA'),
-            '_APP_DOMAIN_TARGET_A' => System::getEnv('_APP_DOMAIN_TARGET_A'),
+            '_APP_DOMAIN_TARGET_A' => $targetA,
             '_APP_DOMAIN_TARGET_CAA' => '0 issue "' . System::getEnv('_APP_DOMAIN_TARGET_CAA') . '"',
             '_APP_STORAGE_LIMIT' => +System::getEnv('_APP_STORAGE_LIMIT'),
             '_APP_COMPUTE_BUILD_TIMEOUT' => +System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT'),
@@ -82,8 +84,8 @@ class Get extends Action
             '_APP_VCS_ENABLED' => $isVcsEnabled,
             '_APP_DOMAIN_ENABLED' => $isDomainEnabled,
             '_APP_ASSISTANT_ENABLED' => $isAssistantEnabled,
-            '_APP_DOMAIN_SITES' => System::getEnv('_APP_DOMAIN_SITES'),
-            '_APP_DOMAIN_FUNCTIONS' => System::getEnv('_APP_DOMAIN_FUNCTIONS'),
+            '_APP_DOMAIN_SITES' => $platform['sitesDomain'],
+            '_APP_DOMAIN_FUNCTIONS' => $platform['functionsDomain'],
             '_APP_OPTIONS_FORCE_HTTPS' => System::getEnv('_APP_OPTIONS_FORCE_HTTPS'),
             '_APP_DOMAINS_NAMESERVERS' => System::getEnv('_APP_DOMAINS_NAMESERVERS'),
         ]);

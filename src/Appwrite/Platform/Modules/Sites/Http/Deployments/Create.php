@@ -19,6 +19,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
+use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
@@ -26,7 +27,6 @@ use Utopia\Storage\Validator\File;
 use Utopia\Storage\Validator\FileExt;
 use Utopia\Storage\Validator\FileSize;
 use Utopia\Storage\Validator\Upload;
-use Utopia\Swoole\Request;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
@@ -88,6 +88,7 @@ class Create extends Action
             ->inject('queueForBuilds')
             ->inject('plan')
             ->inject('authorization')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -108,7 +109,8 @@ class Create extends Action
         Device $deviceForLocal,
         Build $queueForBuilds,
         array $plan,
-        Authorization $authorization
+        Authorization $authorization,
+        array $platform,
     ) {
         $activate = \strval($activate) === 'true' || \strval($activate) === '1';
 
@@ -272,7 +274,7 @@ class Create extends Action
                     ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
                 $dbForProject->updateDocument('sites', $site->getId(), $site);
 
-                $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+                $sitesDomain = $platform['sitesDomain'];
                 $domain = ID::unique() . "." . $sitesDomain;
 
                 // TODO: (@Meldiron) Remove after 1.7.x migration
@@ -342,7 +344,7 @@ class Create extends Action
                     ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
                 $dbForProject->updateDocument('sites', $site->getId(), $site);
 
-                $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+                $sitesDomain = $platform['sitesDomain'];
                 $domain = ID::unique() . "." . $sitesDomain;
                 $ruleId = md5($domain);
                 $authorization->skip(

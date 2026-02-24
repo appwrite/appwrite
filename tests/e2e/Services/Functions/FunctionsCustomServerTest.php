@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
@@ -1751,7 +1751,10 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEventually(function () use ($functionId, $userId) {
             $executions = $this->listExecutions($functionId);
 
-            $lastExecution = $executions['body']['executions'][0];
+            $this->assertEquals(200, $executions['headers']['status-code']);
+            $executionsList = $executions['body']['executions'] ?? [];
+            $this->assertNotEmpty($executionsList);
+            $lastExecution = $executionsList[0];
 
             $this->assertEquals('completed', $lastExecution['status']);
             $this->assertEquals(204, $lastExecution['responseStatusCode']);

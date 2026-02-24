@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documen
 use Appwrite\Event\Event;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
+use Appwrite\Functions\EventProcessor;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
@@ -27,7 +28,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Nullable;
@@ -134,9 +135,10 @@ class Create extends Action
             ->inject('queueForWebhooks')
             ->inject('plan')
             ->inject('authorization')
+            ->inject('eventProcessor')
             ->callback($this->action(...));
     }
-    public function action(string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, ?array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan, Authorization $authorization): void
+    public function action(string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, ?array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan, Authorization $authorization, EventProcessor $eventProcessor): void
     {
         $data = \is_string($data)
             ? \json_decode($data, true)
@@ -317,6 +319,9 @@ class Create extends Action
                         $relation['$id'] = ID::unique();
                         $relation = new Document($relation);
                     }
+
+                    $this->validateRelationship($relation);
+
                     if ($relation instanceof Document) {
                         $relation = $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser);
 
@@ -498,7 +503,9 @@ class Create extends Action
                 $queueForEvents,
                 $queueForRealtime,
                 $queueForFunctions,
-                $queueForWebhooks
+                $queueForWebhooks,
+                $dbForProject,
+                $eventProcessor
             );
             return;
         }

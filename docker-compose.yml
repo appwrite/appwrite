@@ -12,7 +12,7 @@ x-logging: &x-logging
 
 services:
   traefik:
-    image: traefik:2.11
+    image: traefik:3.6
     <<: *x-logging
     container_name: appwrite-traefik
     command:
@@ -98,8 +98,9 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
+      # - ./vendor/utopia-php/framework:/usr/src/code/vendor/utopia-php/framework
     depends_on:
-      - mariadb
+      - ${_APP_DB_HOST:-mariadb}
       - redis
       - coredns
       # - clamav
@@ -111,13 +112,16 @@ services:
       - _APP_ENV
       - _APP_EDITION
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_LOCALE
+      - _APP_COMPRESSION_ENABLED
       - _APP_COMPRESSION_MIN_SIZE_BYTES
       - _APP_CONSOLE_WHITELIST_ROOT
       - _APP_CONSOLE_WHITELIST_EMAILS
       - _APP_CONSOLE_SESSION_ALERTS
       - _APP_CONSOLE_WHITELIST_IPS
       - _APP_CONSOLE_HOSTNAMES
+      - _APP_CONSOLE_SCHEMA
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
       - _APP_SYSTEM_TEAM_EMAIL
@@ -130,6 +134,7 @@ services:
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
       - _APP_CONSOLE_DOMAIN
+      - _APP_CONSOLE_TRUSTED_PROJECTS
       - _APP_DOMAIN_TARGET_CNAME
       - _APP_DOMAIN_TARGET_AAAA
       - _APP_DOMAIN_TARGET_A
@@ -145,6 +150,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
       - _APP_SMTP_SECURE
@@ -200,6 +206,7 @@ services:
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
       - _APP_SMS_PROVIDER
       - _APP_SMS_FROM
+      - _APP_GRAPHQL_INTROSPECTION
       - _APP_GRAPHQL_MAX_BATCH_SIZE
       - _APP_GRAPHQL_MAX_COMPLEXITY
       - _APP_GRAPHQL_MAX_DEPTH
@@ -224,6 +231,7 @@ services:
       - _APP_FUNCTIONS_CREATION_ABUSE_LIMIT
       - _APP_CUSTOM_DOMAIN_DENY_LIST
       - _APP_TRUSTED_HEADERS
+      - _APP_MIGRATION_HOST
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -277,7 +285,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
+      - ${_APP_DB_HOST:-mariadb}
       - redis
     environment:
       - _APP_ENV
@@ -294,10 +302,12 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_USAGE_STATS
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_CONFIG_REALTIME
       - _APP_DATABASE_SHARED_TABLES
+      - _APP_POOL_ADAPTER=swoole
 
   appwrite-worker-audits:
     entrypoint: worker-audits
@@ -311,10 +321,11 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mariadb}
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -325,6 +336,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_LOGGING_CONFIG
       - _APP_DATABASE_SHARED_TABLES
 
@@ -340,12 +352,13 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mariadb}
       - request-catcher-sms
       - request-catcher-webhook
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_EMAIL_SECURITY
       - _APP_DB_HOST
@@ -353,6 +366,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -370,7 +384,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mariadb}
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -383,6 +397,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -393,6 +408,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_STORAGE_DEVICE
       - _APP_STORAGE_S3_ACCESS_KEY
       - _APP_STORAGE_S3_SECRET
@@ -436,10 +452,11 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mariadb}
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -450,6 +467,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_LOGGING_CONFIG
       - _APP_WORKERS_NUM
       - _APP_QUEUE_NAME
@@ -470,10 +488,11 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mariadb}
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
@@ -486,6 +505,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_LOGGING_CONFIG
       - _APP_VCS_GITHUB_APP_NAME
       - _APP_VCS_GITHUB_PRIVATE_KEY
@@ -500,6 +520,7 @@ services:
       - _APP_OPTIONS_ROUTER_FORCE_HTTPS
       - _APP_DOMAIN
       - _APP_CONSOLE_DOMAIN
+      - _APP_CONSOLE_TRUSTED_PROJECTS
       - _APP_STORAGE_DEVICE
       - _APP_STORAGE_S3_ACCESS_KEY
       - _APP_STORAGE_S3_SECRET
@@ -544,9 +565,12 @@ services:
     environment:
       # Specific
       - _APP_BROWSER_HOST
+      - _APP_WORKER_SCREENSHOTS_ROUTER
+      - _APP_OPTIONS_FORCE_HTTPS
       # Basic
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_LOGGING_CONFIG
       # Database
       - _APP_OPENSSL_KEY_V1
@@ -595,7 +619,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mariadb}
     volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -604,6 +628,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET_CNAME
@@ -614,6 +639,38 @@ services:
       - _APP_DOMAIN_FUNCTIONS
       - _APP_DOMAIN_SITES
       - _APP_EMAIL_CERTIFICATES
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_DB_ADAPTER
+      - _APP_LOGGING_CONFIG
+      - _APP_DATABASE_SHARED_TABLES
+
+  appwrite-worker-executions:
+    entrypoint: worker-executions
+    <<: *x-logging
+    container_name: appwrite-worker-executions
+    image: appwrite-dev
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+    depends_on:
+      redis:
+        condition: service_started
+      mariadb:
+        condition: service_started
+    environment:
+      - _APP_ENV
+      - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -637,12 +694,12 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
+      - ${_APP_DB_HOST:-mariadb}
       - redis
-      - mariadb
-      - openruntimes-executor
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
       - _APP_OPTIONS_FORCE_HTTPS
@@ -655,6 +712,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_SITES_TIMEOUT
       - _APP_COMPUTE_BUILD_TIMEOUT
@@ -682,10 +740,12 @@ services:
     depends_on:
       - redis
       - maildev
+      - ${_APP_DB_HOST:-mariadb}
       # - smtp
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
@@ -693,6 +753,12 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
       - _APP_SMTP_SECURE
@@ -720,6 +786,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -730,6 +797,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_LOGGING_CONFIG
       - _APP_SMS_FROM
       - _APP_SMS_PROVIDER
@@ -773,10 +841,11 @@ services:
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
     depends_on:
-      - mariadb
+      - ${_APP_DB_HOST:-mariadb}
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET_CNAME
@@ -794,11 +863,13 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_LOGGING_CONFIG
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
       - _APP_DATABASE_SHARED_TABLES
       - _APP_OPTIONS_FORCE_HTTPS
+      - _APP_MIGRATION_HOST
 
   appwrite-task-maintenance:
     entrypoint: maintenance
@@ -816,6 +887,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET_CNAME
       - _APP_DOMAIN_TARGET_AAAA
@@ -833,6 +905,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_MAINTENANCE_RETENTION_CACHE
@@ -860,6 +933,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET_CNAME
       - _APP_DOMAIN_TARGET_AAAA
@@ -894,16 +968,18 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mariadb}
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -925,16 +1001,18 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mariadb}
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -956,16 +1034,18 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mariadb}
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -986,11 +1066,12 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
+      - ${_APP_DB_HOST:-mariadb}
       - redis
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -1001,6 +1082,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_DATABASE_SHARED_TABLES
 
   appwrite-task-scheduler-executions:
@@ -1014,11 +1096,12 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
+      - ${_APP_DB_HOST:-mariadb}
       - redis
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -1029,6 +1112,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
 
   appwrite-task-scheduler-messages:
     entrypoint: schedule-messages
@@ -1041,11 +1125,12 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
+      - ${_APP_DB_HOST:-mariadb}
       - redis
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -1056,6 +1141,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_DATABASE_SHARED_TABLES
 
   appwrite-assistant:
@@ -1124,6 +1210,12 @@ services:
       - OPR_EXECUTOR_STORAGE_WASABI_SECRET=$_APP_STORAGE_WASABI_SECRET
       - OPR_EXECUTOR_STORAGE_WASABI_REGION=$_APP_STORAGE_WASABI_REGION
       - OPR_EXECUTOR_STORAGE_WASABI_BUCKET=$_APP_STORAGE_WASABI_BUCKET
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -H \"Authorization: Bearer $$OPR_EXECUTOR_SECRET\" http://localhost/v1/health >/dev/null"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
 
   mariadb:
     image: mariadb:10.11 # fix issues when upgrading using: mysql_upgrade -u root -p
@@ -1142,6 +1234,22 @@ services:
       - MYSQL_PASSWORD=${_APP_DB_PASS}
       - MARIADB_AUTO_UPGRADE=1
     command: "mysqld --innodb-flush-method=fsync"
+
+  postgresql:
+    image: postgres:18
+    container_name: appwrite-postgresql
+    <<: *x-logging
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-postgresql:/var/lib/postgresql/data:rw
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=${_APP_DB_SCHEMA}
+      - POSTGRES_USER=${_APP_DB_USER}
+      - POSTGRES_PASSWORD=${_APP_DB_PASS}
+    command: "postgres"
 
   redis:
     image: redis:7.2.4-alpine
@@ -1370,6 +1478,7 @@ configs:
 
 volumes:
   appwrite-mariadb:
+  appwrite-postgresql:
   appwrite-redis:
   appwrite-cache:
   appwrite-uploads:

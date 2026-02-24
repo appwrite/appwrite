@@ -30,6 +30,10 @@ class AttributeList extends Model
                     Response::MODEL_ATTRIBUTE_POINT,
                     Response::MODEL_ATTRIBUTE_LINE,
                     Response::MODEL_ATTRIBUTE_POLYGON,
+                    Response::MODEL_ATTRIBUTE_VARCHAR,
+                    Response::MODEL_ATTRIBUTE_TEXT,
+                    Response::MODEL_ATTRIBUTE_MEDIUMTEXT,
+                    Response::MODEL_ATTRIBUTE_LONGTEXT,
                     Response::MODEL_ATTRIBUTE_STRING // needs to be last, since its condition would dominate any other string attribute
                 ],
                 'description' => 'List of attributes.',
