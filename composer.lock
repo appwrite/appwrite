@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9982b1af032ade7b23f2aa5c4cf69432",
+    "content-hash": "1f4033f1f09f0ddc0b040d3f1af0dfb0",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4518,16 +4518,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "dev-improve-columns-setup",
+            "version": "dev-remove-dsn-callables",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "e4872c17cb5dcf56807f267b04c00006268fce1b"
+                "reference": "682cdc36618a2be4fe376047a6250a3d0c4ea739"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/e4872c17cb5dcf56807f267b04c00006268fce1b",
-                "reference": "e4872c17cb5dcf56807f267b04c00006268fce1b",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/682cdc36618a2be4fe376047a6250a3d0c4ea739",
+                "reference": "682cdc36618a2be4fe376047a6250a3d0c4ea739",
                 "shasum": ""
             },
             "require": {
@@ -4567,9 +4567,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/improve-columns-setup"
+                "source": "https://github.com/utopia-php/migration/tree/remove-dsn-callables"
             },
-            "time": "2026-02-18T10:30:45+00:00"
+            "time": "2026-02-24T05:05:52+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8940,9 +8940,9 @@
     "aliases": [
         {
             "package": "utopia-php/migration",
-            "version": "dev-improve-columns-setup",
-            "alias": "1.6.1",
-            "alias_normalized": "1.6.1.0"
+            "version": "dev-remove-dsn-callables",
+            "alias": "1.6.2",
+            "alias_normalized": "1.6.2.0"
         }
     ],
     "minimum-stability": "dev",

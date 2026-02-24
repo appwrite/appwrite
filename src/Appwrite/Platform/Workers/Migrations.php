@@ -258,7 +258,6 @@ class Migrations extends Action
     protected function processDestination(Document $migration): Destination
     {
         $destination = $migration->getAttribute('destination');
-        $getDatabaseDSN = fn (string $databaseType): string => $this->getDatabaseDSN($databaseType);
         $options = $migration->getAttribute('options', []);
         $credentials = $migration->getAttribute('credentials');
 
@@ -269,7 +268,6 @@ class Migrations extends Action
                 $credentials['destinationApiKey'],
                 $this->dbForProject,
                 $this->getDatabasesDB,
-                $getDatabaseDSN,
                 Config::getParam('collections', [])['databases']['collections'],
             ),
             DestinationCSV::getName() => new DestinationCSV(
@@ -549,14 +547,6 @@ class Migrations extends Action
         return call_user_func($this->getDatabasesDB, $database);
     }
 
-    protected function getDatabaseDSN(string $databaseType): string
-    {
-        return match ($databaseType) {
-            'documentsdb' => $this->project->getAttribute('documentsDatabase'),
-            'vectordb' => $this->project->getAttribute('vectorDatabase'),
-            default => $this->project->getAttribute('database'),
-        };
-    }
     /**
      * Handle actions to be performed when a CSV export migration is successfully completed
      *
