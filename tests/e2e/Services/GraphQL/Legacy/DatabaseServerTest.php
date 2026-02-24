@@ -192,7 +192,14 @@ class DatabaseServerTest extends Scope
             ]
         ];
         $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
-        sleep(1);
+        $this->assertEventually(function () use ($data) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['database']['_id'] . '/collections/' . $data['collection']['_id'] . '/attributes/name', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         // Update string attribute
         $query = $this->getQuery(self::UPDATE_STRING_ATTRIBUTE);
@@ -222,7 +229,14 @@ class DatabaseServerTest extends Scope
             ]
         ];
         $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
-        sleep(1);
+        $this->assertEventually(function () use ($data) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['database']['_id'] . '/collections/' . $data['collection']['_id'] . '/attributes/age', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         // Update integer attribute
         $query = $this->getQuery(self::UPDATE_INTEGER_ATTRIBUTE);
@@ -252,7 +266,14 @@ class DatabaseServerTest extends Scope
             ]
         ];
         $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
-        sleep(1);
+        $this->assertEventually(function () use ($data) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['database']['_id'] . '/collections/' . $data['collection']['_id'] . '/attributes/alive', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         // Update boolean attribute
         $query = $this->getQuery(self::UPDATE_BOOLEAN_ATTRIBUTE);
@@ -283,7 +304,14 @@ class DatabaseServerTest extends Scope
             ]
         ];
         $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
-        sleep(1);
+        $this->assertEventually(function () use ($data) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['database']['_id'] . '/collections/' . $data['collection']['_id'] . '/attributes/salary', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         // Update float attribute
         $query = $this->getQuery(self::UPDATE_FLOAT_ATTRIBUTE);
@@ -313,7 +341,14 @@ class DatabaseServerTest extends Scope
             ]
         ];
         $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
-        sleep(1);
+        $this->assertEventually(function () use ($data) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['database']['_id'] . '/collections/' . $data['collection']['_id'] . '/attributes/email', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         // Update email attribute
         $query = $this->getQuery(self::UPDATE_EMAIL_ATTRIBUTE);
@@ -346,7 +381,14 @@ class DatabaseServerTest extends Scope
             ]
         ];
         $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
-        sleep(1);
+        $this->assertEventually(function () use ($data) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['database']['_id'] . '/collections/' . $data['collection']['_id'] . '/attributes/role', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         // Update enum attribute
         $query = $this->getQuery(self::UPDATE_ENUM_ATTRIBUTE);
@@ -379,7 +421,14 @@ class DatabaseServerTest extends Scope
             ]
         ];
         $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
-        sleep(1);
+        $this->assertEventually(function () use ($data) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['database']['_id'] . '/collections/' . $data['collection']['_id'] . '/attributes/dob', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         // Update datetime attribute
         $query = $this->getQuery(self::UPDATE_DATETIME_ATTRIBUTE);
@@ -408,7 +457,14 @@ class DatabaseServerTest extends Scope
             ]
         ];
         $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
-        sleep(3);
+        $this->assertEventually(function () use ($data) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['database']['_id'] . '/collections/' . $data['collection']['_id'] . '/attributes/ip', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         // Update IP attribute
         $query = $this->getQuery(self::UPDATE_IP_ATTRIBUTE);
@@ -437,7 +493,14 @@ class DatabaseServerTest extends Scope
             ]
         ];
         $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
-        sleep(3);
+        $this->assertEventually(function () use ($data) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['database']['_id'] . '/collections/' . $data['collection']['_id'] . '/attributes/url', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         // Update URL attribute
         $query = $this->getQuery(self::UPDATE_URL_ATTRIBUTE);
@@ -453,8 +516,15 @@ class DatabaseServerTest extends Scope
         ];
         $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
 
-        // Wait for all attributes to become available before returning
-        sleep(5);
+        // Poll for the last attribute to confirm all are available
+        $this->assertEventually(function () use ($data) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['database']['_id'] . '/collections/' . $data['collection']['_id'] . '/attributes/url', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         self::$allAttributesCache[$cacheKey] = $data;
         return self::$allAttributesCache[$cacheKey];
@@ -684,7 +754,14 @@ class DatabaseServerTest extends Scope
         ];
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
-        sleep(1);
+        $this->assertEventually(function () use ($databaseId, $collectionId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/name', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         // Step 4: Create documents
         $query = $this->getQuery(self::CREATE_DOCUMENTS);
@@ -783,8 +860,14 @@ class DatabaseServerTest extends Scope
         ];
         $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
 
-        // Wait for attributes to be available
-        sleep(1);
+        $this->assertEventually(function () use ($data) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['database']['_id'] . '/collections/' . $data['collection']['_id'] . '/attributes/name', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $query = $this->getQuery(self::UPDATE_STRING_ATTRIBUTE);
         $gqlPayload = [
@@ -866,8 +949,14 @@ class DatabaseServerTest extends Scope
         ];
         $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
 
-        // Wait for attributes to be available
-        sleep(1);
+        $this->assertEventually(function () use ($data) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['database']['_id'] . '/collections/' . $data['collection']['_id'] . '/attributes/age', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $query = $this->getQuery(self::UPDATE_INTEGER_ATTRIBUTE);
         $gqlPayload = [
@@ -949,8 +1038,14 @@ class DatabaseServerTest extends Scope
         ];
         $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
 
-        // Wait for attributes to be available
-        sleep(1);
+        $this->assertEventually(function () use ($data) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['database']['_id'] . '/collections/' . $data['collection']['_id'] . '/attributes/alive', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $query = $this->getQuery(self::UPDATE_BOOLEAN_ATTRIBUTE);
         $gqlPayload = [
@@ -1034,8 +1129,14 @@ class DatabaseServerTest extends Scope
         ];
         $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
 
-        // Wait for attributes to be available
-        sleep(1);
+        $this->assertEventually(function () use ($data) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['database']['_id'] . '/collections/' . $data['collection']['_id'] . '/attributes/salary', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $query = $this->getQuery(self::UPDATE_FLOAT_ATTRIBUTE);
         $gqlPayload = [
@@ -1117,8 +1218,14 @@ class DatabaseServerTest extends Scope
         ];
         $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
 
-        // Wait for attributes to be available
-        sleep(1);
+        $this->assertEventually(function () use ($data) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['database']['_id'] . '/collections/' . $data['collection']['_id'] . '/attributes/email', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $query = $this->getQuery(self::UPDATE_EMAIL_ATTRIBUTE);
         $gqlPayload = [
@@ -1206,8 +1313,14 @@ class DatabaseServerTest extends Scope
         ];
         $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
 
-        // Wait for attributes to be available
-        sleep(1);
+        $this->assertEventually(function () use ($data) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['database']['_id'] . '/collections/' . $data['collection']['_id'] . '/attributes/role', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $query = $this->getQuery(self::UPDATE_ENUM_ATTRIBUTE);
         $gqlPayload = [
@@ -1292,8 +1405,14 @@ class DatabaseServerTest extends Scope
         ];
         $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
 
-        // Wait for attributes to be available
-        sleep(1);
+        $this->assertEventually(function () use ($data) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['database']['_id'] . '/collections/' . $data['collection']['_id'] . '/attributes/dob', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $query = $this->getQuery(self::UPDATE_DATETIME_ATTRIBUTE);
         $gqlPayload = [
@@ -1355,7 +1474,14 @@ class DatabaseServerTest extends Scope
     {
         $data = $this->setupRelationship();
 
-        sleep(1);
+        $this->assertEventually(function () use ($data) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['database']['_id'] . '/collections/' . $data['collection2']['_id'] . '/attributes/actors', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::UPDATE_RELATIONSHIP_ATTRIBUTE);
@@ -1436,8 +1562,14 @@ class DatabaseServerTest extends Scope
         ];
         $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
 
-        // Wait for attributes to be available
-        sleep(3);
+        $this->assertEventually(function () use ($data) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['database']['_id'] . '/collections/' . $data['collection']['_id'] . '/attributes/ip', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $query = $this->getQuery(self::UPDATE_IP_ATTRIBUTE);
         $gqlPayload = [
@@ -1517,8 +1649,14 @@ class DatabaseServerTest extends Scope
         ];
         $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
 
-        // Wait for attributes to be available
-        sleep(3);
+        $this->assertEventually(function () use ($data) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['database']['_id'] . '/collections/' . $data['collection']['_id'] . '/attributes/url', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $query = $this->getQuery(self::UPDATE_URL_ATTRIBUTE);
         $gqlPayload = [

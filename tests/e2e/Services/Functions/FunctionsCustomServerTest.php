@@ -548,7 +548,7 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEquals(200, $deployment['headers']['status-code']);
             $this->assertEquals('ready', $deployment['body']['status']);
             $this->assertEquals('cli', $deployment['body']['type']);
-        }, 500000, 1000);
+        }, 120000, 500);
     }
 
     public function testCreateFunctionAndDeploymentFromTemplate()
@@ -1021,7 +1021,7 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEquals('ready', $deployment['body']['status']);
             $this->assertEquals($deploymentSize, $deployment['body']['sourceSize']);
             $this->assertGreaterThan(1024 * 1024 * 10, $deployment['body']['buildSize']); // ~7MB video file + 10MB sample file
-        }, 500000, 1000);
+        }, 120000, 500);
     }
 
     public function testUpdateDeployment(): void
@@ -2133,7 +2133,7 @@ class FunctionsCustomServerTest extends Scope
             $this->assertEquals(24, count($response['body']));
             $this->assertEquals('24h', $response['body']['range']);
             $this->assertEquals(1, $response['body']['executionsTotal']);
-        }, 25000, 1000);
+        }, 25000, 500);
 
         $this->cleanupFunction($functionId);
     }

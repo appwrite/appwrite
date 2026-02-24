@@ -1423,17 +1423,18 @@ trait UsersBase
         $this->assertEquals($user['headers']['status-code'], 200);
         $this->assertNotEmpty($user['body']['$id']);
         $this->assertEmpty($user['body']['password']);
-        sleep(5);
 
-        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], [
-            'email' => 'users.service@updated.com',
-            'password' => 'password'
-        ]);
+        $this->assertEventually(function () {
+            $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'email' => 'users.service@updated.com',
+                'password' => 'password'
+            ]);
 
-        $this->assertEquals(401, $session['headers']['status-code']);
+            $this->assertEquals(401, $session['headers']['status-code']);
+        }, 15_000, 500);
         $this->updateProjectinvalidateSessionsProperty(true);
         $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/password', array_merge([
             'content-type' => 'application/json',

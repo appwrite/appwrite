@@ -6,6 +6,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ApiTablesDB;
 use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\SchemaPolling;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Helpers\ID;
@@ -18,6 +19,7 @@ class TablesDBPermissionsTeamTest extends Scope
     use ProjectCustom;
     use SideClient;
     use ApiTablesDB;
+    use SchemaPolling;
 
     public array $collections = [];
     public string $databaseId = 'testpermissiondb';
@@ -114,7 +116,8 @@ class TablesDBPermissionsTeamTest extends Scope
         );
         $this->assertEquals(202, $schema2['headers']['status-code']);
 
-        sleep(2);
+        $this->waitForAttribute($this->databaseId, $this->collections['collection1'], 'title');
+        $this->waitForAttribute($this->databaseId, $this->collections['collection2'], 'title');
 
         return $this->collections;
     }

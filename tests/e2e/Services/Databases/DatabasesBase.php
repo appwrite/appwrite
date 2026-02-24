@@ -2791,8 +2791,8 @@ trait DatabasesBase
                 'required' => false,
             ]);
 
+            $this->waitForAttribute($databaseId, $person['body']['$id'], 'fullName');
 
-            sleep(1); // Wait for worker
             $relation = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $person['body']['$id']) . '/relationship', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
@@ -2805,7 +2805,7 @@ trait DatabasesBase
                 'onDelete' => Database::RELATION_MUTATE_CASCADE,
             ]);
 
-            sleep(1); // Wait for worker
+            $this->waitForAttribute($databaseId, $person['body']['$id'], 'library');
 
             $libraryName = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $library['body']['$id']) . '/string', array_merge([
                 'content-type' => 'application/json',
@@ -2817,7 +2817,7 @@ trait DatabasesBase
                 'required' => true,
             ]);
 
-            sleep(1); // Wait for worker
+            $this->waitForAttribute($databaseId, $library['body']['$id'], 'libraryName');
 
             $this->assertEquals(202, $libraryName['headers']['status-code']);
 
@@ -5645,7 +5645,7 @@ trait DatabasesBase
         $createdAt = $document['body']['$createdAt'];
         $updatedAt = $document['body']['$updatedAt'];
 
-        \sleep(1);
+        \usleep(500000);
 
         $document = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($data['databaseId'], $data['moviesId'], $documentId), $headers, [
             'data' => [
@@ -5659,7 +5659,7 @@ trait DatabasesBase
         $this->assertEquals($document['body']['$createdAt'], $createdAt);
         $this->assertNotEquals($document['body']['$updatedAt'], $updatedAt);
 
-        \sleep(1);
+        \usleep(500000);
 
         $document = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($data['databaseId'], $data['moviesId'], $documentId), $headers, [
             'data' => [
@@ -9036,7 +9036,8 @@ trait DatabasesBase
             ]);
             $this->assertEquals(200, $updated['headers']['status-code']);
 
-            sleep(2);
+            $this->waitForAttribute($databaseId, $collectionId, 'pOptional');
+
             $retriedIndex = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
@@ -10149,8 +10150,8 @@ trait DatabasesBase
         ]);
         $this->assertEquals(201, $row1['headers']['status-code']);
 
-        // Sleep to ensure different creation times
-        sleep(1);
+        // Ensure different creation times
+        usleep(500000);
 
         $row2 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $posts['body']['$id']), array_merge([
             'content-type' => 'application/json',
@@ -10170,8 +10171,7 @@ trait DatabasesBase
         // Get the creation time of the second post to use as boundary
         $secondPostCreatedAt = $row2['body']['$createdAt'];
 
-        // Sleep again
-        sleep(1);
+        usleep(500000);
 
         $row3 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $posts['body']['$id']), array_merge([
             'content-type' => 'application/json',
@@ -10290,8 +10290,8 @@ trait DatabasesBase
         ]);
         $this->assertEquals(201, $row1['headers']['status-code']);
 
-        // Sleep to ensure different creation times
-        sleep(1);
+        // Ensure different creation times
+        usleep(500000);
 
         $row2 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $events['body']['$id']), array_merge([
             'content-type' => 'application/json',
@@ -10311,8 +10311,7 @@ trait DatabasesBase
         // Get the creation time of the second event to use as boundary
         $secondEventCreatedAt = $row2['body']['$createdAt'];
 
-        // Sleep again
-        sleep(1);
+        usleep(500000);
 
         $row3 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $events['body']['$id']), array_merge([
             'content-type' => 'application/json',
@@ -10432,8 +10431,8 @@ trait DatabasesBase
         $this->assertEquals(201, $row1['headers']['status-code']);
         $firstArticleCreatedAt = $row1['body']['$createdAt'];
 
-        // Sleep to ensure different timestamps
-        sleep(1);
+        // Ensure different timestamps
+        usleep(500000);
 
         // Create second article
         $row2 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $articles['body']['$id']), array_merge([
@@ -10452,8 +10451,7 @@ trait DatabasesBase
         $this->assertEquals(201, $row2['headers']['status-code']);
         $secondArticleCreatedAt = $row2['body']['$createdAt'];
 
-        // Sleep again
-        sleep(1);
+        usleep(500000);
 
         // Create third article
         $row3 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $articles['body']['$id']), array_merge([
@@ -10472,8 +10470,7 @@ trait DatabasesBase
         $this->assertEquals(201, $row3['headers']['status-code']);
         $thirdArticleCreatedAt = $row3['body']['$createdAt'];
 
-        // Sleep again
-        sleep(1);
+        usleep(500000);
 
         // Create fourth article
         $row4 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $articles['body']['$id']), array_merge([
@@ -10655,7 +10652,7 @@ trait DatabasesBase
         $taskThreeId = $row3['body']['$id'];
 
         // Update first task
-        sleep(1);
+        usleep(500000);
         $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $tasks['body']['$id']) . '/' . $this->getRecordResource() . '/' . $taskOneId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -10666,7 +10663,7 @@ trait DatabasesBase
         ]);
 
         // Update second task and get its updated time
-        sleep(1);
+        usleep(500000);
         $updatedTaskTwo = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $tasks['body']['$id']) . '/' . $this->getRecordResource() . '/' . $taskTwoId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -10678,7 +10675,7 @@ trait DatabasesBase
         $secondTaskUpdatedAt = $updatedTaskTwo['body']['$updatedAt'];
 
         // Update third task
-        sleep(1);
+        usleep(500000);
         $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $tasks['body']['$id']) . '/' . $this->getRecordResource() . '/' . $taskThreeId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -10828,7 +10825,7 @@ trait DatabasesBase
         $orderThreeId = $row3['body']['$id'];
 
         // Update first order
-        sleep(1);
+        usleep(500000);
         $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $orders['body']['$id']) . '/' . $this->getRecordResource() . '/' . $orderOneId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -10839,7 +10836,7 @@ trait DatabasesBase
         ]);
 
         // Update second order and get its updated time
-        sleep(1);
+        usleep(500000);
         $updatedOrderTwo = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $orders['body']['$id']) . '/' . $this->getRecordResource() . '/' . $orderTwoId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -10851,7 +10848,7 @@ trait DatabasesBase
         $secondOrderUpdatedAt = $updatedOrderTwo['body']['$updatedAt'];
 
         // Update third order
-        sleep(1);
+        usleep(500000);
         $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $orders['body']['$id']) . '/' . $this->getRecordResource() . '/' . $orderThreeId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -10963,8 +10960,8 @@ trait DatabasesBase
         ]);
         $this->assertEquals(201, $row1['headers']['status-code']);
 
-        // Sleep to ensure different timestamps
-        sleep(1);
+        // Ensure different timestamps
+        usleep(500000);
 
         // Create second product
         $row2 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $products['body']['$id']), array_merge([
@@ -10983,8 +10980,7 @@ trait DatabasesBase
         ]);
         $this->assertEquals(201, $row2['headers']['status-code']);
 
-        // Sleep again
-        sleep(1);
+        usleep(500000);
 
         // Create third product
         $row3 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $products['body']['$id']), array_merge([
@@ -11003,8 +10999,7 @@ trait DatabasesBase
         ]);
         $this->assertEquals(201, $row3['headers']['status-code']);
 
-        // Sleep again
-        sleep(1);
+        usleep(500000);
 
         // Create fourth product
         $row4 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $products['body']['$id']), array_merge([
@@ -11024,7 +11019,7 @@ trait DatabasesBase
         $this->assertEquals(201, $row4['headers']['status-code']);
 
         // Now update products in sequence to get different updatedAt timestamps
-        sleep(1);
+        usleep(500000);
 
         // Update first product
         $update1 = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $products['body']['$id']) . '/' . $this->getRecordResource() . '/' . $row1['body']['$id'], array_merge([
@@ -11038,7 +11033,7 @@ trait DatabasesBase
         $this->assertEquals(200, $update1['headers']['status-code']);
         $firstProductUpdatedAt = $update1['body']['$updatedAt'];
 
-        sleep(1);
+        usleep(500000);
 
         // Update second product
         $update2 = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $products['body']['$id']) . '/' . $this->getRecordResource() . '/' . $row2['body']['$id'], array_merge([
@@ -11052,7 +11047,7 @@ trait DatabasesBase
         $this->assertEquals(200, $update2['headers']['status-code']);
         $secondProductUpdatedAt = $update2['body']['$updatedAt'];
 
-        sleep(1);
+        usleep(500000);
 
         // Update third product
         $update3 = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $products['body']['$id']) . '/' . $this->getRecordResource() . '/' . $row3['body']['$id'], array_merge([
@@ -11066,7 +11061,7 @@ trait DatabasesBase
         $this->assertEquals(200, $update3['headers']['status-code']);
         $thirdProductUpdatedAt = $update3['body']['$updatedAt'];
 
-        sleep(1);
+        usleep(500000);
 
         // Update fourth product
         $update4 = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $products['body']['$id']) . '/' . $this->getRecordResource() . '/' . $row4['body']['$id'], array_merge([

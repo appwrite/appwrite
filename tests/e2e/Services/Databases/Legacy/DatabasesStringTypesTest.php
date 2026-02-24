@@ -83,8 +83,8 @@ class DatabasesStringTypesTest extends Scope
             'key' => 'varchar_min', 'size' => 1, 'required' => false,
         ]);
 
-        // Small delay between batches to avoid overwhelming the worker
-        sleep(1);
+        // Wait for varchar attributes to be available before creating more
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create text attributes
         $this->client->call(Client::METHOD_POST, $base . '/text', $headers, [
@@ -100,7 +100,7 @@ class DatabasesStringTypesTest extends Scope
             'key' => 'text_array', 'required' => false, 'array' => true,
         ]);
 
-        sleep(1);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create mediumtext attributes
         $this->client->call(Client::METHOD_POST, $base . '/mediumtext', $headers, [
@@ -116,7 +116,7 @@ class DatabasesStringTypesTest extends Scope
             'key' => 'mediumtext_array', 'required' => false, 'array' => true,
         ]);
 
-        sleep(1);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create longtext attributes
         $this->client->call(Client::METHOD_POST, $base . '/longtext', $headers, [
@@ -541,7 +541,7 @@ class DatabasesStringTypesTest extends Scope
         $collectionId = $data['collectionId'];
 
         // Wait for attributes to be created
-        sleep(2);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes', [
             'content-type' => 'application/json',
@@ -787,15 +787,14 @@ class DatabasesStringTypesTest extends Scope
         $this->assertEquals(204, $deleteVarchar['headers']['status-code']);
 
         // Wait for async deletion to complete
-        sleep(2);
-
-        // Verify deletion
-        $getDeleted = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/varchar_min', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]);
-
-        $this->assertEquals(404, $getDeleted['headers']['status-code']);
+        // Poll until async deletion completes
+        $this->assertEventually(function () use ($databaseId, $collectionId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/varchar_min', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals(404, $response['headers']['status-code']);
+        }, 30000, 250);
     }
 }

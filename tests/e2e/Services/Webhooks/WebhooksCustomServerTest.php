@@ -904,7 +904,7 @@ class WebhooksCustomServerTest extends Scope
             $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
             $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
             $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        }, 30000, 1000);
+        }, 30000, 500);
     }
 
     public function testDeleteDeployment(): void

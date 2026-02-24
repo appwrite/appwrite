@@ -170,15 +170,24 @@ class DatabaseServerTest extends Scope
         // Check if already updated by looking for default value
         $projectId = $this->getProject()['$id'];
 
-        // Wait for columns to be available
-        sleep(1);
+        $databaseId = $data['database']['_id'];
+        $tableId = $data['table']['_id'];
+
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/name', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $query = $this->getQuery(self::UPDATE_STRING_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'tableId' => $data['table']['_id'],
+                'databaseId' => $databaseId,
+                'tableId' => $tableId,
                 'key' => 'name',
                 'required' => false,
                 'default' => 'Default Value',
@@ -229,15 +238,24 @@ class DatabaseServerTest extends Scope
         $data = $this->setupIntegerColumn();
         $projectId = $this->getProject()['$id'];
 
-        // Wait for columns to be available
-        sleep(1);
+        $databaseId = $data['database']['_id'];
+        $tableId = $data['table']['_id'];
+
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/age', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $query = $this->getQuery(self::UPDATE_INTEGER_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'tableId' => $data['table']['_id'],
+                'databaseId' => $databaseId,
+                'tableId' => $tableId,
                 'key' => 'age',
                 'required' => false,
                 'min' => 12,
@@ -288,15 +306,24 @@ class DatabaseServerTest extends Scope
         $data = $this->setupBooleanColumn();
         $projectId = $this->getProject()['$id'];
 
-        // Wait for columns to be available
-        sleep(1);
+        $databaseId = $data['database']['_id'];
+        $tableId = $data['table']['_id'];
+
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/alive', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $query = $this->getQuery(self::UPDATE_BOOLEAN_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'tableId' => $data['table']['_id'],
+                'databaseId' => $databaseId,
+                'tableId' => $tableId,
                 'key' => 'alive',
                 'required' => false,
                 'default' => true
@@ -348,15 +375,24 @@ class DatabaseServerTest extends Scope
         $data = $this->setupFloatColumn();
         $projectId = $this->getProject()['$id'];
 
-        // Wait for columns to be available
-        sleep(1);
+        $databaseId = $data['database']['_id'];
+        $tableId = $data['table']['_id'];
+
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/salary', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $query = $this->getQuery(self::UPDATE_FLOAT_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'tableId' => $data['table']['_id'],
+                'databaseId' => $databaseId,
+                'tableId' => $tableId,
                 'key' => 'salary',
                 'required' => false,
                 'min' => 100.0,
@@ -407,15 +443,24 @@ class DatabaseServerTest extends Scope
         $data = $this->setupEmailColumn();
         $projectId = $this->getProject()['$id'];
 
-        // Wait for columns to be available
-        sleep(1);
+        $databaseId = $data['database']['_id'];
+        $tableId = $data['table']['_id'];
+
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/email', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $query = $this->getQuery(self::UPDATE_EMAIL_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'tableId' => $data['table']['_id'],
+                'databaseId' => $databaseId,
+                'tableId' => $tableId,
                 'key' => 'email',
                 'required' => false,
                 'default' => 'torsten@appwrite.io',
@@ -469,15 +514,24 @@ class DatabaseServerTest extends Scope
         $data = $this->setupEnumColumn();
         $projectId = $this->getProject()['$id'];
 
-        // Wait for columns to be available
-        sleep(1);
+        $databaseId = $data['database']['_id'];
+        $tableId = $data['table']['_id'];
+
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/role', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $query = $this->getQuery(self::UPDATE_ENUM_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'tableId' => $data['table']['_id'],
+                'databaseId' => $databaseId,
+                'tableId' => $tableId,
                 'key' => 'role',
                 'required' => false,
                 'elements' => [
@@ -531,15 +585,24 @@ class DatabaseServerTest extends Scope
         $data = $this->setupDatetimeColumn();
         $projectId = $this->getProject()['$id'];
 
-        // Wait for columns to be available
-        sleep(1);
+        $databaseId = $data['database']['_id'];
+        $tableId = $data['table']['_id'];
+
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/dob', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $query = $this->getQuery(self::UPDATE_DATETIME_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'tableId' => $data['table']['_id'],
+                'databaseId' => $databaseId,
+                'tableId' => $tableId,
                 'key' => 'dob',
                 'required' => false,
                 'default' => '2000-01-01T00:00:00Z'
@@ -591,14 +654,24 @@ class DatabaseServerTest extends Scope
         $data = $this->setupRelationshipColumn();
         $projectId = $this->getProject()['$id'];
 
-        sleep(1);
+        $databaseId = $data['database']['_id'];
+        $tableId = $data['table2']['_id'];
+
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/actors', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $query = $this->getQuery(self::UPDATE_RELATIONSHIP_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'tableId' => $data['table2']['_id'],
+                'databaseId' => $databaseId,
+                'tableId' => $tableId,
                 'key' => 'actors',
                 'onDelete' => Database::RELATION_MUTATE_CASCADE,
             ]
@@ -647,15 +720,24 @@ class DatabaseServerTest extends Scope
         $data = $this->setupIPColumn();
         $projectId = $this->getProject()['$id'];
 
-        // Wait for columns to be available
-        sleep(3);
+        $databaseId = $data['database']['_id'];
+        $tableId = $data['table']['_id'];
+
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/ip', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $query = $this->getQuery(self::UPDATE_IP_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'tableId' => $data['table']['_id'],
+                'databaseId' => $databaseId,
+                'tableId' => $tableId,
                 'key' => 'ip',
                 'required' => false,
                 'default' => '127.0.0.1'
@@ -705,15 +787,24 @@ class DatabaseServerTest extends Scope
         $data = $this->setupURLColumn();
         $projectId = $this->getProject()['$id'];
 
-        // Wait for columns to be available
-        sleep(3);
+        $databaseId = $data['database']['_id'];
+        $tableId = $data['table']['_id'];
+
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/url', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $query = $this->getQuery(self::UPDATE_URL_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'tableId' => $data['table']['_id'],
+                'databaseId' => $databaseId,
+                'tableId' => $tableId,
                 'key' => 'url',
                 'required' => false,
                 'default' => 'https://cloud.appwrite.io'
@@ -800,16 +891,29 @@ class DatabaseServerTest extends Scope
         $this->setupUpdatedDatetimeColumn();
         $data = $this->setupUpdatedEnumColumn();
 
-        // Wait for all columns to be available
-        sleep(3);
-
         $projectId = $this->getProject()['$id'];
+        $databaseId = $data['database']['_id'];
+        $tableId = $data['table']['_id'];
+
+        // Wait for all columns to be available
+        $columns = ['name', 'age', 'alive', 'salary', 'email', 'dob', 'role'];
+        foreach ($columns as $columnKey) {
+            $this->assertEventually(function () use ($databaseId, $tableId, $columnKey) {
+                $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/' . $columnKey, array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]));
+                $this->assertEquals('available', $response['body']['status']);
+            }, 30000, 250);
+        }
+
         $query = $this->getQuery(self::CREATE_ROW);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'tableId' => $data['table']['_id'],
+                'databaseId' => $databaseId,
+                'tableId' => $tableId,
                 'rowId' => ID::unique(),
                 'data' => [
                     'name' => 'John Doe',
@@ -904,7 +1008,15 @@ class DatabaseServerTest extends Scope
         ];
 
         $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
-        sleep(1);
+
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/name', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         // Step 4: Create rows
         $query = $this->getQuery(self::CREATE_ROWS);
@@ -986,16 +1098,25 @@ class DatabaseServerTest extends Scope
     {
         $data = $this->setupStringColumn();
 
-        // Wait for columns to be available
-        sleep(1);
-
         $projectId = $this->getProject()['$id'];
+        $databaseId = $data['database']['_id'];
+        $tableId = $data['table']['_id'];
+
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/name', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
+
         $query = $this->getQuery(self::UPDATE_STRING_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'tableId' => $data['table']['_id'],
+                'databaseId' => $databaseId,
+                'tableId' => $tableId,
                 'key' => 'name',
                 'required' => false,
                 'default' => 'Default Value',
@@ -1055,16 +1176,25 @@ class DatabaseServerTest extends Scope
     {
         $data = $this->setupIntegerColumn();
 
-        // Wait for columns to be available
-        sleep(1);
-
         $projectId = $this->getProject()['$id'];
+        $databaseId = $data['database']['_id'];
+        $tableId = $data['table']['_id'];
+
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/age', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
+
         $query = $this->getQuery(self::UPDATE_INTEGER_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'tableId' => $data['table']['_id'],
+                'databaseId' => $databaseId,
+                'tableId' => $tableId,
                 'key' => 'age',
                 'required' => false,
                 'min' => 12,
@@ -1126,16 +1256,25 @@ class DatabaseServerTest extends Scope
     {
         $data = $this->setupBooleanColumn();
 
-        // Wait for columns to be available
-        sleep(1);
-
         $projectId = $this->getProject()['$id'];
+        $databaseId = $data['database']['_id'];
+        $tableId = $data['table']['_id'];
+
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/alive', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
+
         $query = $this->getQuery(self::UPDATE_BOOLEAN_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'tableId' => $data['table']['_id'],
+                'databaseId' => $databaseId,
+                'tableId' => $tableId,
                 'key' => 'alive',
                 'required' => false,
                 'default' => true
@@ -1196,16 +1335,25 @@ class DatabaseServerTest extends Scope
     {
         $data = $this->setupFloatColumn();
 
-        // Wait for columns to be available
-        sleep(1);
-
         $projectId = $this->getProject()['$id'];
+        $databaseId = $data['database']['_id'];
+        $tableId = $data['table']['_id'];
+
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/salary', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
+
         $query = $this->getQuery(self::UPDATE_FLOAT_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'tableId' => $data['table']['_id'],
+                'databaseId' => $databaseId,
+                'tableId' => $tableId,
                 'key' => 'salary',
                 'required' => false,
                 'min' => 100.0,
@@ -1267,16 +1415,25 @@ class DatabaseServerTest extends Scope
     {
         $data = $this->setupEmailColumn();
 
-        // Wait for columns to be available
-        sleep(1);
-
         $projectId = $this->getProject()['$id'];
+        $databaseId = $data['database']['_id'];
+        $tableId = $data['table']['_id'];
+
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/email', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
+
         $query = $this->getQuery(self::UPDATE_EMAIL_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'tableId' => $data['table']['_id'],
+                'databaseId' => $databaseId,
+                'tableId' => $tableId,
                 'key' => 'email',
                 'required' => false,
                 'default' => 'torsten@appwrite.io',
@@ -1340,16 +1497,25 @@ class DatabaseServerTest extends Scope
     {
         $data = $this->setupEnumColumn();
 
-        // Wait for columns to be available
-        sleep(1);
-
         $projectId = $this->getProject()['$id'];
+        $databaseId = $data['database']['_id'];
+        $tableId = $data['table']['_id'];
+
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/role', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
+
         $query = $this->getQuery(self::UPDATE_ENUM_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'tableId' => $data['table']['_id'],
+                'databaseId' => $databaseId,
+                'tableId' => $tableId,
                 'key' => 'role',
                 'required' => false,
                 'elements' => [
@@ -1414,16 +1580,25 @@ class DatabaseServerTest extends Scope
     {
         $data = $this->setupDatetimeColumn();
 
-        // Wait for columns to be available
-        sleep(1);
-
         $projectId = $this->getProject()['$id'];
+        $databaseId = $data['database']['_id'];
+        $tableId = $data['table']['_id'];
+
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/dob', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
+
         $query = $this->getQuery(self::UPDATE_DATETIME_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'tableId' => $data['table']['_id'],
+                'databaseId' => $databaseId,
+                'tableId' => $tableId,
                 'key' => 'dob',
                 'required' => false,
                 'default' => '2000-01-01T00:00:00Z'
@@ -1478,15 +1653,25 @@ class DatabaseServerTest extends Scope
     {
         $data = $this->setupRelationshipColumn();
 
-        sleep(1);
+        $databaseId = $data['database']['_id'];
+        $tableId = $data['table2']['_id'];
+
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/actors', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::UPDATE_RELATIONSHIP_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'tableId' => $data['table2']['_id'],
+                'databaseId' => $databaseId,
+                'tableId' => $tableId,
                 'key' => 'actors',
                 'onDelete' => Database::RELATION_MUTATE_CASCADE,
             ]
@@ -1542,16 +1727,25 @@ class DatabaseServerTest extends Scope
     {
         $data = $this->setupIPColumn();
 
-        // Wait for columns to be available
-        sleep(3);
+        $databaseId = $data['database']['_id'];
+        $tableId = $data['table']['_id'];
+
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/ip', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::UPDATE_IP_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'tableId' => $data['table']['_id'],
+                'databaseId' => $databaseId,
+                'tableId' => $tableId,
                 'key' => 'ip',
                 'required' => false,
                 'default' => '127.0.0.1'
@@ -1610,16 +1804,25 @@ class DatabaseServerTest extends Scope
     {
         $data = $this->setupURLColumn();
 
-        // Wait for columns to be available
-        sleep(3);
+        $databaseId = $data['database']['_id'];
+        $tableId = $data['table']['_id'];
+
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/url', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::UPDATE_URL_COLUMN);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'tableId' => $data['table']['_id'],
+                'databaseId' => $databaseId,
+                'tableId' => $tableId,
                 'key' => 'url',
                 'required' => false,
                 'default' => 'https://cloud.appwrite.io'
@@ -1695,16 +1898,29 @@ class DatabaseServerTest extends Scope
         $this->setupUpdatedDatetimeColumn();
         $data = $this->setupUpdatedEnumColumn();
 
-        // Wait for all columns to be available
-        sleep(3);
-
         $projectId = $this->getProject()['$id'];
+        $databaseId = $data['database']['_id'];
+        $tableId = $data['table']['_id'];
+
+        // Wait for all columns to be available
+        $columns = ['name', 'age', 'alive', 'salary', 'email', 'dob', 'role'];
+        foreach ($columns as $columnKey) {
+            $this->assertEventually(function () use ($databaseId, $tableId, $columnKey) {
+                $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/' . $columnKey, array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]));
+                $this->assertEquals('available', $response['body']['status']);
+            }, 30000, 250);
+        }
+
         $query = $this->getQuery(self::CREATE_ROW);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'tableId' => $data['table']['_id'],
+                'databaseId' => $databaseId,
+                'tableId' => $tableId,
                 'rowId' => ID::unique(),
                 'data' => [
                     'name' => 'John Doe',

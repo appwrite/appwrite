@@ -907,7 +907,15 @@ trait StorageBase
 
         $this->assertEquals(204, $file['headers']['status-code']);
         $this->assertEmpty($file['body']);
-        sleep(1);
+
+        $this->assertEventually(function () use ($data, $fileId) {
+            $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files/' . $fileId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $this->assertEquals(404, $file['headers']['status-code']);
+        }, 10_000, 500);
+
         //upload again using the same ID
         $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
             'content-type' => 'multipart/form-data',

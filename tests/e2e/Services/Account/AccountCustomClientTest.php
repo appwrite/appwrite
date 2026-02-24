@@ -1010,7 +1010,6 @@ class AccountCustomClientTest extends Scope
 
     public function testGetAccountLogs(): void
     {
-        sleep(5);
         // Use fresh account for predictable log count
         $data = $this->createFreshAccountWithSession();
         $session = $data['session'];
@@ -1233,7 +1232,7 @@ class AccountCustomClientTest extends Scope
             ]);
 
             $this->assertEquals(201, $response['headers']['status-code']);
-            sleep(1);
+            usleep(500000);
         }
 
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions', array_merge([
@@ -1316,7 +1315,7 @@ class AccountCustomClientTest extends Scope
             ]);
 
             $this->assertEquals(201, $response['headers']['status-code']);
-            sleep(1);
+            usleep(500000);
         }
 
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions', array_merge([

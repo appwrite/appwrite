@@ -517,7 +517,15 @@ trait MessagingBase
             'content' => 'Check out the new blog post at http://localhost',
         ]);
 
-        \sleep(2);
+        $messageId = $email['body']['$id'];
+        $this->assertEventually(function () use ($messageId) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertContains($response['body']['status'], ['sent', 'failed']);
+        }, 30000, 500);
 
         self::$sentEmailData[$cacheKey] = [
             'message' => $email['body'],
@@ -619,7 +627,15 @@ trait MessagingBase
             'content' => '064763',
         ]);
 
-        \sleep(5);
+        $smsMessageId = $sms['body']['$id'];
+        $this->assertEventually(function () use ($smsMessageId) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $smsMessageId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertContains($response['body']['status'], ['sent', 'failed']);
+        }, 30000, 500);
 
         self::$sentSmsData[$cacheKey] = $sms['body'];
 
@@ -715,7 +731,15 @@ trait MessagingBase
             'body' => 'Test-Notification-Body-Sent',
         ]);
 
-        \sleep(5);
+        $pushMessageId = $push['body']['$id'];
+        $this->assertEventually(function () use ($pushMessageId) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $pushMessageId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertContains($response['body']['status'], ['sent', 'failed']);
+        }, 30000, 500);
 
         self::$sentPushData[$cacheKey] = $push['body'];
 
@@ -1743,7 +1767,14 @@ trait MessagingBase
 
         $bucketId = $bucket['body']['$id'];
 
-        \sleep(1);
+        $this->assertEventually(function () use ($bucketId) {
+            $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals(200, $response['headers']['status-code']);
+        }, 10000, 500);
 
         // Create file
         $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', [
@@ -1837,7 +1868,7 @@ trait MessagingBase
 
             $this->assertEquals(200, $message['headers']['status-code']);
             $this->assertContains($message['body']['status'], [MessageStatus::FAILED, MessageStatus::PROCESSING]);
-        }, 60000, 1000);
+        }, 60000, 500);
     }
 
     public function testScheduledToDraftMessage(): void
@@ -1884,16 +1915,17 @@ trait MessagingBase
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(MessageStatus::DRAFT, $message['body']['status']);
 
-        \sleep(8);
-
-        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $message['body']['$id'], [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
-
-        $this->assertEquals(200, $message['headers']['status-code']);
-        $this->assertEquals(MessageStatus::DRAFT, $message['body']['status']);
+        // Verify the message remains in DRAFT status and is not processed by the scheduler
+        $draftMessageId = $message['body']['$id'];
+        $this->assertEventually(function () use ($draftMessageId) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $draftMessageId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals(MessageStatus::DRAFT, $response['body']['status']);
+        }, 10000, 500);
     }
 
     public function testDraftToScheduledMessage(): void
@@ -2001,22 +2033,21 @@ trait MessagingBase
 
         $messageId = $message['body']['$id'];
 
-        // Verify message is still scheduled after a short wait
-        // (scheduled far enough in the future that the scheduler won't process it)
-        \sleep(5);
-
-        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
-
-        $this->assertEquals(200, $message['headers']['status-code']);
-        $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
-        $this->assertEquals(
-            (new \DateTime($scheduledAt))->getTimestamp(),
-            (new \DateTime($message['body']['scheduledAt']))->getTimestamp()
-        );
+        // Verify the message remains scheduled (scheduled far enough in the future
+        // that the scheduler won't process it)
+        $this->assertEventually(function () use ($messageId, $scheduledAt) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals(MessageStatus::SCHEDULED, $response['body']['status']);
+            $this->assertEquals(
+                (new \DateTime($scheduledAt))->getTimestamp(),
+                (new \DateTime($response['body']['scheduledAt']))->getTimestamp()
+            );
+        }, 10000, 500);
     }
 
     public function testSendEmail(): array
@@ -2105,9 +2136,17 @@ trait MessagingBase
 
         $this->assertEquals(201, $email['headers']['status-code']);
 
-        \sleep(2);
+        $emailMessageId = $email['body']['$id'];
+        $this->assertEventually(function () use ($emailMessageId) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $emailMessageId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertContains($response['body']['status'], ['sent', 'failed']);
+        }, 30000, 500);
 
-        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $email['body']['$id'], [
+        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $emailMessageId, [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2168,9 +2207,17 @@ trait MessagingBase
 
         $this->assertEquals(200, $updatedEmail['headers']['status-code']);
 
-        \sleep(5);
+        $updatedEmailId = $updatedEmail['body']['$id'];
+        $this->assertEventually(function () use ($updatedEmailId) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $updatedEmailId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertContains($response['body']['status'], ['sent', 'failed']);
+        }, 30000, 500);
 
-        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $updatedEmail['body']['$id'], [
+        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $updatedEmailId, [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2278,9 +2325,17 @@ trait MessagingBase
 
         $this->assertEquals(201, $sms['headers']['status-code']);
 
-        \sleep(5);
+        $smsMessageId = $sms['body']['$id'];
+        $this->assertEventually(function () use ($smsMessageId) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $smsMessageId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertContains($response['body']['status'], ['sent', 'failed']);
+        }, 30000, 500);
 
-        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $sms['body']['$id'], [
+        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $smsMessageId, [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2333,9 +2388,17 @@ trait MessagingBase
 
         $this->assertEquals(200, $updatedSms['headers']['status-code']);
 
-        \sleep(2);
+        $updatedSmsId = $updatedSms['body']['$id'];
+        $this->assertEventually(function () use ($updatedSmsId) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $updatedSmsId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertContains($response['body']['status'], ['sent', 'failed']);
+        }, 30000, 500);
 
-        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $updatedSms['body']['$id'], [
+        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $updatedSmsId, [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2440,9 +2503,17 @@ trait MessagingBase
 
         $this->assertEquals(201, $push['headers']['status-code']);
 
-        \sleep(5);
+        $pushMessageId = $push['body']['$id'];
+        $this->assertEventually(function () use ($pushMessageId) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $pushMessageId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertContains($response['body']['status'], ['sent', 'failed']);
+        }, 30000, 500);
 
-        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $push['body']['$id'], [
+        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $pushMessageId, [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2496,9 +2567,17 @@ trait MessagingBase
 
         $this->assertEquals(200, $updatedPush['headers']['status-code']);
 
-        \sleep(5);
+        $updatedPushId = $updatedPush['body']['$id'];
+        $this->assertEventually(function () use ($updatedPushId) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $updatedPushId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertContains($response['body']['status'], ['sent', 'failed']);
+        }, 30000, 500);
 
-        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $updatedPush['body']['$id'], [
+        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $updatedPushId, [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

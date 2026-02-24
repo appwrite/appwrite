@@ -65,7 +65,7 @@ trait SitesBase
             }
 
             $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-        }, 240000, 500);
+        }, 120000, 500);
 
         // Not === so multipart/form-data works fine too
         if (($params['activate'] ?? false) == true) {
@@ -338,7 +338,7 @@ trait SitesBase
         $maxRetries = 3;
         for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
             if ($attempt > 0) {
-                sleep(5);
+                sleep(2);
             }
 
             $ch = curl_init("https://api.github.com/repos/{$owner}/{$repository}/commits/main");

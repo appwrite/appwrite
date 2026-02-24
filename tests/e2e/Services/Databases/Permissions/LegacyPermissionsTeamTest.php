@@ -6,6 +6,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ApiLegacy;
 use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\SchemaPolling;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Helpers\ID;
@@ -18,6 +19,7 @@ class LegacyPermissionsTeamTest extends Scope
     use ProjectCustom;
     use SideClient;
     use ApiLegacy;
+    use SchemaPolling;
 
     public array $collections = [];
     public string $databaseId = 'testpermissiondb';
@@ -110,7 +112,8 @@ class LegacyPermissionsTeamTest extends Scope
             ]
         );
 
-        sleep(2);
+        $this->waitForAttribute($this->databaseId, $this->collections['collection1'], 'title');
+        $this->waitForAttribute($this->databaseId, $this->collections['collection2'], 'title');
 
         return $this->collections;
     }

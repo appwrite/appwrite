@@ -61,7 +61,7 @@ trait ProjectCustom
             }
 
             if ($team['headers']['status-code'] === 401 && $i < $maxRetries - 1) {
-                \sleep(1); // 1s delay before retry
+                \usleep(500000); // 500ms delay before retry
                 continue;
             }
         }
@@ -94,7 +94,7 @@ trait ProjectCustom
             }
 
             if ($project['headers']['status-code'] === 401 && $i < $maxRetries - 1) {
-                \sleep(1); // 1s delay before retry
+                \usleep(500000); // 500ms delay before retry
                 continue;
             }
         }

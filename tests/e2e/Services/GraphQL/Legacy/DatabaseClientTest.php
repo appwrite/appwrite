@@ -211,7 +211,22 @@ class DatabaseClientTest extends Scope
         }
 
         $data = $this->setupAttributes();
-        sleep(3);
+        $this->assertEventually(function () use ($data) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['database']['_id'] . '/collections/' . $data['collection']['_id'] . '/attributes/name', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
+        $this->assertEventually(function () use ($data) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['database']['_id'] . '/collections/' . $data['collection']['_id'] . '/attributes/age', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_DOCUMENT);
@@ -311,7 +326,14 @@ class DatabaseClientTest extends Scope
         ];
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
-        sleep(1);
+        $this->assertEventually(function () use ($databaseId, $collectionId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/name', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         // Step 4: Create documents
         $query = $this->getQuery(self::CREATE_DOCUMENTS);
@@ -606,7 +628,22 @@ class DatabaseClientTest extends Scope
     {
         // Create a fresh document for deletion to avoid conflicts with other tests
         $data = $this->setupAttributes();
-        sleep(1);
+        $this->assertEventually(function () use ($data) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['database']['_id'] . '/collections/' . $data['collection']['_id'] . '/attributes/name', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
+        $this->assertEventually(function () use ($data) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['database']['_id'] . '/collections/' . $data['collection']['_id'] . '/attributes/age', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $projectId = $this->getProject()['$id'];
 

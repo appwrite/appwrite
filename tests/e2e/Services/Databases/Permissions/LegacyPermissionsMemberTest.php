@@ -6,6 +6,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ApiLegacy;
 use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\SchemaPolling;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Helpers\ID;
@@ -18,6 +19,7 @@ class LegacyPermissionsMemberTest extends Scope
     use ProjectCustom;
     use SideClient;
     use ApiLegacy;
+    use SchemaPolling;
 
     public array $collections = [];
 
@@ -161,7 +163,9 @@ class LegacyPermissionsMemberTest extends Scope
         );
         $this->assertEquals(202, $response['headers']['status-code']);
 
-        sleep(2);
+        $this->waitForAttribute($databaseId, $this->collections['public'], 'title');
+        $this->waitForAttribute($databaseId, $this->collections['private'], 'title');
+        $this->waitForAttribute($databaseId, $this->collections['doconly'], 'title');
 
         self::$setupDatabaseCache[$cacheKey] = [
             'users' => $this->users,

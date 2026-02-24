@@ -1778,8 +1778,6 @@ class ProjectsConsoleClientTest extends Scope
         $sessionCookie = $response['headers']['set-cookie'];
         $sessionId2 = $response['body']['$id'];
 
-        sleep(5); // fixes flaky tests.
-
         /**
          * List sessions
          */
@@ -5683,17 +5681,17 @@ class ProjectsConsoleClientTest extends Scope
         ]);
         $this->assertEquals(401, $response['headers']['status-code']);
 
-        sleep(5);
-
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-dev-key' => $devKey['secret']
-        ], [
-            'email' => 'user@appwrite.io',
-            'password' => 'password'
-        ]);
-        $this->assertEquals(429, $response['headers']['status-code']);
+        $this->assertEventually(function () use ($projectId, $devKey) {
+            $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-dev-key' => $devKey['secret']
+            ], [
+                'email' => 'user@appwrite.io',
+                'password' => 'password'
+            ]);
+            $this->assertEquals(429, $response['headers']['status-code']);
+        }, 15_000, 500);
     }
 
     #[Group('abuseEnabled')]

@@ -43,7 +43,7 @@ trait FunctionsBase
             }
 
             if ($attempt < $maxRetries) {
-                \sleep(\min($attempt * 2, 10));
+                \sleep(\min($attempt, 3));
             }
         }
 
@@ -89,7 +89,7 @@ trait FunctionsBase
             }
 
             $this->assertEquals('ready', $status, 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-        }, 360000, 500);
+        }, 120000, 500);
 
         // Not === so multipart/form-data works fine too
         if (($params['activate'] ?? false) == true) {
@@ -101,7 +101,7 @@ trait FunctionsBase
                 ]));
                 $this->assertNotEquals(401, $function['headers']['status-code'], 'Auth failed while polling function activation');
                 $this->assertEquals($deploymentId, $function['body']['deploymentId'] ?? '', 'Deployment is not activated, deployment: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
-            }, 360000, 500);
+            }, 120000, 500);
         }
 
         return $deploymentId;
@@ -122,7 +122,7 @@ trait FunctionsBase
             }
 
             if ($i < $maxRetries - 1) {
-                \sleep(1);
+                \usleep(500000);
             }
         }
 

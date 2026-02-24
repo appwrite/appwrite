@@ -81,7 +81,7 @@ class DatabasesStringTypesTest extends Scope
             'key' => 'varchar_min', 'size' => 1, 'required' => false,
         ]);
 
-        sleep(1);
+        $this->waitForAllAttributes($databaseId, $tableId);
 
         // Create text columns
         $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/text', $headers, [
@@ -97,7 +97,7 @@ class DatabasesStringTypesTest extends Scope
             'key' => 'text_array', 'required' => false, 'array' => true,
         ]);
 
-        sleep(1);
+        $this->waitForAllAttributes($databaseId, $tableId);
 
         // Create mediumtext columns
         $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/mediumtext', $headers, [
@@ -113,7 +113,7 @@ class DatabasesStringTypesTest extends Scope
             'key' => 'mediumtext_array', 'required' => false, 'array' => true,
         ]);
 
-        sleep(1);
+        $this->waitForAllAttributes($databaseId, $tableId);
 
         // Create longtext columns
         $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/longtext', $headers, [
@@ -793,16 +793,14 @@ class DatabasesStringTypesTest extends Scope
 
         $this->assertEquals(204, $deleteVarchar['headers']['status-code']);
 
-        // Wait for async deletion to complete
-        sleep(2);
-
-        // Verify deletion
-        $getDeleted = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/varchar_min', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]);
-
-        $this->assertEquals(404, $getDeleted['headers']['status-code']);
+        // Poll until async deletion completes
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/varchar_min', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals(404, $response['headers']['status-code']);
+        }, 30000, 250);
     }
 }

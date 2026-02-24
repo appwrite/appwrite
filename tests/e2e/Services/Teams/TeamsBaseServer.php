@@ -323,19 +323,18 @@ trait TeamsBaseServer
         $this->assertEquals($user['headers']['status-code'], 204);
 
         /** Wait for deletes worker to delete membership and update team membership count */
-        sleep(5);
+        $this->assertEventually(function () use ($teamUid) {
+            $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
 
-        /** Get Team Count */
-        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals('Arsenal', $response['body']['name']);
-        $this->assertEquals(0, $response['body']['total']);
-        $this->assertIsInt($response['body']['total']);
-        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['$createdAt']));
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertNotEmpty($response['body']['$id']);
+            $this->assertEquals('Arsenal', $response['body']['name']);
+            $this->assertEquals(0, $response['body']['total']);
+            $this->assertIsInt($response['body']['total']);
+            $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['$createdAt']));
+        }, 30_000, 500);
     }
 }

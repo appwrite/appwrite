@@ -64,7 +64,7 @@ class FunctionsScheduleTest extends Scope
             $this->assertNotEmpty($asyncExecution['$id']);
             $headers = array_column($asyncExecution['requestHeaders'] ?? [], 'value', 'name');
             $this->assertEmpty($headers['x-appwrite-client-ip'] ?? '');
-        }, 180000, 1000); // 3 minute timeout with 1s polling for CI stability
+        }, 180000, 500); // 3 minute timeout with 500ms polling for CI stability
 
         $this->cleanupFunction($functionId);
     }
@@ -90,7 +90,7 @@ class FunctionsScheduleTest extends Scope
 
         // Schedule execution for the future
         \date_default_timezone_set('UTC');
-        $futureTime = (new \DateTime())->add(new \DateInterval('PT2M')); // 2 minute in the future
+        $futureTime = (new \DateTime())->add(new \DateInterval('PT1M')); // 1 minute in the future
         $futureTime->setTime($futureTime->format('H'), $futureTime->format('i'), 0, 0);
 
 
@@ -124,8 +124,6 @@ class FunctionsScheduleTest extends Scope
         $this->assertEquals('x-appwrite-client-ip', $execution['body']['requestHeaders'][0]['name']);
         $this->assertNotEmpty($execution['body']['requestHeaders'][0]['value']);
 
-        \sleep(120);
-
         $this->assertEventually(function () use ($functionId, $executionId) {
             $execution = $this->getExecution($functionId, $executionId);
 
@@ -141,7 +139,7 @@ class FunctionsScheduleTest extends Scope
             $this->assertStringContainsString('user-is-' . $this->getUser()['$id'], $execution['body']['logs']);
             $this->assertStringContainsString('jwt-is-valid', $execution['body']['logs']);
             $this->assertGreaterThan(0, $execution['body']['duration']);
-        }, 10000, 500);
+        }, 120000, 500);
 
         /* Test for FAILURE */
         // Schedule synchronous execution

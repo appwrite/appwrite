@@ -1418,7 +1418,18 @@ trait MigrationsBase
 
         $this->assertEquals(202, $longtext['headers']['status-code']);
 
-        \sleep(3);
+        $this->assertEventually(function () use ($databaseId, $collectionId) {
+            $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals(200, $collection['headers']['status-code']);
+            $this->assertNotEmpty($collection['body']['attributes']);
+            foreach ($collection['body']['attributes'] as $attr) {
+                $this->assertEquals('available', $attr['status'], "Attribute '{$attr['key']}' is not available yet");
+            }
+        }, 30_000, 500);
 
         // Create sample documents
         for ($i = 1; $i <= 10; $i++) {

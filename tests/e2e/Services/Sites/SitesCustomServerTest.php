@@ -883,7 +883,7 @@ class SitesCustomServerTest extends Scope
             $deployment = $this->getDeployment($siteId, $deploymentIdActive);
 
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 120000, 1000);
+        }, 120000, 500);
 
         $deployment = $this->createDeployment($siteId, [
             'code' => $this->packageSite('static-single-file'),
@@ -899,7 +899,7 @@ class SitesCustomServerTest extends Scope
             $deployment = $this->getDeployment($siteId, $deploymentIdInactive);
 
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 300000, 500);
+        }, 120000, 500);
 
         $site = $this->getSite($siteId);
 
@@ -992,7 +992,7 @@ class SitesCustomServerTest extends Scope
             $deployment = $this->getDeployment($siteId, $deploymentId);
 
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 120000, 1000);
+        }, 120000, 500);
 
         /**
          * Test for SUCCESS
@@ -1239,7 +1239,7 @@ class SitesCustomServerTest extends Scope
             $deployment = $this->getDeployment($siteId, $deploymentId);
 
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 120000, 1000);
+        }, 120000, 500);
 
         /**
          * Test for SUCCESS
@@ -1364,7 +1364,7 @@ class SitesCustomServerTest extends Scope
             $deployment = $this->getDeployment($siteId, $deploymentId);
 
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 120000, 1000);
+        }, 120000, 500);
 
         /**
          * Test for SUCCESS
@@ -1589,7 +1589,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEventually(function () use ($siteId) {
             $site = $this->getSite($siteId);
             $this->assertNotEmpty($site['body']['deploymentId']);
-        }, 200000, 500);
+        }, 120000, 500);
 
         $domain = $this->setupSiteDomain($siteId);
         $proxyClient = new Client();
@@ -1660,7 +1660,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEventually(function () use ($siteId) {
             $site = $this->getSite($siteId);
             $this->assertNotEmpty($site['body']['deploymentId']);
-        }, 200000, 500);
+        }, 120000, 500);
 
         $domain = $this->setupSiteDomain($siteId);
         $proxyClient = new Client();
@@ -1738,7 +1738,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEventually(function () use ($siteId) {
             $site = $this->getSite($siteId);
             $this->assertNotEmpty($site['body']['deploymentId']);
-        }, 200000, 500);
+        }, 120000, 500);
 
         $domain = $this->setupSiteDomain($siteId);
         $proxyClient = new Client();
@@ -1840,7 +1840,7 @@ class SitesCustomServerTest extends Scope
 
             $this->assertEquals(200, $rules['headers']['status-code']);
             $this->assertEquals(0, $rules['body']['total']);
-        }, 120000, 1000);
+        }, 120000, 500);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/');
 
@@ -2081,7 +2081,7 @@ class SitesCustomServerTest extends Scope
             if (!empty($logs['body']['executions'])) {
                 break;
             }
-            \sleep(1);
+            \usleep(500000);
         }
         $this->assertNotEmpty($logs['body']['executions'], 'Execution logs were not available within timeout');
         $this->assertEquals(200, $logs['headers']['status-code']);
@@ -2152,11 +2152,11 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(200, $site['headers']['status-code']);
 
         // Wait for the logging config change to propagate to the site runtime
-        \sleep(5);
-
-        $response = $proxyClient->call(Client::METHOD_GET, '/logs-inline');
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Inline logs printed.", $response['body']);
+        $this->assertEventually(function () use ($proxyClient) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/logs-inline');
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertStringContainsString("Inline logs printed.", $response['body']);
+        }, 15_000, 500);
 
         // Poll for the NEW log entry (after logging was disabled) to appear
         $timeout = 30;
@@ -2175,7 +2175,7 @@ class SitesCustomServerTest extends Scope
                 $newLog = $logs['body']['executions'][0];
                 break;
             }
-            \sleep(1);
+            \usleep(500000);
         }
         $this->assertNotNull($newLog, 'New log entry should appear after logging-disabled request');
         $this->assertEquals("GET", $newLog['requestMethod']);
@@ -2205,7 +2205,7 @@ class SitesCustomServerTest extends Scope
                 $newLog = $logs['body']['executions'][0];
                 break;
             }
-            \sleep(1);
+            \usleep(500000);
         }
         $this->assertNotNull($newLog, 'New log entry should appear after logging-disabled /logs-action request');
         $this->assertEquals("GET", $newLog['requestMethod']);
@@ -2298,7 +2298,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEventually(function () use ($siteId, $deploymentId2) {
             $site = $this->getSite($siteId);
             $this->assertEquals($deploymentId2, $site['body']['deploymentId']);
-        }, 120000, 1000);
+        }, 120000, 500);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/not-found');
         $this->assertStringContainsString("Index page", $response['body']);
@@ -2664,13 +2664,13 @@ class SitesCustomServerTest extends Scope
             $response = $proxyClient->call(Client::METHOD_GET, '/');
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertStringContainsString('Sub-directory index', $response['body']);
-        }, 30000, 2000);
+        }, 30000, 500);
 
         $this->assertEventually(function () use ($proxyClient) {
             $response1 = $proxyClient->call(Client::METHOD_GET, '/project1');
             $this->assertEquals(200, $response1['headers']['status-code']);
             $this->assertStringContainsString('Sub-directory project1', $response1['body']);
-        }, 30000, 2000);
+        }, 30000, 500);
 
         $response2 = $proxyClient->call(Client::METHOD_GET, '/project1/');
         $this->assertEquals(200, $response2['headers']['status-code']);
@@ -2816,7 +2816,7 @@ class SitesCustomServerTest extends Scope
             $deployment = $this->getDeployment($siteId, $deploymentId);
 
             $this->assertEquals('failed', $deployment['body']['status']);
-        }, 120000, 1000);
+        }, 120000, 500);
 
         // deployment failed error page
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [

@@ -523,13 +523,21 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $email['headers']['status-code']);
 
-        \sleep(5);
+        $emailMessageId = $email['body']['data']['messagingCreateEmail']['_id'];
+        $this->assertEventually(function () use ($emailMessageId) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $emailMessageId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertContains($response['body']['status'], ['sent', 'failed']);
+        }, 30000, 500);
 
         $query = $this->getQuery(self::GET_MESSAGE);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'messageId' => $email['body']['data']['messagingCreateEmail']['_id'],
+                'messageId' => $emailMessageId,
             ],
         ];
         $message = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -674,13 +682,21 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $sms['headers']['status-code']);
 
-        \sleep(5);
+        $smsMessageId = $sms['body']['data']['messagingCreateSMS']['_id'];
+        $this->assertEventually(function () use ($smsMessageId) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $smsMessageId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertContains($response['body']['status'], ['sent', 'failed']);
+        }, 30000, 500);
 
         $query = $this->getQuery(self::GET_MESSAGE);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'messageId' => $sms['body']['data']['messagingCreateSMS']['_id'],
+                'messageId' => $smsMessageId,
             ],
         ];
         $message = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -827,13 +843,21 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $push['headers']['status-code']);
 
-        \sleep(5);
+        $pushMessageId = $push['body']['data']['messagingCreatePushNotification']['_id'];
+        $this->assertEventually(function () use ($pushMessageId) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $pushMessageId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertContains($response['body']['status'], ['sent', 'failed']);
+        }, 30000, 500);
 
         $query = $this->getQuery(self::GET_MESSAGE);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'messageId' => $push['body']['data']['messagingCreatePushNotification']['_id'],
+                'messageId' => $pushMessageId,
             ],
         ];
         $message = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -1130,13 +1154,21 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $email['headers']['status-code']);
 
-        \sleep(5);
+        $updatedEmailId = $email['body']['data']['messagingUpdateEmail']['_id'];
+        $this->assertEventually(function () use ($updatedEmailId) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $updatedEmailId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertContains($response['body']['status'], ['sent', 'failed']);
+        }, 30000, 500);
 
         $query = $this->getQuery(self::GET_MESSAGE);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'messageId' => $email['body']['data']['messagingUpdateEmail']['_id'],
+                'messageId' => $updatedEmailId,
             ],
         ];
         $message = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -1194,13 +1226,21 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $sms['headers']['status-code']);
 
-        \sleep(5);
+        $updatedSmsId = $sms['body']['data']['messagingUpdateSMS']['_id'];
+        $this->assertEventually(function () use ($updatedSmsId) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $updatedSmsId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertContains($response['body']['status'], ['sent', 'failed']);
+        }, 30000, 500);
 
         $query = $this->getQuery(self::GET_MESSAGE);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'messageId' => $sms['body']['data']['messagingUpdateSMS']['_id'],
+                'messageId' => $updatedSmsId,
             ],
         ];
         $message = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -1259,13 +1299,21 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $push['headers']['status-code']);
 
-        \sleep(5);
+        $updatedPushId = $push['body']['data']['messagingUpdatePushNotification']['_id'];
+        $this->assertEventually(function () use ($updatedPushId) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $updatedPushId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertContains($response['body']['status'], ['sent', 'failed']);
+        }, 30000, 500);
 
         $query = $this->getQuery(self::GET_MESSAGE);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'messageId' => $push['body']['data']['messagingUpdatePushNotification']['_id'],
+                'messageId' => $updatedPushId,
             ],
         ];
         $message = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([

@@ -145,19 +145,23 @@ abstract class Scope extends TestCase
 
     protected function getLastEmail(int $limit = 1): array
     {
-        sleep(3);
+        $result = [];
+        $this->assertEventually(function () use (&$result, $limit) {
+            $emails = json_decode(file_get_contents('http://maildev:1080/email'), true);
 
-        $emails = json_decode(file_get_contents('http://maildev:1080/email'), true);
+            $this->assertNotEmpty($emails, 'Maildev should have at least one email');
+            $this->assertIsArray($emails);
 
-        if ($emails && is_array($emails)) {
             if ($limit === 1) {
-                return end($emails);
+                $result = end($emails);
             } else {
-                return array_slice($emails, -1 * $limit);
+                $result = array_slice($emails, -1 * $limit);
             }
-        }
 
-        return [];
+            $this->assertNotEmpty($result, 'Expected email result to be non-empty');
+        }, 15_000, 500);
+
+        return $result;
     }
 
     /**
@@ -166,25 +170,30 @@ abstract class Scope extends TestCase
      */
     protected function getLastEmailByAddress(string $address): array
     {
-        sleep(3);
+        $result = [];
+        $this->assertEventually(function () use (&$result, $address) {
+            $emails = json_decode(file_get_contents('http://maildev:1080/email'), true);
 
-        $emails = json_decode(file_get_contents('http://maildev:1080/email'), true);
+            $this->assertNotEmpty($emails, 'Maildev should have at least one email');
+            $this->assertIsArray($emails);
 
-        if ($emails && is_array($emails)) {
             // Search from the end (most recent) to the beginning
             for ($i = count($emails) - 1; $i >= 0; $i--) {
                 $email = $emails[$i];
                 if (isset($email['to']) && is_array($email['to'])) {
                     foreach ($email['to'] as $recipient) {
                         if (isset($recipient['address']) && $recipient['address'] === $address) {
-                            return $email;
+                            $result = $email;
+                            return;
                         }
                     }
                 }
             }
-        }
 
-        return [];
+            $this->fail("No email found for address: {$address}");
+        }, 15_000, 500);
+
+        return $result;
     }
 
     protected function extractQueryParamsFromEmailLink(string $html): array
@@ -288,8 +297,6 @@ abstract class Scope extends TestCase
         }
 
         $query = http_build_query($queryParams);
-
-        sleep(2);
 
         for ($attempt = 0; $attempt < $maxAttempts; $attempt++) {
             $requests = json_decode(file_get_contents('http://' . $hostname . ':5000/__find_request__?' . $query), true);

@@ -205,7 +205,20 @@ class DatabaseClientTest extends Scope
         }
 
         $data = $this->setupColumns();
-        sleep(3);
+
+        $databaseId = $data['database']['_id'];
+        $tableId = $data['table']['_id'];
+
+        foreach (['name', 'age'] as $columnKey) {
+            $this->assertEventually(function () use ($databaseId, $tableId, $columnKey) {
+                $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/' . $columnKey, array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]));
+                $this->assertEquals('available', $response['body']['status']);
+            }, 30000, 250);
+        }
 
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_ROW);
@@ -309,7 +322,15 @@ class DatabaseClientTest extends Scope
 
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
-        sleep(1);
+
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/name', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         // Step 4: Create rows
         $query = $this->getQuery(self::CREATE_ROWS);
@@ -590,7 +611,20 @@ class DatabaseClientTest extends Scope
     {
         // Need to create a fresh row for deletion since we can't delete the cached row
         $data = $this->setupColumns();
-        sleep(1);
+
+        $databaseId = $data['database']['_id'];
+        $tableId = $data['table']['_id'];
+
+        foreach (['name', 'age'] as $columnKey) {
+            $this->assertEventually(function () use ($databaseId, $tableId, $columnKey) {
+                $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/' . $columnKey, array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]));
+                $this->assertEquals('available', $response['body']['status']);
+            }, 30000, 250);
+        }
 
         $projectId = $this->getProject()['$id'];
 
