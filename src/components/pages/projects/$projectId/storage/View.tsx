@@ -48,6 +48,7 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { CreateBucket } from './_components/CreateBucket'
 import type { Models } from '@appwrite.io/console'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
+import { BucketContextMenu } from './_components/BucketContextMenu'
 
 export function View() {
   const { projectId } = useParams({
@@ -348,33 +349,37 @@ export function View() {
                       const bucketData = bucket as Models.Bucket
                       const isDisabled = !bucketData.enabled
                       return (
-                        <TableRow
+                        <BucketContextMenu
                           key={bucketData.$id}
-                          className={cn(
-                            'cursor-pointer transition-colors border-b border-border/50',
-                            selectedBuckets.has(bucketData.$id)
-                              ? 'bg-sky-100 dark:bg-sky-950'
-                              : 'hover:bg-muted/30',
-                          )}
-                          onClick={(e) => {
-                            // Don't navigate if clicking on checkbox, link, or their containers
-                            const target = e.target as HTMLElement
-                            if (
-                              target.closest('button') ||
-                              target.closest('[role="checkbox"]') ||
-                              target.closest('a')
-                            ) {
-                              return
-                            }
-                            navigate({
-                              to: '/projects/$projectId/storage/$bucketId/',
-                              params: {
-                                projectId: projectId!,
-                                bucketId: bucketData.$id,
-                              },
-                            })
-                          }}
+                          projectId={projectId!}
+                          bucket={{ id: bucketData.$id, name: bucketData.name }}
                         >
+                          <TableRow
+                            className={cn(
+                              'cursor-pointer transition-colors border-b border-border/50',
+                              selectedBuckets.has(bucketData.$id)
+                                ? 'bg-sky-100 dark:bg-sky-950'
+                                : 'hover:bg-muted/30',
+                            )}
+                            onClick={(e) => {
+                              // Don't navigate if clicking on checkbox, link, or their containers
+                              const target = e.target as HTMLElement
+                              if (
+                                target.closest('button') ||
+                                target.closest('[role="checkbox"]') ||
+                                target.closest('a')
+                              ) {
+                                return
+                              }
+                              navigate({
+                                to: '/projects/$projectId/storage/$bucketId/',
+                                params: {
+                                  projectId: projectId!,
+                                  bucketId: bucketData.$id,
+                                },
+                              })
+                            }}
+                          >
                           <TableCell
                             onClick={(e) => e.stopPropagation()}
                             className="px-4 py-3"
@@ -468,7 +473,8 @@ export function View() {
                               )}
                             </Link>
                           </TableCell>
-                        </TableRow>
+                          </TableRow>
+                        </BucketContextMenu>
                       )
                     })}
                   </TableBody>
@@ -508,65 +514,70 @@ export function View() {
                   const bucketData = bucket as Models.Bucket
                   const isDisabled = !bucketData.enabled
                   return (
-                    <Link
+                    <BucketContextMenu
                       key={bucketData.$id}
-                      to="/projects/$projectId/storage/$bucketId/"
-                      params={{ projectId, bucketId: bucketData.$id }}
+                      projectId={projectId!}
+                      bucket={{ id: bucketData.$id, name: bucketData.name }}
                     >
-                      <ResourceCard
-                        title={bucketData.name}
-                        resourceId={bucketData.$id}
-                        icon={Folder}
-                        iconColor="bg-muted text-muted-foreground"
-                        status={isDisabled ? 'error' : undefined}
-                        statusLabel={isDisabled ? 'Disabled' : undefined}
-                        metadata={[
-                          ...(bucketData.compression &&
-                          bucketData.compression !== 'none'
-                            ? [
-                                {
-                                  label: 'Compression',
-                                  value:
-                                    bucketData.compression === 'gzip'
-                                      ? 'Gzip'
-                                      : bucketData.compression === 'zstd'
-                                        ? 'Zstd'
-                                        : bucketData.compression,
-                                },
-                              ]
-                            : []),
-                          ...(bucketData.maximumFileSize &&
-                          bucketData.maximumFileSize > 0
-                            ? [
-                                {
-                                  label: 'Max size',
-                                  value: formatBytes(
-                                    bucketData.maximumFileSize,
-                                  ),
-                                },
-                              ]
-                            : []),
-                          ...(bucketData.allowedFileExtensions &&
-                          bucketData.allowedFileExtensions.length > 0
-                            ? [
-                                {
-                                  label: 'Extensions',
-                                  value: `${bucketData.allowedFileExtensions.length} ${bucketData.allowedFileExtensions.length === 1 ? 'type' : 'types'}`,
-                                },
-                              ]
-                            : []),
-                          {
-                            label: 'Encrypted',
-                            value: bucketData.encryption ? (
-                              <Lock className="h-3.5 w-3.5 text-muted-foreground" />
-                            ) : null,
-                          },
-                        ].filter(
-                          (item) =>
-                            item.value !== null && item.value !== undefined,
-                        )}
-                      />
-                    </Link>
+                      <Link
+                        to="/projects/$projectId/storage/$bucketId/"
+                        params={{ projectId, bucketId: bucketData.$id }}
+                      >
+                        <ResourceCard
+                          title={bucketData.name}
+                          resourceId={bucketData.$id}
+                          icon={Folder}
+                          iconColor="bg-muted text-muted-foreground"
+                          status={isDisabled ? 'error' : undefined}
+                          statusLabel={isDisabled ? 'Disabled' : undefined}
+                          metadata={[
+                            ...(bucketData.compression &&
+                            bucketData.compression !== 'none'
+                              ? [
+                                  {
+                                    label: 'Compression',
+                                    value:
+                                      bucketData.compression === 'gzip'
+                                        ? 'Gzip'
+                                        : bucketData.compression === 'zstd'
+                                          ? 'Zstd'
+                                          : bucketData.compression,
+                                  },
+                                ]
+                              : []),
+                            ...(bucketData.maximumFileSize &&
+                            bucketData.maximumFileSize > 0
+                              ? [
+                                  {
+                                    label: 'Max size',
+                                    value: formatBytes(
+                                      bucketData.maximumFileSize,
+                                    ),
+                                  },
+                                ]
+                              : []),
+                            ...(bucketData.allowedFileExtensions &&
+                            bucketData.allowedFileExtensions.length > 0
+                              ? [
+                                  {
+                                    label: 'Extensions',
+                                    value: `${bucketData.allowedFileExtensions.length} ${bucketData.allowedFileExtensions.length === 1 ? 'type' : 'types'}`,
+                                  },
+                                ]
+                              : []),
+                            {
+                              label: 'Encrypted',
+                              value: bucketData.encryption ? (
+                                <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+                              ) : null,
+                            },
+                          ].filter(
+                            (item) =>
+                              item.value !== null && item.value !== undefined,
+                          )}
+                        />
+                      </Link>
+                    </BucketContextMenu>
                   )
                 })}
               </div>
