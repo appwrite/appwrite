@@ -144,8 +144,26 @@ class Update extends Action
             $databaseOperations = [];
             $currentDocumentId = null;
 
+            $databaseDoc = null;
+            if ($this->getDatabaseType() === DATABASE_TYPE_DOCUMENTSDB || $this->getDatabaseType() === DATABASE_TYPE_VECTORDB) {
+                $previewOperations = $authorization->skip(fn () => $dbForProject->find('transactionLogs', [
+                    Query::equal('transactionInternalId', [$transaction->getSequence()]),
+                    Query::orderAsc(),
+                    Query::limit(1),
+                ]));
+                $firstOp = $previewOperations[0] ?? null;
+                if ($firstOp !== null) {
+                    $databaseDoc = $authorization->skip(fn () => $dbForProject->findOne('databases', [
+                        Query::equal('$sequence', [$firstOp['databaseInternalId']])
+                    ]));
+                }
+            }
+
+            $dbForDatabases = $databaseDoc !== null
+                ? $getDatabasesDB($databaseDoc)
+                : $getDatabasesDB(new Document(['database' => $project->getAttribute('database')]));
+
             try {
-                $dbForDatabases = $getDatabasesDB(new Document(['database' => $this->getDatabaseDSN($project)]));
                 $dbForDatabases->withTransaction(function () use ($dbForDatabases, $dbForProject, $transactionState, $queueForDeletes, $transactionId, &$transaction, &$operations, &$totalOperations, &$databaseOperations, &$currentDocumentId, $queueForEvents, $queueForStatsUsage, $queueForRealtime, $queueForFunctions, $queueForWebhooks, $authorization) {
                     $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                         'status' => 'committing',
@@ -455,15 +473,6 @@ class Update extends Action
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
             ->dynamic($transaction, UtopiaResponse::MODEL_TRANSACTION);
-    }
-
-    private function getDatabaseDSN(Document $project)
-    {
-        return match ($this->getDatabaseType()) {
-            DOCUMENTSDB => $project->getAttribute('documentsDatabase'),
-            VECTORDB => $project->getAttribute('vectorDatabase'),
-            default => $project->getAttribute('database'),
-        };
     }
 
     /**
