@@ -446,9 +446,11 @@ class RealtimeCustomClientTest extends Scope
         $this->assertContains("users.*.verification.*", $response['data']['events']);
         $this->assertContains("users.*", $response['data']['events']);
 
-        $lastEmail = $this->getLastEmail();
+        $lastEmail = $this->getLastEmailByAddress('torsten@appwrite.io', function ($email) use ($userId) {
+            $this->assertStringContainsString($userId, $email['html']);
+        });
         $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
-        $verification = $tokens['secret'];
+        $verificationSecret = $tokens['secret'];
 
         /**
          * Test Account Verification Complete
@@ -460,8 +462,10 @@ class RealtimeCustomClientTest extends Scope
             'cookie' => 'a_session_' . $projectId . '=' . $session,
         ]), [
             'userId' => $userId,
-            'secret' => $verification,
+            'secret' => $verificationSecret,
         ]);
+
+        $this->assertEquals(200, $verification['headers']['status-code']);
 
         $response = json_decode($client->receive(), true);
 
@@ -644,9 +648,12 @@ class RealtimeCustomClientTest extends Scope
         $recoveryId = $recovery['body']['$id'];
         $response = json_decode($client->receive(), true);
 
-        $lastEmail = $this->getLastEmail();
+        $lastEmail = $this->getLastEmailByAddress('torsten@appwrite.io', function ($email) use ($userId) {
+            $this->assertStringContainsString($userId, $email['html']);
+            $this->assertStringContainsString('recovery', $email['html']);
+        });
         $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
-        $recovery = $tokens['secret'];
+        $recoverySecret = $tokens['secret'];
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -668,15 +675,17 @@ class RealtimeCustomClientTest extends Scope
         $this->assertContains("users.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
 
-        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', array_merge([
+        $recoveryResponse = $this->client->call(Client::METHOD_PUT, '/account/recovery', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ]), [
             'userId' => $userId,
-            'secret' => $recovery,
+            'secret' => $recoverySecret,
             'password' => 'test-recovery',
         ]);
+
+        $this->assertEquals(200, $recoveryResponse['headers']['status-code']);
 
         $response = json_decode($client->receive(), true);
 

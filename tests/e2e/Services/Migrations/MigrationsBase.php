@@ -180,7 +180,7 @@ trait MigrationsBase
             $migrationResult = $response['body'];
 
             return true;
-        });
+        }, 60_000, 1_000);
 
         return $migrationResult;
     }

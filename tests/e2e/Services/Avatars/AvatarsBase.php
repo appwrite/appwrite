@@ -198,41 +198,48 @@ trait AvatarsBase
     {
         /**
          * Test for SUCCESS
+         * Wrapped in assertEventually to handle transient external URL failures
          */
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], [
-            'url' => 'https://appwrite.io/images/open-graph/website.png',
-        ]);
+        $this->assertEventually(function () {
+            $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'url' => 'https://appwrite.io/images/open-graph/website.png',
+            ]);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('image/png', $response['headers']['content-type']);
-        $this->assertNotEmpty($response['body']);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals('image/png', $response['headers']['content-type']);
+            $this->assertNotEmpty($response['body']);
+        }, 30_000, 2_000);
 
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], [
-            'url' => 'https://appwrite.io/images/open-graph/website.png',
-            'width' => 200,
-            'height' => 200,
-        ]);
+        $this->assertEventually(function () {
+            $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'url' => 'https://appwrite.io/images/open-graph/website.png',
+                'width' => 200,
+                'height' => 200,
+            ]);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('image/png', $response['headers']['content-type']);
-        $this->assertNotEmpty($response['body']);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals('image/png', $response['headers']['content-type']);
+            $this->assertNotEmpty($response['body']);
+        }, 30_000, 2_000);
 
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], [
-            'url' => 'https://appwrite.io/images/open-graph/website.png',
-            'width' => 300,
-            'height' => 300,
-            'quality' => 30,
-        ]);
+        $this->assertEventually(function () {
+            $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'url' => 'https://appwrite.io/images/open-graph/website.png',
+                'width' => 300,
+                'height' => 300,
+                'quality' => 30,
+            ]);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('image/png', $response['headers']['content-type']);
-        $this->assertNotEmpty($response['body']);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals('image/png', $response['headers']['content-type']);
+            $this->assertNotEmpty($response['body']);
+        }, 30_000, 2_000);
 
         /**
          * Test for FAILURE
