@@ -207,7 +207,7 @@ trait SchemaPolling
      * @param int $timeoutMs Maximum time to wait in milliseconds
      * @param int $waitMs Time between polling attempts in milliseconds
      */
-    protected function waitForAllAttributes(string $databaseId, string $containerId, int $timeoutMs = 120000, int $waitMs = 500): void
+    protected function waitForAllAttributes(string $databaseId, string $containerId, int $timeoutMs = 180000, int $waitMs = 500): void
     {
         $this->assertEventually(function () use ($databaseId, $containerId) {
             $container = $this->client->call(

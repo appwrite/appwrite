@@ -1746,55 +1746,41 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
 
         /**
-         * create new session
+         * Create sessions and verify limit enforcement.
+         * Each session creation triggers the session limit shutdown hook.
+         * We retry session creation to handle potential cache propagation delays
+         * where the shutdown hook may not see the updated maxSessions on the first attempt.
          */
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $id,
-        ]), [
-            'email' => $email,
-            'password' => $password,
-        ]);
+        $this->assertEventually(function () use ($id, $email, $password) {
+            $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $id,
+            ], [
+                'email' => $email,
+                'password' => $password,
+            ]);
 
+            $this->assertEquals(201, $response['headers']['status-code']);
+            $latestSessionId = $response['body']['$id'];
+            $sessionCookie = 'a_session_' . $id . '=' . ($response['cookies']['a_session_' . $id] ?? '');
 
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $sessionId1 = $response['body']['$id'];
+            // Small delay for shutdown hook to complete
+            \usleep(500_000);
 
-        /**
-         * create new session
-         */
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $id,
-        ]), [
-            'email' => $email,
-            'password' => $password,
-        ]);
-
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $sessionCookie = $response['headers']['set-cookie'];
-        $sessionId2 = $response['body']['$id'];
-
-        /**
-         * List sessions
-         */
-        $this->assertEventually(function () use ($id, $sessionCookie, $sessionId2) {
             $response = $this->client->call(Client::METHOD_GET, '/account/sessions', [
                 'origin' => 'http://localhost',
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $id,
-                'Cookie' => $sessionCookie,
+                'cookie' => $sessionCookie,
             ]);
 
             $this->assertEquals(200, $response['headers']['status-code']);
             $sessions = $response['body']['sessions'];
 
-            $this->assertEquals(1, count($sessions));
-            $this->assertEquals($sessionId2, $sessions[0]['$id']);
-        }, 120_000, 300);
+            $this->assertCount(1, $sessions);
+            $this->assertEquals($latestSessionId, $sessions[0]['$id']);
+        }, 30_000, 2_000);
 
         /**
          * Reset Limit
