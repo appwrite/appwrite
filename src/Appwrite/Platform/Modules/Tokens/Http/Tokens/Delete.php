@@ -54,7 +54,7 @@ class Delete extends Action
             ],
             contentType: ContentType::NONE
         ))
-        ->param('tokenId', '', new UID(), 'Token ID.')
+        ->param('tokenId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Token ID.', false, ['dbForProject'])
         ->inject('response')
         ->inject('dbForProject')
         ->inject('queueForEvents')

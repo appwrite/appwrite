@@ -71,12 +71,12 @@ class Create extends Action
                 type: MethodType::UPLOAD,
                 packaging: true,
             ))
-            ->param('siteId', '', new UID(), 'Site ID.')
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
             ->param('installCommand', null, new Nullable(new Text(8192, 0)), 'Install Commands.', true)
             ->param('buildCommand', null, new Nullable(new Text(8192, 0)), 'Build Commands.', true)
             ->param('outputDirectory', null, new Nullable(new Text(8192, 0)), 'Output Directory.', true)
             ->param('code', [], new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', skipValidation: true)
-            ->param('activate', false, new Boolean(true), 'Automatically activate the deployment when it is finished building.')
+            ->param('activate', false, new Boolean(true), 'Automatically activate the deployment when it is finished building.', true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
