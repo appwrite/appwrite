@@ -1,7 +1,0 @@
-```graphql
-mutation {
-    accountDeleteSessions {
-        status
-    }
-}
-```
