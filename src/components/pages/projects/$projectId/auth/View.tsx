@@ -68,6 +68,7 @@ import { Security } from './Security'
 import { AuthSettings } from './Settings'
 import { Templates } from './Templates'
 import { toast } from 'sonner'
+import { UserContextMenu } from './_components/UserContextMenu'
 
 export function View() {
   const { projectId } = useParams({
@@ -738,33 +739,45 @@ export function View() {
                           const hasPhone = !!user.phone
 
                           return (
-                            <TableRow
+                            <UserContextMenu
                               key={user.$id}
-                              className={cn(
-                                'cursor-pointer transition-colors border-b border-border/50',
-                                selectedUsers.has(user.$id)
-                                  ? 'bg-sky-100 dark:bg-sky-950'
-                                  : 'hover:bg-muted/30',
-                              )}
-                              onClick={(e) => {
-                                // Don't navigate if clicking on checkbox, link, or their containers
-                                const target = e.target as HTMLElement
-                                if (
-                                  target.closest('button') ||
-                                  target.closest('[role="checkbox"]') ||
-                                  target.closest('a')
-                                ) {
-                                  return
-                                }
-                                navigate({
-                                  to: '/projects/$projectId/auth/users/$userId',
-                                  params: {
-                                    projectId: projectId!,
-                                    userId: user.$id,
-                                  },
-                                })
+                              projectId={projectId!}
+                              user={{
+                                $id: user.$id,
+                                name: user.name,
+                                email: user.email,
+                                phone: user.phone,
+                                emailVerification: user.emailVerification,
+                                phoneVerification: user.phoneVerification,
+                                status: user.status as boolean | null,
                               }}
                             >
+                              <TableRow
+                                className={cn(
+                                  'cursor-pointer transition-colors border-b border-border/50',
+                                  selectedUsers.has(user.$id)
+                                    ? 'bg-sky-100 dark:bg-sky-950'
+                                    : 'hover:bg-muted/30',
+                                )}
+                                onClick={(e) => {
+                                  // Don't navigate if clicking on checkbox, link, or their containers
+                                  const target = e.target as HTMLElement
+                                  if (
+                                    target.closest('button') ||
+                                    target.closest('[role="checkbox"]') ||
+                                    target.closest('a')
+                                  ) {
+                                    return
+                                  }
+                                  navigate({
+                                    to: '/projects/$projectId/auth/users/$userId',
+                                    params: {
+                                      projectId: projectId!,
+                                      userId: user.$id,
+                                    },
+                                  })
+                                }}
+                              >
                               <TableCell
                                 onClick={(e) => e.stopPropagation()}
                                 className="px-4 py-3"
@@ -997,7 +1010,8 @@ export function View() {
                                   )}
                                 </Link>
                               </TableCell>
-                            </TableRow>
+                              </TableRow>
+                            </UserContextMenu>
                           )
                         })}
                       </TableBody>
@@ -1040,31 +1054,44 @@ export function View() {
                       undefined
 
                     return (
-                      <Link
+                      <UserContextMenu
                         key={user.$id}
-                        to="/projects/$projectId/auth/users/$userId"
-                        params={{ projectId: projectId!, userId: user.$id }}
+                        projectId={projectId!}
+                        user={{
+                          $id: user.$id,
+                          name: user.name,
+                          email: user.email,
+                          phone: user.phone,
+                          emailVerification: user.emailVerification,
+                          phoneVerification: user.phoneVerification,
+                          status: user.status as boolean | null,
+                        }}
                       >
-                        <ResourceCard
-                          title={user.name || '-'}
-                          subtitle={subtitle || '-'}
-                          resourceId={user.$id}
-                          avatar={user.name || user.email || ''}
-                          status={cardStatus}
-                          statusLabel={verification.label}
-                          metadata={[
-                            {
-                              label: 'Joined',
-                              value: (
-                                <DateTooltip
-                                  date={user.createdAt}
-                                  className="text-[11px] font-medium text-muted-foreground"
-                                />
-                              ),
-                            },
-                          ]}
-                        />
-                      </Link>
+                        <Link
+                          to="/projects/$projectId/auth/users/$userId"
+                          params={{ projectId: projectId!, userId: user.$id }}
+                        >
+                          <ResourceCard
+                            title={user.name || '-'}
+                            subtitle={subtitle || '-'}
+                            resourceId={user.$id}
+                            avatar={user.name || user.email || ''}
+                            status={cardStatus}
+                            statusLabel={verification.label}
+                            metadata={[
+                              {
+                                label: 'Joined',
+                                value: (
+                                  <DateTooltip
+                                    date={user.createdAt}
+                                    className="text-[11px] font-medium text-muted-foreground"
+                                  />
+                                ),
+                              },
+                            ]}
+                          />
+                        </Link>
+                      </UserContextMenu>
                     )
                   })}
 
