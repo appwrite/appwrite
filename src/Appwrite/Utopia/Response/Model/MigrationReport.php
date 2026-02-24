@@ -53,6 +53,18 @@ class MigrationReport extends Model
                 'default' => 0,
                 'example' => 20,
             ])
+            ->addRule(Resource::TYPE_DEPLOYMENT, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of deployments to be migrated.',
+                'default' => 0,
+                'example' => 5,
+            ])
+            ->addRule(Resource::TYPE_ENVIRONMENT_VARIABLE, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of environment variables to be migrated.',
+                'default' => 0,
+                'example' => 10,
+            ])
             ->addRule(Resource::TYPE_SITE, [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Number of sites to be migrated.',
