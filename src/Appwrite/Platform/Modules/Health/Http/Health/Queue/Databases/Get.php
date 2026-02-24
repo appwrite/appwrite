@@ -42,7 +42,7 @@ class Get extends Base
                 ],
                 contentType: ContentType::JSON
             ))
-            ->param('name', 'database_db_main', new Text(256), 'Queue name for which to check the queue size', true)
+            ->param('name', 'database_db_main-0', new Text(256), 'Queue name for which to check the queue size', true)
             ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
             ->inject('queueForDatabase')
             ->inject('response')

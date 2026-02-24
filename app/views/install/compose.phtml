@@ -180,6 +180,7 @@ $dbService = $this->getParam('database');
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
       - _APP_ASSISTANT_OPENAI_API_KEY
+      - _APP_DATABASE_WORKERS
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
@@ -366,11 +367,12 @@ $dbService = $this->getParam('database');
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_EMAIL_CERTIFICATES
 
-  appwrite-worker-databases:
+<?php for ($i = 0; $i < 4; $i++) { ?>
+  appwrite-worker-databases-<?= $i ?>:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: worker-databases
     <<: *x-logging
-    container_name: appwrite-worker-databases
+    container_name: appwrite-worker-databases-<?= $i."\n" ?>
     restart: unless-stopped
     networks:
       - appwrite
@@ -392,8 +394,9 @@ $dbService = $this->getParam('database');
       - _APP_DB_PASS
       - _APP_DB_ADAPTER
       - _APP_LOGGING_CONFIG
+      - _APP_QUEUE_NAME=database_db_main-<?= $i."\n" ?>
 
-  appwrite-worker-builds:
+<?php } ?>  appwrite-worker-builds:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: worker-builds
     <<: *x-logging
