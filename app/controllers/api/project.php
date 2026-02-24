@@ -77,6 +77,8 @@ Http::get('/v1/project/usage')
                 METRIC_NETWORK_REQUESTS,
                 METRIC_NETWORK_INBOUND,
                 METRIC_NETWORK_OUTBOUND,
+                METRIC_SITES_INBOUND,
+                METRIC_SITES_OUTBOUND,
                 METRIC_USERS,
                 METRIC_EXECUTIONS,
                 METRIC_DATABASES_STORAGE,
@@ -334,6 +336,16 @@ Http::get('/v1/project/usage')
         }
 
         foreach ($usage[METRIC_NETWORK_OUTBOUND] as $item) {
+            $projectBandwidth[$item['date']] ??= 0;
+            $projectBandwidth[$item['date']] += $item['value'];
+        }
+
+        foreach ($usage[METRIC_SITES_INBOUND] as $item) {
+            $projectBandwidth[$item['date']] ??= 0;
+            $projectBandwidth[$item['date']] += $item['value'];
+        }
+
+        foreach ($usage[METRIC_SITES_OUTBOUND] as $item) {
             $projectBandwidth[$item['date']] ??= 0;
             $projectBandwidth[$item['date']] += $item['value'];
         }
