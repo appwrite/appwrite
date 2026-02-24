@@ -8937,7 +8937,14 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/fetch",
+            "version": "dev-feat-support-base-url",
+            "alias": "0.4.2",
+            "alias_normalized": "0.4.2.0"
+        }
+    ],
     "minimum-stability": "stable",
     "stability-flags": {},
     "prefer-stable": false,

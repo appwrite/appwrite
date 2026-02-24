@@ -23,6 +23,7 @@ use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\GraphQL\Schema;
+use Appwrite\Locale\GeoRecord;
 use Appwrite\Network\Cors;
 use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
@@ -31,6 +32,7 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Executor\Executor;
+use MaxMind\Db\Reader;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit;
@@ -52,6 +54,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
+use Utopia\Fetch\Client;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
@@ -512,6 +515,7 @@ Http::setResource('session', function (User $user, Store $store, Token $proofFor
     if (!$sessionId) {
         return;
     }
+
     foreach ($sessions as $session) {
         /** @var Document $session */
         if ($sessionId === $session->getId()) {
@@ -1091,6 +1095,75 @@ Http::setResource('geodb', function ($register) {
     /** @var Utopia\Registry\Registry $register */
     return $register->get('geodb');
 }, ['register']);
+
+Http::setResource('geoRecord', function (Reader $geodb, Request $request, Locale $locale) {
+    $ip = $request->getIp();
+
+    if (!filter_var($ip, FILTER_VALIDATE_IP)) {
+        Console::warning("Invalid IP address: {$ip}");
+        $ip = '0.0.0.0'; // Use fallback IP
+    }
+    $eu = Config::getParam('locale-eu');
+    $currencies = Config::getParam('locale-currencies');
+
+    $client = new Client();
+    $client->addHeader('Authorization', 'Bearer ' . System::getEnv('_APP_GEO_SECRET'));
+
+    $client->setBaseUrl('http://appwrite-geo/v1');
+
+    $record = null;
+    try {
+        $record = $client->fetch("/ips/{$ip}", Client::METHOD_GET);
+        if ($record->getStatusCode() !== 200) {
+            $error = $record->json();
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, $error['message'] ?? 'Failed to fetch geo data');
+        }
+        $record = $record->json();
+    } catch (Throwable $th) {
+        Console::error($th->getMessage());
+        Console::error($th->getTraceAsString());
+        $record = null;
+    }
+
+    if (empty($record)) {
+        // Fallback
+        $dbRecord = $geodb->get($ip);
+        if ($dbRecord) {
+            $record = [];
+            $record['countryCode'] = $dbRecord['country']['iso_code'] ?? '--';
+            $record['country'] = $dbRecord['country']['names'] ?? [];
+            $record['continent'] = $dbRecord['continent']['names'] ?? [];
+            $record['continentCode'] = $dbRecord['continent']['code'] ?? '--';
+        }
+    }
+
+    $output = [];
+    $output['ip'] = $ip;
+    $currency = null;
+    if (!empty($record)) {
+        $output['countryCode'] = $record['countryCode'];
+        $output['countryName'] = $locale->getText('countries.' . strtolower($record['countryCode']), $locale->getText('locale.country.unknown'));
+        $output['continent'] = $locale->getText('continents.' . strtolower($record['continentCode']), $locale->getText('locale.country.unknown'));
+        $output['continentCode'] = $record['continentCode'];
+        $output['eu'] = (\in_array($record['countryCode'], $eu)) ? true : false;
+
+        foreach ($currencies as $code => $element) {
+            if (isset($element['locations']) && isset($element['code']) && \in_array($record['countryCode'], $element['locations'])) {
+                $currency = $element['code'];
+            }
+        }
+
+        $output['currency'] = $currency;
+    } else {
+        $output['countryCode'] = '--';
+        $output['countryName'] = $locale->getText('locale.country.unknown');
+        $output['continent'] = $locale->getText('locale.country.unknown');
+        $output['continentCode'] = '--';
+        $output['eu'] = false;
+        $output['currency'] = $currency;
+    }
+    return new GeoRecord($output);
+}, ['geodb', 'request', 'locale']);
 
 Http::setResource('passwordsDictionary', function ($register) {
     /** @var Utopia\Registry\Registry $register */
