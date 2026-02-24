@@ -34,7 +34,6 @@ class Create extends Action
 
     protected function getDatabaseDSN(Document $project): string
     {
-        var_dump($project);
         // TODO: use database worker for for creating the v2 schema if not present
         // it is considered that the v2 metadata schema is already created during server start in the http.php
         return $this->constructDatabaseDSNFromProjectDatabase($this->getDatabaseType(), $project->getAttribute('region'), $project->getAttribute('database'));
@@ -73,7 +72,6 @@ class Create extends Action
             default:
                 // legacy/tablesdb
                 // it is already created during create project
-                var_dump($dsn);
                 return $dsn;
         }
 

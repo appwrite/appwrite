@@ -159,7 +159,7 @@ class Update extends Action
                 }
             }
 
-            $dbForDatabases = $databaseDoc !== null
+            $dbForDatabases = $databaseDoc instanceof Document && !$databaseDoc->isEmpty()
                 ? $getDatabasesDB($databaseDoc)
                 : $getDatabasesDB(new Document(['database' => $project->getAttribute('database')]));
 
