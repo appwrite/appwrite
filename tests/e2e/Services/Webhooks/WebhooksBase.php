@@ -277,8 +277,10 @@ trait WebhooksBase
         $membershipId = $team['body']['$id'];
         $userId = $team['body']['userId'];
 
-        // Get the secret from email
-        $lastEmail = $this->getLastEmail();
+        // Get the secret from email (use probe to match correct email by recipient address)
+        $lastEmail = $this->getLastEmail(1, function ($msg) use ($email) {
+            $this->assertEquals($email, $msg['to'][0]['address'] ?? '');
+        });
         $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html'] ?? '');
         $secret = $tokens['secret'] ?? '';
 

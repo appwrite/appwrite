@@ -6441,8 +6441,8 @@ class ProjectsConsoleClientTest extends Scope
 
         $userId = $response['body']['userId'];
 
-        $lastEmail = $this->getLastEmail(1, function ($email) use ($userId) {
-            $this->assertStringContainsString($userId, $email['html'] ?? '');
+        $lastEmail = $this->getLastEmail(1, function ($email) use ($url) {
+            $this->assertStringContainsString($url, $email['html'] ?? '');
         });
 
         $this->assertEquals($this->getUser()['email'], $lastEmail['to'][0]['address']);
@@ -6474,8 +6474,8 @@ class ProjectsConsoleClientTest extends Scope
 
         $userId = $response['body']['userId'];
 
-        $lastEmail = $this->getLastEmail(1, function ($email) use ($userId) {
-            $this->assertStringContainsString($userId, $email['html'] ?? '');
+        $lastEmail = $this->getLastEmail(1, function ($email) use ($url) {
+            $this->assertStringContainsString($url, $email['html'] ?? '');
         });
 
         $this->assertEquals($this->getUser()['email'], $lastEmail['to'][0]['address']);
@@ -6507,8 +6507,8 @@ class ProjectsConsoleClientTest extends Scope
 
         $userId = $response['body']['userId'];
 
-        $lastEmail = $this->getLastEmail(1, function ($email) use ($userId) {
-            $this->assertStringContainsString($userId, $email['html'] ?? '');
+        $lastEmail = $this->getLastEmail(1, function ($email) use ($url, $userId) {
+            $this->assertStringContainsString($url . '?userId=' . $userId, $email['html'] ?? '');
         });
 
         $this->assertEquals($this->getUser()['email'], $lastEmail['to'][0]['address']);
@@ -6540,8 +6540,8 @@ class ProjectsConsoleClientTest extends Scope
 
         $userId = $response['body']['userId'];
 
-        $lastEmail = $this->getLastEmail(1, function ($email) use ($userId) {
-            $this->assertStringContainsString($userId, $email['html'] ?? '');
+        $lastEmail = $this->getLastEmail(1, function ($email) use ($url, $userId) {
+            $this->assertStringContainsString($url . '?userId=' . $userId, $email['html'] ?? '');
         });
 
         $this->assertEquals($this->getUser()['email'], $lastEmail['to'][0]['address']);
@@ -6573,8 +6573,8 @@ class ProjectsConsoleClientTest extends Scope
 
         $userId = $response['body']['userId'];
 
-        $lastEmail = $this->getLastEmail(1, function ($email) use ($userId) {
-            $this->assertStringContainsString($userId, $email['html'] ?? '');
+        $lastEmail = $this->getLastEmail(1, function ($email) {
+            $this->assertStringContainsString('INJECTED', $email['html'] ?? '');
         });
 
         $this->assertEquals($this->getUser()['email'], $lastEmail['to'][0]['address']);

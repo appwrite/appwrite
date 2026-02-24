@@ -167,6 +167,7 @@ abstract class Scope extends TestCase
                 $result = end($emails);
             } else {
                 $result = array_slice($emails, -1 * $limit);
+                $this->assertCount($limit, $result, "Expected {$limit} emails but only got " . count($result));
             }
 
             $this->assertNotEmpty($result, 'Expected email result to be non-empty');
