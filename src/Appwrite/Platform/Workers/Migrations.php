@@ -315,6 +315,8 @@ class Migrations extends Action
                 'functions.write',
                 'backups.read',
                 'backups.write',
+                'policies.read',
+                'policies.write',
                 'tokens.read',
                 'tokens.write',
             ]
