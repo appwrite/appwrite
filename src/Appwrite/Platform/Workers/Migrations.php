@@ -313,6 +313,8 @@ class Migrations extends Action
                 'files.write',
                 'functions.read',
                 'functions.write',
+                'backups.read',
+                'backups.write',
                 'tokens.read',
                 'tokens.write',
             ]

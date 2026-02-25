@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1fb043a556550f62ab27a0aad0b9332a",
+    "content-hash": "b284384ab11f46d042621c366655f59d",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -69,25 +69,25 @@
         },
         {
             "name": "appwrite/appwrite",
-            "version": "19.1.0",
+            "version": "20.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "8738e812062f899c85b2598eef43d6a247f08a56"
+                "reference": "e946bb65fe259e4ec6eda7057e02c63995fc7692"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/8738e812062f899c85b2598eef43d6a247f08a56",
-                "reference": "8738e812062f899c85b2598eef43d6a247f08a56",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/e946bb65fe259e4ec6eda7057e02c63995fc7692",
+                "reference": "e946bb65fe259e4ec6eda7057e02c63995fc7692",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
                 "ext-json": "*",
-                "php": ">=7.1.0"
+                "php": ">=8.0.0"
             },
             "require-dev": {
-                "mockery/mockery": "^1.6.12",
+                "mockery/mockery": "1.6.12",
                 "phpunit/phpunit": "^10"
             },
             "type": "library",
@@ -100,14 +100,14 @@
             "license": [
                 "BSD-3-Clause"
             ],
-            "description": "Appwrite is an open-source self-hosted backend server that abstract and simplify complex and repetitive development tasks behind a very simple REST API",
+            "description": "Appwrite is an open-source self-hosted backend server that abstracts and simplifies complex and repetitive development tasks behind a very simple REST API",
             "support": {
                 "email": "team@appwrite.io",
                 "issues": "https://github.com/appwrite/sdk-for-php/issues",
-                "source": "https://github.com/appwrite/sdk-for-php/tree/19.1.0",
+                "source": "https://github.com/appwrite/sdk-for-php/tree/20.2.0",
                 "url": "https://appwrite.io/support"
             },
-            "time": "2025-12-18T08:07:43+00:00"
+            "time": "2026-02-19T11:59:59+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -3351,20 +3351,20 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "1.2.2",
+            "version": "dev-feat-bump-sdk-v20",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "20bee84fd14dbe81d50ecabf1ffd81cceca06152"
+                "reference": "4ef7e2eed302c7fa8338ce76c82d6b3e8b10720c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/20bee84fd14dbe81d50ecabf1ffd81cceca06152",
-                "reference": "20bee84fd14dbe81d50ecabf1ffd81cceca06152",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/4ef7e2eed302c7fa8338ce76c82d6b3e8b10720c",
+                "reference": "4ef7e2eed302c7fa8338ce76c82d6b3e8b10720c",
                 "shasum": ""
             },
             "require": {
-                "appwrite/appwrite": "19.*",
+                "appwrite/appwrite": "20.*",
                 "ext-curl": "*",
                 "ext-pdo": "*",
                 "ext-redis": "*",
@@ -3397,9 +3397,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/1.2.2"
+                "source": "https://github.com/utopia-php/abuse/tree/feat-bump-sdk-v20"
             },
-            "time": "2026-02-02T10:43:10+00:00"
+            "time": "2026-02-25T15:14:07+00:00"
         },
         {
             "name": "utopia-php/agents",
@@ -4517,20 +4517,20 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.6.1",
+            "version": "dev-feat-backup-policy-migration",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "c5c7544d02d2418536d41050794050132f247d62"
+                "reference": "aa7b5514d08b0d4066372abfc68d0a1d06b7f12c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/c5c7544d02d2418536d41050794050132f247d62",
-                "reference": "c5c7544d02d2418536d41050794050132f247d62",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/aa7b5514d08b0d4066372abfc68d0a1d06b7f12c",
+                "reference": "aa7b5514d08b0d4066372abfc68d0a1d06b7f12c",
                 "shasum": ""
             },
             "require": {
-                "appwrite/appwrite": "19.*",
+                "appwrite/appwrite": "20.*",
                 "ext-curl": "*",
                 "ext-openssl": "*",
                 "halaxa/json-machine": "^1.2",
@@ -4566,9 +4566,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.6.1"
+                "source": "https://github.com/utopia-php/migration/tree/feat-backup-policy-migration"
             },
-            "time": "2026-02-17T05:49:48+00:00"
+            "time": "2026-02-17T12:29:06+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -9043,7 +9043,10 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/abuse": 20,
+        "utopia-php/migration": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
