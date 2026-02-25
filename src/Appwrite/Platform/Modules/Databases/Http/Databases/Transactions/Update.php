@@ -138,36 +138,48 @@ class Update extends Action
         }
 
         if ($commit) {
-
             $operations = [];
             $totalOperations = 0;
             $databaseOperations = [];
             $currentDocumentId = null;
 
+            $firstOperation = $authorization->skip(fn () => $dbForProject->findOne('transactionLogs', [
+                Query::equal('transactionInternalId', [$transaction->getSequence()]),
+                Query::orderAsc(),
+            ]));
+
+            if ($firstOperation->isEmpty()) {
+                $transaction = $authorization->skip(fn () => $dbForProject->updateDocument(
+                    'transactions',
+                    $transactionId,
+                    new Document(['status' => 'committed'])
+                ));
+
+                $queueForDeletes
+                    ->setType(DELETE_TYPE_DOCUMENT)
+                    ->setDocument($transaction);
+
+                $response
+                    ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
+                    ->dynamic($transaction, $this->getResponseModel());
+
+                return;
+            }
+
             $databaseDoc = null;
             switch ($this->getDatabaseType()) {
                 case DATABASE_TYPE_DOCUMENTSDB:
                 case DATABASE_TYPE_VECTORDB:
-                    $previewOperations = $authorization->skip(fn () => $dbForProject->find('transactionLogs', [
-                        Query::equal('transactionInternalId', [$transaction->getSequence()]),
-                        Query::orderAsc(),
-                        Query::limit(1),
+                    $databaseDoc = $authorization->skip(fn () => $dbForProject->findOne('databases', [
+                        Query::equal('$sequence', [$firstOperation['databaseInternalId']])
                     ]));
-
-                    $firstOp = $previewOperations[0] ?? null;
-
-                    if ($firstOp !== null) {
-                        $databaseDoc = $authorization->skip(fn () => $dbForProject->findOne('databases', [
-                            Query::equal('$sequence', [$firstOp['databaseInternalId']])
-                        ]));
-                    }
                     break;
                 default:
+                    // Legacy/tablesdb: use project-level database
                     $databaseDoc = new Document(['database' => $project->getAttribute('database')]);
                     break;
             }
 
-            // databaseDoc will not be null -> if null that means database was deleted -> automatically will be leading to error
             $dbForDatabases = $getDatabasesDB($databaseDoc);
 
             try {
