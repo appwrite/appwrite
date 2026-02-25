@@ -25,7 +25,7 @@ export function OnboardingCard({
   }
 
   if (collapsed) {
-    const size = 20
+    const size = 18
     const strokeWidth = 2
     const radius = (size - strokeWidth) / 2
     const circumference = 2 * Math.PI * radius
