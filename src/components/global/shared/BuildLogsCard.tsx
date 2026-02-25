@@ -13,7 +13,14 @@ import {
   TooltipContent,
 } from '@/components/ui/tooltip'
 import { BuildLogsView } from '@/components/global/shared/BuildLogsView'
-import { Search, Copy, Download, ArrowUp, ArrowDown, CircleDashed } from 'lucide-react'
+import {
+  Search,
+  Copy,
+  Download,
+  ArrowUp,
+  ArrowDown,
+  CircleDashed,
+} from 'lucide-react'
 import { toast } from 'sonner'
 
 export interface BuildLogsCardProps {
@@ -115,11 +122,15 @@ export function BuildLogsCard({
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4 flex items-center justify-between gap-3">
-        <h3 className="text-[15px] font-semibold text-foreground">Build logs</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">
+          Build logs
+        </h3>
         {durationDisplay && (
           <span className="text-[12px] sm:text-[13px] text-muted-foreground shrink-0">
             Duration:{' '}
-            <span className="font-medium text-foreground">{durationDisplay}</span>
+            <span className="font-medium text-foreground">
+              {durationDisplay}
+            </span>
           </span>
         )}
       </div>

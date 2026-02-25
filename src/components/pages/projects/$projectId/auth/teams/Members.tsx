@@ -62,7 +62,8 @@ export function TeamMembers({
   const [selectedMemberships, setSelectedMemberships] = useState<Set<string>>(
     new Set(),
   )
-  const [internalCreateDialogOpen, setInternalCreateDialogOpen] = useState(false)
+  const [internalCreateDialogOpen, setInternalCreateDialogOpen] =
+    useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [selectedMembership, setSelectedMembership] =
     useState<Models.Membership | null>(null)
@@ -600,4 +601,3 @@ function CreateMembershipDialog({
     </Dialog>
   )
 }
-

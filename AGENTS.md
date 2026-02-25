@@ -923,7 +923,7 @@ Follow the modal structure pattern above. For no-content modals, skip content se
 | Button during action   | Keep text, use `disabled` state                                                                                                                                       |
 | Unavailable action     | Disable button with tooltip, don't hide                                                                                                                               |
 | Service avatar         | `bg-muted text-muted-foreground` (never colored)                                                                                                                      |
-| Badge style            | Use status variants (`error`, `warning`, `success`, `info`) for same design; `text-[10px] shrink-0` when inline with text                                               |
+| Badge style            | Use status variants (`error`, `warning`, `success`, `info`) for same design; `text-[10px] shrink-0` when inline with text                                             |
 | Icon spacing           | `mr-1.5` or `gap-1.5`                                                                                                                                                 |
 | Date display           | Always include DateTooltip                                                                                                                                            |
 | Route prefetch         | All crucial data at route level                                                                                                                                       |

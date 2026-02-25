@@ -32,7 +32,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Plus, Eye, EyeOff, Upload, Code, Key, XCircle, MoreHorizontal } from 'lucide-react'
+import {
+  Plus,
+  Eye,
+  EyeOff,
+  Upload,
+  Code,
+  Key,
+  XCircle,
+  MoreHorizontal,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { VariableEditor } from '@/components/global/shared/VariableEditor'
@@ -354,11 +363,11 @@ export function EnvironmentVariablesCard({
                                   {variable.value || '(empty)'}
                                 </code>
                                 <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() =>
-                                      handleToggleShowSecret(variable.key)
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleToggleShowSecret(variable.key)
                                   }
                                   className="h-6 w-6 p-0"
                                 >
@@ -408,9 +417,7 @@ export function EnvironmentVariablesCard({
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem
-                                onClick={() =>
-                                  handleToggleSecret(variable.key)
-                                }
+                                onClick={() => handleToggleSecret(variable.key)}
                               >
                                 {variable.secret ? 'Unmark secret' : 'Secret'}
                               </DropdownMenuItem>
@@ -421,11 +428,11 @@ export function EnvironmentVariablesCard({
                                 Delete
                               </DropdownMenuItem>
                             </DropdownMenuContent>
-                            </DropdownMenu>
-                          )}
+                          </DropdownMenu>
+                        )}
                       </TableCell>
                     </TableRow>
-                      ))}
+                  ))}
                 </TableBody>
               </Table>
             </div>
@@ -486,7 +493,10 @@ export function EnvironmentVariablesCard({
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor={`create-key-${index}`} className="text-[12px]">
+                    <Label
+                      htmlFor={`create-key-${index}`}
+                      className="text-[12px]"
+                    >
                       Key <span className="text-destructive">*</span>
                     </Label>
                     <Input

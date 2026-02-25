@@ -34,7 +34,10 @@ interface DeployingViewProps {
   deploymentId?: string
 }
 
-export function DeployingView({ functionId, deploymentId }: DeployingViewProps) {
+export function DeployingView({
+  functionId,
+  deploymentId,
+}: DeployingViewProps) {
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const { formData, resetFormData } = useFunctionWizard()

@@ -249,8 +249,8 @@ export function UploadFile({
                       className="flex items-center gap-2 rounded-md border border-border bg-muted/30 p-2"
                     >
                       <span className="flex-1 truncate text-[12px] text-foreground">
-                        {selectedFile.name} (
-                        {formatFileSize(selectedFile.size)})
+                        {selectedFile.name} ({formatFileSize(selectedFile.size)}
+                        )
                       </span>
                       <Button
                         type="button"

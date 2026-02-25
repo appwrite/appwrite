@@ -450,7 +450,9 @@ code {
   );
   background-size: 300% 100%;
   animation: border-rotate 4s ease-in-out infinite;
-  filter: drop-shadow(0 2px 4px color-mix(in oklch, var(--foreground) 12%, transparent));
+  filter: drop-shadow(
+    0 2px 4px color-mix(in oklch, var(--foreground) 12%, transparent)
+  );
 }
 
 .upgrade-button-wrapper > * {
@@ -496,7 +498,9 @@ code {
     color-mix(in oklch, var(--muted-foreground) 25%, var(--border)) 100%
   );
   background-size: 300% 100%;
-  filter: drop-shadow(0 2px 6px color-mix(in oklch, var(--foreground) 18%, transparent));
+  filter: drop-shadow(
+    0 2px 6px color-mix(in oklch, var(--foreground) 18%, transparent)
+  );
 }
 
 .dark .upgrade-button-wrapper::before {

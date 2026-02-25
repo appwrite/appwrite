@@ -83,9 +83,7 @@ export interface RepositoryPickerProps {
   /** For connect mode: which repo is currently selected */
   selectedRepositoryId?: string
   onRepositorySelect: (
-    repo:
-      | Models.ProviderRepositoryFramework
-      | Models.ProviderRepositoryRuntime,
+    repo: Models.ProviderRepositoryFramework | Models.ProviderRepositoryRuntime,
   ) => void
   /** create = wizard (Connect button per row); connect = modal (select one then Confirm) */
   mode: 'create' | 'connect'
@@ -150,11 +148,15 @@ export function RepositoryPicker({
       | Models.ProviderRepositoryRuntimeList
       | undefined
     if (vcsType === VCSDetectionType.Runtime) {
-      return (data as Models.ProviderRepositoryRuntimeList)
-        ?.runtimeProviderRepositories ?? []
+      return (
+        (data as Models.ProviderRepositoryRuntimeList)
+          ?.runtimeProviderRepositories ?? []
+      )
     }
-    return (data as Models.ProviderRepositoryFrameworkList)
-      ?.frameworkProviderRepositories ?? []
+    return (
+      (data as Models.ProviderRepositoryFrameworkList)
+        ?.frameworkProviderRepositories ?? []
+    )
   }, [repositoriesData, vcsType])
   const hasMoreRepos = repositories.length === REPO_PAGE_SIZE
   const selectedInstallation = installations.find(
@@ -340,9 +342,14 @@ export function RepositoryPicker({
                                 framework={repo.framework}
                                 size="sm"
                               />
-                            ) : 'runtime' in repo && (repo as Models.ProviderRepositoryRuntime).runtime ? (
+                            ) : 'runtime' in repo &&
+                              (repo as Models.ProviderRepositoryRuntime)
+                                .runtime ? (
                               <RuntimeIcon
-                                runtime={(repo as Models.ProviderRepositoryRuntime).runtime}
+                                runtime={
+                                  (repo as Models.ProviderRepositoryRuntime)
+                                    .runtime
+                                }
                                 className="h-3.5 w-3.5"
                               />
                             ) : (
@@ -378,8 +385,8 @@ export function RepositoryPicker({
                               Connect
                             </Button>
                           )}
-                          {mode === 'connect' && (
-                            isSelected ? (
+                          {mode === 'connect' &&
+                            (isSelected ? (
                               <span className="text-[12px] font-medium text-primary shrink-0">
                                 Selected
                               </span>
@@ -395,8 +402,7 @@ export function RepositoryPicker({
                               >
                                 Connect
                               </Button>
-                            )
-                          )}
+                            ))}
                         </div>
                       )
                     },

@@ -11,9 +11,8 @@ export interface CreateDeploymentContextValue {
   openManualModal: () => void
 }
 
-const CreateDeploymentContext = createContext<CreateDeploymentContextValue | null>(
-  null,
-)
+const CreateDeploymentContext =
+  createContext<CreateDeploymentContextValue | null>(null)
 
 export function useCreateDeployment() {
   const ctx = useContext(CreateDeploymentContext)

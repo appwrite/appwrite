@@ -24,7 +24,5 @@ export const Route = createFileRoute(
 
 function DeployingPage() {
   const { functionId, deploymentId } = Route.useSearch()
-  return (
-    <DeployingView functionId={functionId} deploymentId={deploymentId} />
-  )
+  return <DeployingView functionId={functionId} deploymentId={deploymentId} />
 }

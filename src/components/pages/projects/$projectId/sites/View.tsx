@@ -437,7 +437,9 @@ export function View() {
                                 <span className="text-[12px] text-muted-foreground">
                                   Deployed{' '}
                                   {formatDistanceToNow(
-                                    new Date(siteData.latestDeploymentCreatedAt),
+                                    new Date(
+                                      siteData.latestDeploymentCreatedAt,
+                                    ),
                                     { addSuffix: false },
                                   )}{' '}
                                   ago

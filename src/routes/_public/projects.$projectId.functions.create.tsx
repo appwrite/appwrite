@@ -119,9 +119,7 @@ function CreateFunctionLayoutInner() {
   const { data: installationsData } = useQuery(
     vcsInstallationsQueryOptions(projectId, 0, 100),
   )
-  const { data: project } = useQuery(
-    projectQueryOptions(projectId as string),
-  )
+  const { data: project } = useQuery(projectQueryOptions(projectId as string))
 
   useEffect(() => {
     if (installationsData?.installations) {

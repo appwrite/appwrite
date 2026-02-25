@@ -293,75 +293,77 @@ function FunctionLayoutContent() {
     >
       <div className="flex flex-col">
         <ServiceHeader
-        title={
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" asChild className="h-7 w-7 p-0">
-              <Link
-                to="/projects/$projectId/functions"
-                params={{ projectId: projectId! }}
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
-            </Button>
-            <span>{func.name || 'Unnamed Function'}</span>
-          </div>
-        }
-        tabs={tabs}
-        activeTab={activeTab}
-        fullWidthBorder
-        searchPlaceholder={
-          activeTab === 'domains' ? 'Search domain...' : undefined
-        }
-        searchValue={activeTab === 'domains' ? domainsSearchValue : undefined}
-        onSearchChange={
-          activeTab === 'domains' ? handleDomainsSearchChange : undefined
-        }
-        showFilters={activeTab === 'deployments' || activeTab === 'executions'}
-        onFilterClick={
-          activeTab === 'deployments' || activeTab === 'executions'
-            ? handleFilterClick
-            : undefined
-        }
-        showRefresh={activeTab === 'executions' && hasRefreshHandler}
-        onRefresh={activeTab === 'executions' ? triggerRefresh : undefined}
-        isRefreshing={isRefreshing}
-        beforeCreateButtons={
-          activeTab === 'deployments' ? (
-            <CreateDeploymentDropdown
-              onSelectGit={() => setGitDeployOpen(true)}
-              onSelectCli={() => setCliDeployOpen(true)}
-              onSelectManual={() => setManualDeployOpen(true)}
-            />
-          ) : undefined
-        }
-        createLabel={
-          activeTab === 'deployments'
-            ? undefined
-            : activeTab === 'executions'
-              ? 'Create execution'
-              : activeTab === 'domains'
-                ? 'Add domain'
-                : undefined
-        }
-        onCreate={
-          activeTab === 'deployments'
-            ? undefined
-            : activeTab === 'executions'
-              ? handleCreateExecution
-              : activeTab === 'domains'
-                ? handleAddDomain
-                : undefined
-        }
-        createDisabled={activeTab === 'executions' && !func?.deploymentId}
-        contentAfterBorder={
-          disabledAlert || configAlert ? (
-            <div>
-              {disabledAlert}
-              {configAlert}
+          title={
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" asChild className="h-7 w-7 p-0">
+                <Link
+                  to="/projects/$projectId/functions"
+                  params={{ projectId: projectId! }}
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Link>
+              </Button>
+              <span>{func.name || 'Unnamed Function'}</span>
             </div>
-          ) : undefined
-        }
-      />
+          }
+          tabs={tabs}
+          activeTab={activeTab}
+          fullWidthBorder
+          searchPlaceholder={
+            activeTab === 'domains' ? 'Search domain...' : undefined
+          }
+          searchValue={activeTab === 'domains' ? domainsSearchValue : undefined}
+          onSearchChange={
+            activeTab === 'domains' ? handleDomainsSearchChange : undefined
+          }
+          showFilters={
+            activeTab === 'deployments' || activeTab === 'executions'
+          }
+          onFilterClick={
+            activeTab === 'deployments' || activeTab === 'executions'
+              ? handleFilterClick
+              : undefined
+          }
+          showRefresh={activeTab === 'executions' && hasRefreshHandler}
+          onRefresh={activeTab === 'executions' ? triggerRefresh : undefined}
+          isRefreshing={isRefreshing}
+          beforeCreateButtons={
+            activeTab === 'deployments' ? (
+              <CreateDeploymentDropdown
+                onSelectGit={() => setGitDeployOpen(true)}
+                onSelectCli={() => setCliDeployOpen(true)}
+                onSelectManual={() => setManualDeployOpen(true)}
+              />
+            ) : undefined
+          }
+          createLabel={
+            activeTab === 'deployments'
+              ? undefined
+              : activeTab === 'executions'
+                ? 'Create execution'
+                : activeTab === 'domains'
+                  ? 'Add domain'
+                  : undefined
+          }
+          onCreate={
+            activeTab === 'deployments'
+              ? undefined
+              : activeTab === 'executions'
+                ? handleCreateExecution
+                : activeTab === 'domains'
+                  ? handleAddDomain
+                  : undefined
+          }
+          createDisabled={activeTab === 'executions' && !func?.deploymentId}
+          contentAfterBorder={
+            disabledAlert || configAlert ? (
+              <div>
+                {disabledAlert}
+                {configAlert}
+              </div>
+            ) : undefined
+          }
+        />
         <div className="flex-1">
           <Outlet />
         </div>

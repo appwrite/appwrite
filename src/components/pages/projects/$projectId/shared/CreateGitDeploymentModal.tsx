@@ -63,9 +63,7 @@ export function CreateGitDeploymentModal({
     resource.installationId && resource.providerRepositoryId,
   )
 
-  const [branch, setBranch] = useState(
-    resource.providerBranch || 'main',
-  )
+  const [branch, setBranch] = useState(resource.providerBranch || 'main')
   const [activate, setActivate] = useState(true)
   const [selectedInstallationId, setSelectedInstallationId] = useState('')
   const [selectedRepositoryId, setSelectedRepositoryId] = useState('')
@@ -78,8 +76,8 @@ export function CreateGitDeploymentModal({
 
   const { data: repository } = useRepository(
     projectId,
-    hasLinkedRepo ? resource.installationId ?? null : null,
-    hasLinkedRepo ? resource.providerRepositoryId ?? null : null,
+    hasLinkedRepo ? (resource.installationId ?? null) : null,
+    hasLinkedRepo ? (resource.providerRepositoryId ?? null) : null,
   )
   const { data: installationsData } = useVcsInstallations(projectId)
   const installations = installationsData?.installations ?? []
@@ -105,10 +103,7 @@ export function CreateGitDeploymentModal({
   }, [resource.providerBranch, open])
 
   useEffect(() => {
-    if (
-      installations.length > 0 &&
-      !selectedInstallationId
-    ) {
+    if (installations.length > 0 && !selectedInstallationId) {
       setSelectedInstallationId(installations[0].$id)
     }
   }, [installations, selectedInstallationId])
@@ -217,20 +212,18 @@ export function CreateGitDeploymentModal({
   }
 
   const installationId = hasLinkedRepo
-    ? resource.installationId ?? undefined
+    ? (resource.installationId ?? undefined)
     : selectedInstallationId || undefined
   const providerRepositoryId = hasLinkedRepo
-    ? resource.providerRepositoryId ?? undefined
+    ? (resource.providerRepositoryId ?? undefined)
     : selectedRepositoryId || undefined
 
   const docsUrl =
     resourceType === 'function' ? FUNCTIONS_DEPLOY_DOCS : SITES_DEPLOY_DOCS
   const isPending = linkRepoThenDeployMutation.isPending
 
-  const showRepoPicker =
-    !hasLinkedRepo && !selectedRepositoryId
-  const showNextSteps =
-    hasLinkedRepo || selectedRepositoryId
+  const showRepoPicker = !hasLinkedRepo && !selectedRepositoryId
+  const showNextSteps = hasLinkedRepo || selectedRepositoryId
 
   const handleRepositorySelect = (repo: Models.ProviderRepositoryFramework) => {
     setSelectedRepositoryId(repo.id)
@@ -286,8 +279,7 @@ export function CreateGitDeploymentModal({
                   </p>
                   {repository.pushedAt && (
                     <p className="text-[12px] text-muted-foreground mt-1">
-                      Last updated{' '}
-                      <DateTooltip date={repository.pushedAt} />
+                      Last updated <DateTooltip date={repository.pushedAt} />
                     </p>
                   )}
                   {repository.url && (
@@ -309,8 +301,7 @@ export function CreateGitDeploymentModal({
                   </p>
                   {selectedRepoPushedAt && (
                     <p className="text-[12px] text-muted-foreground mt-1">
-                      Last updated{' '}
-                      <DateTooltip date={selectedRepoPushedAt} />
+                      Last updated <DateTooltip date={selectedRepoPushedAt} />
                     </p>
                   )}
                   <Button

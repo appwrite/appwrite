@@ -1613,7 +1613,10 @@ function RestoreBackupDialog({
               <div className="flex flex-col gap-0.5">
                 <span className="text-muted-foreground">Created</span>
                 <span className="text-foreground">
-                  {new Date(backup.$createdAt).toISOString().replace('T', ' ').slice(0, 19)}
+                  {new Date(backup.$createdAt)
+                    .toISOString()
+                    .replace('T', ' ')
+                    .slice(0, 19)}
                 </span>
               </div>
               <div className="flex flex-col gap-0.5">
@@ -1671,7 +1674,8 @@ function RestoreBackupDialog({
                   New database
                 </span>
                 <p className="text-[12px] text-muted-foreground leading-snug">
-                  Create a new database from this archive; source remains unchanged.
+                  Create a new database from this archive; source remains
+                  unchanged.
                 </p>
               </div>
             </Label>
@@ -1695,7 +1699,8 @@ function RestoreBackupDialog({
                   Current database
                 </span>
                 <p className="text-[12px] text-muted-foreground leading-snug">
-                  Overwrite existing data with this backup. This cannot be undone.
+                  Overwrite existing data with this backup. This cannot be
+                  undone.
                 </p>
               </div>
             </Label>
@@ -1724,7 +1729,10 @@ function RestoreBackupDialog({
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="new-db-id" className="text-[13px]">
-                    ID <span className="text-muted-foreground font-normal">(optional)</span>
+                    ID{' '}
+                    <span className="text-muted-foreground font-normal">
+                      (optional)
+                    </span>
                   </Label>
                   <IdInput
                     id="new-db-id"
@@ -1759,7 +1767,8 @@ function RestoreBackupDialog({
                   htmlFor="confirm-same-db"
                   className="flex-1 cursor-pointer text-[13px] text-foreground"
                 >
-                  I understand that all current database data will be permanently replaced by this backup.
+                  I understand that all current database data will be
+                  permanently replaced by this backup.
                 </Label>
               </div>
             </div>

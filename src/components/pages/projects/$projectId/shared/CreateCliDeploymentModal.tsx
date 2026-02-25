@@ -15,7 +15,10 @@ import {
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Info } from 'lucide-react'
-import { CodeBlock, type CodeBlockLanguage } from '@/components/global/shared/CodeBlock'
+import {
+  CodeBlock,
+  type CodeBlockLanguage,
+} from '@/components/global/shared/CodeBlock'
 
 export type CreateCliDeploymentResourceType = 'function' | 'site'
 
@@ -132,14 +135,16 @@ function getDefaultCliTab(): 'unix' | 'cmd' | 'powershell' {
   if (typeof navigator === 'undefined') return 'unix'
   const platform =
     (navigator as Navigator & { userAgentData?: { platform: string } })
-      .userAgentData?.platform || navigator.platform || ''
+      .userAgentData?.platform ||
+    navigator.platform ||
+    ''
   if (platform.toLowerCase().includes('win')) return 'cmd'
   return 'unix'
 }
 
 const DESCRIPTION = {
   function:
-    'Deploy your function using the Appwrite CLI by running the following command inside your function\'s folder.',
+    "Deploy your function using the Appwrite CLI by running the following command inside your function's folder.",
   site: "Deploy your site using the Appwrite CLI by running the following command inside your site's folder.",
 } as const
 
@@ -190,13 +195,19 @@ export function CreateCliDeploymentModal({
               <TabsTrigger value="cmd" className="cursor-pointer text-[13px]">
                 CMD
               </TabsTrigger>
-              <TabsTrigger value="powershell" className="cursor-pointer text-[13px]">
+              <TabsTrigger
+                value="powershell"
+                className="cursor-pointer text-[13px]"
+              >
                 PowerShell
               </TabsTrigger>
             </TabsList>
             {/* Fixed-height container with explicit CodeBlock height so all tabs scroll properly */}
             <div className="min-h-0 overflow-hidden" style={{ height: 250 }}>
-              <TabsContent value="unix" className="mt-0 h-full data-[state=inactive]:hidden">
+              <TabsContent
+                value="unix"
+                className="mt-0 h-full data-[state=inactive]:hidden"
+              >
                 <CodeBlock
                   code={codeByTab.unix}
                   language={languageByTab.unix}
@@ -205,7 +216,10 @@ export function CreateCliDeploymentModal({
                   className="[&>div:last-child]:min-h-0"
                 />
               </TabsContent>
-              <TabsContent value="cmd" className="mt-0 h-full data-[state=inactive]:hidden">
+              <TabsContent
+                value="cmd"
+                className="mt-0 h-full data-[state=inactive]:hidden"
+              >
                 <CodeBlock
                   code={codeByTab.cmd}
                   language={languageByTab.cmd}
@@ -214,7 +228,10 @@ export function CreateCliDeploymentModal({
                   className="[&>div:last-child]:min-h-0"
                 />
               </TabsContent>
-              <TabsContent value="powershell" className="mt-0 h-full data-[state=inactive]:hidden">
+              <TabsContent
+                value="powershell"
+                className="mt-0 h-full data-[state=inactive]:hidden"
+              >
                 <CodeBlock
                   code={codeByTab.powershell}
                   language={languageByTab.powershell}

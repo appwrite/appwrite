@@ -109,7 +109,9 @@ export function CreateManualDeploymentModal({
           onProgress: (progress) => {
             if (progress.chunksTotal && progress.chunksTotal > 0) {
               setUploadProgress(
-                Math.round((progress.chunksUploaded / progress.chunksTotal) * 100),
+                Math.round(
+                  (progress.chunksUploaded / progress.chunksTotal) * 100,
+                ),
               )
             }
           },
@@ -122,7 +124,9 @@ export function CreateManualDeploymentModal({
         onProgress: (progress) => {
           if (progress.chunksTotal && progress.chunksTotal > 0) {
             setUploadProgress(
-              Math.round((progress.chunksUploaded / progress.chunksTotal) * 100),
+              Math.round(
+                (progress.chunksUploaded / progress.chunksTotal) * 100,
+              ),
             )
           }
         },
@@ -135,7 +139,9 @@ export function CreateManualDeploymentModal({
           : ['deployments', 'site', projectId, resourceId]
       queryClient.refetchQueries({ queryKey: deployKey })
       if (resourceType === 'site') {
-        queryClient.invalidateQueries({ queryKey: ['site', 'project', projectId, resourceId] })
+        queryClient.invalidateQueries({
+          queryKey: ['site', 'project', projectId, resourceId],
+        })
       }
       toast.success('Deployment created successfully')
       handleClose(false)
@@ -168,7 +174,8 @@ export function CreateManualDeploymentModal({
         <DialogHeader className="px-6 pt-6 pb-4 text-left">
           <DialogTitle>Create manual deployment</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Upload a .tar.gz archive of your code. Maximum file size is {maxMb}MB.
+            Upload a .tar.gz archive of your code. Maximum file size is {maxMb}
+            MB.
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />

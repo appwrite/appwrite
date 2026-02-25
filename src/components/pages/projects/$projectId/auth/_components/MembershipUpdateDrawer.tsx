@@ -15,7 +15,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { useUpdateTeamMembership, useDeleteTeamMembership } from '@/lib/react-query/hooks'
+import {
+  useUpdateTeamMembership,
+  useDeleteTeamMembership,
+} from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import { Plus, X, Trash2, ChevronRight } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
@@ -207,10 +210,7 @@ export function MembershipUpdateDrawer({
                         params={{ projectId, teamId: membership.teamId }}
                         className="flex items-center gap-3 rounded-xl border border-border bg-card/50 px-4 py-3 transition-colors hover:bg-muted/50"
                       >
-                        <InitialsAvatar
-                          name={membership.teamName}
-                          size="md"
-                        />
+                        <InitialsAvatar name={membership.teamName} size="md" />
                         <div className="flex-1 min-w-0">
                           <p className="text-[13px] font-medium text-foreground truncate">
                             {membership.teamName || 'Team'}
@@ -368,8 +368,12 @@ export function MembershipUpdateDrawer({
               Are you sure you want to remove{' '}
               <strong>
                 {context === 'team'
-                  ? membership?.userName || membership?.userEmail || 'this member'
-                  : membership?.userName || membership?.userEmail || 'this user'}
+                  ? membership?.userName ||
+                    membership?.userEmail ||
+                    'this member'
+                  : membership?.userName ||
+                    membership?.userEmail ||
+                    'this user'}
                 {' · '}
                 {membership?.teamName || 'this team'}
               </strong>

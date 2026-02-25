@@ -359,137 +359,137 @@ export function AccountSessions() {
             </TableHeader>
             <TableBody>
               {sessions.map((session) => {
-                    const deviceInfo = formatDeviceInfo(session)
-                    const isCurrent = session.current || false
-                    const flagUrl = getCountryFlagUrl(session.countryCode)
-                    const providerIcon = getProviderIcon(session.provider)
-                    const hasMFA = session.factors && session.factors.length > 0
+                const deviceInfo = formatDeviceInfo(session)
+                const isCurrent = session.current || false
+                const flagUrl = getCountryFlagUrl(session.countryCode)
+                const providerIcon = getProviderIcon(session.provider)
+                const hasMFA = session.factors && session.factors.length > 0
 
-                    return (
-                      <TableRow key={session.$id} className="group">
-                        <TableCell className="px-4 py-3.5">
-                          <div className="flex items-start gap-3">
-                            <BrowserIcon
-                              clientCode={session.clientCode}
-                              deviceName={session.deviceName}
-                            />
-                            <div className="flex-1 min-w-0 space-y-1">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-[13px] font-semibold text-foreground">
-                                  {deviceInfo.primary}
-                                </span>
-                                {isCurrent && (
-                                  <Badge
-                                    variant="success"
-                                    className="text-[10px] font-medium px-1.5 py-0 h-4"
-                                  >
-                                    Current
-                                  </Badge>
-                                )}
-                                {hasMFA && (
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <div className="flex items-center justify-center h-4 w-4 rounded bg-muted/50">
-                                        <Shield className="h-2.5 w-2.5 text-muted-foreground" />
-                                      </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p className="text-xs">
-                                        MFA: {session.factors?.join(', ')}
-                                      </p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-3 flex-wrap">
-                                {deviceInfo.secondary && (
-                                  <span className="text-[12px] text-muted-foreground">
-                                    {deviceInfo.secondary}
-                                  </span>
-                                )}
-                                {session.provider && (
-                                  <div className="flex items-center gap-1.5">
-                                    {providerIcon ? (
-                                      <img
-                                        src={`/icons/${providerIcon}`}
-                                        alt={session.provider}
-                                        className="h-3 w-3 opacity-60"
-                                        onError={(e) => {
-                                          e.currentTarget.style.display = 'none'
-                                        }}
-                                      />
-                                    ) : (
-                                      <Key className="h-3 w-3 text-muted-foreground/60" />
-                                    )}
-                                    <span className="text-[11px] text-muted-foreground/80 font-medium">
-                                      {getProviderName(session.provider)}
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="px-4 py-3.5">
-                          <div className="flex items-center gap-2">
-                            {flagUrl ? (
-                              <img
-                                src={flagUrl}
-                                alt={session.countryName || ''}
-                                className="h-4 w-4 rounded-sm border border-border/30 shadow-sm"
-                                onError={(e) => {
-                                  e.currentTarget.style.display = 'none'
-                                }}
-                              />
-                            ) : (
-                              <Globe className="h-4 w-4 text-muted-foreground/60" />
+                return (
+                  <TableRow key={session.$id} className="group">
+                    <TableCell className="px-4 py-3.5">
+                      <div className="flex items-start gap-3">
+                        <BrowserIcon
+                          clientCode={session.clientCode}
+                          deviceName={session.deviceName}
+                        />
+                        <div className="flex-1 min-w-0 space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-[13px] font-semibold text-foreground">
+                              {deviceInfo.primary}
+                            </span>
+                            {isCurrent && (
+                              <Badge
+                                variant="success"
+                                className="text-[10px] font-medium px-1.5 py-0 h-4"
+                              >
+                                Current
+                              </Badge>
                             )}
-                            <span className="text-[13px] font-medium text-foreground">
-                              {session.countryName &&
-                              session.countryCode &&
-                              session.countryCode !== '--'
-                                ? session.countryName
-                                : 'Unknown'}
-                            </span>
+                            {hasMFA && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="flex items-center justify-center h-4 w-4 rounded bg-muted/50">
+                                    <Shield className="h-2.5 w-2.5 text-muted-foreground" />
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p className="text-xs">
+                                    MFA: {session.factors?.join(', ')}
+                                  </p>
+                                </TooltipContent>
+                              </Tooltip>
+                            )}
                           </div>
-                        </TableCell>
-                        <TableCell className="px-4 py-3.5">
-                          {session.ip ? (
-                            <code className="text-[12px] text-muted-foreground font-mono bg-muted/30 px-1.5 py-0.5 rounded">
-                              {formatIP(session.ip)}
-                            </code>
-                          ) : (
-                            <span className="text-[12px] text-muted-foreground/50">
-                              —
-                            </span>
-                          )}
-                        </TableCell>
-                        <TableCell className="px-4 py-3.5">
-                          <DateTooltip
-                            date={session.$createdAt}
-                            className="text-[12px] font-medium text-foreground"
+                          <div className="flex items-center gap-3 flex-wrap">
+                            {deviceInfo.secondary && (
+                              <span className="text-[12px] text-muted-foreground">
+                                {deviceInfo.secondary}
+                              </span>
+                            )}
+                            {session.provider && (
+                              <div className="flex items-center gap-1.5">
+                                {providerIcon ? (
+                                  <img
+                                    src={`/icons/${providerIcon}`}
+                                    alt={session.provider}
+                                    className="h-3 w-3 opacity-60"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = 'none'
+                                    }}
+                                  />
+                                ) : (
+                                  <Key className="h-3 w-3 text-muted-foreground/60" />
+                                )}
+                                <span className="text-[11px] text-muted-foreground/80 font-medium">
+                                  {getProviderName(session.provider)}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-4 py-3.5">
+                      <div className="flex items-center gap-2">
+                        {flagUrl ? (
+                          <img
+                            src={flagUrl}
+                            alt={session.countryName || ''}
+                            className="h-4 w-4 rounded-sm border border-border/30 shadow-sm"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none'
+                            }}
                           />
-                        </TableCell>
-                        <TableCell className="px-4 py-3.5">
-                          <DateTooltip
-                            date={session.expire}
-                            className="text-[12px] font-medium text-foreground"
-                          />
-                        </TableCell>
-                        <TableCell className="px-4 py-3.5 text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                            onClick={() => handleDeleteClick(session.$id)}
-                            disabled={deleteSessionMutation.isPending}
-                            title="Revoke session"
-                          >
-                            <LogOut className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    )
+                        ) : (
+                          <Globe className="h-4 w-4 text-muted-foreground/60" />
+                        )}
+                        <span className="text-[13px] font-medium text-foreground">
+                          {session.countryName &&
+                          session.countryCode &&
+                          session.countryCode !== '--'
+                            ? session.countryName
+                            : 'Unknown'}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-4 py-3.5">
+                      {session.ip ? (
+                        <code className="text-[12px] text-muted-foreground font-mono bg-muted/30 px-1.5 py-0.5 rounded">
+                          {formatIP(session.ip)}
+                        </code>
+                      ) : (
+                        <span className="text-[12px] text-muted-foreground/50">
+                          —
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="px-4 py-3.5">
+                      <DateTooltip
+                        date={session.$createdAt}
+                        className="text-[12px] font-medium text-foreground"
+                      />
+                    </TableCell>
+                    <TableCell className="px-4 py-3.5">
+                      <DateTooltip
+                        date={session.expire}
+                        className="text-[12px] font-medium text-foreground"
+                      />
+                    </TableCell>
+                    <TableCell className="px-4 py-3.5 text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={() => handleDeleteClick(session.$id)}
+                        disabled={deleteSessionMutation.isPending}
+                        title="Revoke session"
+                      >
+                        <LogOut className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                )
               })}
             </TableBody>
           </Table>

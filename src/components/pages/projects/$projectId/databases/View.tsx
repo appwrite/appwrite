@@ -4234,11 +4234,7 @@ function RowEditDrawer({
                               (k) => k !== '$createdAt' && k !== '$updatedAt',
                             ),
                           ]
-                        : [
-                            '$createdAt',
-                            '$updatedAt',
-                            ...Object.keys(row.data),
-                          ]
+                        : ['$createdAt', '$updatedAt', ...Object.keys(row.data)]
                       ).map((key) => {
                         const value = isCreateMode
                           ? formData[key]

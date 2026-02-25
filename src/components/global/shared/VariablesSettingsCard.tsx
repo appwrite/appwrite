@@ -1089,9 +1089,7 @@ export function VariablesSettingsCard({
               size="sm"
               className="h-9 text-[13px]"
               onClick={() => setShowImportModal(false)}
-              disabled={
-                createMutation.isPending || updateMutation.isPending
-              }
+              disabled={createMutation.isPending || updateMutation.isPending}
             >
               Cancel
             </Button>
