@@ -19,6 +19,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
+use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
@@ -26,7 +27,6 @@ use Utopia\Storage\Validator\File;
 use Utopia\Storage\Validator\FileExt;
 use Utopia\Storage\Validator\FileSize;
 use Utopia\Storage\Validator\Upload;
-use Utopia\Swoole\Request;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
@@ -71,12 +71,12 @@ class Create extends Action
                 type: MethodType::UPLOAD,
                 packaging: true,
             ))
-            ->param('siteId', '', new UID(), 'Site ID.')
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
             ->param('installCommand', null, new Nullable(new Text(8192, 0)), 'Install Commands.', true)
             ->param('buildCommand', null, new Nullable(new Text(8192, 0)), 'Build Commands.', true)
             ->param('outputDirectory', null, new Nullable(new Text(8192, 0)), 'Output Directory.', true)
             ->param('code', [], new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', skipValidation: true)
-            ->param('activate', false, new Boolean(true), 'Automatically activate the deployment when it is finished building.')
+            ->param('activate', false, new Boolean(true), 'Automatically activate the deployment when it is finished building.', true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
@@ -88,6 +88,7 @@ class Create extends Action
             ->inject('queueForBuilds')
             ->inject('plan')
             ->inject('authorization')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -108,7 +109,8 @@ class Create extends Action
         Device $deviceForLocal,
         Build $queueForBuilds,
         array $plan,
-        Authorization $authorization
+        Authorization $authorization,
+        array $platform,
     ) {
         $activate = \strval($activate) === 'true' || \strval($activate) === '1';
 
@@ -272,7 +274,7 @@ class Create extends Action
                     ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
                 $dbForProject->updateDocument('sites', $site->getId(), $site);
 
-                $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+                $sitesDomain = $platform['sitesDomain'];
                 $domain = ID::unique() . "." . $sitesDomain;
 
                 // TODO: (@Meldiron) Remove after 1.7.x migration
@@ -342,7 +344,7 @@ class Create extends Action
                     ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
                 $dbForProject->updateDocument('sites', $site->getId(), $site);
 
-                $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+                $sitesDomain = $platform['sitesDomain'];
                 $domain = ID::unique() . "." . $sitesDomain;
                 $ruleId = md5($domain);
                 $authorization->skip(

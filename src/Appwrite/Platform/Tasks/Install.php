@@ -7,8 +7,8 @@ use Appwrite\Docker\Env;
 use Appwrite\Utopia\View;
 use Utopia\Auth\Proofs\Password;
 use Utopia\Auth\Proofs\Token;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Platform\Action;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
@@ -32,10 +32,11 @@ class Install extends Action
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
+            ->param('database', 'mongodb', new Text(0), 'Database to use (mongodb|mariadb|postgres)', true)
             ->callback($this->action(...));
     }
 
-    public function action(string $httpPort, string $httpsPort, string $organization, string $image, string $interactive, bool $noStart): void
+    public function action(string $httpPort, string $httpsPort, string $organization, string $image, string $interactive, bool $noStart, string $database): void
     {
         $config = Config::getParam('variables');
         $defaultHTTPPort = '80';
@@ -136,7 +137,16 @@ class Install extends Action
                     }
                 }
             }
+
+            // Block database type changes on existing installations
+            $existingDatabase = $vars['_APP_DB_ADAPTER']['default'] ?? null;
+            if ($existingDatabase !== null && $existingDatabase !== $database) {
+                Console::error("Cannot change database type from '{$existingDatabase}' to '{$database}'.");
+                Console::error('Changing database types on an existing installation is not supported.');
+                Console::exit(1);
+            }
         }
+
 
         if (empty($httpPort)) {
             $httpPort = Console::confirm('Choose your server HTTP port: (default: ' . $defaultHTTPPort . ')');
@@ -176,6 +186,7 @@ class Install extends Action
         $input = [];
 
         $password = new Password();
+        $password->setCharset('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789');
         $token = new Token();
         foreach ($vars as $var) {
             if ($var['name'] === '_APP_ASSISTANT_OPENAI_API_KEY') {
@@ -226,6 +237,11 @@ class Install extends Action
                 continue;
             }
 
+            if ($var['name'] === '_APP_DB_ADAPTER' && $data !== false) {
+                $input[$var['name']] = $database;
+                continue;
+            }
+
             $input[$var['name']] = Console::confirm($var['question'] . ' (default: \'' . $var['default'] . '\')');
 
             if (empty($input[$var['name']])) {
@@ -242,17 +258,34 @@ class Install extends Action
                 }
             }
         }
+        $database = $input['_APP_DB_ADAPTER'];
+        if ($database === 'postgresql') {
+            $input['_APP_DB_HOST'] = 'postgresql';
+            $input['_APP_DB_PORT'] = 5432;
+        } elseif ($database === 'mariadb') {
+            $input['_APP_DB_HOST'] = 'mariadb';
+            $input['_APP_DB_PORT'] = 3306;
+        }
+
+        $database = $input['_APP_DB_ADAPTER'];
+        if ($database === 'mongodb') {
+            $input['_APP_DB_HOST'] = 'mongodb';
+            $input['_APP_DB_PORT'] = 27017;
+        } elseif ($database === 'mariadb') {
+            $input['_APP_DB_HOST'] = 'mariadb';
+            $input['_APP_DB_PORT'] = 3306;
+        }
 
         $templateForCompose = new View(__DIR__ . '/../../../../app/views/install/compose.phtml');
         $templateForEnv = new View(__DIR__ . '/../../../../app/views/install/env.phtml');
-
         $templateForCompose
             ->setParam('httpPort', $httpPort)
             ->setParam('httpsPort', $httpsPort)
             ->setParam('version', APP_VERSION_STABLE)
             ->setParam('organization', $organization)
             ->setParam('image', $image)
-            ->setParam('enableAssistant', $enableAssistant);
+            ->setParam('enableAssistant', $enableAssistant)
+            ->setParam('database', $database);
 
         $templateForEnv->setParam('vars', $input);
 

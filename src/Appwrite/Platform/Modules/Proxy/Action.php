@@ -31,32 +31,40 @@ class Action extends PlatformAction
     protected function validateDomainRestrictions(string $domain, array $platform): void
     {
         $domains = $platform['hostnames'] ?? [];
-        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
 
+        $deniedDomains = [...$domains];
         $restrictions = [];
-        if (!empty($sitesDomain)) {
+
+        $sitesDomains = System::getEnv('_APP_DOMAIN_SITES', '');
+        foreach (\explode(',', $sitesDomains) as $sitesDomain) {
+            if (empty($sitesDomain)) {
+                continue;
+            }
+
+            $deniedDomains[] = $sitesDomain;
+
+            // Ensure site domains are exactly 1 subdomain, and dont start with reserved prefix
             $domainLevel = \count(\explode('.', $sitesDomain));
             $restrictions[] = ValidatorDomain::createRestriction($sitesDomain, $domainLevel + 1, ['commit-', 'branch-']);
         }
-        if (!empty($functionsDomain)) {
+
+        $functionsDomains = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+        foreach (\explode(',', $functionsDomains) as $functionsDomain) {
+            if (empty($functionsDomains)) {
+                continue;
+            }
+
+            $deniedDomains[] = $functionsDomain;
+
+            // Ensure function domains are exactly 1 subdomain
             $domainLevel = \count(\explode('.', $functionsDomain));
             $restrictions[] = ValidatorDomain::createRestriction($functionsDomain, $domainLevel + 1);
         }
+
         $validator = new ValidatorDomain($restrictions);
 
         if (!$validator->isValid($domain)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please use a different domain.');
-        }
-
-        $deniedDomains = [...$domains];
-
-        if (!empty($sitesDomain)) {
-            $deniedDomains[] = $sitesDomain;
-        }
-
-        if (!empty($functionsDomain)) {
-            $deniedDomains[] = $functionsDomain;
         }
 
         $denyListDomains = System::getEnv('_APP_CUSTOM_DOMAIN_DENY_LIST', '');
@@ -117,31 +125,43 @@ class Action extends PlatformAction
             }
         }
 
-        $targetCNAME = null;
+        $targetCNAMEs = [];
         $ruleType = $rule->getAttribute('type', '');
         $resourceType = $rule->getAttribute('deploymentResourceType', '');
 
         // Ensures different target based on rule's type, as configured by env variables
-        if ($resourceType === 'function') {
-            // For example: fra.appwrite.run
-            $targetCNAME = new Domain(System::getEnv('_APP_DOMAIN_FUNCTIONS', ''));
-        } elseif ($resourceType === 'site') {
+        if ($resourceType === 'site') {
             // For example: appwrite.network
-            $targetCNAME = new Domain(System::getEnv('_APP_DOMAIN_SITES', ''));
-        } elseif ($ruleType === 'api') {
+            foreach (\explode(',', System::getEnv('_APP_DOMAIN_SITES', '')) as $targetCNAME) {
+                if (empty($targetCNAME)) {
+                    continue;
+                }
+                $targetCNAMEs[] = new Domain($targetCNAME);
+            }
+        } elseif ($resourceType === 'function' || $ruleType === 'api') {
             // For example: fra.cloud.appwrite.io
-            $targetCNAME = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME', ''));
+            $targetCNAMEs[] = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME', ''));
         } elseif ($ruleType === 'redirect') {
             // Shouldn't be needed, because redirect should always have resourceTyp too, but just in case we default to sites
             // For example: appwrite.network
-            $targetCNAME = new Domain(System::getEnv('_APP_DOMAIN_SITES', ''));
+            foreach (\explode(',', System::getEnv('_APP_DOMAIN_SITES', '')) as $targetCNAME) {
+                if (empty($targetCNAME)) {
+                    continue;
+                }
+                $targetCNAMEs[] = new Domain($targetCNAME);
+            }
         }
 
         $validators = [];
         $mainValidator = null; // Validator to use for error description
 
-        if (!is_null($targetCNAME)) {
-            $validator = new $dnsValidatorClass($targetCNAME->get(), Record::TYPE_CNAME, $dnsServers);
+        if (\count($targetCNAMEs) > 0) {
+            $cnameValidators = [];
+            foreach ($targetCNAMEs as $targetCNAME) {
+                $cnameValidators[] = new $dnsValidatorClass($targetCNAME->get(), Record::TYPE_CNAME, $dnsServers);
+            }
+
+            $validator = new AnyOf($cnameValidators);
             $validators[] = $validator;
 
             if (\is_null($mainValidator)) {
@@ -150,13 +170,17 @@ class Action extends PlatformAction
         }
 
         // Ensure at least one of CNAME/A/AAAA record points to our servers properly
-        $targetA = System::getEnv('_APP_DOMAIN_TARGET_A', '');
-        if ((new IP(IP::V4))->isValid($targetA)) {
-            $validator = new $dnsValidatorClass($targetA, Record::TYPE_A, $dnsServers);
-            $validators[] = $validator;
+        foreach (\explode(',', System::getEnv('_APP_DOMAIN_TARGET_A', '')) as $targetA) {
+            if (empty($targetA)) {
+                continue;
+            }
+            if ((new IP(IP::V4))->isValid($targetA)) {
+                $validator = new $dnsValidatorClass($targetA, Record::TYPE_A, $dnsServers);
+                $validators[] = $validator;
 
-            if (\is_null($mainValidator)) {
-                $mainValidator = $validator;
+                if (\is_null($mainValidator)) {
+                    $mainValidator = $validator;
+                }
             }
         }
 
@@ -184,5 +208,31 @@ class Action extends PlatformAction
             }
             throw new Exception(Exception::RULE_VERIFICATION_FAILED, $mainValidator->getDescription());
         }
+    }
+
+    protected function isAppwriteOwned(string $domain): bool
+    {
+        $appwriteDomains = [];
+        $appwriteDomainEnvs = [
+            System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', ''),
+            System::getEnv('_APP_DOMAIN_FUNCTIONS', ''),
+            System::getEnv('_APP_DOMAIN_SITES', ''),
+        ];
+        foreach ($appwriteDomainEnvs as $appwriteDomainEnv) {
+            foreach (\explode(',', $appwriteDomainEnv) as $appwriteDomain) {
+                if (empty($appwriteDomain)) {
+                    continue;
+                }
+                $appwriteDomains[] = $appwriteDomain;
+            }
+        }
+
+        foreach ($appwriteDomains as $appwriteDomain) {
+            if (\str_ends_with($domain, $appwriteDomain)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

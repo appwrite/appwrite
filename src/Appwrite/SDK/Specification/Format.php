@@ -3,13 +3,13 @@
 namespace Appwrite\SDK\Specification;
 
 use Appwrite\Utopia\Response\Model;
-use Utopia\App;
 use Utopia\Config\Config;
-use Utopia\Route;
+use Utopia\Http\Http;
+use Utopia\Http\Route;
 
 abstract class Format
 {
-    protected App $app;
+    protected Http $app;
 
     /**
      * @var array<Route>
@@ -80,7 +80,7 @@ abstract class Format
 
     protected array $enumBlacklist = [];
 
-    public function __construct(App $app, array $services, array $routes, array $models, array $keys, int $authCount, string $platform)
+    public function __construct(Http $app, array $services, array $routes, array $models, array $keys, int $authCount, string $platform)
     {
         $this->app = $app;
         $this->services = $services;

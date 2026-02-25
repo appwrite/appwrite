@@ -24,34 +24,82 @@ trait ProjectCustom
             return self::$project;
         }
 
-        $team = $this->client->call(Client::METHOD_POST, '/teams', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-            'x-appwrite-project' => 'console',
-        ], [
-            'teamId' => ID::unique(),
-            'name' => 'Demo Project Team',
-        ]);
-        $this->assertEquals(201, $team['headers']['status-code']);
-        $this->assertEquals('Demo Project Team', $team['body']['name']);
-        $this->assertNotEmpty($team['body']['$id']);
+        if ($fresh) {
+            return $this->createNewProject();
+        }
 
-        $project = $this->client->call(Client::METHOD_POST, '/projects', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-            'x-appwrite-project' => 'console',
-        ], [
-            'projectId' => ID::unique(),
-            'region' => System::getEnv('_APP_REGION', 'default'),
-            'name' => 'Demo Project',
-            'teamId' => $team['body']['$id'],
-            'description' => 'Demo Project Description',
-            'url' => 'https://appwrite.io',
-        ]);
+        self::$project = $this->createNewProject();
 
-        $this->assertEquals(201, $project['headers']['status-code']);
+        return self::$project;
+    }
+
+    /**
+     * Create a new project with team, API key, dev key, webhook, and SMTP config.
+     */
+    protected function createNewProject(): array
+    {
+        // Small delay to ensure session is fully propagated under parallel load
+        usleep(100000); // 100ms
+
+        $maxRetries = 5;
+        $team = null;
+        $teamId = ID::unique();
+
+        for ($i = 0; $i < $maxRetries; $i++) {
+            $team = $this->client->call(Client::METHOD_POST, '/teams', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+                'x-appwrite-project' => 'console',
+            ], [
+                'teamId' => $teamId,
+                'name' => 'Demo Project Team',
+            ]);
+
+            if ($team['headers']['status-code'] === 201 || $team['headers']['status-code'] === 409) {
+                break;
+            }
+
+            if ($team['headers']['status-code'] === 401 && $i < $maxRetries - 1) {
+                \usleep(500000); // 500ms delay before retry
+                continue;
+            }
+        }
+
+        $this->assertContains($team['headers']['status-code'], [201, 409], 'Team creation failed with status: ' . $team['headers']['status-code']);
+        if ($team['headers']['status-code'] === 201) {
+            $this->assertEquals('Demo Project Team', $team['body']['name']);
+            $this->assertNotEmpty($team['body']['$id']);
+            $teamId = $team['body']['$id'];
+        }
+
+        $project = null;
+        for ($i = 0; $i < $maxRetries; $i++) {
+            $project = $this->client->call(Client::METHOD_POST, '/projects', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+                'x-appwrite-project' => 'console',
+            ], [
+                'projectId' => ID::unique(),
+                'region' => System::getEnv('_APP_REGION', 'default'),
+                'name' => 'Demo Project',
+                'teamId' => $teamId,
+                'description' => 'Demo Project Description',
+                'url' => 'https://appwrite.io',
+            ]);
+
+            if ($project['headers']['status-code'] === 201) {
+                break;
+            }
+
+            if ($project['headers']['status-code'] === 401 && $i < $maxRetries - 1) {
+                \usleep(500000); // 500ms delay before retry
+                continue;
+            }
+        }
+
+        $this->assertEquals(201, $project['headers']['status-code'], 'Project creation failed with status: ' . $project['headers']['status-code']);
         $this->assertNotEmpty($project['body']);
 
         $key = $this->client->call(Client::METHOD_POST, '/projects/' . $project['body']['$id'] . '/keys', [
@@ -60,6 +108,7 @@ trait ProjectCustom
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
+            'keyId' => ID::unique(),
             'name' => 'Demo Project Key',
             'scopes' => [
                 'users.read',
@@ -139,7 +188,7 @@ trait ProjectCustom
             'name' => 'Webhook Test',
             'events' => [
                 'databases.*',
-                // 'functions.*', TODO @christyjacob4 : enable test once we allow functions.* events
+                'functions.*',
                 'buckets.*',
                 'teams.*',
                 'users.*'
@@ -166,7 +215,7 @@ trait ProjectCustom
             'password' => System::getEnv('_APP_SMTP_PASSWORD', 'password'),
         ]);
 
-        $project = [
+        return [
             '$id' => $project['body']['$id'],
             'name' => $project['body']['name'],
             'apiKey' => $key['body']['secret'],
@@ -174,13 +223,6 @@ trait ProjectCustom
             'webhookId' => $webhook['body']['$id'],
             'signatureKey' => $webhook['body']['signatureKey'],
         ];
-
-        if ($fresh) {
-            return $project;
-        }
-        self::$project = $project;
-
-        return self::$project;
     }
 
     public function getNewKey(array $scopes)
@@ -194,6 +236,7 @@ trait ProjectCustom
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
+            'keyId' => ID::unique(),
             'name' => 'Demo Project Key',
             'scopes' => $scopes,
         ]);

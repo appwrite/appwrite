@@ -6,7 +6,7 @@ use Appwrite\Tests\Async;
 use Appwrite\Tests\Async\Exceptions\Critical;
 use CURLFile;
 use Tests\E2E\Client;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\System\System;
@@ -65,7 +65,7 @@ trait SitesBase
             }
 
             $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-        }, 300000, 500);
+        }, 120000, 500);
 
         // Not === so multipart/form-data works fine too
         if (($params['activate'] ?? false) == true) {
@@ -76,7 +76,7 @@ trait SitesBase
                     'x-appwrite-key' => $this->getProject()['apiKey'],
                 ]));
                 $this->assertEquals($deploymentId, $site['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
-            }, 100000, 500);
+            }, 120000, 500);
         }
 
         return $deploymentId;
@@ -281,12 +281,12 @@ trait SitesBase
         $this->assertEventually(function () use ($siteId, $deploymentId) {
             $deployment = $this->getDeployment($siteId, $deploymentId);
             $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-        }, 150000, 500);
+        }, 120000, 500);
 
         $this->assertEventually(function () use ($siteId, $deploymentId) {
             $site = $this->getSite($siteId);
             $this->assertEquals($deploymentId, $site['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
-        }, 100000, 500);
+        }, 60000, 500);
 
         return $deploymentId;
     }
@@ -335,21 +335,28 @@ trait SitesBase
 
     protected function helperGetLatestCommit(string $owner, string $repository): ?string
     {
-        $ch = curl_init("https://api.github.com/repos/{$owner}/{$repository}/commits/main");
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'User-Agent: Appwrite',
-            'Accept: application/vnd.github.v3+json'
-        ]);
+        $maxRetries = 3;
+        for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
+            if ($attempt > 0) {
+                sleep(2);
+            }
 
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+            $ch = curl_init("https://api.github.com/repos/{$owner}/{$repository}/commits/main");
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'User-Agent: Appwrite',
+                'Accept: application/vnd.github.v3+json'
+            ]);
 
-        if ($httpCode === 200) {
-            $commitData = json_decode($response, true);
-            if (isset($commitData['sha'])) {
-                return $commitData['sha'];
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($httpCode === 200) {
+                $commitData = json_decode($response, true);
+                if (isset($commitData['sha'])) {
+                    return $commitData['sha'];
+                }
             }
         }
 
@@ -368,12 +375,13 @@ trait SitesBase
 
     protected function setupSiteDomain(string $siteId, string $subdomain = ''): string
     {
+        $sitesDomain = \explode(',', System::getEnv('_APP_DOMAIN_SITES', ''))[0];
         $subdomain = $subdomain ? $subdomain : ID::unique();
         $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/site', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'domain' => $subdomain . '.' . System::getEnv('_APP_DOMAIN_SITES', ''),
+            'domain' => $subdomain . '.' . $sitesDomain,
             'siteId' => $siteId,
         ]);
 

@@ -15,7 +15,8 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Http\Http;
 use Utopia\Validator;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
@@ -66,10 +67,12 @@ class Create extends Action
             ->param('required', null, new Boolean(), 'Is attribute required?')
             ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
             ->param('array', false, new Boolean(), 'Is attribute an array?', true)
+            ->param('encrypt', false, new Boolean(), 'Toggle encryption for the attribute. Encryption enhances security by not storing any plain text values in the database. However, encrypted attributes cannot be queried.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
+            ->inject('plan')
             ->inject('authorization')
             ->callback($this->action(...));
     }
@@ -82,16 +85,34 @@ class Create extends Action
         ?bool          $required,
         ?string        $default,
         bool           $array,
+        bool           $encrypt,
         UtopiaResponse $response,
         Database       $dbForProject,
         EventDatabase  $queueForDatabase,
         Event          $queueForEvents,
+        array $plan,
         Authorization $authorization
     ): void {
+        if (!Http::isDevelopment() && $encrypt && !empty($plan) && !($plan['databasesAllowEncrypt'] ?? false)) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Encrypted ' . $this->getSDKGroup() . ' are not available on your plan. Please upgrade to create encrypted ' . $this->getSDKGroup() . '.');
+        }
+
+        if ($encrypt && $size < APP_DATABASE_ENCRYPT_SIZE_MIN) {
+            throw new Exception(
+                Exception::GENERAL_BAD_REQUEST,
+                "Size too small. Encrypted strings require a minimum size of " . APP_DATABASE_ENCRYPT_SIZE_MIN . " characters."
+            );
+        }
+
         // Ensure default fits in the given size
         $validator = new Text($size, 0);
         if (!is_null($default) && !$validator->isValid($default)) {
             throw new Exception($this->getInvalidValueException(), $validator->getDescription());
+        }
+
+        $filters = [];
+        if ($encrypt) {
+            $filters[] = 'encrypt';
         }
 
         $attribute = $this->createAttribute(
@@ -104,6 +125,7 @@ class Create extends Action
                 'required' => $required,
                 'default' => $default,
                 'array' => $array,
+                'filters' => $filters,
             ]),
             $response,
             $dbForProject,
@@ -111,6 +133,8 @@ class Create extends Action
             $queueForEvents,
             $authorization
         );
+
+        $attribute->setAttribute('encrypt', $encrypt);
 
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_ACCEPTED)

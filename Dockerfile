@@ -1,4 +1,4 @@
-FROM composer:2.0 AS composer
+FROM composer:2 AS composer
 
 ARG TESTING=false
 ENV TESTING=$TESTING
@@ -12,7 +12,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:0.11.5 AS base
+FROM appwrite/base:1.0.0 AS base
 
 LABEL maintainer="team@appwrite.io"
 
@@ -37,6 +37,9 @@ COPY ./app /usr/src/code/app
 COPY ./public /usr/src/code/public
 COPY ./bin /usr/local/bin
 COPY ./src /usr/src/code/src
+COPY ./dev /usr/src/code/dev
+COPY ./mongo-init.js /usr/src/code/mongo-init.js
+COPY ./mongo-entrypoint.sh /usr/src/code/mongo-entrypoint.sh
 
 # Set Volumes
 RUN mkdir -p /storage/uploads && \
@@ -81,6 +84,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-certificates && \
     chmod +x /usr/local/bin/worker-databases && \
     chmod +x /usr/local/bin/worker-deletes && \
+    chmod +x /usr/local/bin/worker-executions && \
     chmod +x /usr/local/bin/worker-functions && \
     chmod +x /usr/local/bin/worker-mails && \
     chmod +x /usr/local/bin/worker-messaging && \

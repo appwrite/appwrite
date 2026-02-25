@@ -21,7 +21,6 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Abuse;
-use Utopia\App;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
@@ -31,6 +30,8 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
+use Utopia\Database\Validator\Roles;
+use Utopia\Http\Http;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Validator\WhiteList;
@@ -74,7 +75,7 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
     return $label;
 };
 
-App::init()
+Http::init()
     ->groups(['api'])
     ->inject('utopia')
     ->inject('request')
@@ -89,7 +90,7 @@ App::init()
     ->inject('team')
     ->inject('apiKey')
     ->inject('authorization')
-    ->action(function (App $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, Audit $queueForAudits, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization) {
+    ->action(function (Http $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, Audit $queueForAudits, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization) {
         $route = $utopia->getRoute();
 
         /**
@@ -169,8 +170,10 @@ App::init()
 
             // Handle special app role case
             if ($apiKey->getRole() === User::ROLE_APPS) {
-                // Disable authorization checks for API keys
-                $authorization->setDefaultStatus(false);
+                // Disable authorization checks for project API keys
+                if (($apiKey->getType() === API_KEY_STANDARD || $apiKey->getType() === API_KEY_DYNAMIC) && $apiKey->getProjectId() === $project->getId()) {
+                    $authorization->setDefaultStatus(false);
+                }
 
                 $user = new User([
                     '$id' => '',
@@ -247,6 +250,35 @@ App::init()
 
                 $queueForAudits->setUser($user);
             }
+
+            // Apply permission
+            if ($apiKey->getType() === API_KEY_ORGANIZATION) {
+                $authorization->addRole(Role::team($team->getId())->toString());
+                $authorization->addRole(Role::team($team->getId(), 'owner')->toString());
+            } elseif ($apiKey->getType() === API_KEY_ACCOUNT) {
+                $authorization->addRole(Role::user($user->getId())->toString());
+                $authorization->addRole(Role::users()->toString());
+
+                if ($user->getAttribute('emailVerification', false) || $user->getAttribute('phoneVerification', false)) {
+                    $authorization->addRole(Role::user($user->getId(), Roles::DIMENSION_VERIFIED)->toString());
+                    $authorization->addRole(Role::users(Roles::DIMENSION_VERIFIED)->toString());
+                } else {
+                    $authorization->addRole(Role::user($user->getId(), Roles::DIMENSION_UNVERIFIED)->toString());
+                    $authorization->addRole(Role::users(Roles::DIMENSION_UNVERIFIED)->toString());
+                }
+
+                foreach (\array_filter($user->getAttribute('memberships', []), fn ($membership) => ($membership['confirm'] ?? false) === true) as $nodeMembership) {
+                    $authorization->addRole(Role::team($nodeMembership['teamId'])->toString());
+                    $authorization->addRole(Role::member($nodeMembership->getId())->toString());
+                    foreach (($nodeMembership['roles'] ?? []) as $nodeRole) {
+                        $authorization->addRole(Role::team($nodeMembership['teamId'], $nodeRole)->toString());
+                    }
+                }
+
+                foreach ($user->getAttribute('labels', []) as $nodeLabel) {
+                    $authorization->addRole('label:' . $nodeLabel);
+                }
+            }
         } // Admin User Authentication
         elseif (($project->getId() === 'console' && !$team->isEmpty() && !$user->isEmpty()) || ($project->getId() !== 'console' && !$user->isEmpty() && $mode === APP_MODE_ADMIN)) {
             $teamId = $team->getId();
@@ -263,12 +295,40 @@ App::init()
                 throw new Exception(Exception::USER_UNAUTHORIZED);
             }
 
-            $scopes = []; // Reset scope if admin
-            foreach ($adminRoles as $role) {
-                $scopes = \array_merge($scopes, $roles[$role]['scopes']);
+            $projectId = $project->getId();
+            if ($projectId === 'console' && str_starts_with($route->getPath(), '/v1/projects/:projectId')) {
+                $uri = $request->getURI();
+                $projectId = explode('/', $uri)[3];
             }
 
-            $authorization->setDefaultStatus(false);  // Cancel security segmentation for admin users.
+            // Base scopes for admin users to allow listing teams and projects.
+            // Useful for those who have project-specific roles but don't have team-wide role.
+            $scopes = ['teams.read', 'projects.read'];
+            foreach ($adminRoles as $adminRole) {
+                $isTeamWideRole = !str_starts_with($adminRole, 'project-');
+                $isProjectSpecificRole = $projectId !== 'console' && str_starts_with($adminRole, 'project-' . $projectId);
+
+                if ($isTeamWideRole || $isProjectSpecificRole) {
+                    $role = match (str_starts_with($adminRole, 'project-')) {
+                        true => substr($adminRole, strrpos($adminRole, '-') + 1),
+                        false => $adminRole,
+                    };
+                    $roleScopes = $roles[$role]['scopes'] ?? [];
+                    $scopes = \array_merge($scopes, $roleScopes);
+                    $authorization->addRole($role);
+                }
+            }
+
+            /**
+             * For console projects resource, we use platform DB.
+             * Enabling authorization restricts admin user to the projects they have access to.
+             */
+            if ($project->getId() === 'console' && ($route->getPath() === '/v1/projects' || $route->getPath() === '/v1/projects/:projectId')) {
+                $authorization->setDefaultStatus(true);
+            } else {
+                // Otherwise, disable authorization checks.
+                $authorization->setDefaultStatus(false);
+            }
         }
 
         $scopes = \array_unique($scopes);
@@ -276,6 +336,21 @@ App::init()
         $authorization->addRole($role);
         foreach ($user->getRoles($authorization) as $authRole) {
             $authorization->addRole($authRole);
+        }
+
+        /**
+         * We disable authorization checks above to ensure other endpoints (list teams, members, etc.) will continue working.
+         * But, for actions on resources (sites, functions, etc.) in a non-console project, we explicitly check
+         * whether the admin user has necessary permission on the project (sites, functions, etc. don't have permissions associated to them).
+         */
+        if (empty($apiKey) && !$user->isEmpty() && $project->getId() !== 'console' && $mode === APP_MODE_ADMIN) {
+            $input = new Input(Database::PERMISSION_READ, $project->getPermissionsByType(Database::PERMISSION_READ));
+            $initialStatus = $authorization->getStatus();
+            $authorization->enable();
+            if (!$authorization->isValid($input)) {
+                throw new Exception(Exception::PROJECT_NOT_FOUND);
+            }
+            $authorization->setStatus($initialStatus);
         }
 
         // Step 6: Update project and user last activity
@@ -292,10 +367,10 @@ App::init()
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
                 $user->setAttribute('accessedAt', DateTime::now());
 
-                if (APP_MODE_ADMIN !== $mode) {
+                if ($project->getId() !== 'console' && APP_MODE_ADMIN !== $mode) {
                     $dbForProject->updateDocument('users', $user->getId(), $user);
                 } else {
-                    $dbForPlatform->updateDocument('users', $user->getId(), $user);
+                    $authorization->skip(fn () => $dbForPlatform->updateDocument('users', $user->getId(), $user));
                 }
             }
         }
@@ -356,7 +431,7 @@ App::init()
         }
     });
 
-App::init()
+Http::init()
     ->groups(['api'])
     ->inject('utopia')
     ->inject('request')
@@ -382,7 +457,7 @@ App::init()
     ->inject('telemetry')
     ->inject('platform')
     ->inject('authorization')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Mail $queueForMails, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform, Authorization $authorization) {
+    ->action(function (Http $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Mail $queueForMails, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform, Authorization $authorization) {
 
         $route = $utopia->getRoute();
 
@@ -397,6 +472,7 @@ App::init()
         /*
         * Abuse Check
         */
+
         $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
         $timeLimitArray = [];
 
@@ -432,6 +508,7 @@ App::init()
 
             $abuse = new Abuse($timeLimit);
             $remaining = $timeLimit->remaining();
+
             $limit = $timeLimit->limit();
             $time = $timeLimit->time() + $route->getLabel('abuse-time', 3600);
 
@@ -496,6 +573,7 @@ App::init()
         $queueForMessaging->setProject($project);
         $queueForFunctions->setProject($project);
         $queueForBuilds->setProject($project);
+        $queueForMails->setProject($project);
 
         /* Auto-set platforms */
         $queueForFunctions->setPlatform($platform);
@@ -592,7 +670,7 @@ App::init()
         }
     });
 
-App::init()
+Http::init()
     ->groups(['session'])
     ->inject('user')
     ->inject('request')
@@ -612,14 +690,14 @@ App::init()
  * Delete older sessions if the number of sessions have crossed
  * the session limit set for the project
  */
-App::shutdown()
+Http::shutdown()
     ->groups(['session'])
     ->inject('utopia')
     ->inject('request')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Database $dbForProject) {
+    ->action(function (Http $utopia, Request $request, Response $response, Document $project, Database $dbForProject) {
         $sessionLimit = $project->getAttribute('auths', [])['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT;
         $session = $response->getPayload();
         $userId = $session['userId'] ?? '';
@@ -646,7 +724,7 @@ App::shutdown()
         $dbForProject->purgeCachedDocument('users', $userId);
     });
 
-App::shutdown()
+Http::shutdown()
     ->groups(['api'])
     ->inject('utopia')
     ->inject('request')
@@ -667,7 +745,7 @@ App::shutdown()
     ->inject('authorization')
     ->inject('timelimit')
     ->inject('eventProcessor')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Audit $queueForAudits, StatsUsage $queueForStatsUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor) use ($parseLabel) {
+    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Audit $queueForAudits, StatsUsage $queueForStatsUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -892,7 +970,7 @@ App::shutdown()
         }
     });
 
-App::init()
+Http::init()
     ->groups(['usage'])
     ->action(function () {
         if (System::getEnv('_APP_USAGE_STATS', 'enabled') !== 'enabled') {

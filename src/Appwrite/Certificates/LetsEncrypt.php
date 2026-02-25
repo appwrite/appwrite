@@ -4,9 +4,9 @@ namespace Appwrite\Certificates;
 
 use Appwrite\Certificates\Exception\CertificateStatus as CertificateStatusException;
 use Exception;
-use Utopia\App;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\DateTime;
+use Utopia\Http\Http;
 use Utopia\Logger\Log;
 
 class LetsEncrypt implements Adapter
@@ -24,7 +24,7 @@ class LetsEncrypt implements Adapter
         $stdout = '';
         $stderr = '';
 
-        $staging = (App::isProduction()) ? '' : ' --dry-run';
+        $staging = (Http::isProduction()) ? '' : ' --dry-run';
         $exit = Console::execute(
             "certbot certonly -v --webroot --noninteractive --agree-tos{$staging}"
             . " --email " . $this->email

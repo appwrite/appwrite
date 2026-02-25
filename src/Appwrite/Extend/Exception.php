@@ -55,6 +55,7 @@ class Exception extends \Exception
     public const string GENERAL_CURSOR_NOT_FOUND = 'general_cursor_not_found';
     public const string GENERAL_SERVER_ERROR = 'general_server_error';
     public const string GENERAL_PROTOCOL_UNSUPPORTED = 'general_protocol_unsupported';
+    public const string GENERAL_FEATURE_UNSUPPORTED = 'general_feature_unsupported';
     public const string GENERAL_CODES_DISABLED = 'general_codes_disabled';
     public const string GENERAL_USAGE_DISABLED = 'general_usage_disabled';
     public const string GENERAL_NOT_IMPLEMENTED = 'general_not_implemented';
@@ -318,6 +319,7 @@ class Exception extends \Exception
 
     /** Keys */
     public const string KEY_NOT_FOUND = 'key_not_found';
+    public const string KEY_ALREADY_EXISTS = 'key_already_exists';
 
     /** Variables */
     public const string VARIABLE_NOT_FOUND = 'variable_not_found';
@@ -392,9 +394,9 @@ class Exception extends \Exception
 
     public function __construct(
         string $type = Exception::GENERAL_UNKNOWN,
-        string $message = null,
-        int|string $code = null,
-        \Throwable $previous = null,
+        ?string $message = null,
+        int|string|null $code = null,
+        ?\Throwable $previous = null,
         ?string $view = null,
         array $params = []
     ) {

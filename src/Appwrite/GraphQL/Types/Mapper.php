@@ -9,8 +9,8 @@ use Exception;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Definition\UnionType;
-use Utopia\App;
-use Utopia\Route;
+use Utopia\Http\Http;
+use Utopia\Http\Route;
 use Utopia\Validator;
 use Utopia\Validator\Nullable;
 
@@ -59,7 +59,8 @@ class Mapper
             'none' => Types::json(),
             'any' => Types::json(),
             'array' => Types::json(),
-            'enum' => Type::string()
+            'enum' => Type::string(),
+            'id' => Type::string()
         ];
 
         foreach ($defaults as $type => $default) {
@@ -79,7 +80,7 @@ class Mapper
     }
 
     public static function route(
-        App $utopia,
+        Http $utopia,
         Route $route,
         Method $method,
         callable $complexity
@@ -245,7 +246,7 @@ class Mapper
     /**
      * Map a {@see Route} parameter to a GraphQL Type
      *
-     * @param App $utopia
+     * @param Http $utopia
      * @param Validator|callable $validator
      * @param bool $required
      * @param array $injections
@@ -253,7 +254,7 @@ class Mapper
      * @throws Exception
      */
     public static function param(
-        App $utopia,
+        Http $utopia,
         Validator|callable $validator,
         bool $required,
         array $injections
