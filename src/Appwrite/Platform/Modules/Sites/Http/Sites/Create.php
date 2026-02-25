@@ -14,6 +14,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -136,7 +137,7 @@ class Create extends Base
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS (Version Control System), you need to provide "installationId" and "providerBranch".');
         }
 
-        $site = $dbForProject->createDocument('sites', new Document([
+        $site = new Document([
             '$id' => $siteId,
             'enabled' => $enabled,
             'live' => true,
@@ -166,13 +167,17 @@ class Create extends Base
             'runtimeSpecification' => $specification,
             'buildRuntime' => $buildRuntime,
             'adapter' => $adapter,
-        ]));
+        ]);
 
-        // Git connect logic
+        try {
+            $site = $dbForProject->createDocument('sites', $site);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::SITE_ALREADY_EXISTS);
+        }
+
         if (!empty($providerRepositoryId)) {
             $teamId = $project->getAttribute('teamId', '');
-
-            $repository = $dbForPlatform->createDocument('repositories', new Document([
+            $repository = new Document([
                 '$id' => ID::unique(),
                 '$permissions' => $this->getPermissions($teamId, $project->getId()),
                 'installationId' => $installation->getId(),
@@ -184,8 +189,8 @@ class Create extends Base
                 'resourceInternalId' => $site->getSequence(),
                 'resourceType' => 'site',
                 'providerPullRequestIds' => []
-            ]));
-
+            ]);
+            $repository = $dbForPlatform->createDocument('repositories', $repository);
             $site->setAttribute('repositoryId', $repository->getId());
             $site->setAttribute('repositoryInternalId', $repository->getSequence());
         }
