@@ -15,7 +15,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
-import { ExternalLink } from 'lucide-react'
+import { ExternalLink, ArrowLeft } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk, getApiEndpoint } from '@/lib/appwrite/sdk'
@@ -70,6 +70,9 @@ export function CreateGitDeploymentModal({
   const [selectedInstallationId, setSelectedInstallationId] = useState('')
   const [selectedRepositoryId, setSelectedRepositoryId] = useState('')
   const [selectedRepoPushedAt, setSelectedRepoPushedAt] = useState<
+    string | null
+  >(null)
+  const [selectedRepoDisplayName, setSelectedRepoDisplayName] = useState<
     string | null
   >(null)
 
@@ -224,21 +227,59 @@ export function CreateGitDeploymentModal({
     resourceType === 'function' ? FUNCTIONS_DEPLOY_DOCS : SITES_DEPLOY_DOCS
   const isPending = linkRepoThenDeployMutation.isPending
 
+  const showRepoPicker =
+    !hasLinkedRepo && !selectedRepositoryId
+  const showNextSteps =
+    hasLinkedRepo || selectedRepositoryId
+
+  const handleRepositorySelect = (repo: Models.ProviderRepositoryFramework) => {
+    setSelectedRepositoryId(repo.id)
+    setSelectedRepoPushedAt(repo.pushedAt ?? null)
+    setSelectedRepoDisplayName(
+      [repo.organization, repo.name].filter(Boolean).join('/') || null,
+    )
+  }
+
+  const handleBackToRepoPicker = () => {
+    setSelectedRepositoryId('')
+    setSelectedRepoPushedAt(null)
+    setSelectedRepoDisplayName(null)
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg p-0">
         <DialogHeader className="px-6 pt-6 pb-4 text-left">
           <DialogTitle>Create git deployment</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Deploy from a connected Git repository. Select the production branch
-            and whether to activate the deployment after the build completes.
+            {showRepoPicker
+              ? 'Select a repository to deploy from. You can change it later in settings.'
+              : 'Choose the production branch and whether to activate the deployment after the build completes.'}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
         <div className="px-6 pb-4 pt-0 space-y-4">
-          {hasLinkedRepo ? (
+          {showRepoPicker ? (
+            <div>
+              <Label className="text-[13px]">Repository</Label>
+              <RepositoryPicker
+                projectId={projectId}
+                getGitHubAuthUrl={getGitHubAuthUrl}
+                installations={installations}
+                selectedInstallationId={selectedInstallationId}
+                onInstallationChange={setSelectedInstallationId}
+                selectedRepositoryId={selectedRepositoryId}
+                onRepositorySelect={handleRepositorySelect}
+                mode="connect"
+                detectionType={
+                  resourceType === 'function' ? 'runtime' : 'framework'
+                }
+                className="mt-2"
+              />
+            </div>
+          ) : (
             <>
-              {repository && (
+              {hasLinkedRepo && repository && (
                 <div className="rounded-lg border border-border bg-muted/20 px-3 py-2">
                   <p className="text-[13px] font-medium text-foreground truncate">
                     {repository.organization}/{repository.name}
@@ -261,6 +302,29 @@ export function CreateGitDeploymentModal({
                   )}
                 </div>
               )}
+              {!hasLinkedRepo && selectedRepositoryId && (
+                <div className="rounded-lg border border-border bg-muted/20 px-3 py-2">
+                  <p className="text-[13px] font-medium text-foreground truncate">
+                    {selectedRepoDisplayName ?? 'Repository'}
+                  </p>
+                  {selectedRepoPushedAt && (
+                    <p className="text-[12px] text-muted-foreground mt-1">
+                      Last updated{' '}
+                      <DateTooltip date={selectedRepoPushedAt} />
+                    </p>
+                  )}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-[12px] text-muted-foreground hover:text-foreground mt-1 -ml-1"
+                    onClick={handleBackToRepoPicker}
+                  >
+                    <ArrowLeft className="h-3 w-3 mr-1" />
+                    Change repository
+                  </Button>
+                </div>
+              )}
               <BranchSelector
                 projectId={projectId}
                 installationId={installationId}
@@ -270,96 +334,70 @@ export function CreateGitDeploymentModal({
                 label="Production branch"
                 placeholder="Select branch"
               />
-            </>
-          ) : (
-            <>
-              <div>
-                <Label className="text-[13px]">Repository</Label>
-                <p className="text-[12px] text-muted-foreground mt-0.5 mb-2">
-                  Connect a repository to deploy from. You can change it later in
-                  settings.
-                </p>
-                <RepositoryPicker
-                  projectId={projectId}
-                  getGitHubAuthUrl={getGitHubAuthUrl}
-                  installations={installations}
-                  selectedInstallationId={selectedInstallationId}
-                  onInstallationChange={setSelectedInstallationId}
-                  selectedRepositoryId={selectedRepositoryId}
-                  onRepositorySelect={(repo) => {
-                    setSelectedRepositoryId(repo.providerRepositoryId)
-                    setSelectedRepoPushedAt(repo.pushedAt ?? null)
-                  }}
-                  mode="connect"
-                  detectionType={
-                    resourceType === 'function' ? 'runtime' : 'framework'
-                  }
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="activate-after-build"
+                  checked={activate}
+                  onCheckedChange={(v) => setActivate(v === true)}
                 />
+                <Label
+                  htmlFor="activate-after-build"
+                  className="text-[13px] font-normal cursor-pointer"
+                >
+                  Activate deployment after build
+                </Label>
               </div>
-              {selectedRepositoryId && (
-                <>
-                  {selectedRepoPushedAt && (
-                    <p className="text-[12px] text-muted-foreground">
-                      Last updated{' '}
-                      <DateTooltip date={selectedRepoPushedAt} />
-                    </p>
-                  )}
-                  <BranchSelector
-                    projectId={projectId}
-                    installationId={selectedInstallationId || undefined}
-                    providerRepositoryId={selectedRepositoryId}
-                    value={branch}
-                    onChange={setBranch}
-                    label="Production branch"
-                    placeholder="Select branch"
-                  />
-                </>
-              )}
+              <a
+                href={docsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-[12px] text-primary hover:underline"
+              >
+                Deployment docs <ExternalLink className="h-3 w-3" />
+              </a>
             </>
           )}
-
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="activate-after-build"
-              checked={activate}
-              onCheckedChange={(v) => setActivate(v === true)}
-            />
-            <Label
-              htmlFor="activate-after-build"
-              className="text-[13px] font-normal cursor-pointer"
-            >
-              Activate deployment after build
-            </Label>
-          </div>
-
-          <a
-            href={docsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-[12px] text-primary hover:underline"
-          >
-            Deployment docs <ExternalLink className="h-3 w-3" />
-          </a>
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isPending}
-            className="h-9 text-[13px]"
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={
-              isPending ||
-              (hasLinkedRepo ? !branch?.trim() : !selectedRepositoryId)
-            }
-            className="h-9 text-[13px]"
-          >
-            Create deployment
-          </Button>
+          {showNextSteps && (
+            <>
+              {!hasLinkedRepo && (
+                <Button
+                  variant="ghost"
+                  onClick={handleBackToRepoPicker}
+                  disabled={isPending}
+                  className="h-9 text-[13px] mr-auto sm:mr-0 sm:order-first"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5 mr-1.5" />
+                  Back
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isPending}
+                className="h-9 text-[13px]"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                disabled={isPending || !branch?.trim()}
+                className="h-9 text-[13px]"
+              >
+                Create deployment
+              </Button>
+            </>
+          )}
+          {showRepoPicker && (
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="h-9 text-[13px] ml-auto"
+            >
+              Cancel
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>

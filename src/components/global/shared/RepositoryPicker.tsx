@@ -357,10 +357,24 @@ export function RepositoryPicker({
                               Connect
                             </Button>
                           )}
-                          {mode === 'connect' && isSelected && (
-                            <span className="text-[12px] font-medium text-primary shrink-0">
-                              Selected
-                            </span>
+                          {mode === 'connect' && (
+                            isSelected ? (
+                              <span className="text-[12px] font-medium text-primary shrink-0">
+                                Selected
+                              </span>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-[12px] shrink-0"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  onRepositorySelect(repo)
+                                }}
+                              >
+                                Connect
+                              </Button>
+                            )
                           )}
                         </div>
                       )
