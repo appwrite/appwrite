@@ -4,7 +4,8 @@ namespace Appwrite\Platform\Modules\VCS\Http\GitHub\Events;
 
 use Appwrite\Event\Build;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\VCS\Http\GitHub\Action;
+use Appwrite\Platform\Action;
+use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployments;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
@@ -19,6 +20,7 @@ use Utopia\VCS\Adapter\Git\GitHub;
 class Create extends Action
 {
     use HTTP;
+    use Deployments;
 
     public static function getName()
     {

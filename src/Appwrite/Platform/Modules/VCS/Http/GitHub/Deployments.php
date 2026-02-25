@@ -6,7 +6,6 @@ use Appwrite\Event\Build;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
-use Appwrite\Platform\Action as UtopiaAction;
 use Appwrite\Vcs\Comment;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -22,7 +21,7 @@ use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
-class Action extends UtopiaAction
+trait Deployments
 {
     protected function createGitDeployments(
         GitHub $github,

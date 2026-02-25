@@ -4,7 +4,8 @@ namespace Appwrite\Platform\Modules\VCS\Http\GitHub\Authorize\External;
 
 use Appwrite\Event\Build;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\VCS\Http\GitHub\Action;
+use Appwrite\Platform\Action;
+use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployments;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -22,6 +23,7 @@ use Utopia\VCS\Exception\RepositoryNotFound;
 class Update extends Action
 {
     use HTTP;
+    use Deployments;
 
     public static function getName()
     {
