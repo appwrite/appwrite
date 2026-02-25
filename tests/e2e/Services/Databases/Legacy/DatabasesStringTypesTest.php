@@ -565,6 +565,22 @@ class DatabasesStringTypesTest extends Scope
         $data = $this->setupDatabaseAndCollection();
         $databaseId = $data['databaseId'];
         $collectionId = $data['collectionId'];
+
+        $encryptedVarchar = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/varchar', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'key' => 'varchar_encrypted_collection',
+            'size' => 256,
+            'required' => false,
+            'encrypt' => true,
+        ]);
+
+        $this->assertEquals(202, $encryptedVarchar['headers']['status-code']);
+
+        $this->waitForAllAttributes($databaseId, $collectionId);
+
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -598,6 +614,9 @@ class DatabasesStringTypesTest extends Scope
 
         $this->assertArrayHasKey('longtext_field', $attributesByKey);
         $this->assertFalse($attributesByKey['longtext_field']['encrypt']);
+
+        $this->assertArrayHasKey('varchar_encrypted_collection', $attributesByKey);
+        $this->assertTrue($attributesByKey['varchar_encrypted_collection']['encrypt']);
     }
 
     public function testUpdateVarcharAttribute(): void
