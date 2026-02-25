@@ -23,10 +23,9 @@ use Appwrite\Utopia\Database\Validator\Queries\Memberships;
 use Appwrite\Utopia\Database\Validator\Queries\Teams;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use libphonenumber\NumberParseException;
 use libphonenumber\PhoneNumberUtil;
 use MaxMind\Db\Reader;
-use Utopia\Abuse\Abuse;
-use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Auth\Proofs\Password;
 use Utopia\Auth\Proofs\Token;
@@ -52,15 +51,15 @@ use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
 use Utopia\Emails\Email;
+use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
-use Utopia\Validator\WhiteList;
 
-App::post('/v1/teams')
+Http::post('/v1/teams')
     ->desc('Create team')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].create')
@@ -80,9 +79,9 @@ App::post('/v1/teams')
             )
         ]
     ))
-    ->param('teamId', '', new CustomId(), 'Team ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('teamId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Team ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('name', null, new Text(128), 'Team name. Max length: 128 chars.')
-    ->param('roles', ['owner'], new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of strings. Use this param to set the roles in the team for the user who created it. The default role is **owner**. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', true)
+    ->param('roles', ['owner'], fn (Database $dbForProject) => new ArrayList(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of strings. Use this param to set the roles in the team for the user who created it. The default role is **owner**. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', true, ['dbForProject'])
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
@@ -103,6 +102,7 @@ App::post('/v1/teams')
                     Permission::update(Role::team($teamId, 'owner')),
                     Permission::delete(Role::team($teamId, 'owner')),
                 ],
+                'labels' => [],
                 'name' => $name,
                 'total' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
                 'prefs' => new \stdClass(),
@@ -155,7 +155,7 @@ App::post('/v1/teams')
             ->dynamic($team, Response::MODEL_TEAM);
     });
 
-App::get('/v1/teams')
+Http::get('/v1/teams')
     ->desc('List teams')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
@@ -190,16 +190,10 @@ App::get('/v1/teams')
             $queries[] = Query::search('search', $search);
         }
 
-        /**
-         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
-         */
-        $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
-        });
-        $cursor = reset($cursor);
-        if ($cursor) {
-            /** @var Query $cursor */
+        $cursor = Query::getCursorQueries($queries, false);
+        $cursor = \reset($cursor);
 
+        if ($cursor !== false) {
             $validator = new Cursor();
             if (!$validator->isValid($cursor)) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
@@ -229,7 +223,7 @@ App::get('/v1/teams')
         ]), Response::MODEL_TEAM_LIST);
     });
 
-App::get('/v1/teams/:teamId')
+Http::get('/v1/teams/:teamId')
     ->desc('Get team')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
@@ -246,7 +240,7 @@ App::get('/v1/teams/:teamId')
             )
         ]
     ))
-    ->param('teamId', '', new UID(), 'Team ID.')
+    ->param('teamId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Team ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $teamId, Response $response, Database $dbForProject) {
@@ -260,7 +254,7 @@ App::get('/v1/teams/:teamId')
         $response->dynamic($team, Response::MODEL_TEAM);
     });
 
-App::get('/v1/teams/:teamId/prefs')
+Http::get('/v1/teams/:teamId/prefs')
     ->desc('Get team preferences')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
@@ -277,7 +271,7 @@ App::get('/v1/teams/:teamId/prefs')
             )
         ]
     ))
-    ->param('teamId', '', new UID(), 'Team ID.')
+    ->param('teamId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Team ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $teamId, Response $response, Database $dbForProject) {
@@ -299,7 +293,7 @@ App::get('/v1/teams/:teamId/prefs')
         $response->dynamic($prefs, Response::MODEL_PREFERENCES);
     });
 
-App::put('/v1/teams/:teamId')
+Http::put('/v1/teams/:teamId')
     ->desc('Update name')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].update')
@@ -319,7 +313,7 @@ App::put('/v1/teams/:teamId')
             )
         ]
     ))
-    ->param('teamId', '', new UID(), 'Team ID.')
+    ->param('teamId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Team ID.', false, ['dbForProject'])
     ->param('name', null, new Text(128), 'New team name. Max length: 128 chars.')
     ->inject('requestTimestamp')
     ->inject('response')
@@ -344,7 +338,7 @@ App::put('/v1/teams/:teamId')
         $response->dynamic($team, Response::MODEL_TEAM);
     });
 
-App::put('/v1/teams/:teamId/prefs')
+Http::put('/v1/teams/:teamId/prefs')
     ->desc('Update preferences')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].update.prefs')
@@ -365,7 +359,7 @@ App::put('/v1/teams/:teamId/prefs')
             )
         ]
     ))
-    ->param('teamId', '', new UID(), 'Team ID.')
+    ->param('teamId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Team ID.', false, ['dbForProject'])
     ->param('prefs', '', new Assoc(), 'Prefs key-value JSON object.')
     ->inject('response')
     ->inject('dbForProject')
@@ -392,7 +386,7 @@ App::put('/v1/teams/:teamId/prefs')
         $response->dynamic($prefs, Response::MODEL_PREFERENCES);
     });
 
-App::delete('/v1/teams/:teamId')
+Http::delete('/v1/teams/:teamId')
     ->desc('Delete team')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].delete')
@@ -413,7 +407,7 @@ App::delete('/v1/teams/:teamId')
         ],
         contentType: ContentType::NONE
     ))
-    ->param('teamId', '', new UID(), 'Team ID.')
+    ->param('teamId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Team ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('getProjectDB')
     ->inject('dbForProject')
@@ -432,14 +426,21 @@ App::delete('/v1/teams/:teamId')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove team from DB');
         }
 
+        // Sync delete
         $deletes = new Deletes();
         $deletes->deleteMemberships($getProjectDB, $team, $project);
 
+        // Async delete
         if ($project->getId() === 'console') {
             $queueForDeletes
                 ->setType(DELETE_TYPE_TEAM_PROJECTS)
-                ->setDocument($team);
+                ->setDocument($team)
+                ->trigger();
         }
+
+        $queueForDeletes
+            ->setType(DELETE_TYPE_DOCUMENT)
+            ->setDocument($team);
 
         $queueForEvents
             ->setParam('teamId', $team->getId())
@@ -449,7 +450,7 @@ App::delete('/v1/teams/:teamId')
         $response->noContent();
     });
 
-App::post('/v1/teams/:teamId/memberships')
+Http::post('/v1/teams/:teamId/memberships')
     ->desc('Create team membership')
     ->groups(['api', 'teams', 'auth'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].create')
@@ -472,20 +473,11 @@ App::post('/v1/teams/:teamId/memberships')
         ]
     ))
     ->label('abuse-limit', 10)
-    ->param('teamId', '', new UID(), 'Team ID.')
+    ->param('teamId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Team ID.', false, ['dbForProject'])
     ->param('email', '', new EmailValidator(), 'Email of the new team member.', true)
-    ->param('userId', '', new UID(), 'ID of the user to be added to a team.', true)
+    ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'ID of the user to be added to a team.', true, ['dbForProject'])
     ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
-    ->param('roles', [], function (Document $project) {
-        if ($project->getId() === 'console') {
-            $roles = array_keys(Config::getParam('roles', []));
-            $roles = array_filter($roles, function ($role) {
-                return !in_array($role, [User::ROLE_APPS, User::ROLE_GUESTS, User::ROLE_USERS]);
-            });
-            return new ArrayList(new WhiteList($roles), APP_LIMIT_ARRAY_PARAMS_SIZE);
-        }
-        return new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE);
-    }, 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', false, ['project'])
+    ->param('roles', [], new ArrayList(new Key(maxLength: 81), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', false, ['project']) // For project-specific permissions, roles will be in the format `project-<projectId>-<role>`. Template takes 9 characters, `projectId` and `role` can be upto 36 characters. In total, 81 characters.
     ->param('url', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect the user back to your app from the invitation email. This parameter is not required when an API key is supplied. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator']) // TODO add our own built-in confirm page
     ->param('name', '', new Text(128), 'Name of the new team member. Max length: 128 chars.', true)
     ->inject('response')
@@ -506,7 +498,6 @@ App::post('/v1/teams/:teamId/memberships')
         $isAppUser = User::isApp($authorization->getRoles());
         $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
 
-        $url = htmlentities($url);
         if (empty($url)) {
             if (!$isAppUser && !$isPrivilegedUser) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'URL is required');
@@ -771,7 +762,7 @@ App::post('/v1/teams/:teamId/memberships')
                     ->setPreview($preview)
                     ->setRecipient($invitee->getAttribute('email'))
                     ->setName($invitee->getAttribute('name', ''))
-                    ->setVariables($emailVariables)
+                    ->appendVariables($emailVariables)
                     ->trigger();
             } elseif (!empty($phone)) {
                 if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
@@ -801,26 +792,21 @@ App::post('/v1/teams/:teamId/memberships')
                     ->setRecipients([$phone])
                     ->setProviderType('SMS');
 
-                if (isset($plan['authPhone'])) {
-                    $timelimit = $timelimit('organization:{organizationId}', $plan['authPhone'], 30 * 24 * 60 * 60); // 30 days
-                    $timelimit
-                        ->setParam('{organizationId}', $project->getAttribute('teamId'));
+                $helper = PhoneNumberUtil::getInstance();
+                try {
+                    $countryCode = $helper->parse($phone)->getCountryCode();
 
-                    $abuse = new Abuse($timelimit);
-                    if ($abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
-                        $helper = PhoneNumberUtil::getInstance();
-                        $countryCode = $helper->parse($phone)->getCountryCode();
-
-                        if (!empty($countryCode)) {
-                            $queueForStatsUsage
-                                ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
-                        }
+                    if (!empty($countryCode)) {
+                        $queueForStatsUsage
+                            ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                     }
-                    $queueForStatsUsage
-                        ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
-                        ->setProject($project)
-                        ->trigger();
+                } catch (NumberParseException $e) {
+                    // Ignore invalid phone number for country code stats
                 }
+                $queueForStatsUsage
+                    ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
+                    ->setProject($project)
+                    ->trigger();
             }
         }
 
@@ -841,7 +827,7 @@ App::post('/v1/teams/:teamId/memberships')
             );
     });
 
-App::get('/v1/teams/:teamId/memberships')
+Http::get('/v1/teams/:teamId/memberships')
     ->desc('List team memberships')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
@@ -858,7 +844,7 @@ App::get('/v1/teams/:teamId/memberships')
             )
         ]
     ))
-    ->param('teamId', '', new UID(), 'Team ID.')
+    ->param('teamId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Team ID.', false, ['dbForProject'])
     ->param('queries', [], new Memberships(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Memberships::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
@@ -886,21 +872,14 @@ App::get('/v1/teams/:teamId/memberships')
         // Set internal queries
         $queries[] = Query::equal('teamInternalId', [$team->getSequence()]);
 
-        /**
-         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
-         */
-        $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
-        });
-        $cursor = reset($cursor);
-        if ($cursor) {
-            /** @var Query $cursor */
+        $cursor = Query::getCursorQueries($queries, false);
+        $cursor = \reset($cursor);
 
+        if ($cursor !== false) {
             $validator = new Cursor();
             if (!$validator->isValid($cursor)) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
             }
-
 
             $membershipId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('memberships', $membershipId);
@@ -985,7 +964,7 @@ App::get('/v1/teams/:teamId/memberships')
         ]), Response::MODEL_MEMBERSHIP_LIST);
     });
 
-App::get('/v1/teams/:teamId/memberships/:membershipId')
+Http::get('/v1/teams/:teamId/memberships/:membershipId')
     ->desc('Get team membership')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
@@ -1002,8 +981,8 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
             )
         ]
     ))
-    ->param('teamId', '', new UID(), 'Team ID.')
-    ->param('membershipId', '', new UID(), 'Membership ID.')
+    ->param('teamId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Team ID.', false, ['dbForProject'])
+    ->param('membershipId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Membership ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
@@ -1070,7 +1049,7 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
         $response->dynamic($membership, Response::MODEL_MEMBERSHIP);
     });
 
-App::patch('/v1/teams/:teamId/memberships/:membershipId')
+Http::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->desc('Update membership')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].update')
@@ -1090,18 +1069,9 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
             )
         ]
     ))
-    ->param('teamId', '', new UID(), 'Team ID.')
-    ->param('membershipId', '', new UID(), 'Membership ID.')
-    ->param('roles', [], function (Document $project) {
-        if ($project->getId() === 'console') {
-            $roles = array_keys(Config::getParam('roles', []));
-            $roles = array_filter($roles, function ($role) {
-                return !in_array($role, [User::ROLE_APPS, User::ROLE_GUESTS, User::ROLE_USERS]);
-            });
-            return new ArrayList(new WhiteList($roles), APP_LIMIT_ARRAY_PARAMS_SIZE);
-        }
-        return new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE);
-    }, 'An array of strings. Use this param to set the user\'s roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', false, ['project'])
+    ->param('teamId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Team ID.', false, ['dbForProject'])
+    ->param('membershipId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Membership ID.', false, ['dbForProject'])
+    ->param('roles', [], new ArrayList(new Key(maxLength: 81), APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings. Use this param to set the user\'s roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', false, ['project']) // For project-specific permissions, roles will be in the format `project-<projectId>-<role>`. Template takes 9 characters, `projectId` and `role` can be upto 36 characters. In total, 81 characters.
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -1180,7 +1150,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         );
     });
 
-App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
+Http::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->desc('Update team membership status')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].update.status')
@@ -1201,9 +1171,9 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             )
         ]
     ))
-    ->param('teamId', '', new UID(), 'Team ID.')
-    ->param('membershipId', '', new UID(), 'Membership ID.')
-    ->param('userId', '', new UID(), 'User ID.')
+    ->param('teamId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Team ID.', false, ['dbForProject'])
+    ->param('membershipId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Membership ID.', false, ['dbForProject'])
+    ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
     ->param('secret', '', new Text(256), 'Secret key.')
     ->inject('request')
     ->inject('response')
@@ -1347,7 +1317,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         );
     });
 
-App::delete('/v1/teams/:teamId/memberships/:membershipId')
+Http::delete('/v1/teams/:teamId/memberships/:membershipId')
     ->desc('Delete team membership')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].delete')
@@ -1368,8 +1338,8 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
         ],
         contentType: ContentType::NONE
     ))
-    ->param('teamId', '', new UID(), 'Team ID.')
-    ->param('membershipId', '', new UID(), 'Membership ID.')
+    ->param('teamId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Team ID.', false, ['dbForProject'])
+    ->param('membershipId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Membership ID.', false, ['dbForProject'])
     ->inject('user')
     ->inject('project')
     ->inject('response')
@@ -1447,7 +1417,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
         $response->noContent();
     });
 
-App::get('/v1/teams/:teamId/logs')
+Http::get('/v1/teams/:teamId/logs')
     ->desc('List team logs')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
@@ -1464,14 +1434,15 @@ App::get('/v1/teams/:teamId/logs')
             )
         ]
     ))
-    ->param('teamId', '', new UID(), 'Team ID.')
+    ->param('teamId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Team ID.', false, ['dbForProject'])
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $teamId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('audit')
+    ->action(function (string $teamId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audit) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -1485,9 +1456,12 @@ App::get('/v1/teams/:teamId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $audit = new Audit($dbForProject);
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? 25;
+        $offset = $grouped['offset'] ?? 0;
+
         $resource = 'team/' . $team->getId();
-        $logs = $audit->getLogsByResource($resource, $queries);
+        $logs = $audit->getLogsByResource($resource, offset: $offset, limit: $limit);
 
         $output = [];
 
@@ -1534,7 +1508,7 @@ App::get('/v1/teams/:teamId/logs')
             }
         }
         $response->dynamic(new Document([
-            'total' => $includeTotal ? $audit->countLogsByResource($resource, $queries) : 0,
+            'total' => $includeTotal ? $audit->countLogsByResource($resource) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });

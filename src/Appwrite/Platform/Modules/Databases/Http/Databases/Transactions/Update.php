@@ -7,6 +7,7 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
+use Appwrite\Functions\EventProcessor;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -25,7 +26,7 @@ use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 
 class Update extends Action
@@ -63,7 +64,7 @@ class Update extends Action
                 ],
                 contentType: ContentType::JSON
             ))
-            ->param('transactionId', '', new UID(), 'Transaction ID.')
+            ->param('transactionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Transaction ID.', false, ['dbForProject'])
             ->param('commit', false, new Boolean(), 'Commit transaction?', true)
             ->param('rollback', false, new Boolean(), 'Rollback transaction?', true)
             ->inject('response')
@@ -77,6 +78,7 @@ class Update extends Action
             ->inject('queueForFunctions')
             ->inject('queueForWebhooks')
             ->inject('authorization')
+            ->inject('eventProcessor')
             ->callback($this->action(...));
     }
 
@@ -94,6 +96,7 @@ class Update extends Action
      * @param Event $queueForRealtime
      * @param Event $queueForFunctions
      * @param Event $queueForWebhooks
+     * @param EventProcessor $eventProcessor
      * @return void
      * @throws ConflictException
      * @throws Exception
@@ -101,9 +104,9 @@ class Update extends Action
      * @throws \Utopia\Database\Exception
      * @throws Authorization
      * @throws Structure
-     * @throws \Utopia\Exception
+     * @throws \Utopia\Http\Exception
      */
-    public function action(string $transactionId, bool $commit, bool $rollback, UtopiaResponse $response, Database $dbForProject, Document $user, TransactionState $transactionState, Delete $queueForDeletes, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, Authorization $authorization): void
+    public function action(string $transactionId, bool $commit, bool $rollback, UtopiaResponse $response, Database $dbForProject, Document $user, TransactionState $transactionState, Delete $queueForDeletes, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, Authorization $authorization, EventProcessor $eventProcessor): void
     {
         if (!$commit && !$rollback) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Either commit or rollback must be true');
@@ -371,6 +374,11 @@ class Update extends Action
 
                 $queueForEvents->setEvent($eventString);
 
+                // Get project and function/webhook events (cached)
+                $project = $queueForEvents->getProject();
+                $functionsEvents = $eventProcessor->getFunctionsEvents($project, $dbForProject);
+                $webhooksEvents = $eventProcessor->getWebhooksEvents($project);
+
                 foreach ($documentsToTrigger as $doc) {
                     $payload = $doc->getArrayCopy();
                     $payload['$tableId'] = $collection->getId();
@@ -381,9 +389,33 @@ class Update extends Action
                         ->setParam('rowId', $doc->getId())
                         ->setPayload($payload);
 
+                    // Generate events for this document operation
+                    $generatedEvents = Event::generateEvents(
+                        $queueForEvents->getEvent(),
+                        $queueForEvents->getParams()
+                    );
+
                     $queueForRealtime->from($queueForEvents)->trigger();
-                    $queueForFunctions->from($queueForEvents)->trigger();
-                    $queueForWebhooks->from($queueForEvents)->trigger();
+
+                    // Only trigger functions if there are matching function events
+                    if (!empty($functionsEvents)) {
+                        foreach ($generatedEvents as $event) {
+                            if (isset($functionsEvents[$event])) {
+                                $queueForFunctions->from($queueForEvents)->trigger();
+                                break;
+                            }
+                        }
+                    }
+
+                    // Only trigger webhooks if there are matching webhook events
+                    if (!empty($webhooksEvents)) {
+                        foreach ($generatedEvents as $event) {
+                            if (isset($webhooksEvents[$event])) {
+                                $queueForWebhooks->from($queueForEvents)->trigger();
+                                break;
+                            }
+                        }
+                    }
                 }
 
                 $queueForEvents->reset();

@@ -370,6 +370,75 @@ return [
         ],
     ],
     [
+        'category' => 'Database',
+        'description' => 'Appwrite uses a database for storing user and meta data. You can choose between MariaDB, MongoDB or PostgreSQL.',
+        'variables' => [
+            [
+                'name' => '_APP_DB_ADAPTER',
+                'description' => 'Which database to use. Must be one of: MariaDB, MongoDB, or PostgreSQL',
+                'introduction' => '1.9.0',
+                'default' => 'mongodb',
+                'required' => true,
+                'question' => 'Choose your database (mariadb|mongodb|postgresql)',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_HOST',
+                'description' => 'Database server host name address. Default value is: \'mongodb\'.',
+                'introduction' => '',
+                'default' => 'mongodb',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_PORT',
+                'description' => 'Database server TCP port. Default value is: \'27017\'.',
+                'introduction' => '',
+                'default' => '27017',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_SCHEMA',
+                'description' => 'Database server database schema. Default value is: \'appwrite\'.',
+                'introduction' => '',
+                'default' => 'appwrite',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_USER',
+                'description' => 'Database server user name. Default value is: \'user\'.',
+                'introduction' => '',
+                'default' => 'user',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_PASS',
+                'description' => 'Database server user password. Default value is: \'password\'.',
+                'introduction' => '',
+                'default' => 'password',
+                'required' => false,
+                'question' => '',
+                'filter' => 'password'
+            ],
+            [
+                'name' => '_APP_DB_ROOT_PASS',
+                'description' => 'Database server root password. Default value is: \'rootsecretpassword\'.',
+                'introduction' => '',
+                'default' => 'rootsecretpassword',
+                'required' => false,
+                'question' => '',
+                'filter' => 'password'
+            ],
+        ],
+    ],
+    [
         'category' => 'Redis',
         'description' => 'Appwrite uses a Redis server for managing cache, queues and scheduled tasks. The Redis env vars are used to allow Appwrite server to connect to the Redis container.',
         'variables' => [
@@ -408,66 +477,6 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
-            ],
-        ],
-    ],
-    [
-        'category' => 'MariaDB',
-        'description' => 'Appwrite is using a MariaDB server for managing persistent database data. The MariaDB env vars are used to allow Appwrite server to connect to the MariaDB container.',
-        'variables' => [
-            [
-                'name' => '_APP_DB_HOST',
-                'description' => 'MariaDB server host name address. Default value is: \'mariadb\'.',
-                'introduction' => '',
-                'default' => 'mariadb',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_DB_PORT',
-                'description' => 'MariaDB server TCP port. Default value is: \'3306\'.',
-                'introduction' => '',
-                'default' => '3306',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_DB_SCHEMA',
-                'description' => 'MariaDB server database schema. Default value is: \'appwrite\'.',
-                'introduction' => '',
-                'default' => 'appwrite',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_DB_USER',
-                'description' => 'MariaDB server user name. Default value is: \'user\'.',
-                'introduction' => '',
-                'default' => 'user',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_DB_PASS',
-                'description' => 'MariaDB server user password. Default value is: \'password\'.',
-                'introduction' => '',
-                'default' => 'password',
-                'required' => false,
-                'question' => '',
-                'filter' => 'password'
-            ],
-            [
-                'name' => '_APP_DB_ROOT_PASS',
-                'description' => 'MariaDB server root password. Default value is: \'rootsecretpassword\'.',
-                'introduction' => '',
-                'default' => 'rootsecretpassword',
-                'required' => false,
-                'question' => '',
-                'filter' => 'password'
             ],
         ],
     ],
@@ -1285,6 +1294,15 @@ return [
         'category' => 'GraphQL',
         'description' => '',
         'variables' => [
+            [
+                'name' => '_APP_GRAPHQL_INTROSPECTION',
+                'description' => 'Enable or disable GraphQL introspection. Set to \'enabled\' to allow schema introspection, or \'disabled\' to block it. The default value is \'enabled\'.',
+                'introduction' => '',
+                'default' => 'enabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
             [
                 'name' => '_APP_GRAPHQL_MAX_BATCH_SIZE',
                 'description' => 'Maximum number of batched queries per request. The default value is 10.',

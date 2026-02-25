@@ -29,9 +29,9 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
+use Utopia\Http\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Request;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
@@ -76,7 +76,7 @@ class Create extends Base
                     )
                 ],
             ))
-            ->param('functionId', '', new CustomId(), 'Function ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+            ->param('functionId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
             ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.')
             ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with execution permissions. By default no user is granted with any execute permissions. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
@@ -87,7 +87,7 @@ class Create extends Base
             ->param('logging', true, new Boolean(), 'When disabled, executions will exclude logs and errors, and will be slightly faster.', true)
             ->param('entrypoint', '', new Text(1028, 0), 'Entrypoint File. This path is relative to the "providerRootDirectory".', true)
             ->param('commands', '', new Text(8192, 0), 'Build Commands.', true)
-            ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of scopes allowed for API key auto-generated for every execution. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.', true)
+            ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of scopes allowed for API key auto-generated for every execution. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.', true)
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Control System) deployment.', true)
             ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the function.', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function.', true)
@@ -116,6 +116,7 @@ class Create extends Base
             ->inject('request')
             ->inject('gitHub')
             ->inject('authorization')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -154,7 +155,8 @@ class Create extends Base
         Database $dbForPlatform,
         Request $request,
         GitHub $github,
-        Authorization $authorization
+        Authorization $authorization,
+        array $platform
     ) {
 
         // Temporary abuse check
@@ -223,6 +225,8 @@ class Create extends Base
                 'entrypoint' => $entrypoint,
                 'commands' => $commands,
                 'scopes' => $scopes,
+                'deploymentRetention' => 0,
+                'startCommand' => '',
                 'search' => implode(' ', [$functionId, $name, $runtime]),
                 'version' => 'v5',
                 'installationId' => $installation->getId(),
@@ -233,7 +237,9 @@ class Create extends Base
                 'providerBranch' => $providerBranch,
                 'providerRootDirectory' => $providerRootDirectory,
                 'providerSilentMode' => $providerSilentMode,
-                'specification' => $specification
+                'specification' => $specification,
+                'buildSpecification' => $specification,
+                'runtimeSpecification' => $specification,
             ]));
         } catch (DuplicateException) {
             throw new Exception(Exception::FUNCTION_ALREADY_EXISTS);
@@ -261,13 +267,7 @@ class Create extends Base
 
             $repository = $dbForPlatform->createDocument('repositories', new Document([
                 '$id' => ID::unique(),
-                '$permissions' => [
-                    Permission::read(Role::team(ID::custom($teamId))),
-                    Permission::update(Role::team(ID::custom($teamId), 'owner')),
-                    Permission::update(Role::team(ID::custom($teamId), 'developer')),
-                    Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-                    Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-                ],
+                '$permissions' => $this->getPermissions($teamId, $project->getId()),
                 'installationId' => $installation->getId(),
                 'installationInternalId' => $installation->getSequence(),
                 'projectId' => $project->getId(),
@@ -317,7 +317,6 @@ class Create extends Base
                     template: $template,
                     github: $github,
                     activate: true,
-                    authorization: $authorization,
                     reference: $providerBranch,
                     referenceType: 'branch'
                 );
@@ -343,6 +342,7 @@ class Create extends Base
                     'resourceType' => 'functions',
                     'entrypoint' => $function->getAttribute('entrypoint', ''),
                     'buildCommands' => $function->getAttribute('commands', ''),
+                    'startCommand' => $function->getAttribute('startCommand', ''),
                     'type' => 'manual',
                     'activate' => true,
                 ]));
@@ -361,7 +361,7 @@ class Create extends Base
                     ->setTemplate($template);
             }
 
-            $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+            $functionsDomain = $platform['functionsDomain'];
             if (!empty($functionsDomain)) {
                 $routeSubdomain = ID::unique();
                 $domain = "{$routeSubdomain}.{$functionsDomain}";

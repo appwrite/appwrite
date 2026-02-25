@@ -139,6 +139,11 @@ return [
         'description' => 'There was an error processing your request. Please check the inputs and try again.',
         'code' => 400,
     ],
+    Exception::GENERAL_FEATURE_UNSUPPORTED => [
+        'name' => Exception::GENERAL_FEATURE_UNSUPPORTED,
+        'description' => 'This feature is not supported with your current configuration.',
+        'code' => 400,
+    ],
 
     /** User Errors */
     Exception::USER_COUNT_EXCEEDED => [
@@ -355,6 +360,11 @@ return [
     Exception::USER_API_KEY_AND_SESSION_SET => [
         'name' => Exception::USER_API_KEY_AND_SESSION_SET,
         'description' => 'API key and session used in the same request. Use either `setSession` or `setKey`. Learn about which authentication method to use in the SSR docs: https://appwrite.io/docs/products/auth/server-side-rendering',
+        'code' => 403,
+    ],
+    Exception::USER_JWT_AND_COOKIE_SET => [
+        'name' => Exception::USER_JWT_AND_COOKIE_SET,
+        'description' => 'JWT and cookie used in the same request. Use either `setJWT` or `setCookie`. Learn about which authentication method to use in the SSR docs: https://appwrite.io/docs/products/auth/server-side-rendering',
         'code' => 403,
     ],
     Exception::API_KEY_EXPIRED => [
@@ -1074,6 +1084,11 @@ return [
         'description' => 'The project key has expired. Please generate a new key using the Appwrite console.',
         'code' => 401,
     ],
+    Exception::ACCOUNT_KEY_EXPIRED => [
+        'name' => Exception::ACCOUNT_KEY_EXPIRED,
+        'description' => 'The account API key has expired. Please generate a new key using the Appwrite console.',
+        'code' => 401,
+    ],
     Exception::ROUTER_HOST_NOT_FOUND => [
         'name' => Exception::ROUTER_HOST_NOT_FOUND,
         'description' => 'Host is not trusted. This could occur because you have not configured a custom domain. Add a custom domain to your project first and try again.',
@@ -1103,7 +1118,6 @@ return [
         'name' => Exception::RULE_VERIFICATION_FAILED,
         'description' => 'Domain verification failed. Please check if your DNS records are correct and try again.',
         'code' => 400,
-        'publish' => true
     ],
     Exception::PROJECT_SMTP_CONFIG_INVALID => [
         'name' => Exception::PROJECT_SMTP_CONFIG_INVALID,
@@ -1129,6 +1143,11 @@ return [
         'name' => Exception::KEY_NOT_FOUND,
         'description' => 'Key with the requested ID could not be found.',
         'code' => 404,
+    ],
+    Exception::KEY_ALREADY_EXISTS => [
+        'name' => Exception::KEY_ALREADY_EXISTS,
+        'description' => 'Key with the same ID already exists. Try again with a different ID.',
+        'code' => 409,
     ],
     Exception::PLATFORM_NOT_FOUND => [
         'name' => Exception::PLATFORM_NOT_FOUND,
@@ -1328,5 +1347,20 @@ return [
         'name' => Exception::TARGET_PROVIDER_INVALID_TYPE,
         'description' => 'Target has an invalid provider type.',
         'code' => 400,
+    ],
+    Exception::USER_ID_MISSING => [
+        'name' => Exception::USER_ID_MISSING,
+        'description' => 'When using account API key, make sure to pass x-appwrite-user header with your user ID.',
+        'code' => 403,
+    ],
+    Exception::ORGANIZATION_ID_MISSING => [
+        'name' => Exception::ORGANIZATION_ID_MISSING,
+        'description' => 'When using organization API key, make sure to pass x-appwrite-organization header with your organization ID.',
+        'code' => 403,
+    ],
+    Exception::PROJECT_ID_MISSING => [
+        'name' => Exception::PROJECT_ID_MISSING,
+        'description' => 'When using project API key, make sure to pass x-appwrite-project header with your project ID.',
+        'code' => 403,
     ],
 ];

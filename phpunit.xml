@@ -1,15 +1,15 @@
-<phpunit backupGlobals="false"
-         backupStaticAttributes="false"
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         backupGlobals="false"
          bootstrap="app/init.php"
          colors="true"
-         convertErrorsToExceptions="true"
-         convertNoticesToExceptions="true"
-         convertWarningsToExceptions="true"
          processIsolation="false"
          stopOnFailure="false"
+         cacheDirectory=".phpunit.cache"
 >
     <extensions>
-        <extension class="Appwrite\Tests\TestHook" />
+        <bootstrap class="Appwrite\Tests\TestHook" />
     </extensions>
     <testsuites>
         <testsuite name="unit">
