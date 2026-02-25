@@ -364,8 +364,22 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         }
 
         if ($type === 'function') {
+            $userJwt = $request->getHeader('x-appwrite-user-jwt', '');
             $permissions = $resource->getAttribute('execute');
-            if (!(\in_array('any', $permissions)) && !(\in_array('guests', $permissions))) {
+            $isExecutionAllowed = (\in_array('any', $permissions)) || (\in_array('guests', $permissions));
+
+            if (!$isExecutionAllowed && !empty($userJwt)) {
+                $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
+                $payload = [];
+                try {
+                    $payload = $jwt->decode($userJwt);
+                } catch (JWTException $error) {}
+
+                $userId = $payload['userId'] ?? '';
+                $isExecutionAllowed = \in_array("user:{$userId}", $permissions);
+            }
+
+            if (!$isExecutionAllowed) {
                 $exception = new AppwriteException(AppwriteException::FUNCTION_EXECUTE_PERMISSION_MISSING, view: $errorView);
                 $exception->addCTA('View settings', $url . '/console/project-' . $project->getAttribute('region', 'default') . '-' . $project->getId() . '/functions/function-' . $resource->getId() . '/settings');
                 throw $exception;
