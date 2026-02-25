@@ -1352,7 +1352,7 @@ Http::error()
             $log->setMessage($error->getMessage());
 
             $log->addTag('database', $dsn->getHost());
-            $log->addTag('method', $route->getMethod());
+            $log->addTag('method', $route?->getMethod() ?? $request->getMethod());
             $log->addTag('url', $request->getURI());
             $log->addTag('verboseType', get_class($error));
             $log->addTag('code', $error->getCode());
@@ -1450,10 +1450,14 @@ Http::error()
                 // don't fail the error handler
             }
 
+            $sdk = $route?->getLabel("sdk", false);
             $action = 'UNKNOWN_NAMESPACE.UNKNOWN.METHOD';
             if (!empty($sdk)) {
                 /** @var \Appwrite\SDK\Method $sdk */
                 $action = $sdk->getNamespace() . '.' . $sdk->getMethodName();
+            } elseif ($route === null) {
+                $path = ltrim(parse_url($request->getURI(), PHP_URL_PATH) ?? '/', '/') ?: 'root';
+                $action = 'http.' . $request->getMethod() . '.' . $path;
             }
 
             $log->setAction($action);

@@ -36,6 +36,9 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
             $projectId = $repository->getAttribute('projectId');
             $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
+            if ($project->isEmpty()) {
+                throw new Exception(Exception::PROJECT_NOT_FOUND, 'Repository references non-existent project');
+            }
             $dbForProject = $getProjectDB($project);
 
             $resourceCollection = $resourceType === "function" ? 'functions' : 'sites';

@@ -230,8 +230,8 @@ Http::setResource('allowedHostnames', function (array $platform, Document $proje
 /**
  * List of allowed request schemes for the request.
  */
-Http::setResource('allowedSchemes', function (Document $project) {
-    $allowed = [];
+Http::setResource('allowedSchemes', function (array $platform, Document $project) {
+    $allowed = [...($platform['schemas'] ?? [])];
 
     if (!$project->isEmpty() && $project->getId() !== 'console') {
         /* Add hardcoded schemes */
@@ -245,7 +245,7 @@ Http::setResource('allowedSchemes', function (Document $project) {
     }
 
     return array_unique($allowed);
-}, ['project']);
+}, ['platform', 'project']);
 
 /**
  * Rule associated with a request origin.
@@ -412,13 +412,7 @@ Http::setResource('user', function (string $mode, Document $project, Document $c
     ) { // Validate user has valid login token
         $user = new User([]);
     }
-    // if (APP_MODE_ADMIN === $mode) {
-    //     if ($user->find('teamInternalId', $project->getAttribute('teamInternalId'), 'memberships')) {
-    //         $authorization->setDefaultStatus(false);  // Cancel security segmentation for admin users.
-    //     } else {
-    //         $user = new Document([]);
-    //     }
-    // }
+
     $authJWT = $request->getHeader('x-appwrite-jwt', '');
     if (!empty($authJWT) && !$project->isEmpty()) { // JWT authentication
         if (!$user->isEmpty()) {
@@ -565,11 +559,16 @@ Http::setResource('dbForProject', function (Group $pools, Database $dbForPlatfor
         return $dbForPlatform;
     }
 
+    $database = $project->getAttribute('database', '');
+    if (empty($database)) {
+        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Project database is not configured');
+    }
+
     try {
-        $dsn = new DSN($project->getAttribute('database'));
+        $dsn = new DSN($database);
     } catch (\InvalidArgumentException) {
         // TODO: Temporary until all projects are using shared tables
-        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+        $dsn = new DSN('mysql://' . $database);
     }
 
     $adapter = new DatabasePool($pools->get($dsn->getHost()));
@@ -829,11 +828,16 @@ Http::setResource('getProjectDB', function (Group $pools, Database $dbForPlatfor
             return $dbForPlatform;
         }
 
+        $database = $project->getAttribute('database', '');
+        if (empty($database)) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Project database is not configured');
+        }
+
         try {
-            $dsn = new DSN($project->getAttribute('database'));
+            $dsn = new DSN($database);
         } catch (\InvalidArgumentException) {
             // TODO: Temporary until all projects are using shared tables
-            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+            $dsn = new DSN('mysql://' . $database);
         }
 
         $configure = (function (Database $database) use ($project, $dsn, $authorization) {
@@ -1286,6 +1290,8 @@ Http::setResource('team', function (Document $project, Database $dbForPlatform, 
             return $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $orgHeader));
         }
     }
+
+    // if teamInternalId is empty, return an empty document
 
     if (empty($teamInternalId)) {
         return new Document([]);

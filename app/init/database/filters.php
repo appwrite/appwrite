@@ -72,7 +72,7 @@ Database::addFilter(
         $attributes = $database->getAuthorization()->skip(fn () => $database->find('attributes', [
             Query::equal('collectionInternalId', [$document->getSequence()]),
             Query::equal('databaseInternalId', [$document->getAttribute('databaseInternalId')]),
-            Query::limit($database->getLimitForAttributes()),
+            Query::limit($database->getLimitForAttributes() ?: APP_LIMIT_SUBQUERY),
         ]));
 
         foreach ($attributes as $attribute) {
