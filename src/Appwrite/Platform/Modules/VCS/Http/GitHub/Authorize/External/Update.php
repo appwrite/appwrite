@@ -129,10 +129,6 @@ class Update extends Action
         $providerBranch = \explode(':', $pullRequestResponse['head']['label'])[1] ?? '';
         $providerBranchUrl = "$providerRepositoryUrl/tree/$providerBranch";
         $providerCommitHash = $pullRequestResponse['head']['sha'] ?? '';
-        $providerBranchUrl = $pullRequestResponse['head']['repo']['html_url'] ?? '';
-        $providerRepositoryName = $pullRequestResponse['head']['repo']['name'] ?? '';
-        $providerRepositoryUrl = $pullRequestResponse['head']['repo']['html_url'] ?? '';
-        $providerRepositoryOwner = $pullRequestResponse['head']['repo']['owner']['login'] ?? '';
 
         $commitDetails = $github->getCommit($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash);
         $providerCommitMessage = $commitDetails["commitMessage"] ?? '';
