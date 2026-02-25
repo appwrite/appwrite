@@ -4521,12 +4521,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "79cab8efb98f3c9c7f8821813e72226113db4afb"
+                "reference": "987d11c9f744348908b5af237291cf2be5a66e9e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/79cab8efb98f3c9c7f8821813e72226113db4afb",
-                "reference": "79cab8efb98f3c9c7f8821813e72226113db4afb",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/987d11c9f744348908b5af237291cf2be5a66e9e",
+                "reference": "987d11c9f744348908b5af237291cf2be5a66e9e",
                 "shasum": ""
             },
             "require": {
@@ -4568,7 +4568,7 @@
                 "issues": "https://github.com/utopia-php/migration/issues",
                 "source": "https://github.com/utopia-php/migration/tree/fix-kebab-case-site"
             },
-            "time": "2026-02-24T22:28:20+00:00"
+            "time": "2026-02-24T23:51:51+00:00"
         },
         {
             "name": "utopia-php/mongo",
