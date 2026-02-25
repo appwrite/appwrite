@@ -245,5 +245,15 @@
     "emails.otpSession.clientInfo": "ଏହି ସାଇନ୍ ଇନ୍ ଅନୁରୋଧ କରାଯାଇଛି {{agentClient}} ଉପରେ {{agentDevice}} {{agentOs}} ବ୍ୟବହାର କରି। ଯଦି ଆପଣ ସାଇନ୍ ଇନ୍ ଅନୁରୋଧ କରି ନାହାଁନ୍ତି, ଆପଣ ସୁରକ୍ଷିତଭାବେ ଏହି ଇମେଲକୁ ଉପେକ୍ଷା କରିପାରନ୍ତି।",
     "emails.otpSession.securityPhrase": "ଏହି ଇମେଲର ସୁରକ୍ଷା ବାକ୍ୟାଂଶ ହେଉଛି {{phrase}}। ସାଇନ୍ ଇନ୍ କରିବା ସମୟରେ ଦେଖାଯାଇଥିବା ବାକ୍ୟାଂଶ ସହ ଏହା ମେଳେ ଯଦି, ଆପଣ ଏହି ଇମେଲକୁ ଆସ୍ଥା କରି ପାରିବେ।",
     "emails.otpSession.thanks": "ଧନ୍ୟବାଦ,",
-    "emails.otpSession.signature": "ପ୍ରକଳ୍ପ ଟିମ୍ବ୍"
+    "emails.otpSession.signature": "ପ୍ରକଳ୍ପ ଟିମ୍ବ୍",
+    "emails.sessionAlert.subject": "Security alert: new session on your {{project}} account",
+    "emails.sessionAlert.preview": "New login detected on {{project}} at {{time}} UTC.",
+    "emails.sessionAlert.hello": "Hello {{user}},",
+    "emails.sessionAlert.body": "A new session has been created on your {{b}}{{project}}{{/b}} account, {{b}}on {{date}}, {{year}} at {{time}} UTC{{/b}}.\nHere are the details of the new session: ",
+    "emails.sessionAlert.listDevice": "Device: {{b}}{{device}}{{/b}}",
+    "emails.sessionAlert.listIpAddress": "IP Address: {{b}}{{ipAddress}}{{/b}}",
+    "emails.sessionAlert.listCountry": "Country: {{b}}{{country}}{{/b}}",
+    "emails.sessionAlert.footer": "If this was you, there's nothing more you need to do.\nIf you didn't initiate this session or suspect any unauthorized activity, please secure your account.",
+    "emails.sessionAlert.thanks": "Thanks,",
+    "emails.sessionAlert.signature": "{{project}} team"
 }
