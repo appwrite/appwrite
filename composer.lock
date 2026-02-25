@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "bbadd08240c123309a6b7be4da296624",
+    "content-hash": "cb2ca42cfed8603c31b75113c85a4699",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3403,16 +3403,16 @@
         },
         {
             "name": "utopia-php/agents",
-            "version": "1.2.1",
+            "version": "1.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/agents.git",
-                "reference": "052227953678a30ecc4b5467401fcb0b2386471e"
+                "reference": "9291c4616b794bd3f0a342bfabaad2c2a4de7a19"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/agents/zipball/052227953678a30ecc4b5467401fcb0b2386471e",
-                "reference": "052227953678a30ecc4b5467401fcb0b2386471e",
+                "url": "https://api.github.com/repos/utopia-php/agents/zipball/9291c4616b794bd3f0a342bfabaad2c2a4de7a19",
+                "reference": "9291c4616b794bd3f0a342bfabaad2c2a4de7a19",
                 "shasum": ""
             },
             "require": {
@@ -3420,9 +3420,10 @@
                 "utopia-php/fetch": "0.5.*"
             },
             "require-dev": {
-                "laravel/pint": "^1.18",
-                "phpstan/phpstan": "^2.0",
-                "phpunit/phpunit": "^12.0"
+                "laravel/pint": "1.2.*",
+                "phpstan/phpstan": "1.9.x-dev",
+                "phpunit/phpunit": "^9.3",
+                "vimeo/psalm": "4.0.1"
             },
             "type": "library",
             "autoload": {
@@ -3450,9 +3451,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/agents/issues",
-                "source": "https://github.com/utopia-php/agents/tree/1.2.1"
+                "source": "https://github.com/utopia-php/agents/tree/1.2.0"
             },
-            "time": "2026-02-24T06:03:55+00:00"
+            "time": "2026-02-23T12:08:31+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -4517,16 +4518,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "dev-fix-kebab-case-site",
+            "version": "1.6.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "987d11c9f744348908b5af237291cf2be5a66e9e"
+                "reference": "c5c7544d02d2418536d41050794050132f247d62"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/987d11c9f744348908b5af237291cf2be5a66e9e",
-                "reference": "987d11c9f744348908b5af237291cf2be5a66e9e",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/c5c7544d02d2418536d41050794050132f247d62",
+                "reference": "c5c7544d02d2418536d41050794050132f247d62",
                 "shasum": ""
             },
             "require": {
@@ -4566,9 +4567,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/fix-kebab-case-site"
+                "source": "https://github.com/utopia-php/migration/tree/1.6.1"
             },
-            "time": "2026-02-24T23:51:51+00:00"
+            "time": "2026-02-17T05:49:48+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -9043,9 +9044,7 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "utopia-php/migration": 20
-    },
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
@@ -9069,5 +9068,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }
