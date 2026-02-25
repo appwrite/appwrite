@@ -21,9 +21,14 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Textarea } from '@/components/ui/textarea'
+import { Progress } from '@/components/ui/progress'
 
 export type ColumnType =
-  | 'string'
+  | 'text'
+  | 'mediumtext'
+  | 'longtext'
+  | 'varchar'
   | 'integer'
   | 'double'
   | 'boolean'
@@ -36,6 +41,7 @@ export type ColumnType =
   | 'point'
   | 'linestring'
   | 'polygon'
+  | 'string' // deprecated
 
 export interface ColumnFormData {
   key: string
@@ -67,6 +73,9 @@ export interface ColumnFormData {
     | null
 }
 
+const VARCHAR_SIZE_MIN = 1
+const VARCHAR_SIZE_MAX = 16_383
+
 interface ColumnDrawerProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -75,10 +84,15 @@ interface ColumnDrawerProps {
   availableTables?: Array<{ $id: string; name: string }>
   existingColumns?: Array<{ key: string }>
   isLoading?: boolean
+  /** Table metadata for row size usage (varchar create only). Optional: bytesUsed, bytesMax. */
+  table?: { bytesUsed?: number; bytesMax?: number }
 }
 
 const COLUMN_TYPES: { value: ColumnType; label: string }[] = [
-  { value: 'string', label: 'String' },
+  { value: 'text', label: 'Text' },
+  { value: 'mediumtext', label: 'Mediumtext' },
+  { value: 'longtext', label: 'Longtext' },
+  { value: 'varchar', label: 'Varchar' },
   { value: 'integer', label: 'Integer' },
   { value: 'double', label: 'Float' },
   { value: 'boolean', label: 'Boolean' },
@@ -91,6 +105,7 @@ const COLUMN_TYPES: { value: ColumnType; label: string }[] = [
   { value: 'point', label: 'Point' },
   { value: 'linestring', label: 'Line' },
   { value: 'polygon', label: 'Polygon' },
+  { value: 'string', label: 'String (deprecated)' },
 ]
 
 const RELATIONSHIP_TYPES: {
@@ -123,11 +138,12 @@ export function ColumnDrawer({
   availableTables = [],
   existingColumns = [],
   isLoading = false,
+  table,
 }: ColumnDrawerProps) {
   const isEditMode = !!column
   const [formData, setFormData] = useState<ColumnFormData>({
     key: '',
-    type: 'string',
+    type: 'text',
     required: false,
     array: false,
   })
@@ -150,6 +166,8 @@ export function ColumnDrawer({
       if (column.type === 'string') {
         data.size = column.size
         data.encrypt = column.encrypt || false
+      } else if (column.type === 'varchar') {
+        data.size = column.size ?? 255
       } else if (column.type === 'integer' || column.type === 'double') {
         data.min = column.min
         data.max = column.max
@@ -169,7 +187,7 @@ export function ColumnDrawer({
       // Reset form for create mode
       setFormData({
         key: '',
-        type: 'string',
+        type: 'text',
         required: false,
         array: false,
       })
@@ -223,7 +241,7 @@ export function ColumnDrawer({
         // Reset form when closing
         setFormData({
           key: '',
-          type: 'string',
+          type: 'text',
           required: false,
           array: false,
         })
@@ -256,6 +274,25 @@ export function ColumnDrawer({
       } else if (formData.encrypt && formData.size < 150) {
         newErrors.size =
           'Encrypted string columns require a minimum size of 150'
+      }
+    } else if (formData.type === 'varchar') {
+      if (
+        formData.size === undefined ||
+        formData.size < VARCHAR_SIZE_MIN ||
+        formData.size > VARCHAR_SIZE_MAX
+      ) {
+        newErrors.size = `Size is required and must be between ${VARCHAR_SIZE_MIN} and ${VARCHAR_SIZE_MAX}`
+      } else if (
+        !isEditMode &&
+        table?.bytesUsed !== undefined &&
+        table?.bytesMax !== undefined &&
+        table.bytesMax > 0
+      ) {
+        const newColumnBytes = formData.size * 4 + 2
+        if (table.bytesUsed + newColumnBytes > table.bytesMax) {
+          newErrors.size =
+            'This column exceeds the remaining row space. Consider using text, mediumtext, or longtext instead.'
+        }
       }
     } else if (formData.type === 'enum') {
       const validElements = enumElements.filter((e) => e.trim().length > 0)
@@ -413,7 +450,7 @@ export function ColumnDrawer({
                     ...prev,
                     type: value as ColumnType,
                     // Reset type-specific fields
-                    size: undefined,
+                    size: value === 'varchar' ? 255 : undefined,
                     encrypt: false,
                     min: undefined,
                     max: undefined,
@@ -529,6 +566,98 @@ export function ColumnDrawer({
                   </div>
                 )}
               </>
+            )}
+
+            {/* Varchar-specific fields */}
+            {formData.type === 'varchar' && (
+              <>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="column-size-varchar"
+                    className="text-[12px] font-medium"
+                  >
+                    Size <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="column-size-varchar"
+                    type="number"
+                    value={formData.size ?? ''}
+                    onChange={(e) => {
+                      const size = parseInt(e.target.value) || 0
+                      setFormData((prev) => ({
+                        ...prev,
+                        size: size || undefined,
+                      }))
+                    }}
+                    placeholder="255"
+                    min={VARCHAR_SIZE_MIN}
+                    max={VARCHAR_SIZE_MAX}
+                    disabled={isLoading}
+                    className={errors.size ? 'border-destructive' : ''}
+                  />
+                  {errors.size && (
+                    <p className="text-[12px] text-destructive">
+                      {errors.size}
+                    </p>
+                  )}
+                  <p className="text-[11px] text-muted-foreground">
+                    Between {VARCHAR_SIZE_MIN.toLocaleString()} and{' '}
+                    {VARCHAR_SIZE_MAX.toLocaleString()} characters. Stored in
+                    row (counts toward 64 KB row limit).
+                  </p>
+                </div>
+                {!isEditMode &&
+                  table?.bytesUsed !== undefined &&
+                  table?.bytesMax !== undefined &&
+                  table.bytesMax > 0 && (
+                    <div className="space-y-2 rounded-lg border border-border bg-muted/30 p-3">
+                      <p className="text-[11px] font-medium text-foreground">
+                        Row size usage
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        Database rows have a maximum size of 64 KB. varchar
+                        columns use 4 bytes per character plus a small overhead.
+                        text, mediumtext, and longtext columns only use ~20
+                        bytes regardless of content length.
+                      </p>
+                      <Progress
+                        value={
+                          table.bytesMax > 0
+                            ? Math.min(
+                                100,
+                                (table.bytesUsed / table.bytesMax) * 100,
+                              )
+                            : 0
+                        }
+                        className="h-2"
+                      />
+                      <p className="text-[11px] text-muted-foreground">
+                        Current: {(table.bytesUsed / 1024).toFixed(1)} KB /{' '}
+                        {(table.bytesMax / 1024).toFixed(1)} KB
+                        {formData.size
+                          ? ` · New column: ~${((formData.size * 4 + 2) / 1024).toFixed(1)} KB`
+                          : ''}
+                      </p>
+                    </div>
+                  )}
+              </>
+            )}
+
+            {/* Text / Mediumtext / Longtext static hints */}
+            {formData.type === 'text' && (
+              <p className="text-[11px] text-muted-foreground">
+                Maximum size: 16,383 characters.
+              </p>
+            )}
+            {formData.type === 'mediumtext' && (
+              <p className="text-[11px] text-muted-foreground">
+                Maximum size: 4,194,303 characters.
+              </p>
+            )}
+            {formData.type === 'longtext' && (
+              <p className="text-[11px] text-muted-foreground">
+                Maximum size: 1,073,741,823 characters.
+              </p>
             )}
 
             {/* Integer/Float-specific fields */}
@@ -1163,6 +1292,48 @@ export function ColumnDrawer({
                     step={formData.type === 'double' ? 0.1 : 1}
                     placeholder="Enter value"
                     disabled={isLoading}
+                  />
+                ) : formData.type === 'varchar' ? (
+                  (formData.size ?? 255) < 50 ? (
+                    <Input
+                      id="column-default"
+                      type="text"
+                      value={formData.xdefault ? String(formData.xdefault) : ''}
+                      onChange={(e) => {
+                        const value = e.target.value || null
+                        setFormData((prev) => ({ ...prev, xdefault: value }))
+                      }}
+                      placeholder="Enter value"
+                      maxLength={formData.size ?? 255}
+                      disabled={isLoading}
+                    />
+                  ) : (
+                    <Textarea
+                      id="column-default"
+                      value={formData.xdefault ? String(formData.xdefault) : ''}
+                      onChange={(e) => {
+                        const value = e.target.value || null
+                        setFormData((prev) => ({ ...prev, xdefault: value }))
+                      }}
+                      placeholder="Enter value"
+                      maxLength={formData.size ?? 255}
+                      disabled={isLoading}
+                      className="min-h-[80px]"
+                    />
+                  )
+                ) : ['text', 'mediumtext', 'longtext'].includes(
+                    formData.type,
+                  ) ? (
+                  <Textarea
+                    id="column-default"
+                    value={formData.xdefault ? String(formData.xdefault) : ''}
+                    onChange={(e) => {
+                      const value = e.target.value || null
+                      setFormData((prev) => ({ ...prev, xdefault: value }))
+                    }}
+                    placeholder="Enter value"
+                    disabled={isLoading}
+                    className="min-h-[80px]"
                   />
                 ) : (
                   <Input

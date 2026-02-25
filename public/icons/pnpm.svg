@@ -1,0 +1,5 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- pnpm: stylized p + npm blocks -->
+  <path d="M4 4h4v8h4V4h4v16h-4v-8H8v8H4V4z" fill="#C4C6D7"/>
+  <path d="M16 4h4v4h-2V6h-2V4z" fill="#868EA3"/>
+</svg>

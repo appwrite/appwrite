@@ -7,6 +7,7 @@
 
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { z } from 'zod'
+import { pageTitle } from '@/lib/utils/page-title'
 
 const searchSchema = z.object({
   siteId: z.string().optional(),
@@ -16,6 +17,7 @@ const searchSchema = z.object({
 export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/create/finish',
 )({
+  head: () => ({ meta: [{ title: pageTitle('Create', 'Sites') }] }),
   validateSearch: searchSchema,
   beforeLoad: ({ params, search }) => {
     throw redirect({

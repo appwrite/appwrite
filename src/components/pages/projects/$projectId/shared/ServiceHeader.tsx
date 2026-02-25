@@ -65,9 +65,17 @@ interface ServiceHeaderProps {
   /** Show import button */
   showImport?: boolean
   onImport?: () => void
+  /** Tooltip for import button (e.g. "Import CSV") */
+  importTooltip?: string
+  /** Disable import button (e.g. while import is starting) */
+  importDisabled?: boolean
   /** Show export button */
   showExport?: boolean
   onExport?: () => void
+  /** Tooltip for export button (e.g. "Export CSV") */
+  exportTooltip?: string
+  /** Disable export button (e.g. when no rows to export) */
+  exportDisabled?: boolean
   /** Allow collapsing the header (hides tabs) */
   collapsible?: boolean
   /** Breadcrumbs to show above the title */
@@ -102,8 +110,12 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
       isRefreshing = false,
       showImport = false,
       onImport,
+      importTooltip,
+      importDisabled = false,
       showExport = false,
       onExport,
+      exportTooltip,
+      exportDisabled = false,
       collapsible = false,
       breadcrumbs,
       hideTitle = false,
@@ -181,7 +193,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                 role="tab"
                 aria-selected={isActive}
                 className={cn(
-                  'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
+                  'relative flex shrink-0 cursor-pointer items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
                   'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                   isActive
                     ? 'text-foreground'
@@ -200,7 +212,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
               aria-selected={isActive}
               onClick={() => onTabChange?.(tab.id)}
               className={cn(
-                'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
+                'relative flex shrink-0 cursor-pointer items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
                 'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                 isActive
                   ? 'text-foreground'
@@ -220,7 +232,8 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
         {!isCollapsed && !hideTitle && (
           <div
             className={cn(
-              'flex flex-col gap-1 px-4 pt-6 pb-4 sm:px-6',
+              'flex flex-col gap-1 px-4 pt-6 sm:px-6',
+              hasTabs ? 'pb-4' : 'pb-6',
               fullWidthBorder && !fullWidth && 'mx-auto w-full max-w-7xl',
               fullWidthBorder && fullWidth && 'w-full',
             )}
@@ -286,7 +299,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                         role="tab"
                         aria-selected={isActive}
                         className={cn(
-                          'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
+                          'relative flex shrink-0 cursor-pointer items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
                           'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                           isActive
                             ? 'text-foreground'
@@ -305,7 +318,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                       aria-selected={isActive}
                       onClick={() => onTabChange?.(tab.id)}
                       className={cn(
-                        'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
+                        'relative flex shrink-0 cursor-pointer items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
                         'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                         isActive
                           ? 'text-foreground'
@@ -345,7 +358,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                   placeholder={searchPlaceholder}
                   value={searchValue}
                   onChange={(e) => onSearchChange(e.target.value)}
-                  className="h-9 w-full rounded-md border border-border bg-accent/50 pl-10 pr-4 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:outline-none focus:ring-0"
+                  className="h-9 w-full rounded-md border border-border bg-accent/50 pl-10 pr-4 text-[13px] text-foreground placeholder:text-muted-foreground outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                 />
               </div>
             )}
@@ -402,13 +415,14 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                         variant="outline"
                         size="sm"
                         onClick={onImport}
-                        className="h-9 w-9 p-0 border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground"
+                        disabled={importDisabled}
+                        className="h-9 w-9 p-0 border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50"
                       >
                         <Upload className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">
-                      <p>Import</p>
+                      <p>{importTooltip ?? 'Import'}</p>
                     </TooltipContent>
                   </Tooltip>
                 )}
@@ -421,13 +435,14 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                         variant="outline"
                         size="sm"
                         onClick={onExport}
-                        className="h-9 w-9 p-0 border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground"
+                        disabled={exportDisabled}
+                        className="h-9 w-9 p-0 border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50"
                       >
                         <Download className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">
-                      <p>Export</p>
+                      <p>{exportTooltip ?? 'Export'}</p>
                     </TooltipContent>
                   </Tooltip>
                 )}

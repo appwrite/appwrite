@@ -1,10 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/messaging/$messageId/View'
 import { fetchMessage } from '@/lib/react-query/hooks'
+import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/messaging/$messageId/',
 )({
+  head: () => ({ meta: [{ title: pageTitle('Message', 'Messaging') }] }),
   loader: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {

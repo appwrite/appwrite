@@ -5,11 +5,13 @@ import {
   fetchProject,
   mapApiKeysFromResponse,
 } from '@/lib/react-query/hooks'
+import { pageTitle } from '@/lib/utils/page-title'
 
 const STALE_TIME = 30 * 1000
 const PROJECT_STALE_TIME = 5 * 60 * 1000
 
 export const Route = createFileRoute('/_public/projects/$projectId/api-keys')({
+  head: () => ({ meta: [{ title: pageTitle('API keys') }] }),
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return undefined
 

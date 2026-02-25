@@ -7,10 +7,18 @@ import {
   projectRuntimesQueryOptions,
   projectVariablesQueryOptions,
 } from '@/lib/react-query/hooks'
+import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/functions/$functionId/settings',
 )({
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: pageTitle(loaderData?.function?.name ?? 'Function', 'Functions'),
+      },
+    ],
+  }),
   loader: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
@@ -37,6 +45,10 @@ export const Route = createFileRoute(
       // Fetch runtimes - blocks navigation until ready
       queryClient.ensureQueryData(projectRuntimesQueryOptions(projectId)),
     ])
+    const fn = queryClient.getQueryData<{ name?: string }>(
+      projectFunctionQueryOptions(projectId, functionId).queryKey,
+    )
+    return { function: fn }
   },
   component: View,
 })

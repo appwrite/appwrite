@@ -86,6 +86,14 @@ export function setProjectRegion(
 }
 
 /**
+ * Get the cached region for a project (set when project is fetched).
+ * Used when making console-region calls (e.g. upload CSV to console bucket).
+ */
+export function getProjectRegion(projectId: string): string | undefined {
+  return projectRegions.get(projectId)
+}
+
+/**
  * Endpoint for project-scoped API calls and URL construction.
  * Uses cached region from setProjectRegion (populated when project is fetched).
  * When region is not yet cached, returns base endpoint.

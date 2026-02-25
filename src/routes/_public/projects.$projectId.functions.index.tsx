@@ -6,9 +6,11 @@ import {
   organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute('/_public/projects/$projectId/functions/')(
   {
+    head: () => ({ meta: [{ title: pageTitle('Functions') }] }),
     pendingComponent: () => (
       <div className="flex h-full items-center justify-center">
         <div className="text-muted-foreground">Loading functions...</div>

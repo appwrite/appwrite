@@ -831,14 +831,15 @@ export function CreateSiteView() {
                         </p>
                       )}
                     </div>
-                    <div className="relative flex-1 overflow-hidden">
+                    {/* Screenshot slot: aspect-video reserves space to avoid layout shift when image loads */}
+                    <div className="relative flex-1 min-h-0 overflow-hidden">
                       {screenshotUrl ? (
-                        <div className="absolute left-8 -right-4 top-4 transform -rotate-3 transition-transform group-hover:-rotate-2">
-                          <div className="overflow-hidden rounded-lg ring-1 ring-border">
+                        <div className="absolute left-8 -right-4 top-4 aspect-video transform -rotate-3 transition-transform group-hover:-rotate-2">
+                          <div className="relative h-full w-full overflow-hidden rounded-lg ring-1 ring-border bg-muted/30">
                             <FadeImage
                               src={screenshotUrl}
                               alt={template.name}
-                              className="w-full object-cover object-top"
+                              className="absolute inset-0 h-full w-full object-cover object-top"
                             />
                           </div>
                         </div>

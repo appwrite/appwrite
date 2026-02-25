@@ -1,10 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/sites/usage/View'
 import { fetchProject } from '@/lib/react-query/hooks'
+import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/usage',
 )({
+  head: () => ({ meta: [{ title: pageTitle('Usage', 'Sites') }] }),
   pendingComponent: () => (
     <div className="flex h-full items-center justify-center">
       <div className="text-muted-foreground">Loading usage...</div>

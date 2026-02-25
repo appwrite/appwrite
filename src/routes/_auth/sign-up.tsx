@@ -14,6 +14,7 @@ import { AppwriteException, ID, OAuthProvider } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { setLastLoginMethod } from '@/lib/utils/auth-storage'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { pageTitle } from '@/lib/utils/page-title'
 
 // Helper function to validate that a redirect URL is relative (prevents redirect hijacking)
 function isValidRelativeRedirect(url: string): boolean {
@@ -37,6 +38,7 @@ const searchSchema = z.object({
 export const Route = createFileRoute('/_auth/sign-up')({
   component: SignUpPage,
   validateSearch: searchSchema,
+  head: () => ({ meta: [{ title: pageTitle('Sign up') }] }),
 })
 
 function SignUpPage() {

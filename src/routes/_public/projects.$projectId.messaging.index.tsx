@@ -5,11 +5,13 @@ import {
   fetchProject,
   organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
+import { pageTitle } from '@/lib/utils/page-title'
 
 const MESSAGES_PER_PAGE = 25
 
 export const Route = createFileRoute('/_public/projects/$projectId/messaging/')(
   {
+    head: () => ({ meta: [{ title: pageTitle('Messaging') }] }),
     pendingComponent: () => (
       <div className="flex h-full items-center justify-center">
         <div className="text-muted-foreground">Loading messaging...</div>

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useLocation, Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import {
@@ -104,8 +104,19 @@ export function BucketDetailView() {
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
+  // Refetch files list when an upload completes (list uses refetchOnMount: false)
+  const refetchFiles = useCallback(() => {
+    if (projectId && bucketId) {
+      void queryClient.refetchQueries({
+        queryKey: ['files', 'project', projectId, 'bucket', bucketId],
+      })
+    }
+  }, [queryClient, projectId, bucketId])
+
   // Background upload queue
-  const { queueUpload } = useUploadQueue(projectId, bucketId)
+  const { queueUpload } = useUploadQueue(projectId, bucketId, {
+    onUploadComplete: refetchFiles,
+  })
 
   // Convert 1-indexed page to 0-indexed for API
   const pageIndexed = currentPage - 1
@@ -161,11 +172,19 @@ export function BucketDetailView() {
   // Handle file upload - queues in background
   const handleFileUpload = async (data: {
     fileId?: string
-    file: File
+    files: File[]
     permissions?: string[]
   }) => {
     try {
-      await queueUpload(data.file, data.fileId, data.permissions)
+      await Promise.all(
+        data.files.map((file) =>
+          queueUpload(
+            file,
+            data.files.length === 1 ? data.fileId : undefined,
+            data.permissions,
+          ),
+        ),
+      )
       // No toast - progress bar shows upload status
       setUploadFileDialogOpen(false)
       // Files list will automatically reload when upload completes (handled by GlobalUploadProgress)

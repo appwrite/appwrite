@@ -1,4 +1,5 @@
 import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
+import { useTheme } from 'next-themes'
 import {
   useParams,
   Link,
@@ -79,7 +80,7 @@ import {
   useProjectSite,
   useSiteDeployments,
   useSiteDeployment,
-  useDeploymentProxyRules,
+  useSiteDomains,
   deleteSiteDeployment,
   Dependencies,
 } from '@/lib/react-query/hooks'
@@ -91,6 +92,9 @@ import type { Models } from '@appwrite.io/console'
 
 const DEPLOYMENTS_PER_PAGE = 25
 const SCREENSHOTS_BUCKET_ID = 'screenshots'
+/** Preview dimensions for deployment screenshot (16:9), 2x for retina. */
+const SCREENSHOT_PREVIEW_WIDTH = 1280
+const SCREENSHOT_PREVIEW_HEIGHT = 720
 
 function formatSize(bytes: number): string {
   if (bytes === 0) return '0 B'
@@ -211,11 +215,21 @@ export function SiteDeploymentsView() {
   const [deleteActiveDialogOpen, setDeleteActiveDialogOpen] = useState(false)
   const [redeployDialogOpen, setRedeployDialogOpen] = useState(false)
   const [activateDialogOpen, setActivateDialogOpen] = useState(false)
-  const [screenshotTheme, setScreenshotTheme] = useState<'dark' | 'light'>(
-    'dark',
-  )
   const [screenshotLoaded, setScreenshotLoaded] = useState(false)
+  const [screenshotThemeOverride, setScreenshotThemeOverride] = useState<
+    'dark' | 'light' | null
+  >(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+  const { theme, resolvedTheme } = useTheme()
+  const isDark = useMemo(
+    () =>
+      resolvedTheme === 'dark' ||
+      theme === 'dark' ||
+      (typeof window !== 'undefined' &&
+        window.matchMedia('(prefers-color-scheme: dark)').matches),
+    [theme, resolvedTheme],
+  )
 
   const { data: site, isLoading: siteLoading } = useProjectSite(
     projectId,
@@ -323,34 +337,51 @@ export function SiteDeploymentsView() {
     site?.deploymentId || undefined,
   )
 
+  // Screenshot theme: user override or current active app theme (resolvedTheme when available)
+  const defaultScreenshotTheme =
+    resolvedTheme === 'dark' || resolvedTheme === 'light'
+      ? resolvedTheme
+      : isDark
+        ? 'dark'
+        : 'light'
+  const screenshotTheme = screenshotThemeOverride ?? defaultScreenshotTheme
+
   // Reset screenshot loaded state when active deployment or theme changes
   useEffect(() => {
     setScreenshotLoaded(false)
   }, [activeDeployment?.$id, screenshotTheme])
 
-  // Fetch proxy rules for active deployment
-  const { data: proxyRulesData } = useDeploymentProxyRules(
+  // Use same site domains as Domains tab, then filter to active deployment
+  const { rules: siteDomainsRules } = useSiteDomains(
     projectId,
     siteId,
-    site?.deploymentId || undefined,
+    0,
+    100,
+    '',
   )
 
-  // Filter domains for active deployment and sort by length (shortest first), limit to 3
+  // Filter to rules that point to the active deployment (same data source as Domains tab)
   const activeDomains = useMemo(() => {
     const filtered =
-      proxyRulesData?.rules?.filter(
-        (rule) => rule.deploymentId === activeDeployment?.$id,
+      siteDomainsRules?.filter(
+        (rule) =>
+          rule.type === 'deployment' &&
+          rule.deploymentId === activeDeployment?.$id,
       ) || []
     return filtered
       .sort((a, b) => a.domain.length - b.domain.length)
       .slice(0, 3)
-  }, [proxyRulesData?.rules, activeDeployment?.$id])
+  }, [siteDomainsRules, activeDeployment?.$id])
 
-  // Check if there are more domains than displayed
-  const totalActiveDomains =
-    proxyRulesData?.rules?.filter(
-      (rule) => rule.deploymentId === activeDeployment?.$id,
-    ).length || 0
+  const totalActiveDomains = useMemo(
+    () =>
+      siteDomainsRules?.filter(
+        (rule) =>
+          rule.type === 'deployment' &&
+          rule.deploymentId === activeDeployment?.$id,
+      ).length ?? 0,
+    [siteDomainsRules, activeDeployment?.$id],
+  )
   const hasMoreDomains = totalActiveDomains > activeDomains.length
 
   // Get VCS provider info
@@ -623,7 +654,7 @@ export function SiteDeploymentsView() {
               <div className="border-t border-border" />
               <div className="px-6 py-4">
                 <div className="flex flex-col lg:flex-row gap-6">
-                  {/* Screenshot */}
+                  {/* Screenshot - preview size (retina), default theme = app theme, toggle to override */}
                   {(() => {
                     const screenshotId =
                       screenshotTheme === 'dark'
@@ -632,9 +663,11 @@ export function SiteDeploymentsView() {
 
                     if (screenshotId) {
                       const screenshotUrl =
-                        sdk.forConsole.storage.getFileDownload({
+                        sdk.forConsole.storage.getFilePreview({
                           bucketId: SCREENSHOTS_BUCKET_ID,
                           fileId: screenshotId,
+                          width: SCREENSHOT_PREVIEW_WIDTH,
+                          height: SCREENSHOT_PREVIEW_HEIGHT,
                         })
 
                       return (
@@ -670,7 +703,7 @@ export function SiteDeploymentsView() {
                               <div className="flex items-center gap-1 rounded-lg border border-border bg-background/95 backdrop-blur-sm p-1">
                                 <button
                                   onClick={() => {
-                                    setScreenshotTheme('light')
+                                    setScreenshotThemeOverride('light')
                                     setScreenshotLoaded(false)
                                   }}
                                   className={cn(
@@ -685,7 +718,7 @@ export function SiteDeploymentsView() {
                                 </button>
                                 <button
                                   onClick={() => {
-                                    setScreenshotTheme('dark')
+                                    setScreenshotThemeOverride('dark')
                                     setScreenshotLoaded(false)
                                   }}
                                   className={cn(
@@ -893,14 +926,14 @@ export function SiteDeploymentsView() {
                       </div>
                       {activeDomains.length > 0 ? (
                         <>
-                          <div className="space-y-1">
+                          <div className="flex flex-col gap-1">
                             {activeDomains.map((rule) => (
                               <a
                                 key={rule.$id}
                                 href={`https://${rule.domain}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-[13px] font-mono text-foreground hover:underline"
+                                className="block text-[13px] font-mono text-foreground hover:underline"
                               >
                                 {rule.domain}
                               </a>
@@ -911,28 +944,86 @@ export function SiteDeploymentsView() {
                               +{totalActiveDomains - activeDomains.length} more
                             </p>
                           )}
-                          <Link
-                            to="/projects/$projectId/sites/$siteId/domains"
-                            params={{
-                              projectId: projectId!,
-                              siteId: siteId!,
-                            }}
-                            className="text-[11px] text-primary hover:underline mt-2 inline-block"
-                          >
-                            Add domain
-                          </Link>
+                          <div className="mt-3 pt-2 border-t border-border/60 flex flex-wrap items-center gap-2">
+                            <Button
+                              variant="link"
+                              size="sm"
+                              className="h-auto p-0 text-[13px] font-medium text-primary"
+                              asChild
+                            >
+                              <Link
+                                to="/projects/$projectId/sites/$siteId/domains"
+                                params={{
+                                  projectId: projectId!,
+                                  siteId: siteId!,
+                                }}
+                              >
+                                View all domains
+                                {hasMoreDomains && (
+                                  <Badge
+                                    variant="secondary"
+                                    className="ml-1.5 h-4 min-w-4 px-1 text-[10px] font-semibold tabular-nums"
+                                  >
+                                    +{totalActiveDomains - activeDomains.length}
+                                  </Badge>
+                                )}
+                              </Link>
+                            </Button>
+                            <span className="text-muted-foreground/60">·</span>
+                            <Button
+                              variant="link"
+                              size="sm"
+                              className="h-auto p-0 text-[13px] font-medium text-primary"
+                              asChild
+                            >
+                              <Link
+                                to="/projects/$projectId/sites/$siteId/domains"
+                                params={{
+                                  projectId: projectId!,
+                                  siteId: siteId!,
+                                }}
+                              >
+                                Add domain
+                              </Link>
+                            </Button>
+                          </div>
                         </>
                       ) : (
-                        <Link
-                          to="/projects/$projectId/sites/$siteId/domains"
-                          params={{
-                            projectId: projectId!,
-                            siteId: siteId!,
-                          }}
-                          className="text-[11px] text-primary hover:underline"
-                        >
-                          Add domain
-                        </Link>
+                        <div className="mt-2 pt-2 border-t border-border/60 flex flex-wrap items-center gap-2">
+                          <Button
+                            variant="link"
+                            size="sm"
+                            className="h-auto p-0 text-[13px] font-medium text-primary"
+                            asChild
+                          >
+                            <Link
+                              to="/projects/$projectId/sites/$siteId/domains"
+                              params={{
+                                projectId: projectId!,
+                                siteId: siteId!,
+                              }}
+                            >
+                              View all domains
+                            </Link>
+                          </Button>
+                          <span className="text-muted-foreground/60">·</span>
+                          <Button
+                            variant="link"
+                            size="sm"
+                            className="h-auto p-0 text-[13px] font-medium text-primary"
+                            asChild
+                          >
+                            <Link
+                              to="/projects/$projectId/sites/$siteId/domains"
+                              params={{
+                                projectId: projectId!,
+                                siteId: siteId!,
+                              }}
+                            >
+                              Add domain
+                            </Link>
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -1531,6 +1622,7 @@ export function SiteDeploymentsView() {
                 onPageChange={handlePageChange}
                 onPageSizeChange={handlePageSizeChange}
                 itemLabel="deployments"
+                className="py-2"
               />
             </>
           ) : (

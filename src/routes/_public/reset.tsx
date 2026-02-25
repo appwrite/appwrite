@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import { AppwriteException } from '@appwrite.io/console'
 import { Link } from '@tanstack/react-router'
+import { pageTitle } from '@/lib/utils/page-title'
 
 const searchSchema = z.object({
   userId: z.string().min(1, 'User ID is required'),
@@ -17,6 +18,7 @@ const searchSchema = z.object({
 export const Route = createFileRoute('/_public/reset')({
   component: ResetPage,
   validateSearch: searchSchema,
+  head: () => ({ meta: [{ title: pageTitle('Reset password') }] }),
 })
 
 function ResetPage() {

@@ -207,6 +207,20 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             },
           },
           {
+            label: 'Show native app bar',
+            description:
+              'App bar above header with back/forward and centered search (for future native OS app)',
+            variant: 'switch' as const,
+            switchValue: overrides.showNativeAppBar,
+            switchOnChange: (checked: boolean) => {
+              setOverrides((prev) => ({
+                ...prev,
+                showNativeAppBar: checked,
+              }))
+              setDebugOverride('showNativeAppBar', checked)
+            },
+          },
+          {
             label: 'Reset overrides',
             onClick: () => {
               resetDebugOverrides()
@@ -340,6 +354,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     theme,
     currentFavicon,
     overrides.disableInitialLoader,
+    overrides.showNativeAppBar,
     banners.length,
     currentOrgId,
     actions,

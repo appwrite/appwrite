@@ -1,10 +1,10 @@
 import { useParams, Link } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import {
   useProjectSite,
   useSiteDeployments,
   useSiteDeployment,
-  useDeploymentProxyRules,
+  useSiteDomains,
   Dependencies,
 } from '@/lib/react-query/hooks'
 import {
@@ -125,16 +125,37 @@ export function View() {
     site?.deploymentId || undefined,
   )
 
-  // Fetch proxy rules for active deployment
-  const { data: proxyRulesData } = useDeploymentProxyRules(
-    projectId,
-    siteId,
-    site?.deploymentId || undefined,
-  )
-
   const recentDeployments = recentDeploymentsData?.deployments || []
   const productionDeployment = productionDeploymentsData?.deployments?.[0]
-  const proxyRules = proxyRulesData?.rules || []
+
+  // Use same site domains as Domains tab, then filter to active deployment
+  const { rules: siteDomainsRules } = useSiteDomains(
+    projectId,
+    siteId,
+    0,
+    100,
+    '',
+  )
+
+  // Filter to rules that point to the active deployment (same data source as Domains tab), show up to 3
+  const activeDomains = useMemo(() => {
+    const filtered =
+      siteDomainsRules?.filter(
+        (rule) =>
+          rule.type === 'deployment' &&
+          rule.deploymentId === activeDeployment?.$id,
+      ) || []
+    return filtered
+      .sort((a, b) => a.domain.length - b.domain.length)
+      .slice(0, 3)
+  }, [siteDomainsRules, activeDeployment?.$id])
+  const totalActiveDomains =
+    siteDomainsRules?.filter(
+      (rule) =>
+        rule.type === 'deployment' &&
+        rule.deploymentId === activeDeployment?.$id,
+    ).length ?? 0
+  const hasMoreDomains = totalActiveDomains > activeDomains.length
 
   const isBuilding =
     activeDeployment?.status === 'building' ||
@@ -330,29 +351,107 @@ export function View() {
                       Domains
                     </div>
                     <div className="text-[13px] text-foreground">
-                      {proxyRules.length > 0 ? (
-                        <div className="flex flex-wrap gap-1">
-                          {proxyRules.slice(0, 2).map((rule) => (
-                            <a
-                              key={rule.$id}
-                              href={`https://${rule.domain}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="font-mono text-[11px] text-primary hover:underline"
+                      {activeDomains.length > 0 ? (
+                        <>
+                          <div className="flex flex-col gap-1">
+                            {activeDomains.map((rule) => (
+                              <a
+                                key={rule.$id}
+                                href={`https://${rule.domain}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="block font-mono text-[11px] text-primary hover:underline"
+                              >
+                                {rule.domain}
+                              </a>
+                            ))}
+                            {hasMoreDomains && (
+                              <span className="text-[11px] text-muted-foreground">
+                                +{totalActiveDomains - activeDomains.length}{' '}
+                                more
+                              </span>
+                            )}
+                          </div>
+                          <div className="mt-3 pt-2 border-t border-border/60 flex flex-wrap items-center gap-2">
+                            <Button
+                              variant="link"
+                              size="sm"
+                              className="h-auto p-0 text-[13px] font-medium text-primary"
+                              asChild
                             >
-                              {rule.domain}
-                            </a>
-                          ))}
-                          {proxyRules.length > 2 && (
-                            <span className="text-[11px] text-muted-foreground">
-                              +{proxyRules.length - 2} more
-                            </span>
-                          )}
-                        </div>
+                              <Link
+                                to="/projects/$projectId/sites/$siteId/domains"
+                                params={{
+                                  projectId: projectId!,
+                                  siteId: siteId!,
+                                }}
+                              >
+                                View all domains
+                                {hasMoreDomains && (
+                                  <Badge
+                                    variant="secondary"
+                                    className="ml-1.5 h-4 min-w-4 px-1 text-[10px] font-semibold tabular-nums"
+                                  >
+                                    +{totalActiveDomains - activeDomains.length}
+                                  </Badge>
+                                )}
+                              </Link>
+                            </Button>
+                            <span className="text-muted-foreground/60">·</span>
+                            <Button
+                              variant="link"
+                              size="sm"
+                              className="h-auto p-0 text-[13px] font-medium text-primary"
+                              asChild
+                            >
+                              <Link
+                                to="/projects/$projectId/sites/$siteId/domains"
+                                params={{
+                                  projectId: projectId!,
+                                  siteId: siteId!,
+                                }}
+                              >
+                                Add domain
+                              </Link>
+                            </Button>
+                          </div>
+                        </>
                       ) : (
-                        <span className="text-muted-foreground">
-                          No domains
-                        </span>
+                        <div className="mt-2 pt-2 border-t border-border/60 flex flex-wrap items-center gap-2">
+                          <Button
+                            variant="link"
+                            size="sm"
+                            className="h-auto p-0 text-[13px] font-medium text-primary"
+                            asChild
+                          >
+                            <Link
+                              to="/projects/$projectId/sites/$siteId/domains"
+                              params={{
+                                projectId: projectId!,
+                                siteId: siteId!,
+                              }}
+                            >
+                              View all domains
+                            </Link>
+                          </Button>
+                          <span className="text-muted-foreground/60">·</span>
+                          <Button
+                            variant="link"
+                            size="sm"
+                            className="h-auto p-0 text-[13px] font-medium text-primary"
+                            asChild
+                          >
+                            <Link
+                              to="/projects/$projectId/sites/$siteId/domains"
+                              params={{
+                                projectId: projectId!,
+                                siteId: siteId!,
+                              }}
+                            >
+                              Add domain
+                            </Link>
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -408,7 +507,7 @@ export function View() {
                     Build logs
                   </Button>
                 </Link>
-                {proxyRules.length > 0 && (
+                {activeDomains.length > 0 && (
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -427,7 +526,7 @@ export function View() {
                             Domains
                           </h4>
                           <div className="space-y-1.5">
-                            {proxyRules.map((rule) => (
+                            {activeDomains.map((rule) => (
                               <a
                                 key={rule.$id}
                                 href={`https://${rule.domain}`}

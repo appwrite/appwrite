@@ -68,7 +68,45 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import type { Models } from '@appwrite.io/console'
+import { cn } from '@/lib/utils'
 import { useProject, useOrganizationPlan } from '@/lib/react-query/hooks'
+
+type BackupStatusVariant = 'completed' | 'failed' | 'pending' | 'processing'
+
+function getBackupStatus(status: string) {
+  const statusMap: Record<
+    string,
+    { label: string; icon: typeof Clock; badgeVariant: BackupStatusVariant }
+  > = {
+    pending: { label: 'Pending', icon: Clock, badgeVariant: 'pending' },
+    completed: {
+      label: 'Complete',
+      icon: CheckCircle2,
+      badgeVariant: 'completed',
+    },
+    uploading: {
+      label: 'Processing',
+      icon: CircleDashed,
+      badgeVariant: 'processing',
+    },
+    downloading: {
+      label: 'Processing',
+      icon: CircleDashed,
+      badgeVariant: 'processing',
+    },
+    failed: { label: 'Failed', icon: AlertCircle, badgeVariant: 'failed' },
+  }
+  const statusInfo = statusMap[status] || {
+    label: 'Waiting',
+    icon: Clock,
+    badgeVariant: 'pending' as BackupStatusVariant,
+  }
+  return {
+    label: statusInfo.label,
+    badgeVariant: statusInfo.badgeVariant,
+    icon: statusInfo.icon,
+  }
+}
 
 interface BackupsViewProps {
   databaseId: string
@@ -337,48 +375,6 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
     return `${mb.toFixed(2)} MB`
   }
 
-  // Get backup status badge
-  const getBackupStatus = (status: string) => {
-    const statusMap: Record<
-      string,
-      {
-        label: string
-        icon: typeof Clock
-        badgeVariant: 'completed' | 'failed' | 'pending' | 'processing'
-      }
-    > = {
-      pending: { label: 'Pending', icon: Clock, badgeVariant: 'pending' },
-      completed: {
-        label: 'Complete',
-        icon: CheckCircle2,
-        badgeVariant: 'completed',
-      },
-      uploading: {
-        label: 'Processing',
-        icon: CircleDashed,
-        badgeVariant: 'processing',
-      },
-      downloading: {
-        label: 'Processing',
-        icon: CircleDashed,
-        badgeVariant: 'processing',
-      },
-      failed: { label: 'Failed', icon: AlertCircle, badgeVariant: 'failed' },
-    }
-
-    const statusInfo = statusMap[status] || {
-      label: 'Waiting',
-      icon: Clock,
-      badgeVariant: 'pending' as const,
-    }
-
-    return {
-      label: statusInfo.label,
-      badgeVariant: statusInfo.badgeVariant,
-      icon: statusInfo.icon,
-    }
-  }
-
   // Calculate next backup date from cron
   const getNextBackupDate = (schedule: string) => {
     // Simple implementation - for hourly (0 * * * *) and daily (* * * *)
@@ -439,7 +435,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
 
   if (isBackupsDisabled) {
     return (
-      <div className="mx-auto w-full max-w-7xl px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6">
+      <div className="mx-auto w-full max-w-7xl mt-4 px-4 pb-4 sm:mt-6 sm:px-6 sm:pb-6">
         <UpgradeCurtain
           isLocked={true}
           orgId={project?.teamId}
@@ -475,7 +471,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6">
+    <div className="mx-auto w-full max-w-7xl mt-4 px-4 pb-4 sm:mt-6 sm:px-6 sm:pb-6">
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Policies Section */}
         <div className="lg:col-span-1">
@@ -1594,134 +1590,181 @@ function RestoreBackupDialog({
         Boolean(newDatabaseId && newDatabaseId === databaseId)
       : !confirmSameDbRestore
 
+  const backupStatus = getBackupStatus(backup.status)
+  const StatusIcon = backupStatus.icon
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md p-0 max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="px-6 pt-6 text-left">
+      <DialogContent className="sm:max-w-2xl p-0 max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="px-6 pt-6 pb-5 text-left">
           <DialogTitle>Restore backup</DialogTitle>
-          <DialogDescription className="text-[13px] mt-2">
-            Choose where to restore this backup.
-          </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
-
-        <div className="px-6 pb-4 pt-0 space-y-4">
-          {/* Backup Info Card */}
-          <Card>
-            <CardHeader className="pb-3">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-green-500" />
-                <CardTitle className="text-[14px]">
-                  {new Date(backup.$createdAt).toLocaleString()}
-                </CardTitle>
+        <div className="px-6 pb-4 pt-0">
+          {/* Archive snapshot details */}
+          <div className="rounded-xl border border-border bg-card/50 overflow-hidden mb-5">
+            <div className="px-6 py-4">
+              <h3 className="text-[15px] font-semibold text-foreground">
+                Archive snapshot
+              </h3>
+            </div>
+            <div className="border-t border-border" />
+            <div className="grid grid-cols-2 gap-x-6 gap-y-3 px-6 py-4 text-[13px]">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-muted-foreground">Created</span>
+                <span className="text-foreground">
+                  {new Date(backup.$createdAt).toISOString().replace('T', ' ').slice(0, 19)}
+                </span>
               </div>
-            </CardHeader>
-            <CardContent className="space-y-2 text-[13px]">
-              <div>
-                <span className="text-muted-foreground">Status: </span>
-                <span className="text-foreground">Completed</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Size: </span>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-muted-foreground">Size</span>
                 <span className="text-foreground">
                   {formatSize(backup.size)}
                 </span>
               </div>
-              <div>
-                <span className="text-muted-foreground">Time ago: </span>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-muted-foreground">Status</span>
+                <Badge
+                  variant={backupStatus.badgeVariant}
+                  className="gap-1.5 text-[11px] font-medium w-fit"
+                >
+                  <StatusIcon className="h-3 w-3" />
+                  {backupStatus.label}
+                </Badge>
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-muted-foreground">Age</span>
                 <span className="text-foreground">
                   {formatDistanceToNow(new Date(backup.$createdAt), {
                     addSuffix: true,
                   })}
                 </span>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          {/* Restore Options */}
+          {/* Restore target - options side by side */}
+          <h3 className="text-[15px] font-semibold text-foreground mb-4">
+            Restore target
+          </h3>
           <RadioGroup
             value={restoreOption}
             onValueChange={(value) => setRestoreOption(value as 'new' | 'same')}
+            className="grid grid-cols-2 gap-3"
           >
-            <div className="space-y-3">
-              <div className="flex items-start space-x-3 rounded-lg border border-border p-4">
-                <RadioGroupItem value="new" id="new" className="mt-1" />
-                <Label htmlFor="new" className="flex-1 cursor-pointer">
-                  <div className="font-medium text-[13px] mb-1">
-                    Restore in new database
-                  </div>
-                  <div className="text-[12px] text-muted-foreground">
-                    Duplicate to a new database with a different name
-                  </div>
-                </Label>
+            <Label
+              htmlFor="restore-new"
+              className={cn(
+                'flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors',
+                restoreOption === 'new'
+                  ? 'border-primary/50 bg-muted/50'
+                  : 'border-border bg-card/50 hover:bg-muted/30',
+              )}
+            >
+              <RadioGroupItem
+                value="new"
+                id="restore-new"
+                className="mt-0.5 shrink-0"
+              />
+              <div className="min-w-0 flex-1 space-y-2">
+                <span className="text-[13px] font-semibold text-foreground">
+                  New database
+                </span>
+                <p className="text-[12px] text-muted-foreground leading-snug">
+                  Create a new database from this archive; source remains unchanged.
+                </p>
               </div>
+            </Label>
 
-              <div className="flex items-start space-x-3 rounded-lg border border-border p-4">
-                <RadioGroupItem value="same" id="same" className="mt-1" />
-                <Label htmlFor="same" className="flex-1 cursor-pointer">
-                  <div className="font-medium text-[13px] mb-1">
-                    Restore in current database
-                  </div>
-                  <div className="text-[12px] text-muted-foreground">
-                    Overwrite current database with backup data
-                  </div>
-                </Label>
+            <Label
+              htmlFor="restore-same"
+              className={cn(
+                'flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors',
+                restoreOption === 'same'
+                  ? 'border-primary/50 bg-muted/50'
+                  : 'border-border bg-card/50 hover:bg-muted/30',
+              )}
+            >
+              <RadioGroupItem
+                value="same"
+                id="restore-same"
+                className="mt-0.5 shrink-0"
+              />
+              <div className="min-w-0 flex-1 space-y-2">
+                <span className="text-[13px] font-semibold text-foreground">
+                  Current database
+                </span>
+                <p className="text-[12px] text-muted-foreground leading-snug">
+                  Overwrite existing data with this backup. This cannot be undone.
+                </p>
               </div>
-            </div>
+            </Label>
           </RadioGroup>
 
-          {/* Conditional Fields */}
+          {/* Conditional: new database fields */}
           {restoreOption === 'new' && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="new-db-name" className="text-[13px]">
-                  Database Name <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="new-db-name"
-                  placeholder="Enter database name"
-                  value={newDatabaseName}
-                  onChange={(e) => setNewDatabaseName(e.target.value)}
-                />
+            <div className="mt-5 rounded-xl border border-border bg-card/50 overflow-hidden">
+              <div className="px-6 py-4">
+                <h3 className="text-[15px] font-semibold text-foreground">
+                  New database
+                </h3>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="new-db-id" className="text-[13px]">
-                  Database ID (optional)
-                </Label>
-                <IdInput
-                  id="new-db-id"
-                  value={newDatabaseId}
-                  onChange={(id) => setNewDatabaseId(id || '')}
-                  placeholder="Leave blank to auto-generate"
-                />
-                {newDatabaseId === databaseId && (
-                  <p className="text-[12px] text-destructive">
-                    Database ID must be different from source database
-                  </p>
-                )}
+              <div className="border-t border-border" />
+              <div className="px-6 py-4 space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="new-db-name" className="text-[13px]">
+                    Name <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="new-db-name"
+                    placeholder="e.g. production-restore"
+                    value={newDatabaseName}
+                    onChange={(e) => setNewDatabaseName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="new-db-id" className="text-[13px]">
+                    ID <span className="text-muted-foreground font-normal">(optional)</span>
+                  </Label>
+                  <IdInput
+                    id="new-db-id"
+                    value={newDatabaseId}
+                    onChange={(id) => setNewDatabaseId(id || '')}
+                    placeholder="Auto-generated if blank"
+                  />
+                  {newDatabaseId === databaseId && (
+                    <p className="text-[12px] text-destructive flex items-center gap-1.5">
+                      <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                      Must differ from the source database ID
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           )}
 
+          {/* Conditional: overwrite confirmation */}
           {restoreOption === 'same' && (
-            <div className="flex items-start space-x-2 rounded-lg border border-border p-4">
-              <Checkbox
-                id="confirm-same-db"
-                checked={confirmSameDbRestore}
-                onCheckedChange={(checked) =>
-                  setConfirmSameDbRestore(checked === true)
-                }
-              />
-              <Label
-                htmlFor="confirm-same-db"
-                className="flex-1 cursor-pointer text-[13px]"
-              >
-                I understand this will overwrite the current database
-              </Label>
+            <div className="mt-5 rounded-lg border border-border bg-muted/30 p-4">
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  id="confirm-same-db"
+                  checked={confirmSameDbRestore}
+                  onCheckedChange={(checked) =>
+                    setConfirmSameDbRestore(checked === true)
+                  }
+                  className="mt-0.5"
+                />
+                <Label
+                  htmlFor="confirm-same-db"
+                  className="flex-1 cursor-pointer text-[13px] text-foreground"
+                >
+                  I understand that all current database data will be permanently replaced by this backup.
+                </Label>
+              </div>
             </div>
           )}
         </div>
-
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button
             variant="outline"

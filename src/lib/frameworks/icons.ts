@@ -56,6 +56,12 @@ export const FRAMEWORK_ICON_MAP: Record<string, string> = {
   sveltekit: 'svelte.svg',
   'svelte-kit': 'svelte.svg',
 
+  solid: 'solid.svg',
+  solidjs: 'solid.svg',
+  'solid-js': 'solid.svg',
+
+  refine: 'refine.svg',
+
   astro: 'astro.svg',
   astrojs: 'astro.svg',
   'astro-js': 'astro.svg',
@@ -66,11 +72,27 @@ export const FRAMEWORK_ICON_MAP: Record<string, string> = {
 
   flutter: 'flutter.svg',
 
+  python: 'python.svg',
+  dart: 'dart.svg',
+  php: 'php.svg',
+  ruby: 'ruby.svg',
+  dotnet: 'dotnet.svg',
+  go: 'go.svg',
+  swift: 'swift.svg',
+  kotlin: 'kotlin.svg',
+  node: 'node.svg',
+  express: 'node.svg',
+  deno: 'deno.svg',
+
+  pnpm: 'pnpm.svg',
+  npm: 'npm.svg',
+
   lynx: 'lynx.svg',
   lynxjs: 'lynx.svg',
   'lynx-js': 'lynx.svg',
 
   static: 'js.svg',
+  vanilla: 'js.svg',
 }
 
 /**

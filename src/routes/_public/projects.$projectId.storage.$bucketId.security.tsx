@@ -1,10 +1,18 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/storage/$bucketId/View'
 import { fetchBucket } from '@/lib/react-query/hooks'
+import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/storage/$bucketId/security',
 )({
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: pageTitle(loaderData?.bucket?.name ?? 'Bucket', 'Storage'),
+      },
+    ],
+  }),
   loader: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {

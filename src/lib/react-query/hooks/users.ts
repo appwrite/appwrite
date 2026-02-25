@@ -1599,6 +1599,27 @@ export async function deleteTeamMembership(
   return await projectSdk.teams.deleteMembership({ teamId, membershipId })
 }
 
+/**
+ * Mutation function to update team membership roles
+ */
+export async function updateTeamMembership(
+  projectId: string,
+  teamId: string,
+  membershipId: string,
+  roles: string[],
+) {
+  if (!projectId || !teamId || !membershipId) {
+    throw new Error('Project ID, Team ID, and Membership ID are required')
+  }
+
+  const projectSdk = sdk.forProject(projectId)
+  return await projectSdk.teams.updateMembership({
+    teamId,
+    membershipId,
+    roles,
+  })
+}
+
 // ============================================================================
 // TEAM DETAIL HOOKS
 // ============================================================================
@@ -1755,6 +1776,42 @@ export function useDeleteTeamMembership(
       queryClient.invalidateQueries({
         queryKey: ['team', 'project', projectId, teamId],
       })
+      // Invalidate user memberships so user detail tab refreshes when a membership is deleted
+      queryClient.invalidateQueries({ queryKey: ['user', 'memberships'] })
+    },
+  })
+}
+
+/**
+ * Hook to update team membership roles
+ */
+export function useUpdateTeamMembership(
+  projectId: string | null | undefined,
+  teamId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      membershipId,
+      roles,
+    }: {
+      membershipId: string
+      roles: string[]
+    }) => {
+      if (!projectId || !teamId) {
+        throw new Error('Project ID and Team ID are required')
+      }
+      return updateTeamMembership(projectId, teamId, membershipId, roles)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['team', 'memberships', 'project', projectId, teamId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['team', 'project', projectId, teamId],
+      })
+      queryClient.invalidateQueries({ queryKey: ['user', 'memberships'] })
     },
   })
 }

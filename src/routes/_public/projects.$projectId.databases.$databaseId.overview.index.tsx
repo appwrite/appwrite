@@ -1,9 +1,11 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect } from 'react'
+import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/$databaseId/overview/',
 )({
+  head: () => ({ meta: [{ title: pageTitle('Database', 'Databases') }] }),
   component: DatabaseOverviewIndexRedirect,
 })
 
@@ -14,8 +16,8 @@ function DatabaseOverviewIndexRedirect() {
 
   useEffect(() => {
     navigate({
-      to: '/projects/$projectId/databases/$databaseId/',
-      params: { projectId, databaseId },
+      to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+      params: { projectId, databaseId, tableId: '-' },
       replace: true,
     })
   }, [navigate, projectId, databaseId])

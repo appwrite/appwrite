@@ -18,6 +18,7 @@ export function View() {
     functionId,
   )
 
+  // Execute permissions live on the function's `execute` attribute (array of role names, e.g. ["any"], ["users"])
   const [execute, setExecute] = useState<string[]>([])
   const [scopes, setScopes] = useState<string[] | null>(null)
 
@@ -126,6 +127,7 @@ export function View() {
                 permissions={execute}
                 onPermissionsChange={setExecute}
                 projectId={projectId}
+                executeOnly
               />
             </div>
             <div className="px-6 py-4 border-t border-border bg-muted/30">

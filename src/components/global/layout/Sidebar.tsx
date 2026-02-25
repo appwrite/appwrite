@@ -476,9 +476,7 @@ export function ConsoleSidebar({
           {/* Overview */}
           <div className="space-y-0.5">{renderNavItem(overviewItem, true)}</div>
 
-          {visibleCategories.map((category) =>
-            renderCategory(category, true),
-          )}
+          {visibleCategories.map((category) => renderCategory(category, true))}
         </nav>
 
         {/* Settings */}

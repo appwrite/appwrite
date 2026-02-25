@@ -1,5 +1,6 @@
 import { View } from '@/components/pages/organizations/$orgId/domains/View'
 import { createFileRoute } from '@tanstack/react-router'
+import { pageTitle } from '@/lib/utils/page-title'
 import {
   organizationsQueryOptions,
   organizationDomainsQueryOptions,
@@ -8,6 +9,7 @@ import {
 const DOMAINS_PER_PAGE = 25
 
 export const Route = createFileRoute('/_public/organizations/$orgId/domains/')({
+  head: () => ({ meta: [{ title: pageTitle('Domains', 'Organization') }] }),
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return
 

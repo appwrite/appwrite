@@ -6,7 +6,19 @@ import { useState, useEffect, useCallback } from 'react'
 import { uploadManager } from './upload-manager'
 import type { UploadItem } from './types'
 
-export function useUploadQueue(projectId?: string, bucketId?: string) {
+const TERMINAL_STATUSES = ['completed', 'failed', 'cancelled'] as const
+
+export interface UseUploadQueueOptions {
+  /** Called when an upload reaches a terminal state (completed, failed, cancelled) */
+  onUploadComplete?: (projectId: string, bucketId: string) => void
+}
+
+export function useUploadQueue(
+  projectId?: string,
+  bucketId?: string,
+  options?: UseUploadQueueOptions,
+) {
+  const { onUploadComplete } = options ?? {}
   const [uploads, setUploads] = useState<UploadItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -129,7 +141,7 @@ export function useUploadQueue(projectId?: string, bucketId?: string) {
         permissions,
       )
 
-      // Set up progress listener
+      // Set up progress listener (keep until terminal state so we receive completion)
       const unsubscribe = uploadManager.onProgress(uploadId, (progress) => {
         setUploads((prev) => {
           const existing = prev.find((u) => u.id === uploadId)
@@ -167,9 +179,17 @@ export function useUploadQueue(projectId?: string, bucketId?: string) {
             ]
           }
         })
+        if (
+          TERMINAL_STATUSES.includes(
+            progress.status as (typeof TERMINAL_STATUSES)[number],
+          )
+        ) {
+          onUploadComplete?.(projectId, bucketId)
+          setTimeout(() => unsubscribe(), 0)
+        }
       })
 
-      // Reload uploads to get the full item
+      // Reload uploads to get the full item (don't unsubscribe - we need completion events)
       setTimeout(async () => {
         const item = await uploadManager.getUploadStatus(uploadId)
         if (item) {
@@ -181,12 +201,11 @@ export function useUploadQueue(projectId?: string, bucketId?: string) {
             return prev
           })
         }
-        unsubscribe()
       }, 100)
 
       return uploadId
     },
-    [projectId, bucketId],
+    [projectId, bucketId, onUploadComplete],
   )
 
   const cancelUpload = useCallback(async (uploadId: string) => {

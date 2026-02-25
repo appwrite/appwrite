@@ -4,10 +4,18 @@ import {
   projectQueryOptions,
   projectFunctionQueryOptions,
 } from '@/lib/react-query/hooks'
+import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/functions/$functionId/security',
 )({
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: pageTitle(loaderData?.function?.name ?? 'Function', 'Functions'),
+      },
+    ],
+  }),
   loader: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
@@ -23,6 +31,10 @@ export const Route = createFileRoute(
     await queryClient.ensureQueryData(
       projectFunctionQueryOptions(projectId, functionId),
     )
+    const fn = queryClient.getQueryData<{ name?: string }>(
+      projectFunctionQueryOptions(projectId, functionId).queryKey,
+    )
+    return { function: fn }
   },
   component: View,
 })

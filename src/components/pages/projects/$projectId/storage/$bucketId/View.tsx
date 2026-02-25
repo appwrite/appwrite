@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useLocation, Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import {
@@ -105,8 +105,19 @@ export function View() {
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
+  // Refetch files list when an upload completes (list uses refetchOnMount: false)
+  const refetchFiles = useCallback(() => {
+    if (projectId && bucketId) {
+      void queryClient.refetchQueries({
+        queryKey: ['files', 'project', projectId, 'bucket', bucketId],
+      })
+    }
+  }, [queryClient, projectId, bucketId])
+
   // Background upload queue
-  const { queueUpload } = useUploadQueue(projectId, bucketId)
+  const { queueUpload } = useUploadQueue(projectId, bucketId, {
+    onUploadComplete: refetchFiles,
+  })
 
   // Fetch bucket data
   const { data: bucket } = useBucket(projectId, bucketId)
@@ -182,11 +193,19 @@ export function View() {
   // Handle file upload - queues in background
   const handleFileUpload = async (data: {
     fileId?: string
-    file: File
+    files: File[]
     permissions?: string[]
   }) => {
     try {
-      await queueUpload(data.file, data.fileId, data.permissions)
+      await Promise.all(
+        data.files.map((file) =>
+          queueUpload(
+            file,
+            data.files.length === 1 ? data.fileId : undefined,
+            data.permissions,
+          ),
+        ),
+      )
       // No toast - progress bar shows upload status
       setUploadFileDialogOpen(false)
       // Files list will automatically reload when upload completes (handled by GlobalUploadProgress)
@@ -786,73 +805,73 @@ export function View() {
                       itemLabel="files"
                     />
                   )}
-
-                  {/* Bulk Delete Action Bar */}
-                  {selectedFiles.size > 0 && (
-                    <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
-                      <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
-                        <Badge variant="secondary" className="h-6 px-2.5">
-                          {selectedFiles.size} file
-                          {selectedFiles.size > 1 ? 's' : ''} selected
-                        </Badge>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setSelectedFiles(new Set())}
-                            className="h-8 text-xs"
-                          >
-                            Cancel
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={handleBulkDelete}
-                            disabled={bulkDeleteMutation.isPending}
-                            className="h-8 gap-2"
-                          >
-                            Delete
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Bulk Delete Confirmation Dialog */}
-                  <Dialog
-                    open={deleteDialogOpen}
-                    onOpenChange={setDeleteDialogOpen}
-                  >
-                    <DialogContent className="sm:max-w-md p-0">
-                      <DialogHeader className="px-6 pt-6 text-left">
-                        <DialogTitle>Delete Files</DialogTitle>
-                        <DialogDescription className="text-[13px] mt-2">
-                          Are you sure you want to delete {selectedFiles.size}{' '}
-                          file{selectedFiles.size > 1 ? 's' : ''}? This action
-                          cannot be undone.
-                        </DialogDescription>
-                      </DialogHeader>
-
-                      <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                        <Button
-                          variant="outline"
-                          onClick={() => setDeleteDialogOpen(false)}
-                          disabled={bulkDeleteMutation.isPending}
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          onClick={confirmBulkDelete}
-                          disabled={bulkDeleteMutation.isPending}
-                        >
-                          Delete
-                        </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
                 </div>
               )}
+
+              {/* Bulk Delete Action Bar - shown for both list and grid when files selected */}
+              {selectedFiles.size > 0 && (
+                <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
+                  <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
+                    <Badge variant="secondary" className="h-6 px-2.5">
+                      {selectedFiles.size} file
+                      {selectedFiles.size > 1 ? 's' : ''} selected
+                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedFiles(new Set())}
+                        className="h-8 text-xs"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={handleBulkDelete}
+                        disabled={bulkDeleteMutation.isPending}
+                        className="h-8 gap-2"
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Bulk Delete Confirmation Dialog */}
+              <Dialog
+                open={deleteDialogOpen}
+                onOpenChange={setDeleteDialogOpen}
+              >
+                <DialogContent className="sm:max-w-md p-0">
+                  <DialogHeader className="px-6 pt-6 text-left">
+                    <DialogTitle>Delete Files</DialogTitle>
+                    <DialogDescription className="text-[13px] mt-2">
+                      Are you sure you want to delete {selectedFiles.size} file
+                      {selectedFiles.size > 1 ? 's' : ''}? This action cannot be
+                      undone.
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                    <Button
+                      variant="outline"
+                      onClick={() => setDeleteDialogOpen(false)}
+                      disabled={bulkDeleteMutation.isPending}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={confirmBulkDelete}
+                      disabled={bulkDeleteMutation.isPending}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </>
           </div>
         )}

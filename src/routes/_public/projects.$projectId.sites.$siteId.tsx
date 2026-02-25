@@ -8,10 +8,21 @@ import {
   projectQueryOptions,
 } from '@/lib/react-query/hooks'
 import { Query } from '@appwrite.io/console'
+import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/$siteId',
 )({
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: pageTitle(
+          loaderData?.site?.name ?? loaderData?.site?.resourceId ?? 'Site',
+          'Sites',
+        ),
+      },
+    ],
+  }),
   loader: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
@@ -63,6 +74,7 @@ export const Route = createFileRoute(
           siteDomainsQueryOptions(projectId, siteId, 0, 25, ''),
         ),
       ])
+      return { site }
     } catch (error) {
       // Don't throw - let the component handle the error (e.g. on reload when
       // session isn't ready yet or network fails). The View will show

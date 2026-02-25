@@ -7,6 +7,7 @@ import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import { AppwriteException } from '@appwrite.io/console'
+import { pageTitle } from '@/lib/utils/page-title'
 
 const searchSchema = z.object({
   email: z.string().optional(),
@@ -15,6 +16,7 @@ const searchSchema = z.object({
 export const Route = createFileRoute('/_auth/recovery')({
   component: RecoveryPage,
   validateSearch: searchSchema,
+  head: () => ({ meta: [{ title: pageTitle('Password recovery') }] }),
 })
 
 function RecoveryPage() {

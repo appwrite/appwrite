@@ -40,6 +40,8 @@ export interface PermissionsEditorProps {
   permissions: string[]
   onPermissionsChange: (permissions: string[]) => void
   withCreate?: boolean
+  /** When true, only parse/display "execute" permission (e.g. for functions) */
+  executeOnly?: boolean
   projectId?: string
 }
 
@@ -48,14 +50,34 @@ interface PermissionActions {
   read: boolean
   update: boolean
   delete: boolean
+  execute: boolean
 }
 
-type PermissionAction = 'create' | 'read' | 'update' | 'delete'
+type PermissionAction = 'create' | 'read' | 'update' | 'delete' | 'execute'
+
+const EMPTY_ACTIONS: PermissionActions = {
+  create: false,
+  read: false,
+  update: false,
+  delete: false,
+  execute: false,
+}
+
+function hasAnyPermission(
+  actions: PermissionActions,
+  executeOnly: boolean,
+): boolean {
+  if (executeOnly) return actions.execute
+  return actions.create || actions.read || actions.update || actions.delete
+}
 
 /**
  * Parse permission strings into a map of role -> actions
  */
-function parsePermissions(perms: string[]): Map<string, PermissionActions> {
+function parsePermissions(
+  perms: string[],
+  executeOnly?: boolean,
+): Map<string, PermissionActions> {
   const roleMap = new Map<string, PermissionActions>()
 
   if (!Array.isArray(perms)) {
@@ -68,20 +90,16 @@ function parsePermissions(perms: string[]): Map<string, PermissionActions> {
     }
 
     // Match pattern: action("role") or action('role')
-    // More flexible regex to handle various quote styles
     const match = perm.match(/(\w+)\(["']([^"']+)["']\)/)
     if (match) {
       const [, action, role] = match
       if (!roleMap.has(role)) {
-        roleMap.set(role, {
-          create: false,
-          read: false,
-          update: false,
-          delete: false,
-        })
+        roleMap.set(role, { ...EMPTY_ACTIONS })
       }
       const actions = roleMap.get(role)!
-      if (
+      if (executeOnly) {
+        if (action === 'execute') actions.execute = true
+      } else if (
         action === 'create' ||
         action === 'read' ||
         action === 'update' ||
@@ -89,6 +107,13 @@ function parsePermissions(perms: string[]): Map<string, PermissionActions> {
       ) {
         actions[action] = true
       }
+    } else if (executeOnly && perm.trim()) {
+      // Function execute array can be plain role names (e.g. ["any"], ["users"])
+      const role = perm.trim()
+      if (!roleMap.has(role)) {
+        roleMap.set(role, { ...EMPTY_ACTIONS })
+      }
+      roleMap.get(role)!.execute = true
     }
   })
 
@@ -98,12 +123,25 @@ function parsePermissions(perms: string[]): Map<string, PermissionActions> {
 /**
  * Convert role map back to permission strings array
  */
-function exportPermissions(roleMap: Map<string, PermissionActions>): string[] {
+function exportPermissions(
+  roleMap: Map<string, PermissionActions>,
+  executeOnly?: boolean,
+): string[] {
   const perms: string[] = []
 
+  if (executeOnly) {
+    // Function execute attribute expects plain role names (e.g. ["any"], ["users"])
+    roleMap.forEach((actions, role) => {
+      if (actions.execute) {
+        perms.push(role)
+      }
+    })
+    return perms
+  }
+
   roleMap.forEach((actions, role) => {
-    Object.entries(actions).forEach(([action, enabled]) => {
-      if (enabled) {
+    ;(['create', 'read', 'update', 'delete'] as const).forEach((action) => {
+      if (actions[action]) {
         perms.push(`${action}("${role}")`)
       }
     })
@@ -226,8 +264,8 @@ function UserRoleDisplay({ userId, projectId }: UserRoleDisplayProps) {
             {displayName}
           </span>
           <Badge
-            variant="secondary"
-            className="text-[10px] px-1.5 py-0 shrink-0"
+            variant="info"
+            className="text-[10px] shrink-0"
           >
             User
           </Badge>
@@ -266,8 +304,8 @@ function TeamRoleDisplay({ teamId, projectId }: TeamRoleDisplayProps) {
             {displayName}
           </span>
           <Badge
-            variant="secondary"
-            className="text-[10px] px-1.5 py-0 shrink-0"
+            variant="info"
+            className="text-[10px] shrink-0"
           >
             Team
           </Badge>
@@ -289,9 +327,24 @@ interface LabelRoleDisplayProps {
 
 function LabelRoleDisplay({ labelName }: LabelRoleDisplayProps) {
   return (
-    <span className="text-[13px] font-medium text-foreground underline truncate max-w-[120px] sm:max-w-[200px]">
-      {labelName}
-    </span>
+    <div className="flex items-center gap-2 min-w-0">
+      <div className="size-6 shrink-0 rounded-full bg-muted flex items-center justify-center">
+        <Tag className="size-3.5 text-muted-foreground" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5">
+          <span className="text-[13px] font-medium text-foreground truncate max-w-[120px] sm:max-w-[200px]">
+            {labelName}
+          </span>
+          <Badge
+            variant="info"
+            className="text-[10px] shrink-0"
+          >
+            Label
+          </Badge>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -304,9 +357,24 @@ interface CustomRoleDisplayProps {
 
 function CustomRoleDisplay({ role }: CustomRoleDisplayProps) {
   return (
-    <span className="text-[13px] font-medium text-foreground underline truncate max-w-[120px] sm:max-w-[200px]">
-      {role}
-    </span>
+    <div className="flex items-center gap-2 min-w-0">
+      <div className="size-6 shrink-0 rounded-full bg-muted flex items-center justify-center">
+        <Code className="size-3.5 text-muted-foreground" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5">
+          <span className="text-[13px] font-medium text-foreground truncate max-w-[120px] sm:max-w-[200px]">
+            {role}
+          </span>
+          <Badge
+            variant="info"
+            className="text-[10px] shrink-0"
+          >
+            Custom
+          </Badge>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -709,8 +777,19 @@ function LabelInputModal({ open, onOpenChange, onAdd }: LabelInputModalProps) {
   )
 }
 
+/** Valid permission format: user:ID, user:ID/role, team:ID, or team:ID/role */
+function isValidPermissionFormat(value: string): boolean {
+  const trimmed = value.trim()
+  if (!trimmed) return false
+  // user:userId or user:userId/roleName
+  if (/^user:[^/]+(\/.+)?$/.test(trimmed)) return true
+  // team:teamId or team:teamId/roleName
+  if (/^team:[^/]+(\/.+)?$/.test(trimmed)) return true
+  return false
+}
+
 /**
- * CustomRoleInputModal - modal for entering custom role
+ * CustomRoleInputModal - modal for entering a role by permission string (user: or team: format)
  */
 interface CustomRoleInputModalProps {
   open: boolean
@@ -724,10 +803,13 @@ function CustomRoleInputModal({
   onAdd,
 }: CustomRoleInputModalProps) {
   const [role, setRole] = useState('')
+  const trimmed = role.trim()
+  const isValid = isValidPermissionFormat(trimmed)
+  const showFormatError = trimmed.length > 0 && !isValid
 
   const handleAdd = () => {
-    if (role.trim()) {
-      onAdd(role.trim())
+    if (isValid) {
+      onAdd(trimmed)
       setRole('')
       onOpenChange(false)
     }
@@ -742,9 +824,17 @@ function CustomRoleInputModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 text-left">
-          <DialogTitle>Add Custom Permission</DialogTitle>
+          <DialogTitle>Add by role string</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Enter any custom role identifier.
+            Grant access using a user or team ID. Use{' '}
+            <code className="rounded bg-muted px-1 py-0.5 text-[12px]">
+              user:[USER_ID]
+            </code>{' '}
+            or{' '}
+            <code className="rounded bg-muted px-1 py-0.5 text-[12px]">
+              team:[TEAM_ID]/[ROLE]
+            </code>
+            .
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -752,18 +842,31 @@ function CustomRoleInputModal({
         <div className="px-6 pb-4 pt-0">
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="custom-role">Role Identifier</Label>
+              <Label htmlFor="custom-role">Permission string</Label>
               <Input
                 id="custom-role"
-                placeholder="e.g., admin, moderator, custom-role"
+                placeholder="user:USER_ID or team:TEAM_ID/ROLE"
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && role.trim()) {
+                  if (e.key === 'Enter' && isValid) {
                     handleAdd()
                   }
                 }}
+                className={showFormatError ? 'border-destructive' : ''}
               />
+              {showFormatError && (
+                <p className="text-[12px] text-destructive flex items-center gap-1.5">
+                  <span>Use format</span>
+                  <code className="rounded bg-destructive/10 px-1 py-0.5">
+                    user:USER_ID
+                  </code>
+                  <span>or</span>
+                  <code className="rounded bg-destructive/10 px-1 py-0.5">
+                    team:TEAM_ID/ROLE
+                  </code>
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -772,7 +875,7 @@ function CustomRoleInputModal({
           <Button variant="outline" onClick={handleCancel}>
             Cancel
           </Button>
-          <Button onClick={handleAdd} disabled={!role.trim()}>
+          <Button onClick={handleAdd} disabled={!isValid}>
             Add
           </Button>
         </div>
@@ -788,6 +891,7 @@ export function PermissionsEditor({
   permissions,
   onPermissionsChange,
   withCreate = false,
+  executeOnly = false,
   projectId: projectIdProp,
 }: PermissionsEditorProps) {
   const params = useParams({ strict: false })
@@ -826,17 +930,12 @@ export function PermissionsEditor({
       if (permissions.length > 0) {
         lastExportedRef.current = permissionsStr
       }
-      const newMap = parsePermissions(permissions)
+      const newMap = parsePermissions(permissions, executeOnly)
       setPermissionsMap(newMap)
       // Initialize rolesWithPermissions with roles that already have permissions
       const rolesWithPerms = new Set<string>()
       newMap.forEach((actions, role) => {
-        if (
-          actions.create ||
-          actions.read ||
-          actions.update ||
-          actions.delete
-        ) {
+        if (hasAnyPermission(actions, executeOnly)) {
           rolesWithPerms.add(role)
         }
       })
@@ -853,17 +952,12 @@ export function PermissionsEditor({
     // If we had empty permissions initially and now have real permissions, initialize
     if (!lastExportedRef.current && permissions.length > 0) {
       lastExportedRef.current = permissionsStr
-      const newMap = parsePermissions(permissions)
+      const newMap = parsePermissions(permissions, executeOnly)
       setPermissionsMap(newMap)
       // Initialize rolesWithPermissions
       const rolesWithPerms = new Set<string>()
       newMap.forEach((actions, role) => {
-        if (
-          actions.create ||
-          actions.read ||
-          actions.update ||
-          actions.delete
-        ) {
+        if (hasAnyPermission(actions, executeOnly)) {
           rolesWithPerms.add(role)
         }
       })
@@ -872,7 +966,7 @@ export function PermissionsEditor({
     }
 
     // Permissions changed externally - merge with current state to preserve newly added roles
-    const newMap = parsePermissions(permissions)
+    const newMap = parsePermissions(permissions, executeOnly)
 
     // If current map is empty and we have new permissions, just set them directly
     setPermissionsMap((prevMap) => {
@@ -880,12 +974,7 @@ export function PermissionsEditor({
       if (prevMap.size === 0) {
         const rolesWithPerms = new Set<string>()
         newMap.forEach((actions, role) => {
-          if (
-            actions.create ||
-            actions.read ||
-            actions.update ||
-            actions.delete
-          ) {
+          if (hasAnyPermission(actions, executeOnly)) {
             rolesWithPerms.add(role)
           }
         })
@@ -910,12 +999,7 @@ export function PermissionsEditor({
       // Update rolesWithPermissions
       const rolesWithPerms = new Set<string>()
       mergedMap.forEach((actions, role) => {
-        if (
-          actions.create ||
-          actions.read ||
-          actions.update ||
-          actions.delete
-        ) {
+        if (hasAnyPermission(actions, executeOnly)) {
           rolesWithPerms.add(role)
         }
       })
@@ -923,7 +1007,7 @@ export function PermissionsEditor({
 
       return mergedMap
     })
-  }, [permissions])
+  }, [permissions, executeOnly])
 
   // Export permissions when map changes (but not during initialization)
   useEffect(() => {
@@ -932,7 +1016,7 @@ export function PermissionsEditor({
       return
     }
 
-    const exported = exportPermissions(permissionsMap)
+    const exported = exportPermissions(permissionsMap, executeOnly)
     const exportedStr = JSON.stringify([...exported].sort())
 
     // Only export if:
@@ -945,23 +1029,17 @@ export function PermissionsEditor({
       lastExportedRef.current = exportedStr
       onPermissionsChange(exported)
     }
-  }, [permissionsMap, permissions, onPermissionsChange])
+  }, [permissionsMap, permissions, onPermissionsChange, executeOnly])
 
   const handlePermissionChange = useCallback(
     (role: string, action: PermissionAction, enabled: boolean) => {
       setPermissionsMap((prev) => {
         const newMap = new Map(prev)
         if (!newMap.has(role)) {
-          newMap.set(role, {
-            create: false,
-            read: false,
-            update: false,
-            delete: false,
-          })
+          newMap.set(role, { ...EMPTY_ACTIONS })
         }
         const actions = newMap.get(role)!
-        const hadPermissionsBefore =
-          actions.create || actions.read || actions.update || actions.delete
+        const hadPermissionsBefore = hasAnyPermission(actions, executeOnly)
         actions[action] = enabled
 
         // Track if this role has had permissions set
@@ -976,8 +1054,7 @@ export function PermissionsEditor({
         // 2. It previously had permissions enabled (user had configured it before)
         // 3. It's NOT a newly added role (extra safety check - newly added roles should never be auto-removed)
         const isNewlyAdded = newlyAddedRolesRef.current.has(role)
-        const allDisabled =
-          !actions.create && !actions.read && !actions.update && !actions.delete
+        const allDisabled = !hasAnyPermission(actions, executeOnly)
 
         // NEVER remove newly added roles, even if all permissions are disabled
         // Only remove if it had permissions before AND all are now disabled AND it's not newly added
@@ -993,7 +1070,7 @@ export function PermissionsEditor({
         return newMap
       })
     },
-    [],
+    [executeOnly],
   )
 
   const handleRemoveRole = useCallback((role: string) => {
@@ -1017,18 +1094,20 @@ export function PermissionsEditor({
       }
       setPermissionsMap((prev) => {
         const newMap = new Map(prev)
+        // In executeOnly, adding a role grants execute immediately (no checkbox)
         newMap.set(role, {
-          create: false,
-          read: false,
-          update: false,
-          delete: false,
+          ...EMPTY_ACTIONS,
+          ...(executeOnly ? { execute: true } : {}),
         })
         return newMap
       })
-      // Mark as newly added so it won't be removed until user sets at least one permission
-      newlyAddedRolesRef.current.add(role)
+      if (executeOnly) {
+        setRolesWithPermissions((prev) => new Set(prev).add(role))
+      } else {
+        newlyAddedRolesRef.current.add(role)
+      }
     },
-    [permissionsMap],
+    [permissionsMap, executeOnly],
   )
 
   const handleAddUsers = useCallback(
@@ -1084,7 +1163,9 @@ export function PermissionsEditor({
           emptyState
         />
         <p className="text-sm text-muted-foreground">
-          Add a role to get started
+          {executeOnly
+            ? 'Add roles to choose who can execute'
+            : 'Add a role to get started'}
         </p>
 
         {/* Modals */}
@@ -1116,7 +1197,71 @@ export function PermissionsEditor({
     )
   }
 
-  // Table state
+  // Execute-only: simple list of roles (who can execute) — no table or checkboxes
+  if (executeOnly) {
+    const rolesWithExecute = roles.filter(
+      (role) => permissionsMap.get(role)?.execute,
+    )
+    return (
+      <div className="space-y-4">
+        <div className="flex flex-wrap gap-2">
+          {rolesWithExecute.map((role) => (
+            <div
+              key={role}
+              className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 pl-3 pr-1 py-2 min-w-0"
+            >
+              <RoleDisplay role={role} projectId={projectId} />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-8 shrink-0"
+                onClick={() => handleRemoveRole(role)}
+                aria-label={`Remove ${role} from execute list`}
+              >
+                <X className="size-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
+        <AddRoleDropdown
+          onAddSpecialRole={handleAddRole}
+          onOpenUserModal={() => setUserModalOpen(true)}
+          onOpenTeamModal={() => setTeamModalOpen(true)}
+          onOpenLabelModal={() => setLabelModalOpen(true)}
+          onOpenCustomModal={() => setCustomModalOpen(true)}
+          hasAny={hasAny}
+          hasGuests={hasGuests}
+          hasUsers={hasUsers}
+        />
+        <UserSelectionModal
+          open={userModalOpen}
+          onOpenChange={setUserModalOpen}
+          onSelect={handleAddUsers}
+          projectId={projectId}
+          existingRoles={new Set(permissionsMap.keys())}
+        />
+        <TeamSelectionModal
+          open={teamModalOpen}
+          onOpenChange={setTeamModalOpen}
+          onSelect={handleAddTeams}
+          projectId={projectId}
+          existingRoles={new Set(permissionsMap.keys())}
+        />
+        <LabelInputModal
+          open={labelModalOpen}
+          onOpenChange={setLabelModalOpen}
+          onAdd={handleAddLabel}
+        />
+        <CustomRoleInputModal
+          open={customModalOpen}
+          onOpenChange={setCustomModalOpen}
+          onAdd={handleAddCustom}
+        />
+      </div>
+    )
+  }
+
+  // Table state (CRUD permissions)
   return (
     <div className="space-y-4">
       <div className="overflow-x-auto">
@@ -1326,7 +1471,7 @@ function AddRoleDropdown({
         </DropdownMenuItem>
         <DropdownMenuItem onClick={onOpenCustomModal}>
           <Code className="size-4 mr-2" />
-          <span>Custom permission</span>
+          <span>Custom</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

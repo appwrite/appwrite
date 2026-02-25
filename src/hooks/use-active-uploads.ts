@@ -34,29 +34,30 @@ export function useActiveUploads() {
 
   // Register progress listeners for each active upload so we get smooth updates and completion events
   useEffect(() => {
+    const listeners = listenersRef.current
     const currentIds = new Set(activeUploads.map((u) => u.id))
 
     // Remove listeners for uploads no longer in the list (e.g. completed)
-    listenersRef.current.forEach((unsub, id) => {
+    listeners.forEach((unsub, id) => {
       if (!currentIds.has(id)) {
         unsub()
-        listenersRef.current.delete(id)
+        listeners.delete(id)
       }
     })
 
     // Add listeners for new uploads
     activeUploads.forEach((item) => {
-      if (!listenersRef.current.has(item.id)) {
+      if (!listeners.has(item.id)) {
         const unsubscribe = uploadManager.onProgress(item.id, () => {
           loadActiveUploads()
         })
-        listenersRef.current.set(item.id, unsubscribe)
+        listeners.set(item.id, unsubscribe)
       }
     })
 
     return () => {
-      listenersRef.current.forEach((unsub) => unsub())
-      listenersRef.current.clear()
+      listeners.forEach((unsub) => unsub())
+      listeners.clear()
     }
   }, [activeUploads, loadActiveUploads])
 

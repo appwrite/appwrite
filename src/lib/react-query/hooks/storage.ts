@@ -73,9 +73,23 @@ export async function fetchBucket(
 }
 
 /**
+ * Query filter for CSV-compatible files (by mime type or .csv extension).
+ * Use with listFiles to only return files suitable for CSV import.
+ */
+const CSV_FILE_QUERIES = [
+  Query.or([
+    Query.equal('mimeType', 'text/csv'),
+    Query.equal('mimeType', 'text/plain'),
+    Query.startsWith('mimeType', 'text/'),
+    Query.endsWith('name', '.csv'),
+  ]),
+]
+
+/**
  * Query function to fetch files in a bucket
  *
  * This is extracted so it can be reused in both hooks and route loaders.
+ * @param csvOnly - When true, only return CSV-compatible files (mimeType text/csv, text/plain, text/*, or name ending in .csv)
  */
 export async function fetchBucketFiles(
   projectId: string,
@@ -83,6 +97,7 @@ export async function fetchBucketFiles(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  csvOnly?: boolean,
 ): Promise<Models.FileList> {
   if (!projectId || !bucketId) {
     return { files: [], total: 0 }
@@ -90,6 +105,7 @@ export async function fetchBucketFiles(
 
   const projectSdk = sdk.forProject(projectId)
   const queries = [
+    ...(csvOnly ? CSV_FILE_QUERIES : []),
     Query.orderDesc('$createdAt'),
     Query.limit(limit),
     Query.offset(page * limit),
@@ -250,6 +266,7 @@ export function useBucket(
 
 /**
  * Hook to fetch files in a bucket
+ * @param csvOnly - When true, only return CSV-compatible files (for CSV import selector)
  */
 export function useBucketFiles(
   projectId: string | null | undefined,
@@ -257,6 +274,7 @@ export function useBucketFiles(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  csvOnly?: boolean,
 ) {
   return useQuery({
     queryKey: [
@@ -268,8 +286,10 @@ export function useBucketFiles(
       page,
       limit,
       search,
+      csvOnly,
     ],
-    queryFn: () => fetchBucketFiles(projectId!, bucketId!, page, limit, search),
+    queryFn: () =>
+      fetchBucketFiles(projectId!, bucketId!, page, limit, search, csvOnly),
     enabled: !!projectId && !!bucketId,
     staleTime: DEFAULT_STALE_TIME,
   })

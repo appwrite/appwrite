@@ -1,10 +1,15 @@
-import { ReactNode } from 'react'
+import { ReactNode, useState, useEffect } from 'react'
 import { ConsoleHeader } from './Header'
 import { ConsoleSidebar } from './Sidebar'
 import { ConsoleFooter } from './Footer'
 import { ConsoleBanner } from './ConsoleBanner'
+import { NativeAppBar } from './NativeAppBar'
 import { PaymentAlert } from '@/components/pages/projects/$projectId/shared/PaymentAlert'
 import { cn } from '@/lib/utils'
+import {
+  loadDebugOverrides,
+  subscribeToDebugOverrides,
+} from '@/lib/debug-overrides'
 
 interface ConsoleLayoutProps {
   /** Main content to render */
@@ -87,23 +92,28 @@ export function ConsoleLayout({
     containerClassName ||
     (hasSidebar ? 'project-layout-container' : 'org-layout-container')
 
+  const [overrides, setOverrides] = useState(loadDebugOverrides)
+  useEffect(() => {
+    return subscribeToDebugOverrides(setOverrides)
+  }, [])
+
+  const showNativeAppBar = overrides.showNativeAppBar
+
   return (
     <div
       className={cn('flex h-full flex-col bg-background', layoutContainerClass)}
     >
       {/* Sticky header section - takes space in flex layout */}
-      <div className="flex-shrink-0">
-        <div className="sticky top-0 z-40">
-          <PaymentAlert />
-        </div>
-        <div className="sticky top-0 z-30 bg-background">
-          <ConsoleHeader
-            onMenuClick={sidebar?.onMenuClick}
-            projectId={header?.projectId}
-            onCommandCenterOpen={header?.onCommandCenterOpen}
-            onCreateOrganization={header?.onCreateOrganization}
-          />
-        </div>
+      <div className="flex-shrink-0 sticky top-0 z-30 flex flex-col bg-background">
+        {showNativeAppBar && <NativeAppBar />}
+        <PaymentAlert />
+        <ConsoleHeader
+          onMenuClick={sidebar?.onMenuClick}
+          projectId={header?.projectId}
+          onCommandCenterOpen={header?.onCommandCenterOpen}
+          onCreateOrganization={header?.onCreateOrganization}
+          hideSearch={showNativeAppBar}
+        />
       </div>
 
       {/* Mobile sidebar overlay */}

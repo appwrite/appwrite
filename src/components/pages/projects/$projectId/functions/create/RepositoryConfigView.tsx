@@ -46,7 +46,16 @@ import { toast } from 'sonner'
 import { ID, VCSDetectionType, VCSReferenceType } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { useRepository, useProjectRuntimes } from '@/lib/react-query/hooks'
+import {
+  useRepository,
+  useProjectRuntimes,
+  useFunctionSpecifications,
+} from '@/lib/react-query/hooks'
+import {
+  getFirstEnabledSpecification,
+  isSpecificationAllowedInPlan,
+  hasUnavailableSpecifications,
+} from '@/lib/specifications'
 import { useFunctionWizard } from './WizardContext'
 
 function GitHubIcon({ className }: { className?: string }) {
@@ -118,6 +127,8 @@ export function RepositoryConfigView({
   const [variables, setVariables] = useState<FunctionWizardVariable[]>([])
   const [domain, setDomain] = useState('')
   const [domainValid, setDomainValid] = useState(false)
+  const [isPublic, setIsPublic] = useState(true)
+  const [specification, setSpecification] = useState('')
   const [isDeploying, setIsDeploying] = useState(false)
 
   const { data: repository } = useRepository(
@@ -126,7 +137,19 @@ export function RepositoryConfigView({
     providerRepositoryId || null,
   )
   const { data: runtimesData } = useProjectRuntimes(projectId)
+  const { data: specificationsData } = useFunctionSpecifications(projectId)
   const runtimes = runtimesData?.runtimes ?? []
+  const specifications = useMemo(
+    () => specificationsData?.specifications ?? [],
+    [specificationsData],
+  )
+
+  useEffect(() => {
+    if (specifications.length > 0 && !specification) {
+      const first = getFirstEnabledSpecification(specifications)
+      if (first?.slug) setSpecification(first.slug)
+    }
+  }, [specifications, specification])
 
   const detectRuntimeMutation = useMutation({
     mutationFn: async () => {
@@ -196,7 +219,7 @@ export function RepositoryConfigView({
         functionId: finalFunctionId,
         name: functionName.trim(),
         runtime: runtime as unknown,
-        execute: [],
+        execute: isPublic ? ['any'] : [],
         enabled: true,
         entrypoint: entrypoint.trim() || undefined,
         commands: commands.trim() || undefined,
@@ -205,6 +228,7 @@ export function RepositoryConfigView({
         providerBranch: branch,
         providerSilentMode: silentMode,
         providerRootDirectory: rootDirectory || undefined,
+        specification: specification || undefined,
       })
 
       await projectSdk.proxy.createFunctionRule({
@@ -494,6 +518,51 @@ export function RepositoryConfigView({
               </Select>
             )}
           </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="text-[13px]">Public</Label>
+              <p className="text-[11px] text-muted-foreground">
+                Allow anyone to execute this function (execute role: any)
+              </p>
+            </div>
+            <Switch checked={isPublic} onCheckedChange={setIsPublic} />
+          </div>
+          {specifications.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="specification" className="text-[13px]">
+                Compute
+              </Label>
+              <Select
+                value={specification || undefined}
+                onValueChange={setSpecification}
+              >
+                <SelectTrigger id="specification" className="h-9 text-[13px]">
+                  <SelectValue placeholder="Select specification" />
+                </SelectTrigger>
+                <SelectContent>
+                  {specifications
+                    .filter((s) => s.slug?.trim())
+                    .map((spec) => (
+                      <SelectItem
+                        key={spec.slug}
+                        value={spec.slug}
+                        disabled={!isSpecificationAllowedInPlan(spec)}
+                      >
+                        {spec.cpus} CPU, {spec.memory}MB RAM
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground">
+                Runtime specification for your function
+              </p>
+              {hasUnavailableSpecifications(specifications) && (
+                <p className="text-[11px] text-muted-foreground">
+                  Upgrade your plan to unlock additional specifications.
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

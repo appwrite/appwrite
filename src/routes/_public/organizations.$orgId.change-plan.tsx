@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { pageTitle } from '@/lib/utils/page-title'
 import {
   organizationsQueryOptions,
   organizationQueryOptions,
@@ -14,6 +15,7 @@ import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 export const Route = createFileRoute(
   '/_public/organizations/$orgId/change-plan',
 )({
+  head: () => ({ meta: [{ title: pageTitle('Change plan', 'Organization') }] }),
   loader: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {

@@ -3,6 +3,8 @@
  *
  * Subscribes to the console realtime channel for the current project
  * and invalidates React Query cache when events are received so the UI updates.
+ * When migration events arrive, notifies SessionMigrations so in-progress CSV
+ * export/import can be shown (unless the user already dismissed that migration).
  * Unsubscribes on unmount or when projectId changes.
  *
  * Ensures only one subscription is active: awaits previous cleanup before
@@ -10,9 +12,10 @@
  * Strict Mode or fast dependency changes).
  */
 
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, type ReactNode } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { subscribeProjectRealtime } from '@/lib/realtime'
+import { useSessionMigrations } from '@/components/global/providers/SessionMigrationsContext'
 
 interface RealtimeProviderProps {
   children: ReactNode
@@ -24,6 +27,17 @@ export function RealtimeProvider({
   projectId,
 }: RealtimeProviderProps) {
   const queryClient = useQueryClient()
+  const { addMigrationFromRealtime } = useSessionMigrations(projectId)
+  const addMigrationRef = useRef(addMigrationFromRealtime)
+  addMigrationRef.current = addMigrationFromRealtime
+
+  const onMigrationEvent = useCallback(
+    (payload: unknown) => {
+      addMigrationRef.current?.(projectId, payload)
+    },
+    [projectId],
+  )
+
   const cleanupRef = useRef<(() => Promise<void>) | null>(null)
   const cleanupPromiseRef = useRef<Promise<void> | null>(null)
 
@@ -33,8 +47,6 @@ export function RealtimeProvider({
     let cancelled = false
 
     async function run() {
-      // Wait for any previous subscription to fully close before opening new
-      // ones so we never have duplicate WebSockets (e.g. from Strict Mode).
       const previousCleanupPromise = cleanupPromiseRef.current
       cleanupPromiseRef.current = null
       if (previousCleanupPromise) {
@@ -42,7 +54,9 @@ export function RealtimeProvider({
       }
       if (cancelled) return
 
-      const cleanup = await subscribeProjectRealtime(projectId, queryClient)
+      const cleanup = await subscribeProjectRealtime(projectId, queryClient, {
+        onMigrationEvent,
+      })
       if (cancelled) {
         await cleanup()
         return
@@ -60,7 +74,7 @@ export function RealtimeProvider({
         cleanupPromiseRef.current = promise
       }
     }
-  }, [projectId, queryClient])
+  }, [projectId, queryClient, onMigrationEvent])
 
   return <>{children}</>
 }

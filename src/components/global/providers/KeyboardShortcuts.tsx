@@ -3,7 +3,6 @@ import {
   useContext,
   useState,
   useCallback,
-  useEffect,
   type ReactNode,
 } from 'react'
 import { useNavigate } from '@tanstack/react-router'
@@ -12,8 +11,6 @@ import {
   useSequentialShortcuts,
 } from '@/hooks/use-keyboard-shortcuts'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
-import { cn } from '@/lib/utils'
-import { motion, AnimatePresence } from 'motion/react'
 
 interface KeyboardShortcutsContextValue {
   openCommandCenter: () => void
@@ -191,88 +188,6 @@ export function KeyboardShortcutsProvider({
         onNavigate={navigateToSection}
         projectId={projectId}
       />
-      {/* Show keyboard indicator when not in command center */}
-      {!commandCenterOpen && <KeyboardIndicator />}
     </KeyboardShortcutsContext.Provider>
-  )
-}
-
-export function KeyboardIndicator({ className }: { className?: string }) {
-  const [keys, setKeys] = useState<string[]>([])
-  const [visible, setVisible] = useState(false)
-
-  useEffect(() => {
-    let timeout: NodeJS.Timeout | null = null
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if in input
-      const target = e.target as Element
-      if (
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.getAttribute('contenteditable') === 'true'
-      ) {
-        return
-      }
-
-      // Ignore modifier-only keys
-      if (['Meta', 'Control', 'Alt', 'Shift'].includes(e.key)) {
-        return
-      }
-
-      // Ignore if any modifier is pressed (except shift)
-      if (e.metaKey || e.ctrlKey || e.altKey) {
-        return
-      }
-
-      // Show the indicator
-      setVisible(true)
-      setKeys((prev) => [...prev, e.key.toUpperCase()])
-
-      // Clear timeout
-      if (timeout) {
-        clearTimeout(timeout)
-      }
-
-      // Hide after delay
-      timeout = setTimeout(() => {
-        setVisible(false)
-        setKeys([])
-      }, 1500)
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-      if (timeout) clearTimeout(timeout)
-    }
-  }, [])
-
-  return (
-    <AnimatePresence>
-      {visible && keys.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 10, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -10, scale: 0.95 }}
-          transition={{ duration: 0.15 }}
-          className={cn(
-            'fixed bottom-6 left-1/2 z-50 -translate-x-1/2',
-            className,
-          )}
-        >
-          <div className="flex items-center gap-1.5 rounded-lg border border-border bg-popover/95 px-3 py-2 shadow-xl backdrop-blur-sm">
-            {keys.map((key, i) => (
-              <span key={i} className="flex items-center gap-1.5">
-                {i > 0 && <span className="text-muted-foreground/30">+</span>}
-                <kbd className="flex h-7 min-w-[28px] items-center justify-center rounded-md bg-accent px-2 text-[13px] font-medium text-foreground shadow-sm">
-                  {key === ' ' ? '␣' : key}
-                </kbd>
-              </span>
-            ))}
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
   )
 }

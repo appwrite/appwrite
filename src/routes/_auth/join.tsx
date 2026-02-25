@@ -14,6 +14,7 @@ import { Card } from '@/components/ui/card'
 import { toast } from 'sonner'
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
+import { pageTitle } from '@/lib/utils/page-title'
 
 const searchSchema = z.object({
   teamId: z.string().optional(),
@@ -26,6 +27,7 @@ const searchSchema = z.object({
 export const Route = createFileRoute('/_auth/join')({
   component: AcceptInvitePage,
   validateSearch: searchSchema,
+  head: () => ({ meta: [{ title: pageTitle('Accept invite') }] }),
   loader: async () => {
     // Authentication check is handled by RequireAuth component
     // Team name verification happens client-side in the component

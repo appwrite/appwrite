@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { pageTitle } from '@/lib/utils/page-title'
 import {
   organizationsQueryOptions,
   organizationInvoicesQueryOptions,
@@ -16,6 +17,7 @@ const CREDITS_PER_PAGE = 5
 const PROJECTS_PER_PAGE = 10
 
 export const Route = createFileRoute('/_public/organizations/$orgId/billing')({
+  head: () => ({ meta: [{ title: pageTitle('Billing', 'Organization') }] }),
   loader: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {

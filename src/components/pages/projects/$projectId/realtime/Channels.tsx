@@ -155,7 +155,7 @@ export function RealtimeChannels({ projectId }: RealtimeChannelsProps) {
               ))}
             </TableBody>
           </Table>
-          <div className="px-4 pb-4 pt-4 sm:px-6">
+          <div className="px-4 py-2 sm:px-6">
             <Pagination
               currentPage={currentPage}
               totalItems={total}
@@ -164,6 +164,7 @@ export function RealtimeChannels({ projectId }: RealtimeChannelsProps) {
               onPageChange={handlePageChange}
               onPageSizeChange={handlePageSizeChange}
               itemLabel="channels"
+              className="py-2"
             />
           </div>
         </>

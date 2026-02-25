@@ -4,6 +4,7 @@ import { MFAChallenge } from '@/components/global/auth/MFAChallenge'
 import { sdk } from '@/lib/appwrite/sdk'
 import { AppwriteException } from '@appwrite.io/console'
 import { fetchMFAFactors } from '@/lib/react-query/hooks'
+import { pageTitle } from '@/lib/utils/page-title'
 
 // Helper function to validate that a redirect URL is relative
 function isValidRelativeRedirect(url: string): boolean {
@@ -26,6 +27,7 @@ const searchSchema = z.object({
 export const Route = createFileRoute('/_auth/mfa')({
   component: MFAPage,
   validateSearch: searchSchema,
+  head: () => ({ meta: [{ title: pageTitle('Two-factor authentication') }] }),
   loader: async ({ location }) => {
     // Check if MFA is required by trying to get account
     // If we get 'user_more_factors_required' error, MFA is required

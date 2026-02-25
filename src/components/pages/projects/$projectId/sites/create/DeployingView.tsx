@@ -238,9 +238,11 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
       ? (deployment as unknown).screenshotDark
       : (deployment as unknown).screenshotLight
     if (!screenshotId) return null
-    return sdk.forConsole.storage.getFileDownload({
+    return sdk.forConsole.storage.getFilePreview({
       bucketId: SCREENSHOTS_BUCKET_ID,
       fileId: screenshotId,
+      width: 1280,
+      height: 720,
     })
   }, [deployment, isDark])
 
@@ -619,7 +621,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
                   <img
                     src={screenshotUrl}
                     alt={`${site.name} preview`}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-cover object-top"
                     onLoad={() => setPreviewImageLoaded(true)}
                   />
                 </div>

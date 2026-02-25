@@ -5,10 +5,21 @@ import { fetchVcsInstallations } from '@/lib/react-query/hooks/vcs'
 import { fetchOrganizationDomains } from '@/lib/react-query/hooks/domains'
 import { Query } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/$siteId/domains/add-domain',
 )({
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: pageTitle(
+          loaderData?.site?.name ?? loaderData?.site?.resourceId ?? 'Site',
+          'Sites',
+        ),
+      },
+    ],
+  }),
   loader: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {

@@ -5,6 +5,7 @@ import {
   fetchDomainRecords,
   fetchOrganizations,
 } from '@/lib/react-query/hooks'
+import { pageTitle } from '@/lib/utils/page-title'
 
 const RECORDS_PER_PAGE = 25
 const STALE_TIME = 30 * 1000
@@ -12,6 +13,13 @@ const STALE_TIME = 30 * 1000
 export const Route = createFileRoute(
   '/_public/organizations/$orgId/domains/$domainId/',
 )({
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: pageTitle(loaderData?.domain?.domain ?? 'Domain', 'Domains'),
+      },
+    ],
+  }),
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return undefined
 

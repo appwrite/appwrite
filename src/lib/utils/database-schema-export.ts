@@ -264,6 +264,10 @@ function getTypeScriptType(col: ColumnSchema): string {
 
   switch (col.type) {
     case 'string':
+    case 'varchar':
+    case 'text':
+    case 'mediumtext':
+    case 'longtext':
       baseType = 'string'
       break
     case 'integer':

@@ -35,7 +35,6 @@ import { getPlatformDisplayName } from '@/lib/utils/platform'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ApiKeysList } from '../shared/ApiKeysList'
 import { ApiKeyDrawer } from '../api-keys/ApiKeyDrawer'
-import { useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
@@ -47,6 +46,7 @@ import {
 } from '@/components/ui/dialog'
 import type { Models } from '@appwrite.io/console'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { ConnectProject } from '../shared/ConnectProject'
 
 interface OverviewTab {
   id: string
@@ -133,11 +133,20 @@ export function View({ projectId }: ViewProps) {
   const [updateDrawerOpen, setUpdateDrawerOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedKeyId, setSelectedKeyId] = useState<string | null>(null)
-  const navigate = useNavigate()
-
-  const handleConnectPlatform = () => {
-    // TODO: Implement platform connection logic
-    // This will trigger the connect platform flow
+  const [connectDialogOpen, setConnectDialogOpen] = useState(false)
+  const [connectInitialSdk, setConnectInitialSdk] = useState<string>('web')
+  const handleConnectPlatform = (platform?: string) => {
+    const sdkMap: Record<string, string> = {
+      web: 'web',
+      'react-native': 'web',
+      flutter: 'flutter',
+      apple: 'apple',
+      android: 'android',
+      windows: 'web',
+      linux: 'web',
+    }
+    setConnectInitialSdk(sdkMap[platform ?? 'web'] ?? 'web')
+    setConnectDialogOpen(true)
   }
 
   const handleCreateApiKey = () => {
@@ -249,14 +258,6 @@ export function View({ projectId }: ViewProps) {
       return projectEndpoint.replace(/^https?:\/\//, '')
     }
   }, [projectEndpoint])
-
-  const handleViewApiKey = () => {
-    // Navigate to API keys page to view/manage
-    navigate({
-      to: '/projects/$projectId/api-keys',
-      params: { projectId },
-    })
-  }
 
   const copyToClipboard = (text: string, field?: string) => {
     navigator.clipboard.writeText(text)
@@ -633,7 +634,7 @@ export function View({ projectId }: ViewProps) {
                   {supportedPlatforms.map(({ id, platform }) => (
                     <Button
                       key={id}
-                      onClick={() => handleConnectPlatform(platform)}
+                      onClick={() => handleConnectPlatform(id)}
                       variant="outline"
                       size="lg"
                     >
@@ -754,7 +755,6 @@ export function View({ projectId }: ViewProps) {
             <ApiKeysList
               apiKeys={apiKeys}
               isLoading={false}
-              onView={handleViewApiKey}
               onUpdate={handleUpdate}
               onDelete={handleDelete}
               onCopy={copyToClipboard}
@@ -817,6 +817,13 @@ export function View({ projectId }: ViewProps) {
           </div>
         </DialogContent>
       </Dialog>
+
+      <ConnectProject
+        open={connectDialogOpen}
+        onOpenChange={setConnectDialogOpen}
+        projectId={projectId}
+        initialSdk={connectInitialSdk}
+      />
     </div>
   )
 }

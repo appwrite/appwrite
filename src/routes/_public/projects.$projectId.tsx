@@ -4,6 +4,9 @@ import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { KeyboardShortcutsProvider } from '@/components/global/providers/KeyboardShortcuts'
 import { RealtimeProvider } from '@/components/global/providers/RealtimeProvider'
 import { RequireAuth } from '@/components/global/auth/RequireAuth'
+import { CsvExportBox, CsvImportBox } from '@/components/global/csv-migrations'
+import { SessionMigrationsProvider } from '@/components/global/providers/SessionMigrationsContext'
+import { GlobalUploadProgress } from '@/components/global/shared/GlobalUploadProgress'
 import {
   fetchProject,
   organizationPlanQueryOptions,
@@ -61,22 +64,29 @@ function ProjectLayout() {
   const pathParts = location.pathname.split('/')
   const activeSection = pathParts[3] || 'overview'
 
-  // Check if we're in a database table spreadsheet view (rows, columns, indexes, security, settings)
-  // Pattern: /projects/:projectId/databases/:databaseId/tables/:tableId/(rows|columns|indexes|security|settings)
+  // Check if we're in a database table view (rows, columns, indexes, security, settings, visualizer, insights, backups, export-import, db-security, db-settings)
+  // Pattern: /projects/:projectId/databases/:databaseId/tables/:tableId/<tab>
   const isDatabaseSpreadsheetView =
     activeSection === 'databases' &&
     pathParts.length >= 8 &&
     pathParts[5] === 'tables' &&
-    ['rows', 'columns', 'indexes', 'security', 'settings'].includes(
-      pathParts[7],
-    )
+    [
+      'rows',
+      'columns',
+      'indexes',
+      'security',
+      'settings',
+      'visualizer',
+      'insights',
+      'backups',
+      'export-import',
+      'db-security',
+      'db-settings',
+    ].includes(pathParts[7])
 
-  // Check if we're in the database visualizer view
-  // Pattern: /projects/:projectId/databases/:databaseId/visualizer
+  // Visualizer is now under tables/:tableId/visualizer; keep for backwards compatibility with redirect
   const isDatabaseVisualizerView =
-    activeSection === 'databases' &&
-    pathParts.length >= 6 &&
-    pathParts[5] === 'visualizer'
+    isDatabaseSpreadsheetView && pathParts[7] === 'visualizer'
 
   // Functions local code editor (Monaco)
   const isFunctionsEditorView =
@@ -169,24 +179,32 @@ function ProjectLayout() {
 
   return (
     <RequireAuth>
-      <RealtimeProvider projectId={projectId}>
-        <KeyboardShortcutsProvider projectId={projectId}>
-          <ConsoleLayout
-            sidebar={{
-              projectId,
-              activeSection,
-              mobileOpen: sidebarOpen,
-              onMobileClose: () => setSidebarOpen(false),
-              onMenuClick: () => setSidebarOpen(true),
-            }}
-            header={{ projectId }}
-            showFooter={!hideFooter}
-            fixedLayout={isFixedLayoutView}
-          >
-            <Outlet />
-          </ConsoleLayout>
-        </KeyboardShortcutsProvider>
-      </RealtimeProvider>
+      <SessionMigrationsProvider>
+        <RealtimeProvider projectId={projectId}>
+          <KeyboardShortcutsProvider projectId={projectId}>
+            <ConsoleLayout
+              sidebar={{
+                projectId,
+                activeSection,
+                mobileOpen: sidebarOpen,
+                onMobileClose: () => setSidebarOpen(false),
+                onMenuClick: () => setSidebarOpen(true),
+              }}
+              header={{ projectId }}
+              showFooter={!hideFooter}
+              fixedLayout={isFixedLayoutView}
+            >
+              <Outlet />
+            </ConsoleLayout>
+            {/* Unified progress panel: file uploads + CSV export/import (same style, no collision) */}
+            <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full">
+              <GlobalUploadProgress embedded />
+              <CsvImportBox projectId={projectId} />
+              <CsvExportBox projectId={projectId} />
+            </div>
+          </KeyboardShortcutsProvider>
+        </RealtimeProvider>
+      </SessionMigrationsProvider>
     </RequireAuth>
   )
 }

@@ -8,6 +8,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
 import { TemplateConfigView } from '@/components/pages/projects/$projectId/functions/create/TemplateConfigView'
+import { pageTitle } from '@/lib/utils/page-title'
 
 const searchSchema = z.object({
   runtime: z.string().optional(),
@@ -16,6 +17,9 @@ const searchSchema = z.object({
 export const Route = createFileRoute(
   '/_public/projects/$projectId/functions/create/template/$templateId',
 )({
+  head: () => ({
+    meta: [{ title: pageTitle('Create from template', 'Functions') }],
+  }),
   validateSearch: searchSchema,
   component: TemplateConfigPage,
 })

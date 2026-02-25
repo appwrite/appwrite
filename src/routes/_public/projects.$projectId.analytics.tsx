@@ -1,7 +1,9 @@
 import { createFileRoute, Outlet, useMatches } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/analytics/View'
+import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute('/_public/projects/$projectId/analytics')({
+  head: () => ({ meta: [{ title: pageTitle('Analytics') }] }),
   component: AnalyticsPage,
 })
 

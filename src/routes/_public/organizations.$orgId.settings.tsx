@@ -1,6 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { pageTitle } from '@/lib/utils/page-title'
+import { fetchOrganizations } from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute('/_public/organizations/$orgId/settings')({
+  head: () => ({ meta: [{ title: pageTitle('Settings', 'Organization') }] }),
   loader: async ({ context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {

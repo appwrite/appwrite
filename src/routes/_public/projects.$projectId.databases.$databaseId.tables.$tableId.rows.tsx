@@ -10,6 +10,7 @@ import {
   projectQueryOptions,
   organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
+import { pageTitle } from '@/lib/utils/page-title'
 
 const TABLES_PER_PAGE = 100
 const ROWS_PER_PAGE = 25
@@ -17,6 +18,13 @@ const ROWS_PER_PAGE = 25
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
 )({
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: pageTitle(loaderData?.database?.name ?? 'Database', 'Databases'),
+      },
+    ],
+  }),
   pendingComponent: () => (
     <div className="flex h-full items-center justify-center">
       <div className="text-muted-foreground">Loading rows...</div>
@@ -45,10 +53,9 @@ export const Route = createFileRoute(
       tablesQueryOptions(projectId, databaseId, 0, TABLES_PER_PAGE, undefined),
     )
 
-    // If tableId is '-', fetch first table and redirect to it
+    // If tableId is '-', fetch first table and redirect to it if one exists
     if (tableId === '-') {
       const tablesData = await tablesPromise
-      // Sort tables by name in ascending order before selecting the first one
       const sortedTables = [...(tablesData.tables || [])].sort((a, b) => {
         const nameA = a.name?.toLowerCase() || ''
         const nameB = b.name?.toLowerCase() || ''
@@ -57,30 +64,31 @@ export const Route = createFileRoute(
       const firstTable = sortedTables[0]
 
       if (firstTable?.$id) {
-        // Redirect to the first table with replace to update URL history
         throw redirect({
           to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
           params: { projectId, databaseId, tableId: firstTable.$id },
           replace: true,
         })
       }
-      // If no tables exist, redirect to database index (tables view)
-      throw redirect({
-        to: '/projects/$projectId/databases/$databaseId/',
-        params: { projectId, databaseId },
-        replace: true,
-      })
+      // No tables: stay on tables/-/rows and render TableView with database-level content
+      await queryClient.ensureQueryData(
+        databaseQueryOptions(projectId, databaseId),
+      )
+      const database = queryClient.getQueryData<{ name?: string }>(
+        databaseQueryOptions(projectId, databaseId).queryKey,
+      )
+      return { database }
     }
 
     if (tableId) {
       // Check if table exists and if there are any tables
       const tablesData = await tablesPromise
 
-      // If no tables exist, redirect to database index (tables view)
+      // If no tables exist, redirect to tables/-/rows (database main view)
       if (!tablesData.tables || tablesData.tables.length === 0) {
         throw redirect({
-          to: '/projects/$projectId/databases/$databaseId/',
-          params: { projectId, databaseId },
+          to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+          params: { projectId, databaseId, tableId: '-' },
           replace: true,
         })
       }
@@ -90,10 +98,9 @@ export const Route = createFileRoute(
         (table: unknown) => table.$id === tableId,
       )
       if (!tableExists) {
-        // Table not found, redirect to database index (tables view)
         throw redirect({
-          to: '/projects/$projectId/databases/$databaseId/',
-          params: { projectId, databaseId },
+          to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+          params: { projectId, databaseId, tableId: '-' },
           replace: true,
         })
       }
@@ -147,6 +154,10 @@ export const Route = createFileRoute(
             // Don't block on optional data errors
           }),
       ])
+      const database = queryClient.getQueryData<{ name?: string }>(
+        databaseQueryOptions(projectId, databaseId).queryKey,
+      )
+      return { database }
     } else {
       await tablesPromise
     }

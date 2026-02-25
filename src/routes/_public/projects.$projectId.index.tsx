@@ -1,8 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/overview/Overview'
 import { fetchProject } from '@/lib/react-query/hooks'
+import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute('/_public/projects/$projectId/')({
+  head: () => ({ meta: [{ title: pageTitle('Overview') }] }),
   loader: async ({ params, context }) => {
     const { projectId } = params
     const { queryClient } = context

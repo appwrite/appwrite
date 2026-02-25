@@ -26,6 +26,7 @@ import { useInitialLoader } from '@/hooks/use-initial-loader'
 import { DynamicFavicon } from '@/components/global/shared/DynamicFavicon'
 import { UploadWarning } from '@/components/global/providers/UploadWarning'
 import { GlobalUploadProgress } from '@/components/global/shared/GlobalUploadProgress'
+import { useLocation } from '@tanstack/react-router'
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -102,7 +103,7 @@ function ClientThemeProvider({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider
       attribute="class"
-      defaultTheme="dark"
+      defaultTheme="system"
       enableSystem
       disableTransitionOnChange
       themes={['light', 'dark', 'system', 'crazy', 'stealth']}
@@ -125,9 +126,16 @@ function ClientOnly({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+/** When true, upload progress is shown by the project layout unified panel instead of root */
+function isProjectRoute(pathname: string) {
+  const parts = pathname.split('/').filter(Boolean)
+  return parts[0] === 'projects' && parts.length >= 2
+}
+
 function RootDocument({ children }: { children: React.ReactNode }) {
   const { isLoading, isAuthRoute } = useInitialLoader()
   const [clientMounted, setClientMounted] = useState(false)
+  const location = useLocation()
   useEffect(() => {
     setClientMounted(true)
   }, [])
@@ -172,7 +180,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
               <Toaster />
             </ClientOnly>
             <ClientOnly>
-              <GlobalUploadProgress />
+              {!isProjectRoute(location.pathname) && <GlobalUploadProgress />}
             </ClientOnly>
           </NavigationHistoryProvider>
           {/* <TanStackDevtools

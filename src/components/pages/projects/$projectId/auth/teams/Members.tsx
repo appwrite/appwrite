@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from '@tanstack/react-router'
+import { useParams } from '@tanstack/react-router'
 import {
   useTeamMemberships,
   useCreateTeamMembership,
@@ -30,32 +30,59 @@ import {
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Plus, Trash2, X, Info } from 'lucide-react'
+import { EmptyState } from '@/components/global/shared/EmptyState'
+import { MembershipUpdateDrawer } from '../_components/MembershipUpdateDrawer'
+import { Plus, Trash2, X, Info, Loader2, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Models } from '@appwrite.io/console'
 
-const MEMBERSHIPS_PER_PAGE = 25
+const DEFAULT_PAGE_SIZE = 25
 
-export function TeamMembers() {
+export interface TeamMembersProps {
+  /** When provided with onCreateDialogOpenChange, search/filter is controlled by parent (e.g. ServiceHeader) */
+  searchValue?: string
+  onSearchChange?: (value: string) => void
+  createDialogOpen?: boolean
+  onCreateDialogOpenChange?: (open: boolean) => void
+}
+
+export function TeamMembers({
+  searchValue: searchValueProp,
+  onSearchChange: onSearchChangeProp,
+  createDialogOpen: createDialogOpenProp,
+  onCreateDialogOpenChange: onCreateDialogOpenChangeProp,
+}: TeamMembersProps = {}) {
   const { projectId, teamId } = useParams({
     strict: false,
   })
 
   const [page, setPage] = useState(1)
-  const [search] = useState('')
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
+  const [internalSearch, setInternalSearch] = useState('')
   const [selectedMemberships, setSelectedMemberships] = useState<Set<string>>(
     new Set(),
   )
-  const [createDialogOpen, setCreateDialogOpen] = useState(false)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [membershipToDelete, setMembershipToDelete] =
+  const [internalCreateDialogOpen, setInternalCreateDialogOpen] = useState(false)
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [selectedMembership, setSelectedMembership] =
     useState<Models.Membership | null>(null)
+
+  const search =
+    searchValueProp !== undefined ? searchValueProp : internalSearch
+  const createDialogOpen =
+    createDialogOpenProp !== undefined
+      ? createDialogOpenProp
+      : internalCreateDialogOpen
+  const setCreateDialogOpen =
+    onCreateDialogOpenChangeProp ?? setInternalCreateDialogOpen
+  const hasHeaderInParent =
+    searchValueProp !== undefined && createDialogOpenProp !== undefined
 
   const { data: membershipsData, isLoading } = useTeamMemberships(
     projectId,
     teamId,
     page - 1,
-    MEMBERSHIPS_PER_PAGE,
+    pageSize,
     search,
   )
 
@@ -65,10 +92,13 @@ export function TeamMembers() {
   const memberships = membershipsData?.memberships || []
   const total = membershipsData?.total || 0
 
-  // Reset selection when page or search changes
+  // Reset selection and page when search changes
   useEffect(() => {
     setSelectedMemberships(new Set())
   }, [page, search])
+  useEffect(() => {
+    setPage(1)
+  }, [search])
 
   const handleCreateMembership = async (data: {
     email: string
@@ -97,20 +127,9 @@ export function TeamMembers() {
     }
   }
 
-  const handleDeleteMembership = async (membershipId: string) => {
-    if (!teamId) return
-
-    try {
-      await deleteMembershipMutation.mutateAsync(membershipId)
-      toast.success('Member deleted successfully')
-      setDeleteDialogOpen(false)
-      setMembershipToDelete(null)
-      setSelectedMemberships(new Set())
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : 'Failed to delete membership',
-      )
-    }
+  const openDrawer = (membership: Models.Membership) => {
+    setSelectedMembership(membership)
+    setDrawerOpen(true)
   }
 
   const handleBulkDelete = async () => {
@@ -153,42 +172,67 @@ export function TeamMembers() {
     }
   }
 
-  const totalPages = Math.ceil(total / MEMBERSHIPS_PER_PAGE)
+  const totalPages = Math.ceil(total / pageSize)
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-[15px] font-medium text-foreground">Members</h2>
-          <p className="text-[12px] text-muted-foreground mt-1">
-            {total} member{total !== 1 ? 's' : ''}
-          </p>
+      {!hasHeaderInParent && (
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-[15px] font-medium text-foreground">Members</h2>
+            <p className="text-[12px] text-muted-foreground mt-1">
+              {total} member{total !== 1 ? 's' : ''}
+            </p>
+          </div>
+          <Button onClick={() => setCreateDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-1.5" />
+            Invite member
+          </Button>
         </div>
-        <Button onClick={() => setCreateDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-1.5" />
-          Create membership
-        </Button>
-      </div>
+      )}
 
       {isLoading ? (
         <div className="rounded-lg border border-border bg-card py-12 text-center">
-          <div className="text-muted-foreground">Loading members...</div>
+          <Loader2 className="mx-auto h-5 w-5 animate-spin text-muted-foreground" />
+          <p className="mt-2 text-[13px] text-muted-foreground">
+            Loading members...
+          </p>
         </div>
       ) : memberships.length === 0 ? (
-        <div className="rounded-lg border border-border bg-card py-12 text-center">
-          <p className="text-muted-foreground mb-4">No memberships available</p>
-          <Button onClick={() => setCreateDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-1.5" />
-            Create membership
-          </Button>
+        <div className="space-y-4">
+          <EmptyState
+            icon={Users}
+            title="No memberships available"
+            description={
+              search
+                ? 'No members match your search.'
+                : 'Invite members to this team to get started.'
+            }
+            isEmpty={!search}
+            hasFilters={!!search}
+            variant="card"
+            iconSize="md"
+          />
+          {!hasHeaderInParent && !search && (
+            <div className="flex justify-center">
+              <Button
+                size="sm"
+                className="h-9 text-[13px]"
+                onClick={() => setCreateDialogOpen(true)}
+              >
+                <Plus className="mr-1.5 h-4 w-4" />
+                Invite member
+              </Button>
+            </div>
+          )}
         </div>
       ) : (
         <>
-          <div className="rounded-lg border border-border bg-card">
+          <div className="rounded-lg border border-border bg-card overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-b border-border">
-                  <TableHead className="w-[40px] px-4">
+                  <TableHead className="w-[40px] px-4 py-3">
                     <Checkbox
                       checked={
                         memberships.length > 0 &&
@@ -197,16 +241,18 @@ export function TeamMembers() {
                       onCheckedChange={toggleAll}
                     />
                   </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[220px]">
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                     Name
                   </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px]">
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Status
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                     Roles
                   </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                     Joined
                   </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[80px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -219,13 +265,17 @@ export function TeamMembers() {
                     <TableRow
                       key={membership.$id}
                       className={cn(
-                        'cursor-pointer transition-colors',
+                        'cursor-pointer transition-colors border-b border-border/50',
                         selectedMemberships.has(membership.$id)
                           ? 'bg-sky-100 dark:bg-sky-950'
-                          : 'hover:bg-muted/50',
+                          : 'hover:bg-muted/30',
                       )}
+                      onClick={() => openDrawer(membership)}
                     >
-                      <TableCell onClick={(e) => e.stopPropagation()}>
+                      <TableCell
+                        className="w-[40px] px-4 py-3"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <Checkbox
                           checked={selectedMemberships.has(membership.$id)}
                           onCheckedChange={() =>
@@ -233,15 +283,11 @@ export function TeamMembers() {
                           }
                         />
                       </TableCell>
-                      <TableCell>
-                        <Link
-                          to="/projects/$projectId/auth/$userId"
-                          params={{
-                            projectId: projectId as string,
-                            userId: membership.userId,
-                          }}
-                          className="flex items-center gap-3 min-w-0"
-                        >
+                      <TableCell
+                        className="px-4 py-3"
+                        onClick={() => openDrawer(membership)}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
                           <InitialsAvatar
                             name={userName !== '-' ? userName : userEmail}
                             size="md"
@@ -256,20 +302,44 @@ export function TeamMembers() {
                               </p>
                             )}
                           </div>
-                        </Link>
+                        </div>
                       </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
+                      <TableCell
+                        className="px-4 py-3"
+                        onClick={() => openDrawer(membership)}
+                      >
+                        <Badge
+                          variant={membership.confirm ? 'active' : 'pending'}
+                          className="text-[10px] shrink-0"
+                        >
+                          {membership.confirm ? 'Active' : 'Pending'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell
+                        className="px-4 py-3"
+                        onClick={() => openDrawer(membership)}
+                      >
+                        <div className="flex flex-wrap gap-1.5 items-center">
                           {roles.length > 0 ? (
-                            roles.map((role, idx) => (
-                              <Badge
-                                key={idx}
-                                variant="secondary"
-                                className="text-[11px] font-medium"
-                              >
-                                {role}
-                              </Badge>
-                            ))
+                            <>
+                              {roles.slice(0, 2).map((role, idx) => (
+                                <Badge
+                                  key={idx}
+                                  variant="info"
+                                  className="text-[10px] shrink-0"
+                                >
+                                  {role}
+                                </Badge>
+                              ))}
+                              {roles.length > 2 && (
+                                <Badge
+                                  variant="info"
+                                  className="text-[10px] shrink-0"
+                                >
+                                  +{roles.length - 2}
+                                </Badge>
+                              )}
+                            </>
                           ) : (
                             <span className="text-[12px] text-muted-foreground">
                               -
@@ -277,24 +347,14 @@ export function TeamMembers() {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell
+                        className="px-4 py-3"
+                        onClick={() => openDrawer(membership)}
+                      >
                         <DateTooltip
                           date={membership.$createdAt}
                           className="text-[12px] text-muted-foreground"
                         />
-                      </TableCell>
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => {
-                            setMembershipToDelete(membership)
-                            setDeleteDialogOpen(true)
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
                       </TableCell>
                     </TableRow>
                   )
@@ -303,34 +363,49 @@ export function TeamMembers() {
             </Table>
           </div>
 
-          {selectedMemberships.size > 0 && (
-            <div className="mt-4 flex items-center justify-between rounded-lg border border-border bg-card p-4">
-              <span className="text-[13px] text-foreground">
-                {selectedMemberships.size} member
-                {selectedMemberships.size !== 1 ? 's' : ''} selected
-              </span>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleBulkDelete}
-                disabled={deleteMembershipMutation.isPending}
-              >
-                <Trash2 className="h-4 w-4 mr-1.5" />
-                Delete
-              </Button>
-            </div>
-          )}
-
-          {totalPages > 1 && (
+          {memberships.length > 0 && (
             <Pagination
               currentPage={page}
               totalItems={total}
-              pageSize={MEMBERSHIPS_PER_PAGE}
+              pageSize={pageSize}
               pageSizeOptions={[10, 25, 50, 100]}
               onPageChange={setPage}
-              onPageSizeChange={() => {}}
+              onPageSizeChange={(size) => {
+                setPageSize(size)
+                setPage(1)
+              }}
               itemLabel="members"
             />
+          )}
+
+          {selectedMemberships.size > 0 && (
+            <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
+              <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
+                <Badge variant="secondary" className="h-6 px-2.5">
+                  {selectedMemberships.size} member
+                  {selectedMemberships.size !== 1 ? 's' : ''} selected
+                </Badge>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedMemberships(new Set())}
+                    className="h-8 text-xs"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleBulkDelete}
+                    disabled={deleteMembershipMutation.isPending}
+                    className="h-8 gap-2"
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            </div>
           )}
         </>
       )}
@@ -343,19 +418,14 @@ export function TeamMembers() {
         isLoading={createMembershipMutation.isPending}
       />
 
-      {/* Delete Membership Dialog */}
-      {membershipToDelete && (
-        <DeleteMembershipDialog
-          open={deleteDialogOpen}
-          onOpenChange={(open) => {
-            setDeleteDialogOpen(open)
-            if (!open) setMembershipToDelete(null)
-          }}
-          membership={membershipToDelete}
-          onConfirm={() => handleDeleteMembership(membershipToDelete.$id)}
-          isLoading={deleteMembershipMutation.isPending}
-        />
-      )}
+      {/* Update membership drawer */}
+      <MembershipUpdateDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        membership={selectedMembership}
+        projectId={projectId!}
+        context="team"
+      />
     </div>
   )
 }
@@ -476,14 +546,14 @@ function CreateMembershipDialog({
                     {roles.map((role) => (
                       <Badge
                         key={role}
-                        variant="secondary"
-                        className="text-[12px] font-medium"
+                        variant="info"
+                        className="text-[10px] shrink-0 pr-1"
                       >
                         {role}
                         <button
                           type="button"
                           onClick={() => handleRemoveRole(role)}
-                          className="ml-1.5 hover:text-destructive"
+                          className="ml-0.5 hover:text-destructive rounded p-0.5"
                         >
                           <X className="h-3 w-3" />
                         </button>
@@ -496,7 +566,15 @@ function CreateMembershipDialog({
                 <Info className="h-4 w-4" />
                 <AlertDescription className="text-[12px]">
                   Roles are used to manage access permissions. You can create
-                  any role you want.
+                  any role you want.{' '}
+                  <a
+                    href="https://appwrite.io/docs/advanced/platform/permissions"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    Learn more about permissions
+                  </a>
                 </AlertDescription>
               </Alert>
             </div>
@@ -523,60 +601,3 @@ function CreateMembershipDialog({
   )
 }
 
-// Delete Membership Dialog Component
-interface DeleteMembershipDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  membership: Models.Membership
-  onConfirm: () => void
-  isLoading: boolean
-}
-
-function DeleteMembershipDialog({
-  open,
-  onOpenChange,
-  membership,
-  onConfirm,
-  isLoading,
-}: DeleteMembershipDialogProps) {
-  const userName = membership.userName || membership.userEmail || 'this member'
-  const teamName = membership.teamName || 'this team'
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md p-0">
-        <DialogHeader className="px-6 pt-6 text-left">
-          <DialogTitle>Delete member</DialogTitle>
-          <DialogDescription className="text-[13px] mt-2">
-            Are you sure you want to delete{' '}
-            <strong>
-              {userName} · {teamName}
-            </strong>
-            ? This action cannot be undone.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 text-[13px]"
-            onClick={() => onOpenChange(false)}
-            disabled={isLoading}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="destructive"
-            size="sm"
-            className="h-9 text-[13px]"
-            onClick={onConfirm}
-            disabled={isLoading}
-          >
-            Delete
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  )
-}

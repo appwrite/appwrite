@@ -316,10 +316,15 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
       // 4. Create deployment: always use template deployment so the build has source code.
       // (When connect now, the site is linked to the user's repo for future VCS deployments,
       // but the initial deploy uses the template repo so new/empty user repos don't fail.)
+      if (!template.providerRepositoryId || !template.providerOwner) {
+        toast.error('Template is missing repository information')
+        setIsDeploying(false)
+        return
+      }
       const deployment = await createTemplateDeploymentMutation.mutateAsync({
         siteId: site.$id,
-        repository: template.providerRepositoryId || template.key,
-        owner: template.providerOwner || 'appwrite',
+        repository: template.providerRepositoryId,
+        owner: template.providerOwner,
         rootDirectory: templateFramework?.providerRootDirectory ?? './',
         type: 'tag',
         reference: template.providerVersion || 'main',
@@ -382,15 +387,15 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
         </div>
       </div>
 
-      {/* Template preview - tilted screenshot style */}
+      {/* Template preview - tilted screenshot style (aspect-video reserves space to avoid layout shift) */}
       <div className="relative h-[120px] overflow-hidden border-b border-border/50">
         {screenshotUrl ? (
-          <div className="absolute left-6 -right-4 top-4 transform -rotate-3">
-            <div className="overflow-hidden rounded-lg ring-1 ring-border">
+          <div className="absolute left-6 -right-4 top-4 aspect-video transform -rotate-3">
+            <div className="relative h-full w-full overflow-hidden rounded-lg ring-1 ring-border bg-muted/30">
               <FadeImage
                 src={screenshotUrl}
                 alt={`${template.name} preview`}
-                className="w-full object-cover object-top"
+                className="absolute inset-0 h-full w-full object-cover object-top"
               />
             </div>
           </div>

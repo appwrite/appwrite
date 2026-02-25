@@ -1,10 +1,18 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/storage/files/$fileId/View'
 import { fetchFile, fetchFileTokens } from '@/lib/react-query/hooks'
+import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/storage/$bucketId/files/$fileId',
 )({
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: pageTitle(loaderData?.file?.name ?? 'File', 'Storage'),
+      },
+    ],
+  }),
   loader: async ({ params, context }) => {
     const { projectId, bucketId, fileId } = params
     const { queryClient } = context
@@ -34,6 +42,15 @@ export const Route = createFileRoute(
           staleTime: 30 * 1000,
         }),
       ])
+      const file = queryClient.getQueryData<{ name?: string }>([
+        'file',
+        'project',
+        projectId,
+        'bucket',
+        bucketId,
+        fileId,
+      ])
+      return { file }
     }
   },
   component: FileViewPage,
