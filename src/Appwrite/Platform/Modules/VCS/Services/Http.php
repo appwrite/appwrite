@@ -2,8 +2,10 @@
 
 namespace Appwrite\Platform\Modules\VCS\Services;
 
+use Appwrite\Platform\Modules\VCS\Http\GitHub\Authorize\External\Update as UpdateExternalDeployment;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Authorize\Get as GetGitHubAuthorize;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Callback\Get as GetGitHubCallback;
+use Appwrite\Platform\Modules\VCS\Http\GitHub\Events\Create as CreateGitHubEvent;
 use Appwrite\Platform\Modules\VCS\Http\Installations\Delete as DeleteInstallation;
 use Appwrite\Platform\Modules\VCS\Http\Installations\Get as GetInstallation;
 use Appwrite\Platform\Modules\VCS\Http\Installations\Repositories\Branches\XList as ListRepositoryBranches;
@@ -24,6 +26,7 @@ class Http extends Service
         // GitHub Authorization & Callback
         $this->addAction(GetGitHubAuthorize::getName(), new GetGitHubAuthorize());
         $this->addAction(GetGitHubCallback::getName(), new GetGitHubCallback());
+        $this->addAction(UpdateExternalDeployment::getName(), new UpdateExternalDeployment());
 
         // Installations
         $this->addAction(GetInstallation::getName(), new GetInstallation());
@@ -37,5 +40,8 @@ class Http extends Service
         $this->addAction(ListRepositoryBranches::getName(), new ListRepositoryBranches());
         $this->addAction(GetRepositoryContents::getName(), new GetRepositoryContents());
         $this->addAction(CreateRepositoryDetections::getName(), new CreateRepositoryDetections());
+
+        // Events
+        $this->addAction(CreateGitHubEvent::getName(), new CreateGitHubEvent());
     }
 }
