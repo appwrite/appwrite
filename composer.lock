@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cb2ca42cfed8603c31b75113c85a4699",
+    "content-hash": "bbadd08240c123309a6b7be4da296624",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4518,16 +4518,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.6.1",
+            "version": "dev-fix-kebab-case-site",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "c5c7544d02d2418536d41050794050132f247d62"
+                "reference": "3190013af7e167258bad3ae90db7176a0d8cb31e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/c5c7544d02d2418536d41050794050132f247d62",
-                "reference": "c5c7544d02d2418536d41050794050132f247d62",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/3190013af7e167258bad3ae90db7176a0d8cb31e",
+                "reference": "3190013af7e167258bad3ae90db7176a0d8cb31e",
                 "shasum": ""
             },
             "require": {
@@ -4567,9 +4567,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.6.1"
+                "source": "https://github.com/utopia-php/migration/tree/fix-kebab-case-site"
             },
-            "time": "2026-02-17T05:49:48+00:00"
+            "time": "2026-02-25T09:29:21+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -5439,16 +5439,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.10.2",
+            "version": "1.11.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "b31e6b4209ecad46d2fef509dc59f1945d0e83cb"
+                "reference": "6ff411f26f2750eea05c7598c14bb3a2ada898cb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/b31e6b4209ecad46d2fef509dc59f1945d0e83cb",
-                "reference": "b31e6b4209ecad46d2fef509dc59f1945d0e83cb",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/6ff411f26f2750eea05c7598c14bb3a2ada898cb",
+                "reference": "6ff411f26f2750eea05c7598c14bb3a2ada898cb",
                 "shasum": ""
             },
             "require": {
@@ -5484,9 +5484,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.10.2"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.11.1"
             },
-            "time": "2026-02-23T04:04:15+00:00"
+            "time": "2026-02-25T07:15:19+00:00"
         },
         {
             "name": "brianium/paratest",
@@ -9044,7 +9044,9 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/migration": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
@@ -9068,5 +9070,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.6.0"
 }
