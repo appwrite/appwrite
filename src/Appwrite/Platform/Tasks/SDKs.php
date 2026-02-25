@@ -6,6 +6,7 @@ use Appwrite\SDK\Language\AgentSkills;
 use Appwrite\SDK\Language\Android;
 use Appwrite\SDK\Language\Apple;
 use Appwrite\SDK\Language\CLI;
+use Appwrite\SDK\Language\CursorPlugin;
 use Appwrite\SDK\Language\Dart;
 use Appwrite\SDK\Language\Deno;
 use Appwrite\SDK\Language\DotNet;
@@ -60,6 +61,7 @@ class SDKs extends Action
         'rest',
         'markdown',
         'agent-skills',
+        'cursor-plugin'
     ];
 
     public static function getName(): string
@@ -308,6 +310,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         break;
                     case 'agent-skills':
                         $config = new AgentSkills();
+                        break;
+                    case 'cursor-plugin':
+                        $config = new CursorPlugin();
                         break;
                     default:
                         throw new \Exception('Language "' . $language['key'] . '" not supported');
