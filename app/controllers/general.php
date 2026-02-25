@@ -373,7 +373,8 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 $payload = [];
                 try {
                     $payload = $jwt->decode($userJwt);
-                } catch (JWTException $error) {}
+                } catch (JWTException $error) {
+                }
 
                 $userId = $payload['userId'] ?? '';
                 $isExecutionAllowed = \in_array("user:{$userId}", $permissions);
