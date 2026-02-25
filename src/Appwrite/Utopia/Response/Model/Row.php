@@ -82,8 +82,12 @@ class Row extends Any
     {
         $document->removeAttribute('$collection');
         $document->removeAttribute('$tenant');
-        $sequence = $document->getAttribute('$sequence', '');
-        $document->setAttribute('$sequence', $sequence);
+
+
+        if (!$document->isEmpty()) {
+            $sequence = (int)$document->getAttribute('$sequence', 0);
+            $document->setAttribute('$sequence', $sequence);
+        }
 
         foreach ($document->getAttributes() as $column) {
             if (\is_array($column)) {
