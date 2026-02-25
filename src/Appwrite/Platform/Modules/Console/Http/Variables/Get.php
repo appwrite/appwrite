@@ -102,7 +102,7 @@ class Get extends Action
             'supportForAttributeResizing' => $adapter->getSupportForAttributeResizing(),
             'supportForSchemas' => $adapter->getSupportForSchemas(),
             'maxIndexLength' => $adapter->getMaxIndexLength(),
-            'supportForIntegerIds' => $adapter->getIdType() === 'integer',
+            'supportForIntegerIds' => $adapter->getIdAttributeType() === 'integer',
         ]);
 
         $response->dynamic($variables, Response::MODEL_CONSOLE_VARIABLES);
