@@ -824,6 +824,7 @@ class Swagger2 extends Format
 
                     case 'id':
                         $type = 'integer';
+                        $format = $rule['format'] ?? 'int32';
                         break;
 
                     case 'enum':

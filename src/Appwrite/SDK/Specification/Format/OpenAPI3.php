@@ -844,6 +844,7 @@ class OpenAPI3 extends Format
 
                     case 'id':
                         $type = 'integer';
+                        $format = $rule['format'] ?? 'int32';
                         break;
 
                     case 'enum':

@@ -143,6 +143,14 @@ abstract class Scope extends TestCase
         return $this->getConsoleVariables()['maxIndexLength'] ?? 768;
     }
 
+    /**
+     * Check if the database adapter uses integer sequence IDs
+     */
+    protected function getSupportForIntegerIds(): bool
+    {
+        return $this->getConsoleVariables()['supportForIntegerIds'] ?? true;
+    }
+
     protected function getLastEmail(int $limit = 1, ?callable $probe = null): array
     {
         $result = [];
