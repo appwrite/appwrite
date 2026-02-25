@@ -2644,7 +2644,7 @@ trait DatabasesBase
         $this->getSupportForIntegerIds()
             ? $this->assertIsInt($document['body']['$sequence'])
             : $this->assertIsString($document['body']['$sequence']);
-            
+
         $upsertData = [
             'title' => 'Thor: Ragnarok',
             'releaseYear' => 2000,
