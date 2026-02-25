@@ -819,8 +819,12 @@ class Swagger2 extends Format
                 switch ($rule['type']) {
                     case 'string':
                     case 'datetime':
-                    case 'id':
                         $type = 'string';
+                        break;
+
+                    case 'id':
+                        $type = 'integer';
+                        $format = $rule['format'] ?? 'int32';
                         break;
 
                     case 'enum':
