@@ -196,6 +196,15 @@ class ConsoleVariables extends Model
                     'example' => 768,
                 ]
             )
+            ->addRule(
+                'supportForIntegerIds',
+                [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Whether the database adapter uses integer sequence IDs.',
+                    'default' => true,
+                    'example' => true,
+                ]
+            )
         ;
     }
 

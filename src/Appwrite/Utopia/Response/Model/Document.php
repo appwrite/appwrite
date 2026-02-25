@@ -83,9 +83,8 @@ class Document extends Any
         $document->removeAttribute('$collection');
         $document->removeAttribute('$tenant');
 
-        if (!$document->isEmpty()) {
-            $sequence = $document->getAttribute('$sequence', '');
-            $document->setAttribute('$sequence', $sequence);
+        if (!$document->isEmpty() && \is_numeric($document->getAttribute('$sequence', 0))) {
+            $document->setAttribute('$sequence', (int)$document->getAttribute('$sequence', 0));
         }
 
         foreach ($document->getAttributes() as $attribute) {

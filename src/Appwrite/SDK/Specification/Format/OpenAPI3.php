@@ -839,8 +839,12 @@ class OpenAPI3 extends Format
                     case 'string':
                     case 'datetime':
                     case 'payload':
-                    case 'id':
                         $type = 'string';
+                        break;
+
+                    case 'id':
+                        $type = 'integer';
+                        $format = $rule['format'] ?? 'int32';
                         break;
 
                     case 'enum':
