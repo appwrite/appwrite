@@ -232,8 +232,8 @@ Http::setResource('allowedHostnames', function (array $platform, Document $proje
 /**
  * List of allowed request schemes for the request.
  */
-Http::setResource('allowedSchemes', function (Document $project) {
-    $allowed = [];
+Http::setResource('allowedSchemes', function (array $platform, Document $project) {
+    $allowed = [...($platform['schemas'] ?? [])];
 
     if (!$project->isEmpty() && $project->getId() !== 'console') {
         /* Add hardcoded schemes */
@@ -247,7 +247,7 @@ Http::setResource('allowedSchemes', function (Document $project) {
     }
 
     return array_unique($allowed);
-}, ['project']);
+}, ['platform', 'project']);
 
 /**
  * Rule associated with a request origin.
@@ -414,13 +414,7 @@ Http::setResource('user', function (string $mode, Document $project, Document $c
     ) { // Validate user has valid login token
         $user = new User([]);
     }
-    // if (APP_MODE_ADMIN === $mode) {
-    //     if ($user->find('teamInternalId', $project->getAttribute('teamInternalId'), 'memberships')) {
-    //         $authorization->setDefaultStatus(false);  // Cancel security segmentation for admin users.
-    //     } else {
-    //         $user = new Document([]);
-    //     }
-    // }
+
     $authJWT = $request->getHeader('x-appwrite-jwt', '');
     if (!empty($authJWT) && !$project->isEmpty()) { // JWT authentication
         if (!$user->isEmpty()) {

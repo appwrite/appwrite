@@ -64,6 +64,7 @@ services:
     networks:
       - appwrite
     dns:
+      - 127.0.0.11
       - 172.16.238.100
     labels:
       - "traefik.enable=true"
@@ -98,9 +99,9 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
-      # - ./vendor/utopia-php/framework:/usr/src/code/vendor/utopia-php/framework
+
     depends_on:
-      - ${_APP_DB_HOST:-mariadb}
+      - ${_APP_DB_HOST:-mongodb}
       - redis
       - coredns
       - ollama
@@ -122,6 +123,7 @@ services:
       - _APP_CONSOLE_SESSION_ALERTS
       - _APP_CONSOLE_WHITELIST_IPS
       - _APP_CONSOLE_HOSTNAMES
+      - _APP_CONSOLE_SCHEMA
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
       - _APP_SYSTEM_TEAM_EMAIL
@@ -291,7 +293,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - ${_APP_DB_HOST:-mariadb}
+      - ${_APP_DB_HOST:-mongodb}
       - redis
       - ollama
     environment:
@@ -334,7 +336,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mariadb}
+      - ${_APP_DB_HOST:-mongodb}
       - ollama
     environment:
       - _APP_ENV
@@ -367,7 +369,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mariadb}
+      - ${_APP_DB_HOST:-mongodb}
       - request-catcher-sms
       - request-catcher-webhook
       - ollama
@@ -401,7 +403,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mariadb}
+      - ${_APP_DB_HOST:-mongodb}
       - ollama
     volumes:
       - appwrite-uploads:/storage/uploads:rw
@@ -473,7 +475,7 @@ services:
       
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mariadb}
+      - ${_APP_DB_HOST:-mongodb}
       - ollama
     environment:
       - _APP_ENV
@@ -516,7 +518,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mariadb}
+      - ${_APP_DB_HOST:-mongodb}
       - ollama
     environment:
       - _APP_ENV
@@ -591,7 +593,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
     environment:
       # Specific
       - _APP_BROWSER_HOST
@@ -608,6 +610,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -649,7 +652,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mariadb}
+      - ${_APP_DB_HOST:-mongodb}
       - ollama
     volumes:
       - appwrite-config:/storage/config:rw
@@ -695,10 +698,8 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      redis:
-        condition: service_started
-      mariadb:
-        condition: service_started
+      - redis
+      - ${_APP_DB_HOST:-mongodb}
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -707,6 +708,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -726,10 +728,8 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
+      - ${_APP_DB_HOST:-mongodb}
       - redis
-      - ${_APP_DB_HOST:-mariadb}
-      - ollama
-      - openruntimes-executor
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -878,8 +878,7 @@ services:
       - ./tests:/usr/src/code/tests
       
     depends_on:
-      - ${_APP_DB_HOST:-mariadb}
-      - ollama
+      - ${_APP_DB_HOST:-mongodb}
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -921,7 +920,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
       - redis
     environment:
       - _APP_ENV
@@ -968,7 +967,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
       - redis
     environment:
       - _APP_ENV
@@ -987,6 +986,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -1008,8 +1008,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mariadb}
-      - ollama
+      - ${_APP_DB_HOST:-mongodb}
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -1043,8 +1042,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mariadb}
-      - ollama
+      - ${_APP_DB_HOST:-mongodb}
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -1078,7 +1076,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mariadb}
+      - ${_APP_DB_HOST:-mongodb}
       - ollama
     environment:
       - _APP_ENV
@@ -1112,7 +1110,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - ${_APP_DB_HOST:-mariadb}
+      - ${_APP_DB_HOST:-mongodb}
       - redis
       - ollama
     environment:
@@ -1144,7 +1142,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - ${_APP_DB_HOST:-mariadb}
+      - ${_APP_DB_HOST:-mongodb}
       - redis
       - ollama
     environment:
@@ -1175,7 +1173,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - ${_APP_DB_HOST:-mariadb}
+      - ${_APP_DB_HOST:-mongodb}
       - redis
       - ollama
     environment:
@@ -1270,6 +1268,7 @@ services:
       start_period: 5s
 
   mariadb:
+    profiles: ["mariadb"]
     image: mariadb:10.11 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
     <<: *x-logging
@@ -1288,7 +1287,8 @@ services:
     command: "mysqld --innodb-flush-method=fsync"
 
   mongodb:
-    image: mongo:8.0.10
+    profiles: ["mongodb"]
+    image: mongo:8.2.5
     container_name: appwrite-mongodb
     <<: *x-logging
     networks:
@@ -1324,6 +1324,7 @@ services:
       start_period: 30s
 
   appwrite-mongo-express:
+    profiles: ["mongodb"]
     image: mongo-express
     container_name: appwrite-mongo-express
     networks:
@@ -1334,11 +1335,15 @@ services:
       ME_CONFIG_MONGODB_URL: "mongodb://root:${_APP_DB_ROOT_PASS}@appwrite-mongodb:27017/?replicaSet=rs0&directConnection=true"
       ME_CONFIG_BASICAUTH_USERNAME: ${_APP_DB_USER}
       ME_CONFIG_BASICAUTH_PASSWORD: ${_APP_DB_PASS}
-    depends_on: []
+    depends_on:
+      - mongodb
 
   postgresql:
+    profiles: ["postgresql"]
     build:
-      context: https://github.com/appwrite/docker-postgres.git#feat-dockerfile
+      context: ./tests/resources/postgresql
+      args:
+        POSTGRES_VERSION: 17
     container_name: appwrite-postgresql
     <<: *x-logging
     networks:
@@ -1371,7 +1376,7 @@ services:
       - appwrite
 
   redis:
-    image: redis:7.2.4-alpine
+    image: redis:7.4.7-alpine
     <<: *x-logging
     container_name: appwrite-redis
     command: >
@@ -1439,7 +1444,7 @@ services:
       - MAILDEV_INCOMING_PASS=${_APP_SMTP_PASSWORD}
 
   request-catcher-webhook: # used mainly for dev tests (mock HTTP webhook)
-    image: appwrite/requestcatcher:1.0.0
+    image: appwrite/requestcatcher:1.1.0
     container_name: appwrite-requestcatcher-webhook
     <<: *x-logging
     ports:
@@ -1448,7 +1453,7 @@ services:
       - appwrite
 
   request-catcher-sms: # used mainly for dev tests (mock SMS auth secret)
-    image: appwrite/requestcatcher:1.0.0
+    image: appwrite/requestcatcher:1.1.0
     container_name: appwrite-requestcatcher-sms
     <<: *x-logging
     ports:

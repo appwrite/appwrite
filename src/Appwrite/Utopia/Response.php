@@ -491,7 +491,7 @@ class Response extends SwooleResponse
                         }
 
                         if ($ruleType === null || !self::hasModel($ruleType)) {
-                            throw new Exception('Missing model for rule: ' . $ruleType);
+                            throw new Exception('Missing model for rule: ' . ($ruleType ?? 'null') . ' (key: ' . $key . ')');
                         }
 
                         $data[$key][$index] = $this->output($item, $ruleType);

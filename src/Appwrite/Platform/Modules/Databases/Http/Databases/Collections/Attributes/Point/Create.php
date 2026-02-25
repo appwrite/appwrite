@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attribu
 
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Deprecated;
@@ -76,6 +77,10 @@ class Create extends Action
 
     public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?array $default, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
+        if (!$dbForProject->getAdapter()->getSupportForSpatialAttributes()) {
+            throw new Exception(Exception::GENERAL_FEATURE_UNSUPPORTED, 'Spatial columns are not supported by this database.');
+        }
+
         $attribute = $this->createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
             'type' => Database::VAR_POINT,

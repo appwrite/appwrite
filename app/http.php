@@ -194,6 +194,8 @@ function createDatabase(Http $app, string $resourceKey, string $dbName, array $c
 {
     $max = 15;
     $sleep = 2;
+    $max = 15;
+    $sleep = 2;
     $attempts = 0;
 
     while (true) {
@@ -204,7 +206,7 @@ function createDatabase(Http $app, string $resourceKey, string $dbName, array $c
             $database = is_callable($resource) ? $resource() : $resource;
             break; // exit loop on success
         } catch (\Throwable $e) {
-            Console::warning("  └── Database not ready. Retrying connection ({$attempts})...");
+            Console::warning("  └── Database not ready ({$dbName}). Retrying connection ({$attempts}): " . $e->getMessage());
             if ($attempts >= $max) {
                 throw new \Exception('  └── Failed to connect to database: ' . $e->getMessage());
             }
@@ -219,12 +221,13 @@ function createDatabase(Http $app, string $resourceKey, string $dbName, array $c
     while (true) {
         try {
             $attempts++;
+            Console::info("  └── Creating database: $dbName...");
             $database->create();
             break; // exit loop on success
         } catch (\Exception $e) {
             if ($e instanceof DuplicateException) {
-                Console::info("  └── Skip: metadata table already exists");
                 Span::add('database.exists', true);
+                Console::info("  └── Skip: metadata table already exists");
                 break;
             }
 
@@ -443,10 +446,12 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $tot
             while (true) {
                 try {
                     $attempts++;
+                    Console::success('[Setup] - Creating project database: ' . $hostname . '...');
                     $dbForProject->create();
                     break; // exit loop on success
                 } catch (DuplicateException) {
                     Span::add('database.exists', true);
+                    Console::success('[Setup] - Skip: metadata table already exists');
                     break;
                 } catch (\Throwable $e) {
                     Console::warning("  └── Project database create failed. Retrying ({$attempts})...");
@@ -573,8 +578,8 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
             $log->setType(Log::TYPE_ERROR);
             $log->setMessage($th->getMessage());
 
-            $log->addTag('method', $route->getMethod());
-            $log->addTag('url', $route->getPath());
+            $log->addTag('method', $route?->getMethod() ?? $request->getMethod());
+            $log->addTag('url', $route?->getPath() ?? $request->getURI());
             $log->addTag('verboseType', get_class($th));
             $log->addTag('code', $th->getCode());
             // $log->addTag('projectId', $project->getId()); // TODO: Figure out how to get ProjectID, if it becomes relevant
@@ -586,12 +591,15 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
             $log->addExtra('trace', $th->getTraceAsString());
             $log->addExtra('roles', isset($authorization) ? $authorization->getRoles() : []);
 
-            $sdk = $route->getLabel("sdk", false);
+            $sdk = $route?->getLabel("sdk", false);
 
             $action = 'UNKNOWN_NAMESPACE.UNKNOWN.METHOD';
             if (!empty($sdk)) {
                 /** @var Appwrite\SDK\Method $sdk */
                 $action = $sdk->getNamespace() . '.' . $sdk->getMethodName();
+            } elseif ($route === null) {
+                $path = ltrim(parse_url($request->getURI(), PHP_URL_PATH) ?? '/', '/') ?: 'root';
+                $action = 'http.' . $request->getMethod() . '.' . $path;
             }
 
             $log->setAction($action);

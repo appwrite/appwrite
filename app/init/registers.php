@@ -153,9 +153,9 @@ $register->set('pools', function () {
     $group = new Group();
 
     $fallbackForDB = 'db_main=' . AppwriteURL::unparse([
-        'scheme' => System::getEnv('_APP_DB_ADAPTER', 'mariadb'),
-        'host' => System::getEnv('_APP_DB_HOST', 'mariadb'),
-        'port' => System::getEnv('_APP_DB_PORT', '3306'),
+        'scheme' => System::getEnv('_APP_DB_ADAPTER', 'mongodb'),
+        'host' => System::getEnv('_APP_DB_HOST', 'mongodb'),
+        'port' => System::getEnv('_APP_DB_PORT', '27017'),
         'user' => System::getEnv('_APP_DB_USER', ''),
         'pass' => System::getEnv('_APP_DB_PASS', ''),
         'path' => System::getEnv('_APP_DB_SCHEMA', ''),
@@ -190,7 +190,7 @@ $register->set('pools', function () {
             'type' => 'database',
             'dsns' => $fallbackForDB,
             'multiple' => false,
-            'schemes' => ['mongodb','mariadb', 'mysql','postgresql'],
+            'schemes' => ['mariadb', 'mongodb', 'mysql', 'postgresql'],
         ],
         'database' => [
             'type' => 'database',
@@ -308,17 +308,6 @@ $register->set('pools', function () {
                         ]);
                     });
                 },
-                'postgresql' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                    return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                        return new PDO("pgsql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase}", $dsnUser, $dsnPass, array(
-                            \PDO::ATTR_TIMEOUT => 3, // Seconds
-                            \PDO::ATTR_PERSISTENT => false,
-                            \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
-                            \PDO::ATTR_EMULATE_PREPARES => true,
-                            \PDO::ATTR_STRINGIFY_FETCHES => true
-                        ));
-                    });
-                },
                 'mongodb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase, $dsn) {
                     try {
                         $mongo = new MongoClient($dsnDatabase, $dsnHost, (int)$dsnPort, $dsnUser, $dsnPass, false);
@@ -331,7 +320,7 @@ $register->set('pools', function () {
                 },
                 'postgresql' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
                     return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                        return new PDO("pgsql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase}", $dsnUser, $dsnPass, array(
+                        return new PDO("pgsql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};connect_timeout=3", $dsnUser, $dsnPass, array(
                             \PDO::ATTR_TIMEOUT => 3, // Seconds
                             \PDO::ATTR_PERSISTENT => false,
                             \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
@@ -362,8 +351,8 @@ $register->set('pools', function () {
                         $adapter = match ($dsn->getScheme()) {
                             'mariadb' => new MariaDB($resource()),
                             'mysql' => new MySQL($resource()),
-                            'postgresql' => new Postgres($resource()),
                             'mongodb' => new Mongo($resource()),
+                            'postgresql' => new Postgres($resource()),
                             default => null
                         };
 
@@ -421,30 +410,28 @@ $register->set('db', function () {
     $dbPort = System::getEnv('_APP_DB_PORT', '');
     $dbUser = System::getEnv('_APP_DB_USER', '');
     $dbPass = System::getEnv('_APP_DB_PASS', '');
-    $dbScheme = System::getEnv('_APP_DB_SCHEMA', '');
+    $dbSchema = System::getEnv('_APP_DB_SCHEMA', '');
     $dbAdapter = System::getEnv('_APP_DB_ADAPTER', 'mongodb');
     $dsn = '';
 
     switch ($dbAdapter) {
         case 'mongodb':
             try {
-                $mongo = new MongoClient($dbScheme, $dbHost, (int)$dbPort, $dbUser, $dbPass, false);
+                $mongo = new MongoClient($dbSchema, $dbHost, (int)$dbPort, $dbUser, $dbPass, false);
                 @$mongo->connect();
-
                 return $mongo;
             } catch (\Throwable $e) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, "MongoDB connection failed: " . $e->getMessage());
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'MongoDB connection failed: ' . $e->getMessage());
             }
-
-        case 'postgresql':
-            $dsn = "pgsql:host={$dbHost};port={$dbPort};dbname={$dbSchema}";
-            break;
-
         case 'mysql':
         case 'mariadb':
-        default:
-            $dsn = "mysql:host={$dbHost};port={$dbPort};dbname={$dbScheme};charset=utf8mb4";
+            $dsn = "mysql:host={$dbHost};port={$dbPort};dbname={$dbSchema};charset=utf8mb4";
             return new PDO($dsn, $dbUser, $dbPass, SQL::getPDOAttributes());
+        case 'postgresql':
+            $dsn = "pgsql:host={$dbHost};port={$dbPort};dbname={$dbSchema};connect_timeout=3";
+            return new PDO($dsn, $dbUser, $dbPass, SQL::getPDOAttributes());
+        default:
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid database adapter');
     }
 });
 

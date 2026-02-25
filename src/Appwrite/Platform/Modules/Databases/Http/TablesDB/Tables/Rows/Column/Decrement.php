@@ -62,7 +62,7 @@ class Decrement extends DecrementDocumentAttribute
             ->param('column', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Column key.', false, ['dbForProject'])
             ->param('value', 1, new Numeric(), 'Value to increment the column by. The value must be a number.', true)
             ->param('min', null, new Nullable(new Numeric()), 'Minimum value for the column. If the current value is lesser than this value, an exception will be thrown.', true)
-            ->param('transactionId', null, new Nullable(new UID()), 'Transaction ID for staging the operation.', true)
+            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
