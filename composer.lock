@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "bbadd08240c123309a6b7be4da296624",
+    "content-hash": "cb2ca42cfed8603c31b75113c85a4699",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4517,16 +4517,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "dev-fix-kebab-case-site",
+            "version": "1.6.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "134efdc72bf2fed59d98c07eb8e6a2e6fee64e67"
+                "reference": "037bf4b3813d44f1b0990bc124e35b501ed27fca"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/134efdc72bf2fed59d98c07eb8e6a2e6fee64e67",
-                "reference": "134efdc72bf2fed59d98c07eb8e6a2e6fee64e67",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/037bf4b3813d44f1b0990bc124e35b501ed27fca",
+                "reference": "037bf4b3813d44f1b0990bc124e35b501ed27fca",
                 "shasum": ""
             },
             "require": {
@@ -4566,9 +4566,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/fix-kebab-case-site"
+                "source": "https://github.com/utopia-php/migration/tree/1.6.2"
             },
-            "time": "2026-02-25T11:33:23+00:00"
+            "time": "2026-02-25T12:00:11+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -9043,9 +9043,7 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "utopia-php/migration": 20
-    },
+    "stability-flags": [],
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
