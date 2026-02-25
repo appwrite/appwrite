@@ -112,29 +112,35 @@ class Update extends Action
         $repositories = [$repository];
         $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
 
-        $owner = $github->getOwnerName($providerInstallationId);
         try {
-            $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
-            if (empty($repositoryName)) {
+            $providerRepositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+            if (empty($providerRepositoryName)) {
                 throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
             }
         } catch (RepositoryNotFound $e) {
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
-        $pullRequestResponse = $github->getPullRequest($owner, $repositoryName, $providerPullRequestId);
 
+        $owner = $github->getOwnerName($providerInstallationId);
+        $pullRequestResponse = $github->getPullRequest($owner, $providerRepositoryName, $providerPullRequestId);
+
+        $providerRepositoryUrl = $pullRequestResponse['head']['repo']['html_url'] ?? '';
+        $providerRepositoryOwner = $pullRequestResponse['head']['repo']['owner']['login'] ?? '';
         $providerBranch = \explode(':', $pullRequestResponse['head']['label'])[1] ?? '';
+        $providerBranchUrl = "$providerRepositoryUrl/tree/$providerBranch";
         $providerCommitHash = $pullRequestResponse['head']['sha'] ?? '';
         $providerBranchUrl = $pullRequestResponse['head']['repo']['html_url'] ?? '';
         $providerRepositoryName = $pullRequestResponse['head']['repo']['name'] ?? '';
         $providerRepositoryUrl = $pullRequestResponse['head']['repo']['html_url'] ?? '';
         $providerRepositoryOwner = $pullRequestResponse['head']['repo']['owner']['login'] ?? '';
-        $providerCommitAuthor = $pullRequestResponse['head']['user']['login'] ?? '';
-        $providerCommitAuthorUrl = $pullRequestResponse['head']['user']['html_url'] ?? '';
-        $providerCommitMessage = $pullRequestResponse['title'] ?? '';
-        $providerCommitUrl = $pullRequestResponse['html_url'] ?? '';
 
-        $this->createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, '', '', '', '', $providerCommitHash, '', '', '', '', $providerPullRequestId, true, $dbForPlatform, $authorization, $queueForBuilds, $getProjectDB, $platform);
+        $commitDetails = $github->getCommit($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash);
+        $providerCommitMessage = $commitDetails["commitMessage"] ?? '';
+        $providerCommitUrl = $commitDetails["commitUrl"] ?? '';
+        $providerCommitAuthor = $commitDetails["commitAuthor"] ?? '';
+        $providerCommitAuthorUrl = $commitDetails["commitAuthorUrl"] ?? '';
+
+        $this->createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, true, $dbForPlatform, $authorization, $queueForBuilds, $getProjectDB, $platform);
 
         $response->noContent();
     }

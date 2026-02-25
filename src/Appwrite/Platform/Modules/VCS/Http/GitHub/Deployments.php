@@ -49,17 +49,19 @@ trait Deployments
         foreach ($repositories as $repository) {
             try {
                 $repositoryId = $repository->getId();
+                $projectId = $repository->getAttribute('projectId');
+                $resourceId = $repository->getAttribute('resourceId');
                 $resourceType = $repository->getAttribute('resourceType');
 
-                $logBase = "vcs.github.event.{$repositoryId}";
-                Span::add("{$logBase}.resourceType", $resourceType);
+                $logBase = "vcs.github.event.repo.{$repositoryId}";
                 Span::add("{$logBase}.projectId", $projectId);
+                Span::add("{$logBase}.resourceId", $resourceId);
+                Span::add("{$logBase}.resourceType", $resourceType);
 
                 if ($resourceType !== "function" && $resourceType !== "site") {
                     continue;
                 }
 
-                $projectId = $repository->getAttribute('projectId');
                 $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
 
                 if ($project->isEmpty()) {
@@ -72,7 +74,6 @@ trait Deployments
 
                 $dbForProject = $getProjectDB($project);
                 $resourceCollection = $resourceType === "function" ? 'functions' : 'sites';
-                $resourceId = $repository->getAttribute('resourceId');
                 $resource = $authorization->skip(fn () => $dbForProject->getDocument($resourceCollection, $resourceId));
                 $resourceInternalId = $resource->getSequence();
 
@@ -113,7 +114,7 @@ trait Deployments
 
                 Span::add("{$logBase}.authorized", $isAuthorized);
 
-                $commentStatus = $isAuthorized ? 'waiting' : 'failed';
+                $commentStatus = 'waiting';
                 $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
                 $hostname = $platform['consoleHostname'] ?? '';
 
@@ -256,14 +257,8 @@ trait Deployments
                         throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
                     }
                     $owner = $github->getOwnerName($providerInstallationId);
-                    $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'failure', $message, $authorizeUrl, $name);
+                    $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $authorizeUrl, $name);
                     continue;
-                }
-
-                if ($external) {
-                    $pullRequestResponse = $github->getPullRequest($owner, $repositoryName, $providerPullRequestId);
-                    $providerRepositoryName = $pullRequestResponse['head']['repo']['owner']['login'];
-                    $providerRepositoryOwner = $pullRequestResponse['head']['repo']['name'];
                 }
 
                 $commands = [];
