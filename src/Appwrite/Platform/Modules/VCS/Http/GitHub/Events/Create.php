@@ -16,7 +16,6 @@ use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
 
-
 class Create extends Action
 {
     use HTTP;
@@ -90,8 +89,7 @@ class Create extends Action
         array $parsedPayload,
         Database $dbForPlatform,
         Authorization $authorization,
-    )
-    {
+    ) {
         if ($parsedPayload["action"] !== "deleted") {
             return;
         }
@@ -128,8 +126,7 @@ class Create extends Action
         Build $queueForBuilds,
         callable $getProjectDB,
         array $platform,
-    )
-    {
+    ) {
         $providerBranchCreated = $parsedPayload["branchCreated"] ?? false;
         $providerBranchDeleted = $parsedPayload["branchDeleted"] ?? false;
         $providerBranch = $parsedPayload["branch"] ?? '';
@@ -175,8 +172,7 @@ class Create extends Action
         Build $queueForBuilds,
         callable $getProjectDB,
         array $platform,
-    )
-    {
+    ) {
         $action = $parsedPayload["action"] ?? '';
 
         if ($action == "opened" || $action == "reopened" || $action == "synchronize") {

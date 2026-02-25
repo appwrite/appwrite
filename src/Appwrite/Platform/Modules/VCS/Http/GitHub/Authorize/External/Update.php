@@ -77,8 +77,7 @@ class Update extends Action
         callable $getProjectDB,
         Build $queueForBuilds,
         array $platform
-    )
-    {
+    ) {
         $installation = $dbForPlatform->getDocument('installations', $installationId);
 
         if ($installation->isEmpty()) {

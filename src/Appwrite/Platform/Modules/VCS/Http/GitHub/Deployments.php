@@ -44,8 +44,7 @@ trait Deployments
         Build $queueForBuilds,
         callable $getProjectDB,
         array $platform,
-    )
-    {
+    ) {
         $errors = [];
         foreach ($repositories as $repository) {
             try {
@@ -483,7 +482,7 @@ trait Deployments
                     $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
                 }
 
-                $queueName = $this->getBuildQueueName( $project, $dbForPlatform, $authorization);
+                $queueName = $this->getBuildQueueName($project, $dbForPlatform, $authorization);
 
                 $queueForBuilds
                     ->setQueue($queueName)
