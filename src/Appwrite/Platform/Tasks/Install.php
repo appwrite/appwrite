@@ -32,7 +32,7 @@ class Install extends Action
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
-            ->param('database', 'mariadb', new Text(0), 'Database to use (mariadb|postgresql)', true)
+            ->param('database', 'mongodb', new Text(0), 'Database to use (mongodb|mariadb|postgres)', true)
             ->callback($this->action(...));
     }
 
@@ -137,6 +137,14 @@ class Install extends Action
                     }
                 }
             }
+
+            // Block database type changes on existing installations
+            $existingDatabase = $vars['_APP_DB_ADAPTER']['default'] ?? null;
+            if ($existingDatabase !== null && $existingDatabase !== $database) {
+                Console::error("Cannot change database type from '{$existingDatabase}' to '{$database}'.");
+                Console::error('Changing database types on an existing installation is not supported.');
+                Console::exit(1);
+            }
         }
 
 
@@ -178,6 +186,7 @@ class Install extends Action
         $input = [];
 
         $password = new Password();
+        $password->setCharset('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789');
         $token = new Token();
         foreach ($vars as $var) {
             if ($var['name'] === '_APP_ASSISTANT_OPENAI_API_KEY') {

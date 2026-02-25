@@ -5649,17 +5649,11 @@ trait TransactionsBase
      */
     public function testArrayOperatorsWithUpdateRow(): void
     {
-<<<<<<< HEAD:tests/e2e/Services/Databases/TablesDB/Transactions/TransactionsBase.php
-        if ($this->isMongoDB()) {
-            $this->markTestSkipped('MongoDB is not supported for this test');
-        }
-=======
         if (!$this->getSupportForOperators()) {
             $this->expectNotToPerformAssertions();
             return;
         }
 
->>>>>>> origin/1.8.x:tests/e2e/Services/Databases/Transactions/TransactionsBase.php
         // Create database
         $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), array_merge([
             'content-type' => 'application/json',
@@ -5782,17 +5776,11 @@ trait TransactionsBase
      */
     public function testArrayOperatorsWithCreateOperations(): void
     {
-<<<<<<< HEAD:tests/e2e/Services/Databases/TablesDB/Transactions/TransactionsBase.php
-        if ($this->isMongoDB()) {
-            $this->markTestSkipped('MongoDB is not supported for this test');
-        }
-=======
         if (!$this->getSupportForOperators()) {
             $this->expectNotToPerformAssertions();
             return;
         }
 
->>>>>>> origin/1.8.x:tests/e2e/Services/Databases/Transactions/TransactionsBase.php
         // Create database
         $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), array_merge([
             'content-type' => 'application/json',
@@ -5918,17 +5906,11 @@ trait TransactionsBase
      */
     public function testMultipleArrayOperators(): void
     {
-<<<<<<< HEAD:tests/e2e/Services/Databases/TablesDB/Transactions/TransactionsBase.php
-        if ($this->isMongoDB()) {
-            $this->markTestSkipped('MongoDB is not supported for this test');
-        }
-=======
         if (!$this->getSupportForOperators()) {
             $this->expectNotToPerformAssertions();
             return;
         }
 
->>>>>>> origin/1.8.x:tests/e2e/Services/Databases/Transactions/TransactionsBase.php
         // Create database
         $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), array_merge([
             'content-type' => 'application/json',

@@ -213,7 +213,7 @@ class Create extends Action
             $dbForDatabases->getAdapter()->getSupportForUniqueIndex(),
             $dbForDatabases->getAdapter()->getSupportForFulltextIndex(),
             $dbForDatabases->getAdapter()->getSupportForTTLIndexes(),
-            $dbForDatabases->getAdapter()->getSupportForObject(),
+            $dbForDatabases->getAdapter()->getSupportForObject()
         );
 
         if (!$validator->isValid($index)) {

@@ -931,8 +931,7 @@ class UsageTest extends Scope
         return $data;
     }
 
-<<<<<<< HEAD
-    /** @depends testDatabaseStatsTablesAPI */
+    #[Depends('testDatabaseStatsTablesAPI')]
     public function testPrepareDocumentsDBStats(array $data): array
     {
         $documentsTotal = 0;
@@ -1079,7 +1078,7 @@ class UsageTest extends Scope
         ]);
     }
 
-    /** @depends testPrepareDocumentsDBStats */
+    #[Depends('testPrepareDocumentsDBStats')]
     #[Retry(count: 1)]
     public function testDocumentsDBStats(array $data): array
     {
@@ -1150,7 +1149,7 @@ class UsageTest extends Scope
         return $data;
     }
 
-    /** @depends testDocumentsDBStats */
+    #[Depends('testDocumentsDBStats')]
     public function testPrepareVectorDBStats(array $data): array
     {
         $documentsTotal = 0;
@@ -1301,7 +1300,7 @@ class UsageTest extends Scope
         ]);
     }
 
-    /** @depends testPrepareVectorDBStats */
+    #[Depends('testPrepareVectorDBStats')]
     #[Retry(count: 1)]
     public function testVectorDBStats(array $data): array
     {
@@ -1372,10 +1371,7 @@ class UsageTest extends Scope
         return $data;
     }
 
-    /** @depends testVectorDBStats */
-=======
-    #[Depends('testDatabaseStatsTablesAPI')]
->>>>>>> origin/1.8.x
+    #[Depends('testVectorDBStats')]
     public function testPrepareFunctionsStats(array $data): array
     {
         $executionTime = 0;

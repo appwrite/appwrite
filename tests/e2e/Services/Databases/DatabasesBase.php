@@ -1157,25 +1157,6 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-<<<<<<< HEAD:tests/e2e/Services/Databases/Legacy/DatabasesBase.php
-        $this->assertIsArray($movies['body']['attributes']);
-        $this->assertCount(10, $movies['body']['attributes']);
-        $this->assertArrayHasKey('bytesMax', $movies['body']);
-        $this->assertArrayHasKey('bytesUsed', $movies['body']);
-        $this->assertGreaterThanOrEqual(0, $movies['body']['bytesUsed']);
-        $this->assertEquals($movies['body']['attributes'][0]['key'], $title['body']['key']);
-        $this->assertEquals($movies['body']['attributes'][1]['key'], $description['body']['key']);
-        $this->assertEquals($movies['body']['attributes'][2]['key'], $tagline['body']['key']);
-        $this->assertEquals($movies['body']['attributes'][3]['key'], $releaseYear['body']['key']);
-        $this->assertEquals($movies['body']['attributes'][4]['key'], $duration['body']['key']);
-        $this->assertEquals($movies['body']['attributes'][5]['key'], $actors['body']['key']);
-        $this->assertEquals($movies['body']['attributes'][6]['key'], $datetime['body']['key']);
-        $this->assertEquals($movies['body']['attributes'][7]['key'], $relationship['body']['key']);
-        $this->assertEquals($movies['body']['attributes'][8]['key'], $integers['body']['key']);
-        $this->assertEquals($movies['body']['attributes'][9]['key'], $integers2['body']['key']);
-
-        return $data;
-=======
         $schemaResource = $this->getSchemaResource();
         $this->assertIsArray($movies['body'][$schemaResource]);
         $this->assertCount($this->getSupportForRelationships() ? 10 : 9, $movies['body'][$schemaResource]);
@@ -1197,7 +1178,6 @@ trait DatabasesBase
             $this->assertEquals($movies['body'][$schemaResource][8]['key'], $integers['body']['key']);
             $this->assertEquals($movies['body'][$schemaResource][9]['key'], $integers2['body']['key']);
         }
->>>>>>> origin/1.8.x:tests/e2e/Services/Databases/DatabasesBase.php
     }
 
     public function testListAttributes(): void
@@ -1290,23 +1270,8 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $attribute['headers']['status-code']);
-<<<<<<< HEAD:tests/e2e/Services/Databases/Legacy/DatabasesBase.php
-
-        $message = $attribute['body']['message'];
-        if ($this->isMongoDB()) {
-            $this->assertStringContainsString('Index length is longer than the maximum: 1024', $message);
-        } else {
-            // length depends on the shared table
-            $this->assertTrue(
-                str_contains($message, 'Index length is longer than the maximum: 767') ||
-                str_contains($message, 'Index length is longer than the maximum: 768'),
-                "Message does not contain expected max length"
-            );
-        }
-=======
         $maxLength = $this->getMaxIndexLength();
         $this->assertStringContainsString('Index length is longer than the maximum: '.$maxLength, $attribute['body']['message']);
->>>>>>> origin/1.8.x:tests/e2e/Services/Databases/DatabasesBase.php
     }
 
     public function testUpdateAttributeEnum(): void
@@ -2218,17 +2183,7 @@ trait DatabasesBase
 
         $this->assertEquals(400, $fulltextReleaseYear['headers']['status-code']);
 
-<<<<<<< HEAD:tests/e2e/Services/Databases/Legacy/DatabasesBase.php
-        // MongoDB only allows one fulltext index per collection, so it returns a different error
-        if ($this->isMongoDB()) {
-            $this->assertEquals('There is already a fulltext index in the collection', $fulltextReleaseYear['body']['message']);
-        } else {
-            $this->assertEquals('Attribute "releaseYear" cannot be part of a fulltext index, must be of type string', $fulltextReleaseYear['body']['message']);
-        }
-        $noAttributes = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
-=======
         $noAttributes = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
->>>>>>> origin/1.8.x:tests/e2e/Services/Databases/DatabasesBase.php
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -2284,10 +2239,6 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $fulltextArray['headers']['status-code']);
-<<<<<<< HEAD:tests/e2e/Services/Databases/Legacy/DatabasesBase.php
-
-=======
->>>>>>> origin/1.8.x:tests/e2e/Services/Databases/DatabasesBase.php
         $this->assertEquals('Creating indexes on array attributes is not currently supported.', $fulltextArray['body']['message']);
 
         $actorsArray = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
@@ -2428,24 +2379,8 @@ trait DatabasesBase
         $this->assertEquals('lengthTestIndex', $index['body']['key']);
         $this->assertEquals([128, 200], $index['body']['lengths']);
 
-<<<<<<< HEAD:tests/e2e/Services/Databases/Legacy/DatabasesBase.php
-        // Test case for lengths array overriding
-        // set a length for an array attribute, it should get overridden with Database::ARRAY_INDEX_LENGTH
-        if ($this->isMongoDB()) {
-            // MongoDB doesn't support identical indexes, so delete the existing one first
-            $this->client->call(Client::METHOD_DELETE, "/databases/{$databaseId}/collections/{$collectionId}/indexes/index-actors", [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
-            ]);
-            sleep(2);
-        }
-
-        $create = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/indexes", [
-=======
         // Test case for array attribute index (should be blocked)
         $create = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), [
->>>>>>> origin/1.8.x:tests/e2e/Services/Databases/DatabasesBase.php
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -2455,10 +2390,6 @@ trait DatabasesBase
             $this->getIndexAttributesParam() => ['actors'],
             'lengths' => [120],
         ]);
-<<<<<<< HEAD:tests/e2e/Services/Databases/Legacy/DatabasesBase.php
-
-=======
->>>>>>> origin/1.8.x:tests/e2e/Services/Databases/DatabasesBase.php
         $this->assertEquals(400, $create['headers']['status-code']);
         $this->assertEquals('Creating indexes on array attributes is not currently supported.', $create['body']['message']);
 
@@ -2635,18 +2566,10 @@ trait DatabasesBase
         $this->assertEquals($document1['body']['actors'][1], 'Samuel Jackson');
         $this->assertEquals($document1['body']['birthDay'], '1975-06-12T12:12:55.000+00:00');
         $this->assertTrue(array_key_exists('$sequence', $document1['body']));
-<<<<<<< HEAD:tests/e2e/Services/Databases/Legacy/DatabasesBase.php
-        if ($this->isMongoDB()) {
-            $this->assertIsString($document1['body']['$sequence']);
-        } else {
-            $this->assertIsInt($document1['body']['$sequence']);
-        }
-=======
 
         $this->getSupportForIntegerIds()
             ? $this->assertIsInt($document1['body']['$sequence'])
             : $this->assertIsString($document1['body']['$sequence']);
->>>>>>> origin/1.8.x:tests/e2e/Services/Databases/DatabasesBase.php
 
         $this->assertEquals(201, $document2['headers']['status-code']);
         $this->assertEquals($data['moviesId'], $document2['body'][$this->getContainerIdResponseKey()]);
@@ -4070,17 +3993,11 @@ trait DatabasesBase
 
     public function testOperators(): void
     {
-<<<<<<< HEAD:tests/e2e/Services/Databases/Legacy/DatabasesBase.php
-        if ($this->isMongoDB()) {
-            $this->markTestSkipped('MongoDB is not supported for this test');
-        }
-=======
         if (!$this->getSupportForOperators()) {
             $this->expectNotToPerformAssertions();
             return;
         }
 
->>>>>>> origin/1.8.x:tests/e2e/Services/Databases/DatabasesBase.php
         // Create database
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
             'content-type' => 'application/json',
@@ -4330,17 +4247,11 @@ trait DatabasesBase
 
     public function testBulkOperators(): void
     {
-<<<<<<< HEAD:tests/e2e/Services/Databases/Legacy/DatabasesBase.php
-        if ($this->isMongoDB()) {
-            $this->markTestSkipped('MongoDB is not supported for this test');
-        }
-=======
         if (!$this->getSupportForOperators()) {
             $this->expectNotToPerformAssertions();
             return;
         }
 
->>>>>>> origin/1.8.x:tests/e2e/Services/Databases/DatabasesBase.php
         // Create database
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
             'content-type' => 'application/json',
