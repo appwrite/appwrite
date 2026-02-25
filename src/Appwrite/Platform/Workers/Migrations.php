@@ -315,6 +315,15 @@ class Migrations extends Action
                 'functions.write',
                 'tokens.read',
                 'tokens.write',
+                'providers.read',
+                'providers.write',
+                'topics.read',
+                'topics.write',
+                'subscribers.read',
+                'subscribers.write',
+                'messages.read',
+                'messages.write',
+                'targets.read',
             ]
         ]);
 
