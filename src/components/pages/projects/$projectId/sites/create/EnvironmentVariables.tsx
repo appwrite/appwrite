@@ -10,7 +10,6 @@ interface EnvironmentVariablesProps {
   onChange: (variables: WizardVariable[]) => void
   disabled?: boolean
   className?: string
-  defaultOpen?: boolean
 }
 
 export function EnvironmentVariables(props: EnvironmentVariablesProps) {

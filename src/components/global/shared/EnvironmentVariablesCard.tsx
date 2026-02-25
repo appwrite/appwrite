@@ -1,20 +1,22 @@
 /**
  * Environment Variables Card
  *
- * Accordion card for managing env vars: table, import .env, editor.
- * Reused by sites and functions create wizards.
+ * Card for managing env vars: table, import .env, editor, create modal.
+ * Reused by sites and functions create wizards. Matches VariablesSettingsCard layout.
  */
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion'
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
 import {
   Table,
   TableBody,
@@ -23,13 +25,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
-import { Plus, Trash2, Eye, EyeOff, Upload, Code, Key } from 'lucide-react'
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Plus, Eye, EyeOff, Upload, Code, Key, XCircle, MoreHorizontal } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { VariableEditor } from '@/components/global/shared/VariableEditor'
@@ -46,7 +49,9 @@ interface EnvironmentVariablesCardProps {
   onChange: (variables: EnvVariable[]) => void
   disabled?: boolean
   className?: string
-  defaultOpen?: boolean
+  title?: string
+  emptyTitle?: string
+  emptyDescription?: string
 }
 
 export function EnvironmentVariablesCard({
@@ -54,36 +59,62 @@ export function EnvironmentVariablesCard({
   onChange,
   disabled = false,
   className,
-  defaultOpen = false,
+  title = 'Environment variables',
+  emptyTitle = 'No environment variables yet',
+  emptyDescription = 'Add a variable above or import from a .env file.',
 }: EnvironmentVariablesCardProps) {
-  const [newKey, setNewKey] = useState('')
-  const [newValue, setNewValue] = useState('')
-  const [newSecret, setNewSecret] = useState(false)
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [createPairs, setCreatePairs] = useState<
+    Array<{ key: string; value: string }>
+  >([{ key: '', value: '' }])
+  const [createSecret, setCreateSecret] = useState(false)
   const [showSecrets, setShowSecrets] = useState<Set<string>>(new Set())
   const [editorOpen, setEditorOpen] = useState(false)
   const [editorContent, setEditorContent] = useState('')
   const [editorFormat, setEditorFormat] = useState<'env' | 'json'>('env')
   const [editorError, setEditorError] = useState<string | undefined>()
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const newKeyInputRef = useRef<HTMLInputElement>(null)
 
-  const handleAddVariable = () => {
-    if (!newKey.trim()) {
-      toast.error('Variable key is required')
-      return
+  useEffect(() => {
+    if (!showCreateModal) {
+      setCreatePairs([{ key: '', value: '' }])
+      setCreateSecret(false)
     }
-    if (variables.some((v) => v.key === newKey.trim())) {
-      toast.error('Variable key already exists')
-      return
+  }, [showCreateModal])
+
+  const handleCreateFromModal = () => {
+    for (const pair of createPairs) {
+      if (!pair.key.trim()) {
+        toast.error('All variable keys are required')
+        return
+      }
+      if (variables.some((v) => v.key === pair.key.trim())) {
+        toast.error(`Variable ${pair.key.trim()} already exists`)
+        return
+      }
+      if (pair.value.length > 8192) {
+        toast.error(
+          `Variable ${pair.key.trim()} is longer than 8192 allowed characters`,
+        )
+        return
+      }
     }
-    onChange([
-      ...variables,
-      { key: newKey.trim(), value: newValue, secret: newSecret },
-    ])
-    setNewKey('')
-    setNewValue('')
-    setNewSecret(false)
-    setTimeout(() => newKeyInputRef.current?.focus(), 0)
+    const newVars = createPairs
+      .filter((p) => p.key.trim())
+      .map((pair) => ({
+        key: pair.key.trim(),
+        value: pair.value,
+        secret: createSecret,
+      }))
+    if (newVars.length > 0) {
+      onChange([...variables, ...newVars])
+      toast.success(
+        `${newVars.length} variable${newVars.length > 1 ? 's' : ''} added`,
+      )
+    }
+    setShowCreateModal(false)
+    setCreatePairs([{ key: '', value: '' }])
+    setCreateSecret(false)
   }
 
   const handleRemoveVariable = (index: number) => {
@@ -229,104 +260,119 @@ export function EnvironmentVariablesCard({
 
   return (
     <>
-      <Accordion
-        type="single"
-        collapsible
-        defaultValue={defaultOpen ? 'env-vars' : undefined}
+      <div
         className={cn(
           'rounded-xl border border-border bg-card/50 overflow-hidden',
           className,
         )}
       >
-        <AccordionItem value="env-vars" className="border-none">
-          <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-transparent cursor-pointer">
-            <span className="text-[15px] font-semibold text-foreground">
-              Environment variables
-              {variables.length > 0 && (
-                <span className="ml-2 font-normal text-muted-foreground">
-                  ({variables.length})
-                </span>
-              )}
-            </span>
-          </AccordionTrigger>
-          <AccordionContent className="px-6 pb-4 pt-0 border-t border-border">
-            <div className="space-y-4 pt-4">
-              <div className="flex items-center gap-2">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".env,.txt"
-                  onChange={handleFileImport}
-                  className="hidden"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={disabled}
-                  className="h-8 text-[12px]"
-                >
-                  <Upload className="mr-1.5 h-3.5 w-3.5" />
-                  Import .env
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleOpenEditor}
-                  disabled={disabled}
-                  className="h-8 text-[12px]"
-                >
-                  <Code className="mr-1.5 h-3.5 w-3.5" />
-                  Editor
-                </Button>
-              </div>
-              {variables.length === 0 ? (
-                <EmptyState
-                  icon={Key}
-                  title="No environment variables yet"
-                  description="Add a variable below or import from a .env file."
-                  isEmpty={true}
-                  variant="card"
-                />
-              ) : (
-                <div className="rounded-lg border border-border overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="hover:bg-transparent border-b border-border">
-                        <TableHead className="px-4 py-2 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                          Key
-                        </TableHead>
-                        <TableHead className="px-4 py-2 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                          Value
-                        </TableHead>
-                        <TableHead className="px-4 py-2 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[80px]">
-                          Secret
-                        </TableHead>
-                        <TableHead className="px-4 py-2 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[50px] text-right" />
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {variables.map((variable, index) => (
-                        <TableRow
-                          key={`${variable.key}-${index}`}
-                          className="border-b border-border/50"
-                        >
-                          <TableCell className="px-4 py-2">
-                            <code className="text-[12px] font-mono">
-                              {variable.key}
-                            </code>
-                          </TableCell>
-                          <TableCell className="px-4 py-2">
-                            <div className="flex items-center gap-2">
-                              <code className="text-[12px] font-mono text-muted-foreground max-w-[200px] truncate">
-                                {variable.secret &&
-                                !showSecrets.has(variable.key)
-                                  ? '••••••••'
-                                  : variable.value || '(empty)'}
-                              </code>
-                              {variable.secret && (
+        <div className="px-6 py-4">
+          <h3 className="text-[15px] font-semibold text-foreground">{title}</h3>
+        </div>
+        <div className="border-t border-border" />
+        <div className="px-6 py-4">
+          <div className="flex items-center justify-between gap-2 mb-4">
+            <div className="flex items-center gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".env,.txt"
+                onChange={handleFileImport}
+                className="hidden"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 text-[13px]"
+                onClick={handleOpenEditor}
+                disabled={disabled}
+              >
+                <Code className="mr-1.5 h-4 w-4" />
+                Editor
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 text-[13px]"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={disabled}
+              >
+                <Upload className="mr-1.5 h-4 w-4" />
+                Import .env
+              </Button>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 text-[13px]"
+              onClick={() => setShowCreateModal(true)}
+              disabled={disabled}
+            >
+              <Plus className="mr-1.5 h-4 w-4" />
+              Create variable
+            </Button>
+          </div>
+          {variables.length === 0 ? (
+            <EmptyState
+              icon={Key}
+              title={emptyTitle}
+              description={emptyDescription}
+              isEmpty={true}
+              variant="card"
+            />
+          ) : (
+            <div className="rounded-lg border border-border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent border-b border-border">
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[200px] max-w-[400px]">
+                      Key
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[200px] max-w-[400px]">
+                      Value
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[50px]" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {variables.map((variable, index) => (
+                    <TableRow
+                      key={`${variable.key}-${index}`}
+                      className="border-b border-border/50"
+                    >
+                      <TableCell className="px-4 py-3">
+                        <code className="text-[12px] font-mono">
+                          {variable.key}
+                        </code>
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        {variable.secret ? (
+                          <div className="flex items-center gap-2">
+                            {showSecrets.has(variable.key) ? (
+                              <>
+                                <code className="text-[12px] font-mono text-muted-foreground">
+                                  {variable.value || '(empty)'}
+                                </code>
+                                <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() =>
+                                      handleToggleShowSecret(variable.key)
+                                  }
+                                  className="h-6 w-6 p-0"
+                                >
+                                  <EyeOff className="h-4 w-4" />
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Badge
+                                  variant="secondary"
+                                  className="text-[12px]"
+                                >
+                                  Secret
+                                </Badge>
                                 <Button
                                   type="button"
                                   variant="ghost"
@@ -336,117 +382,56 @@ export function EnvironmentVariablesCard({
                                   }
                                   className="h-6 w-6 p-0"
                                 >
-                                  {showSecrets.has(variable.key) ? (
-                                    <EyeOff className="h-3.5 w-3.5" />
-                                  ) : (
-                                    <Eye className="h-3.5 w-3.5" />
-                                  )}
+                                  <Eye className="h-4 w-4" />
                                 </Button>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="px-4 py-2">
-                            <Checkbox
-                              checked={variable.secret}
-                              onCheckedChange={() =>
-                                handleToggleSecret(variable.key)
-                              }
-                              disabled={disabled}
-                            />
-                          </TableCell>
-                          <TableCell className="px-4 py-2 text-right">
-                            <TooltipProvider delayDuration={0}>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
-                                    disabled={disabled}
-                                    onClick={() => handleRemoveVariable(index)}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent side="left">
-                                  <p>Delete variable</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </TableCell>
-                        </TableRow>
+                              </>
+                            )}
+                          </div>
+                        ) : (
+                          <code className="text-[12px] font-mono text-muted-foreground">
+                            {variable.value || '(empty)'}
+                          </code>
+                        )}
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        {!disabled && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 w-7 p-0"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleToggleSecret(variable.key)
+                                }
+                              >
+                                {variable.secret ? 'Unmark secret' : 'Secret'}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={() => handleRemoveVariable(index)}
+                              >
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
+                      </TableCell>
+                    </TableRow>
                       ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <label className="text-[12px] font-medium text-muted-foreground">
-                      Key
-                    </label>
-                    <Input
-                      ref={newKeyInputRef}
-                      value={newKey}
-                      onChange={(e) =>
-                        setNewKey(
-                          e.target.value
-                            .toUpperCase()
-                            .replace(/[^A-Z0-9_]/g, ''),
-                        )
-                      }
-                      placeholder="VARIABLE_NAME"
-                      disabled={disabled}
-                      className="h-9 font-mono text-[13px]"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[12px] font-medium text-muted-foreground">
-                      Value
-                    </label>
-                    <Input
-                      value={newValue}
-                      onChange={(e) => setNewValue(e.target.value)}
-                      placeholder="Enter value"
-                      disabled={disabled}
-                      className="h-9 text-[13px]"
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      id="new-secret"
-                      checked={newSecret}
-                      onCheckedChange={(c) => setNewSecret(c === true)}
-                      disabled={disabled}
-                    />
-                    <label
-                      htmlFor="new-secret"
-                      className="text-[12px] text-muted-foreground cursor-pointer"
-                    >
-                      Mark as secret
-                    </label>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleAddVariable}
-                    disabled={disabled || !newKey.trim()}
-                    className="h-8 text-[12px]"
-                  >
-                    <Plus className="mr-1.5 h-3.5 w-3.5" />
-                    Add variable
-                  </Button>
-                </div>
-              </div>
+                </TableBody>
+              </Table>
             </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+          )}
+        </div>
+      </div>
       <VariableEditor
         open={editorOpen}
         onOpenChange={setEditorOpen}
@@ -459,6 +444,144 @@ export function EnvironmentVariablesCard({
         onCopy={handleEditorCopy}
         onDownload={handleEditorDownload}
       />
+
+      <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
+        <DialogContent className="sm:max-w-2xl p-0">
+          <DialogHeader className="px-6 pt-6 text-left">
+            <DialogTitle>Create variable</DialogTitle>
+            <DialogDescription className="text-[13px] mt-2">
+              Add one or more environment variables. You can add multiple
+              variables at once.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="border-t border-border" />
+          <div className="px-6 pb-4 pt-0 max-h-[60vh] overflow-y-auto">
+            <div className="space-y-4">
+              {createPairs.map((pair, index) => (
+                <div
+                  key={index}
+                  className="space-y-3 p-4 border border-border rounded-lg"
+                >
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[13px] font-medium">
+                      Variable {index + 1}
+                    </Label>
+                    {createPairs.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0"
+                        onClick={() =>
+                          setCreatePairs(
+                            createPairs.filter((_, i) => i !== index),
+                          )
+                        }
+                        disabled={
+                          createPairs.length === 1 && !pair.key && !pair.value
+                        }
+                      >
+                        <XCircle className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor={`create-key-${index}`} className="text-[12px]">
+                      Key <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id={`create-key-${index}`}
+                      value={pair.key}
+                      onChange={(e) => {
+                        const newPairs = [...createPairs]
+                        newPairs[index].key = e.target.value
+                        setCreatePairs(newPairs)
+                      }}
+                      placeholder="ENTER_KEY"
+                      autoFocus={index === 0}
+                      autoComplete="off"
+                      className="font-mono text-[13px]"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor={`create-value-${index}`}
+                      className="text-[12px]"
+                    >
+                      Value <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id={`create-value-${index}`}
+                      type="password"
+                      value={pair.value}
+                      onChange={(e) => {
+                        const newPairs = [...createPairs]
+                        newPairs[index].value = e.target.value
+                        setCreatePairs(newPairs)
+                      }}
+                      placeholder="Enter value"
+                      className="font-mono text-[13px]"
+                    />
+                  </div>
+                </div>
+              ))}
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full h-9 text-[13px]"
+                onClick={() =>
+                  setCreatePairs([...createPairs, { key: '', value: '' }])
+                }
+                disabled={!createPairs[createPairs.length - 1]?.key}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add variable
+              </Button>
+
+              <div className="flex items-center space-x-2 pt-2">
+                <Checkbox
+                  id="create-secret"
+                  checked={createSecret}
+                  onCheckedChange={(c) => setCreateSecret(c === true)}
+                />
+                <Label
+                  htmlFor="create-secret"
+                  className="text-[13px] cursor-pointer"
+                >
+                  Secret
+                </Label>
+              </div>
+              <p className="text-[12px] text-muted-foreground -mt-2">
+                If selected, you and your team won't be able to read the values
+                after creation.
+              </p>
+            </div>
+          </div>
+          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 text-[13px]"
+              onClick={() => setShowCreateModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              className="h-9 text-[13px]"
+              onClick={handleCreateFromModal}
+              disabled={
+                createPairs.some((p) => !p.key.trim()) ||
+                createPairs.some((p) => p.value.length > 8192)
+              }
+            >
+              Create
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

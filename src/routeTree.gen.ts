@@ -107,6 +107,7 @@ import { Route as PublicProjectsProjectIdSitesSiteIdDeploymentsRouteImport } fro
 import { Route as PublicProjectsProjectIdMessagingTopicsTopicIdRouteImport } from './routes/_public/projects.$projectId.messaging.topics.$topicId'
 import { Route as PublicProjectsProjectIdMessagingProvidersProviderIdRouteImport } from './routes/_public/projects.$projectId.messaging.providers.$providerId'
 import { Route as PublicProjectsProjectIdFunctionsCreateManualRouteImport } from './routes/_public/projects.$projectId.functions.create.manual'
+import { Route as PublicProjectsProjectIdFunctionsCreateDeployingRouteImport } from './routes/_public/projects.$projectId.functions.create.deploying'
 import { Route as PublicProjectsProjectIdFunctionsCreateDeployRouteImport } from './routes/_public/projects.$projectId.functions.create.deploy'
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdVariablesRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.variables'
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdSettingsRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.settings'
@@ -731,6 +732,12 @@ const PublicProjectsProjectIdFunctionsCreateManualRoute =
     path: '/manual',
     getParentRoute: () => PublicProjectsProjectIdFunctionsCreateRoute,
   } as any)
+const PublicProjectsProjectIdFunctionsCreateDeployingRoute =
+  PublicProjectsProjectIdFunctionsCreateDeployingRouteImport.update({
+    id: '/deploying',
+    path: '/deploying',
+    getParentRoute: () => PublicProjectsProjectIdFunctionsCreateRoute,
+  } as any)
 const PublicProjectsProjectIdFunctionsCreateDeployRoute =
   PublicProjectsProjectIdFunctionsCreateDeployRouteImport.update({
     id: '/deploy',
@@ -1201,6 +1208,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/functions/$functionId/settings': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute
   '/projects/$projectId/functions/$functionId/variables': typeof PublicProjectsProjectIdFunctionsFunctionIdVariablesRoute
   '/projects/$projectId/functions/create/deploy': typeof PublicProjectsProjectIdFunctionsCreateDeployRoute
+  '/projects/$projectId/functions/create/deploying': typeof PublicProjectsProjectIdFunctionsCreateDeployingRoute
   '/projects/$projectId/functions/create/manual': typeof PublicProjectsProjectIdFunctionsCreateManualRoute
   '/projects/$projectId/messaging/providers/$providerId': typeof PublicProjectsProjectIdMessagingProvidersProviderIdRouteWithChildren
   '/projects/$projectId/messaging/topics/$topicId': typeof PublicProjectsProjectIdMessagingTopicsTopicIdRouteWithChildren
@@ -1335,6 +1343,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/functions/$functionId/settings': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute
   '/projects/$projectId/functions/$functionId/variables': typeof PublicProjectsProjectIdFunctionsFunctionIdVariablesRoute
   '/projects/$projectId/functions/create/deploy': typeof PublicProjectsProjectIdFunctionsCreateDeployRoute
+  '/projects/$projectId/functions/create/deploying': typeof PublicProjectsProjectIdFunctionsCreateDeployingRoute
   '/projects/$projectId/functions/create/manual': typeof PublicProjectsProjectIdFunctionsCreateManualRoute
   '/projects/$projectId/sites/$siteId/domains': typeof PublicProjectsProjectIdSitesSiteIdDomainsRouteWithChildren
   '/projects/$projectId/sites/$siteId/logs': typeof PublicProjectsProjectIdSitesSiteIdLogsRoute
@@ -1486,6 +1495,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/functions/$functionId/settings': typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute
   '/_public/projects/$projectId/functions/$functionId/variables': typeof PublicProjectsProjectIdFunctionsFunctionIdVariablesRoute
   '/_public/projects/$projectId/functions/create/deploy': typeof PublicProjectsProjectIdFunctionsCreateDeployRoute
+  '/_public/projects/$projectId/functions/create/deploying': typeof PublicProjectsProjectIdFunctionsCreateDeployingRoute
   '/_public/projects/$projectId/functions/create/manual': typeof PublicProjectsProjectIdFunctionsCreateManualRoute
   '/_public/projects/$projectId/messaging/providers/$providerId': typeof PublicProjectsProjectIdMessagingProvidersProviderIdRouteWithChildren
   '/_public/projects/$projectId/messaging/topics/$topicId': typeof PublicProjectsProjectIdMessagingTopicsTopicIdRouteWithChildren
@@ -1640,6 +1650,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/functions/$functionId/settings'
     | '/projects/$projectId/functions/$functionId/variables'
     | '/projects/$projectId/functions/create/deploy'
+    | '/projects/$projectId/functions/create/deploying'
     | '/projects/$projectId/functions/create/manual'
     | '/projects/$projectId/messaging/providers/$providerId'
     | '/projects/$projectId/messaging/topics/$topicId'
@@ -1774,6 +1785,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/functions/$functionId/settings'
     | '/projects/$projectId/functions/$functionId/variables'
     | '/projects/$projectId/functions/create/deploy'
+    | '/projects/$projectId/functions/create/deploying'
     | '/projects/$projectId/functions/create/manual'
     | '/projects/$projectId/sites/$siteId/domains'
     | '/projects/$projectId/sites/$siteId/logs'
@@ -1924,6 +1936,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/functions/$functionId/settings'
     | '/_public/projects/$projectId/functions/$functionId/variables'
     | '/_public/projects/$projectId/functions/create/deploy'
+    | '/_public/projects/$projectId/functions/create/deploying'
     | '/_public/projects/$projectId/functions/create/manual'
     | '/_public/projects/$projectId/messaging/providers/$providerId'
     | '/_public/projects/$projectId/messaging/topics/$topicId'
@@ -2680,6 +2693,13 @@ declare module '@tanstack/react-router' {
       path: '/manual'
       fullPath: '/projects/$projectId/functions/create/manual'
       preLoaderRoute: typeof PublicProjectsProjectIdFunctionsCreateManualRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsCreateRoute
+    }
+    '/_public/projects/$projectId/functions/create/deploying': {
+      id: '/_public/projects/$projectId/functions/create/deploying'
+      path: '/deploying'
+      fullPath: '/projects/$projectId/functions/create/deploying'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsCreateDeployingRouteImport
       parentRoute: typeof PublicProjectsProjectIdFunctionsCreateRoute
     }
     '/_public/projects/$projectId/functions/create/deploy': {
@@ -3445,6 +3465,7 @@ const PublicProjectsProjectIdFunctionsFunctionIdRouteWithChildren =
 
 interface PublicProjectsProjectIdFunctionsCreateRouteChildren {
   PublicProjectsProjectIdFunctionsCreateDeployRoute: typeof PublicProjectsProjectIdFunctionsCreateDeployRoute
+  PublicProjectsProjectIdFunctionsCreateDeployingRoute: typeof PublicProjectsProjectIdFunctionsCreateDeployingRoute
   PublicProjectsProjectIdFunctionsCreateManualRoute: typeof PublicProjectsProjectIdFunctionsCreateManualRoute
   PublicProjectsProjectIdFunctionsCreateIndexRoute: typeof PublicProjectsProjectIdFunctionsCreateIndexRoute
   PublicProjectsProjectIdFunctionsCreateRepositoryRepositoryRoute: typeof PublicProjectsProjectIdFunctionsCreateRepositoryRepositoryRoute
@@ -3455,6 +3476,8 @@ const PublicProjectsProjectIdFunctionsCreateRouteChildren: PublicProjectsProject
   {
     PublicProjectsProjectIdFunctionsCreateDeployRoute:
       PublicProjectsProjectIdFunctionsCreateDeployRoute,
+    PublicProjectsProjectIdFunctionsCreateDeployingRoute:
+      PublicProjectsProjectIdFunctionsCreateDeployingRoute,
     PublicProjectsProjectIdFunctionsCreateManualRoute:
       PublicProjectsProjectIdFunctionsCreateManualRoute,
     PublicProjectsProjectIdFunctionsCreateIndexRoute:

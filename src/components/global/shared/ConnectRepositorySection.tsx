@@ -200,7 +200,7 @@ export function ConnectRepositorySection({
       repositoryOwner: undefined,
     })
     setRepositoryName(suggestedRepoName)
-    setRepositoryBehaviour('new')
+    setRepositoryBehaviour('existing')
   }
 
   // No installations: show Connect to GitHub only

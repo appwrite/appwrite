@@ -24,7 +24,7 @@ import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { BranchSelector } from '@/components/global/shared/BranchSelector'
 import { RootDirectoryPicker } from '@/components/global/shared/RootDirectoryPicker'
-import { DomainInput } from '@/components/global/shared/DomainInput'
+import { FunctionDomainCard } from './_components/FunctionDomainCard'
 import { EnvironmentVariablesCard } from '@/components/global/shared/EnvironmentVariablesCard'
 import {
   Accordion,
@@ -86,8 +86,7 @@ export function RepositoryConfigView({
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { formData, updateFormData, generateDomain, baseDomain } =
-    useFunctionWizard()
+  const { formData, updateFormData, generateDomain } = useFunctionWizard()
 
   const [repoOwner, repoName] = useMemo(() => {
     const decoded = decodeURIComponent(repositoryParam)
@@ -247,21 +246,26 @@ export function RepositoryConfigView({
         })
       }
 
-      await projectSdk.functions.createVcsDeployment({
+      const deployment = await projectSdk.functions.createVcsDeployment({
         functionId: finalFunctionId,
         type: VCSReferenceType.Branch,
         reference: branch,
         activate: true,
       })
 
+      updateFormData({
+        createdFunctionId: finalFunctionId,
+        createdDeploymentId: deployment.$id,
+      })
+
       await queryClient.refetchQueries({
         queryKey: ['functions', 'project', projectId],
       })
 
-      toast.success('Function created')
       navigate({
-        to: '/projects/$projectId/functions/$functionId',
-        params: { projectId, functionId: finalFunctionId },
+        to: '/projects/$projectId/functions/create/deploying',
+        params: { projectId },
+        search: { functionId: finalFunctionId, deploymentId: deployment.$id },
       })
     } catch (err: unknown) {
       toast.error(err?.message || 'Failed to create function')
@@ -566,38 +570,12 @@ export function RepositoryConfigView({
         </div>
       </div>
 
-      {/* Domain card – same structure and validation as sites */}
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden mb-6">
-        <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Domain</h3>
-          <p className="text-[12px] text-muted-foreground mt-1">
-            Your function will be reachable at this URL
-          </p>
-        </div>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4">
-          <DomainInput
-            value={domain}
-            onChange={setDomain}
-            onValidChange={setDomainValid}
-            baseDomain={baseDomain}
-          />
-        </div>
-        <div className="px-6 py-4 border-t border-border bg-muted/20">
-          <p className="text-[11px] text-muted-foreground leading-relaxed">
-            After deployment you can connect a custom domain via your function
-            settings.{' '}
-            <a
-              href="https://appwrite.io/docs/functions"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-foreground hover:underline font-medium"
-            >
-              Learn more →
-            </a>
-          </p>
-        </div>
-      </div>
+      <FunctionDomainCard
+        domain={domain}
+        setDomain={setDomain}
+        domainValid={domainValid}
+        setDomainValid={setDomainValid}
+      />
 
       {/* Production branch – when Git is used */}
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden mb-6">

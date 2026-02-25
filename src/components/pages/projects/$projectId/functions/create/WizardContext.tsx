@@ -21,10 +21,15 @@ export interface FunctionWizardFormData {
   repositoryOwner: string | undefined
   repositoryName: string | undefined
   repositoryUrl: string | undefined
+  providerBranch: string
+  providerRootDirectory: string
   functionName: string
   runtime: string | undefined
   template: Models.TemplateFunction | undefined
   templateId: string | undefined
+  /** Created resources for deploying/build-watching stage */
+  createdFunctionId: string | undefined
+  createdDeploymentId: string | undefined
 }
 
 const defaultFormData: FunctionWizardFormData = {
@@ -33,11 +38,17 @@ const defaultFormData: FunctionWizardFormData = {
   repositoryOwner: undefined,
   repositoryName: undefined,
   repositoryUrl: undefined,
+  providerBranch: 'main',
+  providerRootDirectory: './',
   functionName: '',
   runtime: undefined,
   template: undefined,
   templateId: undefined,
+  createdFunctionId: undefined,
+  createdDeploymentId: undefined,
 }
+
+export type FunctionEndpointType = 'edge' | 'region'
 
 interface FunctionWizardContextValue {
   formData: FunctionWizardFormData
@@ -48,6 +59,12 @@ interface FunctionWizardContextValue {
   baseDomain: string
   setBaseDomain: (domain: string) => void
   generateDomain: (name: string) => string
+  /** Endpoint type: edge (.appwrite.network) or region (.<region>.appwrite.run) */
+  endpointType: FunctionEndpointType
+  setEndpointType: (type: FunctionEndpointType) => void
+  /** Project region for region endpoint (e.g. 'fra', 'nyc') */
+  region: string | undefined
+  setRegion: (region: string | undefined) => void
 }
 
 const FunctionWizardContext = createContext<FunctionWizardContextValue | null>(
@@ -69,6 +86,9 @@ export function FunctionWizardProvider({ children }: { children: ReactNode }) {
     useState<FunctionWizardFormData>(defaultFormData)
   const [installations, setInstallations] = useState<Models.Installation[]>([])
   const [baseDomain, setBaseDomain] = useState<string>('appwrite.network')
+  const [endpointType, setEndpointType] =
+    useState<FunctionEndpointType>('region')
+  const [region, setRegion] = useState<string | undefined>(undefined)
 
   const updateFormData = useCallback(
     (updates: Partial<FunctionWizardFormData>) => {
@@ -81,6 +101,11 @@ export function FunctionWizardProvider({ children }: { children: ReactNode }) {
     setFormData(defaultFormData)
   }, [])
 
+  const effectiveBaseDomain =
+    endpointType === 'region' && region
+      ? `${region}.appwrite.run`
+      : 'appwrite.network'
+
   const generateDomain = useCallback(
     (name: string) => {
       const subdomain = name
@@ -89,9 +114,9 @@ export function FunctionWizardProvider({ children }: { children: ReactNode }) {
         .replace(/-+/g, '-')
         .replace(/^-|-$/g, '')
         .substring(0, 63)
-      return subdomain ? `${subdomain}.${baseDomain}` : ''
+      return subdomain ? `${subdomain}.${effectiveBaseDomain}` : ''
     },
-    [baseDomain],
+    [effectiveBaseDomain],
   )
 
   const value = useMemo<FunctionWizardContextValue>(
@@ -101,17 +126,23 @@ export function FunctionWizardProvider({ children }: { children: ReactNode }) {
       resetFormData,
       installations,
       setInstallations,
-      baseDomain,
+      baseDomain: effectiveBaseDomain,
       setBaseDomain,
       generateDomain,
+      endpointType,
+      setEndpointType,
+      region,
+      setRegion,
     }),
     [
       formData,
       updateFormData,
       resetFormData,
       installations,
-      baseDomain,
+      effectiveBaseDomain,
       generateDomain,
+      endpointType,
+      region,
     ],
   )
 

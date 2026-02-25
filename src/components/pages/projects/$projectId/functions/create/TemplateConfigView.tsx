@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
   Select,
   SelectContent,
@@ -22,6 +23,7 @@ import { IdInput } from '@/components/ui/id-input'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { Loader2, Key, Tag, GitBranch } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { ID, TemplateReferenceType, type Runtime } from '@appwrite.io/console'
@@ -29,15 +31,23 @@ import { sdk } from '@/lib/appwrite/sdk'
 import {
   useFunctionTemplate,
   useFunctionSpecifications,
+  useProject,
 } from '@/lib/react-query/hooks'
+import { getApiEndpoint } from '@/lib/appwrite/sdk'
+import { resolveTemplatePlaceholder } from '@/lib/template-placeholders'
 import {
   getFirstEnabledSpecification,
   isSpecificationAllowedInPlan,
   hasUnavailableSpecifications,
 } from '@/lib/specifications'
 import { useFunctionWizard } from './WizardContext'
-import { DomainInput } from '@/components/global/shared/DomainInput'
+import { FunctionDomainCard } from './_components/FunctionDomainCard'
 import { EnvironmentVariablesCard } from '@/components/global/shared/EnvironmentVariablesCard'
+import {
+  ConnectRepositorySection,
+  type ConnectRepositoryValue,
+} from '@/components/global/shared/ConnectRepositorySection'
+import { VCSDetectionType } from '@appwrite.io/console'
 import type { FunctionWizardVariable } from './RepositoryConfigView'
 
 interface TemplateConfigViewProps {
@@ -52,7 +62,9 @@ export function TemplateConfigView({
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { generateDomain, baseDomain } = useFunctionWizard()
+  const { formData, updateFormData, installations, generateDomain } =
+    useFunctionWizard()
+  const { project } = useProject(projectId)
 
   const { data: template, isLoading: templateLoading } = useFunctionTemplate(
     projectId,
@@ -73,6 +85,47 @@ export function TemplateConfigView({
   const [isPublic, setIsPublic] = useState(true)
   const [specification, setSpecification] = useState('')
   const [isDeploying, setIsDeploying] = useState(false)
+  const [gitConnection, setGitConnection] = useState<'now' | 'later'>('later')
+
+  const connectRepoValue: ConnectRepositoryValue = useMemo(
+    () => ({
+      installationId: formData.installationId,
+      providerRepositoryId: formData.providerRepositoryId,
+      repositoryName: formData.repositoryName,
+      repositoryOwner: formData.repositoryOwner,
+    }),
+    [
+      formData.installationId,
+      formData.providerRepositoryId,
+      formData.repositoryName,
+      formData.repositoryOwner,
+    ],
+  )
+  const [connectBranch, setConnectBranch] = useState(
+    formData.providerBranch || 'main',
+  )
+  const [connectRootDir, setConnectRootDir] = useState(
+    formData.providerRootDirectory || './',
+  )
+
+  const getGitHubAuthUrl = useMemo(() => {
+    if (typeof window === 'undefined' || !projectId) return '#'
+    const origin = window.location.origin
+    const redirectUrl = `${origin}/projects/${projectId}/functions/create`
+    const successUrl = encodeURIComponent(redirectUrl)
+    const failureUrl = encodeURIComponent(redirectUrl)
+    const projectEndpoint = getApiEndpoint(project?.region)
+    return `${projectEndpoint}/vcs/github/authorize?project=${projectId}&success=${successUrl}&failure=${failureUrl}&mode=admin`
+  }, [projectId, project?.region])
+
+  const handleConnectRepoValueChange = (next: ConnectRepositoryValue) => {
+    updateFormData({
+      installationId: next.installationId,
+      providerRepositoryId: next.providerRepositoryId,
+      repositoryName: next.repositoryName,
+      repositoryOwner: next.repositoryOwner,
+    })
+  }
 
   useEffect(() => {
     if (specifications.length > 0 && !specification) {
@@ -84,6 +137,21 @@ export function TemplateConfigView({
   useEffect(() => {
     if (template) {
       if (!functionName) setFunctionName(template.name)
+      // Pre-fill template variables and auto-replace placeholders
+      if (template.variables?.length && variables.length === 0) {
+        const apiEndpoint = getApiEndpoint(project?.region)
+        const context = {
+          apiEndpoint,
+          projectId: projectId ?? '',
+          projectName: project?.name ?? '',
+        }
+        const templateVars = template.variables.map((v) => ({
+          key: v.name,
+          value: resolveTemplatePlaceholder(v.value || '', context),
+          secret: v.secret || false,
+        }))
+        setVariables(templateVars)
+      }
       const firstRuntime = template.runtimes?.[0]
       const defaultRuntimeName =
         firstRuntime?.name ?? (template.runtimes?.[0] as { key?: string })?.key
@@ -155,6 +223,12 @@ export function TemplateConfigView({
       toast.error('Please enter a domain')
       return
     }
+    if (gitConnection === 'now') {
+      if (!formData.installationId || !formData.providerRepositoryId) {
+        toast.error('Please select a repository')
+        return
+      }
+    }
 
     setIsDeploying(true)
     const projectSdk = sdk.forProject(projectId)
@@ -173,6 +247,11 @@ export function TemplateConfigView({
         }
       | undefined
 
+    const connectNow =
+      gitConnection === 'now' &&
+      formData.installationId &&
+      formData.providerRepositoryId
+
     try {
       await projectSdk.functions.create({
         functionId: finalFunctionId,
@@ -190,9 +269,19 @@ export function TemplateConfigView({
         entrypoint: selectedRuntimeObj?.entrypoint,
         commands: selectedRuntimeObj?.commands,
         scopes: template.scopes?.length ? template.scopes : undefined,
-        providerBranch: 'main',
-        providerSilentMode: false,
-        providerRootDirectory: './',
+        ...(connectNow
+          ? {
+              installationId: formData.installationId,
+              providerRepositoryId: formData.providerRepositoryId,
+              providerBranch: connectBranch,
+              providerRootDirectory: connectRootDir || './',
+              providerSilentMode: false,
+            }
+          : {
+              providerBranch: 'main',
+              providerSilentMode: false,
+              providerRootDirectory: './',
+            }),
         specification: specification || undefined,
       })
 
@@ -224,7 +313,7 @@ export function TemplateConfigView({
         runtimeRoot || (runtime ? `${runtime.split('-')[0]}/starter` : './')
       const reference = template.providerVersion?.trim() || 'main'
 
-      await projectSdk.functions.createTemplateDeployment({
+      const deployment = await projectSdk.functions.createTemplateDeployment({
         functionId: finalFunctionId,
         repository: template.providerRepositoryId,
         owner: template.providerOwner,
@@ -234,14 +323,19 @@ export function TemplateConfigView({
         activate: true,
       })
 
+      updateFormData({
+        createdFunctionId: finalFunctionId,
+        createdDeploymentId: deployment.$id,
+      })
+
       await queryClient.refetchQueries({
         queryKey: ['functions', 'project', projectId],
       })
 
-      toast.success('Function created')
       navigate({
-        to: '/projects/$projectId/functions/$functionId',
-        params: { projectId, functionId: finalFunctionId },
+        to: '/projects/$projectId/functions/create/deploying',
+        params: { projectId },
+        search: { functionId: finalFunctionId, deploymentId: deployment.$id },
       })
     } catch (err: unknown) {
       toast.error(
@@ -402,7 +496,9 @@ export function TemplateConfigView({
               !functionName ||
               !runtime ||
               !domain.trim() ||
-              !domainValid
+              !domainValid ||
+              (gitConnection === 'now' &&
+                (!formData.providerRepositoryId || !formData.installationId))
             }
           >
             {isDeploying ? (
@@ -513,41 +609,203 @@ export function TemplateConfigView({
         </div>
       </div>
 
-      {/* Domain card – same structure and validation as sites */}
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden mb-6">
-        <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Domain</h3>
-          <p className="text-[12px] text-muted-foreground mt-1">
-            Your function will be reachable at this URL
-          </p>
-        </div>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4">
-          <DomainInput
-            value={domain}
-            onChange={setDomain}
-            onValidChange={setDomainValid}
-            baseDomain={baseDomain}
-          />
-        </div>
-        <div className="px-6 py-4 border-t border-border bg-muted/20">
-          <p className="text-[11px] text-muted-foreground leading-relaxed">
-            After deployment you can connect a custom domain via your function
-            settings.{' '}
-            <a
-              href="https://appwrite.io/docs/functions"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-foreground hover:underline font-medium"
-            >
-              Learn more →
-            </a>
-          </p>
-        </div>
-      </div>
+      <FunctionDomainCard
+        domain={domain}
+        setDomain={setDomain}
+        domainValid={domainValid}
+        setDomainValid={setDomainValid}
+      />
 
-      {/* Environment variables – shared card */}
-      <EnvironmentVariablesCard variables={variables} onChange={setVariables} />
+      {/* Git connection section – same as site template wizard */}
+      <RadioGroup
+        value={gitConnection}
+        onValueChange={(value) => setGitConnection(value as 'now' | 'later')}
+        className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6"
+      >
+        <Label
+          htmlFor="git-now"
+          className={cn(
+            'relative flex items-start cursor-pointer rounded-xl border p-5 transition-all',
+            gitConnection === 'now'
+              ? 'border-foreground bg-card/80'
+              : 'border-border bg-card/50 hover:border-border/80 hover:bg-card/60',
+          )}
+        >
+          <RadioGroupItem value="now" id="git-now" className="mt-1 shrink-0" />
+          <div className="ml-3 flex-1">
+            <span className="text-[14px] font-medium text-foreground">
+              Connect your repository
+            </span>
+            <p className="mt-1.5 text-[12px] text-muted-foreground leading-relaxed">
+              Clone this template into a new Git repository or link it to an
+              existing one.
+            </p>
+          </div>
+        </Label>
+        <Label
+          htmlFor="git-later"
+          className={cn(
+            'relative flex items-start cursor-pointer rounded-xl border p-5 transition-all',
+            gitConnection === 'later'
+              ? 'border-foreground bg-card/80'
+              : 'border-border bg-card/50 hover:border-border/80 hover:bg-card/60',
+          )}
+        >
+          <RadioGroupItem
+            value="later"
+            id="git-later"
+            className="mt-1 shrink-0"
+          />
+          <div className="ml-3 flex-1">
+            <span className="text-[14px] font-medium text-foreground">
+              Connect later
+            </span>
+            <p className="mt-1.5 text-[12px] text-muted-foreground leading-relaxed">
+              Deploy now and connect your version control later via CLI or Git
+              integration in your function settings.
+            </p>
+          </div>
+        </Label>
+      </RadioGroup>
+
+      {gitConnection === 'now' && (
+        <ConnectRepositorySection
+          projectId={projectId}
+          installations={installations}
+          getGitHubAuthUrl={getGitHubAuthUrl}
+          defaultRepositoryName={functionName || template?.name || ''}
+          detectionType={VCSDetectionType.Runtime}
+          value={connectRepoValue}
+          onValueChange={handleConnectRepoValueChange}
+          showBranchAndRoot={
+            !!(formData.providerRepositoryId && formData.installationId)
+          }
+          branch={connectBranch}
+          onBranchChange={(b) => {
+            setConnectBranch(b)
+            updateFormData({ providerBranch: b })
+          }}
+          rootDirectory={connectRootDir}
+          onRootDirectoryChange={(r) => {
+            setConnectRootDir(r)
+            updateFormData({ providerRootDirectory: r })
+          }}
+          branchLabelTooltip="Production branch for the repo linked to the function. Successful deployments from this branch get activated automatically."
+          rootDirectoryLabelTooltip="Path to function code in the linked repo. Use the repository root (./) or a subdirectory that contains your function code."
+          rootDirectoryDescription="Choose the directory containing your function code"
+          emptyStateTitle="Connect Git repository"
+          emptyStateDescription="Create and deploy a Function with a connected git repository."
+          className="mb-6"
+        />
+      )}
+
+      {/* Environment variables – template vars or shared card */}
+      {template.variables && template.variables.length > 0 ? (
+        (() => {
+          const requiredKeys = new Set(
+            template.variables.filter((v) => v.required).map((v) => v.name),
+          )
+          const optionalKeys = new Set(
+            template.variables.filter((v) => !v.required).map((v) => v.name),
+          )
+          const requiredVars = variables.filter((v) => requiredKeys.has(v.key))
+          const optionalVars = variables.filter((v) => optionalKeys.has(v.key))
+
+          const renderVariable = (
+            variable: { key: string; value: string; secret: boolean },
+            indexInFull: number,
+          ) => {
+            const templateVar = template.variables?.find(
+              (v) => v.name === variable.key,
+            )
+            return (
+              <div key={variable.key} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-[13px] font-mono">
+                    {variable.key}
+                    {templateVar?.required && (
+                      <span className="text-destructive ml-1">*</span>
+                    )}
+                  </Label>
+                  {templateVar?.secret && (
+                    <span className="text-[10px] text-muted-foreground">
+                      Secret
+                    </span>
+                  )}
+                </div>
+                {templateVar?.description && (
+                  <p
+                    className="text-[11px] text-muted-foreground"
+                    dangerouslySetInnerHTML={{
+                      __html: templateVar.description,
+                    }}
+                  />
+                )}
+                <Input
+                  value={variable.value}
+                  onChange={(e) => {
+                    const newVars = [...variables]
+                    newVars[indexInFull] = {
+                      ...variable,
+                      value: e.target.value,
+                    }
+                    setVariables(newVars)
+                  }}
+                  placeholder={
+                    templateVar?.placeholder || `Enter ${variable.key}`
+                  }
+                  type={templateVar?.secret ? 'password' : 'text'}
+                  className="h-9 text-[13px] font-mono"
+                />
+              </div>
+            )
+          }
+
+          return (
+            <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+              <div className="px-6 py-4">
+                <h3 className="text-[15px] font-semibold text-foreground">
+                  Template variables
+                </h3>
+                <p className="text-[12px] text-muted-foreground mt-1">
+                  Configure the environment variables for this template
+                </p>
+              </div>
+              <div className="border-t border-border" />
+              <div className="px-6 py-4">
+                <div className="space-y-3">
+                  {requiredVars.map((variable) => {
+                    const indexInFull = variables.findIndex(
+                      (v) => v.key === variable.key,
+                    )
+                    return renderVariable(variable, indexInFull)
+                  })}
+                </div>
+                {optionalVars.length > 0 && (
+                  <div className="mt-4 border-t border-border pt-4">
+                    <h4 className="text-[13px] font-medium text-muted-foreground mb-3">
+                      Optional variables ({optionalVars.length})
+                    </h4>
+                    <div className="space-y-3">
+                      {optionalVars.map((variable) => {
+                        const indexInFull = variables.findIndex(
+                          (v) => v.key === variable.key,
+                        )
+                        return renderVariable(variable, indexInFull)
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )
+        })()
+      ) : (
+        <EnvironmentVariablesCard
+          variables={variables}
+          onChange={setVariables}
+        />
+      )}
     </WizardLayout>
   )
 }

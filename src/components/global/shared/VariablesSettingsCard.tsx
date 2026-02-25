@@ -582,6 +582,7 @@ export function VariablesSettingsCard({
               <div className="flex items-center justify-between gap-2 mb-4">
                 <div className="flex items-center gap-2">
                   <Button
+                    variant="outline"
                     size="sm"
                     className="h-9 text-[13px]"
                     onClick={() => setShowEditorModal(true)}
@@ -591,6 +592,7 @@ export function VariablesSettingsCard({
                     Editor
                   </Button>
                   <Button
+                    variant="outline"
                     size="sm"
                     className="h-9 text-[13px]"
                     onClick={() => setShowImportModal(true)}
@@ -601,6 +603,7 @@ export function VariablesSettingsCard({
                   </Button>
                 </div>
                 <Button
+                  variant="outline"
                   size="sm"
                   className="h-9 text-[13px]"
                   onClick={() => setShowCreateModal(true)}

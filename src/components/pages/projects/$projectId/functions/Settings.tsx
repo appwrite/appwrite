@@ -3,7 +3,6 @@ import { useParams, useNavigate } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import {
   Select,
@@ -399,12 +398,11 @@ export function View() {
             </div>
             <div className="border-t border-border" />
             <div className="px-6 py-4">
-              <Textarea
+              <Input
                 value={commands}
                 onChange={(e) => setCommands(e.target.value)}
                 placeholder="npm install"
-                className="font-mono border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                rows={3}
+                className="h-9 font-mono text-[13px]"
               />
             </div>
             <div className="px-6 py-4 border-t border-border bg-muted/30">

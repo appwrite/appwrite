@@ -13,6 +13,7 @@ import {
   vcsInstallationsQueryOptions,
   projectRuntimesQueryOptions,
   functionSpecificationsQueryOptions,
+  projectQueryOptions,
 } from '@/lib/react-query/hooks'
 import { useQuery } from '@tanstack/react-query'
 import {
@@ -113,10 +114,13 @@ function CreateFunctionLayout() {
 
 function CreateFunctionLayoutInner() {
   const { projectId } = useParams({ strict: false })
-  const { setInstallations, setBaseDomain } = useFunctionWizard()
+  const { setInstallations, setBaseDomain, setRegion } = useFunctionWizard()
 
   const { data: installationsData } = useQuery(
     vcsInstallationsQueryOptions(projectId, 0, 100),
+  )
+  const { data: project } = useQuery(
+    projectQueryOptions(projectId as string),
   )
 
   useEffect(() => {
@@ -128,6 +132,12 @@ function CreateFunctionLayoutInner() {
   useEffect(() => {
     setBaseDomain('appwrite.network')
   }, [setBaseDomain])
+
+  useEffect(() => {
+    if (project?.region) {
+      setRegion(project.region)
+    }
+  }, [project?.region, setRegion])
 
   return <Outlet />
 }
