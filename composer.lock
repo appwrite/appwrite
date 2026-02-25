@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "60214d57c2742e563435a45a6cdc3aa7",
+    "content-hash": "d64218e6ec4407e1092b30c71cf1c295",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -9045,8 +9045,8 @@
         {
             "package": "utopia-php/vcs",
             "version": "dev-ser-642",
-            "alias": "0.13.99",
-            "alias_normalized": "0.13.99.0"
+            "alias": "1.0.99",
+            "alias_normalized": "1.0.99.0"
         }
     ],
     "minimum-stability": "dev",
