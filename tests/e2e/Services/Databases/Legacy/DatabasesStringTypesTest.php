@@ -565,7 +565,6 @@ class DatabasesStringTypesTest extends Scope
         $data = $this->setupDatabaseAndCollection();
         $databaseId = $data['databaseId'];
         $collectionId = $data['collectionId'];
-
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -581,6 +580,24 @@ class DatabasesStringTypesTest extends Scope
         $this->assertContains('text', $types);
         $this->assertContains('mediumtext', $types);
         $this->assertContains('longtext', $types);
+
+        // Ensure encrypt flag is present and boolean for all string-like types
+        $attributesByKey = [];
+        foreach ($attributes as $attribute) {
+            $attributesByKey[$attribute['key']] = $attribute;
+        }
+
+        $this->assertArrayHasKey('varchar_field', $attributesByKey);
+        $this->assertFalse($attributesByKey['varchar_field']['encrypt']);
+
+        $this->assertArrayHasKey('text_field', $attributesByKey);
+        $this->assertFalse($attributesByKey['text_field']['encrypt']);
+
+        $this->assertArrayHasKey('mediumtext_field', $attributesByKey);
+        $this->assertFalse($attributesByKey['mediumtext_field']['encrypt']);
+
+        $this->assertArrayHasKey('longtext_field', $attributesByKey);
+        $this->assertFalse($attributesByKey['longtext_field']['encrypt']);
     }
 
     public function testUpdateVarcharAttribute(): void
