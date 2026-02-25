@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d64218e6ec4407e1092b30c71cf1c295",
+    "content-hash": "1fb043a556550f62ab27a0aad0b9332a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -5215,16 +5215,16 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "dev-ser-642",
+            "version": "2.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "56a82b52bb4609235647aba5935a2785035476cb"
+                "reference": "058049326e04a2a0c2f0ce8ad00c7e84825aba14"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/56a82b52bb4609235647aba5935a2785035476cb",
-                "reference": "56a82b52bb4609235647aba5935a2785035476cb",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/058049326e04a2a0c2f0ce8ad00c7e84825aba14",
+                "reference": "058049326e04a2a0c2f0ce8ad00c7e84825aba14",
                 "shasum": ""
             },
             "require": {
@@ -5258,9 +5258,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/vcs/issues",
-                "source": "https://github.com/utopia-php/vcs/tree/ser-642"
+                "source": "https://github.com/utopia-php/vcs/tree/2.0.0"
             },
-            "time": "2026-02-25T10:04:53+00:00"
+            "time": "2026-02-25T11:36:45+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -9041,18 +9041,9 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/vcs",
-            "version": "dev-ser-642",
-            "alias": "1.0.99",
-            "alias_normalized": "1.0.99.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "utopia-php/vcs": 20
-    },
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
