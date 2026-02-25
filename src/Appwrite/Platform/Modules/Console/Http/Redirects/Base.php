@@ -37,7 +37,7 @@ abstract class Base extends Action
     public function action(Request $request, Response $response): void
     {
         $url = parse_url($request->getURI());
-        $target = "/console{$url['path']}";
+        $target = "/console" . ($url['path'] ?? '');
         $params = $request->getParams();
         if (!empty($params)) {
             $target .= "?" . \http_build_query($params);

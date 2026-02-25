@@ -29,6 +29,8 @@
             "Appwrite\\Tests\\": "tests/extensions"
         }
     },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "require": {
         "php": ">=8.3.0",
         "ext-curl": "*",
@@ -46,6 +48,7 @@
         "appwrite/php-runtimes": "0.19.*",
         "appwrite/php-clamav": "2.0.*",
         "utopia-php/abuse": "1.2.*",
+        "utopia-php/agents": "1.2.*",
         "utopia-php/analytics": "0.15.*",
         "utopia-php/audit": "2.2.*",
         "utopia-php/auth": "0.5.*",
@@ -81,17 +84,18 @@
         "matomo/device-detector": "6.4.*",
         "dragonmantank/cron-expression": "3.4.*",
         "phpmailer/phpmailer": "6.9.*",
-        "chillerlan/php-qrcode": "4.4.*",
+        "chillerlan/php-qrcode": "4.3.*",
         "adhocore/jwt": "1.1.*",
-        "spomky-labs/otphp": "^11.4.2",
+        "spomky-labs/otphp": "11.*",
         "webonyx/graphql-php": "14.11.*",
-        "league/csv": "9.24.*",
+        "league/csv": "9.14.*",
         "enshrined/svg-sanitize": "0.22.*"
     },
     "require-dev": {
         "ext-fileinfo": "*",
         "appwrite/sdk-generator": "*",
-        "phpunit/phpunit": "9.*",
+        "brianium/paratest": "7.*",
+        "phpunit/phpunit": "12.*",
         "swoole/ide-helper": "6.*",
         "phpstan/phpstan": "1.12.*",
         "textalk/websocket": "1.5.*",

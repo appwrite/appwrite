@@ -19,3 +19,5 @@ Makefile
 appwrite.config.json
 /.zed/
 /app/config/specs/
+/docs/examples/
+.phpunit.cache

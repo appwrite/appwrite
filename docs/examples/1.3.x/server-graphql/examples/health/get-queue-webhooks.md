@@ -1,5 +1,0 @@
-query {
-    healthGetQueueWebhooks {
-        size
-    }
-}

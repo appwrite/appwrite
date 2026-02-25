@@ -25,6 +25,18 @@ trait MigrationsBase
     protected static array $destinationProject = [];
 
     /**
+     * Cached database data for independent test execution
+     * @var array
+     */
+    protected static array $cachedDatabaseData = [];
+
+    /**
+     * Cached table data for independent test execution
+     * @var array
+     */
+    protected static array $cachedTableData = [];
+
+    /**
      * @param bool $fresh
      * @return array
      */
@@ -40,6 +52,97 @@ trait MigrationsBase
         self::$project = $projectBackup;
 
         return self::$destinationProject;
+    }
+
+    /**
+     * Set up a database for migration tests with static caching
+     * @return array
+     */
+    protected function setupMigrationDatabase(): array
+    {
+        if (!empty(static::$cachedDatabaseData)) {
+            return static::$cachedDatabaseData;
+        }
+
+        $response = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Test Database'
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        static::$cachedDatabaseData = [
+            'databaseId' => $response['body']['$id'],
+        ];
+
+        return static::$cachedDatabaseData;
+    }
+
+    /**
+     * Set up a table with column for migration tests with static caching
+     * @return array
+     */
+    protected function setupMigrationTable(): array
+    {
+        if (!empty(static::$cachedTableData)) {
+            return static::$cachedTableData;
+        }
+
+        // Ensure database exists first
+        $dbData = $this->setupMigrationDatabase();
+        $databaseId = $dbData['databaseId'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'tableId' => ID::unique(),
+            'name' => 'Test Table',
+        ]);
+
+        $this->assertEquals(201, $table['headers']['status-code']);
+
+        $tableId = $table['body']['$id'];
+
+        // Create Column
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/string', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'key' => 'name',
+            'size' => 100,
+            'encrypt' => false,
+            'required' => true
+        ]);
+
+        $this->assertEquals(202, $response['headers']['status-code']);
+
+        // Wait for column to be ready
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/name', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 5000, 500);
+
+        static::$cachedTableData = [
+            'databaseId' => $databaseId,
+            'tableId' => $tableId,
+        ];
+
+        return static::$cachedTableData;
     }
 
     public function performMigrationSync(array $body): array
@@ -77,7 +180,7 @@ trait MigrationsBase
             $migrationResult = $response['body'];
 
             return true;
-        });
+        }, 60_000, 1_000);
 
         return $migrationResult;
     }
@@ -372,7 +475,7 @@ trait MigrationsBase
     /**
      * Databases
      */
-    public function testAppwriteMigrationDatabase(): array
+    public function testAppwriteMigrationDatabase(): void
     {
         $response = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
@@ -427,16 +530,18 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ]);
 
-        return [
-            'databaseId' => $databaseId,
-        ];
+        // Cleanup on source
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
     }
 
-    /**
-     * @depends testAppwriteMigrationDatabase
-     */
-    public function testAppwriteMigrationDatabasesTable(array $data): array
+    public function testAppwriteMigrationDatabasesTable(): void
     {
+        // Set up database using helper method (with static caching)
+        $data = $this->setupMigrationDatabase();
         $databaseId = $data['databaseId'];
 
         $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', [
@@ -526,28 +631,32 @@ trait MigrationsBase
         $this->assertEquals(100, $response['body']['size']);
         $this->assertEquals(true, $response['body']['required']);
 
-        // Cleanup
+        // Cleanup on destination
         $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ]);
 
-        return [
-            'databaseId' => $databaseId,
-            'tableId' => $tableId,
-        ];
+        // Cleanup on source
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        // Clear the cache since we cleaned up
+        static::$cachedDatabaseData = [];
     }
 
-    /**
-     * @depends testAppwriteMigrationDatabasesTable
-     */
-    public function testAppwriteMigrationDatabasesRow(array $data): void
+    public function testAppwriteMigrationDatabasesRow(): void
     {
-        $table = $data['tableId'];
+        // Set up table using helper method (with static caching)
+        $data = $this->setupMigrationTable();
+        $tableId = $data['tableId'];
         $databaseId = $data['databaseId'];
 
-        $row = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $table . '/rows', [
+        $row = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -597,7 +706,7 @@ trait MigrationsBase
             $this->assertEquals(0, $result['statusCounters'][$resource]['warning']);
         }
 
-        $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $table . '/rows/' . $rowId, [
+        $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $rowId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
@@ -609,12 +718,23 @@ trait MigrationsBase
         $this->assertEquals($rowId, $response['body']['$id']);
         $this->assertEquals('Test Row', $response['body']['name']);
 
-        // Cleanup
+        // Cleanup on destination
         $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ]);
+
+        // Cleanup on source
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        // Clear the caches since we cleaned up
+        static::$cachedDatabaseData = [];
+        static::$cachedTableData = [];
     }
 
     /**
@@ -1298,7 +1418,18 @@ trait MigrationsBase
 
         $this->assertEquals(202, $longtext['headers']['status-code']);
 
-        \sleep(3);
+        $this->assertEventually(function () use ($databaseId, $collectionId) {
+            $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals(200, $collection['headers']['status-code']);
+            $this->assertNotEmpty($collection['body']['attributes']);
+            foreach ($collection['body']['attributes'] as $attr) {
+                $this->assertEquals('available', $attr['status'], "Attribute '{$attr['key']}' is not available yet");
+            }
+        }, 30_000, 500);
 
         // Create sample documents
         for ($i = 1; $i <= 10; $i++) {

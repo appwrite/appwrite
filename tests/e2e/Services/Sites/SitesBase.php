@@ -65,7 +65,7 @@ trait SitesBase
             }
 
             $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-        }, 300000, 500);
+        }, 120000, 500);
 
         // Not === so multipart/form-data works fine too
         if (($params['activate'] ?? false) == true) {
@@ -76,7 +76,7 @@ trait SitesBase
                     'x-appwrite-key' => $this->getProject()['apiKey'],
                 ]));
                 $this->assertEquals($deploymentId, $site['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
-            }, 100000, 500);
+            }, 120000, 500);
         }
 
         return $deploymentId;
@@ -281,12 +281,12 @@ trait SitesBase
         $this->assertEventually(function () use ($siteId, $deploymentId) {
             $deployment = $this->getDeployment($siteId, $deploymentId);
             $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-        }, 150000, 500);
+        }, 120000, 500);
 
         $this->assertEventually(function () use ($siteId, $deploymentId) {
             $site = $this->getSite($siteId);
             $this->assertEquals($deploymentId, $site['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
-        }, 100000, 500);
+        }, 60000, 500);
 
         return $deploymentId;
     }
@@ -338,7 +338,7 @@ trait SitesBase
         $maxRetries = 3;
         for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
             if ($attempt > 0) {
-                sleep(5);
+                sleep(2);
             }
 
             $ch = curl_init("https://api.github.com/repos/{$owner}/{$repository}/commits/main");

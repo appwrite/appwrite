@@ -1,4 +1,4 @@
-FROM composer:2.0 AS composer
+FROM composer:2 AS composer
 
 ARG TESTING=false
 ENV TESTING=$TESTING
@@ -37,6 +37,9 @@ COPY ./app /usr/src/code/app
 COPY ./public /usr/src/code/public
 COPY ./bin /usr/local/bin
 COPY ./src /usr/src/code/src
+COPY ./dev /usr/src/code/dev
+COPY ./mongo-init.js /usr/src/code/mongo-init.js
+COPY ./mongo-entrypoint.sh /usr/src/code/mongo-entrypoint.sh
 
 # Set Volumes
 RUN mkdir -p /storage/uploads && \
