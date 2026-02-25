@@ -145,23 +145,30 @@ class Update extends Action
             $currentDocumentId = null;
 
             $databaseDoc = null;
-            if ($this->getDatabaseType() === DATABASE_TYPE_DOCUMENTSDB || $this->getDatabaseType() === DATABASE_TYPE_VECTORDB) {
-                $previewOperations = $authorization->skip(fn () => $dbForProject->find('transactionLogs', [
-                    Query::equal('transactionInternalId', [$transaction->getSequence()]),
-                    Query::orderAsc(),
-                    Query::limit(1),
-                ]));
-                $firstOp = $previewOperations[0] ?? null;
-                if ($firstOp !== null) {
-                    $databaseDoc = $authorization->skip(fn () => $dbForProject->findOne('databases', [
-                        Query::equal('$sequence', [$firstOp['databaseInternalId']])
+            switch ($this->getDatabaseType()) {
+                case DATABASE_TYPE_DOCUMENTSDB:
+                case DATABASE_TYPE_VECTORDB:
+                    $previewOperations = $authorization->skip(fn () => $dbForProject->find('transactionLogs', [
+                        Query::equal('transactionInternalId', [$transaction->getSequence()]),
+                        Query::orderAsc(),
+                        Query::limit(1),
                     ]));
-                }
+
+                    $firstOp = $previewOperations[0] ?? null;
+
+                    if ($firstOp !== null) {
+                        $databaseDoc = $authorization->skip(fn () => $dbForProject->findOne('databases', [
+                            Query::equal('$sequence', [$firstOp['databaseInternalId']])
+                        ]));
+                    }
+                    break;
+                default:
+                    $databaseDoc = new Document(['database' => $project->getAttribute('database')]);
+                    break;
             }
 
-            $dbForDatabases = $databaseDoc instanceof Document && !$databaseDoc->isEmpty()
-                ? $getDatabasesDB($databaseDoc)
-                : $getDatabasesDB(new Document(['database' => $project->getAttribute('database')]));
+            // databaseDoc will not be null -> if null that means database was deleted -> automatically will be leading to error
+            $dbForDatabases = $getDatabasesDB($databaseDoc);
 
             try {
                 $dbForDatabases->withTransaction(function () use ($dbForDatabases, $dbForProject, $transactionState, $queueForDeletes, $transactionId, &$transaction, &$operations, &$totalOperations, &$databaseOperations, &$currentDocumentId, $queueForEvents, $queueForStatsUsage, $queueForRealtime, $queueForFunctions, $queueForWebhooks, $authorization) {
