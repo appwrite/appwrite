@@ -271,7 +271,7 @@
             port = httpsPort;
         }
         if (!hasPort && port && ((protocol === 'http' && port !== '80') || (protocol === 'https' && port !== '443'))) {
-            host = `${rawDomain}:${port}`;
+            host = `${host}:${port}`;
         }
         return `${protocol}://${host}`;
     };

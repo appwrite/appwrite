@@ -64,6 +64,7 @@ class Install extends Action
         bool $noStart,
         string $database
     ): void {
+        $isUpgrade = false;
         $defaultHttpPort = '80';
         $defaultHttpsPort = '443';
         $config = Config::getParam('variables');
@@ -273,13 +274,7 @@ class Install extends Action
         if ($database === 'postgresql') {
             $input['_APP_DB_HOST'] = 'postgresql';
             $input['_APP_DB_PORT'] = 5432;
-        } elseif ($database === 'mariadb') {
-            $input['_APP_DB_HOST'] = 'mariadb';
-            $input['_APP_DB_PORT'] = 3306;
-        }
-
-        $database = $input['_APP_DB_ADAPTER'];
-        if ($database === 'mongodb') {
+        } elseif ($database === 'mongodb') {
             $input['_APP_DB_HOST'] = 'mongodb';
             $input['_APP_DB_PORT'] = 27017;
         } elseif ($database === 'mariadb') {
@@ -634,7 +629,6 @@ class Install extends Action
                 details: [
                     'userId' => $userId,
                     'sessionId' => $session['id'],
-                    'sessionSecret' => $session['secret'],
                     'sessionExpire' => $session['expire'] ?? null
                 ],
                 messageOverride: 'Account created successfully'
@@ -684,8 +678,8 @@ class Install extends Action
             'label' => 'self_hosted_' . $type,
             'version' => $version,
             'data' => json_encode([
-                'name' => $name,
-                'email' => $email,
+                'nameHash' => hash('sha256', trim($name)),
+                'emailHash' => hash('sha256', strtolower(trim($email))),
                 'domain' => $domain,
                 'database' => $database,
             ]),

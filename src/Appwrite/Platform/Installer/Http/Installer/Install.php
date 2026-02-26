@@ -181,6 +181,7 @@ class Install extends Action
         if (file_exists($existingPath)) {
             $existing = $state->readProgressFile($installId);
             if (!empty($existing['steps']) && $retryStep === null) {
+                $state->updateGlobalLock($installId, Server::STATUS_ERROR);
                 if ($wantsStream) {
                     $this->writeSseEvent($swooleResponse, Server::STATUS_ERROR, ['message' => 'Installation already started']);
                     $swooleResponse->end();
@@ -389,12 +390,7 @@ class Install extends Action
 
     private function buildErrorDetails(\Throwable $e): array
     {
-        $details = ['trace' => $e->getTraceAsString()];
-        $previous = $e->getPrevious();
-        if ($previous instanceof \Throwable && $previous->getMessage() !== '') {
-            $details['output'] = $previous->getMessage();
-        }
-        return $details;
+        return [];
     }
 
     private function hasPayload(mixed $data): bool

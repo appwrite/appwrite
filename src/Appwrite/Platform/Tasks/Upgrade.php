@@ -81,6 +81,8 @@ class Upgrade extends Install
             throw new \Exception('Database type not found, can not updgrade. Ensure `_APP_DB_ADAPTER` is set in your environment.');
         }
 
+        $this->lockedDatabase = $database;
+
         parent::action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, $database);
     }
 

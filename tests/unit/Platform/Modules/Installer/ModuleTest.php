@@ -112,6 +112,9 @@ class ModuleTest extends TestCase
         $this->assertActionInjects($action, ['error', 'response']);
     }
 
+    /**
+     * @runInSeparateProcess
+     */
     public function testRouteRegistration(): void
     {
         $services = $this->module->getServicesByType(Service::TYPE_HTTP);

@@ -31,6 +31,7 @@ class Error extends Action
             $code = 500;
         }
         $response->setStatusCode($code);
-        $response->json(['success' => false, 'message' => $error->getMessage()]);
+        $message = $code >= 500 ? 'Internal installer error' : $error->getMessage();
+        $response->json(['success' => false, 'message' => $message]);
     }
 }

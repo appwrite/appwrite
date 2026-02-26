@@ -12,7 +12,11 @@ $version = $this->getParam('version', '');
 $organization = $this->getParam('organization', '');
 $image = $this->getParam('image', '');
 $enableAssistant = $this->getParam('enableAssistant', false);
-$dbService = $this->getParam('database');
+$dbService = $this->getParam('database', 'mongodb');
+$allowedDbServices = ['mariadb', 'mongodb'];
+if (!\in_array($dbService, $allowedDbServices, true)) {
+    $dbService = 'mongodb';
+}
 $hostPath = rtrim($this->getParam('hostPath', ''), '/');
 ?>services:
   traefik:
