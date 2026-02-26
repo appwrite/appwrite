@@ -463,7 +463,7 @@ jobs:
               -e _APP_DATABASE_SHARED_TABLES \
               -e _APP_DATABASE_SHARED_TABLES_V1 \
               -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
-			  appwrite vendor/bin/paratest --processes $(nproc) /usr/src/code/tests/e2e/Services/Projects --group abuseEnabled
+              appwrite vendor/bin/paratest --processes $(nproc) /usr/src/code/tests/e2e/Services/Projects --group abuseEnabled
 
       - name: Failure Logs
         if: failure()
@@ -600,7 +600,7 @@ jobs:
               -e _APP_DATABASE_SHARED_TABLES \
               -e _APP_DATABASE_SHARED_TABLES_V1 \
               -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
-			  appwrite vendor/bin/paratest --processes $(nproc) /usr/src/code/tests/e2e/Services/Sites --group screenshots
+              appwrite vendor/bin/paratest --processes $(nproc) /usr/src/code/tests/e2e/Services/Sites --group screenshots
 
       - name: Failure Logs
         if: failure()
