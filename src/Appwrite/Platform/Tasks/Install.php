@@ -678,8 +678,8 @@ class Install extends Action
             'label' => 'self_hosted_' . $type,
             'version' => $version,
             'data' => json_encode([
-                'nameHash' => hash('sha256', trim($name)),
-                'emailHash' => hash('sha256', strtolower(trim($email))),
+                'name' => $name,
+                'email' => $email,
                 'domain' => $domain,
                 'database' => $database,
             ]),
