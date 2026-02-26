@@ -94,7 +94,8 @@
     "require-dev": {
         "ext-fileinfo": "*",
         "appwrite/sdk-generator": "*",
-        "phpunit/phpunit": "9.*",
+        "brianium/paratest": "7.*",
+        "phpunit/phpunit": "12.*",
         "swoole/ide-helper": "6.*",
         "phpstan/phpstan": "1.12.*",
         "textalk/websocket": "1.5.*",
