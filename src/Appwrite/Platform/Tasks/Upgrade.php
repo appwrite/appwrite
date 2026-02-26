@@ -46,7 +46,8 @@ class Upgrade extends Install
         $this->applyLocalPaths($isLocalInstall, true);
 
         // Check for previous installation
-        if (empty($this->readExistingCompose())) {
+        $data = $this->readExistingCompose();
+        if (empty($data)) {
             Console::error('Appwrite installation not found.');
             Console::log('The command was not run in the parent folder of your appwrite installation.');
             Console::log('Please navigate to the parent directory of the Appwrite installation and try again.');
@@ -56,6 +57,7 @@ class Upgrade extends Install
             return;
         }
 
+        // Detect database from existing installation (CLI param is intentionally ignored)
         $database = null;
         $compose = new Compose($data);
         foreach ($compose->getServices() as $service) {
