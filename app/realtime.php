@@ -592,7 +592,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         }
 
         $projectRegion = $project->getAttribute('region', '');
-        $currentRegion = System::getEnv('_APP_REGION', '');
+        $currentRegion = System::getEnv('_APP_REGION', 'default');
         if (!empty($projectRegion) && $projectRegion !== $currentRegion) {
             throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Project is not accessible in this region. Please make sure you are using the correct endpoint');
         }
