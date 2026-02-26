@@ -1073,6 +1073,12 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - POSTGRES_USER=${_APP_DB_USER}
       - POSTGRES_PASSWORD=${_APP_DB_PASS}
     command: "postgres"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${_APP_DB_USER} -d ${_APP_DB_SCHEMA}"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
 
 <?php endif; ?>
 

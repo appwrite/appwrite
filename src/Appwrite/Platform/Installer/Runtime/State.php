@@ -200,7 +200,7 @@ class State
 
     public function isValidDatabaseAdapter(string $value): bool
     {
-        return in_array($value, ['mongodb', 'mariadb'], true);
+        return in_array($value, ['mongodb', 'mariadb', 'postgresql'], true);
     }
 
     public function progressFilePath(string $installId): string

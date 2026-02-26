@@ -394,7 +394,7 @@ class Install extends Action
             $input['_APP_DB_HOST'] = 'mariadb';
             $input['_APP_DB_PORT'] = 3306;
         } elseif ($database === 'postgresql') {
-            $input['_APP_DB_HOST'] = 'postgres';
+            $input['_APP_DB_HOST'] = 'postgresql';
             $input['_APP_DB_PORT'] = 5432;
         }
 

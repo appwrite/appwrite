@@ -269,6 +269,7 @@ class StateTest extends TestCase
     {
         $this->assertTrue($this->state->isValidDatabaseAdapter('mongodb'));
         $this->assertTrue($this->state->isValidDatabaseAdapter('mariadb'));
+        $this->assertTrue($this->state->isValidDatabaseAdapter('postgresql'));
     }
 
     public function testIsValidDatabaseAdapterWithInvalidAdapters(): void
@@ -276,6 +277,7 @@ class StateTest extends TestCase
         $this->assertFalse($this->state->isValidDatabaseAdapter(''));
         $this->assertFalse($this->state->isValidDatabaseAdapter('mysql'));
         $this->assertFalse($this->state->isValidDatabaseAdapter('postgres'));
+        $this->assertFalse($this->state->isValidDatabaseAdapter('PostgreSQL'));
         $this->assertFalse($this->state->isValidDatabaseAdapter('MongoDB')); // case sensitive
     }
 
@@ -619,12 +621,14 @@ class StateTest extends TestCase
     {
         $this->assertFalse($this->state->isValidDatabaseAdapter(' mongodb'));
         $this->assertFalse($this->state->isValidDatabaseAdapter('mariadb '));
+        $this->assertFalse($this->state->isValidDatabaseAdapter(' postgresql'));
     }
 
     public function testIsValidDatabaseAdapterCaseSensitivity(): void
     {
         $this->assertFalse($this->state->isValidDatabaseAdapter('MongoDB'));
         $this->assertFalse($this->state->isValidDatabaseAdapter('MariaDB'));
+        $this->assertFalse($this->state->isValidDatabaseAdapter('PostgreSQL'));
         $this->assertFalse($this->state->isValidDatabaseAdapter('MONGODB'));
     }
 
