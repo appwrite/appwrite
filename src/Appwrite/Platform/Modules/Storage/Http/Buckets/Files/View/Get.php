@@ -150,7 +150,7 @@ class Get extends Action
 
             $response
                 ->addHeader('Content-Range', "bytes $start-$end/$size")
-                ->addHeader('Content-Length', $end - $start + 1)
+                ->addHeader('Content-Length', (string) ($end - $start + 1))
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
         }
 
