@@ -2,8 +2,8 @@
 
 namespace Tests\Unit\Platform\Modules\Installer\Runtime;
 
-use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Runtime\Config;
+use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server;
 use PHPUnit\Framework\TestCase;
 

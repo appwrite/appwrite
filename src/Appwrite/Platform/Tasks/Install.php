@@ -57,13 +57,13 @@ class Install extends Action
 
     public function action(
         string $httpPort,
-		string $httpsPort,
-		string $organization,
-		string $image,
-		string $interactive,
-		bool $noStart,
-		string $database
-	): void {
+        string $httpsPort,
+        string $organization,
+        string $image,
+        string $interactive,
+        bool $noStart,
+        string $database
+    ): void {
         $defaultHttpPort = '80';
         $defaultHttpsPort = '443';
         $config = Config::getParam('variables');
