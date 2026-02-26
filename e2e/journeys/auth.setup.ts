@@ -35,17 +35,14 @@ test('authenticate once and persist storage state', async ({
       fs.writeFileSync(authPath, JSON.stringify(storageState, null, 2), 'utf-8')
       return
     } catch (error) {
-      test.fail(
-        true,
+      throw new Error(
         `Failed to parse E2E_TEST_SESSION_SECRET: ${(error as Error).message}`,
       )
-      return
     }
   }
 
   if (!email || !password) {
-    test.fail(true, 'E2E_TEST_EMAIL and E2E_TEST_PASSWORD must be set')
-    return
+    throw new Error('E2E_TEST_EMAIL and E2E_TEST_PASSWORD must be set')
   }
 
   if (fs.existsSync(authPath)) {
