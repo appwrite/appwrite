@@ -255,7 +255,7 @@ $logError = function (Throwable $error, string $action) use ($register) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
         $log = new Log();
-        $log->setNamespace("realtime");
+        $log->setNamespace('realtime');
         $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
         $log->setVersion($version);
         $log->setType(Log::TYPE_ERROR);
@@ -591,6 +591,12 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
 
+        $projectRegion = $project->getAttribute('region', '');
+        $currentRegion = System::getEnv('_APP_REGION', '');
+        if (!empty($projectRegion) && $projectRegion !== $currentRegion) {
+            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Project is not accessible in this region. Please make sure you are using the correct endpoint');
+        }
+
         $timelimit = $app->getResource('timelimit');
         $user = $app->getResource('user'); /** @var User $user */
 
@@ -687,7 +693,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
         // Handle SQL error code is 'HY000'
         $code = $th->getCode();
-        if (!is_int($code)) {
+        if (!\is_int($code)) {
             $code = 500;
         }
 
