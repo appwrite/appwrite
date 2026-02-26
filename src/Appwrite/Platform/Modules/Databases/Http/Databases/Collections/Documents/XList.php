@@ -141,13 +141,15 @@ class XList extends Action
 
                     $hostname = $dbForProject->getAdapter()->getHostname();
                     $roles = $dbForProject->getAuthorization()->getRoles();
+                    $collectionUpdatedAt = $collection->getAttribute('$updatedAt', '');
                     $cacheKeyBase = \sprintf(
-                        '%s-cache-%s:%s:%s:collection:%s:user:%s:%s',
+                        '%s-cache-%s:%s:%s:collection:%s:%s:user:%s:%s',
                         $dbForProject->getCacheName(),
                         $hostname ?? '',
                         $dbForProject->getNamespace(),
                         $dbForProject->getTenant(),
                         $collectionId,
+                        $collectionUpdatedAt,
                         \md5(\json_encode($roles)),
                         \md5(\json_encode($serializedQueries))
                     );
