@@ -84,6 +84,8 @@ class Delete extends Action
             throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
         }
 
+        $this->validate($profile, $team, $dbForProject);
+
         if ($project->getId() === 'console') {
             // Quick check:
             // fetch up to 2 owners to determine if only one exists
@@ -111,8 +113,6 @@ class Delete extends Action
                 throw new Exception(Exception::MEMBERSHIP_DELETION_PROHIBITED, 'There must be at least one owner in the organization.');
             }
         }
-
-        $this->validate($profile, $team, $dbForProject);
 
         try {
             $dbForProject->deleteDocument('memberships', $membership->getId());
