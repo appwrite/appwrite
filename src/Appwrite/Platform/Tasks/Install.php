@@ -295,7 +295,6 @@ class Install extends Action
 
     protected function startWebServer(string $defaultHttpPort, string $defaultHttpsPort, string $organization, string $image, bool $noStart, array $vars, bool $isUpgrade = false, ?string $lockedDatabase = null): void
     {
-        $host = InstallerServer::INSTALLER_WEB_HOST;
         $port = InstallerServer::INSTALLER_WEB_PORT;
 
         @unlink(InstallerServer::INSTALLER_COMPLETE_FILE);
@@ -312,19 +311,11 @@ class Install extends Action
             'isLocal' => $this->isLocalInstall(),
             'hostPath' => $this->hostPath ?: null,
         ]);
-        $routerScript = dirname(__DIR__) . '/Installer/Server.php';
-        $docroot = $this->buildFromProjectPath('/app/views/install');
 
-        // Start PHP built-in server in background
-        $command = \sprintf(
-            'php -S %s:%d -t %s %s 2>&1 & echo $!',
-            $host,
-            $port,
-            \escapeshellarg($docroot),
-            \escapeshellarg($routerScript)
-        );
+        // Start Swoole-based installer server in background
+        $serverScript = \escapeshellarg(dirname(__DIR__) . '/Installer/Server.php');
         $output = [];
-        \exec($command, $output);
+        \exec("php {$serverScript} 2>&1 & echo $!", $output);
         $pid = isset($output[0]) ? (int) $output[0] : 0;
 
         \register_shutdown_function(function () use ($pid) {

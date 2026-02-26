@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Installer;
 
-require_once __DIR__ . '/HttpHandler.php';
 require_once __DIR__ . '/Runtime/State.php';
 require_once __DIR__ . '/Runtime/Config.php';
 
@@ -28,10 +27,22 @@ class Server
     public const string STATUS_COMPLETED = 'completed';
     public const string STATUS_ERROR = 'error';
 
+    public const string CSRF_COOKIE = 'appwrite-installer-csrf';
+
+    public const array INSTALLER_CSP = [
+        "default-src 'self'",
+        "script-src 'self'",
+        "style-src 'self'",
+        "img-src 'self' data:",
+        "font-src 'self' data:",
+        "connect-src 'self'",
+        "base-uri 'none'",
+        "form-action 'self'",
+        "frame-ancestors 'none'",
+    ];
+
     private const string DEFAULT_IMAGE = 'appwrite-dev';
     public const string DEFAULT_CONTAINER = 'appwrite-installer';
-    private const string PATTERN_SERVER_LOG_FILTER = '/]\s+\S+:\d+\s+(Accepted|Closing)/';
-    private const string DEV_SERVER_START_PATTERN = '/PHP\s+\d+\.\d+\.\d+\s+Development Server .* started/';
 
     private State $state;
     private array $paths = [];
@@ -40,17 +51,25 @@ class Server
     {
         $this->initPaths();
 
+        // Load autoloader for Swoole/Utopia classes
+        require_once $this->paths['vendor'];
+
+        // Load module classes after autoloader is available
+        require_once __DIR__ . '/Module.php';
+        require_once __DIR__ . '/Services/Http.php';
+        require_once __DIR__ . '/Http/Installer/View.php';
+        require_once __DIR__ . '/Http/Installer/Status.php';
+        require_once __DIR__ . '/Http/Installer/Validate.php';
+        require_once __DIR__ . '/Http/Installer/Complete.php';
+        require_once __DIR__ . '/Http/Installer/Install.php';
+        require_once __DIR__ . '/Http/Installer/Error.php';
+
         $this->state = new State($this->paths);
 
-        /* launches the install/upgrade entrypoint in Docker. */
         if (PHP_SAPI === 'cli') {
             $this->runCli();
             return;
         }
-
-        $handler = new HttpHandler($this->paths, $this->state);
-
-        $handler->handleRequest();
     }
 
     private function initPaths(): void
@@ -96,7 +115,6 @@ class Server
 
         if (isset($opts['clean'])) {
             $this->removeDockerInstallerContainer(self::DEFAULT_CONTAINER);
-            $this->killInstallerDevServers();
             $this->cleanupWebInstallerFiles();
             exit(0);
         }
@@ -107,7 +125,7 @@ class Server
         }
 
         $this->printInstallerUrl($host, $port);
-        $this->startInstallerDevServer($host, $port);
+        $this->startSwooleServer($host, (int) $port);
     }
 
     private function printInstallerUrl(string $host, string $port): void
@@ -117,85 +135,84 @@ class Server
         fwrite(STDOUT, "Open $url" . PHP_EOL);
     }
 
-    private function killInstallerDevServers(): void
+    private function startSwooleServer(string $host, int $port): void
     {
-        $pattern = 'php -S .*app/views/install';
-        $command = 'pkill -f ' . escapeshellarg($pattern) . ' >/dev/null 2>&1';
-        exec($command);
-    }
+        $server = new \Swoole\Http\Server($host, $port);
+        $server->set([
+            'worker_num' => 1,
+        ]);
 
-    private function startInstallerDevServer(string $host, string $port): void
-    {
-        $binary = escapeshellcmd(PHP_BINARY);
-        $address = escapeshellarg("$host:$port");
-        $docroot = escapeshellarg($this->paths['views']);
-        $router = escapeshellarg(__FILE__);
-        $command = "$binary -S $address -t $docroot $router";
+        // Preload static files into memory
+        $files = new \Utopia\Http\Files();
+        $files->load($this->paths['views']);
 
-        $descriptorSpec = [
-            0 => ['pipe', 'r'],
-            1 => ['pipe', 'w'],
-            2 => ['pipe', 'w'],
-        ];
+        // Register resources for dependency injection into actions
+        $config = $this->state->buildConfig();
+        $paths = $this->paths;
+        $state = $this->state;
 
-        $process = proc_open($command, $descriptorSpec, $pipes);
-        if (!is_resource($process)) {
-            fwrite(STDERR, "Failed to start PHP dev server." . PHP_EOL);
-            exit(1);
-        }
+        \Utopia\Http\Http::setResource('installerState', fn () => $state);
+        \Utopia\Http\Http::setResource('installerConfig', fn () => $config);
+        \Utopia\Http\Http::setResource('installerPaths', fn () => $paths);
+        \Utopia\Http\Http::setResource('swooleServer', fn () => $server);
 
-        fclose($pipes[0]);
-        stream_set_blocking($pipes[1], false);
-        stream_set_blocking($pipes[2], false);
+        // Register routes via module structure
+        $module = new Module();
+        $services = $module->getServicesByType(\Utopia\Platform\Service::TYPE_HTTP);
 
-        $lastStatus = null;
-        while (true) {
-            $read = [$pipes[1], $pipes[2]];
-            $write = null;
-            $except = null;
+        foreach ($services as $service) {
+            foreach ($service->getActions() as $action) {
+                $type = $action->getType();
 
-            if (stream_select($read, $write, $except, null) === false) {
-                break;
-            }
-
-            foreach ($read as $stream) {
-                $line = fgets($stream);
-                if ($line === false) {
-                    continue;
+                switch ($type) {
+                    case \Utopia\Platform\Action::TYPE_ERROR:
+                        $hook = \Utopia\Http\Http::error();
+                        break;
+                    default:
+                        $httpMethod = $action->getHttpMethod();
+                        $httpPath = $action->getHttpPath();
+                        $hook = \Utopia\Http\Http::addRoute($httpMethod, $httpPath);
+                        break;
                 }
 
-                if ($stream === $pipes[2] && preg_match(self::DEV_SERVER_START_PATTERN, $line)) {
-                    continue;
+                $hook->desc($action->getDesc() ?? '');
+
+                foreach ($action->getOptions() as $key => $option) {
+                    if ($option['type'] === 'injection') {
+                        $hook->inject($option['name']);
+                    }
                 }
-                if (preg_match(self::PATTERN_SERVER_LOG_FILTER, $line)) {
-                    continue;
-                }
 
-                $target = ($stream === $pipes[2]) ? STDERR : STDOUT;
-                fwrite($target, $line);
-            }
-
-            $status = proc_get_status($process);
-            $lastStatus = $status;
-            if (!$status['running']) {
-                break;
+                $hook->action($action->getCallback());
             }
         }
 
-        foreach ($pipes as $pipe) {
-            if (is_resource($pipe)) {
-                fclose($pipe);
-            }
-        }
+        $server->on('request', function (\Swoole\Http\Request $swooleRequest, \Swoole\Http\Response $swooleResponse) use ($files) {
+            \Utopia\Http\Http::setResource('swooleRequest', fn () => $swooleRequest);
+            \Utopia\Http\Http::setResource('swooleResponse', fn () => $swooleResponse);
 
-        $exitCode = proc_close($process);
-        /**
-         * Treat exit code 255 or signaled status as a clean shutdown.
-         */
-        if ($exitCode === 255 || ($lastStatus['signaled'] ?? false)) {
-            $exitCode = 0;
-        }
-        exit($exitCode);
+            $request = new \Utopia\Http\Adapter\Swoole\Request($swooleRequest);
+            $response = new \Utopia\Http\Adapter\Swoole\Response($swooleResponse);
+
+            // Serve static files from memory
+            $uri = $request->getURI();
+            if ($files->isFileLoaded($uri)) {
+                $response
+                    ->setContentType($files->getFileMimeType($uri))
+                    ->send($files->getFileContents($uri));
+                return;
+            }
+
+            $app = new \Utopia\Http\Http('UTC');
+            $app->run($request, $response);
+        });
+
+        // Handle Ctrl+C gracefully
+        \Swoole\Process::signal(2, function () use ($server) {
+            $server->shutdown();
+        });
+
+        $server->start();
     }
 
     private function removeDockerInstallerContainer(string $container): void
@@ -311,13 +328,11 @@ class Server
 }
 
 /**
- * Run server only on direct execution to avoid Swoole exit exception during autoload.
- *
- * @return bool
+ * Run server only on direct CLI execution.
  */
 function shouldRunInstallerServer(): bool
 {
-    return PHP_SAPI === 'cli-server' || (PHP_SAPI === 'cli' && realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__);
+    return PHP_SAPI === 'cli' && realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === realpath(__FILE__);
 }
 
 if (shouldRunInstallerServer()) {
