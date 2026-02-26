@@ -11,6 +11,7 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\Queries\Executions;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
@@ -110,6 +111,35 @@ class XList extends Base
             $cursor->setValue($cursorDocument);
         }
 
+        // Calculate the cutoff datetime before which a waiting/processing execution is considered timed out.
+        $timeout = $function->getAttribute('timeout', 900);
+        $thresholdDate = new \DateTime("-{$timeout} seconds");
+        $threshold = DateTime::format($thresholdDate);
+
+        // Capture what statuses the caller explicitly requested, before we mutate the query.
+        $requestedStatuses = [];
+        foreach ($queries as $query) {
+            if ($query->getMethod() === Query::TYPE_EQUAL && $query->getAttribute() === 'status') {
+                $requestedStatuses = [...$requestedStatuses, ...$query->getValues()];
+            }
+        }
+
+        // If the caller is filtering by 'failed', expand the DB query to also return
+        // waiting/processing executions created before the timeout threshold, so timed-out
+        // executions that were never marked failed in the DB are included in the results.
+        foreach ($queries as $index => $query) {
+            if ($query->getMethod() === Query::TYPE_EQUAL && $query->getAttribute() === 'status' && \in_array('failed', $query->getValues())) {
+                $queries[$index] = Query::or([
+                    $query,
+                    Query::and([
+                        Query::equal('status', ['waiting', 'processing']),
+                        Query::createdBefore($threshold),
+                    ]),
+                ]);
+                break;
+            }
+        }
+
         $filterQueries = Query::groupByType($queries)['filters'];
 
         try {
@@ -117,6 +147,20 @@ class XList extends Base
             $total = $includeTotal ? $dbForProject->count('executions', $filterQueries, APP_LIMIT_COUNT) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
+
+        // Override status in response for timed-out executions, but only when the caller
+        // did not explicitly request a non-failed status (e.g. waiting/processing).
+        if (empty(\array_diff($requestedStatuses, ['failed']))) {
+            foreach ($results as $execution) {
+                $status = $execution->getAttribute('status', '');
+                if ($status === 'waiting' || $status === 'processing') {
+                    $elapsed = \time() - \strtotime($execution->getCreatedAt());
+                    if ($elapsed >= $timeout) {
+                        $execution->setAttribute('status', 'failed');
+                    }
+                }
+            }
         }
 
         $response->dynamic(new Document([
