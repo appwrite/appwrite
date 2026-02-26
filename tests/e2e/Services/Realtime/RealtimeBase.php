@@ -2,6 +2,9 @@
 
 namespace Tests\E2E\Services\Realtime;
 
+use Tests\E2E\Client;
+use Utopia\Database\Helpers\ID;
+use Utopia\System\System;
 use WebSocket\Client as WebSocketClient;
 use WebSocket\ConnectionException;
 
@@ -148,6 +151,64 @@ trait RealtimeBase
         $this->assertArrayHasKey('channels', $response['data']);
         $this->assertContains('documents', $response['data']['channels']);
 
+        $client->close();
+    }
+
+    public function testConnectionFailureRegionMismatch(): void
+    {
+        $serverRegion = System::getEnv('_APP_REGION', 'default');
+
+        if ($serverRegion === 'fra') {
+            $this->markTestSkipped('Test requires server region to not be "fra"');
+        }
+
+        // Create a team for the mismatched-region project
+        $team = $this->client->call(Client::METHOD_POST, '/teams', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'teamId' => ID::unique(),
+            'name' => 'Region Mismatch Test Team',
+        ]);
+
+        $this->assertEquals(201, $team['headers']['status-code']);
+        $teamId = $team['body']['$id'];
+
+        // Create a project in the 'fra' region (which won't match the server's region)
+        $project = $this->client->call(Client::METHOD_POST, '/projects', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'projectId' => ID::unique(),
+            'region' => 'fra',
+            'name' => 'Region Mismatch Project',
+            'teamId' => $teamId,
+        ]);
+
+        $this->assertEquals(201, $project['headers']['status-code']);
+        $projectId = $project['body']['$id'];
+
+        /**
+         * Test for FAILURE
+         * A project in a different region should be rejected with an access forbidden error.
+         */
+        $client = $this->getWebsocket(['documents'], [], $projectId);
+        $payload = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $payload);
+        $this->assertArrayHasKey('data', $payload);
+        $this->assertEquals('error', $payload['type']);
+        $this->assertEquals(401, $payload['data']['code']);
+        $this->assertEquals(
+            'Project is not accessible in this region. Please make sure you are using the correct endpoint',
+            $payload['data']['message']
+        );
+        \usleep(250000); // 250ms
+        $this->expectException(ConnectionException::class); // Check if server disconnected client
         $client->close();
     }
 }
