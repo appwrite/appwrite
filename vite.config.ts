@@ -1,5 +1,5 @@
-/// <reference types="vitest" />
-import { defineConfig } from 'vitest/config'
+
+import { defineConfig } from 'vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import { sentryTanstackStart } from '@sentry/tanstackstart-react'
 import viteReact from '@vitejs/plugin-react'
@@ -25,7 +25,7 @@ const config = defineConfig({
         // Useful for static hosting platforms
         autoSubfolderIndex: true,
         // Automatically discover and prerender static routes
-        // autoStaticPathsDiscovery: true,
+        autoStaticPathsDiscovery: true,
         // Disable link crawling to prevent infinite loops on auth routes with redirect params
         crawlLinks: false,
         // Don't fail build if prerendering encounters an error (some routes like /reset require search params)
@@ -60,7 +60,7 @@ const config = defineConfig({
           }),
         ]
       : []),
-  ] as any,
+  ],
   server: {
     host: '::',
     allowedHosts: true,
