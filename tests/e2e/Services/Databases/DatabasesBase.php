@@ -3271,16 +3271,21 @@ trait DatabasesBase
     {
         $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
+        $docIds = $data['documentIds'];
+
+        // Filter to setup documents only, since other tests may have created additional docs in this collection.
+        $baseQueries = [
+            Query::equal('$id', $docIds)->toString(),
+            Query::select(['title', 'releaseYear', '$id'])->toString(),
+            Query::orderAsc('releaseYear')->toString(),
+        ];
 
         // 1. Using cache with select queries, first request should miss cache.
         $documents1 = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [
-                Query::select(['title', 'releaseYear', '$id'])->toString(),
-                Query::orderAsc('releaseYear')->toString(),
-            ],
+            'queries' => $baseQueries,
             'ttl' => 30,
         ]);
 
@@ -3301,10 +3306,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [
-                Query::select(['title', 'releaseYear', '$id'])->toString(),
-                Query::orderAsc('releaseYear')->toString(),
-            ],
+            'queries' => $baseQueries,
             'ttl' => 30,
         ]);
 
@@ -3322,10 +3324,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [
-                Query::select(['title', 'releaseYear', '$id'])->toString(),
-                Query::orderAsc('releaseYear')->toString(),
-            ],
+            'queries' => $baseQueries,
             'ttl' => 30,
             'total' => false,
         ]);
@@ -3345,6 +3344,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
+                Query::equal('$id', $docIds)->toString(),
                 Query::select(['title'])->toString(),
                 Query::orderAsc('releaseYear')->toString(),
             ],
@@ -3366,6 +3366,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
+                Query::equal('$id', $docIds)->toString(),
                 Query::select(['title', 'releaseYear', '$id'])->toString(),
                 Query::orderAsc('releaseYear')->toString(),
             ],
@@ -3383,10 +3384,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [
-                Query::select(['title', 'releaseYear', '$id'])->toString(),
-                Query::orderAsc('releaseYear')->toString(),
-            ],
+            'queries' => $baseQueries,
             'ttl' => 10,
         ]);
 
@@ -3403,10 +3401,13 @@ trait DatabasesBase
     {
         $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
+        $docIds = $data['documentIds'];
 
+        // Use different select queries from testListDocumentsWithCache to avoid cache key collision.
         $queries = [
-            Query::select(['title', 'releaseYear', '$id'])->toString(),
-            Query::orderAsc('releaseYear')->toString(),
+            Query::equal('$id', $docIds)->toString(),
+            Query::select(['title', '$id'])->toString(),
+            Query::orderAsc('$createdAt')->toString(),
         ];
 
         // 1. First request should miss cache.
