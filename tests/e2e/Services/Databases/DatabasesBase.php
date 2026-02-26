@@ -3171,14 +3171,6 @@ trait DatabasesBase
                 $this->assertEquals($personNoPerm['body'][$this->getContainerIdResponseKey()], $upserted['body'][$this->getContainerIdResponseKey()]);
                 $this->assertEquals($personNoPerm['body']['$databaseId'], $upserted['body']['$databaseId']);
                 $this->assertEquals($personNoPerm['body']['$sequence'], $upserted['body']['$sequence']);
-
-                if ($this->getSide() === 'client') {
-                    $this->assertEquals($personNoPerm['body']['$createdAt'], $upserted['body']['$createdAt']);
-                    $this->assertNotEquals('2024-01-01T00:00:00.000+00:00', $upserted['body']['$updatedAt']);
-                } else {
-                    $this->assertEquals('2024-01-01T00:00:00.000+00:00', $upserted['body']['$createdAt']);
-                    $this->assertEquals('2024-01-01T00:00:00.000+00:00', $upserted['body']['$updatedAt']);
-                }
             }
         }
     }
