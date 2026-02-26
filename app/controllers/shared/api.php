@@ -941,6 +941,7 @@ Http::shutdown()
                         ])));
                     } catch (DuplicateException) {
                         // Race condition: another concurrent request already created the cache document
+                        $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
                     }
                 } elseif (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $accessedAt) {
                     $cacheLog->setAttribute('accessedAt', $now);
