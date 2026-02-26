@@ -5,13 +5,13 @@ temporary Docker container with its own web server before the Appwrite stack is 
 
 ## Architecture
 
-The web installer runs as part of the installation task in a lightweight PHP built-in web server:
+The web installer runs as part of the installation task using a Swoole HTTP server with Utopia PHP routing:
 
 ```
 docker run (temporary container)
   └── Server.php
-       ├── PHP built-in server (0.0.0.0:20080)
-       ├── HttpHandler (routing, CSRF, SSE)
+       ├── Swoole HTTP server (0.0.0.0:20080)
+       ├── Module / Service / Action routes
        ├── State (progress tracking)
        └── Config (installation settings)
 ```
@@ -67,7 +67,7 @@ docker run -it --rm \
 
 ### Backend
 
-- `src/Appwrite/Platform/Installer/**/*.php` - Installer backend (Server, HttpHandler, State, Config)
+- `src/Appwrite/Platform/Installer/**/*.php` - Installer backend (Server, Module, Actions, State, Config)
 - `src/Appwrite/Platform/Tasks/Install.php` - Installation task execution
 - `app/views/install/*.phtml` - Docker Compose and env templates
 
