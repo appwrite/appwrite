@@ -6,7 +6,6 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Console;
 
 class TeamsCustomClientTest extends Scope
 {
@@ -15,12 +14,10 @@ class TeamsCustomClientTest extends Scope
     use ProjectCustom;
     use SideClient;
 
-    /**
-     * @depends testGetTeamMemberships
-     */
-    public function testGetMembershipPrivacy($data)
+    public function testGetMembershipPrivacy(): void
     {
-        $teamUid = $data['teamUid'] ?? '';
+        $teamData = $this->createTeamHelper();
+        $teamUid = $teamData['teamUid'];
 
         $projectId = $this->getProject()['$id'];
 
@@ -118,12 +115,10 @@ class TeamsCustomClientTest extends Scope
         $this->assertArrayHasKey('mfa', $response['body']['memberships'][0]);
     }
 
-    /**
-     * @depends testUpdateTeamMembership
-     */
-    public function testTeamsInviteHTMLInjection($data): array
+    public function testTeamsInviteHTMLInjection(): void
     {
-        $teamUid = $data['teamUid'] ?? '';
+        $teamData = $this->createTeamHelper();
+        $teamUid = $teamData['teamUid'];
         $email = uniqid() . 'friend@localhost.test';
         $name = 'Friend User';
         $password = 'password';
@@ -152,25 +147,20 @@ class TeamsCustomClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
 
-        $email = $this->getLastEmail();
-        Console::log(json_encode([
-            'testTeamsInviteHTMLInjection' => $email
-        ], JSON_PRETTY_PRINT));
+        $lastEmail = $this->getLastEmailByAddress($email);
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
 
 
         // injection allowed, meant to be protected client-side
         $encoded = 'http://localhost:5000/join-us\"></a><h1>INJECTED</h1>';
 
-        $this->assertStringContainsString('<h1>INJECTED</h1>', $email['html']);
-        $this->assertStringContainsString($encoded, $email['html']);
+        $this->assertStringContainsString('<h1>INJECTED</h1>', $lastEmail['html']);
+        $this->assertStringContainsString($encoded, $lastEmail['html']);
 
         $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamUid . '/memberships/'.$response['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
         $this->assertEquals(204, $response['headers']['status-code']);
-
-
-        return $data;
     }
 }

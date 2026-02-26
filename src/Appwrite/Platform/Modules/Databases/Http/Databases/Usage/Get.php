@@ -55,7 +55,7 @@ class Get extends Action
                     )
                 )
             ])
-            ->param('databaseId', '', new UID(), 'Database ID.')
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
             ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
             ->inject('response')
             ->inject('dbForProject')

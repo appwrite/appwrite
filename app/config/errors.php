@@ -139,6 +139,11 @@ return [
         'description' => 'There was an error processing your request. Please check the inputs and try again.',
         'code' => 400,
     ],
+    Exception::GENERAL_FEATURE_UNSUPPORTED => [
+        'name' => Exception::GENERAL_FEATURE_UNSUPPORTED,
+        'description' => 'This feature is not supported with your current configuration.',
+        'code' => 400,
+    ],
 
     /** User Errors */
     Exception::USER_COUNT_EXCEEDED => [
