@@ -599,6 +599,7 @@ trait StorageBase
         $this->assertEquals(200, $file5['headers']['status-code']);
         $this->assertEquals('attachment; filename="logo.png"', $file5['headers']['content-disposition']);
         $this->assertEquals('image/png', $file5['headers']['content-type']);
+        $this->assertEquals('bytes', $file5['headers']['accept-ranges']);
         $this->assertNotEmpty($file5['body']);
 
         // Test ranged download
@@ -643,6 +644,16 @@ trait StorageBase
         ], $this->getHeaders()));
 
         $this->assertEquals(416, $file54['headers']['status-code']);
+
+        // Test single-byte range (bytes=0-0 should return 206, not 416)
+        $file55 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/download', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=0-0',
+        ], $this->getHeaders()));
+
+        $this->assertEquals(206, $file55['headers']['status-code']);
+        $this->assertEquals(1, $file55['headers']['content-length']);
 
         $file6 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/view', array_merge([
             'content-type' => 'application/json',

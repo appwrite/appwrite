@@ -107,6 +107,7 @@ class Get extends Action
 
         $response
             ->setContentType('application/gzip')
+            ->addHeader('Accept-Ranges', 'bytes')
             ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->addHeader('X-Peak', \memory_get_peak_usage())
             ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '-' . $type . '.tar.gz"');
@@ -120,12 +121,11 @@ class Get extends Action
                 $end = min(($start + MAX_OUTPUT_CHUNK_SIZE - 1), ($size - 1));
             }
 
-            if ($unit !== 'bytes' || $start >= $end || $end >= $size) {
+            if ($unit !== 'bytes' || $start > $end || $end >= $size) {
                 throw new Exception(Exception::STORAGE_INVALID_RANGE);
             }
 
             $response
-                ->addHeader('Accept-Ranges', 'bytes')
                 ->addHeader('Content-Range', 'bytes ' . $start . '-' . $end . '/' . $size)
                 ->addHeader('Content-Length', $end - $start + 1)
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
@@ -135,16 +135,10 @@ class Get extends Action
         }
 
         if ($size > APP_STORAGE_READ_BUFFER) {
-            for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
-                $response->chunk(
-                    $device->read(
-                        $path,
-                        ($i * MAX_OUTPUT_CHUNK_SIZE),
-                        min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))
-                    ),
-                    (($i + 1) * MAX_OUTPUT_CHUNK_SIZE) >= $size
-                );
-            }
+            $response->stream(
+                fn (int $offset, int $length) => $device->read($path, $offset, $length),
+                $size
+            );
         } else {
             $response->send($device->read($path));
         }

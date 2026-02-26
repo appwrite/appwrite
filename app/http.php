@@ -456,7 +456,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $tot
     });
 });
 
-$http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register, $files) {
+$http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register, $files, $http) {
     Span::init('http.request');
 
     Http::setResource('swooleRequest', fn () => $swooleRequest);
@@ -464,6 +464,7 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
 
     $request = new Request($swooleRequest);
     $response = new Response($swooleResponse);
+    $response->setSwooleServer($http);
 
     Span::add('http.method', $request->getMethod());
 
