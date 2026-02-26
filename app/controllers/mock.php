@@ -279,6 +279,40 @@ Http::get('/v1/mock/github/callback')
         ]);
     });
 
+Http::patch('/v1/mock/projects/{projectId}/region')
+    ->desc('Update project region (development/testing only)')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->label('mock', true)
+    ->param('projectId', '', new UID(), 'Project ID.')
+    ->param('region', '', new Text(64), 'Region value to set on the project document.')
+    ->inject('response')
+    ->inject('dbForPlatform')
+    ->action(function (string $projectId, string $region, Response $response, Database $dbForPlatform) {
+        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
+
+        if (!$isDevelopment) {
+            throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
+        }
+
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $dbForPlatform->updateDocument(
+            'projects',
+            $project->getId(),
+            $project->setAttribute('region', $region)
+        );
+
+        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+
+        $response->json(['projectId' => $project->getId(), 'region' => $region]);
+    });
+
 Http::shutdown()
     ->groups(['mock'])
     ->inject('utopia')

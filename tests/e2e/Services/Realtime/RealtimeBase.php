@@ -4,7 +4,6 @@ namespace Tests\E2E\Services\Realtime;
 
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
-use Utopia\System\System;
 use WebSocket\Client as WebSocketClient;
 use WebSocket\ConnectionException;
 
@@ -156,12 +155,6 @@ trait RealtimeBase
 
     public function testConnectionFailureRegionMismatch(): void
     {
-        $serverRegion = System::getEnv('_APP_REGION', 'default');
-
-        if ($serverRegion === 'fra') {
-            $this->markTestSkipped('Test requires server region to not be "fra"');
-        }
-
         // Create a team for the mismatched-region project
         $team = $this->client->call(Client::METHOD_POST, '/teams', [
             'origin' => 'http://localhost',
@@ -176,7 +169,7 @@ trait RealtimeBase
         $this->assertEquals(201, $team['headers']['status-code']);
         $teamId = $team['body']['$id'];
 
-        // Create a project in the 'fra' region (which won't match the server's region)
+        // Create a project with the default (matching) region
         $project = $this->client->call(Client::METHOD_POST, '/projects', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -184,13 +177,23 @@ trait RealtimeBase
             'x-appwrite-project' => 'console',
         ], [
             'projectId' => ID::unique(),
-            'region' => 'fra',
             'name' => 'Region Mismatch Project',
             'teamId' => $teamId,
         ]);
 
         $this->assertEquals(201, $project['headers']['status-code']);
         $projectId = $project['body']['$id'];
+
+        // Force a mismatched region directly in the DB via the mock endpoint (bypasses API validation)
+        $response = $this->client->call(Client::METHOD_PATCH, '/mock/projects/' . $projectId . '/region', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'region' => 'mismatched-region',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
 
         /**
          * Test for FAILURE
