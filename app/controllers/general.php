@@ -34,6 +34,7 @@ use Appwrite\Utopia\View;
 use Executor\Executor;
 use MaxMind\Db\Reader;
 use Swoole\Http\Request as SwooleRequest;
+use Swoole\Table;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -52,6 +53,7 @@ use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Service;
+use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Validator;
 use Utopia\Validator\Text;
@@ -1072,21 +1074,20 @@ Http::init()
    ->inject('queueForCertificates')
    ->inject('platform')
     ->inject('authorization')
-   ->action(function (Request $request, Document $console, Database $dbForPlatform, Certificate $queueForCertificates, array $platform, Authorization $authorization) {
+    ->inject('certifiedDomains')
+   ->action(function (Request $request, Document $console, Database $dbForPlatform, Certificate $queueForCertificates, array $platform, Authorization $authorization, Table $certifiedDomains) {
        $hostname = $request->getHostname();
-       $cache = Config::getParam('hostnames', []);
        $platformHostnames = $platform['hostnames'] ?? [];
 
        // 1. Cache hit
-       if (array_key_exists($hostname, $cache)) {
+       if ($certifiedDomains->exists(md5($hostname))) {
            return;
        }
 
        // 2. Domain validation
        $domain = new Domain(!empty($hostname) ? $hostname : '');
        if (empty($domain->get()) || !$domain->isKnown() || $domain->isTest()) {
-           $cache[$domain->get()] = false;
-           Config::setParam('hostnames', $cache);
+           $certifiedDomains->set(md5($domain->get()), ['value' => 0]);
            return;
        }
 
@@ -1100,7 +1101,7 @@ Http::init()
        }
 
        // 4. Check/create rule (requires DB access)
-       $authorization->skip(function () use ($dbForPlatform, $domain, $console, $queueForCertificates, &$cache) {
+       $authorization->skip(function () use ($dbForPlatform, $domain, $console, $queueForCertificates, $certifiedDomains) {
            try {
                // TODO: (@Meldiron) Remove after 1.7.x migration
                $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
@@ -1163,8 +1164,7 @@ Http::init()
            } catch (Duplicate $e) {
                Console::info('Certificate already exists');
            } finally {
-               $cache[$domain->get()] = true;
-               Config::setParam('hostnames', $cache);
+               $certifiedDomains->set(md5($domain->get()), ['value' => 1]);
            }
        });
    });
@@ -1245,17 +1245,7 @@ Http::error()
         $trace = $error->getTrace();
 
         if (php_sapi_name() === 'cli') {
-            Console::error('[Error] Timestamp: ' . date('c', time()));
-
-            if ($route) {
-                Console::error('[Error] Method: ' . $route->getMethod());
-                Console::error('[Error] URL: ' . $route->getPath());
-            }
-
-            Console::error('[Error] Type: ' . get_class($error));
-            Console::error('[Error] Message: ' . $message);
-            Console::error('[Error] File: ' . $file);
-            Console::error('[Error] Line: ' . $line);
+            Span::error($error);
         }
 
         switch ($class) {
@@ -1362,7 +1352,7 @@ Http::error()
             $log->setMessage($error->getMessage());
 
             $log->addTag('database', $dsn->getHost());
-            $log->addTag('method', $route->getMethod());
+            $log->addTag('method', $route?->getMethod() ?? $request->getMethod());
             $log->addTag('url', $request->getURI());
             $log->addTag('verboseType', get_class($error));
             $log->addTag('code', $error->getCode());
@@ -1460,10 +1450,14 @@ Http::error()
                 // don't fail the error handler
             }
 
+            $sdk = $route?->getLabel("sdk", false);
             $action = 'UNKNOWN_NAMESPACE.UNKNOWN.METHOD';
             if (!empty($sdk)) {
                 /** @var \Appwrite\SDK\Method $sdk */
                 $action = $sdk->getNamespace() . '.' . $sdk->getMethodName();
+            } elseif ($route === null) {
+                $path = ltrim(parse_url($request->getURI(), PHP_URL_PATH) ?? '/', '/') ?: 'root';
+                $action = 'http.' . $request->getMethod() . '.' . $path;
             }
 
             $log->setAction($action);

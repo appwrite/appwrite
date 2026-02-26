@@ -112,6 +112,30 @@ abstract class Scope extends TestCase
     }
 
     /**
+     * Check if the database adapter supports multiple fulltext indexes per collection
+     */
+    protected function getSupportForMultipleFulltextIndexes(): bool
+    {
+        return $this->getConsoleVariables()['supportForMultipleFulltextIndexes'] ?? true;
+    }
+
+    /**
+     * Check if the database adapter supports resizing attributes
+     */
+    protected function getSupportForAttributeResizing(): bool
+    {
+        return $this->getConsoleVariables()['supportForAttributeResizing'] ?? true;
+    }
+
+    /**
+     * Check if the database adapter supports fixed schemas with row width limits
+     */
+    protected function getSupportForSchemas(): bool
+    {
+        return $this->getConsoleVariables()['supportForSchemas'] ?? true;
+    }
+
+    /**
      * Get the maximum index length supported by the database adapter
      */
     protected function getMaxIndexLength(): int
@@ -119,48 +143,84 @@ abstract class Scope extends TestCase
         return $this->getConsoleVariables()['maxIndexLength'] ?? 768;
     }
 
-    protected function getLastEmail(int $limit = 1): array
+    /**
+     * Check if the database adapter uses integer sequence IDs
+     */
+    protected function getSupportForIntegerIds(): bool
     {
-        sleep(3);
+        return $this->getConsoleVariables()['supportForIntegerIds'] ?? true;
+    }
 
-        $emails = json_decode(file_get_contents('http://maildev:1080/email'), true);
+    protected function getLastEmail(int $limit = 1, ?callable $probe = null): array
+    {
+        $result = [];
+        $this->assertEventually(function () use (&$result, $limit, $probe) {
+            $emails = json_decode(file_get_contents('http://maildev:1080/email'), true);
 
-        if ($emails && is_array($emails)) {
-            if ($limit === 1) {
-                return end($emails);
+            $this->assertNotEmpty($emails, 'Maildev should have at least one email');
+            $this->assertIsArray($emails);
+
+            if ($probe !== null && $limit === 1) {
+                for ($i = count($emails) - 1; $i >= 0; $i--) {
+                    try {
+                        $probe($emails[$i]);
+                        $result = $emails[$i];
+                        return;
+                    } catch (\Throwable) {
+                        continue;
+                    }
+                }
+                $this->fail('No email matching probe found');
+            } elseif ($limit === 1) {
+                $result = end($emails);
             } else {
-                return array_slice($emails, -1 * $limit);
+                $result = array_slice($emails, -1 * $limit);
+                $this->assertCount($limit, $result, "Expected {$limit} emails but only got " . count($result));
             }
-        }
 
-        return [];
+            $this->assertNotEmpty($result, 'Expected email result to be non-empty');
+        }, 15_000, 500);
+
+        return $result;
     }
 
     /**
      * Get the last email sent to a specific address.
      * This is more reliable than getLastEmail() when tests run in parallel.
      */
-    protected function getLastEmailByAddress(string $address): array
+    protected function getLastEmailByAddress(string $address, ?callable $probe = null): array
     {
-        sleep(3);
+        $result = [];
+        $this->assertEventually(function () use (&$result, $address, $probe) {
+            $emails = json_decode(file_get_contents('http://maildev:1080/email'), true);
 
-        $emails = json_decode(file_get_contents('http://maildev:1080/email'), true);
+            $this->assertNotEmpty($emails, 'Maildev should have at least one email');
+            $this->assertIsArray($emails);
 
-        if ($emails && is_array($emails)) {
             // Search from the end (most recent) to the beginning
             for ($i = count($emails) - 1; $i >= 0; $i--) {
                 $email = $emails[$i];
                 if (isset($email['to']) && is_array($email['to'])) {
                     foreach ($email['to'] as $recipient) {
                         if (isset($recipient['address']) && $recipient['address'] === $address) {
-                            return $email;
+                            if ($probe !== null) {
+                                try {
+                                    $probe($email);
+                                } catch (\Throwable) {
+                                    continue 2;
+                                }
+                            }
+                            $result = $email;
+                            return;
                         }
                     }
                 }
             }
-        }
 
-        return [];
+            $this->fail("No email found for address: {$address}" . ($probe !== null ? ' matching probe' : ''));
+        }, 15_000, 500);
+
+        return $result;
     }
 
     protected function extractQueryParamsFromEmailLink(string $html): array
@@ -231,11 +291,11 @@ abstract class Scope extends TestCase
     /**
      * @deprecated Use getLastRequestForProject instead. Used only historically in webhook tests
      */
-    protected function getLastRequest(): array
+    protected function getLastRequest(?callable $probe = null): array
     {
         $project = $this->getProject();
         $this->assertArrayHasKey('$id', $project, 'Project must have an $id');
-        return $this->getLastRequestForProject($project['$id']);
+        return $this->getLastRequestForProject($project['$id'], self::REQUEST_TYPE_WEBHOOK, [], 10, 500, $probe);
     }
 
     /**
@@ -264,8 +324,6 @@ abstract class Scope extends TestCase
         }
 
         $query = http_build_query($queryParams);
-
-        sleep(2);
 
         for ($attempt = 0; $attempt < $maxAttempts; $attempt++) {
             $requests = json_decode(file_get_contents('http://' . $hostname . ':5000/__find_request__?' . $query), true);
@@ -374,7 +432,8 @@ abstract class Scope extends TestCase
             return self::$root;
         }
 
-        $email = uniqid() . 'user@localhost.test';
+        // Use more entropy to avoid collisions in parallel test execution
+        $email = uniqid('', true) . getmypid() . bin2hex(random_bytes(4)) . '@localhost.test';
         $password = 'password';
         $name = 'User Name';
 
@@ -400,13 +459,11 @@ abstract class Scope extends TestCase
             'password' => $password,
         ]);
 
-        $session = $session['cookies']['a_session_console'];
-
         self::$root = [
             '$id' => ID::custom($root['body']['$id']),
             'name' => $root['body']['name'],
             'email' => $root['body']['email'],
-            'session' => $session,
+            'session' => $session['cookies']['a_session_console'],
         ];
 
         return self::$root;
@@ -422,18 +479,21 @@ abstract class Scope extends TestCase
      */
     public function getUser(bool $fresh = false): array
     {
-        if (!$fresh && isset(self::$user[$this->getProject()['$id']])) {
-            return self::$user[$this->getProject()['$id']];
+        $projectId = $this->getProject()['$id'];
+
+        if (!$fresh && isset(self::$user[$projectId])) {
+            return self::$user[$projectId];
         }
 
-        $email = uniqid() . 'user@localhost.test';
+        // Use more entropy to avoid collisions in parallel test execution
+        $email = uniqid('', true) . getmypid() . bin2hex(random_bytes(4)) . '@localhost.test';
         $password = 'password';
         $name = 'User Name';
 
         $user = $this->client->call(Client::METHOD_POST, '/account', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $projectId,
         ], [
             'userId' => ID::unique(),
             'email' => $email,
@@ -446,22 +506,20 @@ abstract class Scope extends TestCase
         $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $projectId,
         ], [
             'email' => $email,
             'password' => $password,
         ]);
 
-        $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
-
-        self::$user[$this->getProject()['$id']] = [
+        self::$user[$projectId] = [
             '$id' => ID::custom($user['body']['$id']),
             'name' => $user['body']['name'],
             'email' => $user['body']['email'],
-            'session' => $token,
+            'session' => $session['cookies']['a_session_' . $projectId],
             'sessionId' => $session['body']['$id'],
         ];
 
-        return self::$user[$this->getProject()['$id']];
+        return self::$user[$projectId];
     }
 }

@@ -9,6 +9,7 @@ use Appwrite\Event\Realtime;
 use Appwrite\Event\Screenshot;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
+use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
 use Exception;
@@ -932,16 +933,6 @@ class Builds extends Action
                 $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment->getId(), $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
             }
 
-            /** Screenshot site */
-            if ($resource->getCollection() === 'sites') {
-                $queueForScreenshots
-                    ->setDeploymentId($deployment->getId())
-                    ->setProject($project)
-                    ->trigger();
-
-                Console::log('Site screenshot queued');
-            }
-
             /** Set auto deploy */
             $activateBuild = false;
             if ($deployment->getAttribute('activate') === true) {
@@ -1037,14 +1028,12 @@ class Builds extends Action
                 // VCS branch
                 $branchName = $deployment->getAttribute('providerBranch');
                 if (!empty($branchName)) {
-                    $sitesDomain = $platform['sitesDomain'];
-                    $branchPrefix = substr($branchName, 0, 16);
-                    if (strlen($branchName) > 16) {
-                        $remainingChars = substr($branchName, 16);
-                        $branchPrefix .= '-' . substr(hash('sha256', $remainingChars), 0, 7);
-                    }
-                    $resourceProjectHash = substr(hash('sha256', $resource->getId() . $project->getId()), 0, 7);
-                    $domain = "branch-{$branchPrefix}-{$resourceProjectHash}.{$sitesDomain}";
+                    $domain = (new BranchDomainFilter())->apply([
+                        'branch' => $branchName,
+                        'resourceId' => $resource->getId(),
+                        'projectId' => $project->getId(),
+                        'sitesDomain' => $platform['sitesDomain'],
+                    ]);
                     $ruleId = md5($domain);
 
                     try {
@@ -1121,6 +1110,16 @@ class Builds extends Action
                     ->setAttribute('schedule', $resource->getAttribute('schedule'))
                     ->setAttribute('active', !empty($resource->getAttribute('schedule')) && !empty($resource->getAttribute('deploymentId')));
                 $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule);
+            }
+
+            /** Screenshot site */
+            if ($resource->getCollection() === 'sites') {
+                $queueForScreenshots
+                    ->setDeploymentId($deployment->getId())
+                    ->setProject($project)
+                    ->trigger();
+
+                Console::log('Site screenshot queued');
             }
 
             Console::info('Deployment action finished');

@@ -6,6 +6,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ApiTablesDB;
 use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\SchemaPolling;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Helpers\ID;
@@ -18,6 +19,7 @@ class TablesDBPermissionsGuestTest extends Scope
     use ProjectCustom;
     use SideClient;
     use ApiTablesDB;
+    use SchemaPolling;
 
     public function createCollection(): array
     {
@@ -90,7 +92,8 @@ class TablesDBPermissionsGuestTest extends Scope
         );
         $this->assertEquals(202, $privateSchema['headers']['status-code']);
 
-        sleep(2);
+        $this->waitForAttribute($databaseId, $publicCollection['id'], 'title');
+        $this->waitForAttribute($databaseId, $privateCollection['id'], 'title');
 
         return [
             'databaseId' => $databaseId,
@@ -338,7 +341,7 @@ class TablesDBPermissionsGuestTest extends Scope
         );
         $this->assertEquals(202, $schema['headers']['status-code']);
 
-        sleep(1);
+        $this->waitForAttribute($databaseId, $moviesId, 'title');
 
         $document = $this->client->call(
             Client::METHOD_POST,

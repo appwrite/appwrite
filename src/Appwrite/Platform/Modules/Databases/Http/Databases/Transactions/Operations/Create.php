@@ -58,7 +58,7 @@ class Create extends Action
                 ],
                 contentType: ContentType::JSON
             ))
-            ->param('transactionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Transaction ID.', true, ['dbForProject'])
+            ->param('transactionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Transaction ID.', false, ['dbForProject'])
             ->param('operations', [], new ArrayList(new Operation(type: 'legacy')), 'Array of staged operations.', true)
             ->inject('response')
             ->inject('dbForProject')

@@ -77,16 +77,17 @@ class AccountConsoleClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
         $this->assertEquals($response['headers']['status-code'], 204);
-        sleep(2);
 
-        $response = $this->client->call(Client::METHOD_DELETE, '/account', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]));
+        $this->assertEventually(function () use ($session) {
+            $response = $this->client->call(Client::METHOD_DELETE, '/account', array_merge([
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            ]));
 
-        $this->assertEquals($response['headers']['status-code'], 204);
+            $this->assertEquals(204, $response['headers']['status-code']);
+        }, 10_000, 500);
     }
 
     public function testSessionAlert(): void

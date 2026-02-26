@@ -161,12 +161,48 @@ class ConsoleVariables extends Model
                 ]
             )
             ->addRule(
+                'supportForMultipleFulltextIndexes',
+                [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Whether the database adapter supports multiple fulltext indexes per collection.',
+                    'default' => true,
+                    'example' => true,
+                ]
+            )
+            ->addRule(
+                'supportForAttributeResizing',
+                [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Whether the database adapter supports resizing attributes.',
+                    'default' => true,
+                    'example' => true,
+                ]
+            )
+            ->addRule(
+                'supportForSchemas',
+                [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Whether the database adapter supports fixed schemas with row width limits.',
+                    'default' => true,
+                    'example' => true,
+                ]
+            )
+            ->addRule(
                 'maxIndexLength',
                 [
                     'type' => self::TYPE_INTEGER,
                     'description' => 'Maximum index length supported by the database adapter.',
                     'default' => 768,
                     'example' => 768,
+                ]
+            )
+            ->addRule(
+                'supportForIntegerIds',
+                [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Whether the database adapter uses integer sequence IDs.',
+                    'default' => true,
+                    'example' => true,
                 ]
             )
         ;

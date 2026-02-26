@@ -230,8 +230,8 @@ Http::setResource('allowedHostnames', function (array $platform, Document $proje
 /**
  * List of allowed request schemes for the request.
  */
-Http::setResource('allowedSchemes', function (Document $project) {
-    $allowed = [];
+Http::setResource('allowedSchemes', function (array $platform, Document $project) {
+    $allowed = [...($platform['schemas'] ?? [])];
 
     if (!$project->isEmpty() && $project->getId() !== 'console') {
         /* Add hardcoded schemes */
@@ -245,7 +245,7 @@ Http::setResource('allowedSchemes', function (Document $project) {
     }
 
     return array_unique($allowed);
-}, ['project']);
+}, ['platform', 'project']);
 
 /**
  * Rule associated with a request origin.
@@ -300,54 +300,17 @@ Http::setResource('rule', function (Request $request, Database $dbForPlatform, D
 /**
  * CORS service
  */
-Http::setResource('cors', fn (array $allowedHostnames) => new Cors(
-    $allowedHostnames,
-    allowedMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-    allowedHeaders: [
-        'Accept',
-        'Origin',
-        'Cookie',
-        'Set-Cookie',
-        // Content
-        'Content-Type',
-        'Content-Range',
-        // Appwrite
-        'X-Appwrite-Project',
-        'X-Appwrite-Key',
-        'X-Appwrite-Dev-Key',
-        'X-Appwrite-Locale',
-        'X-Appwrite-Mode',
-        'X-Appwrite-JWT',
-        'X-Appwrite-Response-Format',
-        'X-Appwrite-Timeout',
-        'X-Appwrite-ID',
-        'X-Appwrite-Timestamp',
-        'X-Appwrite-Session',
-        'X-Appwrite-Platform', // for `$platform` injection and SDK generator
-        // SDK generator
-        'X-SDK-Version',
-        'X-SDK-Name',
-        'X-SDK-Language',
-        'X-SDK-Platform',
-        'X-SDK-GraphQL',
-        'X-SDK-Profile',
-        // Caching
-        'Range',
-        'Cache-Control',
-        'Expires',
-        'Pragma',
-        // Server to server
-        'X-Fallback-Cookies',
-        'X-Requested-With',
-        'X-Forwarded-For',
-        'X-Forwarded-User-Agent',
-    ],
-    allowCredentials: true,
-    exposedHeaders: [
-        'X-Appwrite-Session',
-        'X-Fallback-Cookies',
-    ],
-), ['allowedHostnames']);
+Http::setResource('cors', function (array $allowedHostnames) {
+    $corsConfig = Config::getParam('cors');
+
+    return new Cors(
+        $allowedHostnames,
+        allowedMethods: $corsConfig['allowedMethods'],
+        allowedHeaders: $corsConfig['allowedHeaders'],
+        allowCredentials: true,
+        exposedHeaders: $corsConfig['exposedHeaders'],
+    );
+}, ['allowedHostnames']);
 
 Http::setResource('originValidator', function (Document $devKey, array $allowedHostnames, array $allowedSchemes) {
     if (!$devKey->isEmpty()) {
@@ -596,11 +559,16 @@ Http::setResource('dbForProject', function (Group $pools, Database $dbForPlatfor
         return $dbForPlatform;
     }
 
+    $database = $project->getAttribute('database', '');
+    if (empty($database)) {
+        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Project database is not configured');
+    }
+
     try {
-        $dsn = new DSN($project->getAttribute('database'));
+        $dsn = new DSN($database);
     } catch (\InvalidArgumentException) {
         // TODO: Temporary until all projects are using shared tables
-        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+        $dsn = new DSN('mysql://' . $database);
     }
 
     $adapter = new DatabasePool($pools->get($dsn->getHost()));
@@ -860,11 +828,16 @@ Http::setResource('getProjectDB', function (Group $pools, Database $dbForPlatfor
             return $dbForPlatform;
         }
 
+        $database = $project->getAttribute('database', '');
+        if (empty($database)) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Project database is not configured');
+        }
+
         try {
-            $dsn = new DSN($project->getAttribute('database'));
+            $dsn = new DSN($database);
         } catch (\InvalidArgumentException) {
             // TODO: Temporary until all projects are using shared tables
-            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+            $dsn = new DSN('mysql://' . $database);
         }
 
         $configure = (function (Database $database) use ($project, $dsn, $authorization) {
@@ -1298,6 +1271,7 @@ Http::setResource('team', function (Document $project, Database $dbForPlatform, 
     } else {
         $route = $utopia->match($request);
         $path = !empty($route) ? $route->getPath() : $request->getURI();
+        $orgHeader = $request->getHeader('x-appwrite-organization', '');
         if (str_starts_with($path, '/v1/projects/:projectId')) {
             $uri = $request->getURI();
             $pid = explode('/', $uri)[3];
@@ -1312,6 +1286,8 @@ Http::setResource('team', function (Document $project, Database $dbForPlatform, 
 
             $team = $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $teamId));
             return $team;
+        } elseif (!empty($orgHeader)) {
+            return $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $orgHeader));
         }
     }
 

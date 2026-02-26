@@ -122,6 +122,7 @@ services:
       - _APP_CONSOLE_SESSION_ALERTS
       - _APP_CONSOLE_WHITELIST_IPS
       - _APP_CONSOLE_HOSTNAMES
+      - _APP_CONSOLE_SCHEMA
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
       - _APP_SYSTEM_TEAM_EMAIL
@@ -572,6 +573,8 @@ services:
     environment:
       # Specific
       - _APP_BROWSER_HOST
+      - _APP_WORKER_SCREENSHOTS_ROUTER
+      - _APP_OPTIONS_FORCE_HTTPS
       # Basic
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -747,6 +750,7 @@ services:
     depends_on:
       - redis
       - maildev
+      - ${_APP_DB_HOST:-mariadb}
       # - smtp
     environment:
       - _APP_ENV
@@ -759,6 +763,12 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
       - _APP_SMTP_SECURE

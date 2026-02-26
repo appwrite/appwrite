@@ -63,10 +63,11 @@ class Doctor extends Action
         }
 
         $ipv4 = new IP(IP::V4);
-        if (!$ipv4->isValid(System::getEnv('_APP_DOMAIN_TARGET_A'))) {
-            Console::log('🔴 A record target is not valid (' . System::getEnv('_APP_DOMAIN_TARGET_A') . ')');
+        $targetA = \explode(',', System::getEnv('_APP_DOMAIN_TARGET_A', ''))[0];
+        if (!$ipv4->isValid($targetA)) {
+            Console::log('🔴 A record target is not valid (' . $targetA . ')');
         } else {
-            Console::log('🟢 A record target is valid (' . System::getEnv('_APP_DOMAIN_TARGET_A') . ')');
+            Console::log('🟢 A record target is valid (' . $targetA . ')');
         }
 
         $ipv6 = new IP(IP::V6);

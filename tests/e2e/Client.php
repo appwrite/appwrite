@@ -185,6 +185,14 @@ class Client
         $responseHeaders    = [];
         $cookies = [];
 
+        if (isset($params['queries'])) {
+            foreach ($params['queries'] as $value) {
+                if (!is_string($value)) {
+                    throw new Exception('Queries must be converted to strings');
+                }
+            }
+        }
+
         $query = match ($headers['content-type']) {
             'application/json' => json_encode($params),
             'multipart/form-data' => $this->flatten($params),

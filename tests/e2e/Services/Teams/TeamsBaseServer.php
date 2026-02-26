@@ -2,16 +2,46 @@
 
 namespace Tests\E2E\Services\Teams;
 
-use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait TeamsBaseServer
 {
-    #[Depends('testCreateTeam')]
-    public function testGetTeamMemberships($data): array
+    /**
+     * Helper method to create a server-side team membership (auto-confirmed).
+     * Returns membership data for tests.
+     *
+     * @param string $teamUid Team ID
+     * @param string $teamName Team name
+     * @return array{teamUid: string, userUid: string, membershipUid: string}
+     */
+    protected function createServerMembershipHelper(string $teamUid, string $teamName): array
     {
-        $id = $data['teamUid'] ?? '';
+        $email = uniqid() . 'friend@localhost.test';
+
+        $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'email' => $email,
+            'name' => 'Friend User',
+            'roles' => ['admin', 'editor'],
+            'url' => 'http://localhost:5000/join-us#title'
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        return [
+            'teamUid' => $teamUid,
+            'userUid' => $response['body']['userId'],
+            'membershipUid' => $response['body']['$id'],
+        ];
+    }
+
+    public function testGetTeamMemberships(): void
+    {
+        $teamData = $this->createTeamHelper();
+        $id = $teamData['teamUid'];
 
         /**
          * Test for SUCCESS
@@ -27,15 +57,14 @@ trait TeamsBaseServer
         /**
          * Test for FAILURE
          */
-
-        return $data;
     }
 
-    #[Depends('testCreateTeamMembership')]
-    public function testGetTeamMembership($data): void
+    public function testGetTeamMembership(): void
     {
-        $teamUid = $data['teamUid'] ?? '';
-        $membershipUid = $data['membershipUid'] ?? '';
+        $teamData = $this->createTeamHelper();
+        $membershipData = $this->createServerMembershipHelper($teamData['teamUid'], $teamData['teamName']);
+        $teamUid = $membershipData['teamUid'];
+        $membershipUid = $membershipData['membershipUid'];
 
         /**
          * Test for SUCCESS
@@ -137,11 +166,10 @@ trait TeamsBaseServer
         $this->assertEquals(401, $response['headers']['status-code']);
     }
 
-    #[Depends('testCreateTeam')]
-    public function testCreateTeamMembership($data): array
+    public function testCreateTeamMembership(): void
     {
-        $teamUid = $data['teamUid'] ?? '';
-        $teamName = $data['teamName'] ?? '';
+        $teamData = $this->createTeamHelper();
+        $teamUid = $teamData['teamUid'];
         $email = uniqid() . 'friend@localhost.test';
 
         /**
@@ -166,9 +194,6 @@ trait TeamsBaseServer
         $this->assertCount(2, $response['body']['roles']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['joined']));
         $this->assertEquals(true, $response['body']['confirm']);
-
-        $userUid = $response['body']['userId'];
-        $membershipUid = $response['body']['$id'];
 
         /**
          * Test for FAILURE
@@ -221,19 +246,14 @@ trait TeamsBaseServer
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-
-        return [
-            'teamUid' => $teamUid,
-            'userUid' => $userUid,
-            'membershipUid' => $membershipUid
-        ];
     }
 
-    #[Depends('testCreateTeamMembership')]
-    public function testUpdateMembershipRoles($data)
+    public function testUpdateMembershipRoles(): void
     {
-        $teamUid = $data['teamUid'] ?? '';
-        $membershipUid = $data['membershipUid'] ?? '';
+        $teamData = $this->createTeamHelper();
+        $membershipData = $this->createServerMembershipHelper($teamData['teamUid'], $teamData['teamName']);
+        $teamUid = $membershipData['teamUid'];
+        $membershipUid = $membershipData['membershipUid'];
 
         /**
          * Test for SUCCESS
@@ -272,15 +292,14 @@ trait TeamsBaseServer
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    #[Depends('testUpdateMembershipRoles')]
-    public function testDeleteUserUpdatesTeamMembershipCount($data)
+    public function testDeleteUserUpdatesTeamMembershipCount(): void
     {
-        $teamUid = $data['teamUid'] ?? '';
-        $userUid = $data['userUid'] ?? '';
+        $teamData = $this->createTeamHelper();
+        $membershipData = $this->createServerMembershipHelper($teamData['teamUid'], $teamData['teamName']);
+        $teamUid = $membershipData['teamUid'];
+        $userUid = $membershipData['userUid'];
 
         /** Get Team Count */
         $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid, array_merge([
@@ -304,19 +323,18 @@ trait TeamsBaseServer
         $this->assertEquals($user['headers']['status-code'], 204);
 
         /** Wait for deletes worker to delete membership and update team membership count */
-        sleep(5);
+        $this->assertEventually(function () use ($teamUid) {
+            $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
 
-        /** Get Team Count */
-        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals('Arsenal', $response['body']['name']);
-        $this->assertEquals(0, $response['body']['total']);
-        $this->assertIsInt($response['body']['total']);
-        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['$createdAt']));
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertNotEmpty($response['body']['$id']);
+            $this->assertEquals('Arsenal', $response['body']['name']);
+            $this->assertEquals(0, $response['body']['total']);
+            $this->assertIsInt($response['body']['total']);
+            $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['$createdAt']));
+        }, 30_000, 500);
     }
 }

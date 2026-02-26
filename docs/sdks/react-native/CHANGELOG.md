@@ -1,5 +1,14 @@
 # Change log
 
+## 0.24.0
+
+* Added Query.contains, Query.containsAny, and Query.containsAll for enhanced filtering capabilities.
+
+## 0.23.1
+
+* Add `upsert` method to Realtime `Channels` helper class
+* Fix `bignumber.js` bundler conflict by removing direct dependency in favor of transitive dependency from `json-bigint`
+
 ## 0.21.0
 
 * Add `queries` parameter to `client.subscribe()` for filtering Realtime events

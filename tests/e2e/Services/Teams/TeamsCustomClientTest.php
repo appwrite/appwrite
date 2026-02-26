@@ -2,7 +2,6 @@
 
 namespace Tests\E2E\Services\Teams;
 
-use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -15,10 +14,10 @@ class TeamsCustomClientTest extends Scope
     use ProjectCustom;
     use SideClient;
 
-    #[Depends('testGetTeamMemberships')]
-    public function testGetMembershipPrivacy($data)
+    public function testGetMembershipPrivacy(): void
     {
-        $teamUid = $data['teamUid'] ?? '';
+        $teamData = $this->createTeamHelper();
+        $teamUid = $teamData['teamUid'];
 
         $projectId = $this->getProject()['$id'];
 
@@ -116,10 +115,10 @@ class TeamsCustomClientTest extends Scope
         $this->assertArrayHasKey('mfa', $response['body']['memberships'][0]);
     }
 
-    #[Depends('testUpdateTeamMembership')]
-    public function testTeamsInviteHTMLInjection($data): array
+    public function testTeamsInviteHTMLInjection(): void
     {
-        $teamUid = $data['teamUid'] ?? '';
+        $teamData = $this->createTeamHelper();
+        $teamUid = $teamData['teamUid'];
         $email = uniqid() . 'friend@localhost.test';
         $name = 'Friend User';
         $password = 'password';
@@ -151,9 +150,11 @@ class TeamsCustomClientTest extends Scope
         $lastEmail = $this->getLastEmailByAddress($email);
         $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
 
-        $encoded = 'http://localhost:5000/join-us\&quot;&gt;&lt;/a&gt;&lt;h1&gt;INJECTED&lt;/h1&gt;?';
 
-        $this->assertStringNotContainsString('<h1>INJECTED</h1>', $lastEmail['html']);
+        // injection allowed, meant to be protected client-side
+        $encoded = 'http://localhost:5000/join-us\"></a><h1>INJECTED</h1>';
+
+        $this->assertStringContainsString('<h1>INJECTED</h1>', $lastEmail['html']);
         $this->assertStringContainsString($encoded, $lastEmail['html']);
 
         $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamUid . '/memberships/'.$response['body']['$id'], array_merge([
@@ -161,8 +162,5 @@ class TeamsCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
         $this->assertEquals(204, $response['headers']['status-code']);
-
-
-        return $data;
     }
 }

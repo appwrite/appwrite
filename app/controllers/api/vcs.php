@@ -2,6 +2,7 @@
 
 use Appwrite\Event\Build;
 use Appwrite\Extend\Exception;
+use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -35,6 +36,9 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
             $projectId = $repository->getAttribute('projectId');
             $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
+            if ($project->isEmpty()) {
+                throw new Exception(Exception::PROJECT_NOT_FOUND, 'Repository references non-existent project');
+            }
             $dbForProject = $getProjectDB($project);
 
             $resourceCollection = $resourceType === "function" ? 'functions' : 'sites';
@@ -316,13 +320,12 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
                 // VCS branch preview
                 if (!empty($providerBranch)) {
-                    $branchPrefix = substr($providerBranch, 0, 16);
-                    if (strlen($providerBranch) > 16) {
-                        $remainingChars = substr($providerBranch, 16);
-                        $branchPrefix .= '-' . substr(hash('sha256', $remainingChars), 0, 7);
-                    }
-                    $resourceProjectHash = substr(hash('sha256', $resource->getId() . $project->getId()), 0, 7);
-                    $domain = "branch-{$branchPrefix}-{$resourceProjectHash}.{$sitesDomain}";
+                    $domain = (new BranchDomainFilter())->apply([
+                        'branch' => $providerBranch,
+                        'resourceId' => $resource->getId(),
+                        'projectId' => $project->getId(),
+                        'sitesDomain' => $sitesDomain,
+                    ]);
                     $ruleId = md5($domain);
                     try {
                         $authorization->skip(

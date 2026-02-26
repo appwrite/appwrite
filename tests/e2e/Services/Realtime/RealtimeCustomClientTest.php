@@ -4,7 +4,6 @@ namespace Tests\E2E\Services\Realtime;
 
 use CURLFile;
 use Exception;
-use PHPUnit\Framework\Attributes\Depends;
 use Swoole\Coroutine;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -23,6 +22,24 @@ class RealtimeCustomClientTest extends Scope
     use RealtimeBase;
     use ProjectCustom;
     use SideClient;
+
+    /**
+     * Helper to create a team for membership tests.
+     */
+    protected function createTeam(): array
+    {
+        $projectId = $this->getProject()['$id'];
+
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'teamId' => ID::unique(),
+            'name' => 'Test Team ' . uniqid()
+        ]);
+
+        return ['teamId' => $team['body']['$id']];
+    }
 
     public function testChannelParsing()
     {
@@ -429,9 +446,11 @@ class RealtimeCustomClientTest extends Scope
         $this->assertContains("users.*.verification.*", $response['data']['events']);
         $this->assertContains("users.*", $response['data']['events']);
 
-        $lastEmail = $this->getLastEmail();
+        $lastEmail = $this->getLastEmailByAddress('torsten@appwrite.io', function ($email) use ($userId) {
+            $this->assertStringContainsString($userId, $email['html']);
+        });
         $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
-        $verification = $tokens['secret'];
+        $verificationSecret = $tokens['secret'];
 
         /**
          * Test Account Verification Complete
@@ -443,8 +462,10 @@ class RealtimeCustomClientTest extends Scope
             'cookie' => 'a_session_' . $projectId . '=' . $session,
         ]), [
             'userId' => $userId,
-            'secret' => $verification,
+            'secret' => $verificationSecret,
         ]);
+
+        $this->assertEquals(200, $verification['headers']['status-code']);
 
         $response = json_decode($client->receive(), true);
 
@@ -627,9 +648,12 @@ class RealtimeCustomClientTest extends Scope
         $recoveryId = $recovery['body']['$id'];
         $response = json_decode($client->receive(), true);
 
-        $lastEmail = $this->getLastEmail();
+        $lastEmail = $this->getLastEmailByAddress('torsten@appwrite.io', function ($email) use ($userId) {
+            $this->assertStringContainsString($userId, $email['html']);
+            $this->assertStringContainsString('recovery', $email['html']);
+        });
         $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
-        $recovery = $tokens['secret'];
+        $recoverySecret = $tokens['secret'];
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -651,15 +675,17 @@ class RealtimeCustomClientTest extends Scope
         $this->assertContains("users.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
 
-        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', array_merge([
+        $recoveryResponse = $this->client->call(Client::METHOD_PUT, '/account/recovery', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ]), [
             'userId' => $userId,
-            'secret' => $recovery,
+            'secret' => $recoverySecret,
             'password' => 'test-recovery',
         ]);
+
+        $this->assertEquals(200, $recoveryResponse['headers']['status-code']);
 
         $response = json_decode($client->receive(), true);
 
@@ -757,7 +783,14 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals(256, $name['body']['size']);
         $this->assertTrue($name['body']['required']);
 
-        sleep(2);
+        $this->assertEventually(function () use ($databaseId, $actorsId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $actorsId . '/attributes/name', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         /**
          * Test Document Create
@@ -1334,7 +1367,14 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals(256, $name['body']['size']);
         $this->assertTrue($name['body']['required']);
 
-        sleep(2);
+        $this->assertEventually(function () use ($databaseId, $actorsId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $actorsId . '/attributes/name', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         // create
         $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$actorsId}/documents", array_merge([
@@ -1879,7 +1919,14 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals(256, $name['body']['size']);
         $this->assertTrue($name['body']['required']);
 
-        sleep(2);
+        $this->assertEventually(function () use ($databaseId, $actorsId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $actorsId . '/attributes/name', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         /**
          * Test Document Create
@@ -2320,7 +2367,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
     }
 
-    public function testChannelTeams(): array
+    public function testChannelTeams(): void
     {
         $user = $this->getUser();
         $session = $user['session'] ?? '';
@@ -2441,14 +2488,12 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('funcValue2', $response['data']['payload']['funcKey2']);
 
         $client->close();
-
-        return ['teamId' => $teamId];
     }
 
-    #[Depends('testChannelTeams')]
-    public function testChannelMemberships(array $data)
+    public function testChannelMemberships(): void
     {
-        $teamId = $data['teamId'] ?? '';
+        $data = $this->createTeam();
+        $teamId = $data['teamId'];
 
         $user = $this->getUser();
         $session = $user['session'] ?? '';
@@ -2514,6 +2559,126 @@ class RealtimeCustomClientTest extends Scope
         $client->close();
     }
 
+    public function testChannelsTablesDB()
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()), [
+            'databaseId' => ID::unique(),
+            'name' => 'TablesDB Realtime DB',
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()), [
+            'tableId' => ID::unique(),
+            'name' => 'Actors',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $tableId = $table['body']['$id'];
+
+        $column = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()), [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->assertEquals(202, $column['headers']['status-code']);
+
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            $column = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/name', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $column['headers']['status-code']);
+            $this->assertEquals('available', $column['body']['status']);
+        }, 120000, 500);
+
+        $client = $this->getWebsocket(['documents', 'collections'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]);
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertCount(2, $response['data']['channels']);
+        $this->assertContains('documents', $response['data']['channels']);
+
+        $rowId = ID::unique();
+
+        $row = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()), [
+            'rowId' => $rowId,
+            'data' => [
+                'name' => 'Chris Evans',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $row['headers']['status-code']);
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('event', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertArrayHasKey('timestamp', $response['data']);
+
+        // Core channels for tablesdb row events
+        $this->assertContains('rows', $response['data']['channels']);
+
+        $this->assertContains("tablesdb.{$databaseId}.tables.{$tableId}.rows", $response['data']['channels']);
+        $this->assertContains("tablesdb.{$databaseId}.tables.{$tableId}.rows.{$rowId}", $response['data']['channels']);
+
+        // Collections-style compatibility channels
+        $this->assertContains('documents', $response['data']['channels']);
+        $this->assertContains("databases.{$databaseId}.tables.{$tableId}.rows", $response['data']['channels']);
+        $this->assertContains("databases.{$databaseId}.tables.{$tableId}.rows.{$rowId}", $response['data']['channels']);
+        $this->assertContains("databases.{$databaseId}.collections.{$tableId}.documents", $response['data']['channels']);
+        $this->assertContains("databases.{$databaseId}.collections.{$tableId}.documents.{$rowId}", $response['data']['channels']);
+
+        // Primary event should still be present
+        $this->assertContains("databases.{$databaseId}.tables.{$tableId}.rows.{$rowId}.create", $response['data']['events']);
+        $this->assertNotEmpty($response['data']['payload']);
+        $this->assertEquals('Chris Evans', $response['data']['payload']['name']);
+
+        $client->close();
+    }
+
     public function testChannelDatabaseTransaction()
     {
         $user = $this->getUser();
@@ -2569,7 +2734,14 @@ class RealtimeCustomClientTest extends Scope
             'required' => true,
         ]);
 
-        sleep(2);
+        $this->assertEventually(function () use ($databaseId, $collectionId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/name', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         /**
          * Test Transaction Create with Single Document
@@ -2771,7 +2943,14 @@ class RealtimeCustomClientTest extends Scope
             'required' => true,
         ]);
 
-        sleep(2);
+        $this->assertEventually(function () use ($databaseId, $collectionId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/name', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         /**
          * Test Multiple Operations in Single Transaction
@@ -2920,7 +3099,14 @@ class RealtimeCustomClientTest extends Scope
             'required' => true,
         ]);
 
-        sleep(2);
+        $this->assertEventually(function () use ($databaseId, $collectionId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/name', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         /**
          * Test Transaction Rollback - Should NOT trigger realtime events
@@ -3057,7 +3243,23 @@ class RealtimeCustomClientTest extends Scope
             'required' => false,
         ]);
 
-        sleep(2);
+        $this->assertEventually(function () use ($databaseId, $level1Id) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $level1Id . '/attributes/name', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
+
+        $this->assertEventually(function () use ($databaseId, $level2Id) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $level2Id . '/attributes/name', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         // two-way one-to-one relationship from level1 to level2
         $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$level1Id}/attributes/relationship", array_merge([
@@ -3072,7 +3274,14 @@ class RealtimeCustomClientTest extends Scope
             'onDelete' => 'cascade',
         ]);
 
-        sleep(2);
+        $this->assertEventually(function () use ($databaseId, $level1Id) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $level1Id . '/attributes/level2Ref', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $doc2 = $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$level2Id}/documents", array_merge([
             'content-type' => 'application/json',
@@ -3194,7 +3403,14 @@ class RealtimeCustomClientTest extends Scope
                 'required' => true,
             ]);
 
-            Coroutine::sleep(1);
+            $this->assertEventually(function () use ($databaseId, $collectionId) {
+                $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/name', array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]));
+                $this->assertEquals('available', $response['body']['status']);
+            }, 30000, 250);
 
             $creates = [
                 ['name' => 'Doc A'],

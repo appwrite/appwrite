@@ -3,7 +3,6 @@
 namespace Tests\E2E\Services\Messaging;
 
 use Appwrite\Tests\Async;
-use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -19,9 +18,9 @@ class MessagingConsoleClientTest extends Scope
     use ProjectCustom;
     use SideConsole;
 
-    #[Depends('testListProviders')]
-    public function testGetProviderLogs(array $providers): void
+    public function testGetProviderLogs(): void
     {
+        $providers = $this->setupUpdatedProviders();
         /**
          * Test for SUCCESS
          */
@@ -170,9 +169,9 @@ class MessagingConsoleClientTest extends Scope
         $this->assertEquals($response['headers']['status-code'], 400);
     }
 
-    #[Depends('testListTopic')]
-    public function testGetTopicLogs(string $topicId): void
+    public function testGetTopicLogs(): void
     {
+        $topicId = $this->setupUpdatedTopicId();
         /**
          * Test for SUCCESS
          */
@@ -316,13 +315,20 @@ class MessagingConsoleClientTest extends Scope
         $this->assertEquals($response['headers']['status-code'], 400);
     }
 
-    #[Depends('testSendEmail')]
-    public function testGetMessageLogs(array $email): void
+    public function testGetMessageLogs(): void
     {
+        $emailData = $this->setupSentEmailData();
+
+        if (empty($emailData)) {
+            $this->markTestSkipped('Email DSN not provided');
+        }
+
+        $email = $emailData['message'];
+
         /**
          * Test for SUCCESS
          */
-        $logs = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $email['body']['$id'] . '/logs', [
+        $logs = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $email['$id'] . '/logs', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],

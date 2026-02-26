@@ -223,6 +223,10 @@ class Response extends SwooleResponse
     public const MODEL_PROXY_RULE = 'proxyRule';
     public const MODEL_PROXY_RULE_LIST = 'proxyRuleList';
 
+    // Schedules
+    public const MODEL_SCHEDULE = 'schedule';
+    public const MODEL_SCHEDULE_LIST = 'scheduleList';
+
     // Migrations
     public const MODEL_MIGRATION = 'migration';
     public const MODEL_MIGRATION_LIST = 'migrationList';
@@ -456,6 +460,8 @@ class Response extends SwooleResponse
 
                 foreach ($data[$key] as $index => $item) {
                     if ($item instanceof Document) {
+                        $ruleType = null;
+
                         if (\is_array($rule['type'])) {
                             foreach ($rule['type'] as $type) {
                                 $condition = false;
@@ -474,8 +480,8 @@ class Response extends SwooleResponse
                             $ruleType = $rule['type'];
                         }
 
-                        if (!self::hasModel($ruleType)) {
-                            throw new Exception('Missing model for rule: ' . $ruleType);
+                        if ($ruleType === null || !self::hasModel($ruleType)) {
+                            throw new Exception('Missing model for rule: ' . ($ruleType ?? 'null') . ' (key: ' . $key . ')');
                         }
 
                         $data[$key][$index] = $this->output($item, $ruleType);

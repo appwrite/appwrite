@@ -23,6 +23,7 @@ use Utopia\Http\Request as UtopiaRequest;
 use Utopia\Http\Response as UtopiaResponse;
 use Utopia\Platform\Action;
 use Utopia\System\System;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -34,6 +35,9 @@ class Specs extends Action
             ->desc('Generate Appwrite API specifications')
             ->param('version', 'latest', new Text(16), 'Spec version', true)
             ->param('mode', 'normal', new WhiteList(['normal', 'mocks']), 'Spec Mode', true)
+            ->param('git', null, new Nullable(new WhiteList(['yes', 'no'])), 'Should we push to the specs repo?', optional: true)
+            ->param('message', null, new Nullable(new Text(256)), 'Commit Message', optional: true)
+            ->param('branch', null, new Nullable(new Text(256)), 'Target branch for PR (defaults to main)', optional: true)
             ->callback($this->action(...));
     }
 
@@ -73,6 +77,33 @@ class Specs extends Action
             APP_SDK_PLATFORM_SERVER,
             APP_SDK_PLATFORM_CONSOLE,
         ];
+    }
+
+    /**
+     * Platforms to include in PR creation.
+     * Override in a subclass to exclude specific platforms.
+     *
+     * @return array<string>
+     */
+    public static function getPlatformsForPR(): array
+    {
+        return static::getPlatforms();
+    }
+
+    /**
+     * Build the CLI command used to regenerate SDK examples.
+     * Override in a subclass to customise flags (platform, sdk, mode, etc.).
+     *
+     * @param string $version Spec version being generated
+     * @return string Shell command string (including 2>&1 redirect)
+     */
+    protected function getSdksCommand(string $version): string
+    {
+        $cli = \realpath(__DIR__ . '/../../../../app') . '/cli.php';
+
+        return 'php ' . \escapeshellarg($cli)
+            . ' sdks --platform=* --sdk=* --version=' . \escapeshellarg($version)
+            . ' --git=no --mode=examples 2>&1';
     }
 
     /**
@@ -230,8 +261,20 @@ class Specs extends Action
         return $sdkPlatforms;
     }
 
-    public function action(string $version, string $mode): void
+    public function action(string $version, string $mode, ?string $git, ?string $message, ?string $branch): void
     {
+        if (\is_null($git)) {
+            $git = Console::confirm('Should we push specs to the appwrite/specs repo? (yes/no)');
+        }
+
+        if ($git === 'yes' && \is_null($message)) {
+            $message = Console::confirm('Please enter your commit message:');
+        }
+
+        if (\is_null($branch)) {
+            $branch = 'main';
+        }
+
         $appRoutes = Http::getRoutes();
 
         /** @var AppwriteResponse $response */
@@ -248,6 +291,8 @@ class Specs extends Action
         $platforms = static::getPlatforms();
         $authCounts = $this->getAuthCounts();
         $keys = $this->getKeys();
+
+        $generatedFiles = [];
 
         foreach ($platforms as $platform) {
             $routes = [];
@@ -364,25 +409,156 @@ class Specs extends Action
                     ->setParam('docs.description', 'Full API docs, specs and tutorials')
                     ->setParam('docs.url', $endpoint . '/docs');
 
+                $specsDir = __DIR__ . '/../../../../app/config/specs';
+
+                if (!is_dir($specsDir)) {
+                    if (!mkdir($specsDir, 0755, true)) {
+                        throw new Exception('Failed to create specs directory: ' . $specsDir);
+                    }
+                }
+
                 if ($mocks) {
-                    $path = __DIR__ . '/../../../../app/config/specs/' . $format . '-mocks-' . $platform . '.json';
+                    $path = $specsDir . '/' . $format . '-mocks-' . $platform . '.json';
 
                     if (!file_put_contents($path, json_encode($specs->parse(), JSON_PRETTY_PRINT))) {
                         throw new Exception('Failed to save mocks spec file: ' . $path);
                     }
 
+                    $generatedFiles[] = realpath($path);
                     Console::success('Saved mocks spec file: ' . realpath($path));
 
                     continue;
                 }
 
-                $path = __DIR__ . '/../../../../app/config/specs/' . $format . '-' . $version . '-' . $platform . '.json';
+                $path = $specsDir . '/' . $format . '-' . $version . '-' . $platform . '.json';
 
                 if (!file_put_contents($path, json_encode($specs->parse(), JSON_PRETTY_PRINT))) {
                     throw new Exception('Failed to save spec file: ' . $path);
                 }
 
+                $generatedFiles[] = realpath($path);
                 Console::success('Saved spec file: ' . realpath($path));
+            }
+        }
+
+        if ($git === 'yes') {
+            $gitUrl = 'git@github.com:appwrite/specs.git';
+            $gitRepoName = 'appwrite/specs';
+            $gitBranch = 'feat-' . $version . '-specs';
+            $repoBranch = $branch;
+            $target = \realpath(__DIR__ . '/../../../../app') . '/sdks/git/specs/';
+            $examplesDir = \realpath(__DIR__ . '/../../../..') . '/docs/examples/' . $version;
+
+            Console::info("Cloning {$gitRepoName} into {$target}...");
+
+            \exec('rm -rf ' . $target . ' && \
+                mkdir -p ' . $target . ' && \
+                cd ' . $target . ' && \
+                git init && \
+                git config core.ignorecase false && \
+                git config pull.rebase false && \
+                git remote add origin ' . $gitUrl . ' && \
+                git fetch origin && \
+                (git checkout -f ' . $repoBranch . ' 2>/dev/null || git checkout -b ' . $repoBranch . ') && \
+                git pull origin ' . $repoBranch . ' && \
+                (git checkout -f ' . $gitBranch . ' 2>/dev/null || git checkout -b ' . $gitBranch . ') && \
+                (git fetch origin ' . $gitBranch . ' 2>/dev/null || git push -u origin ' . $gitBranch . ') && \
+                git reset --hard origin/' . $gitBranch . ' 2>/dev/null || true
+            ');
+
+            // Copy generated spec files into specs/{version}/ subdirectory
+            $prPlatforms = static::getPlatformsForPR();
+            $prFiles = \array_filter(
+                $generatedFiles,
+                fn (string $file) => \in_array(
+                    \substr(\basename($file, '.json'), \strrpos(\basename($file, '.json'), '-') + 1),
+                    $prPlatforms,
+                    true
+                )
+            );
+
+            $specsSubDir = $mocks ? 'mocks' : $version;
+            \exec('mkdir -p ' . \escapeshellarg("{$target}/specs/{$specsSubDir}"));
+            foreach ($prFiles as $file) {
+                $fileName = \basename($file);
+                \exec('cp ' . \escapeshellarg($file) . ' ' . \escapeshellarg("{$target}/specs/{$specsSubDir}/{$fileName}"));
+                Console::success("Copied spec file to repo: specs/{$specsSubDir}/{$fileName}");
+            }
+
+            // Regenerate SDK examples for this version
+            Console::info("Regenerating SDK examples for version {$version}...");
+            $sdksCommand = $this->getSdksCommand($version);
+            \exec($sdksCommand, $sdksOutput, $sdksReturnCode);
+
+            if ($sdksReturnCode !== 0) {
+                Console::warning("SDK examples generation returned non-zero exit code: {$sdksReturnCode}");
+                Console::warning(\implode("\n", $sdksOutput));
+            } else {
+                Console::success("Regenerated SDK examples for version {$version}");
+            }
+
+            // Copy SDK examples for this version, filtered by PR platforms
+            if (\is_dir($examplesDir)) {
+                \exec('mkdir -p ' . \escapeshellarg("{$target}/examples/{$version}"));
+                $exampleFolders = \glob($examplesDir . '/*', GLOB_ONLYDIR) ?: [];
+                foreach ($exampleFolders as $folder) {
+                    $folderName = \basename($folder);
+                    $platform = \strstr($folderName, '-', true) ?: $folderName;
+                    if (!\in_array($platform, $prPlatforms, true)) {
+                        Console::info("Skipping SDK examples for platform '{$platform}': examples/{$version}/{$folderName}");
+                        continue;
+                    }
+                    \exec('cp -r ' . \escapeshellarg($folder) . ' ' . \escapeshellarg("{$target}/examples/{$version}/"));
+                    Console::success("Copied SDK examples to repo: examples/{$version}/{$folderName}");
+                }
+            } else {
+                Console::warning("No SDK examples found at: {$examplesDir}. Skipping examples copy.");
+            }
+
+            // Git add, commit, and push
+            \exec('cd ' . $target . ' && \
+                git add -A && \
+                git commit -m "' . \addslashes($message) . '" && \
+                git push -u origin ' . $gitBranch . '
+            ');
+
+            Console::success("Pushed specs to {$gitRepoName} on branch {$gitBranch}");
+
+            // Create or update PR
+            $prTitle = "feat: API specs update for version {$version}";
+            $prBody = "This PR contains API specification updates and SDK examples for version {$version}.";
+
+            $prCommand = 'cd ' . $target . ' && \
+                gh pr create \
+                --repo "' . $gitRepoName . '" \
+                --title "' . $prTitle . '" \
+                --body "' . $prBody . '" \
+                --base "' . $repoBranch . '" \
+                --head "' . $gitBranch . '" \
+                2>&1';
+
+            $prUrl = '';
+            \exec($prCommand, $prOutput);
+            $prOutput = \implode("\n", $prOutput);
+
+            if (\str_contains($prOutput, 'already exists')) {
+                Console::warning("PR already exists for branch {$gitBranch}");
+                // Try to get the existing PR URL
+                \exec('cd ' . $target . ' && gh pr view --repo "' . $gitRepoName . '" --json url -q .url 2>&1', $existingPrOutput);
+                $prUrl = \trim(\implode("\n", $existingPrOutput));
+            } else {
+                $prUrl = \trim($prOutput);
+            }
+
+            // Clean up temp directory
+            \exec('chmod -R u+w ' . $target . ' && rm -rf ' . $target);
+            Console::success("Removed temp directory '{$target}'");
+
+            if (!empty($prUrl)) {
+                Console::log('');
+                Console::log('Pull Request Summary');
+                Console::log("Specs PR: {$prUrl}");
+                Console::log('');
             }
         }
     }

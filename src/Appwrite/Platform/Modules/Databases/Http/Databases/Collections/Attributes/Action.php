@@ -388,9 +388,8 @@ abstract class Action extends UtopiaAction
                 \in_array($attribute->getAttribute('type'), Database::SPATIAL_TYPES) &&
                 $attribute->getAttribute('required')
             ) {
-                $hasData = !$authorization->skip(fn () => $dbForProject
-                    ->findOne('database_' . $db->getSequence() . '_collection_' . $collection->getSequence()))
-                    ->isEmpty();
+                $hasData = $authorization->skip(fn () => $dbForProject
+                    ->count('database_' . $db->getSequence() . '_collection_' . $collection->getSequence())) > 0;
 
                 if ($hasData) {
                     throw new StructureException('Failed to add required spatial column: existing rows present. Make the column optional.');

@@ -4,7 +4,6 @@ namespace Tests\E2E\Services\Storage;
 
 use Appwrite\Extend\Exception;
 use CURLFile;
-use PHPUnit\Framework\Attributes\Depends;
 use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
@@ -15,8 +14,170 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait StorageBase
 {
+    /**
+     * @var array Cached bucket and file data for tests
+     */
+    private static array $cachedBucketFile = [];
+
+    /**
+     * @var array Cached zstd compression bucket data for tests
+     */
+    private static array $cachedZstdBucket = [];
+
+    /**
+     * Helper method to set up bucket and file data for tests.
+     * Uses static caching to avoid recreating resources.
+     */
+    protected function setupBucketFile(): array
+    {
+        $cacheKey = $this->getProject()['$id'];
+
+        if (!empty(self::$cachedBucketFile[$cacheKey])) {
+            return self::$cachedBucketFile[$cacheKey];
+        }
+
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket',
+            'fileSecurity' => true,
+            'maximumFileSize' => 2000000, //2MB
+            'allowedFileExtensions' => ['jpg', 'png', 'jfif', 'webp'],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $bucketId = $bucket['body']['$id'];
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        // Create large file bucket
+        $bucket2 = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket 2',
+            'fileSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::any()),
+            ],
+        ]);
+
+        // Chunked Upload for large file
+        $source = __DIR__ . "/../../../resources/disk-a/large-file.mp4";
+        $totalSize = \filesize($source);
+        $chunkSize = 5 * 1024 * 1024;
+        $handle = @fopen($source, "rb");
+        $fileId = 'unique()';
+        $mimeType = mime_content_type($source);
+        $counter = 0;
+        $size = filesize($source);
+        $headers = [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ];
+        $id = '';
+        while (!feof($handle)) {
+            $curlFile = new \CURLFile('data://' . $mimeType . ';base64,' . base64_encode(@fread($handle, $chunkSize)), $mimeType, 'large-file.mp4');
+            $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size - 1) . '/' . $size;
+            if (!empty($id)) {
+                $headers['x-appwrite-id'] = $id;
+            }
+            $largeFile = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket2['body']['$id'] . '/files', array_merge($headers, $this->getHeaders()), [
+                'fileId' => $fileId,
+                'file' => $curlFile,
+                'permissions' => [
+                    Permission::read(Role::any())
+                ],
+            ]);
+            $counter++;
+            $id = $largeFile['body']['$id'];
+        }
+        @fclose($handle);
+
+        // Upload webp file
+        $webpFile = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/image.webp'), 'image/webp', 'image.webp'),
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        self::$cachedBucketFile[$cacheKey] = [
+            'bucketId' => $bucketId,
+            'fileId' => $file['body']['$id'],
+            'largeFileId' => $largeFile['body']['$id'],
+            'largeBucketId' => $bucket2['body']['$id'],
+            'webpFileId' => $webpFile['body']['$id']
+        ];
+
+        return self::$cachedBucketFile[$cacheKey];
+    }
+
+    /**
+     * Helper method to set up zstd compression bucket for tests.
+     * Uses static caching to avoid recreating resources.
+     */
+    protected function setupZstdCompressionBucket(): array
+    {
+        $cacheKey = $this->getProject()['$id'];
+
+        if (!empty(self::$cachedZstdBucket[$cacheKey])) {
+            return self::$cachedZstdBucket[$cacheKey];
+        }
+
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket',
+            'fileSecurity' => true,
+            'maximumFileSize' => 2000000, //2MB
+            'allowedFileExtensions' => ["jpg", "png"],
+            'compression' => 'zstd',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        self::$cachedZstdBucket[$cacheKey] = ['bucketId' => $bucket['body']['$id']];
+
+        return self::$cachedZstdBucket[$cacheKey];
+    }
+
     #[Group('fileTokens')]
-    public function testCreateBucketFile(): array
+    public function testCreateBucketFile(): void
     {
         /**
          * Test for SUCCESS
@@ -294,11 +455,9 @@ trait StorageBase
         $this->assertEquals(200, $webpView['headers']['status-code']);
         $this->assertEquals('image/webp', $webpView['headers']['content-type']);
         $this->assertNotEmpty($webpView['body']);
-
-        return ['bucketId' => $bucketId, 'fileId' => $file['body']['$id'],  'largeFileId' => $largeFile['body']['$id'], 'largeBucketId' => $bucket2['body']['$id'], 'webpFileId' => $webpFileId];
     }
 
-    public function testCreateBucketFileZstdCompression(): array
+    public function testCreateBucketFileZstdCompression(): void
     {
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
             'content-type' => 'application/json',
@@ -343,8 +502,6 @@ trait StorageBase
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);
         $this->assertTrue(md5_file(realpath(__DIR__ . '/../../../resources/logo.png')) == $file['body']['signature']);
-
-        return ['bucketId' => $bucketId];
     }
 
     public function testCreateBucketFileNoCollidingId(): void
@@ -395,9 +552,10 @@ trait StorageBase
         $this->assertEquals(409, $file['headers']['status-code']);
     }
 
-    #[Depends('testCreateBucketFile')]
-    public function testListBucketFiles(array $data): array
+    public function testListBucketFiles(): void
     {
+        $data = $this->setupBucketFile();
+
         /**
          * Test for SUCCESS
          */
@@ -479,13 +637,11 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
         $this->assertEquals(404, $files['headers']['status-code']);
-
-        return $data;
     }
 
-    #[Depends('testCreateBucketFile')]
-    public function testGetBucketFile(array $data): array
+    public function testGetBucketFile(): void
     {
+        $data = $this->setupBucketFile();
         $bucketId = $data['bucketId'];
         /**
          * Test for SUCCESS
@@ -700,13 +856,11 @@ trait StorageBase
         ]);
 
         $this->assertEquals(404, $file8['headers']['status-code']);
-
-        return $data;
     }
 
-    #[Depends('testCreateBucketFile')]
-    public function testFilePreviewCache(array $data): array
+    public function testFilePreviewCache(): void
     {
+        $data = $this->setupBucketFile();
         $bucketId = $data['bucketId'];
 
         $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
@@ -753,7 +907,15 @@ trait StorageBase
 
         $this->assertEquals(204, $file['headers']['status-code']);
         $this->assertEmpty($file['body']);
-        sleep(1);
+
+        $this->assertEventually(function () use ($data, $fileId) {
+            $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files/' . $fileId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $this->assertEquals(404, $file['headers']['status-code']);
+        }, 10_000, 500);
+
         //upload again using the same ID
         $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
             'content-type' => 'multipart/form-data',
@@ -791,13 +953,11 @@ trait StorageBase
         $imageAfter->readImageBlob($file3['body']);
 
         $this->assertNotEquals($imageBefore->getImageBlob(), $imageAfter->getImageBlob());
-
-        return $data;
     }
 
-    #[Depends('testCreateBucketFileZstdCompression')]
-    public function testFilePreviewZstdCompression(array $data): array
+    public function testFilePreviewZstdCompression(): void
     {
+        $data = $this->setupZstdCompressionBucket();
         $bucketId = $data['bucketId'];
 
         $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
@@ -833,13 +993,12 @@ trait StorageBase
         $this->assertEquals(200, $file3['headers']['status-code']);
         $this->assertEquals('image/png', $file3['headers']['content-type']);
         $this->assertNotEmpty($file3['body']);
-
-        return $data;
     }
 
-    #[Depends('testCreateBucketFile')]
-    public function testUpdateBucketFile(array $data): array
+    public function testUpdateBucketFile(): void
     {
+        $data = $this->setupBucketFile();
+
         /**
          * Test for SUCCESS
          */
@@ -887,13 +1046,11 @@ trait StorageBase
         ]);
 
         $this->assertEquals(404, $file['headers']['status-code']);
-
-        return $data;
     }
 
-    #[Depends('testCreateBucketFile')]
-    public function testFilePreview(array $data): array
+    public function testFilePreview(): void
     {
+        $data = $this->setupBucketFile();
         $bucketId = $data['bucketId'];
         $fileId = $data['fileId'];
 
@@ -910,13 +1067,62 @@ trait StorageBase
         $this->assertEquals(200, $preview['headers']['status-code']);
         $this->assertEquals('image/webp', $preview['headers']['content-type']);
         $this->assertNotEmpty($preview['body']);
-
-        return $data;
     }
 
-    #[Depends('testUpdateBucketFile')]
-    public function testDeleteBucketFile(array $data): array
+    public function testDeleteBucketFile(): void
     {
+        // Create a fresh file just for deletion testing (not using cache since we delete it)
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket Delete',
+            'fileSecurity' => true,
+            'maximumFileSize' => 2000000,
+            'allowedFileExtensions' => ['jpg', 'png'],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $bucketId = $bucket['body']['$id'];
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $file['headers']['status-code']);
+
+        // First update the file (to test that delete works after update)
+        $file = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'logo_updated.png',
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+
+        $this->assertEquals(200, $file['headers']['status-code']);
+
+        $data = ['bucketId' => $bucketId, 'fileId' => $file['body']['$id']];
         /**
          * Test for SUCCESS
          */
@@ -934,8 +1140,6 @@ trait StorageBase
         ], $this->getHeaders()));
 
         $this->assertEquals(404, $file['headers']['status-code']);
-
-        return $data;
     }
 
     public function testBucketTotalSize(): void

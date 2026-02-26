@@ -1,3 +1,0 @@
-```bash
-appwrite console variables
-```
