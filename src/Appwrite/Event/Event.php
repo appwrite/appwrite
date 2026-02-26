@@ -524,7 +524,6 @@ class Event
      * @throws \InvalidArgumentException
      */
     public static function generateEvents(string $pattern, array $params = [], ?Document $database = null): array
-    public static function generateEvents(string $pattern, array $params = [], ?Document $database = null): array
     {
         // $params = \array_filter($params, fn($param) => !\is_array($param));
         $paramKeys = \array_keys($params);
