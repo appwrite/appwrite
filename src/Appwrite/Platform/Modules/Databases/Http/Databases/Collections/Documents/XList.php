@@ -163,7 +163,7 @@ class XList extends Action
 
                     if ($cachedDocuments !== null &&
                         $cachedDocuments !== false &&
-                      \is_array($cachedDocuments)) {
+                        \is_array($cachedDocuments)) {
                         $documents = \array_map(function ($doc) {
                             return new Document($doc);
                         }, $cachedDocuments);

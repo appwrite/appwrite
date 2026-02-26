@@ -3285,6 +3285,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(200, $documents1['headers']['status-code']);
+        $this->assertEquals(3, $documents1['body']['total']);
         $this->assertCount(3, $documents1['body'][$this->getRecordResource()]);
         $this->assertEquals(1944, $documents1['body'][$this->getRecordResource()][0]['releaseYear']);
         $this->assertEquals(2017, $documents1['body'][$this->getRecordResource()][1]['releaseYear']);
@@ -3308,6 +3309,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(200, $documents2['headers']['status-code']);
+        $this->assertEquals(3, $documents2['body']['total']);
         $this->assertCount(3, $documents2['body'][$this->getRecordResource()]);
         $this->assertEquals($documents1['body'][$this->getRecordResource()][0]['$id'], $documents2['body'][$this->getRecordResource()][0]['$id']);
         $this->assertEquals($documents1['body'][$this->getRecordResource()][0]['title'], $documents2['body'][$this->getRecordResource()][0]['title']);
