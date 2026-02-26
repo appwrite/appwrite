@@ -142,14 +142,18 @@ class XList extends Action
                     $hostname = $dbForProject->getAdapter()->getHostname();
                     $roles = $dbForProject->getAuthorization()->getRoles();
                     $collectionUpdatedAt = $collection->getAttribute('$updatedAt', '');
+                    $attributeCount = \count($collection->getAttribute('attributes', []));
+                    $indexCount = \count($collection->getAttribute('indexes', []));
                     $cacheKeyBase = \sprintf(
-                        '%s-cache-%s:%s:%s:collection:%s:%s:user:%s:%s',
+                        '%s-cache-%s:%s:%s:collection:%s:%s:%d:%d:user:%s:%s',
                         $dbForProject->getCacheName(),
                         $hostname ?? '',
                         $dbForProject->getNamespace(),
                         $dbForProject->getTenant(),
                         $collectionId,
                         $collectionUpdatedAt,
+                        $attributeCount,
+                        $indexCount,
                         \md5(\json_encode($roles)),
                         \md5(\json_encode($serializedQueries))
                     );
