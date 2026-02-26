@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Env;
 use Utopia\CLI\Console;
-use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
@@ -35,14 +34,14 @@ class Upgrade extends Install
     }
 
     public function action(
-		string $httpPort,
-		string $httpsPort,
-		string $organization,
-		string $image,
-		string $interactive,
-		bool $noStart,
-		string $database
-		): void {
+        string $httpPort,
+        string $httpsPort,
+        string $organization,
+        string $image,
+        string $interactive,
+        bool $noStart,
+        string $database
+    ): void {
         $isLocalInstall = $this->isLocalInstall();
         $this->applyLocalPaths($isLocalInstall, true);
 
@@ -79,31 +78,31 @@ class Upgrade extends Install
         }
 
         if ($database === null) {
-            throw new \Exception('Database type not found, can not updgrade. Ensure `_APP_DB_ADAPTER` is set in your environment.')
+            throw new \Exception('Database type not found, can not updgrade. Ensure `_APP_DB_ADAPTER` is set in your environment.');
         }
 
         parent::action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, $database);
     }
 
     protected function startWebServer(
-		string $defaultHttpPort,
-		string $defaultHttpsPort,
-		string $organization,
-		string $image,
-		bool $noStart,
-		array $vars,
-		bool $isUpgrade = false,
-		?string $lockedDatabase = null
-	): void {
+        string $defaultHttpPort,
+        string $defaultHttpsPort,
+        string $organization,
+        string $image,
+        bool $noStart,
+        array $vars,
+        bool $isUpgrade = false,
+        ?string $lockedDatabase = null
+    ): void {
         parent::startWebServer(
-			$defaultHttpPort,
-			$defaultHttpsPort,
-			$organization,
-			$image,
-			$noStart,
-			$vars,
-			true,
-			$this->lockedDatabase
-		);
+            $defaultHttpPort,
+            $defaultHttpsPort,
+            $organization,
+            $image,
+            $noStart,
+            $vars,
+            true,
+            $this->lockedDatabase
+        );
     }
 }
