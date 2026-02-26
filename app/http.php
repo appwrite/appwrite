@@ -562,6 +562,11 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
 
             $log->addTag('method', $route?->getMethod() ?? $request->getMethod());
             $log->addTag('url', $route?->getPath() ?? $request->getURI());
+
+            if (str_contains($th->getMessage(), 'FTS_TERM or FTS_NUMB')) {
+                $log->addTag('paramQueries', json_encode($request->getParam('queries')));
+            }
+
             $log->addTag('verboseType', get_class($th));
             $log->addTag('code', $th->getCode());
             // $log->addTag('projectId', $project->getId()); // TODO: Figure out how to get ProjectID, if it becomes relevant
