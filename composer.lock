@@ -4685,17 +4685,13 @@
         {
             "name": "utopia-php/pools",
             "version": "1.0.3",
-            "version": "1.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/pools.git",
                 "reference": "74de7c5457a2c447f27e7ec4d72e8412a7d68c10"
-                "reference": "74de7c5457a2c447f27e7ec4d72e8412a7d68c10"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/pools/zipball/74de7c5457a2c447f27e7ec4d72e8412a7d68c10",
-                "reference": "74de7c5457a2c447f27e7ec4d72e8412a7d68c10",
                 "url": "https://api.github.com/repos/utopia-php/pools/zipball/74de7c5457a2c447f27e7ec4d72e8412a7d68c10",
                 "reference": "74de7c5457a2c447f27e7ec4d72e8412a7d68c10",
                 "shasum": ""
@@ -4736,9 +4732,7 @@
             "support": {
                 "issues": "https://github.com/utopia-php/pools/issues",
                 "source": "https://github.com/utopia-php/pools/tree/1.0.3"
-                "source": "https://github.com/utopia-php/pools/tree/1.0.3"
             },
-            "time": "2026-02-26T08:42:40+00:00"
             "time": "2026-02-26T08:42:40+00:00"
         },
         {
