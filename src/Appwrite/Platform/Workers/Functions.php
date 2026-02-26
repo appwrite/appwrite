@@ -11,7 +11,6 @@ use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Utopia\Response\Model\Execution;
-use Exception;
 use Executor\Executor;
 use Utopia\Config\Config;
 use Utopia\Console;
@@ -73,7 +72,10 @@ class Functions extends Action
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
-            throw new Exception('Missing payload');
+            throw new AppwriteException(
+                AppwriteException::GENERAL_ARGUMENT_INVALID,
+                'Functions worker: missing payload in schedule execution'
+            );
         }
 
         $type = $payload['type'] ?? '';
@@ -392,7 +394,10 @@ class Functions extends Action
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
 
         if (!\array_key_exists($function->getAttribute('runtime'), $runtimes)) {
-            throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
+            throw new AppwriteException(
+                AppwriteException::FUNCTION_RUNTIME_UNSUPPORTED,
+                \sprintf('Runtime "%s" is not supported', $function->getAttribute('runtime', '')),
+            );
         }
 
         $runtime = $runtimes[$function->getAttribute('runtime')];
@@ -640,7 +645,7 @@ class Functions extends Action
         if (!empty($error)) {
             throw new AppwriteException(
                 AppwriteException::GENERAL_SERVER_ERROR,
-                $error ?: 'Function execution failed with no error message',
+                'Function execution failed: ' . ($error ?: 'No error message provided'),
                 $errorCode
             );
         }

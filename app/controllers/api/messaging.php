@@ -3251,7 +3251,7 @@ Http::post('/v1/messaging/messages/email')
             }
         }
 
-        $message = $dbForProject->createDocument('messages', new Document([
+        $message = new Document([
             '$id' => $messageId,
             'providerType' => MESSAGE_TYPE_EMAIL,
             'topics' => $topics,
@@ -3267,7 +3267,12 @@ Http::post('/v1/messaging/messages/email')
                 'attachments' => $attachments,
             ],
             'status' => $status,
-        ]));
+        ]);
+        try {
+            $message = $dbForProject->createDocument('messages', $message);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::MESSAGE_ALREADY_EXISTS);
+        }
 
         switch ($status) {
             case MessageStatus::PROCESSING:
@@ -3400,7 +3405,7 @@ Http::post('/v1/messaging/messages/sms')
             }
         }
 
-        $message = $dbForProject->createDocument('messages', new Document([
+        $message = new Document([
             '$id' => $messageId,
             'providerType' => MESSAGE_TYPE_SMS,
             'topics' => $topics,
@@ -3410,7 +3415,12 @@ Http::post('/v1/messaging/messages/sms')
                 'content' => $content,
             ],
             'status' => $status,
-        ]));
+        ]);
+        try {
+            $message = $dbForProject->createDocument('messages', $message);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::MESSAGE_ALREADY_EXISTS);
+        }
 
         switch ($status) {
             case MessageStatus::PROCESSING:
@@ -3620,7 +3630,7 @@ Http::post('/v1/messaging/messages/push')
             $pushData['priority'] = $priority;
         }
 
-        $message = $dbForProject->createDocument('messages', new Document([
+        $message = new Document([
             '$id' => $messageId,
             'providerType' => MESSAGE_TYPE_PUSH,
             'topics' => $topics,
@@ -3629,7 +3639,12 @@ Http::post('/v1/messaging/messages/push')
             'scheduledAt' => $scheduledAt,
             'data' => $pushData,
             'status' => $status,
-        ]));
+        ]);
+        try {
+            $message = $dbForProject->createDocument('messages', $message);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::MESSAGE_ALREADY_EXISTS);
+        }
 
         switch ($status) {
             case MessageStatus::PROCESSING:
