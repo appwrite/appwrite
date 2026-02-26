@@ -519,9 +519,11 @@ class Event
      * @param string $pattern
      * @param array $params
      * @param ?Document $database
+     * @param ?Document $database
      * @return array
      * @throws \InvalidArgumentException
      */
+    public static function generateEvents(string $pattern, array $params = [], ?Document $database = null): array
     public static function generateEvents(string $pattern, array $params = [], ?Document $database = null): array
     {
         // $params = \array_filter($params, fn($param) => !\is_array($param));

@@ -79,7 +79,7 @@
         "utopia-php/storage": "1.0.*",
         "utopia-php/system": "0.10.*",
         "utopia-php/telemetry": "0.2.*",
-        "utopia-php/vcs": "1.*",
+        "utopia-php/vcs": "2.*",
         "utopia-php/websocket": "1.0.*",
         "matomo/device-detector": "6.4.*",
         "dragonmantank/cron-expression": "3.4.*",

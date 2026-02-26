@@ -90,6 +90,15 @@ class Delete extends Base
         }
         $status = $execution->getAttribute('status');
 
+        // Treat timed-out executions as failed so they can be deleted.
+        if ($status === 'waiting' || $status === 'processing') {
+            $timeout = $function->getAttribute('timeout', 900);
+            $elapsed = \time() - \strtotime($execution->getCreatedAt());
+            if ($elapsed >= $timeout) {
+                $status = 'failed';
+            }
+        }
+
         if (!in_array($status, ['completed', 'failed', 'scheduled'])) {
             throw new Exception(Exception::EXECUTION_IN_PROGRESS);
         }

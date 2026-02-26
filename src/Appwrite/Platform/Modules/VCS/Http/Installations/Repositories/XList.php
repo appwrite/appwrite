@@ -141,7 +141,7 @@ class XList extends Action
 
         $page = ($offset / $limit) + 1;
         $owner = $github->getOwnerName($providerInstallationId);
-        ['items' => $repos, 'total' => $total] = $github->searchRepositories($owner, $page, $limit, $search);
+        ['items' => $repos, 'total' => $total] = $github->searchRepositories($providerInstallationId, $owner, $page, $limit, $search);
 
         $repos = \array_map(function ($repo) use ($installation) {
             $repo['id'] = \strval($repo['id'] ?? '');
