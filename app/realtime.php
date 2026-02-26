@@ -268,8 +268,8 @@ if (!function_exists('logError')) {
 
             $log->addTag('code', $error->getCode());
             $log->addTag('verboseType', get_class($error));
-            $log->addTag('projectId', $project?->getId() ?? 'n/a');
-            $log->addTag('userId', $user?->getId() ?? 'n/a');
+            $log->addTag('projectId', $project?->getId() ?: 'n/a');
+            $log->addTag('userId', $user?->getId() ?: 'n/a');
 
             foreach ($tags as $key => $value) {
                 $log->addTag($key, $value ?: 'n/a');
@@ -702,7 +702,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $stats->incr($project->getId(), 'connections');
         $stats->incr($project->getId(), 'connectionsTotal');
     } catch (Throwable $th) {
-        logError($th, 'realtime', [], $project, $logUser, $authorization);
+        logError($th, 'realtime', project: $project, user: $logUser, authorization: $authorization);
 
         // Handle SQL error code is 'HY000'
         $code = $th->getCode();
@@ -866,7 +866,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Message type is not valid.');
         }
     } catch (Throwable $th) {
-        logError($th, 'realtimeMessage', [], $project, null, $authorization);
+        logError($th, 'realtimeMessage', project: $project, authorization: $authorization);
         $code = $th->getCode();
         if (!is_int($code)) {
             $code = 500;
