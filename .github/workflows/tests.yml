@@ -303,7 +303,7 @@ jobs:
         if: failure()
         run: |
           echo "=== Appwrite Logs ==="
-          docker compose logs
+          docker compose logs appwrite
 
   e2e_shared_mode_test:
     name: E2E Shared Mode Service Test
