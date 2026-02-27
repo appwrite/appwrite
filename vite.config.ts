@@ -1,3 +1,4 @@
+
 import { defineConfig } from 'vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import { sentryTanstackStart } from '@sentry/tanstackstart-react'
@@ -65,12 +66,26 @@ const config = defineConfig({
     allowedHosts: true,
     hmr: true,
   },
+  resolve: {
+    dedupe: ['react', 'react-dom'],
+  },
   preview: {
     port: 4173,
     host: '::',
   },
   build: {
     outDir: 'dist',
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./vitest.setup.ts'],
+    css: false,
+    include: [
+      'src/**/*.{test,spec}.{ts,tsx}',
+      'tests/**/*.{test,spec}.{ts,tsx}',
+    ],
+    exclude: ['e2e/**', 'node_modules/**'],
   },
 })
 
