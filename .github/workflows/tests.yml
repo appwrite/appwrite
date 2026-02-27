@@ -265,7 +265,7 @@ jobs:
           fi
 
           sleep 2
-        done
+          done
 
       - name: Wait for Open Runtimes
         timeout-minutes: 3
