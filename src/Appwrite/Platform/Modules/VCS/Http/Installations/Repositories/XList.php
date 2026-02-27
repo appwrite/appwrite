@@ -148,6 +148,8 @@ class XList extends Action
             $repo['pushedAt'] = $repo['pushed_at'] ?? null;
             $repo['provider'] = $installation->getAttribute('provider', '') ?? '';
             $repo['organization'] = $installation->getAttribute('organization', '') ?? '';
+            $repo['providerInstallationId'] = $installation->getAttribute('providerInstallationId', '');
+            $repo['authorized'] = true;
             return $repo;
         }, $repos);
 
