@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\VCS\Http\GitHub\Callback;
 
 use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Permission as AppwritePermission;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -21,6 +22,7 @@ use Utopia\VCS\Adapter\Git\GitHub;
 class Get extends Action
 {
     use HTTP;
+    use AppwritePermission;
 
     public static function getName()
     {
@@ -132,13 +134,7 @@ class Get extends Action
 
                 $installation = new Document([
                     '$id' => ID::unique(),
-                    '$permissions' => [
-                        Permission::read(Role::team(ID::custom($teamId))),
-                        Permission::update(Role::team(ID::custom($teamId), 'owner')),
-                        Permission::update(Role::team(ID::custom($teamId), 'developer')),
-                        Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-                        Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-                    ],
+                    '$permissions' => $this->getPermissions($teamId, $projectId),
                     'providerInstallationId' => $providerInstallationId,
                     'projectId' => $projectId,
                     'projectInternalId' => $projectInternalId,
