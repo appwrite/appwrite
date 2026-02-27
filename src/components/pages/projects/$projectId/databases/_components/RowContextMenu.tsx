@@ -28,27 +28,13 @@ import {
   Lock,
   ExternalLink,
   Square,
-  Code2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { CodeBlock } from '@/components/global/shared/CodeBlock'
-import {
   deleteProjectTableRow,
   createProjectTableRow,
 } from '@/lib/react-query/hooks'
-import {
-  getRowSnippetSections,
-  ROW_SNIPPET_SDK_OPTIONS,
-  type RowSnippetSdk,
-} from '@/lib/snippets/rows'
 
 /** Minimal row shape for context menu (matches RowData from View) */
 export interface RowContextMenuRow {
@@ -116,8 +102,6 @@ export function RowContextMenu({
 }: RowContextMenuProps) {
   const queryClient = useQueryClient()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [snippetDialogOpen, setSnippetDialogOpen] = useState(false)
-  const [snippetSdk, setSnippetSdk] = useState<RowSnippetSdk>('web')
 
   const deleteMutation = useMutation({
     mutationFn: () =>
@@ -220,17 +204,6 @@ export function RowContextMenu({
     setDeleteDialogOpen(true)
   }
 
-  const handleOpenSnippetDialog = () => {
-    setSnippetDialogOpen(true)
-  }
-
-  const snippetData = getRowSnippetSections(
-    snippetSdk,
-    databaseId,
-    tableId,
-    row.$id,
-  )
-
   return (
     <>
       <ContextMenu>
@@ -284,12 +257,6 @@ export function RowContextMenu({
                   <FileJson className="size-4" />
                 </span>
                 Copy as JSON
-              </ContextMenuItem>
-              <ContextMenuItem onSelect={handleOpenSnippetDialog}>
-                <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-                  <Code2 className="size-4" />
-                </span>
-                Copy code snippet
               </ContextMenuItem>
             </ContextMenuSubContent>
           </ContextMenuSub>
@@ -353,57 +320,6 @@ export function RowContextMenu({
         </DialogContent>
       </Dialog>
 
-      <Dialog open={snippetDialogOpen} onOpenChange={setSnippetDialogOpen}>
-        <DialogContent className="sm:max-w-lg p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 text-left">
-            <DialogTitle>Copy code snippet</DialogTitle>
-            <DialogDescription className="text-[13px] mt-2">
-              Choose an SDK to copy row snippets. Assumes a `tablesDB` client is
-              already initialized.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="border-t border-border" />
-          <div className="px-6 py-4 space-y-4 max-h-[70vh] overflow-y-auto">
-            <div className="space-y-2">
-              <span className="text-[13px] font-medium text-foreground">
-                SDK
-              </span>
-              <Select
-                value={snippetSdk}
-                onValueChange={(value) =>
-                  setSnippetSdk(value as RowSnippetSdk)
-                }
-              >
-                <SelectTrigger className="h-9 text-[13px] w-full">
-                  <SelectValue placeholder="Select SDK" />
-                </SelectTrigger>
-                <SelectContent>
-                  {ROW_SNIPPET_SDK_OPTIONS.map((option) => (
-                    <SelectItem key={option.id} value={option.id}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-4">
-              {snippetData.sections.map((section) => (
-                <div key={section.title} className="space-y-2">
-                  <h4 className="text-[13px] font-semibold text-foreground">
-                    {section.title}
-                  </h4>
-                  <CodeBlock
-                    code={section.code}
-                    language={snippetData.language}
-                    showCopy
-                    copyInside
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   )
 }
