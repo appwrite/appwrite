@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\E2E\Services\Databases\VectorDB;
+namespace Tests\E2E\Services\Databases;
 
 use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
@@ -12,7 +12,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 
-class DatabasesConsoleClientTest extends Scope
+class VectorDBConsoleClientTest extends Scope
 {
     use ProjectCustom;
     use SideConsole;

@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Databases\VectorDB;
 
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
@@ -33,9 +34,7 @@ trait DatabasesBase
         return ['databaseId' => $database['body']['$id']];
     }
 
-    /**
-     * @depends testCreateCollectionSample
-     */
+    #[Depends('testCreateCollectionSample')]
     public function testCreateDocument(array $data): array
     {
         $databaseId = $data['databaseId'];
@@ -131,9 +130,7 @@ trait DatabasesBase
         ];
     }
 
-    /**
-     * @depends testCreateDocument
-     */
+    #[Depends('testCreateDocument')]
     public function testGetDocument(array $data): array
     {
         $databaseId = $data['databaseId'];
@@ -160,9 +157,7 @@ trait DatabasesBase
         return $data;
     }
 
-    /**
-     * @depends testCreateDocument
-     */
+    #[Depends('testCreateDocument')]
     public function testListDocuments(array $data): array
     {
         $databaseId = $data['databaseId'];
@@ -211,9 +206,7 @@ trait DatabasesBase
         return $data;
     }
 
-    /**
-     * @depends testCreateDocument
-     */
+    #[Depends('testCreateDocument')]
     public function testUpsertDocument(array $data): array
     {
         $databaseId = $data['databaseId'];
@@ -250,9 +243,7 @@ trait DatabasesBase
         return $data;
     }
 
-    /**
-     * @depends testUpsertDocument
-     */
+    #[Depends('testUpsertDocument')]
     public function testUpdateDocument(array $data): array
     {
         // Upsert is used for update semantics
@@ -303,9 +294,7 @@ trait DatabasesBase
         return $data;
     }
 
-    /**
-     * @depends testUpdateDocument
-     */
+    #[Depends('testUpdateDocument')]
     public function testDocumentsVectorQueries(array $data): array
     {
         $databaseId = $data['databaseId'];
@@ -409,9 +398,7 @@ trait DatabasesBase
         return $data;
     }
 
-    /**
-     * @depends testDocumentsVectorQueries
-     */
+    #[Depends('testDocumentsVectorQueries')]
     public function testDeleteDocument(array $data): void
     {
         $databaseId = $data['databaseId'];
@@ -444,9 +431,7 @@ trait DatabasesBase
         $this->assertEquals(200, $list['headers']['status-code']);
     }
 
-    /**
-     * @depends testCreateCollectionSample
-     */
+    #[Depends('testCreateCollectionSample')]
     public function testDocumentPermissions(array $data): void
     {
         $databaseId = $data['databaseId'];
@@ -487,9 +472,7 @@ trait DatabasesBase
         $this->assertEquals(200, $withKey['headers']['status-code']);
     }
 
-    /**
-     * @depends testCreateDatabase
-     */
+    #[Depends('testCreateDatabase')]
     public function testCreateCollection(array $data): array
     {
         $databaseId = $data['databaseId'];
@@ -556,9 +539,7 @@ trait DatabasesBase
         return ['databaseId' => $database['body']['$id']];
     }
 
-    /**
-     * @depends testCreateDatabaseSample
-     */
+    #[Depends('testCreateDatabaseSample')]
     public function testCreateCollectionSample(array $data): array
     {
         $databaseId = $data['databaseId'];
@@ -972,9 +953,7 @@ trait DatabasesBase
         $this->assertEquals(0, $res['body']['total']);
     }
 
-    /**
-     * @depends testCreateCollection
-     */
+    #[Depends('testCreateCollection')]
     public function testCreateIndexes(array $data): array
     {
         $databaseId = $data['databaseId'];
@@ -1023,9 +1002,7 @@ trait DatabasesBase
         ];
     }
 
-    /**
-     * @depends testCreateIndexes
-     */
+    #[Depends('testCreateIndexes')]
     public function testListIndexes(array $data): void
     {
         $databaseId = $data['databaseId'];
@@ -1044,9 +1021,7 @@ trait DatabasesBase
         }
     }
 
-    /**
-     * @depends testCreateIndexes
-     */
+    #[Depends('testCreateIndexes')]
     public function testGetIndexByKey(array $data): void
     {
         $databaseId = $data['databaseId'];

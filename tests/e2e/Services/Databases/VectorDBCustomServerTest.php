@@ -1,20 +1,19 @@
 <?php
 
-declare(strict_types=1);
-
-namespace Tests\E2E\Services\Databases\VectorDB;
+namespace Tests\E2E\Services\Databases;
 
 use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Tests\E2E\Services\Databases\VectorDB\DatabasesBase;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 
-class DatabasesCustomServerTest extends Scope
+class VectorDBCustomServerTest extends Scope
 {
     use DatabasesBase;
     use ProjectCustom;
