@@ -12,8 +12,6 @@ use Utopia\Database\Query;
 
 trait TransactionsBase
 {
-    use SchemaPolling;
-
     protected static string $sharedDatabaseId = '';
     protected static string $sharedCollectionId = '';
     protected static bool $sharedSetupDone = false;
@@ -70,19 +68,21 @@ trait TransactionsBase
         $this->assertEquals(201, $collection['headers']['status-code']);
         self::$sharedCollectionId = $collection['body']['$id'];
 
-        // Create a standard 'name' attribute
-        $nameAttr = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, self::$sharedCollectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'name',
-            'size' => 256,
-            'required' => true,
-        ]);
-        $this->assertEquals(202, $nameAttr['headers']['status-code']);
+        // Create a standard 'name' attribute only if attributes are supported
+        if ($this->getSupportForAttributes()) {
+            $nameAttr = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, self::$sharedCollectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'name',
+                'size' => 256,
+                'required' => true,
+            ]);
+            $this->assertEquals(202, $nameAttr['headers']['status-code']);
 
-        $this->waitForAllAttributes($databaseId, self::$sharedCollectionId);
+            $this->waitForAllAttributes($databaseId, self::$sharedCollectionId);
+        }
 
         return self::$sharedCollectionId;
     }
@@ -219,20 +219,22 @@ trait TransactionsBase
         $collectionId = $collection['body']['$id'];
 
         // Add attributes
-        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, 'string', null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'name',
-            'size' => 256,
-            'required' => true,
-        ]);
+        if ($this->getSupportForAttributes()) {
+            $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, 'string', null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'name',
+                'size' => 256,
+                'required' => true,
+            ]);
 
-        $this->assertEquals(202, $attribute['headers']['status-code']);
+            $this->assertEquals(202, $attribute['headers']['status-code']);
 
-        // Wait for attribute to be created
-        $this->waitForAllAttributes($databaseId, $collectionId);
+            // Wait for attribute to be created
+            $this->waitForAllAttributes($databaseId, $collectionId);
+        }
 
         // Add valid operations
         $response = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . "/operations", array_merge([
@@ -365,18 +367,20 @@ trait TransactionsBase
         $collectionId = $collection['body']['$id'];
 
         // Add attributes
-        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, 'string', null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'name',
-            'size' => 256,
-            'required' => true,
-        ]);
+        if ($this->getSupportForAttributes()) {
+            $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, 'string', null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'name',
+                'size' => 256,
+                'required' => true,
+            ]);
 
-        $this->assertEquals(202, $attribute['headers']['status-code']);
-        $this->waitForAllAttributes($databaseId, $collectionId);
+            $this->assertEquals(202, $attribute['headers']['status-code']);
+            $this->waitForAllAttributes($databaseId, $collectionId);
+        }
 
         // Create transaction
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
@@ -517,17 +521,19 @@ trait TransactionsBase
         $collectionId = $collection['body']['$id'];
 
         // Add attribute
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, 'string', null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'value',
-            'size' => 256,
-            'required' => true,
-        ]);
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, 'string', null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'value',
+                'size' => 256,
+                'required' => true,
+            ]);
 
-        $this->waitForAllAttributes($databaseId, $collectionId);
+            $this->waitForAllAttributes($databaseId, $collectionId);
+        }
 
         // Add operations
         $response = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . "/operations", array_merge([
@@ -607,15 +613,17 @@ trait TransactionsBase
         $collectionId = $collection['body']['$id'];
 
         // Create attribute
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'data',
-            'size' => 256,
-            'required' => false,
-        ]);
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'data',
+                'size' => 256,
+                'required' => false,
+            ]);
+        }
 
         $this->waitForAllAttributes($databaseId, $collectionId);
 
@@ -697,15 +705,17 @@ trait TransactionsBase
         $collectionId = $collection['body']['$id'];
 
         // Create attribute
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'value',
-            'size' => 256,
-            'required' => false,
-        ]);
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'value',
+                'size' => 256,
+                'required' => false,
+            ]);
+        }
 
         $this->waitForAllAttributes($databaseId, $collectionId);
 
@@ -819,17 +829,19 @@ trait TransactionsBase
         $collectionId = $collection['body']['$id'];
 
         // Create attribute
-        $counterAttr = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "integer", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'counter',
-            'required' => true,
-            'min' => 0,
-            'max' => 1000000,
-        ]);
-        $this->assertEquals(202, $counterAttr['headers']['status-code']);
+        if ($this->getSupportForAttributes()) {
+            $counterAttr = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "integer", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'counter',
+                'required' => true,
+                'min' => 0,
+                'max' => 1000000,
+            ]);
+            $this->assertEquals(202, $counterAttr['headers']['status-code']);
+        }
 
         $this->waitForAllAttributes($databaseId, $collectionId);
 
@@ -959,15 +971,17 @@ trait TransactionsBase
         $collectionId = $collection['body']['$id'];
 
         // Create attribute
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'data',
-            'size' => 256,
-            'required' => false,
-        ]);
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'data',
+                'size' => 256,
+                'required' => false,
+            ]);
+        }
 
         $this->waitForAllAttributes($databaseId, $collectionId);
 
@@ -1064,25 +1078,27 @@ trait TransactionsBase
         $collectionId = $collection['body']['$id'];
 
         // Create attributes
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'name',
-            'size' => 256,
-            'required' => true,
-        ]);
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'name',
+                'size' => 256,
+                'required' => true,
+            ]);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'category',
-            'size' => 256,
-            'required' => true,
-        ]);
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'category',
+                'size' => 256,
+                'required' => true,
+            ]);
+        }
 
         $this->waitForAllAttributes($databaseId, $collectionId);
 
@@ -1228,15 +1244,17 @@ trait TransactionsBase
         $collectionId = $collection['body']['$id'];
 
         // Create attributes with constraints
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'email',
-            'size' => 256,
-            'required' => true,
-        ]);
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'email',
+                'size' => 256,
+                'required' => true,
+            ]);
+        }
 
         $this->waitForAllAttributes($databaseId, $collectionId);
 
@@ -1595,17 +1613,19 @@ trait TransactionsBase
             ['key' => 'data', 'type' => 'string', 'size' => 256, 'required' => false],
         ];
 
-        foreach ($attributes as $attr) {
-            $type = $attr['type'];
-            unset($attr['type']);
+        if ($this->getSupportForAttributes()) {
+            foreach ($attributes as $attr) {
+                $type = $attr['type'];
+                unset($attr['type']);
 
-            $response = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, $type, null), array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
-            ]), $attr);
+                $response = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, $type, null), array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey']
+                ]), $attr);
 
-            $this->assertEquals(202, $response['headers']['status-code']);
+                $this->assertEquals(202, $response['headers']['status-code']);
+            }
         }
 
         $this->waitForAllAttributes($databaseId, $collectionId);
@@ -1699,36 +1719,38 @@ trait TransactionsBase
         $collectionId = $collection['body']['$id'];
 
         // Create attributes
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'name',
-            'size' => 256,
-            'required' => true,
-        ]);
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'name',
+                'size' => 256,
+                'required' => true,
+            ]);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "integer", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'counter',
-            'required' => false,
-            'min' => 0,
-            'max' => 10000,
-        ]);
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "integer", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'counter',
+                'required' => false,
+                'min' => 0,
+                'max' => 10000,
+            ]);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'category',
-            'size' => 256,
-            'required' => false,
-        ]);
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'category',
+                'size' => 256,
+                'required' => false,
+            ]);
+        }
 
         $this->waitForAllAttributes($databaseId, $collectionId);
 
@@ -1836,26 +1858,28 @@ trait TransactionsBase
         $collectionId = $collection['body']['$id'];
 
         // Create attributes
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'name',
-            'size' => 256,
-            'required' => true,
-        ]);
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'name',
+                'size' => 256,
+                'required' => true,
+            ]);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "integer", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'counter',
-            'required' => false,
-            'min' => 0,
-            'max' => 10000,
-        ]);
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "integer", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'counter',
+                'required' => false,
+                'min' => 0,
+                'max' => 10000,
+            ]);
+        }
 
         $this->waitForAllAttributes($databaseId, $collectionId);
 
@@ -2031,25 +2055,27 @@ trait TransactionsBase
         $collectionId = $collection['body']['$id'];
 
         // Create attributes
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'name',
-            'size' => 256,
-            'required' => true,
-        ]);
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'name',
+                'size' => 256,
+                'required' => true,
+            ]);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'category',
-            'size' => 256,
-            'required' => false,
-        ]);
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'category',
+                'size' => 256,
+                'required' => false,
+            ]);
+        }
 
         $this->waitForAllAttributes($databaseId, $collectionId);
 
@@ -2175,25 +2201,27 @@ trait TransactionsBase
         $collectionId = $collection['body']['$id'];
 
         // Create attributes
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'name',
-            'size' => 256,
-            'required' => true,
-        ]);
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'name',
+                'size' => 256,
+                'required' => true,
+            ]);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'category',
-            'size' => 256,
-            'required' => false,
-        ]);
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'category',
+                'size' => 256,
+                'required' => false,
+            ]);
+        }
 
         $this->waitForAllAttributes($databaseId, $collectionId);
 
@@ -2299,26 +2327,28 @@ trait TransactionsBase
         $collectionId = $collection['body']['$id'];
 
         // Create attributes
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'name',
-            'size' => 256,
-            'required' => true,
-        ]);
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'name',
+                'size' => 256,
+                'required' => true,
+            ]);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "integer", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'counter',
-            'required' => false,
-            'min' => 0,
-            'max' => 10000,
-        ]);
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "integer", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'counter',
+                'required' => false,
+                'min' => 0,
+                'max' => 10000,
+            ]);
+        }
 
         $this->waitForAllAttributes($databaseId, $collectionId);
 
@@ -2445,25 +2475,27 @@ trait TransactionsBase
         $collectionId = $collection['body']['$id'];
 
         // Create attributes
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'name',
-            'size' => 256,
-            'required' => true,
-        ]);
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'name',
+                'size' => 256,
+                'required' => true,
+            ]);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'category',
-            'size' => 256,
-            'required' => false,
-        ]);
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'category',
+                'size' => 256,
+                'required' => false,
+            ]);
+        }
 
         $this->waitForAllAttributes($databaseId, $collectionId);
 
@@ -2569,36 +2601,38 @@ trait TransactionsBase
         $collectionId = $collection['body']['$id'];
 
         // Create attributes
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'name',
-            'size' => 256,
-            'required' => true,
-        ]);
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'name',
+                'size' => 256,
+                'required' => true,
+            ]);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'status',
-            'size' => 256,
-            'required' => false,
-        ]);
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'status',
+                'size' => 256,
+                'required' => false,
+            ]);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "integer", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'priority',
-            'required' => false,
-            'min' => 1,
-            'max' => 10,
-        ]);
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "integer", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'priority',
+                'required' => false,
+                'min' => 1,
+                'max' => 10,
+            ]);
+        }
 
         $this->waitForAllAttributes($databaseId, $collectionId);
 
@@ -2990,34 +3024,36 @@ trait TransactionsBase
         $collectionId = $collection['body']['$id'];
 
         // Create attributes
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'name',
-            'size' => 256,
-            'required' => true,
-        ]);
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'name',
+                'size' => 256,
+                'required' => true,
+            ]);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "integer", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'age',
-            'required' => true,
-        ]);
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "integer", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'age',
+                'required' => true,
+            ]);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'status',
-            'size' => 256,
-            'required' => true,
-        ]);
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'status',
+                'size' => 256,
+                'required' => true,
+            ]);
+        }
 
         $this->waitForAllAttributes($databaseId, $collectionId);
 
@@ -3170,35 +3206,37 @@ trait TransactionsBase
         $collectionId = $collection['body']['$id'];
 
         // Create attributes
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'name',
-            'size' => 256,
-            'required' => true,
-        ]);
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'name',
+                'size' => 256,
+                'required' => true,
+            ]);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'category',
-            'size' => 256,
-            'required' => true,
-        ]);
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'category',
+                'size' => 256,
+                'required' => true,
+            ]);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'priority',
-            'size' => 256,
-            'required' => true,
-        ]);
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'priority',
+                'size' => 256,
+                'required' => true,
+            ]);
+        }
 
         $this->waitForAllAttributes($databaseId, $collectionId);
 
@@ -3345,25 +3383,27 @@ trait TransactionsBase
         $collectionId = $collection['body']['$id'];
 
         // Create attributes
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'name',
-            'size' => 256,
-            'required' => true,
-        ]);
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'name',
+                'size' => 256,
+                'required' => true,
+            ]);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'type',
-            'size' => 256,
-            'required' => true,
-        ]);
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'type',
+                'size' => 256,
+                'required' => true,
+            ]);
+        }
 
         $this->waitForAllAttributes($databaseId, $collectionId);
 
@@ -3507,25 +3547,27 @@ trait TransactionsBase
         $collectionId = $collection['body']['$id'];
 
         // Create attributes
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'name',
-            'size' => 256,
-            'required' => true,
-        ]);
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'name',
+                'size' => 256,
+                'required' => true,
+            ]);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'status',
-            'size' => 256,
-            'required' => true,
-        ]);
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'status',
+                'size' => 256,
+                'required' => true,
+            ]);
+        }
 
         $this->waitForAllAttributes($databaseId, $collectionId);
 
@@ -3965,25 +4007,27 @@ trait TransactionsBase
         $collectionId = $collection['body']['$id'];
 
         // Add attributes
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'status',
-            'size' => 50,
-            'required' => false,
-        ]);
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'status',
+                'size' => 50,
+                'required' => false,
+            ]);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'category',
-            'size' => 50,
-            'required' => false,
-        ]);
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'category',
+                'size' => 50,
+                'required' => false,
+            ]);
+        }
 
         $this->waitForAllAttributes($databaseId, $collectionId);
 
@@ -4107,24 +4151,26 @@ trait TransactionsBase
         $collectionId = $collection['body']['$id'];
 
         // Add attributes
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'name',
-            'size' => 100,
-            'required' => false,
-        ]);
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'name',
+                'size' => 100,
+                'required' => false,
+            ]);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "integer", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'value',
-            'required' => false,
-        ]);
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "integer", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'value',
+                'required' => false,
+            ]);
+        }
 
         $this->waitForAllAttributes($databaseId, $collectionId);
 
@@ -4266,24 +4312,26 @@ trait TransactionsBase
         $collectionId = $collection['body']['$id'];
 
         // Add attributes
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'type',
-            'size' => 50,
-            'required' => false,
-        ]);
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'type',
+                'size' => 50,
+                'required' => false,
+            ]);
 
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "integer", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'priority',
-            'required' => false,
-        ]);
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "integer", null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'priority',
+                'required' => false,
+            ]);
+        }
 
         $this->waitForAllAttributes($databaseId, $collectionId);
 
@@ -4405,20 +4453,22 @@ trait TransactionsBase
         $collectionId = $collection['body']['$id'];
 
         // Add required attribute
-        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, 'string', null), array_merge([
+        if ($this->getSupportForAttributes())
+            {$attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, 'string', null), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'name',
-            'size' => 256,
-            'required' => true,
-        ]);
+            ]), [
+                'key' => 'name',
+                'size' => 256,
+                'required' => true,
+            ]);
 
-        $this->assertEquals(202, $attribute['headers']['status-code']);
+            $this->assertEquals(202, $attribute['headers']['status-code']);
 
-        // Wait for attribute to be ready
-        $this->waitForAllAttributes($databaseId, $collectionId);
+            // Wait for attribute to be ready
+            $this->waitForAllAttributes($databaseId, $collectionId);
+        }
 
         // Create transaction
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
