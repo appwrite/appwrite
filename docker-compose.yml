@@ -99,6 +99,7 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
+      - ./vendor:/usr/src/code/vendor
 
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
@@ -1268,7 +1269,6 @@ services:
       start_period: 5s
 
   mariadb:
-    profiles: ["mariadb"]
     image: mariadb:10.11 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
     <<: *x-logging
@@ -1287,7 +1287,6 @@ services:
     command: "mysqld --innodb-flush-method=fsync"
 
   mongodb:
-    profiles: ["mongodb"]
     image: mongo:8.2.5
     container_name: appwrite-mongodb
     <<: *x-logging
@@ -1324,7 +1323,6 @@ services:
       start_period: 30s
 
   appwrite-mongo-express:
-    profiles: ["mongodb"]
     image: mongo-express
     container_name: appwrite-mongo-express
     networks:
@@ -1339,7 +1337,6 @@ services:
       - mongodb
 
   postgresql:
-    profiles: ["postgresql"]
     build:
       context: ./tests/resources/postgresql
       args:

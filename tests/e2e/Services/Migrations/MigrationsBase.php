@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Migrations;
 
 use CURLFile;
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\General\UsageTest;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -1933,9 +1934,7 @@ trait MigrationsBase
         ];
     }
 
-    /**
-     * @depends testAppwriteMigrationVectorDBDatabase
-     */
+    #[Depends('testAppwriteMigrationVectorDBDatabase')]
     public function testAppwriteMigrationVectorDBCollection(array $data): array
     {
         $databaseId = $data['databaseId'];
@@ -1993,9 +1992,7 @@ trait MigrationsBase
         ];
     }
 
-    /**
-     * @depends testAppwriteMigrationVectorDBCollection
-     */
+    #[Depends('testAppwriteMigrationVectorDBCollection')]
     public function testAppwriteMigrationVectorDBDocument(array $data): void
     {
         $databaseId = $data['databaseId'];
@@ -2069,9 +2066,7 @@ trait MigrationsBase
         ]);
     }
 
-    /**
-     * @depends testAppwriteMigrationDocumentsDBDatabase
-     */
+    #[Depends('testAppwriteMigrationDocumentsDBDatabase')]
     public function testAppwriteMigrationDocumentsDBCollection(array $data): array
     {
         $databaseId = $data['databaseId'];
@@ -2132,9 +2127,7 @@ trait MigrationsBase
         ];
     }
 
-    /**
-     * @depends testAppwriteMigrationDocumentsDBCollection
-     */
+    #[Depends('testAppwriteMigrationDocumentsDBCollection')]
     public function testAppwriteMigrationDocumentsDBDocument(array $data): void
     {
         $databaseId = $data['databaseId'];

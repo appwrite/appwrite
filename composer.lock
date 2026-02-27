@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "082aa8800a474cf0f381344d67069961",
+    "content-hash": "502c839fb593cfae623f8e2eb69ff5c3",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4517,16 +4517,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "dev-remove-dsn-callables",
+            "version": "dev-multitype-db",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "682cdc36618a2be4fe376047a6250a3d0c4ea739"
+                "reference": "237513f8cd581055690ed7dad389388ac26642e8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/682cdc36618a2be4fe376047a6250a3d0c4ea739",
-                "reference": "682cdc36618a2be4fe376047a6250a3d0c4ea739",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/237513f8cd581055690ed7dad389388ac26642e8",
+                "reference": "237513f8cd581055690ed7dad389388ac26642e8",
                 "shasum": ""
             },
             "require": {
@@ -4566,9 +4566,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/remove-dsn-callables"
+                "source": "https://github.com/utopia-php/migration/tree/multitype-db"
             },
-            "time": "2026-02-24T05:05:52+00:00"
+            "time": "2026-02-25T03:19:23+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -9044,7 +9044,7 @@
     "aliases": [
         {
             "package": "utopia-php/migration",
-            "version": "dev-remove-dsn-callables",
+            "version": "dev-multitype-db",
             "alias": "1.6.2",
             "alias_normalized": "1.6.2.0"
         }
