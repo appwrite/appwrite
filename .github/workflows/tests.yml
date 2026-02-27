@@ -255,12 +255,17 @@ jobs:
           _APP_BROWSER_HOST: http://invalid-browser/v1
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
-          docker compose up -d
-          until OUTPUT=$(docker compose exec -T appwrite doctor 2>&1); do
-            echo "Waiting for Appwrite..."
-            echo "$OUTPUT"
-            sleep 2
-          done
+          until docker compose exec -T appwrite doctor; do
+          echo "Waiting for Appwrite..."
+
+          if ! docker compose ps appwrite | grep -q "Up"; then
+            echo "Appwrite container is not running!"
+            docker compose logs appwrite
+            exit 1
+          fi
+
+          sleep 2
+        done
 
       - name: Wait for Open Runtimes
         timeout-minutes: 3
