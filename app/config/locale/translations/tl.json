@@ -245,5 +245,15 @@
     "emails.otpSession.clientInfo": "Ang pag-sign in na ito ay hiniling gamit ang {{agentClient}} sa {{agentDevice}} {{agentOs}}. Kung hindi ikaw ang humiling ng pag-sign in, maaari mong ligtas na balewalain ang email na ito.",
     "emails.otpSession.securityPhrase": "Ang security phrase para sa email na ito ay {{phrase}}. Maaari mong pagkatiwalaan ang email na ito kung ang phrase na ito ay tugma sa phrase na ipinakita noong nag-sign in.",
     "emails.otpSession.thanks": "Salamat,",
-    "emails.otpSession.signature": "team ng {{project}}"
+    "emails.otpSession.signature": "team ng {{project}}",
+    "emails.sessionAlert.subject": "Security alert: new session on your {{project}} account",
+    "emails.sessionAlert.preview": "New login detected on {{project}} at {{time}} UTC.",
+    "emails.sessionAlert.hello": "Hello {{user}},",
+    "emails.sessionAlert.body": "A new session has been created on your {{b}}{{project}}{{/b}} account, {{b}}on {{date}}, {{year}} at {{time}} UTC{{/b}}.\nHere are the details of the new session: ",
+    "emails.sessionAlert.listDevice": "Device: {{b}}{{device}}{{/b}}",
+    "emails.sessionAlert.listIpAddress": "IP Address: {{b}}{{ipAddress}}{{/b}}",
+    "emails.sessionAlert.listCountry": "Country: {{b}}{{country}}{{/b}}",
+    "emails.sessionAlert.footer": "If this was you, there's nothing more you need to do.\nIf you didn't initiate this session or suspect any unauthorized activity, please secure your account.",
+    "emails.sessionAlert.thanks": "Thanks,",
+    "emails.sessionAlert.signature": "{{project}} team"
 }
