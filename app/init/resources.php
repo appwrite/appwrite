@@ -424,7 +424,11 @@ App::setResource('user', function (string $mode, Document $project, Document $co
         }
         $jwtSessionId = $payload['sessionId'] ?? '';
         if (!empty($jwtSessionId)) {
-            if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
+            $session = $user->find('$id', $jwtSessionId, 'sessions');
+            if (empty($session) || (isset($session['expire']) && DatabaseDateTime::formatTz($session['expire']) < DatabaseDateTime::formatTz(DatabaseDateTime::now()))) {
+                $user = new User([]);
+            }
+        } // Match JWT to active token
                 $user = new User([]);
             }
         }
