@@ -248,48 +248,62 @@ $adapter
 
 $server = new Server($adapter);
 
-$logError = function (Throwable $error, string $action) use ($register) {
-    $logger = $register->get('realtimeLogger');
+// Allows overriding
+if (!function_exists('logError')) {
+    function logError(Throwable $error, string $action, array $tags = [], ?Document $project = null, ?Document $user = null, ?Authorization $authorization = null): void
+    {
+        global $register;
 
-    if ($logger && !$error instanceof Exception) {
-        $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
+        $logger = $register->get('realtimeLogger');
 
-        $log = new Log();
-        $log->setNamespace("realtime");
-        $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-        $log->setVersion($version);
-        $log->setType(Log::TYPE_ERROR);
-        $log->setMessage($error->getMessage());
+        if ($logger && !$error instanceof Exception) {
+            $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
-        $log->addTag('code', $error->getCode());
-        $log->addTag('verboseType', get_class($error));
+            $log = new Log();
+            $log->setNamespace("realtime");
+            $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
+            $log->setVersion($version);
+            $log->setType(Log::TYPE_ERROR);
+            $log->setMessage($error->getMessage());
 
-        $log->addExtra('file', $error->getFile());
-        $log->addExtra('line', $error->getLine());
-        $log->addExtra('trace', $error->getTraceAsString());
+            $log->addTag('code', $error->getCode());
+            $log->addTag('verboseType', get_class($error));
+            $log->addTag('projectId', $project?->getId() ?: 'n/a');
+            $log->addTag('userId', $user?->getId() ?: 'n/a');
 
-        $log->setAction($action);
+            foreach ($tags as $key => $value) {
+                $log->addTag($key, $value ?: 'n/a');
+            }
 
-        $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
-        $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+            $log->addExtra('file', $error->getFile());
+            $log->addExtra('line', $error->getLine());
+            $log->addExtra('trace', $error->getTraceAsString());
+            $log->addExtra('detailedTrace', $error->getTrace());
+            $log->addExtra('roles', $authorization?->getRoles() ?? []);
 
-        try {
-            $responseCode = $logger->addLog($log);
-            Console::info('Error log pushed with status code: ' . $responseCode);
-        } catch (Throwable $th) {
-            Console::error('Error pushing log: ' . $th->getMessage());
+            $log->setAction($action);
+
+            $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
+            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+
+            try {
+                $responseCode = $logger->addLog($log);
+                Console::info('Error log pushed with status code: ' . $responseCode);
+            } catch (Throwable $th) {
+                Console::error('Error pushing log: ' . $th->getMessage());
+            }
         }
+
+        Console::error('[Error] Type: ' . get_class($error));
+        Console::error('[Error] Message: ' . $error->getMessage());
+        Console::error('[Error] File: ' . $error->getFile());
+        Console::error('[Error] Line: ' . $error->getLine());
     }
+}
 
-    Console::error('[Error] Type: ' . get_class($error));
-    Console::error('[Error] Message: ' . $error->getMessage());
-    Console::error('[Error] File: ' . $error->getFile());
-    Console::error('[Error] Line: ' . $error->getLine());
-};
+$server->error(logError(...));
 
-$server->error($logError);
-
-$server->onStart(function () use ($stats, $register, $containerId, &$statsDocument, $logError) {
+$server->onStart(function () use ($stats, $register, $containerId, &$statsDocument) {
     sleep(5); // wait for the initial database schema to be ready
     Console::success('Server started successfully');
 
@@ -326,7 +340,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
      */
     // TODO: Remove this if check once it doesn't cause issues for cloud
     if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
-        Timer::tick(5000, function () use ($register, $stats, &$statsDocument, $logError) {
+        Timer::tick(5000, function () use ($register, $stats, &$statsDocument) {
             $payload = [];
             foreach ($stats as $projectId => $value) {
                 $payload[$projectId] = $stats->get($projectId, 'connectionsTotal');
@@ -344,13 +358,13 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
 
                 $database->getAuthorization()->skip(fn () => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
             } catch (Throwable $th) {
-                $logError($th, "updateWorkerDocument");
+                logError($th, "updateWorkerDocument");
             }
         });
     }
 });
 
-$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $logError) {
+$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime) {
     Console::success('Worker ' . $workerId . ' started successfully');
 
     $telemetry = getTelemetry($workerId);
@@ -362,7 +376,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     $attempts = 0;
     $start = time();
 
-    Timer::tick(5000, function () use ($server, $register, $realtime, $stats, $logError) {
+    Timer::tick(5000, function () use ($server, $register, $realtime, $stats) {
         /**
          * Sending current connections to project channels on the console project every 5 seconds.
          */
@@ -548,7 +562,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 }
             });
         } catch (Throwable $th) {
-            $logError($th, "pubSubConnection");
+            logError($th, "pubSubConnection");
 
             Console::error('Pub/sub error: ' . $th->getMessage());
             $attempts++;
@@ -560,7 +574,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     Console::error('Failed to restart pub/sub...');
 });
 
-$server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime, $logError) {
+$server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime) {
     $app = new Http('UTC');
     $request = new Request($request);
     $response = new Response(new SwooleResponse());
@@ -570,6 +584,10 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     Http::setResource('pools', fn () => $register->get('pools'));
     Http::setResource('request', fn () => $request);
     Http::setResource('response', fn () => $response);
+
+    $project = null;
+    $logUser = null;
+    $authorization = null;
 
     try {
         /** @var Document $project */
@@ -591,8 +609,15 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
 
+        $projectRegion = $project->getAttribute('region', '');
+        $currentRegion = System::getEnv('_APP_REGION', 'default');
+        if (!empty($projectRegion) && $projectRegion !== $currentRegion) {
+            throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'Project is not accessible in this region. Please make sure you are using the correct endpoint');
+        }
+
         $timelimit = $app->getResource('timelimit');
         $user = $app->getResource('user'); /** @var User $user */
+        $logUser = $user;
 
         /*
          * Abuse Check
@@ -683,11 +708,11 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $stats->incr($project->getId(), 'connections');
         $stats->incr($project->getId(), 'connectionsTotal');
     } catch (Throwable $th) {
-        $logError($th, "initServer");
+        logError($th, 'realtime', project: $project, user: $logUser, authorization: $authorization);
 
         // Handle SQL error code is 'HY000'
         $code = $th->getCode();
-        if (!is_int($code)) {
+        if (!\is_int($code)) {
             $code = 500;
         }
 
@@ -718,7 +743,10 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     }
 });
 
-$server->onMessage(function (int $connection, string $message) use ($server, $register, $realtime, $containerId, $logError) {
+$server->onMessage(function (int $connection, string $message) use ($server, $register, $realtime, $containerId) {
+    $project = null;
+    $authorization = null;
+
     try {
         $response = new Response(new SwooleResponse());
         $projectId = $realtime->connections[$connection]['projectId'] ?? null;
@@ -844,7 +872,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Message type is not valid.');
         }
     } catch (Throwable $th) {
-        $logError($th, "realtimeMessage");
+        logError($th, 'realtimeMessage', project: $project, authorization: $authorization);
         $code = $th->getCode();
         if (!is_int($code)) {
             $code = 500;
