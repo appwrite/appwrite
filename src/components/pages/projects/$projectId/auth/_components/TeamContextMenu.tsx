@@ -4,9 +4,12 @@ import {
   Users,
   Pencil,
   Plus,
-  Activity,
   Trash2,
   UserPlus,
+  ExternalLink,
+  Square,
+  Link2,
+  FileJson,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -30,6 +33,14 @@ import { Button } from '@/components/ui/button'
 import { useNavigate } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { deleteProjectTeam } from '@/lib/react-query/hooks/users'
+import {
+  buildConsoleUrl,
+  copyToClipboard,
+  openInNewTab,
+  openInNewWindow,
+  toPrettyJson,
+} from '@/lib/utils/context-menu'
+import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 
 export type TeamContextMenuTeam = {
   id: string
@@ -40,16 +51,6 @@ interface TeamContextMenuProps {
   projectId: string
   team: TeamContextMenuTeam
   children: React.ReactNode
-}
-
-async function copyToClipboard(label: string, value?: string | null) {
-  if (!value) return
-  try {
-    await navigator.clipboard.writeText(value)
-    toast.success(`${label} copied to clipboard`)
-  } catch {
-    toast.error('Failed to copy')
-  }
 }
 
 export function TeamContextMenu({
@@ -98,12 +99,9 @@ export function TeamContextMenu({
     })
   }
 
-  const handleViewActivity = () => {
-    navigate({
-      to: '/projects/$projectId/auth/teams/$teamId/members',
-      params: { projectId, teamId: team.id },
-    })
-  }
+  const teamHref = buildConsoleUrl(
+    `/projects/${projectId}/auth/teams/${team.id}`,
+  )
 
   const handleDeleteClick = () => {
     setDeleteDialogOpen(true)
@@ -117,65 +115,78 @@ export function TeamContextMenu({
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
         <ContextMenuContent className="w-56">
           <ContextMenuItem onSelect={handleUpdateTeam}>
-            <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-              <Pencil className="size-4" />
-            </span>
-            Update team
+            <ContextMenuIcon icon={Pencil} />
+            Update
           </ContextMenuItem>
           <ContextMenuItem onSelect={handleAddPreferences}>
-            <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-              <Plus className="size-4" />
-            </span>
+            <ContextMenuIcon icon={Plus} />
             Add preferences
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuItem onSelect={handleAddMembers}>
-            <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-              <UserPlus className="size-4" />
-            </span>
+            <ContextMenuIcon icon={UserPlus} />
             Add members
-          </ContextMenuItem>
-          <ContextMenuItem onSelect={handleViewActivity}>
-            <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-              <Activity className="size-4" />
-            </span>
-            View activity
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuSub>
             <ContextMenuSubTrigger>
-              <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-                <Copy className="size-4" />
-              </span>
+              <ContextMenuIcon icon={Copy} />
               Copy
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
               <ContextMenuItem onSelect={() => copyToClipboard('ID', team.id)}>
-                <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-                  <Copy className="size-4" />
-                </span>
+                <ContextMenuIcon icon={Copy} />
                 Copy ID
               </ContextMenuItem>
               {hasName && (
                 <ContextMenuItem
                   onSelect={() => copyToClipboard('Name', team.name)}
                 >
-                  <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-                    <Users className="size-4" />
-                  </span>
+                  <ContextMenuIcon icon={Users} />
                   Copy name
                 </ContextMenuItem>
               )}
+              <ContextMenuItem onSelect={() => copyToClipboard('Link', teamHref)}>
+                <ContextMenuIcon icon={Link2} />
+                Copy link
+              </ContextMenuItem>
+              <ContextMenuItem
+                onSelect={() =>
+                  copyToClipboard(
+                    'JSON',
+                    toPrettyJson(
+                      {
+                        id: team.id,
+                        name: team.name ?? null,
+                      },
+                    ),
+                  )
+                }
+              >
+                <ContextMenuIcon icon={FileJson} />
+                Copy as JSON
+              </ContextMenuItem>
             </ContextMenuSubContent>
           </ContextMenuSub>
+          <ContextMenuSeparator />
+          <ContextMenuItem
+            onSelect={() => openInNewTab(teamHref)}
+          >
+            <ContextMenuIcon icon={ExternalLink} />
+            Open in new tab
+          </ContextMenuItem>
+          <ContextMenuItem
+            onSelect={() => openInNewWindow(teamHref)}
+          >
+            <ContextMenuIcon icon={Square} />
+            Open in new window
+          </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuItem
             onSelect={handleDeleteClick}
             className="text-destructive focus:text-destructive"
           >
-            <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-              <Trash2 className="size-4" />
-            </span>
+            <ContextMenuIcon icon={Trash2} />
             Delete
           </ContextMenuItem>
         </ContextMenuContent>

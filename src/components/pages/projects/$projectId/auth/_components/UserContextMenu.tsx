@@ -8,8 +8,11 @@ import {
   Plus,
   BadgeCheck,
   ShieldOff,
-  Activity,
   Trash2,
+  ExternalLink,
+  Square,
+  Link2,
+  FileJson,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -38,6 +41,14 @@ import {
   useUpdateUserPhoneVerification,
   useUpdateUserStatus,
 } from '@/lib/react-query/hooks/users'
+import {
+  buildConsoleUrl,
+  copyToClipboard,
+  openInNewTab,
+  openInNewWindow,
+  toPrettyJson,
+} from '@/lib/utils/context-menu'
+import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 
 export type UserContextMenuUser = {
   $id: string
@@ -53,16 +64,6 @@ interface UserContextMenuProps {
   projectId: string
   user: UserContextMenuUser
   children: React.ReactNode
-}
-
-async function copyToClipboard(label: string, value?: string | null) {
-  if (!value) return
-  try {
-    await navigator.clipboard.writeText(value)
-    toast.success(`${label} copied to clipboard`)
-  } catch {
-    toast.error('Failed to copy')
-  }
 }
 
 export function UserContextMenu({
@@ -120,12 +121,9 @@ export function UserContextMenu({
     })
   }
 
-  const handleViewActivity = () => {
-    navigate({
-      to: '/projects/$projectId/auth/users/$userId/sessions',
-      params: { projectId, userId: user.$id },
-    })
-  }
+  const userHref = buildConsoleUrl(
+    `/projects/${projectId}/auth/users/${user.$id}`,
+  )
 
   const handleVerifyEmail = () => {
     if (!hasEmail || updateEmailVerification.isPending) return
@@ -179,23 +177,17 @@ export function UserContextMenu({
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
         <ContextMenuContent className="w-56">
           <ContextMenuItem onSelect={handleUpdateUser}>
-            <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-              <Pencil className="size-4" />
-            </span>
-            Update user
+            <ContextMenuIcon icon={Pencil} />
+            Update
           </ContextMenuItem>
           <ContextMenuItem onSelect={handleAddPreferences}>
-            <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-              <Plus className="size-4" />
-            </span>
+            <ContextMenuIcon icon={Plus} />
             Add preferences
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuSub>
             <ContextMenuSubTrigger>
-              <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-                <BadgeCheck className="size-4" />
-              </span>
+              <ContextMenuIcon icon={BadgeCheck} />
               Verify account
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
@@ -203,56 +195,37 @@ export function UserContextMenu({
                 onSelect={handleVerifyEmail}
                 disabled={!hasEmail || updateEmailVerification.isPending}
               >
-                <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-                  <Mail className="size-4" />
-                </span>
+                <ContextMenuIcon icon={Mail} />
                 {emailVerified ? 'Unverify email' : 'Verify email'}
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={handleVerifyPhone}
                 disabled={!hasPhone || updatePhoneVerification.isPending}
               >
-                <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-                  <Phone className="size-4" />
-                </span>
+                <ContextMenuIcon icon={Phone} />
                 {phoneVerified ? 'Unverify phone' : 'Verify phone'}
               </ContextMenuItem>
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuItem onSelect={handleToggleBlock}>
-            <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-              <ShieldOff className="size-4" />
-            </span>
+            <ContextMenuIcon icon={ShieldOff} />
             {isBlocked ? 'Unblock account' : 'Block account'}
           </ContextMenuItem>
-          <ContextMenuItem onSelect={handleViewActivity}>
-            <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-              <Activity className="size-4" />
-            </span>
-            View activity
-          </ContextMenuItem>
-          <ContextMenuSeparator />
           <ContextMenuSub>
             <ContextMenuSubTrigger>
-              <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-                <Copy className="size-4" />
-              </span>
+              <ContextMenuIcon icon={Copy} />
               Copy
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
               <ContextMenuItem onSelect={() => copyToClipboard('ID', user.$id)}>
-                <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-                  <Copy className="size-4" />
-                </span>
+                <ContextMenuIcon icon={Copy} />
                 Copy ID
               </ContextMenuItem>
               {hasName && (
                 <ContextMenuItem
                   onSelect={() => copyToClipboard('Name', user.name)}
                 >
-                  <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-                    <User2 className="size-4" />
-                  </span>
+                  <ContextMenuIcon icon={User2} />
                   Copy name
                 </ContextMenuItem>
               )}
@@ -260,9 +233,7 @@ export function UserContextMenu({
                 <ContextMenuItem
                   onSelect={() => copyToClipboard('Email', user.email)}
                 >
-                  <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-                    <Mail className="size-4" />
-                  </span>
+                  <ContextMenuIcon icon={Mail} />
                   Copy email
                 </ContextMenuItem>
               )}
@@ -270,22 +241,56 @@ export function UserContextMenu({
                 <ContextMenuItem
                   onSelect={() => copyToClipboard('Phone', user.phone)}
                 >
-                  <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-                    <Phone className="size-4" />
-                  </span>
+                  <ContextMenuIcon icon={Phone} />
                   Copy phone
                 </ContextMenuItem>
               )}
+              <ContextMenuItem onSelect={() => copyToClipboard('Link', userHref)}>
+                <ContextMenuIcon icon={Link2} />
+                Copy link
+              </ContextMenuItem>
+              <ContextMenuItem
+                onSelect={() =>
+                  copyToClipboard(
+                    'JSON',
+                    toPrettyJson(
+                      {
+                        id: user.$id,
+                        name: user.name ?? null,
+                        email: user.email ?? null,
+                        phone: user.phone ?? null,
+                        status: user.status ?? null,
+                        emailVerification: user.emailVerification ?? null,
+                        phoneVerification: user.phoneVerification ?? null,
+                      },
+                    ),
+                  )
+                }
+              >
+                <ContextMenuIcon icon={FileJson} />
+                Copy as JSON
+              </ContextMenuItem>
             </ContextMenuSubContent>
           </ContextMenuSub>
+          <ContextMenuSeparator />
+          <ContextMenuItem
+            onSelect={() => openInNewTab(userHref)}
+          >
+            <ContextMenuIcon icon={ExternalLink} />
+            Open in new tab
+          </ContextMenuItem>
+          <ContextMenuItem
+            onSelect={() => openInNewWindow(userHref)}
+          >
+            <ContextMenuIcon icon={Square} />
+            Open in new window
+          </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuItem
             onSelect={handleDeleteClick}
             className="text-destructive focus:text-destructive"
           >
-            <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-              <Trash2 className="size-4" />
-            </span>
+            <ContextMenuIcon icon={Trash2} />
             Delete
           </ContextMenuItem>
         </ContextMenuContent>

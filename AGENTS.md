@@ -288,6 +288,31 @@ All tables must use consistent styling matching the users table pattern for visu
 
 See `src/components/pages/projects/$projectId/auth/View.tsx` for the canonical users table implementation.
 
+### Context Menu Actions
+
+Context menus should follow a consistent action pattern and ordering across resources.
+
+**Standard ordering (top to bottom):**
+
+- **Primary actions** (e.g. `Update`, `Create file`, `Manage permissions`)
+- **Secondary actions** (if applicable)
+- **Copy submenu**
+- **Open in new tab / Open in new window**
+- **Destructive** (e.g. `Delete`) at the bottom
+
+**Copy submenu must include (when applicable):**
+
+- `Copy ID`
+- `Copy name` (if resource has a name)
+- `Copy link` (console route URL)
+- `Copy as JSON` (minimal resource payload)
+
+**Other rules:**
+
+- Use `Update` label (not `Update user`, `Update team`, etc.)
+- Keep action sets aligned to actual capabilities (no “View activity” if the tab doesn’t exist)
+- Include a confirm dialog for destructive actions
+
 ### Long-running task progress
 
 Use one unified progress panel per scope (e.g. on project routes: file uploads, CSV export, CSV import together). All task types share the same card style; there is no wrapper or group header around a type.

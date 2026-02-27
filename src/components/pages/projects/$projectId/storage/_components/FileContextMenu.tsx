@@ -1,6 +1,15 @@
 import { useState } from 'react'
-import { Copy, Pencil, Download, ShieldCheck, Trash2, Link2 } from 'lucide-react'
-import { toast } from 'sonner'
+import {
+  Copy,
+  Pencil,
+  Download,
+  ShieldCheck,
+  Trash2,
+  Link2,
+  ExternalLink,
+  Square,
+  FileJson,
+} from 'lucide-react'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -23,6 +32,14 @@ import { useNavigate } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import {
+  buildConsoleUrl,
+  copyToClipboard,
+  openInNewTab,
+  openInNewWindow,
+  toPrettyJson,
+} from '@/lib/utils/context-menu'
+import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 
 export type FileContextMenuFile = {
   id: string
@@ -35,16 +52,6 @@ interface FileContextMenuProps {
   bucketId: string
   file: FileContextMenuFile
   children: React.ReactNode
-}
-
-async function copyToClipboard(label: string, value?: string | null) {
-  if (!value) return
-  try {
-    await navigator.clipboard.writeText(value)
-    toast.success(`${label} copied to clipboard`)
-  } catch {
-    toast.error('Failed to copy')
-  }
 }
 
 export function FileContextMenu({
@@ -98,10 +105,9 @@ export function FileContextMenu({
     })
   }
 
-  const handleCopyLink = () => {
-    const url = `${window.location.origin}/projects/${projectId}/storage/${bucketId}/files/${file.id}`
-    copyToClipboard('Link', url)
-  }
+  const fileHref = buildConsoleUrl(
+    `/projects/${projectId}/storage/${bucketId}/files/${file.id}`,
+  )
 
   const handleDeleteClick = () => {
     setDeleteDialogOpen(true)
@@ -116,65 +122,78 @@ export function FileContextMenu({
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
         <ContextMenuContent className="w-56">
           <ContextMenuItem onSelect={handleUpdate} disabled={disabled}>
-            <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-              <Pencil className="size-4" />
-            </span>
+            <ContextMenuIcon icon={Pencil} />
             Update
           </ContextMenuItem>
           <ContextMenuItem onSelect={handleDownload} disabled={disabled}>
-            <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-              <Download className="size-4" />
-            </span>
+            <ContextMenuIcon icon={Download} />
             Download
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuItem onSelect={handleManagePermissions} disabled={disabled}>
-            <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-              <ShieldCheck className="size-4" />
-            </span>
+            <ContextMenuIcon icon={ShieldCheck} />
             Manage permissions
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuSub>
             <ContextMenuSubTrigger>
-              <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-                <Copy className="size-4" />
-              </span>
+              <ContextMenuIcon icon={Copy} />
               Copy
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
               <ContextMenuItem onSelect={() => copyToClipboard('ID', file.id)}>
-                <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-                  <Copy className="size-4" />
-                </span>
+                <ContextMenuIcon icon={Copy} />
                 Copy ID
               </ContextMenuItem>
               {hasName && (
                 <ContextMenuItem
                   onSelect={() => copyToClipboard('Name', file.name)}
                 >
-                  <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-                    <Copy className="size-4" />
-                  </span>
+                  <ContextMenuIcon icon={Copy} />
                   Copy name
                 </ContextMenuItem>
               )}
-              <ContextMenuItem onSelect={handleCopyLink}>
-                <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-                  <Link2 className="size-4" />
-                </span>
+              <ContextMenuItem onSelect={() => copyToClipboard('Link', fileHref)}>
+                <ContextMenuIcon icon={Link2} />
                 Copy link
+              </ContextMenuItem>
+              <ContextMenuItem
+                onSelect={() =>
+                  copyToClipboard(
+                    'JSON',
+                    toPrettyJson(
+                      {
+                        id: file.id,
+                        name: file.name ?? null,
+                      },
+                    ),
+                  )
+                }
+              >
+                <ContextMenuIcon icon={FileJson} />
+                Copy as JSON
               </ContextMenuItem>
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuSeparator />
           <ContextMenuItem
+            onSelect={() => openInNewTab(fileHref)}
+          >
+            <ContextMenuIcon icon={ExternalLink} />
+            Open in new tab
+          </ContextMenuItem>
+          <ContextMenuItem
+            onSelect={() => openInNewWindow(fileHref)}
+          >
+            <ContextMenuIcon icon={Square} />
+            Open in new window
+          </ContextMenuItem>
+          <ContextMenuSeparator />
+          <ContextMenuItem
             onSelect={handleDeleteClick}
             className="text-destructive focus:text-destructive"
           >
-            <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-              <Trash2 className="size-4" />
-            </span>
+            <ContextMenuIcon icon={Trash2} />
             Delete
           </ContextMenuItem>
         </ContextMenuContent>
