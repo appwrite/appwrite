@@ -16,4 +16,3 @@ class DocumentsDBTransactionsCustomServerTest extends Scope
     use SideServer;
     use ApiDocumentsDB;
 }
-

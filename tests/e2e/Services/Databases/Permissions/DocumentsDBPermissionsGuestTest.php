@@ -354,4 +354,3 @@ class DocumentsDBPermissionsGuestTest extends Scope
         $this->assertEquals('Thor: Ragnarok', $document['body']['title']);
     }
 }
-

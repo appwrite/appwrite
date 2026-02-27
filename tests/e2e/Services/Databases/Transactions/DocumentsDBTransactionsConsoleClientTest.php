@@ -16,4 +16,3 @@ class DocumentsDBTransactionsConsoleClientTest extends Scope
     use SideConsole;
     use ApiDocumentsDB;
 }
-

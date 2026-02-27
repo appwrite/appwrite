@@ -166,6 +166,7 @@ class Exception extends \Exception
 
     /** Sites */
     public const string SITE_NOT_FOUND = 'site_not_found';
+    public const string SITE_ALREADY_EXISTS = 'site_already_exists';
     public const string SITE_TEMPLATE_NOT_FOUND = 'site_template_not_found';
 
     /** Functions */
@@ -365,6 +366,7 @@ class Exception extends \Exception
 
     /** Message */
     public const string MESSAGE_NOT_FOUND = 'message_not_found';
+    public const string MESSAGE_ALREADY_EXISTS = 'message_already_exists';
     public const string MESSAGE_MISSING_TARGET = 'message_missing_target';
     public const string MESSAGE_ALREADY_SENT = 'message_already_sent';
     public const string MESSAGE_ALREADY_PROCESSING = 'message_already_processing';

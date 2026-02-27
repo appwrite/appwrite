@@ -3,7 +3,6 @@
 namespace Tests\E2E\Services\Databases\Transactions;
 
 use Tests\E2E\Client;
-use Tests\E2E\Scopes\SchemaPolling;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -4453,11 +4452,11 @@ trait TransactionsBase
         $collectionId = $collection['body']['$id'];
 
         // Add required attribute
-        if ($this->getSupportForAttributes())
-            {$attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, 'string', null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+        if ($this->getSupportForAttributes()) {
+            $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, 'string', null), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
             ]), [
                 'key' => 'name',
                 'size' => 256,

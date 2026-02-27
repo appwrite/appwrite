@@ -131,4 +131,23 @@ trait RealtimeBase
         $this->expectException(ConnectionException::class); // Check if server disconnected client
         $client->close();
     }
+
+    public function testConnectionRegionCheck(): void
+    {
+        /**
+         * Test for SUCCESS
+         * A project whose region matches the server region should connect successfully.
+         */
+        $client = $this->getWebsocket(['documents']);
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertArrayHasKey('channels', $response['data']);
+        $this->assertContains('documents', $response['data']['channels']);
+
+        $client->close();
+    }
 }

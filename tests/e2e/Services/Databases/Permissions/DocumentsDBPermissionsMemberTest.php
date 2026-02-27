@@ -236,4 +236,3 @@ class DocumentsDBPermissionsMemberTest extends Scope
         $this->assertGreaterThanOrEqual($docOnlyCount, $documents['body']['total']);
     }
 }
-

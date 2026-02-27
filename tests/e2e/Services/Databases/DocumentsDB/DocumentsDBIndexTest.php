@@ -360,4 +360,3 @@ class DocumentsDBIndexTest extends Scope
         $this->assertEquals(202, $create['headers']['status-code']);
     }
 }
-

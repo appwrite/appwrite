@@ -4517,16 +4517,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "dev-remove-dsn-callables",
+            "version": "1.6.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "682cdc36618a2be4fe376047a6250a3d0c4ea739"
+                "reference": "037bf4b3813d44f1b0990bc124e35b501ed27fca"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/682cdc36618a2be4fe376047a6250a3d0c4ea739",
-                "reference": "682cdc36618a2be4fe376047a6250a3d0c4ea739",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/037bf4b3813d44f1b0990bc124e35b501ed27fca",
+                "reference": "037bf4b3813d44f1b0990bc124e35b501ed27fca",
                 "shasum": ""
             },
             "require": {
@@ -4566,9 +4566,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/remove-dsn-callables"
+                "source": "https://github.com/utopia-php/migration/tree/1.6.2"
             },
-            "time": "2026-02-24T05:05:52+00:00"
+            "time": "2026-02-25T12:00:11+00:00"
         },
         {
             "name": "utopia-php/mongo",

@@ -232,4 +232,3 @@ class DocumentsDBPermissionsTeamTest extends Scope
         }
     }
 }
-

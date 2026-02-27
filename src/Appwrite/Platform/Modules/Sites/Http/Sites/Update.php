@@ -190,11 +190,9 @@ class Update extends Base
             $repositoryInternalId = '';
         }
 
-        // Git connect logic
         if (!$isConnected && !empty($providerRepositoryId)) {
             $teamId = $project->getAttribute('teamId', '');
-
-            $repository = $dbForPlatform->createDocument('repositories', new Document([
+            $repository = new Document([
                 '$id' => ID::unique(),
                 '$permissions' => $this->getPermissions($teamId, $project->getId()),
                 'installationId' => $installation->getId(),
@@ -206,8 +204,8 @@ class Update extends Base
                 'resourceInternalId' => $site->getSequence(),
                 'resourceType' => 'site',
                 'providerPullRequestIds' => []
-            ]));
-
+            ]);
+            $repository = $dbForPlatform->createDocument('repositories', $repository);
             $repositoryId = $repository->getId();
             $repositoryInternalId = $repository->getSequence();
         }

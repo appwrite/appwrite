@@ -3,7 +3,6 @@
 namespace Tests\E2E\Services\Databases\Transactions;
 
 use Tests\E2E\Client;
-use Tests\E2E\Scopes\SchemaPolling;
 use Tests\E2E\Traits\DatabasesUrlHelpers;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -675,8 +674,7 @@ trait TransactionPermissionsBase
 
         $this->assertEquals(201, $collection['headers']['status-code']);
 
-        if($this->getSupportForAttributes())
-        {
+        if ($this->getSupportForAttributes()) {
             $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
