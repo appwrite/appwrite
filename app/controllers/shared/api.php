@@ -2,6 +2,7 @@
 
 use Appwrite\Auth\Key;
 use Appwrite\Auth\MFA\Type\TOTP;
+use Appwrite\Bus\RequestCompleted;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Build;
 use Appwrite\Event\Database as EventDatabase;
@@ -21,6 +22,7 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Abuse;
+use Utopia\Bus\Bus;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
@@ -746,7 +748,8 @@ Http::shutdown()
     ->inject('authorization')
     ->inject('timelimit')
     ->inject('eventProcessor')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Audit $queueForAudits, StatsUsage $queueForStatsUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor) use ($parseLabel) {
+    ->inject('bus')
+    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Audit $queueForAudits, StatsUsage $queueForStatsUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -958,16 +961,11 @@ Http::shutdown()
 
         if ($project->getId() !== 'console') {
             if (!User::isPrivileged($authorization->getRoles())) {
-                $fileSize = 0;
-                $file = $request->getFiles('file');
-                if (!empty($file)) {
-                    $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
-                }
-
-                $queueForStatsUsage
-                    ->addMetric(METRIC_NETWORK_REQUESTS, 1)
-                    ->addMetric(METRIC_NETWORK_INBOUND, $request->getSize() + $fileSize)
-                    ->addMetric(METRIC_NETWORK_OUTBOUND, $response->getSize());
+                $bus->dispatch(new RequestCompleted(
+                    project: $project->getArrayCopy(),
+                    request: $request,
+                    response: $response,
+                ));
             }
 
             $queueForStatsUsage
