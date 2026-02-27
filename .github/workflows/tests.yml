@@ -256,8 +256,9 @@ jobs:
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose up -d
-          until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
-            echo "Waiting for Appwrite to be ready..."
+          until OUTPUT=$(docker compose exec -T appwrite doctor 2>&1); do
+            echo "Waiting for Appwrite..."
+            echo "$OUTPUT"
             sleep 2
           done
 
