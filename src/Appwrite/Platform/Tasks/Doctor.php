@@ -214,7 +214,8 @@ class Doctor extends Action
             /* @var PHPMailer $mail */
             $mail = $register->get('smtp');
 
-            $mail->addAddress('demo@example.com', 'Example.com');
+            $testEmail = App::getEnv('_APP_SMTP_TEST_EMAIL', 'demo@example.com');
+            $mail->addAddress($testEmail, 'Appwrite Doctor');
             $mail->Subject = 'Test SMTP Connection';
             $mail->Body = 'Hello World';
             $mail->AltBody = 'Hello World';

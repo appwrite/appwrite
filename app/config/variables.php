@@ -568,6 +568,15 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
+            [
+                'name' => '_APP_SMTP_TEST_EMAIL',
+                'description' => 'Email address used by the doctor command to test SMTP connection. Default value is demo@example.com.',
+                'introduction' => '',
+                'default' => 'demo@example.com',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
     ],
     [
