@@ -492,6 +492,8 @@ class Realtime extends MessagingAdapter
                 break;
             case 'databases':
             case 'tablesdb':
+            case 'documentsdb':
+            case 'vectordb':
                 $resource = $parts[4] ?? '';
                 if (in_array($resource, ['columns', 'attributes', 'indexes'])) {
                     $channels[] = 'console';
@@ -521,8 +523,7 @@ class Realtime extends MessagingAdapter
                             ...self::getDatabaseChannels('tablesdb', $database->getId(), $resourceId, $payload->getId(), $prefix)
                         ]);
                     }
-
-                    // prefixed channels -> tablesdb
+                    // prefixed channels -> tablesdb, documentsdb,etc
                     if ($parts[0] !== 'databases') {
                         $channels = array_unique([
                             ...$channels,
@@ -594,6 +595,7 @@ class Realtime extends MessagingAdapter
      * @param string $resourceId The collection/table ID
      * @param string $payloadId The document/row ID
      * @param string $prefixOverride Override the channel prefix when different API types share the same terminology but need different prefixes
+     * (e.g., 'databases' and 'documentsdb' use same terminology but need different prefixes)
      * @return array Array of channel names
      */
     private static function getDatabaseChannels(
@@ -626,6 +628,13 @@ class Realtime extends MessagingAdapter
                 $channels[] = "{$basePrefix}.{$databaseId}.tables.{$resourceId}.rows.{$payloadId}";
                 break;
 
+            case 'documentsdb':
+            case 'vectordb':
+                $channels[] = 'documents';
+                $channels[] = "{$basePrefix}.{$databaseId}.collections.{$resourceId}.documents";
+                $channels[] = "{$basePrefix}.{$databaseId}.collections.{$resourceId}.documents.{$payloadId}";
+                break;
+
             default:
                 $basePrefix = 'databases';
                 $channels[] = 'documents';
@@ -634,6 +643,7 @@ class Realtime extends MessagingAdapter
                 break;
 
         }
+
         return $channels;
     }
 }

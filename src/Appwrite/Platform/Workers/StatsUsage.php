@@ -47,6 +47,8 @@ class StatsUsage extends Action
      */
     protected array $skipBaseMetrics = [
         METRIC_DATABASES => true,
+        METRIC_DATABASES_DOCUMENTSDB => true,
+        METRIC_DATABASES_VECTORDB => true,
         METRIC_BUCKETS => true,
         METRIC_USERS => true,
         METRIC_FUNCTIONS => true,
@@ -66,7 +68,13 @@ class StatsUsage extends Action
         METRIC_BUILDS => true,
         METRIC_COLLECTIONS => true,
         METRIC_DOCUMENTS => true,
+        METRIC_COLLECTIONS_DOCUMENTSDB => true,
+        METRIC_DOCUMENTS_DOCUMENTSDB => true,
+        METRIC_COLLECTIONS_VECTORDB => true,
+        METRIC_DOCUMENTS_VECTORDB => true,
         METRIC_DATABASES_STORAGE => true,
+        METRIC_DATABASES_STORAGE_DOCUMENTSDB => true,
+        METRIC_DATABASES_STORAGE_VECTORDB => true,
     ];
 
     /**
@@ -83,6 +91,12 @@ class StatsUsage extends Action
         '.builds',
         '.builds.storage',
         '.databases.storage'
+    ];
+
+    public const DATABASE_PREFIXES = [
+        DATABASE_TYPE_LEGACY,
+        DATABASE_TYPE_TABLESDB,
+        DATABASE_TYPE_DOCUMENTSDB,
     ];
 
     /**
@@ -146,6 +160,11 @@ class StatsUsage extends Action
         $aggregationInterval = (int) System::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '20');
         $project = new Document($payload['project'] ?? []);
         $projectId = $project->getSequence();
+
+        // Get database type from context
+        $databaseContext = $payload['context']['database'] ?? null;
+        $databaseType = $databaseContext ? (new Document($databaseContext))->getAttribute('type', '') : '';
+
         foreach ($payload['reduce'] ?? [] as $document) {
             if (empty($document)) {
                 continue;
@@ -155,7 +174,8 @@ class StatsUsage extends Action
                 project: $project,
                 document: new Document($document),
                 metrics:  $payload['metrics'],
-                getProjectDB: $getProjectDB
+                getProjectDB: $getProjectDB,
+                databaseType: $databaseType
             );
         }
 
@@ -193,9 +213,10 @@ class StatsUsage extends Action
     * @param Document $document
     * @param array $metrics
     * @param  callable(): Database $getProjectDB
+    * @param string $databaseType Database type from context
     * @return void
     */
-    protected function reduce(Document $project, Document $document, array &$metrics, callable $getProjectDB): void
+    protected function reduce(Document $project, Document $document, array &$metrics, callable $getProjectDB, string $databaseType = ''): void
     {
         $dbForProject = $getProjectDB($project);
 
@@ -211,38 +232,48 @@ class StatsUsage extends Action
                     }
                     break;
                 case $document->getCollection() === 'databases': // databases
-                    $collections = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{databaseInternalId}', $document->getSequence(), METRIC_DATABASE_ID_COLLECTIONS)));
-                    $documents = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{databaseInternalId}', $document->getSequence(), METRIC_DATABASE_ID_DOCUMENTS)));
+                    $databaseCollectionsMetric = implode('.', array_filter([$databaseType,METRIC_COLLECTIONS]));
+                    $databaseDocumentsMetric = implode('.', array_filter([$databaseType,METRIC_DOCUMENTS]));
+
+                    $databaseIdCollectionsMetric = implode('.', array_filter([$databaseType,METRIC_DATABASE_ID_COLLECTIONS]));
+                    $databaseIdDocumentsMetric = implode('.', array_filter([$databaseType,METRIC_DATABASE_ID_DOCUMENTS]));
+
+                    $collections = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{databaseInternalId}', $document->getSequence(), $databaseIdCollectionsMetric)));
+                    $documents = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace('{databaseInternalId}', $document->getSequence(), $databaseIdDocumentsMetric)));
                     if (!empty($collections['value'])) {
                         $metrics[] = [
-                            'key' => METRIC_COLLECTIONS,
+                            'key' => $databaseCollectionsMetric,
                             'value' => ($collections['value'] * -1),
                         ];
                     }
 
                     if (!empty($documents['value'])) {
                         $metrics[] = [
-                            'key' => METRIC_DOCUMENTS,
+                            'key' => $databaseDocumentsMetric,
                             'value' => ($documents['value'] * -1),
                         ];
                     }
                     break;
                 case str_starts_with($document->getCollection(), 'database_') && !str_contains($document->getCollection(), 'collection'): //collections
+                    $databaseDocumentsMetric = implode('.', array_filter([$databaseType,METRIC_DOCUMENTS]));
+                    $databaseIdCollectionIdDocumentsMetric = implode('.', array_filter([$databaseType,METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS]));
+                    $databaseIdDocumentsMetric = implode('.', array_filter([$databaseType,METRIC_DATABASE_ID_DOCUMENTS]));
+
                     $parts = explode('_', $document->getCollection());
                     $databaseInternalId = $parts[1] ?? 0;
                     $documents = $dbForProject->getDocument('stats', md5(self::INFINITY_PERIOD . str_replace(
                         ['{databaseInternalId}', '{collectionInternalId}'],
                         [$databaseInternalId, $document->getSequence()],
-                        METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS
+                        $databaseIdCollectionIdDocumentsMetric
                     )));
 
                     if (!empty($documents['value'])) {
                         $metrics[] = [
-                            'key' => METRIC_DOCUMENTS,
+                            'key' => $databaseDocumentsMetric,
                             'value' => ($documents['value'] * -1),
                         ];
                         $metrics[] = [
-                            'key' => str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_DOCUMENTS),
+                            'key' => str_replace('{databaseInternalId}', $databaseInternalId, $databaseIdDocumentsMetric),
                             'value' => ($documents['value'] * -1),
                         ];
                     }
@@ -473,8 +504,11 @@ class StatsUsage extends Action
         if (array_key_exists($stat->getAttribute('metric'), $this->skipBaseMetrics)) {
             return;
         }
+
         foreach ($this->skipParentIdMetrics as $skipMetric) {
-            if (str_ends_with($stat->getAttribute('metric'), $skipMetric)) {
+            $metricParts = explode('.', $stat->getAttribute('metric'));
+            $metric = implode('.', in_array($metricParts[0], self::DATABASE_PREFIXES) ? array_slice($metricParts, 1) : $metricParts);
+            if (str_ends_with($metric, $skipMetric)) {
                 return;
             }
         }

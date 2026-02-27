@@ -80,6 +80,7 @@ class Update extends Action
             ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('queueForStatsUsage')
             ->inject('queueForEvents')
             ->inject('queueForRealtime')
@@ -90,7 +91,7 @@ class Update extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string|array $data, array $queries, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, Event $queueForEvents, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan, EventProcessor $eventProcessor): void
+    public function action(string $databaseId, string $collectionId, string|array $data, array $queries, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, StatsUsage $queueForStatsUsage, Event $queueForEvents, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan, EventProcessor $eventProcessor): void
     {
         $data = \is_string($data)
             ? \json_decode($data, true)
@@ -189,11 +190,12 @@ class Update extends Action
             return;
         }
 
+        $dbForDatabases = $getDatabasesDB($database);
         $documents = [];
 
         try {
-            $modified = $dbForProject->withPreserveDates(function () use ($plan, &$documents, $dbForProject, $database, $collection, $data, $queries) {
-                return $dbForProject->updateDocuments(
+            $modified = $dbForDatabases->withPreserveDates(function () use ($plan, &$documents, $dbForDatabases, $database, $collection, $data, $queries) {
+                return $dbForDatabases->updateDocuments(
                     'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                     new Document($data),
                     $queries,
@@ -220,8 +222,8 @@ class Update extends Action
         }
 
         $queueForStatsUsage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, \max(1, $modified))
-            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $modified));
+            ->addMetric($this->getDatabasesOperationWriteMetric(), \max(1, $modified))
+            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationWriteMetric()), \max(1, $modified));
 
         $response->dynamic(new Document([
             'total' => $modified,

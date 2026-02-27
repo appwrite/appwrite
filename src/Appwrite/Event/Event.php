@@ -519,6 +519,7 @@ class Event
      * @param string $pattern
      * @param array $params
      * @param ?Document $database
+     * @param ?Document $database
      * @return array
      * @throws \InvalidArgumentException
      */
@@ -533,7 +534,7 @@ class Event
         $parsed = self::parseEventPattern($pattern);
         // to switch the resource types from databases to the required prefix
         // eg; all databases events get fired with databases. prefix which mainly depicts legacy type
-        // so a projection from databases to the actual prefix
+        // so a projection from databases to the actual prefix(documentsdb, vectordb,etc)
         if ((str_contains($pattern, 'databases.') && $database && $database->getAttribute('type') !== 'legacy')) {
             $parsed = self::getDatabaseTypeEvents($database, $parsed);
         }
@@ -695,7 +696,6 @@ class Event
             )
         ) {
             $pairedEvents = [];
-
             foreach ($events as $event) {
                 $pairedEvents[] = $event;
                 // tablesdb needs databases event with tables and collections
@@ -741,6 +741,13 @@ class Event
                     'documents'    => 'rows',
                     'collections'  => 'tables',
                     'attributes'   => 'columns',
+                ];
+                break;
+            case 'documentsdb':
+            case 'vectordb':
+                // sending the type itself(eg: documentsdb, vectordb)
+                $eventMap = [
+                    'databases'    => $database->getAttribute('type')
                 ];
                 break;
         }

@@ -69,6 +69,31 @@ trait DatabasesBase
     }
 
     /**
+     * Helper to create an attribute on a collection.
+     *
+     * @param string $databaseId
+     * @param string $collectionId
+     * @param string $type
+     * @param array<string, mixed> $payload
+     *
+     * @return array<string, mixed>
+     */
+    protected function createAttribute(string $databaseId, string $collectionId, string $type, array $payload): array
+    {
+        return $this->client->call(
+            Client::METHOD_POST,
+            $this->getSchemaUrl($databaseId, $collectionId) . '/' . $type,
+            [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ],
+            $payload
+        );
+    }
+
+
+    /**
      * Setup: Create database and collections
      * Uses static caching to avoid recreating resources
      */
@@ -150,75 +175,51 @@ trait DatabasesBase
         $data = $this->setupCollection();
         $databaseId = $data['databaseId'];
 
-        $title = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $data['moviesId']) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
+        if (!$this->getSupportForAttributes()) {
+            self::$attributesCache[$cacheKey] = $data;
+            return self::$attributesCache[$cacheKey];
+        }
+        $title = $this->createAttribute($databaseId, $data['moviesId'], 'string', [
             'key' => 'title',
             'size' => 256,
             'required' => true,
         ]);
 
-        $description = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $data['moviesId']) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
+        $description = $this->createAttribute($databaseId, $data['moviesId'], 'string', [
             'key' => 'description',
             'size' => 512,
             'required' => false,
             'default' => '',
         ]);
 
-        $tagline = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $data['moviesId']) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
+        $tagline = $this->createAttribute($databaseId, $data['moviesId'], 'string', [
             'key' => 'tagline',
             'size' => 512,
             'required' => false,
             'default' => '',
         ]);
 
-        $releaseYear = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $data['moviesId']) . '/integer', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
+        $releaseYear = $this->createAttribute($databaseId, $data['moviesId'], 'integer', [
             'key' => 'releaseYear',
             'required' => true,
             'min' => 1900,
             'max' => 2200,
         ]);
 
-        $duration = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $data['moviesId']) . '/integer', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
+        $duration = $this->createAttribute($databaseId, $data['moviesId'], 'integer', [
             'key' => 'duration',
             'required' => false,
             'min' => 60,
         ]);
 
-        $actors = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $data['moviesId']) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
+        $actors = $this->createAttribute($databaseId, $data['moviesId'], 'string', [
             'key' => 'actors',
             'size' => 256,
             'required' => false,
             'array' => true,
         ]);
 
-        $datetime = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $data['moviesId']) . '/datetime', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
+        $datetime = $this->createAttribute($databaseId, $data['moviesId'], 'datetime', [
             'key' => 'birthDay',
             'required' => false,
         ]);
@@ -933,6 +934,10 @@ trait DatabasesBase
 
     public function testCreateAttributes(): void
     {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+            return;
+        }
         // Use dedicated collections for this test to avoid conflicts with setupAttributes()
         $data = $this->setupDatabase();
         $databaseId = $data['databaseId'];
@@ -1182,6 +1187,10 @@ trait DatabasesBase
 
     public function testListAttributes(): void
     {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+            return;
+        }
         $data = $this->setupAttributes();
         $databaseId = $data['databaseId'];
         $response = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $data['moviesId']), array_merge([
@@ -1210,6 +1219,10 @@ trait DatabasesBase
 
     public function testPatchAttribute(): void
     {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+            return;
+        }
         $data = $this->setupDatabase();
         $databaseId = $data['databaseId'];
 
@@ -1276,6 +1289,10 @@ trait DatabasesBase
 
     public function testUpdateAttributeEnum(): void
     {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+            return;
+        }
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1333,6 +1350,10 @@ trait DatabasesBase
 
     public function testAttributeResponseModels(): void
     {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+            return;
+        }
         $data = $this->setupAttributes();
         $databaseId = $data['databaseId'];
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
@@ -2044,65 +2065,75 @@ trait DatabasesBase
         $this->assertEquals(201, $collection['headers']['status-code']);
         $collectionId = $collection['body']['$id'];
 
-        // Create attributes needed for index testing
-        $title = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), ['key' => 'title', 'size' => 256, 'required' => true]);
-        $this->assertEquals(202, $title['headers']['status-code']);
+        // Create attributes needed for index testing (only when supported).
+        // DocumentsDB can still create indexes without a predefined schema.
+        if ($this->getSupportForAttributes()) {
+            $title = $this->createAttribute($databaseId, $collectionId, 'string', [
+                'key' => 'title',
+                'size' => 256,
+                'required' => true,
+            ]);
+            $this->assertEquals(202, $title['headers']['status-code']);
 
-        $description = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), ['key' => 'description', 'size' => 512, 'required' => false, 'default' => '']);
-        $this->assertEquals(202, $description['headers']['status-code']);
+            $description = $this->createAttribute($databaseId, $collectionId, 'string', [
+                'key' => 'description',
+                'size' => 512,
+                'required' => false,
+                'default' => '',
+            ]);
+            $this->assertEquals(202, $description['headers']['status-code']);
 
-        $tagline = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), ['key' => 'tagline', 'size' => 512, 'required' => false, 'default' => '']);
-        $this->assertEquals(202, $tagline['headers']['status-code']);
+            $tagline = $this->createAttribute($databaseId, $collectionId, 'string', [
+                'key' => 'tagline',
+                'size' => 512,
+                'required' => false,
+                'default' => '',
+            ]);
+            $this->assertEquals(202, $tagline['headers']['status-code']);
 
-        $releaseYear = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/integer', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), ['key' => 'releaseYear', 'required' => true, 'min' => 1900, 'max' => 2200]);
-        $this->assertEquals(202, $releaseYear['headers']['status-code']);
+            $releaseYear = $this->createAttribute($databaseId, $collectionId, 'integer', [
+                'key' => 'releaseYear',
+                'required' => true,
+                'min' => 1900,
+                'max' => 2200,
+            ]);
+            $this->assertEquals(202, $releaseYear['headers']['status-code']);
 
-        $actors = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), ['key' => 'actors', 'size' => 256, 'required' => false, 'array' => true]);
-        $this->assertEquals(202, $actors['headers']['status-code']);
+            $actors = $this->createAttribute($databaseId, $collectionId, 'string', [
+                'key' => 'actors',
+                'size' => 256,
+                'required' => false,
+                'array' => true,
+            ]);
+            $this->assertEquals(202, $actors['headers']['status-code']);
 
-        $birthDay = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/datetime', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), ['key' => 'birthDay', 'required' => false]);
-        $this->assertEquals(202, $birthDay['headers']['status-code']);
+            $birthDay = $this->createAttribute($databaseId, $collectionId, 'datetime', [
+                'key' => 'birthDay',
+                'required' => false,
+            ]);
+            $this->assertEquals(202, $birthDay['headers']['status-code']);
 
-        $integers = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/integer', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), ['key' => 'integers', 'required' => false, 'array' => true, 'min' => 10, 'max' => 99]);
-        $this->assertEquals(202, $integers['headers']['status-code']);
+            $integers = $this->createAttribute($databaseId, $collectionId, 'integer', [
+                'key' => 'integers',
+                'required' => false,
+                'array' => true,
+                'min' => 10,
+                'max' => 99,
+            ]);
+            $this->assertEquals(202, $integers['headers']['status-code']);
 
-        $integers2 = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/integer', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), ['key' => 'integers2', 'required' => false, 'array' => true, 'min' => 10, 'max' => 99]);
-        $this->assertEquals(202, $integers2['headers']['status-code']);
+            $integers2 = $this->createAttribute($databaseId, $collectionId, 'integer', [
+                'key' => 'integers2',
+                'required' => false,
+                'array' => true,
+                'min' => 10,
+                'max' => 99,
+            ]);
+            $this->assertEquals(202, $integers2['headers']['status-code']);
 
-        // Wait for attributes to be ready
-        $this->waitForAllAttributes($databaseId, $collectionId);
+            // Wait for attributes to be ready
+            $this->waitForAllAttributes($databaseId, $collectionId);
+        }
 
         $titleIndex = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
@@ -2219,13 +2250,16 @@ trait DatabasesBase
             $this->getIndexAttributesParam() => ['description', 'tagline'],
         ]);
 
-        if ($this->getMaxIndexLength() < 1024) {
-            // Only SQL-based adapters (MariaDB, PostgreSQL) enforce byte-level index length limits
-            $this->assertEquals(400, $tooLong['headers']['status-code']);
-            $this->assertStringContainsString('Index length is longer than the maximum', $tooLong['body']['message']);
-        } else {
-            // MongoDB (maxIndexLength=1024) doesn't exceed the limit with 512+512
-            $this->assertEquals(202, $tooLong['headers']['status-code']);
+        // documentsdb isn't aware of the size so it will create
+        if ($this->getSupportForAttributes()) {
+            if ($this->getMaxIndexLength() < 1024) {
+                // Only SQL-based adapters (MariaDB, PostgreSQL) enforce byte-level index length limits
+                $this->assertEquals(400, $tooLong['headers']['status-code']);
+                $this->assertStringContainsString('Index length is longer than the maximum', $tooLong['body']['message']);
+            } else {
+                // MongoDB (maxIndexLength=1024) doesn't exceed the limit with 512+512
+                $this->assertEquals(202, $tooLong['headers']['status-code']);
+            }
         }
 
         $fulltextArray = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
@@ -2239,119 +2273,126 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $fulltextArray['headers']['status-code']);
-        $this->assertEquals('Creating indexes on array attributes is not currently supported.', $fulltextArray['body']['message']);
+        $errorMessage = $this->getSupportForAttributes() ? "Creating indexes on array attributes is not currently supported." : "There is already a fulltext index in the collection";
+        $this->assertEquals($errorMessage, $fulltextArray['body']['message']);
 
-        $actorsArray = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), [
-            'key' => 'index-actors',
-            'type' => 'key',
-            $this->getIndexAttributesParam() => ['actors'],
-        ]);
+        if ($this->getSupportForAttributes()) {
 
-        $this->assertEquals(400, $actorsArray['headers']['status-code']);
-        $this->assertEquals('Creating indexes on array attributes is not currently supported.', $actorsArray['body']['message']);
+            $actorsArray = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]), [
+                'key' => 'index-actors',
+                'type' => 'key',
+                $this->getIndexAttributesParam() => ['actors'],
+            ]);
 
-        $twoLevelsArray = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), [
-            'key' => 'index-ip-actors',
-            'type' => 'key',
-            $this->getIndexAttributesParam() => ['releaseYear', 'actors'], // 2 levels
-            'orders' => ['DESC', 'DESC'],
-        ]);
+            $this->assertEquals(400, $actorsArray['headers']['status-code']);
+            $this->assertEquals('Creating indexes on array attributes is not currently supported.', $actorsArray['body']['message']);
 
-        $this->assertEquals(400, $twoLevelsArray['headers']['status-code']);
-        $this->assertEquals('Creating indexes on array attributes is not currently supported.', $twoLevelsArray['body']['message']);
+            $twoLevelsArray = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]), [
+                'key' => 'index-ip-actors',
+                'type' => 'key',
+                $this->getIndexAttributesParam() => ['releaseYear', 'actors'], // 2 levels
+                'orders' => ['DESC', 'DESC'],
+            ]);
 
-        $unknown = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), [
-            'key' => 'index-unknown',
-            'type' => 'key',
-            $this->getIndexAttributesParam() => ['Unknown'],
-        ]);
+            $this->assertEquals(400, $twoLevelsArray['headers']['status-code']);
+            $this->assertEquals('Creating indexes on array attributes is not currently supported.', $twoLevelsArray['body']['message']);
 
-        $this->assertEquals(400, $unknown['headers']['status-code']);
-        $this->assertStringContainsString('\'Unknown\' required for the index could not be found', $unknown['body']['message']);
+            $unknown = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]), [
+                'key' => 'index-unknown',
+                'type' => 'key',
+                $this->getIndexAttributesParam() => ['Unknown'],
+            ]);
 
-        $index1 = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), [
-            'key' => 'integers-order',
-            'type' => 'key',
-            $this->getIndexAttributesParam() => ['integers'], // array attribute
-            'orders' => ['DESC'], // Check order is removed in API
-        ]);
+            $this->assertEquals(400, $unknown['headers']['status-code']);
+            $this->assertStringContainsString('\'Unknown\' required for the index could not be found', $unknown['body']['message']);
+            $index1 = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]), [
+                'key' => 'integers-order',
+                'type' => 'key',
+                $this->getIndexAttributesParam() => ['integers'], // array attribute
+                'orders' => ['DESC'], // Check order is removed in API
+            ]);
 
-        $this->assertEquals(400, $index1['headers']['status-code']);
-        $this->assertEquals('Creating indexes on array attributes is not currently supported.', $index1['body']['message']);
+            $this->assertEquals(400, $index1['headers']['status-code']);
+            $this->assertEquals('Creating indexes on array attributes is not currently supported.', $index1['body']['message']);
 
-        $index2 = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), [
-            'key' => 'integers-size',
-            'type' => 'key',
-            $this->getIndexAttributesParam() => ['integers2'], // array attribute
-        ]);
+            $index2 = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]), [
+                'key' => 'integers-size',
+                'type' => 'key',
+                $this->getIndexAttributesParam() => ['integers2'], // array attribute
+            ]);
 
-        $this->assertEquals(400, $index2['headers']['status-code']);
-        $this->assertEquals('Creating indexes on array attributes is not currently supported.', $index2['body']['message']);
+            $this->assertEquals(400, $index2['headers']['status-code']);
+            $this->assertEquals('Creating indexes on array attributes is not currently supported.', $index2['body']['message']);
 
-        if (!$this->getSupportForMultipleFulltextIndexes()) {
-            // Some databases only allow one fulltext index per collection
-            $this->assertEquals('There is already a fulltext index in the collection', $fulltextReleaseYear['body']['message']);
-        } else {
-            $this->assertEquals('Attribute "releaseYear" cannot be part of a fulltext index, must be of type string', $fulltextReleaseYear['body']['message']);
-        }
+            if (!$this->getSupportForMultipleFulltextIndexes()) {
+                // Some databases only allow one fulltext index per collection
+                $this->assertEquals('There is already a fulltext index in the collection', $fulltextReleaseYear['body']['message']);
+            } else {
+                $this->assertEquals('Attribute "releaseYear" cannot be part of a fulltext index, must be of type string', $fulltextReleaseYear['body']['message']);
+            }
 
-        /**
-         * Create Indexes by worker
-         */
-        $this->waitForAllIndexes($databaseId, $collectionId);
+            /**
+             * Create Indexes by worker
+             */
+            $this->waitForAllIndexes($databaseId, $collectionId);
 
-        $collectionResponse = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $collectionId), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), []);
-
-        $this->assertIsArray($collectionResponse['body']['indexes']);
-        $expectedIndexCount = $this->getMaxIndexLength() < 1024 ? 4 : 5; // MongoDB accepts tooLong index
-        $this->assertCount($expectedIndexCount, $collectionResponse['body']['indexes']);
-        $indexKeys = array_column($collectionResponse['body']['indexes'], 'key');
-        $this->assertContains($titleIndex['body']['key'], $indexKeys);
-        $this->assertContains($releaseYearIndex['body']['key'], $indexKeys);
-        $this->assertContains($releaseWithDate1['body']['key'], $indexKeys);
-        $this->assertContains($releaseWithDate2['body']['key'], $indexKeys);
-
-        $this->assertEventually(function () use ($databaseId, $collectionId) {
-            $collResp = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $collectionId), array_merge([
+            $collectionResponse = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $collectionId), array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey']
-            ]));
+            ]), []);
 
-            foreach ($collResp['body']['indexes'] as $index) {
-                $this->assertEquals('available', $index['status']);
-            }
+            $this->assertIsArray($collectionResponse['body']['indexes']);
+            $expectedIndexCount = $this->getMaxIndexLength() < 1024 ? 4 : 5; // MongoDB accepts tooLong index
+            $this->assertCount($expectedIndexCount, $collectionResponse['body']['indexes']);
+            $indexKeys = array_column($collectionResponse['body']['indexes'], 'key');
+            $this->assertContains($titleIndex['body']['key'], $indexKeys);
+            $this->assertContains($releaseYearIndex['body']['key'], $indexKeys);
+            $this->assertContains($releaseWithDate1['body']['key'], $indexKeys);
+            $this->assertContains($releaseWithDate2['body']['key'], $indexKeys);
 
-            return true;
-        }, 60000, 500);
+            $this->assertEventually(function () use ($databaseId, $collectionId) {
+                $collResp = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $collectionId), array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey']
+                ]));
+
+                foreach ($collResp['body']['indexes'] as $index) {
+                    $this->assertEquals('available', $index['status']);
+                }
+
+                return true;
+            }, 60000, 500);
+        }
     }
 
     public function testGetIndexByKeyWithLengths(): void
     {
+        if (!$this->getSupportForAttributes()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
         $data = $this->setupAttributes();
         $databaseId = $data['databaseId'];
         $collectionId = $data['moviesId'];
@@ -2545,6 +2586,7 @@ trait DatabasesBase
             $this->getRecordIdParam() => ID::unique(),
             'data' => [
                 'releaseYear' => 2020, // Missing title, expect an 400 error
+                'birthDay' => null // adding null here as documentsdb will require it as for documentsdb this document will be created
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
@@ -2564,7 +2606,11 @@ trait DatabasesBase
         $this->assertCount(2, $document1['body']['actors']);
         $this->assertEquals($document1['body']['actors'][0], 'Chris Evans');
         $this->assertEquals($document1['body']['actors'][1], 'Samuel Jackson');
-        $this->assertEquals($document1['body']['birthDay'], '1975-06-12T12:12:55.000+00:00');
+        if ($this->getSupportForAttributes()) {
+            $this->assertEquals($document1['body']['birthDay'], '1975-06-12T12:12:55.000+00:00');
+        } else {
+            $this->assertEquals($document1['body']['birthDay'], '1975-06-12 14:12:55+02:00');
+        }
         $this->assertTrue(array_key_exists('$sequence', $document1['body']));
 
         $this->getSupportForIntegerIds()
@@ -2601,10 +2647,18 @@ trait DatabasesBase
         $this->assertCount(2, $document3['body']['actors']);
         $this->assertEquals($document3['body']['actors'][0], 'Tom Holland');
         $this->assertEquals($document3['body']['actors'][1], 'Zendaya Maree Stoermer');
-        $this->assertEquals($document3['body']['birthDay'], '1975-06-12T18:12:55.000+00:00'); // UTC for NY
+        if ($this->getSupportForAttributes()) {
+            $this->assertEquals($document3['body']['birthDay'], '1975-06-12T18:12:55.000+00:00'); // UTC for NY
+        } else {
+            $this->assertEquals($document1['body']['birthDay'], '1975-06-12 14:12:55+02:00');
+        }
         $this->assertTrue(array_key_exists('$sequence', $document3['body']));
 
-        $this->assertEquals(400, $document4['headers']['status-code']);
+        if ($this->getSupportForAttributes()) {
+            $this->assertEquals(400, $document4['headers']['status-code']);
+        } else {
+            $this->assertEquals(201, $document4['headers']['status-code']);
+        }
     }
 
     public function testUpsertDocument(): void
@@ -3979,34 +4033,43 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);
-        $this->assertEquals(0, $documents['body']['total']);
 
-        $documents = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [
-                Query::greaterThan('birthDay', '16/01/2024 12:00:00AM')->toString(),
-            ],
-        ]);
+        // for tablesdb/legacy it is full match , for docsdb inner pattern is matched
+        if ($this->getSupportForAttributes()) {
+            $this->assertEquals(0, $documents['body']['total']);
+        } else {
+            $this->assertGreaterThan(0, $documents['body']['total']);
+        }
 
-        $this->assertEquals(400, $documents['headers']['status-code']);
-        $this->assertEquals('Invalid query: Query value is invalid for attribute "birthDay"', $documents['body']['message']);
+        if ($this->getSupportForAttributes()) {
+            $documents = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => [
+                    Query::greaterThan('birthDay', '16/01/2024 12:00:00AM')->toString(),
+                ],
+            ]);
 
-        $documents = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [
-                Query::greaterThan('birthDay', '1960-01-01 10:10:10+02:30')->toString(),
-            ],
-        ]);
+            $this->assertEquals(400, $documents['headers']['status-code']);
+            $this->assertEquals('Invalid query: Query value is invalid for attribute "birthDay"', $documents['body']['message']);
 
-        $this->assertEquals(200, $documents['headers']['status-code']);
-        $this->assertGreaterThanOrEqual(2, count($documents['body'][$this->getRecordResource()]));
-        $birthDays = array_column($documents['body'][$this->getRecordResource()], 'birthDay');
-        $this->assertContains('1975-06-12T12:12:55.000+00:00', $birthDays);
-        $this->assertContains('1975-06-12T18:12:55.000+00:00', $birthDays);
+            $documents = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => [
+                    Query::greaterThan('birthDay', '1960-01-01 10:10:10+02:30')->toString(),
+                ],
+            ]);
+
+            $this->assertEquals(200, $documents['headers']['status-code']);
+            $this->assertGreaterThanOrEqual(2, count($documents['body'][$this->getRecordResource()]));
+            $birthDays = array_column($documents['body'][$this->getRecordResource()], 'birthDay');
+            $this->assertContains('1975-06-12T12:12:55.000+00:00', $birthDays);
+            $this->assertContains('1975-06-12T18:12:55.000+00:00', $birthDays);
+        }
+
 
         $documents = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
             'content-type' => 'application/json',
@@ -4650,6 +4713,10 @@ trait DatabasesBase
 
     public function testInvalidDocumentStructure(): void
     {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+            return;
+        }
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -5350,22 +5417,18 @@ trait DatabasesBase
         $this->assertEquals($collection['body'][$this->getSecurityResponseKey()], true);
 
         $collectionId = $collection['body']['$id'];
+        if ($this->getSupportForAttributes()) {
+            $attribute = $this->createAttribute($databaseId, $collectionId, 'string', [
+                'key' => 'attribute',
+                'size' => 64,
+                'required' => true,
+            ]);
+            $this->assertEquals(202, $attribute['headers']['status-code'], 202);
+            $this->assertEquals('attribute', $attribute['body']['key']);
 
-        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'attribute',
-            'size' => 64,
-            'required' => true,
-        ]);
-
-        $this->assertEquals(202, $attribute['headers']['status-code'], 202);
-        $this->assertEquals('attribute', $attribute['body']['key']);
-
-        // wait for db to add attribute
-        $this->waitForAttribute($databaseId, $collectionId, 'attribute');
+            // wait for db to add attribute
+            $this->waitForAttribute($databaseId, $collectionId, 'attribute');
+        }
 
         $index = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
@@ -5374,7 +5437,7 @@ trait DatabasesBase
         ]), [
             'key' => 'key_attribute',
             'type' => 'key',
-            $this->getIndexAttributesParam() => [$attribute['body']['key']],
+            $this->getIndexAttributesParam() => ['attribute'],
         ]);
 
         $this->assertEquals(202, $index['headers']['status-code']);
@@ -5540,21 +5603,17 @@ trait DatabasesBase
         $this->assertEquals($collection['body'][$this->getSecurityResponseKey()], false);
 
         $collectionId = $collection['body']['$id'];
+        if ($this->getSupportForAttributes()) {
+            $attribute = $this->createAttribute($databaseId, $collectionId, 'string', [
+                'key' => 'attribute',
+                'size' => 64,
+                'required' => true,
+            ]);
+            $this->assertEquals(202, $attribute['headers']['status-code'], 202);
+            $this->assertEquals('attribute', $attribute['body']['key']);
 
-        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'attribute',
-            'size' => 64,
-            'required' => true,
-        ]);
-
-        $this->assertEquals(202, $attribute['headers']['status-code'], 202);
-        $this->assertEquals('attribute', $attribute['body']['key']);
-
-        $this->waitForAttribute($databaseId, $collectionId, 'attribute');
+            $this->waitForAttribute($databaseId, $collectionId, 'attribute');
+        }
 
         $index = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
@@ -5563,7 +5622,7 @@ trait DatabasesBase
         ]), [
             'key' => 'key_attribute',
             'type' => 'key',
-            $this->getIndexAttributesParam() => [$attribute['body']['key']],
+            $this->getIndexAttributesParam() => ['attribute'],
         ]);
 
         $this->assertEquals(202, $index['headers']['status-code'], 'Index creation failed: ' . json_encode($index['body'] ?? []));
@@ -5930,21 +5989,18 @@ trait DatabasesBase
         $moviesId = $movies['body']['$id'];
 
         // create attribute
-        $title = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $moviesId) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'title',
-            'size' => 256,
-            'required' => true,
-        ]);
+        if ($this->getSupportForAttributes()) {
+            $title = $this->createAttribute($databaseId, $moviesId, 'string', [
+                'key' => 'title',
+                'size' => 256,
+                'required' => true,
+            ]);
 
-        $this->assertEquals(202, $title['headers']['status-code']);
+            $this->assertEquals(202, $title['headers']['status-code']);
 
-        // wait for database worker to create attributes
-        $this->waitForAttribute($databaseId, $moviesId, 'title');
-
+            // wait for database worker to create attributes
+            $this->waitForAttribute($databaseId, $moviesId, 'title');
+        }
         // add document
         $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $moviesId), array_merge([
             'content-type' => 'application/json',
@@ -6009,6 +6065,11 @@ trait DatabasesBase
 
     public function testAttributeBooleanDefault(): void
     {
+        if (!$this->getSupportForAttributes()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         $data = $this->setupDatabase();
         $databaseId = $data['databaseId'];
 
@@ -6895,32 +6956,25 @@ trait DatabasesBase
         $this->assertEquals(201, $presidents['headers']['status-code']);
         $this->assertEquals($presidents['body']['name'], 'USA Presidents');
 
-        // Create Attributes
-        $firstName = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $presidents['body']['$id']) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'first_name',
-            'size' => 256,
-            'required' => true,
-        ]);
-        $this->assertEquals(202, $firstName['headers']['status-code']);
+        // Create Attributes (only for adapters that support attributes)
+        if ($this->getSupportForAttributes()) {
+            $firstName = $this->createAttribute($databaseId, $presidents['body']['$id'], 'string', [
+                'key' => 'first_name',
+                'size' => 256,
+                'required' => true,
+            ]);
+            $this->assertEquals(202, $firstName['headers']['status-code']);
 
-        $lastName = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $presidents['body']['$id']) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'last_name',
-            'size' => 256,
-            'required' => true,
-        ]);
+            $lastName = $this->createAttribute($databaseId, $presidents['body']['$id'], 'string', [
+                'key' => 'last_name',
+                'size' => 256,
+                'required' => true,
+            ]);
+            $this->assertEquals(202, $lastName['headers']['status-code']);
 
-        $this->assertEquals(202, $lastName['headers']['status-code']);
-
-        // Wait for worker
-        $this->waitForAllAttributes($databaseId, $presidents['body']['$id']);
+            // Wait for worker
+            $this->waitForAllAttributes($databaseId, $presidents['body']['$id']);
+        }
 
         $document1 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $presidents['body']['$id']), array_merge([
             'content-type' => 'application/json',
@@ -7125,20 +7179,19 @@ trait DatabasesBase
             'databaseId' => $databaseId,
         ];
 
-        $longtext = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($data['databaseId'], $data['$id']) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'longtext',
-            'size' => 100000000,
-            'required' => false,
-            'default' => null,
-        ]);
+        // Create attribute only on adapters that support attributes; DocumentsDB can still store the field schemalessly
+        if ($this->getSupportForAttributes()) {
+            $longtext = $this->createAttribute($data['databaseId'], $data['$id'], 'string', [
+                'key' => 'longtext',
+                'size' => 100000000,
+                'required' => false,
+                'default' => null,
+            ]);
 
-        $this->assertEquals($longtext['headers']['status-code'], 202);
+            $this->assertEquals(202, $longtext['headers']['status-code']);
 
-        $this->waitForAttribute($data['databaseId'], $data['$id'], 'longtext');
+            $this->waitForAttribute($data['databaseId'], $data['$id'], 'longtext');
+        }
 
         for ($i = 0; $i < 10; $i++) {
             $this->client->call(Client::METHOD_POST, $this->getRecordUrl($data['databaseId'], $data['$id']), array_merge([
@@ -7206,17 +7259,20 @@ trait DatabasesBase
         ]);
         $collectionId = $collection['body']['$id'];
 
-        // Add integer attribute
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/integer', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'count',
-            'required' => true,
-        ]);
+        // Add integer attribute only when supported; schemaless adapters (e.g. documentsdb)
+        // can still store the field without a predefined attribute.
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/integer', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'count',
+                'required' => true,
+            ]);
 
-        $this->waitForAttribute($databaseId, $collectionId, 'count');
+            $this->waitForAttribute($databaseId, $collectionId, 'count');
+        }
 
         // Create document with initial count = 5
         $doc = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
@@ -7281,7 +7337,10 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]));
-        $this->assertEquals(404, $notFound['headers']['status-code']);
+        $this->assertEquals(
+            $this->getSupportForAttributes() ? 404 : 200,
+            $notFound['headers']['status-code']
+        );
 
         // Test increment with value 0
         $inc3 = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $docId) . "/count/increment", array_merge([
@@ -7322,17 +7381,20 @@ trait DatabasesBase
 
         $collectionId = $collection['body']['$id'];
 
-        // Add integer attribute
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/integer', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'count',
-            'required' => true,
-        ]);
+        // Add integer attribute only when supported; schemaless adapters can still
+        // store the field without a predefined attribute.
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/integer', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'count',
+                'required' => true,
+            ]);
 
-        $this->waitForAttribute($databaseId, $collectionId, 'count');
+            $this->waitForAttribute($databaseId, $collectionId, 'count');
+        }
 
         // Create document with initial count = 10
         $doc = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
@@ -9754,32 +9816,25 @@ trait DatabasesBase
         $this->assertEquals(201, $movies['headers']['status-code']);
         $this->assertEquals($movies['body']['name'], 'Movies');
 
-        // Create Attributes
-        $title = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $movies['body']['$id']) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'title',
-            'size' => 256,
-            'required' => true,
-        ]);
-        $this->assertEquals(202, $title['headers']['status-code']);
+        // Create Attributes (only when supported; DocumentsDB can still store fields schemalessly)
+        if ($this->getSupportForAttributes()) {
+            $title = $this->createAttribute($databaseId, $movies['body']['$id'], 'string', [
+                'key' => 'title',
+                'size' => 256,
+                'required' => true,
+            ]);
+            $this->assertEquals(202, $title['headers']['status-code']);
 
-        $genre = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $movies['body']['$id']) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'genre',
-            'size' => 256,
-            'required' => true,
-        ]);
+            $genre = $this->createAttribute($databaseId, $movies['body']['$id'], 'string', [
+                'key' => 'genre',
+                'size' => 256,
+                'required' => true,
+            ]);
+            $this->assertEquals(202, $genre['headers']['status-code']);
 
-        $this->assertEquals(202, $genre['headers']['status-code']);
-
-        // Wait for worker
-        $this->waitForAllAttributes($databaseId, $movies['body']['$id']);
+            // Wait for worker
+            $this->waitForAllAttributes($databaseId, $movies['body']['$id']);
+        }
 
         $row1 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $movies['body']['$id']), array_merge([
             'content-type' => 'application/json',
@@ -9922,31 +9977,24 @@ trait DatabasesBase
         $this->assertEquals(201, $products['headers']['status-code']);
         $this->assertEquals($products['body']['name'], 'Products');
 
-        // Create Attributes
-        $name = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $products['body']['$id']) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'name',
-            'size' => 256,
-            'required' => true,
-        ]);
-        $this->assertEquals(202, $name['headers']['status-code']);
+        // Create Attributes (only when supported)
+        if ($this->getSupportForAttributes()) {
+            $name = $this->createAttribute($databaseId, $products['body']['$id'], 'string', [
+                'key' => 'name',
+                'size' => 256,
+                'required' => true,
+            ]);
+            $this->assertEquals(202, $name['headers']['status-code']);
 
-        $price = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $products['body']['$id']) . '/float', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'price',
-            'required' => true,
-        ]);
+            $price = $this->createAttribute($databaseId, $products['body']['$id'], 'float', [
+                'key' => 'price',
+                'required' => true,
+            ]);
+            $this->assertEquals(202, $price['headers']['status-code']);
 
-        $this->assertEquals(202, $price['headers']['status-code']);
-
-        // Wait for worker
-        $this->waitForAllAttributes($databaseId, $products['body']['$id']);
+            // Wait for worker
+            $this->waitForAllAttributes($databaseId, $products['body']['$id']);
+        }
 
         $row1 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $products['body']['$id']), array_merge([
             'content-type' => 'application/json',
@@ -10054,32 +10102,25 @@ trait DatabasesBase
         $this->assertEquals(201, $employees['headers']['status-code']);
         $this->assertEquals($employees['body']['name'], 'Employees');
 
-        // Create Attributes
-        $name = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $employees['body']['$id']) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'name',
-            'size' => 256,
-            'required' => true,
-        ]);
-        $this->assertEquals(202, $name['headers']['status-code']);
+        // Create Attributes (only when supported)
+        if ($this->getSupportForAttributes()) {
+            $name = $this->createAttribute($databaseId, $employees['body']['$id'], 'string', [
+                'key' => 'name',
+                'size' => 256,
+                'required' => true,
+            ]);
+            $this->assertEquals(202, $name['headers']['status-code']);
 
-        $department = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $employees['body']['$id']) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'department',
-            'size' => 256,
-            'required' => true,
-        ]);
+            $department = $this->createAttribute($databaseId, $employees['body']['$id'], 'string', [
+                'key' => 'department',
+                'size' => 256,
+                'required' => true,
+            ]);
+            $this->assertEquals(202, $department['headers']['status-code']);
 
-        $this->assertEquals(202, $department['headers']['status-code']);
-
-        // Wait for worker
-        $this->waitForAllAttributes($databaseId, $employees['body']['$id']);
+            // Wait for worker
+            $this->waitForAllAttributes($databaseId, $employees['body']['$id']);
+        }
 
         $row1 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $employees['body']['$id']), array_merge([
             'content-type' => 'application/json',
@@ -10187,32 +10228,25 @@ trait DatabasesBase
         $this->assertEquals(201, $files['headers']['status-code']);
         $this->assertEquals($files['body']['name'], 'Files');
 
-        // Create Attributes
-        $filename = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $files['body']['$id']) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'filename',
-            'size' => 256,
-            'required' => true,
-        ]);
-        $this->assertEquals(202, $filename['headers']['status-code']);
+        // Create Attributes (only when supported)
+        if ($this->getSupportForAttributes()) {
+            $filename = $this->createAttribute($databaseId, $files['body']['$id'], 'string', [
+                'key' => 'filename',
+                'size' => 256,
+                'required' => true,
+            ]);
+            $this->assertEquals(202, $filename['headers']['status-code']);
 
-        $type = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $files['body']['$id']) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'type',
-            'size' => 256,
-            'required' => true,
-        ]);
+            $type = $this->createAttribute($databaseId, $files['body']['$id'], 'string', [
+                'key' => 'type',
+                'size' => 256,
+                'required' => true,
+            ]);
+            $this->assertEquals(202, $type['headers']['status-code']);
 
-        $this->assertEquals(202, $type['headers']['status-code']);
-
-        // Wait for worker
-        $this->waitForAllAttributes($databaseId, $files['body']['$id']);
+            // Wait for worker
+            $this->waitForAllAttributes($databaseId, $files['body']['$id']);
+        }
 
         $row1 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $files['body']['$id']), array_merge([
             'content-type' => 'application/json',
@@ -10320,32 +10354,25 @@ trait DatabasesBase
         $this->assertEquals(201, $posts['headers']['status-code']);
         $this->assertEquals($posts['body']['name'], 'Posts');
 
-        // Create Attributes
-        $title = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $posts['body']['$id']) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'title',
-            'size' => 256,
-            'required' => true,
-        ]);
-        $this->assertEquals(202, $title['headers']['status-code']);
+        // Create Attributes (only when supported)
+        if ($this->getSupportForAttributes()) {
+            $title = $this->createAttribute($databaseId, $posts['body']['$id'], 'string', [
+                'key' => 'title',
+                'size' => 256,
+                'required' => true,
+            ]);
+            $this->assertEquals(202, $title['headers']['status-code']);
 
-        $content = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $posts['body']['$id']) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'content',
-            'size' => 512,
-            'required' => true,
-        ]);
+            $content = $this->createAttribute($databaseId, $posts['body']['$id'], 'string', [
+                'key' => 'content',
+                'size' => 512,
+                'required' => true,
+            ]);
+            $this->assertEquals(202, $content['headers']['status-code']);
 
-        $this->assertEquals(202, $content['headers']['status-code']);
-
-        // Wait for worker
-        $this->waitForAllAttributes($databaseId, $posts['body']['$id']);
+            // Wait for worker
+            $this->waitForAllAttributes($databaseId, $posts['body']['$id']);
+        }
 
         $row1 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $posts['body']['$id']), array_merge([
             'content-type' => 'application/json',
@@ -10460,32 +10487,25 @@ trait DatabasesBase
         $this->assertEquals(201, $events['headers']['status-code']);
         $this->assertEquals($events['body']['name'], 'Events');
 
-        // Create Attributes
-        $name = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $events['body']['$id']) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'name',
-            'size' => 256,
-            'required' => true,
-        ]);
-        $this->assertEquals(202, $name['headers']['status-code']);
+        // Create Attributes (only when supported)
+        if ($this->getSupportForAttributes()) {
+            $name = $this->createAttribute($databaseId, $events['body']['$id'], 'string', [
+                'key' => 'name',
+                'size' => 256,
+                'required' => true,
+            ]);
+            $this->assertEquals(202, $name['headers']['status-code']);
 
-        $description = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $events['body']['$id']) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'description',
-            'size' => 512,
-            'required' => true,
-        ]);
+            $description = $this->createAttribute($databaseId, $events['body']['$id'], 'string', [
+                'key' => 'description',
+                'size' => 512,
+                'required' => true,
+            ]);
+            $this->assertEquals(202, $description['headers']['status-code']);
 
-        $this->assertEquals(202, $description['headers']['status-code']);
-
-        // Wait for worker
-        $this->waitForAllAttributes($databaseId, $events['body']['$id']);
+            // Wait for worker
+            $this->waitForAllAttributes($databaseId, $events['body']['$id']);
+        }
 
         $row1 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $events['body']['$id']), array_merge([
             'content-type' => 'application/json',
@@ -10600,31 +10620,25 @@ trait DatabasesBase
         $this->assertEquals(201, $articles['headers']['status-code']);
         $this->assertEquals($articles['body']['name'], 'Articles');
 
-        // Create Attributes
-        $title = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $articles['body']['$id']) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'title',
-            'size' => 256,
-            'required' => true,
-        ]);
-        $this->assertEquals(202, $title['headers']['status-code']);
+        // Create Attributes (only when supported)
+        if ($this->getSupportForAttributes()) {
+            $title = $this->createAttribute($databaseId, $articles['body']['$id'], 'string', [
+                'key' => 'title',
+                'size' => 256,
+                'required' => true,
+            ]);
+            $this->assertEquals(202, $title['headers']['status-code']);
 
-        $content = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $articles['body']['$id']) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'content',
-            'size' => 5000,
-            'required' => true,
-        ]);
-        $this->assertEquals(202, $content['headers']['status-code']);
+            $content = $this->createAttribute($databaseId, $articles['body']['$id'], 'string', [
+                'key' => 'content',
+                'size' => 5000,
+                'required' => true,
+            ]);
+            $this->assertEquals(202, $content['headers']['status-code']);
 
-        // Wait for attributes to be available
-        $this->waitForAllAttributes($databaseId, $articles['body']['$id']);
+            // Wait for attributes to be available
+            $this->waitForAllAttributes($databaseId, $articles['body']['$id']);
+        }
 
         // Create first article
         $row1 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $articles['body']['$id']), array_merge([
@@ -10785,32 +10799,25 @@ trait DatabasesBase
         $this->assertEquals(201, $tasks['headers']['status-code']);
         $this->assertEquals($tasks['body']['name'], 'Tasks');
 
-        // Create Attributes
-        $title = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $tasks['body']['$id']) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'title',
-            'size' => 256,
-            'required' => true,
-        ]);
-        $this->assertEquals(202, $title['headers']['status-code']);
+        // Create Attributes (only when supported)
+        if ($this->getSupportForAttributes()) {
+            $title = $this->createAttribute($databaseId, $tasks['body']['$id'], 'string', [
+                'key' => 'title',
+                'size' => 256,
+                'required' => true,
+            ]);
+            $this->assertEquals(202, $title['headers']['status-code']);
 
-        $status = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $tasks['body']['$id']) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'status',
-            'size' => 256,
-            'required' => true,
-        ]);
+            $status = $this->createAttribute($databaseId, $tasks['body']['$id'], 'string', [
+                'key' => 'status',
+                'size' => 256,
+                'required' => true,
+            ]);
+            $this->assertEquals(202, $status['headers']['status-code']);
 
-        $this->assertEquals(202, $status['headers']['status-code']);
-
-        // Wait for worker
-        $this->waitForAllAttributes($databaseId, $tasks['body']['$id']);
+            // Wait for worker
+            $this->waitForAllAttributes($databaseId, $tasks['body']['$id']);
+        }
 
         $row1 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $tasks['body']['$id']), array_merge([
             'content-type' => 'application/json',
@@ -10958,32 +10965,25 @@ trait DatabasesBase
         $this->assertEquals(201, $orders['headers']['status-code']);
         $this->assertEquals($orders['body']['name'], 'Orders');
 
-        // Create Attributes
-        $orderNumber = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $orders['body']['$id']) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'orderNumber',
-            'size' => 256,
-            'required' => true,
-        ]);
-        $this->assertEquals(202, $orderNumber['headers']['status-code']);
+        // Create Attributes (only when supported)
+        if ($this->getSupportForAttributes()) {
+            $orderNumber = $this->createAttribute($databaseId, $orders['body']['$id'], 'string', [
+                'key' => 'orderNumber',
+                'size' => 256,
+                'required' => true,
+            ]);
+            $this->assertEquals(202, $orderNumber['headers']['status-code']);
 
-        $status = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $orders['body']['$id']) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'status',
-            'size' => 256,
-            'required' => true,
-        ]);
+            $status = $this->createAttribute($databaseId, $orders['body']['$id'], 'string', [
+                'key' => 'status',
+                'size' => 256,
+                'required' => true,
+            ]);
+            $this->assertEquals(202, $status['headers']['status-code']);
 
-        $this->assertEquals(202, $status['headers']['status-code']);
-
-        // Wait for worker
-        $this->waitForAllAttributes($databaseId, $orders['body']['$id']);
+            // Wait for worker
+            $this->waitForAllAttributes($databaseId, $orders['body']['$id']);
+        }
 
         $row1 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $orders['body']['$id']), array_merge([
             'content-type' => 'application/json',
@@ -11130,30 +11130,24 @@ trait DatabasesBase
         $this->assertEquals(201, $products['headers']['status-code']);
         $this->assertEquals($products['body']['name'], 'Products');
 
-        // Create Attributes
-        $name = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $products['body']['$id']) . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'name',
-            'size' => 256,
-            'required' => true,
-        ]);
-        $this->assertEquals(202, $name['headers']['status-code']);
+        // Create Attributes (only when supported)
+        if ($this->getSupportForAttributes()) {
+            $name = $this->createAttribute($databaseId, $products['body']['$id'], 'string', [
+                'key' => 'name',
+                'size' => 256,
+                'required' => true,
+            ]);
+            $this->assertEquals(202, $name['headers']['status-code']);
 
-        $price = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $products['body']['$id']) . '/float', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'price',
-            'required' => true,
-        ]);
-        $this->assertEquals(202, $price['headers']['status-code']);
+            $price = $this->createAttribute($databaseId, $products['body']['$id'], 'float', [
+                'key' => 'price',
+                'required' => true,
+            ]);
+            $this->assertEquals(202, $price['headers']['status-code']);
 
-        // Wait for attributes to be available
-        $this->waitForAllAttributes($databaseId, $products['body']['$id']);
+            // Wait for attributes to be available
+            $this->waitForAllAttributes($databaseId, $products['body']['$id']);
+        }
 
         // Create first product
         $row1 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $products['body']['$id']), array_merge([

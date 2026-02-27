@@ -267,15 +267,6 @@ class Install extends Action
             $input['_APP_DB_PORT'] = 3306;
         }
 
-        $database = $input['_APP_DB_ADAPTER'];
-        if ($database === 'mongodb') {
-            $input['_APP_DB_HOST'] = 'mongodb';
-            $input['_APP_DB_PORT'] = 27017;
-        } elseif ($database === 'mariadb') {
-            $input['_APP_DB_HOST'] = 'mariadb';
-            $input['_APP_DB_PORT'] = 3306;
-        }
-
         $templateForCompose = new View(__DIR__ . '/../../../../app/views/install/compose.phtml');
         $templateForEnv = new View(__DIR__ . '/../../../../app/views/install/env.phtml');
         $templateForCompose
@@ -299,6 +290,24 @@ class Install extends Action
             $message = 'Failed to save environment variables file';
             Console::error($message);
             Console::exit(1);
+        }
+
+        // Copy MongoDB initialization files for replica set setup
+        if ($database === 'mongodb') {
+            $mongoInitScript = __DIR__ . '/../../../../mongo-init.js';
+            $mongoEntrypoint = __DIR__ . '/../../../../mongo-entrypoint.sh';
+
+            if (file_exists($mongoInitScript)) {
+                if (!copy($mongoInitScript, $this->path . '/mongo-init.js')) {
+                    Console::warning('Failed to copy mongo-init.js');
+                }
+            }
+
+            if (file_exists($mongoEntrypoint)) {
+                if (!copy($mongoEntrypoint, $this->path . '/mongo-entrypoint.sh')) {
+                    Console::warning('Failed to copy mongo-entrypoint.sh');
+                }
+            }
         }
 
         $env = '';

@@ -77,13 +77,14 @@ class Create extends Action
             ->param('lengths', [], new ArrayList(new Nullable(new Integer()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Length of index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE, optional: true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
             ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $key, string $type, array $attributes, array $orders, array $lengths, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $key, string $type, array $attributes, array $orders, array $lengths, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
         $db = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -103,7 +104,9 @@ class Create extends Action
             Query::equal('databaseInternalId', [$db->getSequence()])
         ], 61);
 
-        $limit = $dbForProject->getLimitForIndexes();
+        $dbForDatabases = $getDatabasesDB($db);
+
+        $limit = $dbForDatabases->getLimitForIndexes();
 
         if ($count >= $limit) {
             throw new Exception($this->getLimitException(), params: [$collectionId]);
@@ -145,32 +148,35 @@ class Create extends Action
         ];
 
         $contextType = $this->getParentContext();
-        foreach ($attributes as $i => $attribute) {
-            $attributeIndex = \array_search($attribute, array_column($oldAttributes, 'key'));
+        if ($dbForDatabases->getAdapter()->getSupportForAttributes()) {
+            foreach ($attributes as $i => $attribute) {
+                // find attribute metadata in collection document
+                $attributeIndex = \array_search($attribute, array_column($oldAttributes, 'key'));
 
-            if ($attributeIndex === false) {
-                throw new Exception($this->getParentUnknownException(), params: [$attribute]);
-            }
+                if ($attributeIndex === false) {
+                    throw new Exception($this->getParentUnknownException(), params: [$attribute]);
+                }
 
-            $attributeStatus = $oldAttributes[$attributeIndex]['status'];
-            $attributeType = $oldAttributes[$attributeIndex]['type'];
-            $attributeArray = $oldAttributes[$attributeIndex]['array'] ?? false;
+                $attributeStatus = $oldAttributes[$attributeIndex]['status'];
+                $attributeType = $oldAttributes[$attributeIndex]['type'];
+                $attributeArray = $oldAttributes[$attributeIndex]['array'] ?? false;
 
-            if ($attributeType === Database::VAR_RELATIONSHIP) {
-                throw new Exception($this->getParentInvalidTypeException(), "Cannot create an index for a relationship $contextType: " . $oldAttributes[$attributeIndex]['key']);
-            }
+                if ($attributeType === Database::VAR_RELATIONSHIP) {
+                    throw new Exception($this->getParentInvalidTypeException(), "Cannot create an index for a relationship $contextType: " . $oldAttributes[$attributeIndex]['key']);
+                }
 
-            if ($attributeStatus !== 'available') {
-                throw new Exception($this->getParentNotAvailableException(), params: [$oldAttributes[$attributeIndex]['key']]);
-            }
+                if ($attributeStatus !== 'available') {
+                    throw new Exception($this->getParentNotAvailableException(), params: [$oldAttributes[$attributeIndex]['key']]);
+                }
 
-            if (empty($lengths[$i])) {
-                $lengths[$i] = null;
-            }
+                if (empty($lengths[$i])) {
+                    $lengths[$i] = null;
+                }
 
-            if ($attributeArray === true) {
-                // Because of a bug in MySQL, we cannot create indexes on array attributes for now, otherwise queries break.
-                throw new Exception(Exception::INDEX_INVALID, 'Creating indexes on array attributes is not currently supported.');
+                if ($attributeArray === true) {
+                    // Because of a bug in MySQL, we cannot create indexes on array attributes for now, otherwise queries break.
+                    throw new Exception(Exception::INDEX_INVALID, 'Creating indexes on array attributes is not currently supported.');
+                }
             }
         }
 
@@ -191,21 +197,23 @@ class Create extends Action
         $validator = new IndexValidator(
             $collection->getAttribute('attributes'),
             $collection->getAttribute('indexes'),
-            $dbForProject->getAdapter()->getMaxIndexLength(),
-            $dbForProject->getAdapter()->getInternalIndexesKeys(),
-            $dbForProject->getAdapter()->getSupportForIndexArray(),
-            $dbForProject->getAdapter()->getSupportForSpatialIndexNull(),
-            $dbForProject->getAdapter()->getSupportForSpatialIndexOrder(),
-            $dbForProject->getAdapter()->getSupportForVectors(),
-            $dbForProject->getAdapter()->getSupportForAttributes(),
-            $dbForProject->getAdapter()->getSupportForMultipleFulltextIndexes(),
-            $dbForProject->getAdapter()->getSupportForIdenticalIndexes(),
-            $dbForProject->getAdapter()->getSupportForObjectIndexes(),
-            $dbForProject->getAdapter()->getSupportForTrigramIndex(),
-            $dbForProject->getAdapter()->getSupportForSpatialAttributes(),
-            $dbForProject->getAdapter()->getSupportForIndex(),
-            $dbForProject->getAdapter()->getSupportForUniqueIndex(),
-            $dbForProject->getAdapter()->getSupportForFulltextIndex(),
+            $dbForDatabases->getAdapter()->getMaxIndexLength(),
+            $dbForDatabases->getAdapter()->getInternalIndexesKeys(),
+            $dbForDatabases->getAdapter()->getSupportForIndexArray(),
+            $dbForDatabases->getAdapter()->getSupportForSpatialIndexNull(),
+            $dbForDatabases->getAdapter()->getSupportForSpatialIndexOrder(),
+            $dbForDatabases->getAdapter()->getSupportForVectors(),
+            $dbForDatabases->getAdapter()->getSupportForAttributes(),
+            $dbForDatabases->getAdapter()->getSupportForMultipleFulltextIndexes(),
+            $dbForDatabases->getAdapter()->getSupportForIdenticalIndexes(),
+            $dbForDatabases->getAdapter()->getSupportForObjectIndexes(),
+            $dbForDatabases->getAdapter()->getSupportForTrigramIndex(),
+            $dbForDatabases->getAdapter()->getSupportForSpatialAttributes(),
+            $dbForDatabases->getAdapter()->getSupportForIndex(),
+            $dbForDatabases->getAdapter()->getSupportForUniqueIndex(),
+            $dbForDatabases->getAdapter()->getSupportForFulltextIndex(),
+            $dbForDatabases->getAdapter()->getSupportForTTLIndexes(),
+            $dbForDatabases->getAdapter()->getSupportForObject()
         );
 
         if (!$validator->isValid($index)) {
