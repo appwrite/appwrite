@@ -138,14 +138,51 @@ class Update extends Action
         }
 
         if ($commit) {
-
             $operations = [];
             $totalOperations = 0;
             $databaseOperations = [];
             $currentDocumentId = null;
 
+            $firstOperation = $authorization->skip(fn () => $dbForProject->findOne('transactionLogs', [
+                Query::equal('transactionInternalId', [$transaction->getSequence()]),
+                Query::orderAsc(),
+            ]));
+
+            if ($firstOperation->isEmpty()) {
+                $transaction = $authorization->skip(fn () => $dbForProject->updateDocument(
+                    'transactions',
+                    $transactionId,
+                    new Document(['status' => 'committed'])
+                ));
+
+                $queueForDeletes
+                    ->setType(DELETE_TYPE_DOCUMENT)
+                    ->setDocument($transaction);
+
+                $response
+                    ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
+                    ->dynamic($transaction, $this->getResponseModel());
+
+                return;
+            }
+
+            $databaseDoc = null;
+            switch ($this->getDatabaseType()) {
+                case DATABASE_TYPE_DOCUMENTSDB:
+                case DATABASE_TYPE_VECTORDB:
+                    $databaseDoc = $authorization->skip(fn () => $dbForProject->findOne('databases', [
+                        Query::equal('$sequence', [$firstOperation['databaseInternalId']])
+                    ]));
+                    break;
+                default:
+                    // Legacy/tablesdb: use project-level database
+                    $databaseDoc = new Document(['database' => $project->getAttribute('database')]);
+                    break;
+            }
+
+            $dbForDatabases = $getDatabasesDB($databaseDoc);
+
             try {
-                $dbForDatabases = $getDatabasesDB(new Document(['database' => $this->getDatabaseDSN($project)]));
                 $dbForDatabases->withTransaction(function () use ($dbForDatabases, $dbForProject, $transactionState, $queueForDeletes, $transactionId, &$transaction, &$operations, &$totalOperations, &$databaseOperations, &$currentDocumentId, $queueForEvents, $queueForStatsUsage, $queueForRealtime, $queueForFunctions, $queueForWebhooks, $authorization) {
                     $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                         'status' => 'committing',
@@ -455,15 +492,6 @@ class Update extends Action
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
             ->dynamic($transaction, UtopiaResponse::MODEL_TRANSACTION);
-    }
-
-    private function getDatabaseDSN(Document $project)
-    {
-        return match ($this->getDatabaseType()) {
-            DOCUMENTSDB => $project->getAttribute('documentsDatabase'),
-            VECTORDB => $project->getAttribute('vectorDatabase'),
-            default => $project->getAttribute('database'),
-        };
     }
 
     /**

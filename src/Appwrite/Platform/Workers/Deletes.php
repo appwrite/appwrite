@@ -559,20 +559,40 @@ class Deletes extends Action
             $projectTables = !\in_array($dsn->getHost(), $sharedTables);
             $sharedTablesV1 = \in_array($dsn->getHost(), $sharedTablesV1);
             $sharedTablesV2 = !$projectTables && !$sharedTablesV1;
-            $databaseDSNKeys = ['database','documentsDatabase','vectorDatabase'];
 
-            $exectionActionPerDatabase = function (string $databaseDSNKey, $callback) use ($getDatabasesDB, $document) {
+            $allDatabases = [
+                new Document([
+                    'database' => $document->getAttribute('database')
+                ]),
+                ...$dbForProject->find('databases', [
+                    Query::equal('type', [DATABASE_TYPE_DOCUMENTSDB, DATABASE_TYPE_VECTORDB]),
+                    Query::limit(5000),
+                ]),
+            ];
+            $databasesToClean = [];
+
+            foreach ($allDatabases as $db) {
+                $key = $db->getAttribute('database');
+
+                if ($key) {
+                    $databasesToClean[$key] ??= $db;
+                }
+            }
+
+            $databasesToClean = array_values($databasesToClean);
+
+            $executionActionPerDatabase = function (Document $databaseDoc, $callback) use ($getDatabasesDB, $document) {
                 /**
                 * @var Database $dbForDatabases
                 */
-                $dbForDatabases = $getDatabasesDB(new Document(['database' => $document->getAttribute($databaseDSNKey)]), $document);
+                $dbForDatabases = $getDatabasesDB($databaseDoc, $document);
                 $callback($dbForDatabases);
             };
 
             batch(array_map(
-                fn ($databaseDSNKey) =>
-                    fn () => $exectionActionPerDatabase(
-                        $databaseDSNKey,
+                fn ($databaseDoc) =>
+                    fn () => $executionActionPerDatabase(
+                        $databaseDoc,
                         function (Database $dbForDatabases) use ($projectTables, $projectCollectionIds) {
                             $dbForDatabases->foreach(
                                 Database::METADATA,
@@ -596,7 +616,7 @@ class Deletes extends Action
                             );
                         }
                     ),
-                $databaseDSNKeys
+                $databasesToClean
             ));
 
             // Delete Platforms
@@ -653,13 +673,13 @@ class Deletes extends Action
             // Delete metadata table
             if ($projectTables) {
                 batch(array_map(
-                    fn ($databaseDSNKey) => fn () =>
-                        $exectionActionPerDatabase(
-                            $databaseDSNKey,
+                    fn ($databaseDoc) => fn () =>
+                        $executionActionPerDatabase(
+                            $databaseDoc,
                             fn (Database $dbForDatabases) =>
                                 $dbForDatabases->deleteCollection(Database::METADATA)
                         ),
-                    $databaseDSNKeys
+                    $databasesToClean
                 ));
             } elseif ($sharedTablesV1) {
                 $this->deleteByGroup(

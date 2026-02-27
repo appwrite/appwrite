@@ -19,7 +19,9 @@ use Utopia\Database\Exception\Index as IndexException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Helpers\ID;
+use Utopia\DSN\DSN;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
@@ -32,11 +34,105 @@ class Create extends Action
 
     protected function getDatabaseDSN(Document $project): string
     {
-        return match ($this->getDatabaseType()) {
-            DOCUMENTSDB => $project->getAttribute('documentsDatabase'),
-            VECTORDB => $project->getAttribute('vectorDatabase'),
-            default => $project->getAttribute('database'),
-        };
+        // TODO: use database worker for for creating the v2 schema if not present
+        // it is considered that the v2 metadata schema is already created during server start in the http.php
+        return $this->constructDatabaseDSNFromProjectDatabase($this->getDatabaseType(), $project->getAttribute('region'), $project->getAttribute('database'));
+    }
+
+    private function constructDatabaseDSNFromProjectDatabase(string $databasetype, $region, ?string $dsn = null): string
+    {
+        $databases = [];
+        $databaseKeys = [];
+        /**
+         * @var string|null $databaseOverride
+        */
+        $databaseOverride = '';
+        $dbScheme = '';
+        $sharedTables = [];
+        $sharedTablesV1 = [];
+        $sharedTablesV2 = [];
+
+        switch ($databasetype) {
+            case DOCUMENTSDB:
+                $databases = Config::getParam('pools-documentsdb', []);
+                $databaseKeys = System::getEnv('_APP_DATABASE_DOCUMENTSDB_KEYS', '');
+                $databaseOverride = System::getEnv('_APP_DATABASE_DOCUMENTSDB_OVERRIDE');
+                $dbScheme = System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb');
+                $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES', ''));
+                $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES_V1', ''));
+                break;
+            case VECTORDB:
+                $databases = Config::getParam('pools-vectordb', []);
+                $databaseKeys = System::getEnv('_APP_DATABASE_VECTORDB_KEYS', '');
+                $databaseOverride = System::getEnv('_APP_DATABASE_VECTORDB_OVERRIDE');
+                $dbScheme = System::getEnv('_APP_DB_HOST_VECTORDB', 'postgresql');
+                $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_VECTORDB_SHARED_TABLES', ''));
+                $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_VECTORDB_SHARED_TABLES_V1', ''));
+                break;
+            default:
+                // legacy/tablesdb
+                // it is already created during create project
+                return $dsn;
+        }
+
+        $isSharedTablesV1 = false;
+        $isSharedTablesV2 = false;
+
+        if (!empty($dsn)) {
+            try {
+                $parsedDsn = new DSN($dsn);
+                $dsnHost = $parsedDsn->getHost();
+            } catch (\InvalidArgumentException) {
+                $dsnHost = $dsn;
+            }
+
+            $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+            $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
+            $sharedTablesV2 = \array_diff($sharedTables, $sharedTablesV1);
+            $isSharedTablesV1 = \in_array($dsnHost, $sharedTablesV1);
+            $isSharedTablesV2 = \in_array($dsnHost, $sharedTablesV2);
+        }
+
+        if ($region !== 'default') {
+            $keys = explode(',', $databaseKeys);
+            $databases = array_filter($keys, function ($value) use ($region) {
+                return str_contains($value, $region);
+            });
+        }
+        $sharedTablesV2 = \array_diff($sharedTables, $sharedTablesV1);
+
+        $index = \array_search($databaseOverride, $databases);
+        if ($index !== false) {
+            $selectedDsn = $databases[$index];
+        } else {
+            if (!empty($dsn)) {
+                if ($isSharedTablesV1) {
+                    $databases = array_filter($databases, fn ($value) => \in_array($value, $sharedTablesV1));
+                } elseif ($isSharedTablesV2) {
+                    $databases = array_filter($databases, fn ($value) => \in_array($value, $sharedTablesV2));
+                } else {
+                    $databases = array_filter($databases, fn ($value) => !\in_array($value, $sharedTables));
+                }
+            }
+            $selectedDsn = !empty($databases) ? $databases[array_rand($databases)] : '';
+        }
+
+        if (\in_array($selectedDsn, $sharedTables)) {
+            $schema = 'appwrite';
+            $database = 'appwrite';
+            $namespace = System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
+            $selectedDsn = $schema . '://' . $selectedDsn . '?database=' . $database;
+
+            if (!empty($namespace)) {
+                $selectedDsn .= '&namespace=' . $namespace;
+            }
+        }
+        try {
+            new DSN($selectedDsn);
+        } catch (\InvalidArgumentException) {
+            $selectedDsn = $dbScheme.'://' . $selectedDsn;
+        }
+        return $selectedDsn;
     }
 
     protected function getDatabaseCollection()
