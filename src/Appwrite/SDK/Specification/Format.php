@@ -453,6 +453,38 @@ abstract class Format
                         break;
                 }
                 break;
+            case 'migrations':
+                switch ($method) {
+                    case 'createAppwriteMigration':
+                    case 'getAppwriteReport':
+                        switch ($param) {
+                            case 'resources':
+                                return 'AppwriteMigrationResource';
+                        }
+                        break;
+                    case 'createFirebaseMigration':
+                    case 'getFirebaseReport':
+                        switch ($param) {
+                            case 'resources':
+                                return 'FirebaseMigrationResource';
+                        }
+                        break;
+                    case 'createSupabaseMigration':
+                    case 'getSupabaseReport':
+                        switch ($param) {
+                            case 'resources':
+                                return 'SupabaseMigrationResource';
+                        }
+                        break;
+                    case 'createNHostMigration':
+                    case 'getNHostReport':
+                        switch ($param) {
+                            case 'resources':
+                                return 'NHostMigrationResource';
+                        }
+                        break;
+                }
+                break;
             case 'project':
                 switch ($method) {
                     case 'getUsage':
