@@ -518,7 +518,7 @@ if (!isset($args[1])) {
 $workerName = $args[0];
 
 if (\str_starts_with($workerName, 'databases')) {
-    $queueName = System::getEnv('_APP_QUEUE_NAME', 'database_db_main');
+    $queueName = System::getEnv('_APP_QUEUE_NAME', 'database_db_main-0');
 } else {
     $queueName = System::getEnv('_APP_QUEUE_NAME', 'v1-' . strtolower($workerName));
 }
