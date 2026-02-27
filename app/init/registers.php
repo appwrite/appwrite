@@ -348,6 +348,10 @@ $register->set('smtp', function () {
 
     $mail->isSMTP();
 
+    if (System::getEnv('_APP_ENV') === 'development') {
+        $mail->SMTPDebug = true;
+    }
+
     $username = System::getEnv('_APP_SMTP_USERNAME');
     $password = System::getEnv('_APP_SMTP_PASSWORD');
 
