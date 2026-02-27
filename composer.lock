@@ -4517,16 +4517,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.6.2",
+            "version": "dev-remove-dsn-callables",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "037bf4b3813d44f1b0990bc124e35b501ed27fca"
+                "reference": "682cdc36618a2be4fe376047a6250a3d0c4ea739"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/037bf4b3813d44f1b0990bc124e35b501ed27fca",
-                "reference": "037bf4b3813d44f1b0990bc124e35b501ed27fca",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/682cdc36618a2be4fe376047a6250a3d0c4ea739",
+                "reference": "682cdc36618a2be4fe376047a6250a3d0c4ea739",
                 "shasum": ""
             },
             "require": {
@@ -4566,9 +4566,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.6.2"
+                "source": "https://github.com/utopia-php/migration/tree/remove-dsn-callables"
             },
-            "time": "2026-02-25T12:00:11+00:00"
+            "time": "2026-02-24T05:05:52+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -5438,16 +5438,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.11.2",
+            "version": "1.11.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "cf4024db43ade93bf0c5c97f67738f3d64681ba7"
+                "reference": "45d22c0107a53bb9a0a4e39db0e738d461631d11"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/cf4024db43ade93bf0c5c97f67738f3d64681ba7",
-                "reference": "cf4024db43ade93bf0c5c97f67738f3d64681ba7",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/45d22c0107a53bb9a0a4e39db0e738d461631d11",
+                "reference": "45d22c0107a53bb9a0a4e39db0e738d461631d11",
                 "shasum": ""
             },
             "require": {
@@ -5483,9 +5483,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.11.2"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.11.3"
             },
-            "time": "2026-02-26T08:12:34+00:00"
+            "time": "2026-02-27T06:54:59+00:00"
         },
         {
             "name": "brianium/paratest",
