@@ -167,6 +167,16 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Figma',
     ],
+    'fortytwo' => [
+        'name' => '42 School',
+        'developers' => 'https://api.intra.42.fr/apidoc/',
+        'icon' => 'icon-fortytwo',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+    ],
     'github' => [
         'name' => 'GitHub',
         'developers' => 'https://developer.github.com/',
