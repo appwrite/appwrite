@@ -232,6 +232,8 @@ jobs:
       - name: Set DB Adapter environment
         id: set-db-env
         run: |
+          DB_ADAPTER_LOWER=$(echo "${{ matrix.db_adapter }}" | tr 'A-Z' 'a-z')
+          echo "COMPOSE_PROFILES=${DB_ADAPTER_LOWER}" >> $GITHUB_ENV
           
           if [ "${{ matrix.db_adapter }}" = "MARIADB" ]; then
             echo "_APP_DB_ADAPTER=mariadb" >> $GITHUB_ENV
