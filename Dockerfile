@@ -120,5 +120,6 @@ RUN if [ "$DEBUG" = "true" ]; then \
     fi
 
 EXPOSE 80
+EXPOSE 8080
 
 CMD [ "php", "app/http.php" ]
