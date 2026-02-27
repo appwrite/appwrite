@@ -99,7 +99,6 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
-      - ./vendor:/usr/src/code/vendor
 
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
