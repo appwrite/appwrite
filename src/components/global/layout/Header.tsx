@@ -118,16 +118,20 @@ export function ConsoleHeader({
   const is2FAEnabled =
     account?.mfa === true || account?.twoFactorAuthenticatorEnabled === true
 
+  const hasSidebar = !isOrgOverview
+  const logoColumnWidth = 60
+
   return (
     <div className="@container w-full">
       <header
         className={cn(
-          'flex h-14 min-h-14 flex-wrap items-center justify-between gap-1 sm:gap-2 border-b border-border bg-background px-3 sm:px-4 @[1000px]:px-6',
+          'flex h-14 min-h-14 flex-wrap items-center justify-between gap-1 sm:gap-2 border-b border-border bg-background',
+          'pl-3 pr-3 sm:pl-4 sm:pr-4 @[1000px]:pr-6 lg:pl-0',
           className,
         )}
       >
-        {/* Left: Menu + Logo + Project Selector */}
-        <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+        {/* Left: Menu + Logo (+ nav border when project) + Project Selector */}
+        <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-2">
           {/* Mobile menu button - only show when in project context and sidebar is hidden */}
           {!isOrgOverview && (
             <button
@@ -138,39 +142,58 @@ export function ConsoleHeader({
             </button>
           )}
 
-          {/* Logo - links back to org overview */}
+          {/* Logo - 60px column matches collapsed nav; never shifts; optional spacer + border continues from nav */}
           {(() => {
-            // Use project's teamId when in project context, otherwise fall back to account prefs
-            const orgId =
+            const linkOrgId =
               project?.teamId ||
               (account?.prefs?.organization as string | undefined)
-            if (orgId) {
+            const logoLink = (childClassName?: string) => (
+              <Link
+                to={linkOrgId ? '/organizations/$orgId' : '/'}
+                params={linkOrgId ? { orgId: linkOrgId } : undefined}
+                className={cn(
+                  'flex h-14 shrink-0 items-center justify-center',
+                  childClassName,
+                )}
+              >
+                <img src="/logo.svg" alt="Appwrite" className="h-6 w-6" />
+              </Link>
+            )
+
+            if (hasSidebar) {
               return (
-                <Link
-                  to="/organizations/$orgId"
-                  params={{ orgId }}
-                  className="-ml-[1px] -mr-[1px] flex shrink-0 items-center"
-                >
-                  <img src="/logo.svg" alt="Appwrite" className="h-5 w-5" />
-                </Link>
+                <>
+                  {/* Desktop: 60px logo column, border continues from nav */}
+                  <div
+                    className="hidden h-14 shrink-0 items-center justify-center border-r border-border lg:flex"
+                    style={{ width: logoColumnWidth }}
+                  >
+                    {logoLink()}
+                  </div>
+                  {/* Mobile */}
+                  {logoLink('lg:hidden')}
+                </>
               )
             }
+
+            /* Org: same 60px column */
             return (
-              <Link
-                to="/"
-                className="-ml-[1px] -mr-[1px] flex shrink-0 items-center"
-              >
-                <img src="/logo.svg" alt="Appwrite" className="h-5 w-5" />
-              </Link>
+              <>
+                <div
+                  className="hidden h-14 shrink-0 items-center justify-center lg:flex"
+                  style={{ width: logoColumnWidth }}
+                >
+                  {logoLink()}
+                </div>
+                {logoLink('lg:hidden')}
+              </>
             )
           })()}
 
-          {/* Divider and Project Selector - only show when in project context */}
+          {/* Project Selector - only show when in project context */}
           {!isOrgOverview && (
             <>
-              {/* Divider */}
-              <div className="mx-1 hidden h-5 w-px shrink-0 bg-border @[700px]:block" />
-
+              <div className="hidden w-2 shrink-0 lg:block" />
               {/* Project Selector */}
               <div className="hidden min-w-0 @[700px]:block">
                 <ProjectSelector projectId={projectId} />

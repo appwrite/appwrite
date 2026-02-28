@@ -15,6 +15,8 @@ import {
   Tablet,
   Users,
   UserPlus,
+  Bot,
+  Sparkles,
 } from 'lucide-react'
 import {
   ServiceHeader,
@@ -434,6 +436,65 @@ const visitorTypes = {
   returning: 54800,
 }
 
+// AI vs Human traffic (agentic web analytics)
+const trafficComposition = {
+  human: 78,
+  ai: 22,
+}
+
+interface AiAgentData {
+  name: string
+  platform: string
+  icon: string
+  requests: number
+  topPages: string[]
+}
+
+const topAiAgents: AiAgentData[] = [
+  {
+    name: 'ChatGPT',
+    platform: 'OpenAI',
+    icon: '/icons/chatgpt.svg',
+    requests: 12400,
+    topPages: ['/docs', '/api-reference', '/getting-started'],
+  },
+  {
+    name: 'Claude',
+    platform: 'Anthropic',
+    icon: '/icons/claude.svg',
+    requests: 8900,
+    topPages: ['/docs', '/pricing', '/features'],
+  },
+  {
+    name: 'Gemini',
+    platform: 'Google',
+    icon: '/icons/google.svg',
+    requests: 6200,
+    topPages: ['/docs', '/blog', '/'],
+  },
+  {
+    name: 'Perplexity',
+    platform: 'Perplexity AI',
+    icon: '/icons/perplexity.svg',
+    requests: 4100,
+    topPages: ['/docs', '/', '/pricing'],
+  },
+  {
+    name: 'Copilot',
+    platform: 'Microsoft',
+    icon: '/icons/microsoft.svg',
+    requests: 2800,
+    topPages: ['/docs', '/api-reference'],
+  },
+]
+
+// Value creation: conversions attributed to AI discovery
+const aiDiscoveryImpact = {
+  humanConversions: 342,
+  attributionRate: 2.7,
+  trend: 18,
+}
+
 // Helper functions
 function formatNumber(num: number): string {
   if (num >= 1000000) {
@@ -737,7 +798,7 @@ function WorldMapChart({ data }: { data: LocationData[] }) {
   return (
     <div className="relative h-full w-full p-2 flex flex-col">
       <div className="flex-1 w-full overflow-hidden rounded-lg min-h-[400px]">
-        <Map center={center} zoom={2}>
+        <Map center={center} zoom={2} disableScrollZoom>
           <MapContent data={data} />
         </Map>
       </div>
@@ -1052,6 +1113,201 @@ export function View({
                         </AreaChart>
                       </ResponsiveContainer>
                     ) : null}
+                  </div>
+                </div>
+              </div>
+
+              {/* Traffic composition & AI discovery impact */}
+              <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                {/* Traffic composition: Human vs AI */}
+                <div className="rounded-lg border border-border bg-card">
+                  <div className="border-b border-border px-4 py-2.5">
+                    <h3 className="text-[13px] font-semibold text-foreground">
+                      Traffic composition
+                    </h3>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">
+                      Human visitors vs AI agents and crawlers
+                    </p>
+                  </div>
+                  <div className="p-4">
+                    <div className="space-y-3">
+                      {[
+                        {
+                          type: 'Human',
+                          value: trafficComposition.human,
+                          icon: <Users className="h-4 w-4" />,
+                          color: '#3b82f6',
+                        },
+                        {
+                          type: 'AI agents',
+                          value: trafficComposition.ai,
+                          icon: <Bot className="h-4 w-4" />,
+                          color: '#8b5cf6',
+                        },
+                      ].map((item) => {
+                        const total =
+                          trafficComposition.human + trafficComposition.ai
+                        const percentage = total > 0 ? (item.value / total) * 100 : 0
+                        return (
+                          <div key={item.type} className="space-y-1.5">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className="flex h-4 w-4 items-center justify-center"
+                                  style={{ color: item.color }}
+                                >
+                                  {item.icon}
+                                </span>
+                                <span className="text-[12px] font-medium text-foreground">
+                                  {item.type}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
+                                  {percentage.toFixed(1)}%
+                                </span>
+                                <span className="text-[12px] font-semibold tabular-nums text-foreground">
+                                  {formatNumber(
+                                    Math.round(
+                                      (percentage / 100) *
+                                        (visitorMetrics.find((m) => m.id === 'total')
+                                          ?.value ?? 0),
+                                    ),
+                                  )}{' '}
+                                  visits
+                                </span>
+                              </div>
+                            </div>
+                            <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                              <div
+                                className="h-full transition-all"
+                                style={{
+                                  width: `${percentage}%`,
+                                  backgroundColor: item.color,
+                                }}
+                              />
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* AI discovery impact - value creation */}
+                <div className="rounded-lg border border-border bg-card">
+                  <div className="border-b border-border px-4 py-2.5">
+                    <h3 className="text-[13px] font-semibold text-foreground">
+                      AI discovery impact
+                    </h3>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">
+                      Human sign-ups attributed to AI agent discovery
+                    </p>
+                  </div>
+                  <div className="p-4">
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-[24px] font-semibold tracking-tight text-foreground tabular-nums">
+                          {formatNumber(aiDiscoveryImpact.humanConversions)}
+                        </span>
+                        <span className="flex items-center gap-0.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">
+                          <TrendingUp className="h-3 w-3" />
+                          +{aiDiscoveryImpact.trend}%
+                        </span>
+                      </div>
+                      <p className="text-[12px] text-muted-foreground">
+                        <span className="font-medium text-foreground">
+                          {aiDiscoveryImpact.attributionRate}%
+                        </span>{' '}
+                        of human conversions came from users who discovered you
+                        via AI agents
+                      </p>
+                      <div className="flex items-center gap-2 rounded-md bg-violet-500/10 px-3 py-2">
+                        <Sparkles className="h-4 w-4 shrink-0 text-violet-600 dark:text-violet-400" />
+                        <span className="text-[11px] text-muted-foreground">
+                          Optimize docs and key pages for AI visibility to
+                          increase discovery-driven sign-ups
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* AI Agents breakdown */}
+              <div className="mt-6">
+                <div className="rounded-lg border border-border bg-card">
+                  <div className="border-b border-border px-4 py-2.5">
+                    <h3 className="text-[13px] font-semibold text-foreground">
+                      AI agents
+                    </h3>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">
+                      Top AI platforms crawling and accessing your site
+                    </p>
+                  </div>
+                  <div className="p-4">
+                    <div className="space-y-0.5">
+                      {topAiAgents.map((agent) => {
+                        const maxRequests = Math.max(
+                          ...topAiAgents.map((a) => a.requests),
+                        )
+                        const percentage = Math.round(
+                          (agent.requests / maxRequests) * 100,
+                        )
+                        const share = Math.round(
+                          (agent.requests /
+                            topAiAgents.reduce(
+                              (sum, a) => sum + a.requests,
+                              0,
+                            )) *
+                            100,
+                        )
+                        return (
+                          <div
+                            key={agent.name}
+                            className="group relative flex items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50"
+                          >
+                            <div
+                              className="absolute inset-y-0 left-0 rounded-md transition-all group-hover:opacity-80"
+                              style={{
+                                width: `${percentage}%`,
+                                backgroundColor: '#8b5cf6',
+                                opacity: 0.12,
+                              }}
+                            />
+                            <div className="relative flex flex-1 items-center gap-2">
+                              <div className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded border border-border/50 bg-muted/30">
+                                <img
+                                  src={agent.icon}
+                                  alt=""
+                                  className="h-3.5 w-3.5 object-contain"
+                                  loading="lazy"
+                                />
+                              </div>
+                              <div className="flex min-w-0 flex-1 flex-col">
+                                <span className="truncate text-[12px] font-medium text-foreground">
+                                  {agent.name}
+                                </span>
+                                <span className="truncate text-[10px] text-muted-foreground">
+                                  {agent.platform}
+                                </span>
+                              </div>
+                              <div className="flex shrink-0 items-center gap-3">
+                                <span className="hidden truncate max-w-[140px] text-[10px] text-muted-foreground sm:inline">
+                                  {agent.topPages[0]}
+                                </span>
+                                <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
+                                  {share}%
+                                </span>
+                                <span className="min-w-[50px] text-right text-[12px] font-semibold tabular-nums text-foreground">
+                                  {formatNumber(agent.requests)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1562,7 +1818,7 @@ export function View({
                       </Tabs>
                     </div>
                   </div>
-                  <div className="flex-1 min-h-[400px] w-full overflow-hidden flex flex-col">
+                  <div className="flex flex-1 min-h-[400px] w-full flex-col overflow-hidden">
                     <Tabs
                       value={locationView}
                       onValueChange={(v) =>
@@ -1570,17 +1826,14 @@ export function View({
                           v as 'map' | 'countries' | 'regions' | 'cities',
                         )
                       }
-                      className="flex flex-col flex-1"
+                      className="flex flex-1 flex-col"
                     >
-                      <TabsContent
-                        value="map"
-                        className="mt-0 flex-1 min-h-[400px]"
-                        forceMount={false}
-                      >
-                        {locationView === 'map' ? (
+                      {/* Map: only in DOM when selected – prevents MapLibre from capturing scroll when inactive */}
+                      {locationView === 'map' ? (
+                        <div className="mt-0 flex flex-1 min-h-[400px]">
                           <WorldMapChart data={locationData} />
-                        ) : null}
-                      </TabsContent>
+                        </div>
+                      ) : null}
                       <TabsContent
                         value="countries"
                         className="mt-0 flex-1 min-h-[400px]"
