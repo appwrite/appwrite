@@ -1635,7 +1635,7 @@ export function TableView({
                 Loading…
               </div>
             ) : (
-              <div className="space-y-0.5 border-l border-border pl-2.5 pr-1 py-1">
+              <div className="space-y-0.5 pl-2.5 pr-1 py-1">
                 {displayedSidebarTables.map((table) => {
                   const isTableSelected =
                     selectedTable?.$id === table.$id && !databaseTab
