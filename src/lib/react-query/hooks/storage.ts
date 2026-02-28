@@ -175,6 +175,43 @@ export async function fetchFileTokens(
 // ============================================================================
 
 /**
+ * Query options for fetching files in a bucket
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function bucketFilesQueryOptions(
+  projectId: string | null | undefined,
+  bucketId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  search?: string,
+  csvOnly?: boolean,
+) {
+  return queryOptions({
+    queryKey: [
+      'files',
+      'project',
+      projectId,
+      'bucket',
+      bucketId,
+      page,
+      limit,
+      search,
+      csvOnly,
+    ],
+    queryFn: () =>
+      fetchBucketFiles(projectId!, bucketId!, page, limit, search, csvOnly),
+    enabled: !!projectId && !!bucketId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && bucketId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
  * Query options for fetching paginated buckets for a project
  *
  * This can be used in both route loaders and hooks to ensure consistent query configuration.
@@ -276,23 +313,16 @@ export function useBucketFiles(
   search?: string,
   csvOnly?: boolean,
 ) {
-  return useQuery({
-    queryKey: [
-      'files',
-      'project',
+  return useQuery(
+    bucketFilesQueryOptions(
       projectId,
-      'bucket',
       bucketId,
       page,
       limit,
       search,
       csvOnly,
-    ],
-    queryFn: () =>
-      fetchBucketFiles(projectId!, bucketId!, page, limit, search, csvOnly),
-    enabled: !!projectId && !!bucketId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+    ),
+  )
 }
 
 /**
