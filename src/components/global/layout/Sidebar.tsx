@@ -400,7 +400,7 @@ export function ConsoleSidebar({
         {/* Collapse Toggle - positioned on the border */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute right-0 top-1/2 z-10 flex h-6 w-6 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="absolute right-0 top-1/2 z-10 flex h-6 w-6 -translate-y-1/2 translate-x-1/2 cursor-pointer items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           <ChevronLeft
@@ -455,7 +455,7 @@ export function ConsoleSidebar({
           </div>
           <button
             onClick={onMobileClose}
-            className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label="Close navigation"
           >
             <X className="h-5 w-5" />
