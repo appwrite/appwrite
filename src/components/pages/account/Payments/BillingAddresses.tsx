@@ -221,9 +221,7 @@ export function AccountBillingAddresses() {
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                     Linked To
                   </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[60px]">
-                    Actions
-                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[60px]" />
                 </TableRow>
               </TableHeader>
               <TableBody>
