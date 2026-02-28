@@ -251,17 +251,19 @@ code {
     @apply bg-background text-foreground;
   }
 
-  /* Mobile touch scrolling improvements */
+  /* Mobile touch scrolling improvements.
+     Use height: 100% (not 100vh) so visible viewport matches when address bar is shown.
+     See: https://stackoverflow.com/questions/52848856/100vh-height-when-address-bar-is-shown-chrome-mobile */
   html {
     height: 100%;
-    height: 100dvh;
+    min-height: -webkit-fill-available;
     overscroll-behavior: none;
   }
 
   /* Ensure body uses proper height and prevents scrolling */
   body {
     height: 100%;
-    height: 100dvh;
+    min-height: -webkit-fill-available;
     overflow: hidden;
     overscroll-behavior: none;
   }
@@ -273,11 +275,11 @@ code {
     overscroll-behavior: none;
   }
 
-  /* Use dynamic viewport height for root container on mobile devices */
-  @supports (height: 100dvh) {
-    .root-container {
-      height: 100dvh;
-    }
+  /* Root container: use 100% height (visible viewport) not vh.
+     Combined with html/body height:100%, this avoids bottom trim when address bar is visible. */
+  .root-container {
+    height: 100%;
+    min-height: -webkit-fill-available;
   }
 
   /* Safe area insets for iPad/iPhone - prevent content from being trimmed by home indicator */
@@ -287,15 +289,15 @@ code {
     padding-right: env(safe-area-inset-right, 0px);
   }
 
-  /* On mobile, ensure flex layout properly accounts for header height */
-  @media (max-width: 768px) {
-    /* Ensure the root scroll container doesn't scroll */
+  /* On mobile/tablet, ensure flex layout properly accounts for header height */
+  @media (max-width: 1024px) {
+    /* Ensure the root scroll container doesn't scroll (includes iPad) */
     .root-scroll-container {
       display: flex;
       flex-direction: column;
       height: 100%;
-      height: 100dvh;
-      max-height: 100dvh;
+      min-height: -webkit-fill-available;
+      max-height: 100%;
     }
 
     /* Ensure main content area properly calculates available height */
@@ -316,43 +318,25 @@ code {
       overflow: hidden;
     }
 
-    /* Fix for iOS Safari - ensure layout containers use dvh */
-    @supports (height: 100dvh) {
-      /* Ensure layout containers use proper height calculation */
-      .project-layout-container,
-      .org-layout-container,
-      .account-layout-container,
-      .domain-detail-layout-container {
-        height: 100%;
-        max-height: 100dvh;
-        overflow: hidden;
-      }
+    .project-layout-container,
+    .org-layout-container,
+    .account-layout-container,
+    .domain-detail-layout-container {
+      height: 100%;
+      max-height: 100%;
+      overflow: hidden;
     }
   }
 
-  /* Additional iOS-specific fixes */
+  /* Additional iOS-specific fixes (iPad + iPhone) */
   @supports (-webkit-touch-callout: none) {
-    /* iOS Safari specific */
-    @media (max-width: 768px) {
+    @media (max-width: 1024px) {
       .root-container {
-        height: 100dvh;
-        max-height: 100dvh;
+        min-height: -webkit-fill-available;
       }
 
       .root-scroll-container {
-        height: 100dvh;
-        max-height: 100dvh;
-      }
-
-      .project-layout-container {
-        height: 100%;
-        max-height: 100dvh;
-        overflow: hidden;
-      }
-
-      /* Ensure main content area doesn't exceed viewport on iOS */
-      main[class*='overflow-y-auto'] {
-        max-height: 100%;
+        min-height: -webkit-fill-available;
       }
 
       /* Ensure flex containers properly constrain on iOS */
