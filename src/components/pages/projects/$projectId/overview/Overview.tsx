@@ -366,7 +366,7 @@ export function View({ projectId }: ViewProps) {
                   <TooltipTrigger asChild>
                     <button
                       onClick={() => copyToClipboard(projectId, 'projectId')}
-                      className="flex min-w-0 items-center gap-1.5 rounded-md bg-muted/50 px-2.5 py-1.5 font-mono text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      className="flex min-w-0 cursor-pointer items-center gap-1.5 rounded-md bg-muted/50 px-2.5 py-1.5 font-mono text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                     >
                       <span className="truncate max-w-[120px] sm:max-w-[180px]">
                         {projectId}
@@ -390,7 +390,7 @@ export function View({ projectId }: ViewProps) {
                       onClick={() =>
                         copyToClipboard(projectEndpoint, 'endpoint')
                       }
-                      className="flex min-w-0 items-center gap-1.5 rounded-md bg-muted/50 px-2.5 py-1.5 text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      className="flex min-w-0 cursor-pointer items-center gap-1.5 rounded-md bg-muted/50 px-2.5 py-1.5 text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                     >
                       <Link className="h-3.5 w-3.5 shrink-0" />
                       <span className="truncate max-w-[100px] sm:max-w-[160px] font-mono">
