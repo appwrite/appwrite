@@ -6,22 +6,22 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { useVerifyDomain, useDeleteDomain } from '@/lib/react-query/hooks'
+import { useVerifyDomain, useDeleteDomain } from '@/lib/react-query/hooks/project-domains'
+import { VerifyDomainContent } from '@/components/pages/projects/$projectId/settings/domains/VerifyDomainContent'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
-import { VerifyDomainContent } from './VerifyDomainContent'
 
-interface VerifyDomainDialogProps {
+interface VerifyDomainProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   projectId: string
   region?: string
   rule: Models.ProxyRule
   onVerifySuccess: () => void
-  onReconfigure?: (domain: string) => void
+  onReconfigure?: () => void
 }
 
-export function VerifyDomainDialog({
+export function VerifyDomain({
   open,
   onOpenChange,
   projectId,
@@ -29,9 +29,9 @@ export function VerifyDomainDialog({
   rule,
   onVerifySuccess,
   onReconfigure,
-}: VerifyDomainDialogProps) {
-  const verifyDomainMutation = useVerifyDomain(projectId, region)
-  const deleteDomainMutation = useDeleteDomain(projectId, region)
+}: VerifyDomainProps) {
+  const verifyMutation = useVerifyDomain(projectId, region)
+  const deleteMutation = useDeleteDomain(projectId, region)
   const [verificationError, setVerificationError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -40,9 +40,9 @@ export function VerifyDomainDialog({
 
   const handleChange = async () => {
     try {
-      await deleteDomainMutation.mutateAsync(rule.$id)
+      await deleteMutation.mutateAsync(rule.$id)
       onOpenChange(false)
-      onReconfigure?.(rule.domain)
+      onReconfigure?.()
     } catch {
       toast.error('Failed to remove domain')
     }
@@ -51,22 +51,20 @@ export function VerifyDomainDialog({
   const handleVerify = async () => {
     setVerificationError(null)
     try {
-      const updatedRule = await verifyDomainMutation.mutateAsync(rule.$id)
-      if (updatedRule.status === 'created') {
-        setVerificationError(
-          'Domain verification failed. Please check your domain settings or try again later.',
-        )
-      } else if (updatedRule.status === 'verified') {
-        toast.success('Domain added successfully')
+      const updated = await verifyMutation.mutateAsync(rule.$id)
+      if (updated.status === 'verified') {
+        toast.success('Domain verified')
+        onOpenChange(false)
         onVerifySuccess()
+      } else if (updated.status === 'created' || updated.status === 'unverified') {
+        setVerificationError('Verification failed. Check DNS and retry.')
       } else {
-        toast.success('Verification in progress')
+        toast.success('Verifying...')
+        onOpenChange(false)
         onVerifySuccess()
       }
-    } catch (error: unknown) {
-      setVerificationError(
-        (error instanceof Error ? error.message : null) || 'Failed to verify domain',
-      )
+    } catch {
+      setVerificationError('Failed to verify domain')
     }
   }
 
@@ -92,10 +90,7 @@ export function VerifyDomainDialog({
               variant="outline"
               size="sm"
               onClick={handleChange}
-              disabled={
-                verifyDomainMutation.isPending ||
-                deleteDomainMutation.isPending
-              }
+              disabled={verifyMutation.isPending || deleteMutation.isPending}
             >
               Change
             </Button>
@@ -104,7 +99,7 @@ export function VerifyDomainDialog({
             type="button"
             size="sm"
             onClick={handleVerify}
-            disabled={verifyDomainMutation.isPending}
+            disabled={verifyMutation.isPending}
           >
             Verify
           </Button>

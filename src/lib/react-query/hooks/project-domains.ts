@@ -32,7 +32,11 @@ export async function fetchProjectDomains(
   }
 
   const projectSdk = sdk.forProject(projectId, region)
-  const queries = [Query.equal('type', 'api'), Query.equal('trigger', 'manual')]
+  const queries = [
+    Query.equal('type', 'api'),
+    Query.equal('trigger', 'manual'),
+    Query.orderDesc('$createdAt'),
+  ]
 
   const response = await projectSdk.proxy.listRules({
     queries,

@@ -425,14 +425,7 @@ export function RepositoryConfigView({
               !domainValid
             }
           >
-            {isDeploying ? (
-              <>
-                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                Creating...
-              </>
-            ) : (
-              'Create and deploy'
-            )}
+            Create and deploy
           </Button>
         </>
       }

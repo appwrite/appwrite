@@ -494,14 +494,7 @@ export function InlinePaymentForm({
             }
             className="h-8 text-[13px]"
           >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                Processing...
-              </>
-            ) : (
-              'Add'
-            )}
+            Add
           </Button>
         </div>
       </form>

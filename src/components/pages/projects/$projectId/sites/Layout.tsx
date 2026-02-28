@@ -135,6 +135,18 @@ function SiteLayoutContent() {
           showRefresh={activeTab === 'logs' && hasRefreshHandler}
           onRefresh={activeTab === 'logs' ? triggerRefresh : undefined}
           isRefreshing={isRefreshing}
+          createLabel={
+            activeTab === 'domains' ? 'Add domain' : undefined
+          }
+          onCreate={
+            activeTab === 'domains'
+              ? () =>
+                  navigate({
+                    to: '/projects/$projectId/sites/$siteId/domains/add',
+                    params: { projectId: projectId!, siteId: siteId! },
+                  })
+              : undefined
+          }
           beforeCreateButtons={
             activeTab === 'deployments' ? (
               <CreateDeploymentDropdown

@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -29,12 +30,18 @@ export function RetryDomainDialog({
   onRetrySuccess,
 }: RetryDomainDialogProps) {
   const verifyDomainMutation = useVerifyDomain(projectId, region)
+  const [verificationError, setVerificationError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (open) setVerificationError(null)
+  }, [open])
 
   const handleRetry = async () => {
+    setVerificationError(null)
     try {
       const updatedRule = await verifyDomainMutation.mutateAsync(rule.$id)
       if (updatedRule.status === 'created') {
-        toast.error(
+        setVerificationError(
           'Domain verification failed. Please check your domain settings or try again later.',
         )
       } else if (updatedRule.status === 'verified') {
@@ -45,13 +52,15 @@ export function RetryDomainDialog({
         onRetrySuccess()
       }
     } catch (error: unknown) {
-      toast.error(error.message || 'Failed to retry verification')
+      setVerificationError(
+        (error instanceof Error ? error.message : null) || 'Failed to retry verification',
+      )
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl p-0">
+      <DialogContent className="sm:max-w-4xl p-0">
         <DialogHeader className="px-6 pt-6 text-left">
           <DialogTitle>Retry verification</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
@@ -60,8 +69,13 @@ export function RetryDomainDialog({
         </DialogHeader>
         <div className="border-t border-border" />
 
-        <div className="px-6 pb-4 pt-0">
-          <VerifyDomainContent rule={rule} />
+        <div className="px-6 py-4 max-h-[70vh] overflow-y-auto">
+          <VerifyDomainContent
+            rule={rule}
+            region={region}
+            noCard
+            verificationError={verificationError}
+          />
         </div>
 
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

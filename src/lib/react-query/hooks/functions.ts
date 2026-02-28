@@ -299,7 +299,7 @@ export async function fetchFunctionDomains(
 
   const projectSdk = sdk.forProject(projectId)
   const defaultQueries = [
-    Query.equal('type', 'deployment'),
+    Query.equal('type', ['deployment', 'redirect']),
     Query.equal('deploymentResourceType', 'function'),
     Query.equal('deploymentResourceId', functionId),
     Query.equal('trigger', 'manual'),
@@ -1145,6 +1145,77 @@ export function useDeleteFunction(projectId: string | null | undefined) {
       // Refetch functions list so the UI updates (list uses refetchOnMount: false)
       await queryClient.refetchQueries({
         queryKey: Dependencies.FUNCTIONS,
+      })
+    },
+  })
+}
+
+/**
+ * Hook to create a function domain rule with ACTIVE, BRANCH, or REDIRECT behaviour
+ */
+export function useCreateFunctionDomainRule(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (params: {
+      domain: string
+      functionId: string
+      behaviour: 'active' | 'branch' | 'redirect'
+      branch?: string
+      redirectUrl?: string
+      statusCode?: string
+    }) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      const projectSdk = sdk.forProject(projectId)
+      const { domain, functionId, behaviour, branch, redirectUrl, statusCode } =
+        params
+      const domainNorm = domain.trim().toLowerCase()
+
+      if (behaviour === 'redirect') {
+        if (!redirectUrl?.trim() || !statusCode) {
+          throw new Error('Redirect URL and status code are required')
+        }
+        const { ProxyResourceType, StatusCode } = await import(
+          '@appwrite.io/console'
+        )
+        const codeMap: Record<
+          string,
+          (typeof StatusCode)[keyof typeof StatusCode]
+        > = {
+          '301': StatusCode.MovedPermanently301,
+          '302': StatusCode.Found302,
+          '307': StatusCode.TemporaryRedirect307,
+          '308': StatusCode.PermanentRedirect308,
+        }
+        return await projectSdk.proxy.createRedirectRule({
+          domain: domainNorm,
+          url: redirectUrl.trim(),
+          statusCode: codeMap[statusCode] ?? StatusCode.Found302,
+          resourceId: functionId,
+          resourceType: ProxyResourceType.Function,
+        })
+      }
+
+      if (behaviour === 'branch' && branch) {
+        return await projectSdk.proxy.createFunctionRule({
+          domain: domainNorm,
+          functionId,
+          branch,
+        })
+      }
+
+      return await projectSdk.proxy.createFunctionRule({
+        domain: domainNorm,
+        functionId,
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['proxy-rules'],
       })
     },
   })

@@ -551,14 +551,7 @@ export function PaymentModal({
                   (showStatePicker && !selectedState)
                 }
               >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  'Add'
-                )}
+                Add
               </Button>
             </div>
           </form>

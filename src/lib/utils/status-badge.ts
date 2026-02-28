@@ -202,21 +202,45 @@ export function getMigrationStatusVariant(
  */
 export type DomainStatus = 'verified' | 'verifying' | 'unverified' | 'created'
 
+/** Status-style badge variant per AGENTS.md */
+export type DomainStatusBadgeVariant = 'success' | 'processing' | 'error'
+
 /**
- * Get domain status badge variant
+ * Get domain status badge variant (status-style: success, processing, error)
  */
 export function getDomainStatusVariant(
   status: DomainStatus,
-): 'default' | 'secondary' | 'destructive' | null {
+): DomainStatusBadgeVariant | null {
   switch (status) {
     case 'verified':
-      return null // No badge for verified domains
+      return null
     case 'verifying':
-      return 'secondary'
+      return 'processing'
     case 'unverified':
     case 'created':
-      return 'destructive'
+      return 'error'
     default:
-      return 'secondary'
+      return 'processing'
+  }
+}
+
+/**
+ * Get domain status badge config for rendering
+ */
+export function getDomainStatusBadgeConfig(status: string): {
+  variant: DomainStatusBadgeVariant | 'success'
+  label: string
+} {
+  switch (status) {
+    case 'verified':
+      return { variant: 'success', label: 'Verified' }
+    case 'verifying':
+      return { variant: 'processing', label: 'Generating certificate' }
+    case 'created':
+      return { variant: 'error', label: 'Verification failed' }
+    case 'unverified':
+      return { variant: 'error', label: 'Certificate generation failed' }
+    default:
+      return { variant: 'processing', label: status }
   }
 }

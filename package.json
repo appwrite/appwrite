@@ -88,6 +88,7 @@
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.0.2",
     "tailwindcss": "^4.1.13",
+    "tldts": "^7.0.23",
     "tw-animate-css": "^1.3.6",
     "vaul": "^1.1.2",
     "vite-tsconfig-paths": "^5.1.4",

@@ -21,7 +21,7 @@ import {
 import { IdInput } from '@/components/ui/id-input'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
-import { Loader2, Upload } from 'lucide-react'
+import { Upload } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { ID } from '@appwrite.io/console'
@@ -213,14 +213,7 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
               !file
             }
           >
-            {isDeploying ? (
-              <>
-                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                Creating...
-              </>
-            ) : (
-              'Create and deploy'
-            )}
+            Create and deploy
           </Button>
         </>
       }

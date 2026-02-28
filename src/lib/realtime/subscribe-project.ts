@@ -226,12 +226,10 @@ function handleRealtimeEvent(
   }
 
   if (hasEvent(events, REALTIME_EVENTS.RULES_UPDATE)) {
-    queryClient.invalidateQueries({
-      queryKey: ['proxy-rules', 'project', projectId],
-    })
-    queryClient.invalidateQueries({
-      queryKey: ['proxy-rule', 'project', projectId],
-    })
+    // Invalidate all proxy rules queries (API domains, function domains, site domains,
+    // deployment rules) so status and logs update in real time
+    queryClient.invalidateQueries({ queryKey: ['proxy-rules'] })
+    queryClient.invalidateQueries({ queryKey: ['proxy-rule'] })
   }
 }
 

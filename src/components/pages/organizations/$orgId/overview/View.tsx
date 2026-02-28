@@ -931,7 +931,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   onOpenChange={setOrgSwitcherOpen}
                 >
                   <PopoverTrigger asChild>
-                    <button className="group flex min-w-0 h-8 items-center gap-2 rounded-lg px-2 -ml-2 transition-colors hover:bg-accent">
+                    <button className="group flex min-w-0 h-8 cursor-pointer items-center gap-2 rounded-lg px-2 -ml-2 transition-colors hover:bg-accent">
                       <InitialsAvatar name={selectedOrg.name} size="sm" />
                       <h1 className="truncate text-[13px] font-semibold text-foreground">
                         {selectedOrg.name}

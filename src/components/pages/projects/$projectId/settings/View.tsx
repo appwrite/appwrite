@@ -82,15 +82,11 @@ export function View() {
       : activeTab === 'webhooks'
         ? 'Create webhook'
         : undefined
+  const createTo =
+    activeTab === 'domains' ? '/projects/$projectId/settings/domains/add' : undefined
+  const createParams =
+    activeTab === 'domains' ? { projectId } : undefined
   const handleCreate = useMemo(() => {
-    if (activeTab === 'domains') {
-      return () => {
-        if (typeof window !== 'undefined') {
-          const event = new CustomEvent('settings-create-domain')
-          window.dispatchEvent(event)
-        }
-      }
-    }
     if (activeTab === 'webhooks') {
       return () => {
         if (typeof window !== 'undefined') {
@@ -114,6 +110,8 @@ export function View() {
         searchValue={hasSearch ? searchValue : undefined}
         onSearchChange={hasSearch ? setSearchValue : undefined}
         createLabel={createLabel}
+        createTo={createTo}
+        createParams={createParams}
         onCreate={handleCreate}
       />
 

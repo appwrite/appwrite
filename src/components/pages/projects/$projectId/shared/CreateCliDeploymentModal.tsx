@@ -189,16 +189,13 @@ export function CreateCliDeploymentModal({
         <div className="px-6 pb-4 pt-4">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="mb-3 w-full grid grid-cols-3">
-              <TabsTrigger value="unix" className="cursor-pointer text-[13px]">
+              <TabsTrigger value="unix" className="text-[13px]">
                 Unix
               </TabsTrigger>
-              <TabsTrigger value="cmd" className="cursor-pointer text-[13px]">
+              <TabsTrigger value="cmd" className="text-[13px]">
                 CMD
               </TabsTrigger>
-              <TabsTrigger
-                value="powershell"
-                className="cursor-pointer text-[13px]"
-              >
+              <TabsTrigger value="powershell" className="text-[13px]">
                 PowerShell
               </TabsTrigger>
             </TabsList>

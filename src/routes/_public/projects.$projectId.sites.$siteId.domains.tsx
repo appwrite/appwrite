@@ -1,5 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { View } from '@/components/pages/projects/$projectId/sites/Domains'
+import { createFileRoute, Outlet } from '@tanstack/react-router'
 import {
   siteQueryOptions,
   siteDomainsQueryOptions,
@@ -57,9 +56,9 @@ export const Route = createFileRoute(
         : Promise.resolve(),
     ])
   },
-  component: SiteDomainsPage,
+  component: SiteDomainsLayout,
 })
 
-function SiteDomainsPage() {
-  return <View />
+function SiteDomainsLayout() {
+  return <Outlet />
 }

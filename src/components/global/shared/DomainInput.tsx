@@ -19,6 +19,8 @@ export interface DomainInputProps {
   onValidChange: (valid: boolean) => void
   /** Base domain (e.g. appwrite.network); subdomain is validated and appended. */
   baseDomain: string
+  /** Placeholder for subdomain (e.g. "my-site" for sites, "my-function" for functions) */
+  placeholder?: string
   disabled?: boolean
   className?: string
 }
@@ -39,6 +41,7 @@ export function DomainInput({
   onChange,
   onValidChange,
   baseDomain,
+  placeholder = 'my-site',
   disabled = false,
   className,
 }: DomainInputProps) {
@@ -162,7 +165,7 @@ export function DomainInput({
             id="domain"
             value={localValue}
             onChange={handleInputChange}
-            placeholder="my-site"
+            placeholder={placeholder}
             disabled={disabled}
             className={cn(
               'h-9 pr-10 text-[13px]',

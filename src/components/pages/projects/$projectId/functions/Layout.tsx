@@ -171,8 +171,10 @@ function FunctionLayoutContent() {
   }
 
   const handleAddDomain = () => {
-    // TODO: Open add domain dialog
-    toast.info('Add domain functionality coming soon')
+    navigate({
+      to: '/projects/$projectId/functions/$functionId/domains/add',
+      params: { projectId: projectId!, functionId: functionId! },
+    })
   }
 
   if (isLoading) {

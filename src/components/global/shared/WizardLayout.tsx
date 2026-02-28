@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useCallback } from 'react'
+import { ReactNode, useEffect, useCallback, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { X, ArrowLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -98,6 +98,20 @@ export function WizardLayout({
   // Use smart navigation hook for consistent back behavior
   // Navigation priority: fallbackPath (if provided) > browser history > root
   const smartGoBack = useSmartNavigation({ fallbackPath })
+  const contentRef = useRef<HTMLDivElement>(null)
+
+  // Focus the first input when the wizard opens
+  useEffect(() => {
+    const timer = requestAnimationFrame(() => {
+      const el = contentRef.current?.querySelector<
+        HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+      >(
+        'input:not([type="hidden"]):not([disabled]), textarea:not([disabled]), select:not([disabled])',
+      )
+      el?.focus()
+    })
+    return () => cancelAnimationFrame(timer)
+  }, [])
 
   /**
    * Handle wizard close: use custom onClose or smart navigation
@@ -256,6 +270,7 @@ export function WizardLayout({
               <div className="grid gap-8 lg:grid-cols-3">
                 {/* Main Content */}
                 <div
+                  ref={contentRef}
                   className={cn('lg:col-span-2 space-y-8', contentClassName)}
                 >
                   {children}
@@ -269,7 +284,9 @@ export function WizardLayout({
                 )}
               </div>
             ) : (
-              <div className={contentClassName}>{children}</div>
+              <div ref={contentRef} className={contentClassName}>
+                {children}
+              </div>
             )}
           </div>
         )}
@@ -282,7 +299,10 @@ export function WizardLayout({
             )}
           >
             {/* Main Content */}
-            <div className={cn('lg:col-span-2 space-y-6', contentClassName)}>
+            <div
+              ref={contentRef}
+              className={cn('lg:col-span-2 space-y-6', contentClassName)}
+            >
               {children}
             </div>
 
@@ -296,7 +316,10 @@ export function WizardLayout({
         )}
 
         {!fullscreen && !useSidebar && (
-          <div className={cn(contentPadding && 'pt-6', contentClassName)}>
+          <div
+            ref={contentRef}
+            className={cn(contentPadding && 'pt-6', contentClassName)}
+          >
             {children}
           </div>
         )}

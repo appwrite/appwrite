@@ -131,6 +131,7 @@ export function FunctionDomainCard({
           onChange={setDomain}
           onValidChange={setDomainValid}
           baseDomain={baseDomain}
+          placeholder="my-function"
         />
       </div>
       <div className="px-6 py-4 border-t border-border bg-muted/20">

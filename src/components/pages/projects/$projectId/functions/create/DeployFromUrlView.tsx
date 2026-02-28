@@ -21,7 +21,6 @@ import {
 import { IdInput } from '@/components/ui/id-input'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
-import { Loader2 } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { ID, Runtime, TemplateReferenceType } from '@appwrite.io/console'
@@ -241,14 +240,7 @@ export function DeployFromUrlView({
               !domainValid
             }
           >
-            {isDeploying ? (
-              <>
-                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                Creating...
-              </>
-            ) : (
-              'Create and deploy'
-            )}
+            Create and deploy
           </Button>
         </>
       }

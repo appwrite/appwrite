@@ -1,5 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { View } from '@/components/pages/projects/$projectId/functions/Domains'
+import { createFileRoute, Outlet } from '@tanstack/react-router'
 import {
   projectQueryOptions,
   projectFunctionQueryOptions,
@@ -52,5 +51,9 @@ export const Route = createFileRoute(
     )
     return { function: fn }
   },
-  component: View,
+  component: FunctionDomainsLayout,
 })
+
+function FunctionDomainsLayout() {
+  return <Outlet />
+}

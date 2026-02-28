@@ -443,7 +443,7 @@ export function View({ projectId }: ViewProps) {
                         aria-selected={isActive}
                         onClick={() => setActiveTab(tab.id)}
                         className={cn(
-                          'relative flex min-w-[150px] flex-col gap-0.5 px-4 py-3 text-left transition-colors first:pl-0 rounded-sm',
+                          'relative flex min-w-[150px] flex-col gap-0.5 px-4 py-3 text-left cursor-pointer focus:cursor-pointer focus-visible:cursor-pointer transition-colors first:pl-0 rounded-sm',
                           'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                           isActive
                             ? 'text-foreground'

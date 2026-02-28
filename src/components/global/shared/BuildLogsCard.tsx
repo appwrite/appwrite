@@ -29,6 +29,10 @@ export interface BuildLogsCardProps {
   emptyMessage?: React.ReactNode
   downloadFilename?: string
   hideWhenEmpty?: boolean
+  /** Custom title (default: "Build logs"). Set to empty or use hideTitle to hide the header. */
+  title?: string
+  /** Hide the title header (e.g. when used inside a modal with its own title) */
+  hideTitle?: boolean
 }
 
 export function BuildLogsCard({
@@ -42,6 +46,8 @@ export function BuildLogsCard({
   ),
   downloadFilename = 'build-logs.txt',
   hideWhenEmpty = false,
+  title = 'Build logs',
+  hideTitle = false,
 }: BuildLogsCardProps) {
   const logsContainerRef = useRef<HTMLDivElement>(null)
   const hasUserScrolledRef = useRef(false)
@@ -121,11 +127,12 @@ export function BuildLogsCard({
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-      <div className="px-6 py-4 flex items-center justify-between gap-3">
-        <h3 className="text-[15px] font-semibold text-foreground">
-          Build logs
-        </h3>
-        {durationDisplay && (
+      {!hideTitle && (
+        <div className="px-6 py-4 flex items-center justify-between gap-3">
+          <h3 className="text-[15px] font-semibold text-foreground">
+            {title}
+          </h3>
+          {durationDisplay && (
           <span className="text-[12px] sm:text-[13px] text-muted-foreground shrink-0">
             Duration:{' '}
             <span className="font-medium text-foreground">
@@ -133,8 +140,11 @@ export function BuildLogsCard({
             </span>
           </span>
         )}
-      </div>
-      <div className="border-t border-border px-4 sm:px-6 py-3">
+        </div>
+      )}
+      <div
+        className={`px-4 sm:px-6 py-3 ${!hideTitle ? 'border-t border-border' : ''}`}
+      >
         <TooltipProvider>
           <div className="flex items-center gap-2">
             <div className="relative flex-1 min-w-0">

@@ -8,7 +8,6 @@ import {
   Dependencies,
 } from '@/lib/react-query/hooks'
 import {
-  Loader2,
   Globe,
   Download,
   RefreshCw,
@@ -657,14 +656,7 @@ export function SiteOverviewView() {
                 disabled={deleteMutation.isPending}
                 className="h-9 text-[13px]"
               >
-                {deleteMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                    Deleting...
-                  </>
-                ) : (
-                  'Delete'
-                )}
+                Delete
               </Button>
             </div>
           </DialogContent>
@@ -702,14 +694,7 @@ export function SiteOverviewView() {
                 disabled={redeployMutation.isPending}
                 className="h-9 text-[13px]"
               >
-                {redeployMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                    Redeploying...
-                  </>
-                ) : (
-                  'Redeploy'
-                )}
+                Redeploy
               </Button>
             </div>
           </DialogContent>
@@ -746,14 +731,7 @@ export function SiteOverviewView() {
                 disabled={activateMutation.isPending}
                 className="h-9 text-[13px]"
               >
-                {activateMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                    Activating...
-                  </>
-                ) : (
-                  'Activate'
-                )}
+                Activate
               </Button>
             </div>
           </DialogContent>
