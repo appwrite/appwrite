@@ -209,7 +209,7 @@ export function ConsoleHeader({
                         <TooltipTrigger asChild>
                           <button
                             type="button"
-                            className="flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer hidden @[700px]:flex text-[13px]"
+                            className="flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer hidden @[700px]:flex text-[13px]"
                             onClick={() => setConnectDialogOpen(true)}
                           >
                             <Plug2 className="h-4 w-4" />
@@ -235,7 +235,7 @@ export function ConsoleHeader({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <DropdownMenuTrigger asChild>
-                        <button className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer">
+                        <button className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer">
                           <Plus className="h-4 w-4" />
                         </button>
                       </DropdownMenuTrigger>
@@ -302,7 +302,7 @@ export function ConsoleHeader({
                         <DropdownMenuSeparator />
                         {/* Resources Category */}
                         <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                          Resources
+                          Build
                         </DropdownMenuLabel>
                         <DropdownMenuItem
                           onClick={() => {
@@ -414,7 +414,7 @@ export function ConsoleHeader({
             <>
               <button
                 onClick={openCommandCenter}
-                className="hidden h-8 cursor-pointer items-center gap-2 rounded-md border border-border bg-accent/50 px-3 text-[13px] text-muted-foreground transition-colors hover:border-border hover:bg-accent @[700px]:flex shrink-0"
+                className="hidden h-9 cursor-pointer items-center gap-2 rounded-md border border-border bg-accent/50 px-3 text-[13px] text-muted-foreground transition-colors hover:border-border hover:bg-accent @[700px]:flex shrink-0"
               >
                 <Search className="h-3.5 w-3.5 shrink-0" />
                 <span className="hidden @[850px]:inline">Search...</span>
@@ -426,7 +426,7 @@ export function ConsoleHeader({
               {/* Mobile search icon */}
               <button
                 onClick={openCommandCenter}
-                className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[700px]:hidden"
+                className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[700px]:hidden"
               >
                 <Search className="h-4 w-4" />
               </button>
@@ -458,7 +458,7 @@ export function ConsoleHeader({
             <TooltipTrigger asChild>
               <button
                 onClick={toggleChat}
-                className="hidden h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[1000px]:flex"
+                className="hidden h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[1000px]:flex"
               >
                 <MessageSquare className="h-4 w-4" />
               </button>
@@ -481,7 +481,7 @@ export function ConsoleHeader({
                   asChild
                   size="sm"
                   variant="default"
-                  className="h-8 shrink-0 cursor-pointer px-3 text-[12px] font-semibold relative z-10 rounded-[calc(0.375rem-1px)]"
+                  className="h-9 shrink-0 cursor-pointer px-3 text-[12px] font-semibold relative z-10 rounded-[calc(0.375rem-1px)]"
                 >
                   <Link
                     to="/organizations/$orgId/change-plan"

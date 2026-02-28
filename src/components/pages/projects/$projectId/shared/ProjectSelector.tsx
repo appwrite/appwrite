@@ -409,7 +409,7 @@ export function ProjectSelector({
         <PopoverTrigger asChild>
           <button
             className={cn(
-              'flex items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent cursor-pointer',
+              'flex h-9 items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent cursor-pointer',
               className,
             )}
           >
