@@ -27,7 +27,7 @@ import {
   Check,
   BarChart3,
   Network,
-  Sparkles,
+  Lightbulb,
   BookOpen,
   ExternalLink,
   Download,
@@ -1635,7 +1635,7 @@ export function TableView({
                 Loading…
               </div>
             ) : (
-              <div className="space-y-0.5 pl-2.5 pr-1 py-1">
+              <div className="space-y-0.5 px-2.5 py-1">
                 {displayedSidebarTables.map((table) => {
                   const isTableSelected =
                     selectedTable?.$id === table.$id && !databaseTab
@@ -1977,7 +1977,7 @@ export function TableView({
                 }}
                 className="h-9"
               >
-                <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                <Lightbulb className="h-3.5 w-3.5 mr-1.5" />
                 Suggest columns
               </Button>
             ) : activeTab === 'indexes' ? (
@@ -1991,7 +1991,7 @@ export function TableView({
                 }}
                 className="h-9"
               >
-                <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                <Lightbulb className="h-3.5 w-3.5 mr-1.5" />
                 Suggest indexes
               </Button>
             ) : undefined
@@ -5536,7 +5536,7 @@ function RowsSpreadsheet({
               >
                 <div className="flex items-start gap-3 p-4">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-                    <Sparkles className="h-5 w-5 text-muted-foreground" />
+                    <Lightbulb className="h-5 w-5 text-muted-foreground" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 className="text-sm font-medium text-foreground">
@@ -7190,7 +7190,7 @@ function ColumnsSpreadsheet({
         <div className="absolute bottom-4 left-1/2 z-50 -translate-x-1/2">
           <div className="flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
             <Badge variant="secondary" className="h-6 px-2.5">
-              <Sparkles className="h-3 w-3 mr-1.5" />
+              <Lightbulb className="h-3 w-3 mr-1.5" />
               {suggestedColumns.length} suggestion
               {suggestedColumns.length !== 1 ? 's' : ''}
             </Badge>
@@ -7303,7 +7303,7 @@ function ColumnsSpreadsheet({
               <div className="border-t border-border" />
               <div className="px-6 pb-4 pt-0 mt-8 mb-4 flex flex-col items-center justify-center gap-4">
                 <div className="relative">
-                  <Sparkles className="h-12 w-12 text-amber-500 animate-pulse" />
+                  <Lightbulb className="h-12 w-12 text-amber-500 animate-pulse" />
                   <div className="absolute inset-0 bg-amber-500/20 rounded-full animate-ping" />
                 </div>
                 <p className="text-[13px] text-muted-foreground text-center">
@@ -8049,7 +8049,7 @@ function IndexesSpreadsheet({
               <div className="border-t border-border" />
               <div className="px-6 pb-4 pt-0 mt-8 mb-4 flex flex-col items-center justify-center gap-4">
                 <div className="relative">
-                  <Sparkles className="h-12 w-12 text-amber-500 animate-pulse" />
+                  <Lightbulb className="h-12 w-12 text-amber-500 animate-pulse" />
                   <div className="absolute inset-0 bg-amber-500/20 rounded-full animate-ping" />
                 </div>
                 <p className="text-[13px] text-muted-foreground text-center">
@@ -8111,7 +8111,7 @@ function IndexesSpreadsheet({
         <div className="absolute bottom-4 left-1/2 z-50 -translate-x-1/2">
           <div className="flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
             <Badge variant="secondary" className="h-6 px-2.5">
-              <Sparkles className="h-3 w-3 mr-1.5" />
+              <Lightbulb className="h-3 w-3 mr-1.5" />
               {suggestedIndexes.length} suggestion
               {suggestedIndexes.length !== 1 ? 's' : ''}
             </Badge>

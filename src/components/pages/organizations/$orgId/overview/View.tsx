@@ -958,7 +958,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                           key={org.$id}
                           onClick={() => handleSelectOrg(org)}
                           className={cn(
-                            'flex w-full items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-accent',
+                            'flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-accent',
                             selectedOrg.$id === org.$id && 'bg-accent',
                           )}
                         >
@@ -994,7 +994,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                           setOrgSwitcherOpen(false)
                           setCreateOrgDialogOpen(true)
                         }}
-                        className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                        className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                       >
                         <Plus className="h-4 w-4" />
                         Create organization

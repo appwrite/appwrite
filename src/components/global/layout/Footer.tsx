@@ -49,7 +49,7 @@ export function ConsoleFooter() {
 
   return (
     <footer className="@container flex h-[54px] shrink-0 items-center border-t border-border px-3">
-      <div className="mx-auto w-full max-w-7xl flex items-center justify-between gap-2 overflow-hidden">
+      <div className="mx-auto w-full max-w-7xl flex items-center justify-between gap-2 overflow-visible">
         {/* Left section: Logo, Resource Links, and Social Icons */}
         <div className="flex items-center gap-2 min-w-0 flex-shrink">
           {/* Logo - inline SVG with currentColor so theme (black/white) works on Safari/iOS */}

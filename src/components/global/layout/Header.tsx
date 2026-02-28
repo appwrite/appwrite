@@ -152,11 +152,15 @@ export function ConsoleHeader({
                 to={linkOrgId ? '/organizations/$orgId' : '/'}
                 params={linkOrgId ? { orgId: linkOrgId } : undefined}
                 className={cn(
-                  'flex h-14 shrink-0 items-center justify-center',
+                  'group inline-flex size-10 shrink-0 items-center justify-center rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
                   childClassName,
                 )}
               >
-                <img src="/logo.svg" alt="Appwrite" className="h-6 w-6" />
+                <img
+                  src="/logo.svg"
+                  alt="Appwrite"
+                  className="h-6 w-6 transition-transform duration-150 ease-out group-hover:scale-[1.04]"
+                />
               </Link>
             )
 
@@ -475,7 +479,7 @@ export function ConsoleHeader({
 
           {/* Upgrade Button - hidden on small containers */}
           {orgId && (
-            <div className="hidden @[850px]:flex shrink-0">
+            <div className="hidden @[850px]:flex shrink-0 rounded-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1 focus-within:ring-offset-background">
               <div className="upgrade-button-wrapper">
                 <Button
                   asChild

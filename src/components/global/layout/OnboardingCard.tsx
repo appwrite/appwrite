@@ -34,7 +34,7 @@ export function OnboardingCard({
     const linkContent = (
       <Link
         to="/onboarding"
-        className="flex aspect-square w-full items-center justify-center p-2 text-muted-foreground transition-colors hover:text-foreground"
+        className="flex aspect-square w-full items-center justify-center rounded-md p-2 text-muted-foreground transition-colors hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background"
       >
         <svg
           width={size}
@@ -69,7 +69,7 @@ export function OnboardingCard({
     )
 
     return (
-      <div className="aspect-square w-full overflow-hidden rounded-md border border-border bg-card/50">
+      <div className="aspect-square w-full overflow-visible rounded-md border border-border bg-card/50">
         <Tooltip delayDuration={0}>
           <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
           <TooltipContent side="right" sideOffset={8}>
@@ -84,10 +84,10 @@ export function OnboardingCard({
   }
 
   return (
-    <div className="rounded-md border border-border bg-card/50 overflow-hidden">
+    <div className="rounded-md border border-border bg-card/50 overflow-visible">
       <Link
         to="/onboarding"
-        className="group flex w-full flex-col transition-colors"
+        className="group flex w-full flex-col rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background"
       >
         <div className="px-3 pt-2 pb-2.5">
           <h3 className="text-[13px] font-semibold text-foreground mb-1.5">
