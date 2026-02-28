@@ -1,6 +1,8 @@
-import { useRef, useCallback, useState, useMemo } from 'react'
+import { useRef, useCallback, useMemo } from 'react'
 import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/components/global/auth/RequireAuth'
+import { useSidebarCollapsed } from '@/lib/react-query/hooks'
 import { useDebugMode } from '@/components/global/providers/DebugMode'
 import {
   LayoutDashboard,
@@ -216,7 +218,8 @@ export function ConsoleSidebar({
   onMobileClose,
   className,
 }: ConsoleSidebarProps) {
-  const [collapsed, setCollapsed] = useState(false)
+  const { account } = useAuth()
+  const { collapsed, setCollapsed } = useSidebarCollapsed(account)
   const navRef = useRef<HTMLElement>(null)
   const { isDebugModeOpen } = useDebugMode()
 

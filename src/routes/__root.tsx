@@ -1,6 +1,7 @@
 import {
   HeadContent,
   Scripts,
+  ScriptOnce,
   createRootRouteWithContext,
 } from '@tanstack/react-router'
 import appCss from '../styles.css?url'
@@ -31,6 +32,21 @@ import { useLocation } from '@tanstack/react-router'
 interface MyRouterContext {
   queryClient: QueryClient
 }
+
+/**
+ * Inline script that runs before first paint (via ScriptOnce). Applies theme
+ * class to <html> so the initial loader respects user choice first, then
+ * system preference. Must match next-themes storageKey ("theme") and logic.
+ */
+const THEME_SCRIPT = `(function(){
+  try {
+    var t = localStorage.getItem('theme') || 'system';
+    var r = t === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : t;
+    var e = document.documentElement;
+    ['light','dark','system','crazy','stealth'].forEach(function(c){e.classList.remove(c);});
+    e.classList.add(r);
+  } catch (e) {}
+})()`
 
 const scripts: React.DetailedHTMLProps<
   React.ScriptHTMLAttributes<HTMLScriptElement>,
@@ -146,6 +162,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body suppressHydrationWarning>
+        <ScriptOnce>{THEME_SCRIPT}</ScriptOnce>
         <DynamicFavicon />
         <UploadWarning />
         <ClientThemeProvider>
