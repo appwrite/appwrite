@@ -280,6 +280,13 @@ code {
     }
   }
 
+  /* Safe area insets for iPad/iPhone - prevent content from being trimmed by home indicator */
+  .root-container {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+
   /* On mobile, ensure flex layout properly accounts for header height */
   @media (max-width: 768px) {
     /* Ensure the root scroll container doesn't scroll */
