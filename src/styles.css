@@ -255,6 +255,7 @@ code {
   html {
     height: 100%;
     height: 100dvh;
+    overscroll-behavior: none;
   }
 
   /* Ensure body uses proper height and prevents scrolling */
@@ -262,13 +263,14 @@ code {
     height: 100%;
     height: 100dvh;
     overflow: hidden;
+    overscroll-behavior: none;
   }
 
-  /* Smooth touch scrolling on iOS */
+  /* Smooth touch scrolling on iOS; no elastic bounce */
   [class*='overflow-auto'],
   [class*='overflow-y-auto'] {
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
+    overscroll-behavior: none;
   }
 
   /* Use dynamic viewport height for root container on mobile devices */

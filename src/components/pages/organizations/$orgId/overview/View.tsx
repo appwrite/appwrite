@@ -1003,15 +1003,21 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   </PopoverContent>
                 </Popover>
               )}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 rounded-lg hover:bg-accent"
-                onClick={() => setCreateOrgDialogOpen(true)}
-                title="Create organization"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 rounded-lg hover:bg-accent"
+                    onClick={() => setCreateOrgDialogOpen(true)}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Create organization</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
 
             {/* Right: Team Avatars + Invite Button */}
