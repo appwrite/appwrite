@@ -924,11 +924,12 @@ export function useDeleteSiteDeployment(
       }
       return await deleteSiteDeployment(projectId, siteId, deploymentId)
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch deployments list so the UI updates (list uses refetchOnMount: false)
+      await queryClient.refetchQueries({
         queryKey: Dependencies.DEPLOYMENTS,
       })
-      queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: Dependencies.SITE,
       })
     },

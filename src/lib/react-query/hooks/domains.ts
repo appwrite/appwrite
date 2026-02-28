@@ -579,11 +579,12 @@ export function useDeleteOrganizationDomain(
     mutationFn: async (domainId: string) => {
       return await deleteOrganizationDomain(domainId)
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch domains list so the UI updates (list uses refetchOnMount: false)
+      await queryClient.refetchQueries({
         queryKey: ['domains', 'organization', organizationId],
       })
-      queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: Dependencies.DOMAINS,
       })
     },
@@ -810,11 +811,12 @@ export function useDeleteDnsRecord(domainId: string | null | undefined) {
       }
       return await deleteDnsRecord(domainId, recordId)
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch DNS records list so the UI updates (list uses refetchOnMount: false)
+      await queryClient.refetchQueries({
         queryKey: ['dns-records', 'domain', domainId],
       })
-      queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: ['domain', domainId],
       })
     },

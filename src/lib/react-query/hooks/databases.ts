@@ -2146,11 +2146,12 @@ export function useDeleteProjectTableRow(
       }
       return await deleteProjectTableRow(projectId, databaseId, tableId, rowId)
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch rows list so the UI updates (list uses refetchOnMount: false)
+      await queryClient.refetchQueries({
         queryKey: ['rows', 'project', projectId, databaseId, tableId],
       })
-      queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: ['tables', 'project', projectId, databaseId],
       })
     },
@@ -2314,14 +2315,15 @@ export function useDeleteProjectTableColumn(
         columnKey,
       )
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch columns/tables list so the UI updates (list uses refetchOnMount: false)
+      await queryClient.refetchQueries({
         queryKey: ['columns', 'project', projectId, databaseId, tableId],
       })
-      queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: ['tables', 'project', projectId, databaseId],
       })
-      queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: ['table', 'project', projectId, databaseId, tableId],
       })
     },
@@ -2394,14 +2396,15 @@ export function useDeleteProjectTableIndex(
         indexKey,
       )
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch indexes/tables list so the UI updates (list uses refetchOnMount: false)
+      await queryClient.refetchQueries({
         queryKey: ['indexes', 'project', projectId, databaseId, tableId],
       })
-      queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: ['tables', 'project', projectId, databaseId],
       })
-      queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: ['table', 'project', projectId, databaseId, tableId],
       })
     },
@@ -2466,11 +2469,12 @@ export function useDeleteProjectTable(
       }
       return await deleteProjectTable(projectId, databaseId, tableId)
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch tables/databases list so the UI updates (list uses refetchOnMount: false)
+      await queryClient.refetchQueries({
         queryKey: ['tables', 'project', projectId, databaseId],
       })
-      queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: ['databases', 'project', projectId],
       })
     },

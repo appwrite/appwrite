@@ -451,9 +451,9 @@ export function useDeleteProjectUser(projectId: string | null | undefined) {
       }
       return deleteProjectUser(projectId, userId)
     },
-    onSuccess: () => {
-      // Invalidate users queries to refetch the list
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch users list so the UI updates (list uses refetchOnMount: false)
+      await queryClient.refetchQueries({
         queryKey: ['users', 'project', projectId],
       })
     },
@@ -476,9 +476,9 @@ export function useDeleteProjectTeam(projectId: string | null | undefined) {
       }
       return deleteProjectTeam(projectId, teamId)
     },
-    onSuccess: () => {
-      // Invalidate teams queries to refetch the list
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch teams list so the UI updates (list uses refetchOnMount: false)
+      await queryClient.refetchQueries({
         queryKey: ['teams', 'project', projectId],
       })
     },

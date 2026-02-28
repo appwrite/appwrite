@@ -206,11 +206,11 @@ export function View() {
         deploymentId: activeDeployment.$id,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
         queryKey: [...Dependencies.DEPLOYMENTS],
       })
-      queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: [...Dependencies.SITE],
       })
       toast.success('Deployment rebuild started')
@@ -233,11 +233,11 @@ export function View() {
         deploymentId: activeDeployment.$id,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
         queryKey: [...Dependencies.DEPLOYMENTS],
       })
-      queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: [...Dependencies.SITE],
       })
       toast.success('Deployment activated successfully')
@@ -258,11 +258,11 @@ export function View() {
         'Cannot delete the active deployment. Please activate another deployment first.',
       )
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
         queryKey: [...Dependencies.DEPLOYMENTS],
       })
-      queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: [...Dependencies.SITE],
       })
       toast.success('Deployment deleted successfully')

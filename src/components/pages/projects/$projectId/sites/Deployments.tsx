@@ -478,11 +478,11 @@ export function View() {
         deploymentId: activeDeploymentResolved.$id,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
         queryKey: [...Dependencies.DEPLOYMENTS],
       })
-      queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: ['site', 'project', projectId, siteId],
       })
       toast.success('Deployment rebuild started')
@@ -505,11 +505,11 @@ export function View() {
         deploymentId: activeDeploymentResolved.$id,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
         queryKey: [...Dependencies.DEPLOYMENTS],
       })
-      queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: ['site', 'project', projectId, siteId],
       })
       toast.success('Deployment activated successfully')
@@ -567,11 +567,11 @@ export function View() {
         ),
       )
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
         queryKey: Dependencies.DEPLOYMENTS,
       })
-      queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: ['site', 'project', projectId, siteId],
       })
       toast.success(

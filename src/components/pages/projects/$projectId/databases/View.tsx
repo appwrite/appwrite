@@ -2818,10 +2818,10 @@ export function DatabaseOverview({
         ),
       )
     },
-    onSuccess: () => {
-      // Invalidate and refetch tables
-      queryClient.invalidateQueries({
-        queryKey: ['tables', 'project', projectId, 'database', databaseId],
+    onSuccess: async () => {
+      // Refetch tables list so the UI updates (list uses refetchOnMount: false)
+      await queryClient.refetchQueries({
+        queryKey: ['tables', 'project', projectId, databaseId],
       })
       toast.success(
         `Successfully deleted ${selectedTables.size} table${selectedTables.size > 1 ? 's' : ''}`,
@@ -5319,9 +5319,9 @@ function RowsSpreadsheet({
         ),
       )
     },
-    onSuccess: () => {
-      // Invalidate and refetch rows
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch rows list so the UI updates (list uses refetchOnMount: false)
+      await queryClient.refetchQueries({
         queryKey: ['rows', 'project', projectId, databaseId, tableId],
       })
       toast.success(
