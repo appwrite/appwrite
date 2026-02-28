@@ -103,17 +103,15 @@ export function getInvoiceStatusColor(status: InvoiceStatus): string {
 /**
  * Plan types for organizations
  */
-export type PlanType = 'enterprise' | 'scale' | 'pro' | 'free'
+export type PlanType = 'free' | 'pro' | 'custom'
 
 /**
  * Get plan badge color classes
  */
 export function getPlanBadgeColor(plan: PlanType): string {
   switch (plan) {
-    case 'enterprise':
+    case 'custom':
       return 'bg-purple-500/10 text-purple-600 dark:text-purple-300 border-purple-500/20'
-    case 'scale':
-      return 'bg-blue-500/10 text-blue-600 dark:text-blue-300 border-blue-500/20'
     case 'pro':
       return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border-emerald-500/20'
     case 'free':

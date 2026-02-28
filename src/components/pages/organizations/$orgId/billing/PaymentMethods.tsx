@@ -1,4 +1,4 @@
-import { CreditCard, Plus, MoreHorizontal, Info } from 'lucide-react'
+import { CreditCard, Plus, MoreHorizontal, Info } from '@/lib/icons'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,

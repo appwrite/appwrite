@@ -25,14 +25,11 @@ export function getPlanNameFromTier(
     if (tier === '0' || tier.toLowerCase() === 'tier-0') return 'free'
     if (tier === '1' || tier.toLowerCase() === 'tier-1') return 'pro'
 
-    // If it's already a plan name, return it
-    if (
-      ['free', 'pro', 'scale', 'enterprise', 'custom'].includes(
-        tier.toLowerCase(),
-      )
-    ) {
-      return tier.toLowerCase()
-    }
+    // If it's already a canonical plan name, return it
+    const normalized = tier.toLowerCase()
+    if (['free', 'pro', 'custom'].includes(normalized)) return normalized
+    // Legacy: scale/enterprise normalize to custom
+    if (['scale', 'enterprise'].includes(normalized)) return 'custom'
 
     return 'custom'
   }

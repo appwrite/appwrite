@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { BillingPlan } from '@appwrite.io/console'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Info } from 'lucide-react'
+import { Info } from '@/lib/icons'
 import { formatCurrency } from '../utils'
 import {
   Tooltip,
@@ -33,7 +33,6 @@ export function PlanSummaryCard({
     const planName = getPlanNameFromTier(planTier)
     if (planName === 'free') return 'Free'
     if (planName === 'pro') return 'Pro'
-    if (planName === 'scale') return 'Scale'
     return 'Custom'
   }
 

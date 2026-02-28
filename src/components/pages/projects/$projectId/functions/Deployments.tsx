@@ -320,8 +320,14 @@ export function View() {
   }, [hasInProgressDeployment])
 
   // Fetch domains for the function (filter by active deployment)
-  // Fetch up to 20 to ensure we have 3 after filtering by active deployment
-  const { data: domainsData } = useFunctionDomains(projectId, functionId, 0, 20)
+  // Use same params as domains tab (0, 25, '') to share cache
+  const { data: domainsData } = useFunctionDomains(
+    projectId,
+    functionId,
+    0,
+    25,
+    '',
+  )
 
   // Fetch runtimes to get runtime name
   const { data: runtimesData } = useProjectRuntimes(projectId)

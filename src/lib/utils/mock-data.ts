@@ -5,7 +5,7 @@ export interface Organization {
   name: string
   slug: string
   avatar?: string
-  plan: 'free' | 'pro' | 'scale' | 'enterprise'
+  plan: 'free' | 'pro' | 'custom'
   members: number
 }
 
@@ -224,7 +224,7 @@ export const organizations: Organization[] = [
     name: 'Appwrite',
     slug: 'appwrite',
     avatar: 'https://appwrite.io/images/favicon.png',
-    plan: 'enterprise',
+    plan: 'custom',
     members: 45,
   },
   {

@@ -7,7 +7,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle } from '@/lib/icons'
 import { toast } from 'sonner'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import {

@@ -937,20 +937,27 @@ export function useFunctionDomains(
 }
 
 /**
- * Hook to fetch function deployment proxy rules
+ * Hook to fetch function deployment proxy rules.
+ * Pass enabled: false (e.g. when drawer is closed) to avoid unnecessary fetches.
  */
 export function useFunctionDeploymentProxyRules(
   projectId: string | null | undefined,
   functionId: string | null | undefined,
   deploymentId: string | null | undefined,
+  options?: { enabled?: boolean },
 ) {
-  const { data, isLoading, error, refetch } = useQuery(
-    functionDeploymentProxyRulesQueryOptions(
-      projectId,
-      functionId,
-      deploymentId,
-    ),
+  const baseOptions = functionDeploymentProxyRulesQueryOptions(
+    projectId,
+    functionId,
+    deploymentId,
   )
+  const enabled =
+    (options?.enabled !== false) && baseOptions.enabled !== false
+
+  const { data, isLoading, error, refetch } = useQuery({
+    ...baseOptions,
+    enabled,
+  })
 
   return {
     rules: data?.rules || [],

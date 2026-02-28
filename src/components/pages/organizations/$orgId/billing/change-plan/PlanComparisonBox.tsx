@@ -15,7 +15,6 @@ export function PlanComparisonBox({
     const planName = getPlanNameFromTier(planTier)
     if (planName === 'free') return 'Free'
     if (planName === 'pro') return 'Pro'
-    if (planName === 'scale') return 'Scale'
     return 'Custom'
   }
 

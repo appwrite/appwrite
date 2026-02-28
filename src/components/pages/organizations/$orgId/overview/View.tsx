@@ -30,7 +30,7 @@ import {
   Edit,
   Eye,
   CreditCard,
-} from 'lucide-react'
+} from '@/lib/icons'
 import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
 import { RegionFlag } from '@/components/global/shared/RegionFlag'
 import { type Organization, type TeamMember } from '@/lib/utils/mock-data'
@@ -376,10 +376,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         const planName = getPlanNameFromTier(
           org.billingPlan ?? (org.prefs as { tier?: string })?.tier ?? 'free',
         )
-        // Map 'custom' to 'enterprise' for compatibility with Organization type
-        const plan = (
-          planName === 'custom' ? 'enterprise' : planName
-        ) as Organization['plan']
+        const plan = planName as Organization['plan']
 
         return {
           $id: org.$id,
@@ -794,12 +791,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     return isNaN(limitNum as number) ? null : limitNum
   }, [organizationPlan])
 
-  // Check if the plan supports success team (enterprise plans)
+  // Check if the plan supports success team (custom plans)
   const supportsSuccessTeam = useMemo(() => {
     if (!organizationPlan) return false
-    // Check if plan name is enterprise or if it's a custom/enterprise tier
     const planName = organizationPlan.name?.toLowerCase() || ''
-    return planName === 'enterprise' || selectedOrg?.plan === 'enterprise'
+    return planName === 'custom' || selectedOrg?.plan === 'custom'
   }, [organizationPlan, selectedOrg])
 
   // Fetch memberships for the selected organization
