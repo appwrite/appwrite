@@ -352,7 +352,7 @@ export function View() {
                           className={cn(
                             'cursor-pointer transition-colors',
                             selectedDomains.has(domain.$id)
-                              ? 'bg-sky-100 dark:bg-sky-950'
+                              ? 'bg-muted'
                               : 'hover:bg-muted/50',
                           )}
                           onClick={() => {

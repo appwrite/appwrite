@@ -353,7 +353,7 @@ export function View() {
                           className={cn(
                             'cursor-pointer transition-colors border-b border-border/50',
                             selectedBuckets.has(bucketData.$id)
-                              ? 'bg-sky-100 dark:bg-sky-950'
+                              ? 'bg-muted'
                               : 'hover:bg-muted/30',
                           )}
                           onClick={(e) => {

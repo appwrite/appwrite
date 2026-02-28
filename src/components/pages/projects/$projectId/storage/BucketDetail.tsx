@@ -445,7 +445,7 @@ export function BucketDetailView() {
                                     : 'cursor-pointer transition-colors border-b border-border/50',
                                   !pending && 'hover:bg-muted/30',
                                   selectedFiles.has(file.$id) &&
-                                    'bg-sky-100 dark:bg-sky-950',
+                                    'bg-muted',
                                 )}
                                 onClick={(e) => {
                                   if (pending) return

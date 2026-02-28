@@ -557,7 +557,7 @@ export function View() {
                           className={cn(
                             'cursor-pointer transition-colors border-b border-border/50',
                             selectedDatabases.has(db.$id)
-                              ? 'bg-sky-100 dark:bg-sky-950'
+                              ? 'bg-muted'
                               : 'hover:bg-muted/30',
                           )}
                           onClick={(e) => {
@@ -3114,7 +3114,7 @@ export function DatabaseOverview({
                           className={cn(
                             'cursor-pointer transition-colors border-b border-border/50',
                             selectedTables.has(table.$id)
-                              ? 'bg-sky-100 dark:bg-sky-950'
+                              ? 'bg-muted'
                               : 'hover:bg-muted/30',
                           )}
                           onClick={(e) => {
@@ -5815,7 +5815,7 @@ function RowsSpreadsheet({
                   className={cn(
                     'group cursor-pointer transition-colors',
                     selectedRows.has(row.$id)
-                      ? 'bg-sky-100 dark:bg-sky-950'
+                      ? 'bg-muted'
                       : 'hover:bg-muted/50',
                   )}
                   onClick={() => handleRowClick(row)}
@@ -5829,7 +5829,7 @@ function RowsSpreadsheet({
                     className={cn(
                       'sticky left-0 w-10 border-b border-gray-200 dark:border-border bg-background px-2 py-1.5',
                       'shadow-[inset_-1px_0_0_0_#d1d5db] dark:shadow-[inset_-1px_0_0_0_rgb(255_255_255_/_0.1)]',
-                      selectedRows.has(row.$id) && 'bg-sky-100 dark:bg-sky-950',
+                      selectedRows.has(row.$id) && 'bg-muted',
                     )}
                   >
                     <Checkbox
@@ -5934,7 +5934,7 @@ function RowsSpreadsheet({
                     className={cn(
                       'sticky right-0 border-b border-gray-200 dark:border-border bg-background p-0',
                       'shadow-[inset_1px_0_0_0_#d1d5db] dark:shadow-[inset_1px_0_0_0_rgb(255_255_255_/_0.1)]',
-                      selectedRows.has(row.$id) && 'bg-sky-100 dark:bg-sky-950',
+                      selectedRows.has(row.$id) && 'bg-muted',
                     )}
                     style={{
                       width: '40px',

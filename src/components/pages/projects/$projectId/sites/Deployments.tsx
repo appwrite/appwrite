@@ -1293,7 +1293,7 @@ export function View() {
                           key={deploymentData.$id}
                           className={cn(
                             selectedDeployments.has(deploymentData.$id)
-                              ? 'bg-sky-100 dark:bg-sky-950'
+                              ? 'bg-muted'
                               : 'hover:bg-muted/50',
                             'cursor-pointer',
                           )}
