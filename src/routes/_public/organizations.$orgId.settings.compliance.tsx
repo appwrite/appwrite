@@ -1,10 +1,20 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { pageTitle } from '@/lib/utils/page-title'
 import { fetchOrganizations } from '@/lib/react-query/hooks'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 
 export const Route = createFileRoute(
   '/_public/organizations/$orgId/settings/compliance',
 )({
+  beforeLoad: ({ params }) => {
+    if (!getActiveProfileFeatures().orgCloudSettings) {
+      throw redirect({
+        to: '/organizations/$orgId/settings',
+        params: { orgId: params.orgId },
+        replace: true,
+      })
+    }
+  },
   head: () => ({
     meta: [{ title: pageTitle('Compliance', 'Organization') }],
   }),

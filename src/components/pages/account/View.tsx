@@ -6,12 +6,13 @@ import { AccountSessions } from './Sessions'
 import { AccountPayments } from './Payments'
 import { User, CreditCard, LogOut } from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
 import { cn } from '@/lib/utils'
 import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
 
-const tabs: Tab[] = [
+const BASE_TABS: Tab[] = [
   {
     id: 'overview',
     label: 'Overview',
@@ -36,7 +37,16 @@ interface ViewProps {
 export function View({ activeTab: tabProp }: ViewProps) {
   const location = useLocation()
   const { account, signOut } = useAuth()
+  const { features } = useConsoleProfile()
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)
+
+  const tabs = useMemo(
+    () =>
+      features.billing
+        ? BASE_TABS
+        : BASE_TABS.filter((t) => t.id !== 'payments'),
+    [features.billing],
+  )
 
   // Command center shortcut (Cmd+K / Ctrl+K)
   useKeyboardShortcut('meta+k', () => {
@@ -66,7 +76,10 @@ export function View({ activeTab: tabProp }: ViewProps) {
       // Check if there's a tab segment after 'account'
       if (pathParts[accountIndex + 1]) {
         const tabFromPath = pathParts[accountIndex + 1]
-        if (['overview', 'sessions', 'payments'].includes(tabFromPath)) {
+        const validTabs = features.billing
+          ? ['overview', 'sessions', 'payments']
+          : ['overview', 'sessions']
+        if (validTabs.includes(tabFromPath)) {
           return tabFromPath
         }
       }
@@ -74,7 +87,7 @@ export function View({ activeTab: tabProp }: ViewProps) {
 
     // Default to overview for index route (/account or /account/)
     return 'overview'
-  }, [tabProp, location.pathname])
+  }, [tabProp, location.pathname, features.billing])
 
   const getEmptyStateContent = () => {
     switch (activeTab) {

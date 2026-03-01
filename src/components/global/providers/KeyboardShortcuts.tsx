@@ -6,6 +6,7 @@ import {
   type ReactNode,
 } from 'react'
 import { useNavigate } from '@tanstack/react-router'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   useKeyboardShortcut,
   useSequentialShortcuts,
@@ -47,6 +48,7 @@ export function KeyboardShortcutsProvider({
 }: KeyboardShortcutsProviderProps) {
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)
   const navigate = useNavigate()
+  const { features } = useConsoleProfile()
 
   const navigateToSection = useCallback(
     (section: string) => {
@@ -126,12 +128,12 @@ export function KeyboardShortcutsProvider({
       'g w': () => {
         navigateToSection('sites')
       },
-      'g l': () => {
-        navigateToSection('activity')
-      },
-      'g u': () => {
-        navigateToSection('usage')
-      },
+      ...(features.activity
+        ? { 'g l': () => { navigateToSection('activity') } }
+        : {}),
+      ...(features.usageStats
+        ? { 'g u': () => { navigateToSection('usage') } }
+        : {}),
       'g ,': () => {
         navigateToSection('settings')
       },
@@ -162,7 +164,7 @@ export function KeyboardShortcutsProvider({
     () => {
       navigateToSection('activity')
     },
-    { enabled: !commandCenterOpen },
+    { enabled: !commandCenterOpen && features.activity },
   )
 
   const openCommandCenter = useCallback(() => {

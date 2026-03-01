@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useAccountIdentities, useMFAFactors } from '@/lib/react-query/hooks'
 import { useAuth } from '@/components/global/auth/RequireAuth'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -49,14 +50,15 @@ const Dependencies = {
 } as const
 
 export function AccountOverview() {
+  const { features } = useConsoleProfile()
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
       <div className="space-y-6">
         <UpdateNameSection />
         <UpdateEmailSection />
         <UpdatePasswordSection />
-        <IdentitiesSection />
-        <MFASection />
+        {features.accountIdentities && <IdentitiesSection />}
+        {features.accountMfa && <MFASection />}
         <DeleteAccountSection />
       </div>
     </div>

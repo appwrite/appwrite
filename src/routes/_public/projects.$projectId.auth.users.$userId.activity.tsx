@@ -1,12 +1,22 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/auth/users/View'
 import { projectQueryOptions } from '@/lib/react-query/hooks'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { fetchUser, fetchUserMFAFactors } from '@/lib/react-query/hooks/users'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/auth/users/$userId/activity',
 )({
+  beforeLoad: ({ params }) => {
+    if (!getActiveProfileFeatures().activity) {
+      throw redirect({
+        to: '/projects/$projectId/auth/users/$userId',
+        params: { projectId: params.projectId, userId: params.userId },
+        replace: true,
+      })
+    }
+  },
   head: ({ loaderData }) => ({
     meta: [
       {

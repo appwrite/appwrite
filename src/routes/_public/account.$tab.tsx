@@ -1,6 +1,7 @@
 import { View } from '@/components/pages/account/View'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { RequireAuth } from '@/components/global/auth/RequireAuth'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import {
   accountSessionsQueryOptions,
   accountIdentitiesQueryOptions,
@@ -24,6 +25,15 @@ const TAB_LABELS: Record<string, string> = {
 }
 
 export const Route = createFileRoute('/_public/account/$tab')({
+  beforeLoad: ({ params }) => {
+    const tab = params.tab as string | undefined
+    if (tab === 'payments' && !getActiveProfileFeatures().billing) {
+      throw redirect({
+        to: '/account',
+        replace: true,
+      })
+    }
+  },
   head: ({ params }) => {
     const tab = params.tab as string | undefined
     const tabLabel = tab
@@ -57,11 +67,18 @@ export const Route = createFileRoute('/_public/account/$tab')({
     // Fetch critical data before rendering to prevent layout shifts
     // Use ensureQueryData to use cache if available, fetch if stale/missing
     if (tab === 'overview') {
-      // Fetch identities and MFA factors for overview tab - blocks navigation until ready
-      await Promise.all([
-        queryClient.ensureQueryData(accountIdentitiesQueryOptions()),
-        queryClient.ensureQueryData(mfaFactorsQueryOptions()),
-      ])
+      const features = getActiveProfileFeatures()
+      const overviewFetches = [
+        ...(features.accountIdentities
+          ? [queryClient.ensureQueryData(accountIdentitiesQueryOptions())]
+          : []),
+        ...(features.accountMfa
+          ? [queryClient.ensureQueryData(mfaFactorsQueryOptions())]
+          : []),
+      ]
+      if (overviewFetches.length > 0) {
+        await Promise.all(overviewFetches)
+      }
     } else if (tab === 'sessions') {
       // Fetch sessions - blocks navigation until ready
       await queryClient.ensureQueryData(accountSessionsQueryOptions())

@@ -231,6 +231,7 @@ bun run format:check
 | Variable                          | Required | Default                        | Description                          |
 | --------------------------------- | -------- | ------------------------------ | ------------------------------------ |
 | `VITE_APPWRITE_ENDPOINT`          | Yes      | `https://cloud.appwrite.io/v1` | Appwrite API endpoint                |
+| `VITE_CONSOLE_PROFILE`            | No       | `cloud`                        | `cloud` or `self-hosted` – controls which features are available |
 | `VITE_INSTRUMENTATION_SCRIPT_SRC` | No       | -                              | Analytics/instrumentation script URL |
 | `VITE_STRIPE_PUBLISHABLE_KEY`     | No       | -                              | Stripe publishable key for billing   |
 | `VITE_COMPANY_NAME`               | No       | `Appwrite`                     | Company name for branding            |

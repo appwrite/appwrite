@@ -52,6 +52,7 @@ import {
   useProjectBuckets,
   useProjectFunctions,
 } from '@/lib/react-query/hooks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 // Command types
 type CommandType =
@@ -114,6 +115,7 @@ export function CommandCenter({
   >(null)
   const currentPage = pages[pages.length - 1]
   const isMobile = useIsMobile()
+  const { features } = useConsoleProfile()
 
   // Fetch resources based on context - only when there's a search query or scope
   const hasSearch = search.trim().length > 0
@@ -226,60 +228,76 @@ export function CommandCenter({
           onOpenChange(false)
         },
       },
-      {
-        id: 'nav-domains',
-        label: 'Go to Domains',
-        description: 'Manage custom domains',
-        icon: Globe,
-        type: 'navigation',
-        shortcut: 'G D',
-        keywords: ['dns', 'url', 'hosting'],
-        action: () => {
-          onOrgNavigate?.('domains')
-          onOpenChange(false)
-        },
-      },
-      {
-        id: 'nav-members',
-        label: 'Go to Members',
-        description: 'Team members and roles',
-        icon: Users,
-        type: 'navigation',
-        shortcut: 'G M',
-        keywords: ['team', 'users', 'roles', 'permissions'],
-        action: () => {
-          onOrgNavigate?.('settings/members')
-          onOpenChange(false)
-        },
-      },
-      {
-        id: 'nav-billing',
-        label: 'Go to Billing',
-        description: 'Billing and subscription',
-        icon: CreditCard,
-        type: 'navigation',
-        shortcut: 'G B',
-        keywords: ['payment', 'subscription', 'invoice'],
-        action: () => {
-          onOrgNavigate?.('settings/billing')
-          onOpenChange(false)
-        },
-      },
-      {
-        id: 'nav-compliance',
-        label: 'Go to Compliance',
-        description: 'DPA, BAA, SOC 2',
-        icon: ShieldCheck,
-        type: 'navigation',
-        shortcut: 'G C',
-        keywords: ['compliance', 'dpa', 'baa', 'soc2', 'hipaa', 'gdpr'],
-        action: () => {
-          onOrgNavigate?.('settings/compliance')
-          onOpenChange(false)
-        },
-      },
+      ...(features.domains
+        ? [
+            {
+              id: 'nav-domains',
+              label: 'Go to Domains',
+              description: 'Manage custom domains',
+              icon: Globe,
+              type: 'navigation' as const,
+              shortcut: 'G D',
+              keywords: ['dns', 'url', 'hosting'],
+              action: () => {
+                onOrgNavigate?.('domains')
+                onOpenChange(false)
+              },
+            },
+          ]
+        : []),
+      ...(features.orgRoles
+        ? [
+            {
+              id: 'nav-members',
+              label: 'Go to Members',
+              description: 'Team members and roles',
+              icon: Users,
+              type: 'navigation' as const,
+              shortcut: 'G M',
+              keywords: ['team', 'users', 'roles', 'permissions'],
+              action: () => {
+                onOrgNavigate?.('settings/members')
+                onOpenChange(false)
+              },
+            },
+          ]
+        : []),
+      ...(features.billing
+        ? [
+            {
+              id: 'nav-billing',
+              label: 'Go to Billing',
+              description: 'Billing and subscription',
+              icon: CreditCard,
+              type: 'navigation' as const,
+              shortcut: 'G B',
+              keywords: ['payment', 'subscription', 'invoice'],
+              action: () => {
+                onOrgNavigate?.('settings/billing')
+                onOpenChange(false)
+              },
+            },
+          ]
+        : []),
+      ...(features.orgCloudSettings
+        ? [
+            {
+              id: 'nav-compliance',
+              label: 'Go to Compliance',
+              description: 'DPA, BAA, SOC 2',
+              icon: ShieldCheck,
+              type: 'navigation' as const,
+              shortcut: 'G C',
+              keywords: ['compliance', 'dpa', 'baa', 'soc2', 'hipaa', 'gdpr'],
+              action: () => {
+                onOrgNavigate?.('settings/compliance')
+                onOpenChange(false)
+              },
+            },
+          ]
+        : []),
     ],
-    [onOrgNavigate, onOpenChange],
+    [onOrgNavigate, onOpenChange, features.domains, features.orgRoles, features.billing, features.orgCloudSettings],
   )
 
   // Organization create commands
@@ -466,30 +484,38 @@ export function CommandCenter({
           onOpenChange(false)
         },
       },
-      {
-        id: 'nav-activity',
-        label: 'Go to Activity',
-        description: 'Activity logs',
-        icon: Activity,
-        type: 'navigation',
-        keywords: ['logs', 'events', 'history'],
-        action: () => {
-          onNavigate?.('activity')
-          onOpenChange(false)
-        },
-      },
-      {
-        id: 'nav-usage',
-        label: 'Go to Usage',
-        description: 'Usage statistics',
-        icon: BarChart3,
-        type: 'navigation',
-        keywords: ['stats', 'metrics', 'usage'],
-        action: () => {
-          onNavigate?.('usage')
-          onOpenChange(false)
-        },
-      },
+      ...(features.activity
+        ? [
+            {
+              id: 'nav-activity',
+              label: 'Go to Activity',
+              description: 'Activity logs',
+              icon: Activity,
+              type: 'navigation' as const,
+              keywords: ['logs', 'events', 'history'],
+              action: () => {
+                onNavigate?.('activity')
+                onOpenChange(false)
+              },
+            },
+          ]
+        : []),
+      ...(features.usageStats
+        ? [
+            {
+              id: 'nav-usage',
+              label: 'Go to Usage',
+              description: 'Usage statistics',
+              icon: BarChart3,
+              type: 'navigation' as const,
+              keywords: ['stats', 'metrics', 'usage'],
+              action: () => {
+                onNavigate?.('usage')
+                onOpenChange(false)
+              },
+            },
+          ]
+        : []),
       {
         id: 'nav-analytics',
         label: 'Go to Analytics',
@@ -528,7 +554,7 @@ export function CommandCenter({
         },
       },
     ],
-    [onNavigate, onOpenChange],
+    [onNavigate, onOpenChange, features.activity, features.usageStats],
   )
 
   // Create commands
@@ -639,19 +665,23 @@ export function CommandCenter({
         keywords: ['run', 'trigger', 'invoke'],
         action: () => setPages([...pages, 'functions']),
       },
-      {
-        id: 'action-view-logs',
-        label: 'View Logs',
-        description: 'View activity logs',
-        icon: Terminal,
-        type: 'action',
-        shortcut: isMobile ? undefined : 'L',
-        keywords: ['console', 'debug', 'output'],
-        action: () => {
-          onNavigate?.('activity')
-          onOpenChange(false)
-        },
-      },
+      ...(features.activity
+        ? [
+            {
+              id: 'action-view-logs',
+              label: 'View Logs',
+              description: 'View activity logs',
+              icon: Terminal,
+              type: 'action' as const,
+              shortcut: isMobile ? undefined : ('L' as const),
+              keywords: ['console', 'debug', 'output'],
+              action: () => {
+                onNavigate?.('activity')
+                onOpenChange(false)
+              },
+            },
+          ]
+        : []),
     ]
 
     // Only show keyboard shortcuts on non-touch devices
@@ -669,7 +699,7 @@ export function CommandCenter({
     }
 
     return commands
-  }, [onNavigate, onOpenChange, pages, isMobile])
+  }, [onNavigate, onOpenChange, pages, isMobile, features.activity])
 
   // Org-specific actions
   const orgActionCommands: CommandItemType[] = useMemo(() => {

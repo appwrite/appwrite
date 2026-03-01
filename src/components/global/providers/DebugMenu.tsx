@@ -16,6 +16,8 @@ import {
   Navigation,
   Sparkles,
   ChevronLeft,
+  Cloud,
+  Server,
 } from 'lucide-react'
 import {
   Popover,
@@ -44,6 +46,11 @@ import {
 import { useOrganizationPlan } from '@/lib/react-query/hooks'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useFavicon } from '@/hooks/use-favicon'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import {
+  setDebugProfileOverride,
+  CONSOLE_PROFILES,
+} from '@/lib/console-profiles'
 
 interface DebugAction {
   label: string
@@ -93,6 +100,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
   const [currentFavicon, setCurrentFavicon] = useState<string | null>(null)
   const { theme, setTheme } = useTheme()
   const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null)
+  const { profileId } = useConsoleProfile()
 
   // Get current orgId from URL params or account prefs
   const currentOrgId = useMemo(() => {
@@ -153,6 +161,38 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       icon: <Palette className="h-3 w-3" />,
     }))
 
+    const profileOptions: MenuItem[] = [
+      {
+        label: 'Cloud',
+        description: 'Full feature set (billing, domains, usage, activity, org roles, system status, account MFA, account identities)',
+        onClick: () => {
+          setDebugProfileOverride('cloud')
+          setIsOpen(false)
+        },
+        active: profileId === 'cloud',
+        icon: <Cloud className="h-3 w-3" />,
+      },
+      {
+        label: 'Self-hosted',
+        description: 'Cloud-only features disabled',
+        onClick: () => {
+          setDebugProfileOverride('self-hosted')
+          setIsOpen(false)
+        },
+        active: profileId === 'self-hosted',
+        icon: <Server className="h-3 w-3" />,
+      },
+      {
+        label: 'Use env var',
+        description: 'Reset to VITE_CONSOLE_PROFILE',
+        onClick: () => {
+          setDebugProfileOverride(null)
+          setIsOpen(false)
+        },
+        icon: <RotateCcw className="h-3 w-3" />,
+      },
+    ]
+
     const faviconOptions: MenuItem[] = [
       { label: 'Default', faviconValue: 'default' },
       { label: 'Green', faviconValue: 'green' },
@@ -186,6 +226,18 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             label: 'Favicon',
             icon: <Image className="h-3 w-3" />,
             submenu: faviconOptions,
+          },
+        ],
+      },
+      {
+        title: 'Console profile',
+        icon: <Server className="h-3.5 w-3.5" />,
+        items: [
+          {
+            label: `${CONSOLE_PROFILES[profileId].label} (active)`,
+            description: CONSOLE_PROFILES[profileId].description,
+            icon: profileId === 'cloud' ? <Cloud className="h-3 w-3" /> : <Server className="h-3 w-3" />,
+            submenu: profileOptions,
           },
         ],
       },
@@ -353,6 +405,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
   }, [
     theme,
     currentFavicon,
+    profileId,
     overrides.disableInitialLoader,
     overrides.showNativeAppBar,
     banners.length,

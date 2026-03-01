@@ -47,6 +47,7 @@ import {
 import type { Models } from '@appwrite.io/console'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { ConnectProject } from '../shared/ConnectProject'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 interface OverviewTab {
   id: string
@@ -135,6 +136,7 @@ export function View({ projectId }: ViewProps) {
   const [selectedKeyId, setSelectedKeyId] = useState<string | null>(null)
   const [connectDialogOpen, setConnectDialogOpen] = useState(false)
   const [connectInitialSdk, setConnectInitialSdk] = useState<string>('web')
+  const { features } = useConsoleProfile()
   const handleConnectPlatform = (platform?: string) => {
     const sdkMap: Record<string, string> = {
       web: 'web',
@@ -418,7 +420,8 @@ export function View({ projectId }: ViewProps) {
 
       {/* Content area */}
       <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
-        {/* Charts card */}
+        {/* Charts card - usage stats (cloud only) */}
+        {features.usageStats && (
         <div className="@container rounded-xl border border-border bg-card/50">
           {/* Metric Tabs Row - inside the card */}
           <div className="border-b border-border px-5">
@@ -595,9 +598,10 @@ export function View({ projectId }: ViewProps) {
             </div>
           )}
         </div>
+        )}
 
         {/* Integrations Section */}
-        <div className="mt-6">
+        <div className={features.usageStats ? 'mt-6' : 'mt-0'}>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-[15px] font-semibold text-foreground">Apps</h2>
             <Button

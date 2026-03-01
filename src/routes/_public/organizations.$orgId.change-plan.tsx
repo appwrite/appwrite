@@ -1,5 +1,6 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { pageTitle } from '@/lib/utils/page-title'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import {
   organizationsQueryOptions,
   organizationQueryOptions,
@@ -16,6 +17,15 @@ export const Route = createFileRoute(
   '/_public/organizations/$orgId/change-plan',
 )({
   head: () => ({ meta: [{ title: pageTitle('Change plan', 'Organization') }] }),
+  beforeLoad: ({ params }) => {
+    if (!getActiveProfileFeatures().billing) {
+      throw redirect({
+        to: '/organizations/$orgId',
+        params: { orgId: params.orgId },
+        replace: true,
+      })
+    }
+  },
   loader: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {

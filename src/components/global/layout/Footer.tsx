@@ -1,4 +1,5 @@
 import { ShieldCheck } from 'lucide-react'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 /**
  * ConsoleFooter Component
@@ -17,10 +18,13 @@ import { ShieldCheck } from 'lucide-react'
  */
 export function ConsoleFooter() {
   const currentYear = new Date().getFullYear()
+  const { features } = useConsoleProfile()
 
   const resourceLinks = [
     { label: 'Docs', href: 'https://appwrite.io/docs' },
-    { label: 'Status', href: 'https://status.appwrite.online' },
+    ...(features.systemStatus
+      ? [{ label: 'Status' as const, href: 'https://status.appwrite.online' }]
+      : []),
   ]
 
   const legalLinks = [

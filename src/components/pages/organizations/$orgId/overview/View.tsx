@@ -110,6 +110,7 @@ import { InviteMembersDialog } from './InviteMembers'
 import { CreateOrganizationDialog } from './CreateOrganization'
 import { CreateProjectDialog } from './CreateProjectDialog'
 import { useCreateOrganization } from '@/lib/react-query/hooks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   Table,
   TableBody,
@@ -235,6 +236,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const search = useSearch({ strict: false })
   const matches = useMatches()
   const [searchQuery, setSearchQuery] = useState('')
+  const { features } = useConsoleProfile()
 
   // Check if we're on a domain detail route using route matches and pathname (for navigation transitions)
   const isDomainDetailRoute = useMemo(() => {
@@ -359,6 +361,39 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const [createProjectDialogOpen, setCreateProjectDialogOpen] = useState(false)
   const [deleteOrgDialogOpen, setDeleteOrgDialogOpen] = useState(false)
   const [deleteOrgConfirmation, setDeleteOrgConfirmation] = useState('')
+
+  // Redirect from disabled settings sub-tabs
+  useEffect(() => {
+    if (settingsSubTab === 'members' && !features.orgRoles) {
+      navigate({
+        to: '/organizations/$orgId/settings',
+        params: { orgId: orgId! },
+        replace: true,
+      })
+    } else if (settingsSubTab === 'billing' && !features.billing) {
+      navigate({
+        to: '/organizations/$orgId/settings',
+        params: { orgId: orgId! },
+        replace: true,
+      })
+    } else if (
+      ['compliance', 'oauth-apps', 'api-keys'].includes(settingsSubTab) &&
+      !features.orgCloudSettings
+    ) {
+      navigate({
+        to: '/organizations/$orgId/settings',
+        params: { orgId: orgId! },
+        replace: true,
+      })
+    }
+  }, [
+    settingsSubTab,
+    features.orgRoles,
+    features.billing,
+    features.orgCloudSettings,
+    orgId,
+    navigate,
+  ])
 
   // Command center shortcut (Cmd+K / Ctrl+K)
   useKeyboardShortcut('meta+k', () => {
@@ -853,17 +888,20 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const orgTabs = useMemo(() => {
     if (!selectedOrg) return []
 
-    return [
+    const tabs = [
       { id: 'projects', label: 'Projects', to: '/organizations/$orgId' },
-      { id: 'domains', label: 'Domains', to: '/organizations/$orgId/domains/' },
+      ...(features.domains
+        ? [{ id: 'domains' as const, label: 'Domains', to: '/organizations/$orgId/domains/' as const }]
+        : []),
       {
         id: 'settings',
         label: 'Settings',
         to: '/organizations/$orgId/settings',
       },
     ]
+    return tabs
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedOrg, orgId])
+  }, [selectedOrg, orgId, features.domains])
 
   const filteredProjectsByTeam = projectsByTeam
     .map(({ team, projects }) => ({
@@ -1046,7 +1084,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               </Tooltip>
             </div>
 
-            {/* Right: Team Avatars + Invite Button */}
+            {/* Right: Team Avatars + Invite Button (orgRoles only) */}
+            {features.orgRoles && (
             <div className="flex shrink-0 items-center gap-3">
               {/* Stacked Team Member Avatars - Reserve space even when loading */}
               {selectedOrg && (
@@ -1151,6 +1190,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 </Tooltip>
               )}
             </div>
+            )}
           </div>
 
           {/* Tabs Row */}
@@ -1578,7 +1618,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 {activeTab === 'settings' && (
                   <div className="flex flex-col gap-4 lg:flex-row lg:gap-8">
                     {(() => {
-                      const navItems = [
+                      const allNavItems = [
                         {
                           id: 'overview',
                           label: 'General',
@@ -1591,59 +1631,72 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                             'delete',
                           ],
                         },
-                        {
-                          id: 'members',
-                          label: 'Members',
-                          to: '/organizations/$orgId/settings/members',
-                          icon: Users,
-                          keywords: [
-                            'members',
-                            'team',
-                            'invite',
-                            'roles',
-                          ],
-                        },
-                        {
-                          id: 'billing',
-                          label: 'Billing',
-                          to: '/organizations/$orgId/settings/billing',
-                          icon: CreditCard,
-                          keywords: [
-                            'billing',
-                            'payment',
-                            'invoice',
-                            'subscription',
-                          ],
-                        },
-                        {
-                          id: 'compliance',
-                          label: 'Compliance',
-                          to: '/organizations/$orgId/settings/compliance',
-                          icon: ShieldCheck,
-                          keywords: [
-                            'compliance',
-                            'dpa',
-                            'baa',
-                            'soc2',
-                            'hipaa',
-                            'gdpr',
-                          ],
-                        },
-                        {
-                          id: 'oauth-apps',
-                          label: 'OAuth apps',
-                          to: '/organizations/$orgId/settings/oauth-apps',
-                          icon: KeyRound,
-                          keywords: ['oauth', 'sso', 'apps', 'login'],
-                        },
-                        {
-                          id: 'api-keys',
-                          label: 'API keys',
-                          to: '/organizations/$orgId/settings/api-keys',
-                          icon: Key,
-                          keywords: ['api', 'keys', 'credentials'],
-                        },
-                      ] as const
+                        ...(features.orgRoles
+                          ? [
+                              {
+                                id: 'members' as const,
+                                label: 'Members',
+                                to: '/organizations/$orgId/settings/members' as const,
+                                icon: Users,
+                                keywords: [
+                                  'members',
+                                  'team',
+                                  'invite',
+                                  'roles',
+                                ],
+                              },
+                            ]
+                          : []),
+                        ...(features.billing
+                          ? [
+                              {
+                                id: 'billing' as const,
+                                label: 'Billing',
+                                to: '/organizations/$orgId/settings/billing' as const,
+                                icon: CreditCard,
+                                keywords: [
+                                  'billing',
+                                  'payment',
+                                  'invoice',
+                                  'subscription',
+                                ],
+                              },
+                            ]
+                          : []),
+                        ...(features.orgCloudSettings
+                          ? [
+                              {
+                                id: 'compliance' as const,
+                                label: 'Compliance',
+                                to: '/organizations/$orgId/settings/compliance' as const,
+                                icon: ShieldCheck,
+                                keywords: [
+                                  'compliance',
+                                  'dpa',
+                                  'baa',
+                                  'soc2',
+                                  'hipaa',
+                                  'gdpr',
+                                ],
+                              },
+                              {
+                                id: 'oauth-apps' as const,
+                                label: 'OAuth apps',
+                                to: '/organizations/$orgId/settings/oauth-apps' as const,
+                                icon: KeyRound,
+                                keywords: ['oauth', 'sso', 'apps', 'login'],
+                              },
+                              {
+                                id: 'api-keys' as const,
+                                label: 'API keys',
+                                to: '/organizations/$orgId/settings/api-keys' as const,
+                                icon: Key,
+                                keywords: ['api', 'keys', 'credentials'],
+                              },
+                            ]
+                          : []),
+                      ]
+                      const navItems = allNavItems
 
                       return (
                         <>

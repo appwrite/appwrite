@@ -50,6 +50,7 @@ import { FeedbackPopover } from '@/components/global/shared/FeedbackPopover'
 import { useAIChat } from '@/components/global/providers/AIChat'
 import { Button } from '@/components/ui/button'
 import { useOrganizationPlan } from '@/lib/react-query/hooks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 interface ConsoleHeaderProps {
   onMenuClick?: () => void
@@ -92,6 +93,7 @@ export function ConsoleHeader({
 
   // Fetch organization plan to check if upgrade button should be shown
   const { plan: organizationPlan } = useOrganizationPlan(orgId)
+  const { features } = useConsoleProfile()
 
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text)
@@ -457,28 +459,30 @@ export function ConsoleHeader({
             />
           </div>
 
-          {/* Help/Assistant - hidden on small containers */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={toggleChat}
-                className="hidden h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[1000px]:flex"
-              >
-                <MessageSquare className="h-4 w-4" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Assistant</p>
-            </TooltipContent>
-          </Tooltip>
+          {/* Help/Assistant - hidden on small containers, cloud only */}
+          {features.aiAssistant && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={toggleChat}
+                  className="hidden h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[1000px]:flex"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Assistant</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
 
           {/* Divider before Upgrade Button - hidden on small containers */}
-          {orgId && (
+          {features.billing && orgId && (
             <div className="mx-1 sm:mx-2 hidden h-5 w-px shrink-0 bg-border @[850px]:block" />
           )}
 
           {/* Upgrade Button - hidden on small containers */}
-          {orgId && (
+          {features.billing && orgId && (
             <div className="hidden @[850px]:flex shrink-0 rounded-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1 focus-within:ring-offset-background">
               <div className="upgrade-button-wrapper">
                 <Button
@@ -561,27 +565,28 @@ export function ConsoleHeader({
                   </div>
                 </div>
 
-                {/* 2FA Status */}
-                <div>
-                  <p className="text-[11px] text-muted-foreground mb-1.5">
-                    2FA
-                  </p>
-                  <div className="flex items-center gap-2">
-                    {is2FAEnabled ? (
-                      <>
-                        <Shield className="h-3.5 w-3.5 text-emerald-500" />
-                        <p className="text-[14px] text-foreground">Enabled</p>
-                      </>
-                    ) : (
-                      <>
-                        <Shield className="h-3.5 w-3.5 text-muted-foreground" />
-                        <p className="text-[14px] text-muted-foreground">
-                          Disabled
-                        </p>
-                      </>
-                    )}
+                {features.accountMfa && (
+                  <div>
+                    <p className="text-[11px] text-muted-foreground mb-1.5">
+                      2FA
+                    </p>
+                    <div className="flex items-center gap-2">
+                        {is2FAEnabled ? (
+                          <>
+                            <Shield className="h-3.5 w-3.5 text-emerald-500" />
+                            <p className="text-[14px] text-foreground">Enabled</p>
+                          </>
+                        ) : (
+                          <>
+                            <Shield className="h-3.5 w-3.5 text-muted-foreground" />
+                            <p className="text-[14px] text-muted-foreground">
+                              Disabled
+                            </p>
+                          </>
+                        )}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Account ID */}
                 {accountId && (
@@ -633,15 +638,17 @@ export function ConsoleHeader({
                 </Link>
               </DropdownMenuItem>
 
-              <DropdownMenuItem asChild>
-                <Link
-                  to="/account/payments"
-                  className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
-                >
-                  <CreditCard className="h-4 w-4" />
-                  <span>Payments</span>
-                </Link>
-              </DropdownMenuItem>
+              {features.billing && (
+                <DropdownMenuItem asChild>
+                  <Link
+                    to="/account/payments"
+                    className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+                  >
+                    <CreditCard className="h-4 w-4" />
+                    <span>Payments</span>
+                  </Link>
+                </DropdownMenuItem>
+              )}
 
               <DropdownMenuSeparator className="my-1 bg-border" />
 

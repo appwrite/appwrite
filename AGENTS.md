@@ -935,6 +935,22 @@ Follow the modal structure pattern above. For no-content modals, skip content se
 
 ---
 
+## Console Profiles
+
+Profiles control which features are available based on deployment type (cloud vs self-hosted).
+
+**Profiles:**
+- **Cloud** (default): Full feature set – billing, domains, usage stats, activity, org roles, system status, account MFA, account identities
+- **Self-hosted**: Cloud-only features disabled
+
+**Env var:** `VITE_CONSOLE_PROFILE=cloud` or `VITE_CONSOLE_PROFILE=self-hosted`
+
+**Debug mode:** When debug menu is open (press `.`), use Console profile submenu to override the env-selected profile. Override is stored in localStorage and takes precedence until "Use env var" is selected.
+
+**Feature flags:** Use `useConsoleProfile()` or `getActiveProfileFeatures()` to check `features.billing`, `features.domains`, `features.usageStats`, `features.orgRoles`.
+
+---
+
 ## Environment
 
 Set `VITE_APPWRITE_ENDPOINT` in `.env` (default: `https://cloud.appwrite.io/v1`). Project endpoints are dynamic (per-project region); use `getApiEndpoint(region)` and `getProjectApiEndpoint(projectId)` from `@/lib/appwrite/sdk` for URL construction.

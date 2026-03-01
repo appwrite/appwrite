@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useSidebarCollapsed } from '@/lib/react-query/hooks'
 import { useDebugMode } from '@/components/global/providers/DebugMode'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   LayoutDashboard,
   Database,
@@ -222,6 +223,7 @@ export function ConsoleSidebar({
   const { collapsed, setCollapsed } = useSidebarCollapsed(account)
   const navRef = useRef<HTMLElement>(null)
   const { isDebugModeOpen } = useDebugMode()
+  const { features } = useConsoleProfile()
 
   const { overviewItem, settingsItem } = getNavItems(projectId)
 
@@ -230,12 +232,15 @@ export function ConsoleSidebar({
     return categories
       .map((cat) => ({
         ...cat,
-        items: isDebugModeOpen
-          ? cat.items
-          : cat.items.filter((item) => !item.comingSoon),
+        items: (isDebugModeOpen ? cat.items : cat.items.filter((item) => !item.comingSoon))
+          .filter((item) => {
+            if (item.id === 'usage') return features.usageStats
+            if (item.id === 'activity') return features.activity
+            return true
+          }),
       }))
       .filter((cat) => cat.items.length > 0)
-  }, [projectId, isDebugModeOpen])
+  }, [projectId, isDebugModeOpen, features.usageStats, features.activity])
 
   // Handle keyboard navigation within sidebar
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
