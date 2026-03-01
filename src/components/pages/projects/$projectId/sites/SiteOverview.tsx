@@ -354,9 +354,10 @@ export function SiteOverviewView() {
                                 href={`https://${rule.domain}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="block font-mono text-[11px] text-primary hover:underline"
+                                className="inline-flex items-center gap-1.5 font-mono text-[11px] text-primary hover:underline"
                               >
                                 {rule.domain}
+                                <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
                               </a>
                             ))}
                             {hasMoreDomains && (

@@ -6,6 +6,7 @@ import {
   FileText,
   RefreshCw,
   Trash2,
+  ExternalLink,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Pagination } from '@/components/global/shared/Pagination'
@@ -154,9 +155,10 @@ export function View() {
                         href={`https://${rule.domain}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="font-mono text-[13px] font-medium text-foreground hover:underline"
+                        className="inline-flex items-center gap-1.5 font-mono text-[13px] font-medium text-foreground hover:underline"
                       >
                         {rule.domain}
+                        <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
                       </a>
                     </TableCell>
                     <TableCell className="px-4 py-3 text-[13px]">

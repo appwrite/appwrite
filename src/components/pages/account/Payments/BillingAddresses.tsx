@@ -266,7 +266,7 @@ export function AccountBillingAddresses() {
                                 {linkedOrgs.map((org) => (
                                   <Link
                                     key={org.$id}
-                                    to="/organizations/$orgId/billing"
+                                    to="/organizations/$orgId/settings/billing"
                                     params={{ orgId: org.$id }}
                                     className="block rounded-md px-2 py-1.5 text-[12px] text-foreground hover:bg-muted transition-colors"
                                   >

@@ -26,6 +26,7 @@ import {
   Plus,
   Building2,
   CreditCard,
+  ShieldCheck,
   X,
   Sparkles,
   BarChart2,
@@ -247,7 +248,7 @@ export function CommandCenter({
         shortcut: 'G M',
         keywords: ['team', 'users', 'roles', 'permissions'],
         action: () => {
-          onOrgNavigate?.('members')
+          onOrgNavigate?.('settings/members')
           onOpenChange(false)
         },
       },
@@ -260,7 +261,20 @@ export function CommandCenter({
         shortcut: 'G B',
         keywords: ['payment', 'subscription', 'invoice'],
         action: () => {
-          onOrgNavigate?.('billing')
+          onOrgNavigate?.('settings/billing')
+          onOpenChange(false)
+        },
+      },
+      {
+        id: 'nav-compliance',
+        label: 'Go to Compliance',
+        description: 'DPA, BAA, SOC 2',
+        icon: ShieldCheck,
+        type: 'navigation',
+        shortcut: 'G C',
+        keywords: ['compliance', 'dpa', 'baa', 'soc2', 'hipaa', 'gdpr'],
+        action: () => {
+          onOrgNavigate?.('settings/compliance')
           onOpenChange(false)
         },
       },
@@ -977,6 +991,7 @@ export function CommandCenter({
               { keys: ['G', 'D'], description: 'Go to Domains' },
               { keys: ['G', 'M'], description: 'Go to Members' },
               { keys: ['G', 'B'], description: 'Go to Billing' },
+              { keys: ['G', 'C'], description: 'Go to Compliance' },
             ],
           },
           {

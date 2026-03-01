@@ -82,6 +82,12 @@ import { Route as PublicProjectsProjectIdAuthTeamsRouteImport } from './routes/_
 import { Route as PublicProjectsProjectIdAuthSettingsRouteImport } from './routes/_public/projects.$projectId.auth.settings'
 import { Route as PublicProjectsProjectIdAuthSecurityRouteImport } from './routes/_public/projects.$projectId.auth.security'
 import { Route as PublicProjectsProjectIdAnalyticsWebsiteIdRouteImport } from './routes/_public/projects.$projectId.analytics.$websiteId'
+import { Route as PublicOrganizationsOrgIdSettingsOauthAppsRouteImport } from './routes/_public/organizations.$orgId.settings.oauth-apps'
+import { Route as PublicOrganizationsOrgIdSettingsMembersRouteImport } from './routes/_public/organizations.$orgId.settings.members'
+import { Route as PublicOrganizationsOrgIdSettingsDangerZoneRouteImport } from './routes/_public/organizations.$orgId.settings.danger-zone'
+import { Route as PublicOrganizationsOrgIdSettingsComplianceRouteImport } from './routes/_public/organizations.$orgId.settings.compliance'
+import { Route as PublicOrganizationsOrgIdSettingsBillingRouteImport } from './routes/_public/organizations.$orgId.settings.billing'
+import { Route as PublicOrganizationsOrgIdSettingsApiKeysRouteImport } from './routes/_public/organizations.$orgId.settings.api-keys'
 import { Route as PublicOrganizationsOrgIdDomainsDomainIdRouteImport } from './routes/_public/organizations.$orgId.domains.$domainId'
 import { Route as PublicProjectsProjectIdStorageBucketIdIndexRouteImport } from './routes/_public/projects.$projectId.storage.$bucketId.index'
 import { Route as PublicProjectsProjectIdSitesCreateIndexRouteImport } from './routes/_public/projects.$projectId.sites.create.index'
@@ -585,6 +591,42 @@ const PublicProjectsProjectIdAnalyticsWebsiteIdRoute =
     id: '/$websiteId',
     path: '/$websiteId',
     getParentRoute: () => PublicProjectsProjectIdAnalyticsRoute,
+  } as any)
+const PublicOrganizationsOrgIdSettingsOauthAppsRoute =
+  PublicOrganizationsOrgIdSettingsOauthAppsRouteImport.update({
+    id: '/oauth-apps',
+    path: '/oauth-apps',
+    getParentRoute: () => PublicOrganizationsOrgIdSettingsRoute,
+  } as any)
+const PublicOrganizationsOrgIdSettingsMembersRoute =
+  PublicOrganizationsOrgIdSettingsMembersRouteImport.update({
+    id: '/members',
+    path: '/members',
+    getParentRoute: () => PublicOrganizationsOrgIdSettingsRoute,
+  } as any)
+const PublicOrganizationsOrgIdSettingsDangerZoneRoute =
+  PublicOrganizationsOrgIdSettingsDangerZoneRouteImport.update({
+    id: '/danger-zone',
+    path: '/danger-zone',
+    getParentRoute: () => PublicOrganizationsOrgIdSettingsRoute,
+  } as any)
+const PublicOrganizationsOrgIdSettingsComplianceRoute =
+  PublicOrganizationsOrgIdSettingsComplianceRouteImport.update({
+    id: '/compliance',
+    path: '/compliance',
+    getParentRoute: () => PublicOrganizationsOrgIdSettingsRoute,
+  } as any)
+const PublicOrganizationsOrgIdSettingsBillingRoute =
+  PublicOrganizationsOrgIdSettingsBillingRouteImport.update({
+    id: '/billing',
+    path: '/billing',
+    getParentRoute: () => PublicOrganizationsOrgIdSettingsRoute,
+  } as any)
+const PublicOrganizationsOrgIdSettingsApiKeysRoute =
+  PublicOrganizationsOrgIdSettingsApiKeysRouteImport.update({
+    id: '/api-keys',
+    path: '/api-keys',
+    getParentRoute: () => PublicOrganizationsOrgIdSettingsRoute,
   } as any)
 const PublicOrganizationsOrgIdDomainsDomainIdRoute =
   PublicOrganizationsOrgIdDomainsDomainIdRouteImport.update({
@@ -1166,7 +1208,7 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/change-plan': typeof PublicOrganizationsOrgIdChangePlanRoute
   '/organizations/$orgId/domains': typeof PublicOrganizationsOrgIdDomainsRouteWithChildren
   '/organizations/$orgId/members': typeof PublicOrganizationsOrgIdMembersRoute
-  '/organizations/$orgId/settings': typeof PublicOrganizationsOrgIdSettingsRoute
+  '/organizations/$orgId/settings': typeof PublicOrganizationsOrgIdSettingsRouteWithChildren
   '/organizations/$orgId/support': typeof PublicOrganizationsOrgIdSupportRoute
   '/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
   '/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
@@ -1187,6 +1229,12 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/': typeof PublicOrganizationsOrgIdIndexRoute
   '/projects/$projectId/': typeof PublicProjectsProjectIdIndexRoute
   '/organizations/$orgId/domains/$domainId': typeof PublicOrganizationsOrgIdDomainsDomainIdRouteWithChildren
+  '/organizations/$orgId/settings/api-keys': typeof PublicOrganizationsOrgIdSettingsApiKeysRoute
+  '/organizations/$orgId/settings/billing': typeof PublicOrganizationsOrgIdSettingsBillingRoute
+  '/organizations/$orgId/settings/compliance': typeof PublicOrganizationsOrgIdSettingsComplianceRoute
+  '/organizations/$orgId/settings/danger-zone': typeof PublicOrganizationsOrgIdSettingsDangerZoneRoute
+  '/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
+  '/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/projects/$projectId/analytics/$websiteId': typeof PublicProjectsProjectIdAnalyticsWebsiteIdRoute
   '/projects/$projectId/auth/security': typeof PublicProjectsProjectIdAuthSecurityRoute
   '/projects/$projectId/auth/settings': typeof PublicProjectsProjectIdAuthSettingsRoute
@@ -1320,7 +1368,7 @@ export interface FileRoutesByTo {
   '/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
   '/organizations/$orgId/change-plan': typeof PublicOrganizationsOrgIdChangePlanRoute
   '/organizations/$orgId/members': typeof PublicOrganizationsOrgIdMembersRoute
-  '/organizations/$orgId/settings': typeof PublicOrganizationsOrgIdSettingsRoute
+  '/organizations/$orgId/settings': typeof PublicOrganizationsOrgIdSettingsRouteWithChildren
   '/organizations/$orgId/support': typeof PublicOrganizationsOrgIdSupportRoute
   '/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
   '/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
@@ -1333,6 +1381,12 @@ export interface FileRoutesByTo {
   '/projects/$projectId/usage': typeof PublicProjectsProjectIdUsageRoute
   '/organizations/$orgId': typeof PublicOrganizationsOrgIdIndexRoute
   '/projects/$projectId': typeof PublicProjectsProjectIdIndexRoute
+  '/organizations/$orgId/settings/api-keys': typeof PublicOrganizationsOrgIdSettingsApiKeysRoute
+  '/organizations/$orgId/settings/billing': typeof PublicOrganizationsOrgIdSettingsBillingRoute
+  '/organizations/$orgId/settings/compliance': typeof PublicOrganizationsOrgIdSettingsComplianceRoute
+  '/organizations/$orgId/settings/danger-zone': typeof PublicOrganizationsOrgIdSettingsDangerZoneRoute
+  '/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
+  '/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/projects/$projectId/analytics/$websiteId': typeof PublicProjectsProjectIdAnalyticsWebsiteIdRoute
   '/projects/$projectId/auth/security': typeof PublicProjectsProjectIdAuthSecurityRoute
   '/projects/$projectId/auth/settings': typeof PublicProjectsProjectIdAuthSettingsRoute
@@ -1458,7 +1512,7 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/change-plan': typeof PublicOrganizationsOrgIdChangePlanRoute
   '/_public/organizations/$orgId/domains': typeof PublicOrganizationsOrgIdDomainsRouteWithChildren
   '/_public/organizations/$orgId/members': typeof PublicOrganizationsOrgIdMembersRoute
-  '/_public/organizations/$orgId/settings': typeof PublicOrganizationsOrgIdSettingsRoute
+  '/_public/organizations/$orgId/settings': typeof PublicOrganizationsOrgIdSettingsRouteWithChildren
   '/_public/organizations/$orgId/support': typeof PublicOrganizationsOrgIdSupportRoute
   '/_public/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
   '/_public/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
@@ -1479,6 +1533,12 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/': typeof PublicOrganizationsOrgIdIndexRoute
   '/_public/projects/$projectId/': typeof PublicProjectsProjectIdIndexRoute
   '/_public/organizations/$orgId/domains/$domainId': typeof PublicOrganizationsOrgIdDomainsDomainIdRouteWithChildren
+  '/_public/organizations/$orgId/settings/api-keys': typeof PublicOrganizationsOrgIdSettingsApiKeysRoute
+  '/_public/organizations/$orgId/settings/billing': typeof PublicOrganizationsOrgIdSettingsBillingRoute
+  '/_public/organizations/$orgId/settings/compliance': typeof PublicOrganizationsOrgIdSettingsComplianceRoute
+  '/_public/organizations/$orgId/settings/danger-zone': typeof PublicOrganizationsOrgIdSettingsDangerZoneRoute
+  '/_public/organizations/$orgId/settings/members': typeof PublicOrganizationsOrgIdSettingsMembersRoute
+  '/_public/organizations/$orgId/settings/oauth-apps': typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
   '/_public/projects/$projectId/analytics/$websiteId': typeof PublicProjectsProjectIdAnalyticsWebsiteIdRoute
   '/_public/projects/$projectId/auth/security': typeof PublicProjectsProjectIdAuthSecurityRoute
   '/_public/projects/$projectId/auth/settings': typeof PublicProjectsProjectIdAuthSettingsRoute
@@ -1638,6 +1698,12 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/'
     | '/projects/$projectId/'
     | '/organizations/$orgId/domains/$domainId'
+    | '/organizations/$orgId/settings/api-keys'
+    | '/organizations/$orgId/settings/billing'
+    | '/organizations/$orgId/settings/compliance'
+    | '/organizations/$orgId/settings/danger-zone'
+    | '/organizations/$orgId/settings/members'
+    | '/organizations/$orgId/settings/oauth-apps'
     | '/projects/$projectId/analytics/$websiteId'
     | '/projects/$projectId/auth/security'
     | '/projects/$projectId/auth/settings'
@@ -1784,6 +1850,12 @@ export interface FileRouteTypes {
     | '/projects/$projectId/usage'
     | '/organizations/$orgId'
     | '/projects/$projectId'
+    | '/organizations/$orgId/settings/api-keys'
+    | '/organizations/$orgId/settings/billing'
+    | '/organizations/$orgId/settings/compliance'
+    | '/organizations/$orgId/settings/danger-zone'
+    | '/organizations/$orgId/settings/members'
+    | '/organizations/$orgId/settings/oauth-apps'
     | '/projects/$projectId/analytics/$websiteId'
     | '/projects/$projectId/auth/security'
     | '/projects/$projectId/auth/settings'
@@ -1929,6 +2001,12 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId/'
     | '/_public/projects/$projectId/'
     | '/_public/organizations/$orgId/domains/$domainId'
+    | '/_public/organizations/$orgId/settings/api-keys'
+    | '/_public/organizations/$orgId/settings/billing'
+    | '/_public/organizations/$orgId/settings/compliance'
+    | '/_public/organizations/$orgId/settings/danger-zone'
+    | '/_public/organizations/$orgId/settings/members'
+    | '/_public/organizations/$orgId/settings/oauth-apps'
     | '/_public/projects/$projectId/analytics/$websiteId'
     | '/_public/projects/$projectId/auth/security'
     | '/_public/projects/$projectId/auth/settings'
@@ -2564,6 +2642,48 @@ declare module '@tanstack/react-router' {
       fullPath: '/projects/$projectId/analytics/$websiteId'
       preLoaderRoute: typeof PublicProjectsProjectIdAnalyticsWebsiteIdRouteImport
       parentRoute: typeof PublicProjectsProjectIdAnalyticsRoute
+    }
+    '/_public/organizations/$orgId/settings/oauth-apps': {
+      id: '/_public/organizations/$orgId/settings/oauth-apps'
+      path: '/oauth-apps'
+      fullPath: '/organizations/$orgId/settings/oauth-apps'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsOauthAppsRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdSettingsRoute
+    }
+    '/_public/organizations/$orgId/settings/members': {
+      id: '/_public/organizations/$orgId/settings/members'
+      path: '/members'
+      fullPath: '/organizations/$orgId/settings/members'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsMembersRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdSettingsRoute
+    }
+    '/_public/organizations/$orgId/settings/danger-zone': {
+      id: '/_public/organizations/$orgId/settings/danger-zone'
+      path: '/danger-zone'
+      fullPath: '/organizations/$orgId/settings/danger-zone'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsDangerZoneRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdSettingsRoute
+    }
+    '/_public/organizations/$orgId/settings/compliance': {
+      id: '/_public/organizations/$orgId/settings/compliance'
+      path: '/compliance'
+      fullPath: '/organizations/$orgId/settings/compliance'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsComplianceRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdSettingsRoute
+    }
+    '/_public/organizations/$orgId/settings/billing': {
+      id: '/_public/organizations/$orgId/settings/billing'
+      path: '/billing'
+      fullPath: '/organizations/$orgId/settings/billing'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsBillingRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdSettingsRoute
+    }
+    '/_public/organizations/$orgId/settings/api-keys': {
+      id: '/_public/organizations/$orgId/settings/api-keys'
+      path: '/api-keys'
+      fullPath: '/organizations/$orgId/settings/api-keys'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdSettingsApiKeysRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdSettingsRoute
     }
     '/_public/organizations/$orgId/domains/$domainId': {
       id: '/_public/organizations/$orgId/domains/$domainId'
@@ -3243,12 +3363,42 @@ const PublicOrganizationsOrgIdDomainsRouteWithChildren =
     PublicOrganizationsOrgIdDomainsRouteChildren,
   )
 
+interface PublicOrganizationsOrgIdSettingsRouteChildren {
+  PublicOrganizationsOrgIdSettingsApiKeysRoute: typeof PublicOrganizationsOrgIdSettingsApiKeysRoute
+  PublicOrganizationsOrgIdSettingsBillingRoute: typeof PublicOrganizationsOrgIdSettingsBillingRoute
+  PublicOrganizationsOrgIdSettingsComplianceRoute: typeof PublicOrganizationsOrgIdSettingsComplianceRoute
+  PublicOrganizationsOrgIdSettingsDangerZoneRoute: typeof PublicOrganizationsOrgIdSettingsDangerZoneRoute
+  PublicOrganizationsOrgIdSettingsMembersRoute: typeof PublicOrganizationsOrgIdSettingsMembersRoute
+  PublicOrganizationsOrgIdSettingsOauthAppsRoute: typeof PublicOrganizationsOrgIdSettingsOauthAppsRoute
+}
+
+const PublicOrganizationsOrgIdSettingsRouteChildren: PublicOrganizationsOrgIdSettingsRouteChildren =
+  {
+    PublicOrganizationsOrgIdSettingsApiKeysRoute:
+      PublicOrganizationsOrgIdSettingsApiKeysRoute,
+    PublicOrganizationsOrgIdSettingsBillingRoute:
+      PublicOrganizationsOrgIdSettingsBillingRoute,
+    PublicOrganizationsOrgIdSettingsComplianceRoute:
+      PublicOrganizationsOrgIdSettingsComplianceRoute,
+    PublicOrganizationsOrgIdSettingsDangerZoneRoute:
+      PublicOrganizationsOrgIdSettingsDangerZoneRoute,
+    PublicOrganizationsOrgIdSettingsMembersRoute:
+      PublicOrganizationsOrgIdSettingsMembersRoute,
+    PublicOrganizationsOrgIdSettingsOauthAppsRoute:
+      PublicOrganizationsOrgIdSettingsOauthAppsRoute,
+  }
+
+const PublicOrganizationsOrgIdSettingsRouteWithChildren =
+  PublicOrganizationsOrgIdSettingsRoute._addFileChildren(
+    PublicOrganizationsOrgIdSettingsRouteChildren,
+  )
+
 interface PublicOrganizationsOrgIdRouteChildren {
   PublicOrganizationsOrgIdBillingRoute: typeof PublicOrganizationsOrgIdBillingRoute
   PublicOrganizationsOrgIdChangePlanRoute: typeof PublicOrganizationsOrgIdChangePlanRoute
   PublicOrganizationsOrgIdDomainsRoute: typeof PublicOrganizationsOrgIdDomainsRouteWithChildren
   PublicOrganizationsOrgIdMembersRoute: typeof PublicOrganizationsOrgIdMembersRoute
-  PublicOrganizationsOrgIdSettingsRoute: typeof PublicOrganizationsOrgIdSettingsRoute
+  PublicOrganizationsOrgIdSettingsRoute: typeof PublicOrganizationsOrgIdSettingsRouteWithChildren
   PublicOrganizationsOrgIdSupportRoute: typeof PublicOrganizationsOrgIdSupportRoute
   PublicOrganizationsOrgIdIndexRoute: typeof PublicOrganizationsOrgIdIndexRoute
 }
@@ -3262,7 +3412,7 @@ const PublicOrganizationsOrgIdRouteChildren: PublicOrganizationsOrgIdRouteChildr
       PublicOrganizationsOrgIdDomainsRouteWithChildren,
     PublicOrganizationsOrgIdMembersRoute: PublicOrganizationsOrgIdMembersRoute,
     PublicOrganizationsOrgIdSettingsRoute:
-      PublicOrganizationsOrgIdSettingsRoute,
+      PublicOrganizationsOrgIdSettingsRouteWithChildren,
     PublicOrganizationsOrgIdSupportRoute: PublicOrganizationsOrgIdSupportRoute,
     PublicOrganizationsOrgIdIndexRoute: PublicOrganizationsOrgIdIndexRoute,
   }

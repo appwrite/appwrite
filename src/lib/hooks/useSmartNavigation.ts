@@ -23,8 +23,8 @@ interface UseSmartNavigationOptions {
  *
  * @example
  * ```tsx
- * // With explicit path - always navigates to /organizations/123/billing
- * const goBack = useSmartNavigation({ fallbackPath: '/organizations/123/billing' })
+ * // With explicit path - always navigates to /organizations/123/settings/billing
+ * const goBack = useSmartNavigation({ fallbackPath: '/organizations/123/settings/billing' })
  *
  * // Without explicit path - uses internal console history or root
  * const goBack = useSmartNavigation()

@@ -893,7 +893,7 @@ export function BucketSettings() {
                     onClick={() => {
                       if (orgId) {
                         navigate({
-                          to: '/organizations/$orgId/billing',
+                          to: '/organizations/$orgId/settings/billing',
                           params: { orgId },
                         })
                       }
@@ -991,7 +991,7 @@ export function BucketSettings() {
                       className="h-auto p-0 text-[12px] font-medium underline"
                       onClick={() => {
                         navigate({
-                          to: '/organizations/$orgId/billing',
+                          to: '/organizations/$orgId/settings/billing',
                           params: { orgId },
                         })
                       }}

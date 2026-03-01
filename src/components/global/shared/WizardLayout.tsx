@@ -21,7 +21,7 @@ interface WizardLayoutProps {
   footer?: ReactNode
   /** Handler for close/cancel button (deprecated: use fallbackPath instead) */
   onClose?: () => void
-  /** Fallback path to navigate to if no browser history (e.g., '/organizations/$orgId/billing') */
+  /** Fallback path to navigate to if no browser history (e.g., '/organizations/$orgId/settings/billing') */
   fallbackPath?: string
   /** Whether to render as fullscreen overlay (default: false) */
   fullscreen?: boolean
@@ -58,7 +58,7 @@ interface WizardLayoutProps {
  * <WizardLayout
  *   title="Change Plan"
  *   description="Upgrade or downgrade your organization's billing plan"
- *   fallbackPath="/organizations/$orgId/billing"
+ *   fallbackPath="/organizations/$orgId/settings/billing"
  *   sidebar={<EstimatedTotalBox />}
  *   footerAlign="right"
  *   footer={

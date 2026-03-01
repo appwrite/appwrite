@@ -167,7 +167,7 @@ export function ChangePlanWizardFullscreen() {
           })
           toast.success('Payment confirmed successfully')
           navigate({
-            to: '/organizations/$orgId/billing',
+            to: '/organizations/$orgId/settings/billing',
             params: { orgId: organizationId },
           })
         } catch (error) {
@@ -387,7 +387,7 @@ export function ChangePlanWizardFullscreen() {
 
       // If successful, invalidate and navigate
       toast.success('Plan updated successfully')
-      navigate({ to: '/organizations/$orgId/billing', params: { orgId } })
+      navigate({ to: '/organizations/$orgId/settings/billing', params: { orgId } })
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : 'Failed to update plan',
@@ -430,7 +430,7 @@ export function ChangePlanWizardFullscreen() {
       }
 
       toast.success('Plan updated successfully')
-      navigate({ to: '/organizations/$orgId/billing', params: { orgId } })
+      navigate({ to: '/organizations/$orgId/settings/billing', params: { orgId } })
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : 'Failed to update plan',

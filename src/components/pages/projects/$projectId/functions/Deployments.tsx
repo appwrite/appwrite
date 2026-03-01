@@ -23,6 +23,7 @@ import {
   Package,
   ChevronDown,
   MoreHorizontal,
+  ExternalLink,
 } from 'lucide-react'
 import {
   getDeploymentStatusBadge,
@@ -909,9 +910,10 @@ export function View() {
                             href={`https://${rule.domain}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="block text-[13px] font-mono text-foreground hover:underline"
+                            className="inline-flex items-center gap-1.5 text-[13px] font-mono text-foreground hover:underline"
                           >
                             {rule.domain}
+                            <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
                           </a>
                         ))}
                       </div>

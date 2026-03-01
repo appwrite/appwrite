@@ -80,7 +80,7 @@ export function DeleteAddressModal({
                     {linkedOrganizations.map((org) => (
                       <li key={org.$id}>
                         <Link
-                          to="/organizations/$orgId/billing"
+                          to="/organizations/$orgId/settings/billing"
                           params={{ orgId: org.$id }}
                           className="underline hover:no-underline"
                           onClick={(e) => e.stopPropagation()}
