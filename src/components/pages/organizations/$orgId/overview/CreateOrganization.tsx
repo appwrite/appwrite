@@ -62,7 +62,7 @@ export function CreateOrganizationDialog({
         <DialogHeader className="px-6 pt-6 text-left">
           <DialogTitle>Create organization</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Create a new organization to manage your projects and team members.
+            Create a new organization to manage your projects and organization members.
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />

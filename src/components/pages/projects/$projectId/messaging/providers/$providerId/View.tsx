@@ -298,7 +298,7 @@ export function View() {
             <div className="px-6 py-4">
               <p className="text-[13px] text-muted-foreground">
                 Update your provider's display name. This will be visible to all
-                team members.
+                organization members.
               </p>
               <Input
                 id="provider-name"

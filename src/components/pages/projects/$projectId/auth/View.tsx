@@ -149,6 +149,23 @@ export function View() {
     }
   }, [search?.create, createUserDialogOpen, navigate, location.pathname])
 
+  // Open create team drawer when ?create=team (e.g. from command center)
+  useEffect(() => {
+    if (search?.create === 'team' && !createTeamDialogOpen) {
+      setCreateTeamDialogOpen(true)
+      navigate({
+        to: location.pathname,
+        search: (prev: Record<string, unknown>) => {
+          if (!prev || typeof prev !== 'object') return {}
+          const next = { ...prev }
+          delete next.create
+          return Object.keys(next).length === 0 ? {} : next
+        },
+        replace: true,
+      })
+    }
+  }, [search?.create, createTeamDialogOpen, navigate, location.pathname])
+
   // Pagination state for users (1-indexed for UI)
   const [usersRequestedPage, setUsersRequestedPage] = useState(1)
   const [usersDisplayedPage, setUsersDisplayedPage] = useState(1)

@@ -41,6 +41,8 @@ interface InviteMembersDialogProps {
   organizationId: string
   currentMemberCount: number
   memberLimit: number | null
+  /** Called after invites are successfully sent */
+  onSuccess?: () => void
 }
 
 const ROLE_OPTIONS = [
@@ -82,6 +84,7 @@ export function InviteMembersDialog({
   organizationId,
   currentMemberCount,
   memberLimit,
+  onSuccess,
 }: InviteMembersDialogProps) {
   const queryClient = useQueryClient()
   const { features } = useConsoleProfile()
@@ -156,6 +159,7 @@ export function InviteMembersDialog({
         toast.success(
           `Successfully invited ${successes} member${successes !== 1 ? 's' : ''}`,
         )
+        onSuccess?.()
       }
 
       if (failures > 0) {
@@ -234,7 +238,7 @@ export function InviteMembersDialog({
         <DialogHeader className="px-6 pt-6 text-left">
           <DialogTitle>Invite Members</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Invite team members to your organization. They'll receive an email
+            Invite organization members to your organization. They'll receive an email
             invitation to join.
           </DialogDescription>
         </DialogHeader>

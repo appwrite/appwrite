@@ -609,11 +609,11 @@ export function ChangePlanWizardFullscreen() {
           {selectedPlan === BillingPlanTier.Tier1 && (
             <Alert>
               <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Monthly Charges for Extra Team Members</AlertTitle>
+              <AlertTitle>Monthly Charges for Extra Organization Members</AlertTitle>
               <AlertDescription className="mt-2">
                 {targetPlanInfo?.addons?.seats?.price
-                  ? `You will be charged $${targetPlanInfo.addons.seats.price} per month for each team member beyond the plan limit.`
-                  : 'You will be charged for each team member beyond the plan limit.'}
+                  ? `You will be charged $${targetPlanInfo.addons.seats.price} per month for each organization member beyond the plan limit.`
+                  : 'You will be charged for each organization member beyond the plan limit.'}
               </AlertDescription>
             </Alert>
           )}
@@ -626,7 +626,7 @@ export function ChangePlanWizardFullscreen() {
                 Your plan will change on{' '}
                 {organization?.billingPlanDowngrade?.date ||
                   'the end of your billing period'}
-                . You will lose access to premium features and team members
+                . You will lose access to premium features and organization members
                 beyond the free limit will be removed.
                 <a
                   href="https://appwrite.io/docs/migration"

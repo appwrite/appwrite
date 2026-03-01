@@ -61,6 +61,84 @@ export function KeyboardShortcutsProvider({
     [navigate, projectId],
   )
 
+  const onNavigateToResource = useCallback(
+    (section: string, resourceId: string) => {
+      if (section === 'databases') {
+        navigate({
+          to: '/projects/$projectId/databases/$databaseId',
+          params: { projectId, databaseId: resourceId },
+        })
+      } else if (section === 'auth/users') {
+        navigate({
+          to: '/projects/$projectId/auth/users/$userId',
+          params: { projectId, userId: resourceId },
+        })
+      } else if (section === 'auth/teams') {
+        navigate({
+          to: '/projects/$projectId/auth/teams/$teamId',
+          params: { projectId, teamId: resourceId },
+        })
+      } else if (section === 'storage') {
+        navigate({
+          to: '/projects/$projectId/storage/$bucketId',
+          params: { projectId, bucketId: resourceId },
+        })
+      } else if (section === 'functions') {
+        navigate({
+          to: '/projects/$projectId/functions/$functionId',
+          params: { projectId, functionId: resourceId },
+        })
+      } else if (section === 'sites') {
+        navigate({
+          to: '/projects/$projectId/sites/$siteId',
+          params: { projectId, siteId: resourceId },
+        })
+      }
+    },
+    [navigate, projectId],
+  )
+
+  const onCreateResource = useCallback(
+    (type: 'database' | 'bucket' | 'user' | 'team' | 'function' | 'site') => {
+      if (type === 'database') {
+        navigate({
+          to: '/projects/$projectId/databases',
+          params: { projectId },
+          search: { create: 'database' },
+        })
+      } else if (type === 'bucket') {
+        navigate({
+          to: '/projects/$projectId/storage',
+          params: { projectId },
+          search: { create: 'bucket' },
+        })
+      } else if (type === 'user') {
+        navigate({
+          to: '/projects/$projectId/auth',
+          params: { projectId },
+          search: { create: 'user' },
+        })
+      } else if (type === 'team') {
+        navigate({
+          to: '/projects/$projectId/auth',
+          params: { projectId },
+          search: { create: 'team' },
+        })
+      } else if (type === 'function') {
+        navigate({
+          to: '/projects/$projectId/functions/create',
+          params: { projectId },
+        })
+      } else if (type === 'site') {
+        navigate({
+          to: '/projects/$projectId/sites/create',
+          params: { projectId },
+        })
+      }
+    },
+    [navigate, projectId],
+  )
+
   // Command Center shortcut (Cmd+K / Ctrl+K)
   useKeyboardShortcut('meta+k', () => {
     setCommandCenterOpen(true)
@@ -138,21 +216,24 @@ export function KeyboardShortcutsProvider({
         navigateToSection('settings')
       },
 
-      // Create shortcuts
+      // Create shortcuts (open modal/wizard)
       'c d': () => {
-        navigateToSection('databases')
-      },
-      'c c': () => {
-        navigateToSection('databases')
+        onCreateResource('database')
       },
       'c b': () => {
-        navigateToSection('storage')
+        onCreateResource('bucket')
       },
       'c f': () => {
-        navigateToSection('functions')
+        onCreateResource('function')
+      },
+      'c s': () => {
+        onCreateResource('site')
       },
       'c u': () => {
-        navigateToSection('auth')
+        onCreateResource('user')
+      },
+      'c t': () => {
+        onCreateResource('team')
       },
     },
     { enabled: !commandCenterOpen },
@@ -188,6 +269,8 @@ export function KeyboardShortcutsProvider({
         open={commandCenterOpen}
         onOpenChange={setCommandCenterOpen}
         onNavigate={navigateToSection}
+        onNavigateToResource={onNavigateToResource}
+        onCreateResource={onCreateResource}
         projectId={projectId}
       />
     </KeyboardShortcutsContext.Provider>

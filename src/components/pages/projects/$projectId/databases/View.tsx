@@ -3526,7 +3526,7 @@ export function DatabaseOverview({
                 <div className="px-6 py-4">
                   <p className="text-[13px] text-muted-foreground">
                     Update your database's display name. This will be visible to
-                    all team members.
+                    all organization members.
                   </p>
                   <Input
                     value={databaseName}

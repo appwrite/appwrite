@@ -234,7 +234,7 @@ export function InviteMembersDialog({
         <DialogHeader className="px-6 pt-6 text-left">
           <DialogTitle>Invite Members</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Invite team members to your organization. They'll receive an email
+            Invite organization members to your organization. They'll receive an email
             invitation to join.
           </DialogDescription>
         </DialogHeader>

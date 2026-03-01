@@ -872,7 +872,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   // Update membership role mutation
   const updateRoleMutation = useUpdateMembershipRole(orgId)
 
-  // Remove team member mutation
+  // Remove organization member mutation
   const removeMemberMutation = useRemoveTeamMember(orgId)
 
   // Reset memberships pagination when search query changes
@@ -1080,9 +1080,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               </Tooltip>
             </div>
 
-            {/* Right: Team Avatars + Invite Button */}
+            {/* Right: Organization Member Avatars + Invite Button */}
             <div className="flex shrink-0 items-center gap-3">
-              {/* Stacked Team Member Avatars - Reserve space even when loading */}
+              {/* Stacked Organization Member Avatars - Reserve space even when loading */}
               {selectedOrg && (
                 <div className="flex items-center">
                   {membershipsLoading ? (
@@ -1179,7 +1179,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   <TooltipContent>
                     <p className="text-xs">
                       Your current plan does not support additional members.
-                      Upgrade your plan to invite team members.
+                      Upgrade your plan to invite organization members.
                     </p>
                   </TooltipContent>
                 </Tooltip>
@@ -2339,7 +2339,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                   description={
                                     membershipsSearchQuery
                                       ? undefined
-                                      : 'Invite team members to collaborate on your projects'
+                                      : 'Invite organization members to collaborate on your projects'
                                   }
                                   isEmpty={!membershipsSearchQuery}
                                   hasFilters={!!membershipsSearchQuery}
@@ -2387,7 +2387,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                       <div className="px-6 py-4">
                         <p className="text-[13px] text-muted-foreground">
                           Update your organization's display name. This will be
-                          visible to all team members.
+                          visible to all organization members.
                         </p>
                         <Input
                           value={orgName}
@@ -2647,6 +2647,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         onOpenChange={setCommandCenterOpen}
         context="org"
         onOrgNavigate={handleOrgNavigate}
+        onInviteMember={() => setInviteDialogOpen(true)}
         orgId={orgId}
       />
 
@@ -2658,6 +2659,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           organizationId={orgId}
           currentMemberCount={membershipsTotal}
           memberLimit={memberLimit}
+          onSuccess={() => {
+            if (activeTab !== 'settings' || settingsSubTab !== 'members') {
+              handleOrgNavigate('settings/members')
+            }
+          }}
         />
       )}
 
