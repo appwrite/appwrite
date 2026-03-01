@@ -1893,22 +1893,28 @@ App::get('/v1/users/:userId/mfa/factors')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $userId, Response $response, Database $dbForProject) {
-        $user = $dbForProject->getDocument('users', $userId);
+    $user = $dbForProject->getDocument('users', $userId);
 
-        if ($user->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND);
-        }
+    if ($user->isEmpty()) {
+        throw new Exception(Exception::USER_NOT_FOUND);
+    }
 
-        $totp = TOTP::getAuthenticatorFromUser($user);
+    
+    $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
+    $recoveryCodeEnabled = \is_array($mfaRecoveryCodes) && \count($mfaRecoveryCodes) > 0;
+   
 
-        $factors = new Document([
-            Type::TOTP => $totp !== null && $totp->getAttribute('verified', false),
-            Type::EMAIL => $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false),
-            Type::PHONE => $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false)
-        ]);
+    $totp = TOTP::getAuthenticatorFromUser($user);
 
-        $response->dynamic($factors, Response::MODEL_MFA_FACTORS);
-    });
+    $factors = new Document([
+        Type::TOTP => $totp !== null && $totp->getAttribute('verified', false),
+        Type::EMAIL => $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false),
+        Type::PHONE => $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false),
+        Type::RECOVERY_CODE => $recoveryCodeEnabled
+    ]);
+
+    $response->dynamic($factors, Response::MODEL_MFA_FACTORS);
+});
 
 App::get('/v1/users/:userId/mfa/recovery-codes')
     ->desc('Get MFA recovery codes')
