@@ -307,11 +307,11 @@ class UserTest extends TestCase
         ]);
         $roles = $user->getRoles($this->getAuthorization());
 
-        $this->assertCount(7, $roles);
-        $this->assertNotContains(Role::users()->toString(), $roles);
-        $this->assertNotContains(Role::user(ID::custom('123'))->toString(), $roles);
-        $this->assertNotContains(Role::users(Roles::DIMENSION_VERIFIED)->toString(), $roles);
-        $this->assertNotContains(Role::user(ID::custom('123'), Roles::DIMENSION_VERIFIED)->toString(), $roles);
+        $this->assertCount(11, $roles);
+        $this->assertContains(Role::users()->toString(), $roles);
+        $this->assertContains(Role::user(ID::custom('123'))->toString(), $roles);
+        $this->assertContains(Role::users(Roles::DIMENSION_VERIFIED)->toString(), $roles);
+        $this->assertContains(Role::user(ID::custom('123'), Roles::DIMENSION_VERIFIED)->toString(), $roles);
         $this->assertContains(Role::team(ID::custom('abc'))->toString(), $roles);
         $this->assertContains(Role::team(ID::custom('abc'), 'administrator')->toString(), $roles);
         $this->assertContains(Role::team(ID::custom('abc'), 'moderator')->toString(), $roles);

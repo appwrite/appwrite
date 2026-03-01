@@ -30,7 +30,11 @@ class ColumnList extends Model
                     Response::MODEL_COLUMN_POINT,
                     Response::MODEL_COLUMN_LINE,
                     Response::MODEL_COLUMN_POLYGON,
-                    Response::MODEL_COLUMN_STRING // needs to be last, since its condition would dominate any other string attribute
+                    Response::MODEL_COLUMN_VARCHAR,
+                    Response::MODEL_COLUMN_TEXT,
+                    Response::MODEL_COLUMN_MEDIUMTEXT,
+                    Response::MODEL_COLUMN_LONGTEXT,
+                    Response::MODEL_COLUMN_STRING, // needs to be last, since its condition would dominate any other string attribute
                 ],
                 'description' => 'List of columns.',
                 'default' => [],

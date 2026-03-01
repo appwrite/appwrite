@@ -12,7 +12,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         fetch-depth: 2
 
@@ -20,9 +20,9 @@ jobs:
 
     - name: Validate composer.json and composer.lock
       run: |
-        docker run --rm -v $PWD:/app composer sh -c \
+        docker run --rm -v $PWD:/app composer:2.8 sh -c \
         "composer validate"
     - name: Run Linter
       run: |
-        docker run --rm -v $PWD:/app composer sh -c \
+        docker run --rm -v $PWD:/app composer:2.8 sh -c \
         "composer install --profile --ignore-platform-reqs && composer lint"

@@ -5,7 +5,7 @@ namespace Appwrite\Platform\Modules\Proxy\Http\Rules\Redirect;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Proxy\Http\Rules\Action;
+use Appwrite\Platform\Modules\Proxy\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -65,7 +65,7 @@ class Create extends Action
             ->param('domain', null, new ValidatorDomain(), 'Domain name.')
             ->param('url', null, new URL(), 'Target URL of redirection')
             ->param('statusCode', null, new WhiteList([301, 302, 307, 308]), 'Status code of redirection')
-            ->param('resourceId', '', new UID(), 'ID of parent resource.')
+            ->param('resourceId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'ID of parent resource.', false, ['dbForProject'])
             ->param('resourceType', '', new WhiteList(['site', 'function']), 'Type of parent resource.')
             ->inject('response')
             ->inject('project')
@@ -82,9 +82,6 @@ class Create extends Action
     {
         $this->validateDomainRestrictions($domain, $platform);
 
-        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
-
         $collection = match ($resourceType) {
             'site' => 'sites',
             'function' => 'functions'
@@ -95,14 +92,11 @@ class Create extends Action
         }
 
         // TODO: (@Meldiron) Remove after 1.7.x migration
-        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
+        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5(\strtolower($domain)) : ID::unique();
         $status = RULE_STATUS_CREATED;
         $owner = '';
 
-        if (
-            ($functionsDomain != '' && \str_ends_with($domain, $functionsDomain)) ||
-            ($sitesDomain != '' && \str_ends_with($domain, $sitesDomain))
-        ) {
+        if ($this->isAppwriteOwned($domain)) {
             $status = RULE_STATUS_VERIFIED;
             $owner = 'Appwrite';
         }
@@ -147,6 +141,7 @@ class Create extends Action
                     'domain' => $rule->getAttribute('domain'),
                     'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
                 ]))
+                ->setAction(Certificate::ACTION_GENERATION)
                 ->trigger();
         }
 

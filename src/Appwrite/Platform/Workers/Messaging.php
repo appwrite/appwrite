@@ -4,8 +4,9 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\StatsUsage;
 use Appwrite\Messaging\Status as MessageStatus;
+use libphonenumber\NumberParseException;
+use libphonenumber\PhoneNumberUtil;
 use Swoole\Runtime;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -39,6 +40,7 @@ use Utopia\Messaging\Messages\SMS;
 use Utopia\Messaging\Priority;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
@@ -100,20 +102,29 @@ class Messaging extends Action
 
         $type = $payload['type'] ?? '';
 
-        switch ($type) {
-            case MESSAGE_SEND_TYPE_INTERNAL:
-                $message = new Document($payload['message'] ?? []);
-                $recipients = $payload['recipients'] ?? [];
+        Span::add('message.type', $type);
 
-                $this->sendInternalSMSMessage($message, $project, $recipients, $log);
-                break;
-            case MESSAGE_SEND_TYPE_EXTERNAL:
-                $message = $dbForProject->getDocument('messages', $payload['messageId']);
+        try {
+            switch ($type) {
+                case MESSAGE_SEND_TYPE_INTERNAL:
+                    $message = new Document($payload['message'] ?? []);
+                    $recipients = $payload['recipients'] ?? [];
 
-                $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $project, $queueForStatsUsage);
-                break;
-            default:
-                throw new \Exception('Unknown message type: ' . $type);
+                    $this->sendInternalSMSMessage($message, $project, $recipients, $log);
+                    break;
+                case MESSAGE_SEND_TYPE_EXTERNAL:
+                    $message = $dbForProject->getDocument('messages', $payload['messageId']);
+
+                    $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $project, $queueForStatsUsage);
+                    break;
+                default:
+                    throw new \Exception('Unknown message type: ' . $type);
+            }
+        } catch (\Throwable $e) {
+            Span::error($e);
+            throw $e;
+        } finally {
+            Span::current()?->finish();
         }
     }
 
@@ -178,7 +189,7 @@ class Messaging extends Action
                 'deliveryErrors' => ['No valid recipients found.']
             ]));
 
-            Console::warning('No valid recipients found.');
+            Span::add('message.skipped', 'no_valid_recipients');
             return;
         }
 
@@ -193,7 +204,7 @@ class Messaging extends Action
                 'deliveryErrors' => ['No enabled provider found.']
             ]));
 
-            Console::warning('No enabled provider found.');
+            Span::add('message.skipped', 'no_enabled_provider');
             return;
         }
 
@@ -342,6 +353,9 @@ class Messaging extends Action
             $message->setAttribute('status', MessageStatus::SENT);
         }
 
+        Span::add('message.delivered_total', $deliveredTotal);
+        Span::add('message.errors_total', \count($deliveryErrors));
+
         $message->removeAttribute('to');
 
         foreach ($providers as $provider) {
@@ -392,34 +406,37 @@ class Messaging extends Action
         }
 
         if ($this->adapter === null) {
-            Console::warning('Skipped SMS processing. SMS adapter is not set.');
-            return;
+            throw new \Exception('SMS adapter is not set.');
         }
 
         if ($project->isEmpty()) {
             throw new \Exception('Project not set in payload');
         }
 
-        Console::log('Processing project: ' . $project->getId());
         $denyList = System::getEnv('_APP_SMS_PROJECTS_DENY_LIST', '');
         $denyList = explode(',', $denyList);
         if (\in_array($project->getId(), $denyList)) {
-            Console::error('Project is in the deny list. Skipping...');
+            Span::add('message.skipped', 'project_denied');
             return;
         }
 
         $from = System::getEnv('_APP_SMS_FROM', '');
+        Span::add('message.from', $from);
+
+        try {
+            $phoneNumber = PhoneNumberUtil::getInstance()->parse($recipients[0] ?? '');
+            Span::add('message.country_code', $phoneNumber->getCountryCode());
+        } catch (NumberParseException $e) {
+            Span::add('message.country_code', 'unknown');
+        }
+
         $sms = new SMS(
             $recipients,
             $message->getAttribute('data')['content'],
             $from
         );
 
-        try {
-            $result = $this->adapter->send($sms);
-        } catch (\Throwable $th) {
-            throw new \Exception('Failed sending to targets with error: ' . $th->getMessage());
-        }
+        $this->adapter->send($sms);
     }
 
 
@@ -691,7 +708,6 @@ class Messaging extends Action
     private function createInternalSMSAdapter(): ?SMSAdapter
     {
         if (empty(System::getEnv('_APP_SMS_PROVIDER')) || empty(System::getEnv('_APP_SMS_FROM'))) {
-            Console::warning('Skipped SMS processing. Missing "_APP_SMS_PROVIDER" or "_APP_SMS_FROM" environment variables.');
             return null;
         }
 
@@ -737,13 +753,11 @@ class Messaging extends Action
                 $provider = $this->createProviderFromDSN($localDSN);
                 $adapter = $this->getSmsAdapter($provider);
             } catch (\Exception) {
-                Console::warning('Unable to create adapter: ' . $localDSN->getHost());
                 continue;
             }
 
             $callingCode = $localDSN->getParam('local', '');
             if (empty($callingCode)) {
-                Console::warning('Unable to register adapter: ' . $localDSN->getHost() . '. Missing `local` parameter.');
                 continue;
             }
 

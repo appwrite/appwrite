@@ -5,7 +5,7 @@ namespace Appwrite\Platform\Modules\Proxy\Http\Rules\Verification;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Proxy\Http\Rules\Action;
+use Appwrite\Platform\Modules\Proxy\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -54,7 +54,7 @@ class Update extends Action
                     )
                 ]
             ))
-            ->param('ruleId', '', new UID(), 'Rule ID.')
+            ->param('ruleId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Rule ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('queueForCertificates')
             ->inject('queueForEvents')

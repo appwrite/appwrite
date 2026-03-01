@@ -140,7 +140,16 @@ class AuthTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $gqlPayload);
 
-        sleep(1);
+        $databaseId = $this->database['body']['data']['databasesCreate']['_id'];
+        $collectionId = $this->collection['body']['data']['databasesCreateCollection']['_id'];
+        $this->assertEventually(function () use ($databaseId, $collectionId, $projectId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/name', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
     }
 
     public function testInvalidAuth()
