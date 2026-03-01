@@ -5677,7 +5677,7 @@ function RowsSpreadsheet({
   return (
     <div className="flex h-full flex-col min-h-0">
       {/* Scrollable table area */}
-      <div className="min-h-0 flex-1 overflow-auto overscroll-contain touch-pan-y">
+      <div className="min-h-0 flex-1 overflow-auto overscroll-contain">
         <table className="w-full border-collapse">
           <colgroup>
             <col style={{ width: '40px' }} />
@@ -6955,7 +6955,7 @@ function ColumnsSpreadsheet({
     <div className="flex h-full flex-col relative">
       <div
         className={cn(
-          'flex-1 overflow-auto overscroll-contain touch-pan-y',
+          'flex-1 overflow-auto overscroll-contain',
           suggestedColumns.length > 0 && 'pb-24',
         )}
       >
@@ -7758,7 +7758,7 @@ function IndexesSpreadsheet({
     <div className="flex h-full flex-col relative">
       <div
         className={cn(
-          'flex-1 overflow-y-auto overscroll-contain touch-pan-y',
+          'flex-1 overflow-y-auto overscroll-contain',
           suggestedIndexes.length > 0 && 'pb-24',
         )}
       >
