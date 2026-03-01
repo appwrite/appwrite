@@ -258,6 +258,9 @@ class Resolvers
         ?callable $beforeResolve = null,
         ?callable $beforeReject = null,
     ): void {
+        $response->setStatusCode(Response::STATUS_CODE_OK);
+        $response->setPayload([]);
+
         // Drop json content type so post args are used directly
         if (\str_starts_with($request->getHeader('content-type'), 'application/json')) {
             $request->removeHeader('content-type');
