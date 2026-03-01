@@ -237,7 +237,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 // Reusable table styles for spreadsheet views
 const stickyTheadClass =
-  'sticky top-0 z-20 bg-background shadow-[inset_0_1px_0_0_#d1d5db,inset_0_-1px_0_0_#d1d5db] dark:shadow-[inset_0_1px_0_0_rgb(255_255_255_/_0.1),inset_0_-1px_0_0_rgb(255_255_255_/_0.1)]'
+  'sticky top-0 z-20 bg-background border-t border-b border-border'
 const headerCellBorderClass = 'border-r border-gray-300 dark:border-border'
 const bodyCellBorderClass =
   'border-b border-r border-gray-200 dark:border-border'
