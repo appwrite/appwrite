@@ -209,33 +209,37 @@ function createDatabase(App $app, string $resourceKey, string $dbName, array $co
             continue;
         }
 
-        if (!$database->getCollection($key)->isEmpty()) {
-            continue;
+        try {
+            if (!$database->getCollection($key)->isEmpty()) {
+                continue;
+            }
+
+            Console::info("    └── Creating collection: {$collection['$id']}...");
+
+            $attributes = array_map(fn ($attr) => new Document([
+                '$id' => ID::custom($attr['$id']),
+                'type' => $attr['type'],
+                'size' => $attr['size'],
+                'required' => $attr['required'],
+                'signed' => $attr['signed'],
+                'array' => $attr['array'],
+                'filters' => $attr['filters'],
+                'default' => $attr['default'] ?? null,
+                'format' => $attr['format'] ?? ''
+            ]), $collection['attributes']);
+
+            $indexes = array_map(fn ($index) => new Document([
+                '$id' => ID::custom($index['$id']),
+                'type' => $index['type'],
+                'attributes' => $index['attributes'],
+                'lengths' => $index['lengths'],
+                'orders' => $index['orders'],
+            ]), $collection['indexes']);
+
+            $database->createCollection($key, $attributes, $indexes);
+        } catch (\Exception $e) {
+            Console::warning("    └── Failed to create collection '{$key}': " . $e->getMessage());
         }
-
-        Console::info("    └── Creating collection: {$collection['$id']}...");
-
-        $attributes = array_map(fn ($attr) => new Document([
-            '$id' => ID::custom($attr['$id']),
-            'type' => $attr['type'],
-            'size' => $attr['size'],
-            'required' => $attr['required'],
-            'signed' => $attr['signed'],
-            'array' => $attr['array'],
-            'filters' => $attr['filters'],
-            'default' => $attr['default'] ?? null,
-            'format' => $attr['format'] ?? ''
-        ]), $collection['attributes']);
-
-        $indexes = array_map(fn ($index) => new Document([
-            '$id' => ID::custom($index['$id']),
-            'type' => $index['type'],
-            'attributes' => $index['attributes'],
-            'lengths' => $index['lengths'],
-            'orders' => $index['orders'],
-        ]), $collection['indexes']);
-
-        $database->createCollection($key, $attributes, $indexes);
     }
 
     if ($extraSetup) {
