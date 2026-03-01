@@ -9,6 +9,7 @@ import {
   AlertCircle,
   Search,
   Plus,
+  ShoppingCart,
 } from 'lucide-react'
 import { useOrganizationDomains } from '@/lib/react-query/hooks'
 import { ResourceCard } from '@/components/pages/projects/$projectId/shared/ResourceCard'
@@ -293,9 +294,18 @@ export function View() {
         </div>
         <div className="ml-auto flex items-center gap-2">
           <ViewToggle />
+          <Button variant="outline" asChild className="h-9 gap-1.5 text-[13px] font-medium">
+            <Link
+              to="/organizations/$orgId/domains/buy"
+              params={{ orgId: orgId! }}
+            >
+              <ShoppingCart className="h-4 w-4" />
+              Buy domain
+            </Link>
+          </Button>
           <Button
             onClick={() => setCreateDialogOpen(true)}
-            className="h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90"
+            className="h-9 gap-1.5 text-[13px] font-medium text-white hover:opacity-90"
             style={{ backgroundColor: '#f02e65' }}
           >
             <Plus className="h-4 w-4" />

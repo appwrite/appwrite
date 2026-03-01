@@ -94,9 +94,19 @@ function OrganizationLayout() {
       match.routeId.startsWith('/_public/organizations/$orgId/support'),
   )
 
+  // Check if we're on the buy domain route (fullscreen wizard)
+  const isBuyDomainRoute = matches.some(
+    (match) =>
+      match.routeId?.includes('/domains/buy') ||
+      match.routeId === '/_public/organizations/$orgId/domains/buy',
+  )
+
   return (
     <RequireAuth>
-      {isDomainDetailRoute || isChangePlanRoute || isSupportRoute ? (
+      {isDomainDetailRoute ||
+      isChangePlanRoute ||
+      isSupportRoute ||
+      isBuyDomainRoute ? (
         // For domain detail, change-plan, and support routes, render outlet directly (they have their own layout)
         <Outlet />
       ) : (
