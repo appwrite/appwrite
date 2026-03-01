@@ -472,7 +472,7 @@ function CreateMembershipDialog({
   }
 
   const handleSubmit = () => {
-    if (!email.trim() || roles.length === 0) {
+    if (!email.trim()) {
       return
     }
     onSubmit({ email: email.trim(), name: name.trim() || undefined, roles })
@@ -515,9 +515,7 @@ function CreateMembershipDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="roles">
-                Roles <span className="text-destructive">*</span>
-              </Label>
+              <Label htmlFor="roles">Roles</Label>
               <div className="space-y-2">
                 <div className="flex gap-2">
                   <Input
@@ -592,7 +590,7 @@ function CreateMembershipDialog({
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={!email.trim() || roles.length === 0 || isLoading}
+            disabled={!email.trim() || isLoading}
           >
             Create
           </Button>

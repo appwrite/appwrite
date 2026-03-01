@@ -7,7 +7,7 @@ export const Route = createFileRoute(
   '/_public/organizations/$orgId/settings/compliance',
 )({
   beforeLoad: ({ params }) => {
-    if (!getActiveProfileFeatures().orgCloudSettings) {
+    if (!getActiveProfileFeatures().compliance) {
       throw redirect({
         to: '/organizations/$orgId/settings',
         params: { orgId: params.orgId },

@@ -166,8 +166,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         label: 'Cloud',
         description: 'Full feature set (billing, domains, usage, activity, org roles, system status, account MFA, account identities)',
         onClick: () => {
-          setDebugProfileOverride('cloud')
           setIsOpen(false)
+          // Defer profile change so popover unmounts before app re-renders (avoids removeChild DOM error)
+          setTimeout(() => setDebugProfileOverride('cloud'), 0)
         },
         active: profileId === 'cloud',
         icon: <Cloud className="h-3 w-3" />,
@@ -176,8 +177,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         label: 'Self-hosted',
         description: 'Cloud-only features disabled',
         onClick: () => {
-          setDebugProfileOverride('self-hosted')
           setIsOpen(false)
+          setTimeout(() => setDebugProfileOverride('self-hosted'), 0)
         },
         active: profileId === 'self-hosted',
         icon: <Server className="h-3 w-3" />,
@@ -186,8 +187,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         label: 'Use env var',
         description: 'Reset to VITE_CONSOLE_PROFILE',
         onClick: () => {
-          setDebugProfileOverride(null)
           setIsOpen(false)
+          setTimeout(() => setDebugProfileOverride(null), 0)
         },
         icon: <RotateCcw className="h-3 w-3" />,
       },

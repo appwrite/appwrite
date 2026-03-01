@@ -245,23 +245,19 @@ export function CommandCenter({
             },
           ]
         : []),
-      ...(features.orgRoles
-        ? [
-            {
-              id: 'nav-members',
-              label: 'Go to Members',
-              description: 'Team members and roles',
-              icon: Users,
-              type: 'navigation' as const,
-              shortcut: 'G M',
-              keywords: ['team', 'users', 'roles', 'permissions'],
-              action: () => {
-                onOrgNavigate?.('settings/members')
-                onOpenChange(false)
-              },
-            },
-          ]
-        : []),
+      {
+        id: 'nav-members',
+        label: 'Go to Members',
+        description: 'Team members and roles',
+        icon: Users,
+        type: 'navigation' as const,
+        shortcut: 'G M',
+        keywords: ['team', 'users', 'roles', 'permissions'],
+        action: () => {
+          onOrgNavigate?.('settings/members')
+          onOpenChange(false)
+        },
+      },
       ...(features.billing
         ? [
             {
@@ -279,7 +275,7 @@ export function CommandCenter({
             },
           ]
         : []),
-      ...(features.orgCloudSettings
+      ...(features.compliance
         ? [
             {
               id: 'nav-compliance',
@@ -297,7 +293,7 @@ export function CommandCenter({
           ]
         : []),
     ],
-    [onOrgNavigate, onOpenChange, features.domains, features.orgRoles, features.billing, features.orgCloudSettings],
+    [onOrgNavigate, onOpenChange, features.domains, features.billing, features.compliance],
   )
 
   // Organization create commands

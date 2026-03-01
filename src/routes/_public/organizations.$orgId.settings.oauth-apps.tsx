@@ -7,7 +7,7 @@ export const Route = createFileRoute(
   '/_public/organizations/$orgId/settings/oauth-apps',
 )({
   beforeLoad: ({ params }) => {
-    if (!getActiveProfileFeatures().orgCloudSettings) {
+    if (!getActiveProfileFeatures().oauthApps) {
       throw redirect({
         to: '/organizations/$orgId/settings',
         params: { orgId: params.orgId },

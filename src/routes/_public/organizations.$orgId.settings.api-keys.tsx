@@ -7,7 +7,7 @@ export const Route = createFileRoute(
   '/_public/organizations/$orgId/settings/api-keys',
 )({
   beforeLoad: ({ params }) => {
-    if (!getActiveProfileFeatures().orgCloudSettings) {
+    if (!getActiveProfileFeatures().orgApiKeys) {
       throw redirect({
         to: '/organizations/$orgId/settings',
         params: { orgId: params.orgId },

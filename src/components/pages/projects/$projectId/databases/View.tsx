@@ -106,6 +106,7 @@ import {
   getClaudeDeepLink,
 } from '@/lib/utils/database-schema-export'
 import { useDebugMode } from '@/components/global/providers/DebugMode'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import type { Models } from '@appwrite.io/console'
 
 /** Database list item: API may return extra backup/createdAt fields */
@@ -336,6 +337,8 @@ export function View() {
   const isCreateDisabled =
     databasesLimit > 0 && totalDatabasesCount >= databasesLimit
 
+  const { features } = useConsoleProfile()
+
   // Clear selection when navigating or when search changes
   useEffect(() => {
     setSelectedDatabases(new Set())
@@ -529,9 +532,11 @@ export function View() {
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
                         Status
                       </TableHead>
-                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
-                        Backups
-                      </TableHead>
+                      {features.databaseBackups && (
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
+                          Backups
+                        </TableHead>
+                      )}
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
                         Created
                       </TableHead>
@@ -630,31 +635,33 @@ export function View() {
                               )}
                             </div>
                           </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <div className="flex items-center justify-center">
-                              {(db as DatabaseWithBackup).hasBackupPolicy ? (
-                                <Badge
-                                  variant="success"
-                                  className="gap-1.5 text-[11px] font-medium border px-2 py-0.5"
-                                >
-                                  <CheckCircle2 className="h-3 w-3" />
-                                  {(db as DatabaseWithBackup)
-                                    .backupPolicyCount > 0
-                                    ? `${(db as DatabaseWithBackup).backupPolicyCount} ${(db as DatabaseWithBackup).backupPolicyCount === 1 ? 'policy' : 'policies'}`
-                                    : (db as DatabaseWithBackup).backupPolicy
-                                        ?.name || 'Enabled'}
-                                </Badge>
-                              ) : (
-                                <Badge
-                                  variant="warning"
-                                  className="gap-1.5 text-[11px] font-medium border px-2 py-0.5"
-                                >
-                                  <AlertCircle className="h-3 w-3" />
-                                  None
-                                </Badge>
-                              )}
-                            </div>
-                          </TableCell>
+                          {features.databaseBackups && (
+                            <TableCell className="px-4 py-3">
+                              <div className="flex items-center justify-center">
+                                {(db as DatabaseWithBackup).hasBackupPolicy ? (
+                                  <Badge
+                                    variant="success"
+                                    className="gap-1.5 text-[11px] font-medium border px-2 py-0.5"
+                                  >
+                                    <CheckCircle2 className="h-3 w-3" />
+                                    {(db as DatabaseWithBackup)
+                                      .backupPolicyCount > 0
+                                      ? `${(db as DatabaseWithBackup).backupPolicyCount} ${(db as DatabaseWithBackup).backupPolicyCount === 1 ? 'policy' : 'policies'}`
+                                      : (db as DatabaseWithBackup).backupPolicy
+                                          ?.name || 'Enabled'}
+                                  </Badge>
+                                ) : (
+                                  <Badge
+                                    variant="warning"
+                                    className="gap-1.5 text-[11px] font-medium border px-2 py-0.5"
+                                  >
+                                    <AlertCircle className="h-3 w-3" />
+                                    None
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                          )}
                           <TableCell className="px-4 py-3">
                             <Link
                               to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
@@ -751,31 +758,37 @@ export function View() {
                       statusLabel={
                         db.enabled === false ? 'Disabled' : undefined
                       }
-                      metadata={[
-                        {
-                          label: '',
-                          value: (db as DatabaseWithBackup).hasBackupPolicy ? (
-                            <Badge
-                              variant="success"
-                              className="gap-1.5 text-[11px] font-medium"
-                            >
-                              <CheckCircle2 className="h-3 w-3" />
-                              {(db as DatabaseWithBackup).backupPolicyCount > 0
-                                ? `${(db as DatabaseWithBackup).backupPolicyCount} ${(db as DatabaseWithBackup).backupPolicyCount === 1 ? 'policy' : 'policies'}`
-                                : (db as DatabaseWithBackup).backupPolicy
-                                    ?.name || 'Backup Enabled'}
-                            </Badge>
-                          ) : (
-                            <Badge
-                              variant="warning"
-                              className="gap-1.5 text-[11px] font-medium"
-                            >
-                              <AlertCircle className="h-3 w-3" />
-                              No backup policies
-                            </Badge>
-                          ),
-                        },
-                      ]}
+                      metadata={
+                        features.databaseBackups
+                          ? [
+                              {
+                                label: '',
+                                value: (db as DatabaseWithBackup)
+                                  .hasBackupPolicy ? (
+                                  <Badge
+                                    variant="success"
+                                    className="gap-1.5 text-[11px] font-medium"
+                                  >
+                                    <CheckCircle2 className="h-3 w-3" />
+                                    {(db as DatabaseWithBackup)
+                                      .backupPolicyCount > 0
+                                      ? `${(db as DatabaseWithBackup).backupPolicyCount} ${(db as DatabaseWithBackup).backupPolicyCount === 1 ? 'policy' : 'policies'}`
+                                      : (db as DatabaseWithBackup).backupPolicy
+                                          ?.name || 'Backup Enabled'}
+                                  </Badge>
+                                ) : (
+                                  <Badge
+                                    variant="warning"
+                                    className="gap-1.5 text-[11px] font-medium"
+                                  >
+                                    <AlertCircle className="h-3 w-3" />
+                                    No backup policies
+                                  </Badge>
+                                ),
+                              },
+                            ]
+                          : []
+                      }
                     />
                   </Link>
                 ),
@@ -895,6 +908,7 @@ export function DatabaseDetailLayout({
   })
   const navigate = useNavigate()
   const [tablesExpanded, setTablesExpanded] = useState(true)
+  const { features } = useConsoleProfile()
 
   const database = databases.find((db) => db.$id === databaseId)
   const dbTables = collections.filter((c) => c.databaseId === databaseId)
@@ -1036,24 +1050,28 @@ export function DatabaseDetailLayout({
             <span className="text-[13px]">Security</span>
           </Link>
 
-          {/* Insights Link - Coming Soon */}
-          <span className="flex w-full cursor-not-allowed items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground/50">
-            <BarChart3 className="h-3.5 w-3.5 shrink-0" />
-            <span className="flex-1 text-[13px]">Insights</span>
-            <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-              Soon
-            </span>
-          </span>
-
-          {/* Backups Link */}
-          <Link
-            to="/projects/$projectId/databases/$databaseId/backups"
-            params={{ projectId, databaseId }}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
-          >
-            <Archive className="h-3.5 w-3.5 shrink-0" />
-            <span className="text-[13px]">Backups</span>
-          </Link>
+          {features.databaseInsights && (
+            <>
+              {/* Insights Link - Coming Soon */}
+              <span className="flex w-full cursor-not-allowed items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground/50">
+                <BarChart3 className="h-3.5 w-3.5 shrink-0" />
+                <span className="flex-1 text-[13px]">Insights</span>
+                <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                  Soon
+                </span>
+              </span>
+            </>
+          )}
+          {features.databaseBackups && (
+            <Link
+              to="/projects/$projectId/databases/$databaseId/backups"
+              params={{ projectId, databaseId }}
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+            >
+              <Archive className="h-3.5 w-3.5 shrink-0" />
+              <span className="text-[13px]">Backups</span>
+            </Link>
+          )}
 
           {/* Settings Link */}
           <Link
@@ -1148,6 +1166,7 @@ export function TableView({
   const navigate = useNavigate()
   const isDatabaseLevelView = tableId === '-' || databaseTab != null
   const { isDebugModeOpen } = useDebugMode()
+  const { features } = useConsoleProfile()
 
   // Debug: create 50 random tables (only when debug mode is open and on tables list)
   const createFiftyTablesMutation = useMutation({
@@ -1792,32 +1811,36 @@ export function TableView({
             <Lock className="h-3.5 w-3.5 shrink-0" />
             <span>Security</span>
           </Link>
-          <Link
-            to="/projects/$projectId/databases/$databaseId/tables/$tableId/insights"
-            params={{ projectId, databaseId, tableId }}
-            className={cn(
-              'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
-              databaseTab === 'insights'
-                ? 'bg-accent text-foreground'
-                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-            )}
-          >
-            <BarChart3 className="h-3.5 w-3.5 shrink-0" />
-            <span>Insights</span>
-          </Link>
-          <Link
-            to="/projects/$projectId/databases/$databaseId/tables/$tableId/backups"
-            params={{ projectId, databaseId, tableId }}
-            className={cn(
-              'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
-              databaseTab === 'backups'
-                ? 'bg-accent text-foreground'
-                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-            )}
-          >
-            <Archive className="h-3.5 w-3.5 shrink-0" />
-            <span>Backups</span>
-          </Link>
+          {features.databaseInsights && (
+            <Link
+              to="/projects/$projectId/databases/$databaseId/tables/$tableId/insights"
+              params={{ projectId, databaseId, tableId }}
+              className={cn(
+                  'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
+                  databaseTab === 'insights'
+                    ? 'bg-accent text-foreground'
+                    : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+                )}
+            >
+              <BarChart3 className="h-3.5 w-3.5 shrink-0" />
+              <span>Insights</span>
+            </Link>
+          )}
+          {features.databaseBackups && (
+            <Link
+              to="/projects/$projectId/databases/$databaseId/tables/$tableId/backups"
+              params={{ projectId, databaseId, tableId }}
+              className={cn(
+                  'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
+                  databaseTab === 'backups'
+                    ? 'bg-accent text-foreground'
+                    : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+                )}
+              >
+                <Archive className="h-3.5 w-3.5 shrink-0" />
+              <span>Backups</span>
+            </Link>
+          )}
           <Link
             to="/projects/$projectId/databases/$databaseId/tables/$tableId/export-import"
             params={{ projectId, databaseId, tableId }}
@@ -2197,6 +2220,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [tablesExpanded, setTablesExpanded] = useState(true)
+  const { features } = useConsoleProfile()
   const [createTableDialogOpen, setCreateTableDialogOpen] = useState(false)
 
   const database = databases.find((db) => db.$id === databaseId)
@@ -2304,24 +2328,28 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
             <span className="text-[13px]">Security</span>
           </Link>
 
-          {/* Insights Link - Coming Soon */}
-          <span className="flex w-full cursor-not-allowed items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground/50">
-            <BarChart3 className="h-3.5 w-3.5 shrink-0" />
-            <span className="flex-1 text-[13px]">Insights</span>
-            <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-              Soon
-            </span>
-          </span>
-
-          {/* Backups Link */}
-          <Link
-            to="/projects/$projectId/databases/$databaseId/backups"
-            params={{ projectId, databaseId }}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
-          >
-            <Archive className="h-3.5 w-3.5 shrink-0" />
-            <span className="text-[13px]">Backups</span>
-          </Link>
+          {features.databaseInsights && (
+            <>
+              {/* Insights Link - Coming Soon */}
+              <span className="flex w-full cursor-not-allowed items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground/50">
+                <BarChart3 className="h-3.5 w-3.5 shrink-0" />
+                <span className="flex-1 text-[13px]">Insights</span>
+                <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                  Soon
+                </span>
+              </span>
+            </>
+          )}
+          {features.databaseBackups && (
+            <Link
+              to="/projects/$projectId/databases/$databaseId/backups"
+              params={{ projectId, databaseId }}
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+            >
+              <Archive className="h-3.5 w-3.5 shrink-0" />
+              <span className="text-[13px]">Backups</span>
+            </Link>
+          )}
 
           {/* Settings Link */}
           <Link
@@ -2718,50 +2746,85 @@ export function DatabaseOverview({
     })
   }
 
-  const databaseTabs: Tab[] = [
-    {
-      id: 'tables',
-      label: 'Tables',
-      to: '/projects/$projectId/databases/$databaseId/',
-      params: { projectId, databaseId },
-    },
-    {
-      id: 'visualizer',
-      label: 'Visualizer',
-      to: '/projects/$projectId/databases/$databaseId/visualizer',
-      params: { projectId, databaseId },
-    },
-    {
-      id: 'security',
-      label: 'Security',
-      to: '/projects/$projectId/databases/$databaseId/security',
-      params: { projectId, databaseId },
-    },
-    {
-      id: 'insights',
-      label: 'Insights',
-      to: '/projects/$projectId/databases/$databaseId/insights',
-      params: { projectId, databaseId },
-    },
-    {
-      id: 'backups',
-      label: 'Backups',
-      to: '/projects/$projectId/databases/$databaseId/backups',
-      params: { projectId, databaseId },
-    },
-    {
-      id: 'export-import',
-      label: 'Export / Import',
-      to: '/projects/$projectId/databases/$databaseId/export-import',
-      params: { projectId, databaseId },
-    },
-    {
-      id: 'settings',
-      label: 'Settings',
-      to: '/projects/$projectId/databases/$databaseId/settings',
-      params: { projectId, databaseId },
-    },
-  ]
+  const { features } = useConsoleProfile()
+
+  // Redirect from backups/insights when feature disabled
+  useEffect(() => {
+    if (
+      (activeTab === 'backups' && !features.databaseBackups) ||
+      (activeTab === 'insights' && !features.databaseInsights)
+    ) {
+      navigate({
+        to: '/projects/$projectId/databases/$databaseId',
+        params: { projectId, databaseId },
+        replace: true,
+      })
+    }
+  }, [
+    activeTab,
+    features.databaseBackups,
+    features.databaseInsights,
+    projectId,
+    databaseId,
+    navigate,
+  ])
+
+  const databaseTabs: Tab[] = useMemo(
+    () =>
+      [
+        {
+          id: 'tables',
+          label: 'Tables',
+          to: '/projects/$projectId/databases/$databaseId/',
+          params: { projectId, databaseId },
+        },
+        {
+          id: 'visualizer',
+          label: 'Visualizer',
+          to: '/projects/$projectId/databases/$databaseId/visualizer',
+          params: { projectId, databaseId },
+        },
+        {
+          id: 'security',
+          label: 'Security',
+          to: '/projects/$projectId/databases/$databaseId/security',
+          params: { projectId, databaseId },
+        },
+        ...(features.databaseInsights
+          ? [
+              {
+                id: 'insights' as const,
+                label: 'Insights',
+                to: '/projects/$projectId/databases/$databaseId/insights',
+                params: { projectId, databaseId },
+              },
+            ]
+          : []),
+        ...(features.databaseBackups
+          ? [
+              {
+                id: 'backups' as const,
+                label: 'Backups',
+                to: '/projects/$projectId/databases/$databaseId/backups',
+                params: { projectId, databaseId },
+              },
+            ]
+          : []),
+        {
+          id: 'export-import',
+          label: 'Export / Import',
+          to: '/projects/$projectId/databases/$databaseId/export-import',
+          params: { projectId, databaseId },
+        },
+        {
+          id: 'settings',
+          label: 'Settings',
+          to: '/projects/$projectId/databases/$databaseId/settings',
+          params: { projectId, databaseId },
+        },
+      ] as Tab[],
+    [projectId, databaseId, features.databaseBackups, features.databaseInsights],
+  )
 
   // Tables are already paginated by the API
   const paginatedTables = dbTables

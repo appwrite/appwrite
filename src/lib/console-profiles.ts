@@ -17,7 +17,7 @@ export type ConsoleProfileFeatures = {
   usageStats: boolean
   /** Activity logs and audit trail */
   activity: boolean
-  /** Organization members and role management (owner, developer, editor, analyst, billing) */
+  /** Organization role selection (developer, editor, analyst, billing). When false, all members are owners and role UI is hidden. */
   orgRoles: boolean
   /** Appwrite Cloud system status (status.appwrite.online) */
   systemStatus: boolean
@@ -25,10 +25,18 @@ export type ConsoleProfileFeatures = {
   accountMfa: boolean
   /** Console account identities (OAuth providers linked to the account) */
   accountIdentities: boolean
-  /** Organization compliance, OAuth apps, and org API keys (cloud only) */
-  orgCloudSettings: boolean
+  /** Organization compliance (DPA, BAA, SOC 2) */
+  compliance: boolean
+  /** Organization OAuth apps */
+  oauthApps: boolean
+  /** Organization API keys */
+  orgApiKeys: boolean
   /** In-app AI assistant chat panel and header button */
   aiAssistant: boolean
+  /** Database backup policies and archives */
+  databaseBackups: boolean
+  /** Database analytics and insights */
+  databaseInsights: boolean
 }
 
 export type ConsoleProfile = {
@@ -52,8 +60,12 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       systemStatus: true,
       accountMfa: true,
       accountIdentities: true,
-      orgCloudSettings: true,
+      compliance: true,
+      oauthApps: true,
+      orgApiKeys: true,
       aiAssistant: true,
+      databaseBackups: true,
+      databaseInsights: true,
     },
   },
   'self-hosted': {
@@ -69,8 +81,12 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       systemStatus: false,
       accountMfa: false,
       accountIdentities: false,
-      orgCloudSettings: false,
+      compliance: false,
+      oauthApps: false,
+      orgApiKeys: false,
       aiAssistant: false,
+      databaseBackups: false,
+      databaseInsights: false,
     },
   },
 }

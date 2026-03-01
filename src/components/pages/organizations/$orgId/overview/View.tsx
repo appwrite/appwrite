@@ -364,21 +364,16 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
   // Redirect from disabled settings sub-tabs
   useEffect(() => {
-    if (settingsSubTab === 'members' && !features.orgRoles) {
-      navigate({
-        to: '/organizations/$orgId/settings',
-        params: { orgId: orgId! },
-        replace: true,
-      })
-    } else if (settingsSubTab === 'billing' && !features.billing) {
+    if (settingsSubTab === 'billing' && !features.billing) {
       navigate({
         to: '/organizations/$orgId/settings',
         params: { orgId: orgId! },
         replace: true,
       })
     } else if (
-      ['compliance', 'oauth-apps', 'api-keys'].includes(settingsSubTab) &&
-      !features.orgCloudSettings
+      (settingsSubTab === 'compliance' && !features.compliance) ||
+      (settingsSubTab === 'oauth-apps' && !features.oauthApps) ||
+      (settingsSubTab === 'api-keys' && !features.orgApiKeys)
     ) {
       navigate({
         to: '/organizations/$orgId/settings',
@@ -388,9 +383,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     }
   }, [
     settingsSubTab,
-    features.orgRoles,
     features.billing,
-    features.orgCloudSettings,
+    features.compliance,
+    features.oauthApps,
+    features.orgApiKeys,
     orgId,
     navigate,
   ])
@@ -1084,8 +1080,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               </Tooltip>
             </div>
 
-            {/* Right: Team Avatars + Invite Button (orgRoles only) */}
-            {features.orgRoles && (
+            {/* Right: Team Avatars + Invite Button */}
             <div className="flex shrink-0 items-center gap-3">
               {/* Stacked Team Member Avatars - Reserve space even when loading */}
               {selectedOrg && (
@@ -1190,7 +1185,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 </Tooltip>
               )}
             </div>
-            )}
           </div>
 
           {/* Tabs Row */}
@@ -1631,22 +1625,18 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                             'delete',
                           ],
                         },
-                        ...(features.orgRoles
-                          ? [
-                              {
-                                id: 'members' as const,
-                                label: 'Members',
-                                to: '/organizations/$orgId/settings/members' as const,
-                                icon: Users,
-                                keywords: [
-                                  'members',
-                                  'team',
-                                  'invite',
-                                  'roles',
-                                ],
-                              },
-                            ]
-                          : []),
+                        {
+                          id: 'members' as const,
+                          label: 'Members',
+                          to: '/organizations/$orgId/settings/members' as const,
+                          icon: Users,
+                          keywords: [
+                            'members',
+                            'team',
+                            'invite',
+                            'roles',
+                          ],
+                        },
                         ...(features.billing
                           ? [
                               {
@@ -1663,7 +1653,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               },
                             ]
                           : []),
-                        ...(features.orgCloudSettings
+                        ...(features.compliance
                           ? [
                               {
                                 id: 'compliance' as const,
@@ -1679,6 +1669,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                   'gdpr',
                                 ],
                               },
+                            ]
+                          : []),
+                        ...(features.oauthApps
+                          ? [
                               {
                                 id: 'oauth-apps' as const,
                                 label: 'OAuth apps',
@@ -1686,6 +1680,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                 icon: KeyRound,
                                 keywords: ['oauth', 'sso', 'apps', 'login'],
                               },
+                            ]
+                          : []),
+                        ...(features.orgApiKeys
+                          ? [
                               {
                                 id: 'api-keys' as const,
                                 label: 'API keys',
@@ -2052,12 +2050,16 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                                             Member
                                           </TableHead>
+                                          {features.orgRoles && (
                                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
                                             Role
                                           </TableHead>
+                                          )}
+                                          {features.accountMfa && (
                                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center hidden sm:table-cell">
                                             MFA
                                           </TableHead>
+                                          )}
                                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right hidden sm:table-cell">
                                             Joined
                                           </TableHead>
@@ -2104,6 +2106,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                 </div>
                                               </div>
                                             </TableCell>
+                                            {features.orgRoles && (
                                             <TableCell className="px-4 py-3">
                                               <div className="flex items-center justify-center">
                                                 <Badge
@@ -2122,6 +2125,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                 </Badge>
                                               </div>
                                             </TableCell>
+                                            )}
+                                            {features.accountMfa && (
                                             <TableCell className="px-4 py-3 hidden sm:table-cell">
                                               <div className="flex items-center justify-center">
                                                 {member.status ===
@@ -2161,6 +2166,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                 )}
                                               </div>
                                             </TableCell>
+                                            )}
                                             <TableCell className="px-4 py-3 hidden sm:table-cell">
                                               <div className="text-right">
                                                 {member.status ===
@@ -2260,28 +2266,32 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                       align="end"
                                                       className="w-48"
                                                     >
-                                                      <DropdownMenuItem
-                                                        onClick={() => {
-                                                          setSelectedMember(
-                                                            member,
-                                                          )
-                                                          const role =
-                                                            member.role as
-                                                              | 'owner'
-                                                              | 'developer'
-                                                              | 'editor'
-                                                              | 'analyst'
-                                                              | 'billing'
-                                                          setSelectedRole(role)
-                                                          setUpdateRoleDialogOpen(
-                                                            true,
-                                                          )
-                                                        }}
-                                                      >
-                                                        <UserCog className="mr-2 h-4 w-4" />
-                                                        Update role
-                                                      </DropdownMenuItem>
-                                                      <DropdownMenuSeparator />
+                                                      {features.orgRoles && (
+                                                        <>
+                                                          <DropdownMenuItem
+                                                            onClick={() => {
+                                                              setSelectedMember(
+                                                                member,
+                                                              )
+                                                              const role =
+                                                                member.role as
+                                                                  | 'owner'
+                                                                  | 'developer'
+                                                                  | 'editor'
+                                                                  | 'analyst'
+                                                                  | 'billing'
+                                                              setSelectedRole(role)
+                                                              setUpdateRoleDialogOpen(
+                                                                true,
+                                                              )
+                                                            }}
+                                                          >
+                                                            <UserCog className="mr-2 h-4 w-4" />
+                                                            Update role
+                                                          </DropdownMenuItem>
+                                                          <DropdownMenuSeparator />
+                                                        </>
+                                                      )}
                                                       <DropdownMenuItem
                                                         onClick={() => {
                                                           setSelectedMember(

@@ -100,8 +100,6 @@ export function AIChatPanel() {
   const { isOpen, closeChat, messages, isLoading, setMessages, setIsLoading } =
     useAIChat()
   const [input, setInput] = useState('')
-
-  if (!features.aiAssistant) return null
   const [width, setWidth] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem(STORAGE_KEY)
@@ -174,6 +172,8 @@ export function AIChatPanel() {
       document.body.style.userSelect = ''
     }
   }, [isResizing])
+
+  if (!features.aiAssistant) return null
 
   const handleSend = async (content: string = input) => {
     if (!content.trim() || isLoading) return
