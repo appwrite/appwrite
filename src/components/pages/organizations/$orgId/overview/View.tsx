@@ -33,6 +33,9 @@ import {
   Settings,
   X,
   KeyRound,
+  Info,
+  ExternalLink,
+  ChevronRight,
 } from '@/lib/icons'
 import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
 import { RegionFlag } from '@/components/global/shared/RegionFlag'
@@ -215,6 +218,8 @@ function ProjectCardFooter({
     </div>
   )
 }
+
+import { ProjectSelector } from '@/components/global/shared/ProjectSelector'
 
 interface OrgOverviewProps {
   tab?: 'projects' | 'domains' | 'settings'
@@ -1761,7 +1766,151 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                       ) : settingsSubTab === 'oauth-apps' ? (
                         <ComingSoonView title="OAuth apps" comingSoon />
                       ) : settingsSubTab === 'api-keys' ? (
-                        <ComingSoonView title="API keys" comingSoon />
+                        <div className="mx-auto w-full max-w-4xl space-y-6 px-4 pb-4 sm:px-6 sm:pb-6">
+                          <div>
+                            <h2 className="text-[15px] font-semibold text-foreground">
+                              API key types
+                            </h2>
+                            <p className="mt-1 text-[13px] text-muted-foreground">
+                              Keys apply at different levels. Each key has its
+                              own permissions (scopes) to control access.
+                            </p>
+                          </div>
+                          <div className="grid gap-4 sm:grid-cols-3">
+                            {/* Project keys */}
+                            <div className="rounded-xl border border-border bg-card/50 overflow-hidden transition-colors hover:border-border/80">
+                              <div className="px-4 py-3">
+                                <Badge
+                                  variant="secondary"
+                                  className="mb-2 font-mono text-[10px]"
+                                >
+                                  project
+                                </Badge>
+                                <h3 className="text-[13px] font-semibold text-foreground">
+                                  Project keys
+                                </h3>
+                                <p className="mt-1 text-[12px] text-muted-foreground leading-relaxed">
+                                  Databases, storage, users, functions. One
+                                  project per key.
+                                </p>
+                              </div>
+                              <div className="flex min-h-9 w-full items-center border-t border-border px-4 py-3 bg-muted/20">
+                                {activeProjects.length > 0 ? (
+                                  <ProjectSelector
+                                    orgTeamId={orgTeamId}
+                                    getProjectLink={(projectId) => ({
+                                      to: '/projects/$projectId/api-keys',
+                                      params: { projectId },
+                                    })}
+                                    showApiKeysCount
+                                  />
+                                ) : (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-9 w-full justify-between text-[13px] font-normal"
+                                    asChild
+                                  >
+                                    <Link
+                                      to="/organizations/$orgId"
+                                      params={{ orgId: orgId ?? '' }}
+                                      className="inline-flex items-center gap-1.5"
+                                    >
+                                      Create a project first
+                                      <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+                                    </Link>
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                            {/* Account scope */}
+                            <div className="rounded-xl border border-border bg-card/50 overflow-hidden transition-colors hover:border-border/80">
+                              <div className="px-4 py-3">
+                                <Badge
+                                  variant="secondary"
+                                  className="mb-2 font-mono text-[10px]"
+                                >
+                                  account
+                                </Badge>
+                                <h3 className="text-[13px] font-semibold text-foreground">
+                                  Account keys
+                                </h3>
+                                <p className="mt-1 text-[12px] text-muted-foreground leading-relaxed">
+                                  Account-level ops, CLI auth, sessions. Per-user
+                                  credentials.
+                                </p>
+                              </div>
+                              <div className="flex min-h-9 w-full items-center border-t border-border px-4 py-3 bg-muted/20">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-9 w-full justify-between text-[13px] font-normal"
+                                  asChild
+                                >
+                                  <Link
+                                    to="/account"
+                                    className="inline-flex items-center gap-1.5"
+                                  >
+                                    Account settings
+                                    <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+                                  </Link>
+                                </Button>
+                              </div>
+                            </div>
+                            {/* Organization scope */}
+                            <div className="rounded-xl border border-border bg-card/50 overflow-hidden transition-colors hover:border-border/80">
+                              <div className="px-4 py-3">
+                                <div className="mb-2 flex items-center gap-1.5">
+                                  <Badge
+                                    variant="secondary"
+                                    className="font-mono text-[10px]"
+                                  >
+                                    organization
+                                  </Badge>
+                                  <Badge
+                                    variant="info"
+                                    className="text-[10px] shrink-0"
+                                  >
+                                    Coming soon
+                                  </Badge>
+                                </div>
+                                <h3 className="text-[13px] font-semibold text-foreground">
+                                  Org keys
+                                </h3>
+                                <p className="mt-1 text-[12px] text-muted-foreground leading-relaxed">
+                                  Billing, team, cross-project. One key for the
+                                  whole org.
+                                </p>
+                              </div>
+                              <div className="flex min-h-9 w-full items-center border-t border-border px-4 py-3 bg-muted/20">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-9 w-full justify-between text-[13px] font-normal"
+                                  asChild
+                                >
+                                  <a
+                                    href="https://appwrite.io/docs/advanced/platform/api-keys"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1.5"
+                                  >
+                                    Docs
+                                    <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                                  </a>
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="rounded-lg border border-border bg-muted/20 px-4 py-3">
+                            <p className="text-[12px] text-muted-foreground">
+                              <Info className="mb-0.5 mr-2 inline-block h-4 w-4 align-middle" />
+                              Organization-level keys will be manageable here
+                              once available. Meanwhile, use project keys for
+                              server-side access.
+                            </p>
+                          </div>
+                        </div>
                       ) : settingsSubTab === 'members' ? (
                         <>
                           {/* Error State */}
