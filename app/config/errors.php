@@ -630,6 +630,11 @@ return [
         'description' => 'Site with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::SITE_ALREADY_EXISTS => [
+        'name' => Exception::SITE_ALREADY_EXISTS,
+        'description' => 'Site with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
+    ],
     Exception::SITE_TEMPLATE_NOT_FOUND => [
         'name' => Exception::SITE_TEMPLATE_NOT_FOUND,
         'description' => 'Site Template with the requested ID could not be found.',
@@ -1290,6 +1295,11 @@ return [
         'name' => Exception::MESSAGE_NOT_FOUND,
         'description' => 'Message with the requested ID could not be found.',
         'code' => 404,
+    ],
+    Exception::MESSAGE_ALREADY_EXISTS => [
+        'name' => Exception::MESSAGE_ALREADY_EXISTS,
+        'description' => 'Message with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
     ],
     Exception::MESSAGE_MISSING_TARGET => [
         'name' => Exception::MESSAGE_MISSING_TARGET,

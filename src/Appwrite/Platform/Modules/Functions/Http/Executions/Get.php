@@ -82,6 +82,16 @@ class Get extends Base
             throw new Exception(Exception::EXECUTION_NOT_FOUND);
         }
 
+        // Override status in response if the execution is stuck in waiting/processing beyond the function timeout.
+        $status = $execution->getAttribute('status', '');
+        if ($status === 'waiting' || $status === 'processing') {
+            $timeout = $function->getAttribute('timeout', 900);
+            $elapsed = \time() - \strtotime($execution->getCreatedAt());
+            if ($elapsed >= $timeout) {
+                $execution->setAttribute('status', 'failed');
+            }
+        }
+
         $response->dynamic($execution, Response::MODEL_EXECUTION);
     }
 }

@@ -71,6 +71,16 @@ class Get extends Base
             throw new Exception(Exception::LOG_NOT_FOUND);
         }
 
+        // Override status in response if the log is stuck in waiting/processing beyond the site timeout.
+        $status = $log->getAttribute('status', '');
+        if ($status === 'waiting' || $status === 'processing') {
+            $timeout = $site->getAttribute('timeout', 30);
+            $elapsed = \time() - \strtotime($log->getCreatedAt());
+            if ($elapsed >= $timeout) {
+                $log->setAttribute('status', 'failed');
+            }
+        }
+
         $response->dynamic($log, Response::MODEL_EXECUTION); //TODO: Change to model log, but model log already exists - decide what to do
     }
 }
