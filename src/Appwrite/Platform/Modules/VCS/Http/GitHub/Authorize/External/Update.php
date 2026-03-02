@@ -5,7 +5,7 @@ namespace Appwrite\Platform\Modules\VCS\Http\GitHub\Authorize\External;
 use Appwrite\Event\Build;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
-use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployments;
+use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -23,7 +23,7 @@ use Utopia\VCS\Exception\RepositoryNotFound;
 class Update extends Action
 {
     use HTTP;
-    use Deployments;
+    use Deployment;
 
     public static function getName()
     {
@@ -99,8 +99,6 @@ class Update extends Action
 
         $providerPullRequestIds = \array_unique(\array_merge($repository->getAttribute('providerPullRequestIds', []), [$providerPullRequestId]));
         $repository = $repository->setAttribute('providerPullRequestIds', $providerPullRequestIds);
-
-        // TODO: Delete from array when PR is closed
 
         $repository = $authorization->skip(fn () => $dbForPlatform->updateDocument('repositories', $repository->getId(), $repository));
 

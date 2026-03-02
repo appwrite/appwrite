@@ -7,6 +7,7 @@ use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Vcs\Comment;
+use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -16,12 +17,13 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\DSN\DSN;
 use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
-trait Deployments
+trait Deployment
 {
     protected function createGitDeployments(
         GitHub $github,
@@ -68,7 +70,18 @@ trait Deployments
                     throw new Exception(Exception::PROJECT_NOT_FOUND, 'Repository references non-existent project');
                 }
 
-                if (!$this->validateDB($project)) {
+                try {
+                    $dsn = new DSN($project->getAttribute('database'));
+                    $databaseName = $dsn->getHost();
+                } catch (\InvalidArgumentException) {
+                    $databaseName = $project->getAttribute('database');
+                }
+
+                $databases = Config::getParam('pools-database', []);
+                $index = in_array($databaseName, $databases);
+
+                if ($index === false) {
+                    Console::error("Database: '{$databaseName}' is not part of region: " . System::getEnv('_APP_REGION'));
                     continue;
                 }
 
@@ -501,11 +514,6 @@ trait Deployments
         if (!empty($errors)) {
             throw new Exception(Exception::GENERAL_UNKNOWN, \implode("\n", $errors));
         }
-    }
-
-    protected function validateDB(Document $project): bool
-    {
-        return true;
     }
 
     protected function getBuildQueueName(Document $project, Database $dbForPlatform, Authorization $authorization): string

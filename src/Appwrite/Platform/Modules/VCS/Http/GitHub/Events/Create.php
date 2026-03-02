@@ -5,7 +5,7 @@ namespace Appwrite\Platform\Modules\VCS\Http\GitHub\Events;
 use Appwrite\Event\Build;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
-use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployments;
+use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
@@ -19,7 +19,7 @@ use Utopia\VCS\Adapter\Git\GitHub;
 class Create extends Action
 {
     use HTTP;
-    use Deployments;
+    use Deployment;
 
     public static function getName()
     {
@@ -55,6 +55,8 @@ class Create extends Action
         Build $queueForBuilds,
         array $platform
     ) {
+        $this->preprocessEvent($request);
+
         $event = $request->getHeader('x-github-event', '');
         Span::add('vcs.github.event.name', $event);
 
@@ -69,8 +71,6 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, "Invalid webhook payload signature. Please make sure the webhook secret has same value in your GitHub app and in the _APP_VCS_GITHUB_WEBHOOK_SECRET environment variable");
         }
 
-        // TODO(hmacr): Forward event to other regions
-
         $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
         $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
         $parsedPayload = $github->getEvent($event, $payload);
@@ -83,6 +83,11 @@ class Create extends Action
         };
 
         return $response->json($parsedPayload);
+    }
+
+    protected function preprocessEvent(Request $request)
+    {
+        return;
     }
 
     private function handleInstallationEvent(
