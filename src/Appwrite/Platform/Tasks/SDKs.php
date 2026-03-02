@@ -888,6 +888,16 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
     }
 
     /**
+     * Get the SDK config file path
+     *
+     * @return string Path to the SDK config file
+     */
+    protected function getSdkConfigPath(): string
+    {
+        return __DIR__ . '/../../../../app/config/sdks.php';
+    }
+
+    /**
      * Update SDK version in the config file
      *
      * @param  string  $platform  Platform key
@@ -897,7 +907,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
      */
     private function updateSdkVersion(string $platform, string $sdkKey, string $newVersion): bool
     {
-        $configPath = __DIR__ . '/../../../../app/config/sdks.php';
+        $configPath = $this->getSdkConfigPath();
 
         if (! file_exists($configPath)) {
             Console::error("Config file not found: {$configPath}");
@@ -907,13 +917,13 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
         $content = file_get_contents($configPath);
 
-        // Find and replace the version for this specific SDK
-        // Pattern matches the version line in the SDK array
-        $pattern = '/(\[\s*[\'"]key[\'"]\s*=>\s*[\'"]' . preg_quote($sdkKey, '/') . '[\'"]\s*,[\s\S]*?[\'"]version[\'"]\s*=>\s*[\'"])([^\'"]+)([\'"])/m';
+        // First, try to find inline version in SDK array (pattern 1)
+        // Pattern matches: ['key' => 'nodejs', ... 'version' => '22.1.2']
+        $inlinePattern = '/(\[\s*[\'"]key[\'"]\s*=>\s*[\'"]' . preg_quote($sdkKey, '/') . '[\'"]\s*,[\s\S]*?[\'"]version[\'"]\s*=>\s*[\'"])([^\'"]+)([\'"])/m';
 
-        if (preg_match($pattern, $content, $matches)) {
+        if (preg_match($inlinePattern, $content, $matches)) {
             $oldVersion = $matches[2];
-            $newContent = preg_replace($pattern, '${1}' . $newVersion . '${3}', $content);
+            $newContent = preg_replace($inlinePattern, '${1}' . $newVersion . '${3}', $content);
 
             if (file_put_contents($configPath, $newContent) !== false) {
                 Console::success("Updated {$sdkKey} version from {$oldVersion} to {$newVersion} in config");
@@ -924,11 +934,31 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
                 return false;
             }
-        } else {
-            Console::warning("Could not find version entry for {$sdkKey} in config");
-
-            return false;
         }
+
+        // Second, try to find version in array format (pattern 2)
+        // Pattern matches: 'nodejs' => '22.1.2', or "nodejs" => "22.1.2",
+        // Also handles extra whitespace: 'nodejs'  =>  '22.1.2',
+        $arrayPattern = '/([\'"]' . preg_quote($sdkKey, '/') . '[\'"]\s*=>\s*[\'"])([^\'"]+)([\'"],)/m';
+
+        if (preg_match($arrayPattern, $content, $matches)) {
+            $oldVersion = $matches[2];
+            $newContent = preg_replace($arrayPattern, '${1}' . $newVersion . '${3}', $content);
+
+            if (file_put_contents($configPath, $newContent) !== false) {
+                Console::success("Updated {$sdkKey} version from {$oldVersion} to {$newVersion} in config");
+
+                return true;
+            } else {
+                Console::error('Failed to write config file');
+
+                return false;
+            }
+        }
+
+        Console::warning("Could not find version entry for {$sdkKey} in config");
+
+        return false;
     }
 
     /**
