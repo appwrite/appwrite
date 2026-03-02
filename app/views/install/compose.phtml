@@ -1065,7 +1065,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
 <?php elseif ($dbService === 'postgresql'): ?>
 
   postgresql:
-    image: postgres:18
+    image: appwrite/postgres:0.1.0
     container_name: appwrite-postgresql
     restart: unless-stopped
     networks:
