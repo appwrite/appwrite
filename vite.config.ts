@@ -69,6 +69,12 @@ const config = defineConfig({
   resolve: {
     dedupe: ['react', 'react-dom'],
   },
+  optimizeDeps: {
+    // Recharts uses decimal.js (via victory-vendor/d3-scale) for tick calculations.
+    // Force ESM interop so `new Decimal()` works when pre-bundled.
+    needsInterop: ['decimal.js', 'decimal.js-light'],
+    include: ['decimal.js', 'decimal.js-light'],
+  },
   preview: {
     port: 4173,
     host: '::',

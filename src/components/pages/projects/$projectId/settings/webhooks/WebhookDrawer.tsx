@@ -253,6 +253,7 @@ export function WebhookDrawer({
                   Events <span className="text-destructive">*</span>
                 </Label>
                 <EventSelector
+                  projectId={projectId}
                   selectedEvents={events}
                   onEventsChange={(e) => {
                     setEvents(e)

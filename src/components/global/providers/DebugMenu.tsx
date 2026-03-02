@@ -51,7 +51,6 @@ import {
   setDebugProfileOverride,
   CONSOLE_PROFILES,
 } from '@/lib/console-profiles'
-
 interface DebugAction {
   label: string
   onClick: () => void

@@ -40,6 +40,7 @@ import {
   isSpecificationAllowedInPlan,
 } from '@/lib/specifications'
 import { Trash2, Plus, X } from 'lucide-react'
+import { EventEditorModal } from '@/components/global/shared/EventEditor'
 
 const CONTACT_SALES_URL =
   import.meta.env.VITE_CONTACT_SALES_URL ||
@@ -69,7 +70,7 @@ export function View() {
   const [specification, setSpecification] = useState('')
   const [enabled, setEnabled] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [newEvent, setNewEvent] = useState('')
+  const [eventDialogOpen, setEventDialogOpen] = useState(false)
 
   // Initialize state from function data
   useEffect(() => {
@@ -222,21 +223,11 @@ export function View() {
     updateFunctionMutation.mutate({ events })
   }
 
-  const handleAddEvent = () => {
-    if (!newEvent.trim()) {
-      toast.error('Event name is required')
-      return
-    }
-    if (events.length >= 100) {
-      toast.error('Maximum 100 events allowed')
-      return
-    }
-    if (events.includes(newEvent.trim())) {
-      toast.error('Event already exists')
-      return
-    }
-    setEvents([...events, newEvent.trim()])
-    setNewEvent('')
+  const handleEventCreated = (eventString: string) => {
+    const trimmed = eventString.trim()
+    if (!trimmed || events.includes(trimmed) || events.length >= 100) return
+    setEvents([...events, trimmed])
+    setEventDialogOpen(false)
   }
 
   const handleRemoveEvent = (event: string) => {
@@ -631,29 +622,17 @@ export function View() {
             <div className="border-t border-border" />
             <div className="px-6 py-4">
               <div className="space-y-3">
-                <div className="flex gap-2">
-                  <Input
-                    value={newEvent}
-                    onChange={(e) => setNewEvent(e.target.value)}
-                    placeholder="Enter event name"
-                    className="h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault()
-                        handleAddEvent()
-                      }
-                    }}
-                  />
-                  <Button
-                    size="sm"
-                    className="h-9 text-[13px]"
-                    onClick={handleAddEvent}
-                    disabled={events.length >= 100}
-                  >
-                    <Plus className="mr-1.5 h-4 w-4" />
-                    Add
-                  </Button>
-                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-9 text-[13px]"
+                  onClick={() => setEventDialogOpen(true)}
+                  disabled={events.length >= 100}
+                >
+                  <Plus className="mr-1.5 h-4 w-4" />
+                  Add event
+                </Button>
                 {events.length > 0 && (
                   <div className="space-y-2">
                     {events.map((event) => (
@@ -679,6 +658,13 @@ export function View() {
                     No events configured
                   </p>
                 )}
+                <EventEditorModal
+                  open={eventDialogOpen}
+                  onOpenChange={setEventDialogOpen}
+                  onCreated={handleEventCreated}
+                  description="Set the events that will trigger your function. Maximum 100 events allowed."
+                  projectId={projectId}
+                />
               </div>
             </div>
             <div className="px-6 py-4 border-t border-border bg-muted/30">
