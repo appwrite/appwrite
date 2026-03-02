@@ -798,7 +798,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 - USER-FACING: Source code changes, commands/params, docs, examples, scripts
                 - EXCLUDE: .github/, CI configs, internal tooling
                 - Format: "Breaking: Removed X" or "Added Y feature" or "Fixed Z bug"
-                - One change per bullet, avoid combining multiple changes
+                - Group related changes together (e.g., "Added A, B, and C options" not separate bullets)
                 - If no user-facing changes: `* No user-facing SDK changes.`
 
                 Diff context:
