@@ -13,21 +13,6 @@ $defaultDatabase = $vars['_APP_DB_ADAPTER']['default'] ?? 'mongodb';
 $lockedDatabase = $isUpgrade && empty($lockedDatabase) ? $defaultDatabase : $lockedDatabase;
 $isLocalInstall = $isLocalInstall ?? false;
 
-$step = isset($_GET['step']) ? (int) $_GET['step'] : 1;
-$step = max(1, min(5, $step));
-if ($isUpgrade && ($step === 2 || $step === 3)) {
-    $step = 4;
-}
-
-$partialFile = __DIR__ . "/installer/templates/steps/step-{$step}.phtml";
-if (!is_file($partialFile)) {
-    $partialFile = __DIR__ . "/installer/templates/steps/step-1.phtml";
-}
-
-if (isset($_GET['partial'])) {
-    include $partialFile;
-    exit;
-}
 
 $cardStep = min(4, $step);
 $stepFile = __DIR__ . "/installer/templates/steps/step-{$cardStep}.phtml";

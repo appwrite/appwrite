@@ -14,6 +14,7 @@ use Utopia\Fetch\Client;
 use Utopia\Platform\Action;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 class Install extends Action
 {
@@ -51,7 +52,7 @@ class Install extends Action
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
-            ->param('database', 'mongodb', new Text(0), 'Database to use (mongodb|mariadb|postgres)', true)
+            ->param('database', 'mongodb', new WhiteList(['mongodb', 'mariadb', 'postgresql']), 'Database to use (mongodb|mariadb|postgresql)', true)
             ->callback($this->action(...));
     }
 
@@ -308,9 +309,12 @@ class Install extends Action
         ]);
 
         // Start Swoole-based installer server in background
+        // Redirect stdout/stderr to a log file so exec() returns immediately
+        // (otherwise the backgrounded process holds the pipe open and exec() hangs)
         $serverScript = \escapeshellarg(dirname(__DIR__) . '/Installer/Server.php');
+        $logFile = \sys_get_temp_dir() . '/appwrite-installer-server.log';
         $output = [];
-        \exec("php {$serverScript} 2>&1 & echo $!", $output);
+        \exec("php {$serverScript} > " . \escapeshellarg($logFile) . " 2>&1 & echo \$!", $output);
         $pid = isset($output[0]) ? (int) $output[0] : 0;
 
         \register_shutdown_function(function () use ($pid) {
@@ -318,9 +322,14 @@ class Install extends Action
                 @\posix_kill($pid, SIGTERM);
             }
         });
-        \sleep(3);
+        \sleep(1);
 
         if (!$this->waitForWebServer($port)) {
+            $log = @\file_get_contents($logFile);
+            if ($log !== false && $log !== '') {
+                Console::error('Installer server log:');
+                Console::error($log);
+            }
             Console::warning('Web installer did not respond in time. Please refresh the browser.');
             return;
         }

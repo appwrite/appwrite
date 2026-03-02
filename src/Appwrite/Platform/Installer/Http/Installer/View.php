@@ -34,6 +34,7 @@ class View extends Action
 
         $response->addHeader('Content-Security-Policy', implode('; ', Server::INSTALLER_CSP));
 
+        $params = $request->getParams();
         $vars = $config->getVars();
         $defaultHttpPort = $config->getDefaultHttpPort();
         $defaultHttpsPort = $config->getDefaultHttpsPort();
@@ -44,6 +45,25 @@ class View extends Action
         $defaultEmailCertificates = $vars['_APP_EMAIL_CERTIFICATES']['default'] ?? '';
         if ($isLocalInstall && empty($defaultEmailCertificates)) {
             $defaultEmailCertificates = 'walterobrien@example.com';
+        }
+
+        $step = isset($params['step']) ? (int) $params['step'] : 1;
+        $step = max(1, min(5, $step));
+        if ($isUpgrade && ($step === 2 || $step === 3)) {
+            $step = 4;
+        }
+
+        $partialFile = $paths['views'] . "/installer/templates/steps/step-{$step}.phtml";
+        if (!is_file($partialFile)) {
+            $partialFile = $paths['views'] . '/installer/templates/steps/step-1.phtml';
+        }
+
+        if (isset($params['partial'])) {
+            ob_start();
+            include $partialFile;
+            $html = ob_get_clean();
+            $response->html($html);
+            return;
         }
 
         ob_start();

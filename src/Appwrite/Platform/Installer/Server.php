@@ -207,11 +207,6 @@ class Server
             $app->run($request, $response);
         });
 
-        // Handle Ctrl+C gracefully
-        \Swoole\Process::signal(2, function () use ($server) {
-            $server->shutdown();
-        });
-
         $server->start();
     }
 
