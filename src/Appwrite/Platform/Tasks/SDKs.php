@@ -805,6 +805,16 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 ->setExcludePaths([
                     '.github/workflows/**',
                     '.github/ISSUE_TEMPLATE/**',
+                    'package.json',
+                    'package-lock.json',
+                    'install.sh',
+                    'install.ps1',
+                    'README.md',
+                    'CHANGELOG.md',
+                    'LICENSE',
+                    'LICENSE.md',
+                    'scoop/*.json',
+                    'lib/constants.ts',
                 ])
                 ->setMaxDiffLines(500)
                 ->setUserId('sdk-analyst');
