@@ -433,6 +433,9 @@ export async function fetchAllProjectTablesForVisualizer(
   }
 }
 
+/** Column to sort rows by - any column key or system field */
+export type RowsSortBy = string
+
 /**
  * Query function to fetch rows for a table
  *
@@ -444,6 +447,8 @@ export async function fetchAllProjectTablesForVisualizer(
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
  * @param search - Optional search query
+ * @param order - Sort direction
+ * @param sortBy - Column to sort by
  * @returns Paginated rows with total count
  */
 export async function fetchProjectTableRows(
@@ -453,6 +458,8 @@ export async function fetchProjectTableRows(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  order: 'asc' | 'desc' = 'desc',
+  sortBy: RowsSortBy = '$createdAt',
 ) {
   if (!projectId || !databaseId || !tableId) {
     return { rows: [], total: 0 }
@@ -460,7 +467,7 @@ export async function fetchProjectTableRows(
 
   const projectSdk = sdk.forProject(projectId)
   const queries = [
-    Query.orderDesc('$createdAt'),
+    order === 'asc' ? Query.orderAsc(sortBy) : Query.orderDesc(sortBy),
     Query.limit(limit),
     Query.offset(page * limit),
   ]
@@ -1521,6 +1528,8 @@ export function tableRowsQueryOptions(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  order: 'asc' | 'desc' = 'desc',
+  sortBy: RowsSortBy = '$createdAt',
 ) {
   // Normalize search to undefined if empty string for consistent query keys
   const normalizedSearch = search?.trim() || undefined
@@ -1535,6 +1544,8 @@ export function tableRowsQueryOptions(
       page,
       limit,
       normalizedSearch,
+      order,
+      sortBy,
     ],
     queryFn: () =>
       fetchProjectTableRows(
@@ -1544,6 +1555,8 @@ export function tableRowsQueryOptions(
         page,
         limit,
         normalizedSearch,
+        order,
+        sortBy,
       ),
     enabled: !!projectId && !!databaseId && !!tableId,
     staleTime: DEFAULT_STALE_TIME,
@@ -1902,6 +1915,8 @@ export function useAllProjectTablesForVisualizer(
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
  * @param search - Optional search query
+ * @param order - Sort direction
+ * @param sortBy - Column to sort by
  * @returns Paginated rows with loading state
  */
 export function useProjectTableRows(
@@ -1911,6 +1926,8 @@ export function useProjectTableRows(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  order: 'asc' | 'desc' = 'desc',
+  sortBy: RowsSortBy = '$createdAt',
 ) {
   // Normalize search to undefined if empty string for consistent query keys
   const normalizedSearch = search?.trim() || undefined
@@ -1929,6 +1946,8 @@ export function useProjectTableRows(
       page,
       limit,
       normalizedSearch,
+      order,
+      sortBy,
     ),
   )
 

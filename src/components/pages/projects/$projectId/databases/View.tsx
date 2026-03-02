@@ -18,6 +18,8 @@ import {
   CheckCircle2,
   AlertCircle,
   ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
   Calendar,
   Link2,
   Fingerprint,
@@ -949,7 +951,7 @@ export function DatabaseDetailLayout({
         <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
           <button
             onClick={handleBack}
-            className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="flex h-6 w-6 cursor-pointer items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
@@ -1032,13 +1034,18 @@ export function DatabaseDetailLayout({
               )}
 
               {/* Create Table Button */}
-              <button
-                onClick={() => setCreateTableDialogOpen(true)}
-                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground cursor-pointer"
-              >
-                <Plus className="h-3.5 w-3.5 shrink-0" />
-                <span className="text-[13px]">Create table</span>
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => setCreateTableDialogOpen(true)}
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground cursor-pointer"
+                  >
+                    <Plus className="h-3.5 w-3.5 shrink-0" />
+                    <span className="text-[13px]">Create table</span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right">Create table</TooltipContent>
+              </Tooltip>
             </div>
           )}
 
@@ -1488,7 +1495,7 @@ export function TableView({
           <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
             <button
               onClick={handleBackToDatabases}
-              className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              className="flex h-6 w-6 cursor-pointer items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
               aria-label="Back to databases"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -1559,15 +1566,19 @@ export function TableView({
                 </SelectContent>
               </Select>
             </div>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8 shrink-0"
-              onClick={() => setCreateDatabaseDialogOpen(true)}
-              title="Create database"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8 shrink-0"
+                  onClick={() => setCreateDatabaseDialogOpen(true)}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Create database</TooltipContent>
+            </Tooltip>
           </div>
         </div>
 
@@ -1737,15 +1748,20 @@ export function TableView({
             )}
           </div>
           <div className="shrink-0 border-t border-border px-2 py-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 w-full gap-2 pl-6 pr-6 text-[13px] font-medium"
-              onClick={() => setCreateTableDialogOpen(true)}
-            >
-              <Plus className="h-4 w-4" />
-              Create table
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 w-full gap-2 pl-6 pr-6 text-[13px] font-medium"
+                  onClick={() => setCreateTableDialogOpen(true)}
+                >
+                  <Plus className="h-4 w-4" />
+                  Create table
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top">Create table</TooltipContent>
+            </Tooltip>
           </div>
           <div className="shrink-0 border-t border-border px-2 py-1.5">
             <div className="flex items-center justify-between gap-1 text-[11px] text-muted-foreground">
@@ -2339,7 +2355,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
         <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
           <button
             onClick={handleBack}
-            className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="flex h-6 w-6 cursor-pointer items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
@@ -2370,13 +2386,18 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
           {tablesExpanded && (
             <div className="ml-3 mt-0.5 border-l border-border pl-2">
               {/* Create Table Button */}
-              <button
-                onClick={() => setCreateTableDialogOpen(true)}
-                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground cursor-pointer"
-              >
-                <Plus className="h-3.5 w-3.5 shrink-0" />
-                <span className="text-[13px]">Create table</span>
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => setCreateTableDialogOpen(true)}
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground cursor-pointer"
+                  >
+                    <Plus className="h-3.5 w-3.5 shrink-0" />
+                    <span className="text-[13px]">Create table</span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right">Create table</TooltipContent>
+              </Tooltip>
             </div>
           )}
 
@@ -2430,7 +2451,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
         {/* Mobile back button */}
         <button
           onClick={handleBack}
-          className="flex items-center gap-2 border-b border-border px-4 py-2 text-[13px] text-muted-foreground transition-colors hover:text-foreground lg:hidden"
+          className="flex cursor-pointer items-center gap-2 border-b border-border px-4 py-2 text-[13px] text-muted-foreground transition-colors hover:text-foreground lg:hidden"
         >
           <ChevronLeft className="h-4 w-4" />
           Back to databases
@@ -3034,7 +3055,7 @@ export function DatabaseOverview({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 w-7 p-0"
+                className="h-7 w-7 cursor-pointer p-0"
                 onClick={handleBack}
               >
                 <ArrowLeft className="h-4 w-4" />
@@ -5053,7 +5074,13 @@ function RowsSpreadsheet({
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
   const [requestedPage, setRequestedPage] = useState(1)
   const [displayedPage, setDisplayedPage] = useState(1)
+  const [displayedSortBy, setDisplayedSortBy] = useState<string>('$createdAt')
+  const [displayedSortOrder, setDisplayedSortOrder] = useState<'asc' | 'desc'>(
+    'desc',
+  )
   const [pageSize, setPageSize] = useState(25)
+  const [sortBy, setSortBy] = useState<string>('$createdAt')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [editDrawerOpen, setEditDrawerOpen] = useState(false)
   const [drawerInitialTab, setDrawerInitialTab] = useState<
     'data' | 'permissions' | null
@@ -5081,7 +5108,11 @@ function RowsSpreadsheet({
     setSelectedRows(new Set())
     setDeleteDialogOpen(false)
     setRequestedPage(1)
-    setDisplayedPage(1) // Reset to first page when switching tables
+    setDisplayedPage(1)
+    setDisplayedSortBy('$createdAt')
+    setDisplayedSortOrder('desc')
+    setSortBy('$createdAt')
+    setSortOrder('desc')
   }, [location.pathname, projectId, databaseId, tableId])
 
   // Fetch data for the requested page (triggers load when user changes page)
@@ -5097,9 +5128,11 @@ function RowsSpreadsheet({
     requestedPage - 1,
     pageSize,
     '',
+    sortOrder,
+    sortBy,
   )
 
-  // Fetch data for the displayed page (what we show - stays until new page is ready)
+  // Fetch data for the displayed view (what we show - stays until new data is ready)
   const {
     rows: apiRows,
     total: displayedRowsTotal,
@@ -5111,14 +5144,33 @@ function RowsSpreadsheet({
     displayedPage - 1,
     pageSize,
     '',
+    displayedSortOrder,
+    displayedSortBy,
   )
 
-  // Update displayed page only when requested page data is ready (no flash)
+  // Update displayed page/sort only when requested data is ready (no loading flash)
   useEffect(() => {
-    if (!rowsFetching && requestedPage !== displayedPage && !rowsLoading) {
+    if (
+      !rowsFetching &&
+      !rowsLoading &&
+      (requestedPage !== displayedPage ||
+        sortBy !== displayedSortBy ||
+        sortOrder !== displayedSortOrder)
+    ) {
       setDisplayedPage(requestedPage)
+      setDisplayedSortBy(sortBy)
+      setDisplayedSortOrder(sortOrder)
     }
-  }, [rowsFetching, rowsLoading, requestedPage, displayedPage])
+  }, [
+    rowsFetching,
+    rowsLoading,
+    requestedPage,
+    displayedPage,
+    sortBy,
+    sortOrder,
+    displayedSortBy,
+    displayedSortOrder,
+  ])
 
   // Only show full loading when we have no data to display (initial load)
   const showRowsLoading = displayedRowsLoading && apiRows.length === 0
@@ -5128,11 +5180,12 @@ function RowsSpreadsheet({
   // Notify parent of row count changes (only when count actually changes)
   const prevRowsTotalRef = useRef<number | null>(null)
   useEffect(() => {
-    if (onRowsCountChange && prevRowsTotalRef.current !== rowsTotal) {
-      prevRowsTotalRef.current = rowsTotal
-      onRowsCountChange(rowsTotal)
+    const total = displayedRowsTotal ?? rowsTotal
+    if (onRowsCountChange && prevRowsTotalRef.current !== total) {
+      prevRowsTotalRef.current = total
+      onRowsCountChange(total)
     }
-  }, [rowsTotal, onRowsCountChange])
+  }, [displayedRowsTotal, rowsTotal, onRowsCountChange])
 
   // Expose refetch function to parent component
   useEffect(() => {
@@ -5229,7 +5282,9 @@ function RowsSpreadsheet({
     return {
       $id: row.$id,
       $sequence: row.$sequence,
-      rowNumber: rowsTotal - (currentPageIndexed * pageSize + index),
+      rowNumber:
+        (displayedRowsTotal ?? rowsTotal) -
+        (currentPageIndexed * pageSize + index),
       data,
       $createdAt: row.$createdAt,
       $updatedAt: row.$updatedAt,
@@ -5275,6 +5330,29 @@ function RowsSpreadsheet({
     setRequestedPage(1)
     setDisplayedPage(1)
     setSelectedRows(new Set()) // Clear selection on page size change
+  }
+
+  const handleSortColumn = (columnKey: string) => {
+    if (sortBy === columnKey) {
+      // 3-click cycle: asc → desc → reset to default
+      if (sortOrder === 'asc') {
+        setSortOrder('desc')
+      } else {
+        // sortOrder === 'desc': reset to default (or toggle if $createdAt)
+        if (columnKey === '$createdAt') {
+          setSortOrder('asc')
+        } else {
+          setSortBy('$createdAt')
+          setSortOrder('desc')
+        }
+      }
+    } else {
+      setSortBy(columnKey)
+      setSortOrder('asc')
+    }
+    setRequestedPage(1)
+    setDisplayedPage(1)
+    setSelectedRows(new Set())
   }
 
   const handleRowClick = (row: RowData) => {
@@ -5844,11 +5922,25 @@ function RowsSpreadsheet({
               </th>
               <th className={cn('w-[180px] px-3 py-2', headerCellBorderClass)}>
                 <div className="flex items-center gap-2">
-                  <Fingerprint className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Fingerprint className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                   <span className="text-[12px] font-medium text-foreground">
                     $id
                   </span>
-                  <ArrowUpDown className="ml-auto h-3 w-3 text-muted-foreground" />
+                  <button
+                    type="button"
+                    onClick={() => handleSortColumn('$id')}
+                    className="ml-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  >
+                    {sortBy === '$id' ? (
+                      sortOrder === 'asc' ? (
+                        <ArrowUp className="h-3 w-3 shrink-0 text-foreground" />
+                      ) : (
+                        <ArrowDown className="h-3 w-3 shrink-0 text-foreground" />
+                      )
+                    ) : (
+                      <ArrowUpDown className="h-3 w-3 shrink-0 text-muted-foreground" />
+                    )}
+                  </button>
                 </div>
               </th>
               {columns.map((col: string) => {
@@ -5869,31 +5961,73 @@ function RowsSpreadsheet({
                     )}
                   >
                     <div className="flex items-center gap-2">
-                      <ColumnIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                      <ColumnIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                       <span className="text-[12px] font-medium text-foreground">
                         {col}
                       </span>
-                      <ArrowUpDown className="ml-auto h-3 w-3 text-muted-foreground" />
+                      <button
+                        type="button"
+                        onClick={() => handleSortColumn(col)}
+                        className="ml-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      >
+                        {sortBy === col ? (
+                          sortOrder === 'asc' ? (
+                            <ArrowUp className="h-3 w-3 shrink-0 text-foreground" />
+                          ) : (
+                            <ArrowDown className="h-3 w-3 shrink-0 text-foreground" />
+                          )
+                        ) : (
+                          <ArrowUpDown className="h-3 w-3 shrink-0 text-muted-foreground" />
+                        )}
+                      </button>
                     </div>
                   </th>
                 )
               })}
               <th className={cn('w-[180px] px-3 py-2', headerCellBorderClass)}>
                 <div className="flex items-center gap-2">
-                  <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Calendar className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                   <span className="text-[12px] font-medium text-foreground">
                     $createdAt
                   </span>
-                  <ArrowUpDown className="ml-auto h-3 w-3 text-muted-foreground" />
+                  <button
+                    type="button"
+                    onClick={() => handleSortColumn('$createdAt')}
+                    className="ml-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  >
+                    {sortBy === '$createdAt' ? (
+                      sortOrder === 'asc' ? (
+                        <ArrowUp className="h-3 w-3 shrink-0 text-foreground" />
+                      ) : (
+                        <ArrowDown className="h-3 w-3 shrink-0 text-foreground" />
+                      )
+                    ) : (
+                      <ArrowUpDown className="h-3 w-3 shrink-0 text-muted-foreground" />
+                    )}
+                  </button>
                 </div>
               </th>
               <th className={cn('w-[180px] px-3 py-2', headerCellBorderClass)}>
                 <div className="flex items-center gap-2">
-                  <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Calendar className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                   <span className="text-[12px] font-medium text-foreground">
                     $updatedAt
                   </span>
-                  <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
+                  <button
+                    type="button"
+                    onClick={() => handleSortColumn('$updatedAt')}
+                    className="ml-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  >
+                    {sortBy === '$updatedAt' ? (
+                      sortOrder === 'asc' ? (
+                        <ArrowUp className="h-3 w-3 shrink-0 text-foreground" />
+                      ) : (
+                        <ArrowDown className="h-3 w-3 shrink-0 text-foreground" />
+                      )
+                    ) : (
+                      <ArrowUpDown className="h-3 w-3 shrink-0 text-muted-foreground" />
+                    )}
+                  </button>
                 </div>
               </th>
               <th

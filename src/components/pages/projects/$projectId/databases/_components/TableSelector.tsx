@@ -21,6 +21,11 @@ import {
   CommandInput,
   CommandList,
 } from '@/components/ui/command'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { tablesQueryOptions } from '@/lib/react-query/hooks'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
@@ -91,15 +96,19 @@ export function TableSelector({
     return (
       <div className="flex min-w-0 flex-1 items-center gap-2">
         <span className="text-[13px] text-muted-foreground">No tables</span>
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-8 w-8 shrink-0"
-          onClick={onCreateClick}
-          title="Create table"
-        >
-          <Plus className="h-4 w-4" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 shrink-0"
+              onClick={onCreateClick}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Create table</TooltipContent>
+        </Tooltip>
       </div>
     )
   }
@@ -171,15 +180,19 @@ export function TableSelector({
           </Command>
         </PopoverContent>
       </Popover>
-      <Button
-        variant="outline"
-        size="icon"
-        className="h-8 w-8 shrink-0"
-        onClick={onCreateClick}
-        title="Create table"
-      >
-        <Plus className="h-4 w-4" />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 shrink-0"
+            onClick={onCreateClick}
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">Create table</TooltipContent>
+      </Tooltip>
     </div>
   )
 }

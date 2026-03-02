@@ -493,14 +493,16 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                         )}
                       </div>
                     </TooltipTrigger>
-                    {createDisabled && (
-                      <TooltipContent side="bottom">
+                    <TooltipContent side="bottom">
+                      {createDisabled ? (
                         <p>
                           You've reached the limit for this resource on your
                           plan
                         </p>
-                      </TooltipContent>
-                    )}
+                      ) : (
+                        createLabel
+                      )}
+                    </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               )}
