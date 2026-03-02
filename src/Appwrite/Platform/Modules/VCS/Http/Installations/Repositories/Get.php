@@ -86,12 +86,13 @@ class Get extends Action
         $repository = $github->getRepository($owner, $repositoryName);
 
         $authorized = false;
-        ['items' => $repos] = $github->searchRepositories($providerInstallationId, $owner, 1, 25, $repositoryName);
-        foreach ($repos as $repo) {
-            if (\strval($repo['id']) === $providerRepositoryId) {
+        try {
+            $installationRepository = $github->getInstallationRepository($repositoryName);
+            if (!empty($installationRepository)) {
                 $authorized = true;
-                break;
             }
+        } catch (RepositoryNotFound $e) {
+            $authorized = false;
         }
 
         $repository['id'] = \strval($repository['id']) ?? '';
