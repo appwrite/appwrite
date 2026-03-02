@@ -187,6 +187,12 @@ class Server
             }
         }
 
+        $server->on('start', function (\Swoole\Http\Server $srv) {
+            \Swoole\Process::signal(SIGINT, function () use ($srv) {
+                $srv->shutdown();
+            });
+        });
+
         $server->on('request', function (\Swoole\Http\Request $swooleRequest, \Swoole\Http\Response $swooleResponse) use ($files) {
             \Utopia\Http\Http::setResource('swooleRequest', fn () => $swooleRequest);
             \Utopia\Http\Http::setResource('swooleResponse', fn () => $swooleResponse);
