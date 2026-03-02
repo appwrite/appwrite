@@ -88,6 +88,8 @@ import { ExportImportView } from './ExportImportView'
 import { CreateDatabase } from './CreateDatabase'
 import { CreateTable } from './CreateTable'
 import { TableContextMenu } from './_components/TableContextMenu'
+import { DatabaseSelector } from './_components/DatabaseSelector'
+import { TableSelector } from './_components/TableSelector'
 import { RowContextMenu } from './_components/RowContextMenu'
 import { ImportCsv } from './_components/ImportCsv'
 import { ExportCsv } from './_components/ExportCsv'
@@ -2038,73 +2040,133 @@ export function TableView({
             ) : undefined
           }
           contentAfterBorder={
-            database && (database as Models.Database).enabled === false ? (
-              <div className="border-b border-border bg-amber-500/5">
-                <div className="px-4 py-3 sm:px-6">
-                  <Alert
-                    variant="default"
-                    className="border-amber-500/30 bg-transparent"
-                  >
-                    <AlertCircle className="h-4 w-4 text-amber-500" />
-                    <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-                      Database is disabled
-                    </AlertTitle>
-                    <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
-                      <span className="inline">
-                        This database is disabled and not accessible to end
-                        users through the API. Console actions remain available.{' '}
-                        <Link
-                          to="/projects/$projectId/databases/$databaseId/settings"
-                          params={{ projectId, databaseId }}
-                          className="font-medium underline hover:no-underline inline"
-                        >
-                          Enable it in the Settings tab
-                        </Link>{' '}
-                        to make it available to end users.
-                      </span>
-                    </AlertDescription>
-                  </Alert>
-                </div>
+            <>
+              {/* Mobile DB + table selector - above toolbar, shows when sidebar is hidden */}
+              <div className="flex flex-col gap-2 border-b border-border px-4 py-3 lg:hidden">
+                <DatabaseSelector
+                  projectId={projectId}
+                  value={databaseId}
+                  selectedName={database?.name}
+                  onSelect={async (newDatabaseId) => {
+                    try {
+                      const tablesData =
+                        await queryClient.ensureQueryData(
+                          tablesQueryOptions(
+                            projectId,
+                            newDatabaseId,
+                            0,
+                            100,
+                            undefined,
+                          ),
+                        )
+                      const sorted = [...(tablesData.tables || [])].sort(
+                        (a: { name?: string }, b: { name?: string }) => {
+                          const nameA = a.name?.toLowerCase() || ''
+                          const nameB = b.name?.toLowerCase() || ''
+                          return nameA.localeCompare(nameB)
+                        },
+                      )
+                      const firstTable = sorted[0] as { $id?: string } | undefined
+                      navigate({
+                        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+                        params: {
+                          projectId,
+                          databaseId: newDatabaseId,
+                          tableId: firstTable?.$id ?? '-',
+                        },
+                      })
+                    } catch {
+                      navigate({
+                        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+                        params: {
+                          projectId,
+                          databaseId: newDatabaseId,
+                          tableId: '-',
+                        },
+                      })
+                    }
+                  }}
+                  onCreateClick={() => setCreateDatabaseDialogOpen(true)}
+                />
+                <TableSelector
+                  projectId={projectId}
+                  databaseId={databaseId}
+                  value={tableId}
+                  selectedName={selectedTable?.name}
+                  onSelect={(newTableId) => {
+                    navigate({
+                      to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+                      params: {
+                        projectId,
+                        databaseId,
+                        tableId: newTableId,
+                      },
+                    })
+                  }}
+                  onCreateClick={() => setCreateTableDialogOpen(true)}
+                  empty={dbTables.length === 0}
+                />
               </div>
-            ) : tableDataForStatus && !tableDataForStatus.enabled ? (
-              <div className="border-b border-border bg-amber-500/5">
-                <div className="px-4 py-3 sm:px-6">
-                  <Alert
-                    variant="default"
-                    className="border-amber-500/30 bg-transparent"
-                  >
-                    <AlertCircle className="h-4 w-4 text-amber-500" />
-                    <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-                      Table is disabled
-                    </AlertTitle>
-                    <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
-                      <span className="inline">
-                        This table is currently disabled.{' '}
-                        <Link
-                          to="/projects/$projectId/databases/$databaseId/tables/$tableId/settings"
-                          params={{ projectId, databaseId, tableId }}
-                          className="font-medium underline hover:no-underline inline"
-                        >
-                          Enable it in the Settings tab
-                        </Link>{' '}
-                        to access its data and functionality.
-                      </span>
-                    </AlertDescription>
-                  </Alert>
+              {database && (database as Models.Database).enabled === false ? (
+                <div className="border-b border-border bg-amber-500/5">
+                  <div className="px-4 py-3 sm:px-6">
+                    <Alert
+                      variant="default"
+                      className="border-amber-500/30 bg-transparent"
+                    >
+                      <AlertCircle className="h-4 w-4 text-amber-500" />
+                      <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
+                        Database is disabled
+                      </AlertTitle>
+                      <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
+                        <span className="inline">
+                          This database is disabled and not accessible to end
+                          users through the API. Console actions remain
+                          available.{' '}
+                          <Link
+                            to="/projects/$projectId/databases/$databaseId/settings"
+                            params={{ projectId, databaseId }}
+                            className="font-medium underline hover:no-underline inline"
+                          >
+                            Enable it in the Settings tab
+                          </Link>{' '}
+                          to make it available to end users.
+                        </span>
+                      </AlertDescription>
+                    </Alert>
+                  </div>
                 </div>
-              </div>
-            ) : undefined
+              ) : tableDataForStatus && !tableDataForStatus.enabled ? (
+                <div className="border-b border-border bg-amber-500/5">
+                  <div className="px-4 py-3 sm:px-6">
+                    <Alert
+                      variant="default"
+                      className="border-amber-500/30 bg-transparent"
+                    >
+                      <AlertCircle className="h-4 w-4 text-amber-500" />
+                      <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
+                        Table is disabled
+                      </AlertTitle>
+                      <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
+                        <span className="inline">
+                          This table is currently disabled.{' '}
+                          <Link
+                            to="/projects/$projectId/databases/$databaseId/tables/$tableId/settings"
+                            params={{ projectId, databaseId, tableId }}
+                            className="font-medium underline hover:no-underline inline"
+                          >
+                            Enable it in the Settings tab
+                          </Link>{' '}
+                          to access its data and functionality.
+                        </span>
+                      </AlertDescription>
+                    </Alert>
+                  </div>
+                </div>
+              ) : null}
+            </>
           }
         />
-
-        {/* Mobile back button - shows when sidebar is hidden */}
-        <button
-          onClick={handleBackToDatabase}
-          className="flex items-center gap-2 border-b border-border px-4 py-2 text-[13px] text-muted-foreground transition-colors hover:text-foreground lg:hidden"
-        >
-          <ChevronLeft className="h-4 w-4" />
-          Back to {database.name}
-        </button>
 
         <div className={cn('flex-1 min-h-0 overflow-y-auto')}>
           {isDatabaseLevelView ? (

@@ -1817,26 +1817,23 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                       ) : settingsSubTab === 'oauth-apps' ? (
                         <ComingSoonView title="OAuth apps" comingSoon />
                       ) : settingsSubTab === 'api-keys' ? (
-                        <div className="mx-auto w-full max-w-4xl space-y-6 px-4 pb-4 sm:px-6 sm:pb-6">
-                          <div>
-                            <h2 className="text-[15px] font-semibold text-foreground">
-                              API key types
-                            </h2>
-                            <p className="mt-1 text-[13px] text-muted-foreground">
-                              Keys apply at different levels. Each key has its
-                              own permissions (scopes) to control access.
-                            </p>
-                          </div>
-                          <div className="grid gap-4 sm:grid-cols-3">
+                        <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6">
+                          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                            <div className="px-6 py-4">
+                              <h3 className="text-[15px] font-semibold text-foreground">
+                                API key types
+                              </h3>
+                              <p className="mt-1 text-[13px] text-muted-foreground">
+                                Keys apply at different levels. Each key has its
+                                own permissions (scopes) to control access.
+                              </p>
+                            </div>
+                            <div className="border-t border-border" />
+                            <div className="px-6 py-4">
+                              <div className="grid gap-4 sm:grid-cols-3">
                             {/* Project keys */}
                             <div className="rounded-xl border border-border bg-card/50 overflow-hidden transition-colors hover:border-border/80">
                               <div className="px-4 py-3">
-                                <Badge
-                                  variant="secondary"
-                                  className="mb-2 font-mono text-[10px]"
-                                >
-                                  project
-                                </Badge>
                                 <h3 className="text-[13px] font-semibold text-foreground">
                                   Project keys
                                 </h3>
@@ -1877,12 +1874,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                             {/* Account scope */}
                             <div className="rounded-xl border border-border bg-card/50 overflow-hidden transition-colors hover:border-border/80">
                               <div className="px-4 py-3">
-                                <Badge
-                                  variant="secondary"
-                                  className="mb-2 font-mono text-[10px]"
-                                >
-                                  account
-                                </Badge>
                                 <h3 className="text-[13px] font-semibold text-foreground">
                                   Account keys
                                 </h3>
@@ -1911,20 +1902,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                             {/* Organization scope */}
                             <div className="rounded-xl border border-border bg-card/50 overflow-hidden transition-colors hover:border-border/80">
                               <div className="px-4 py-3">
-                                <div className="mb-2 flex items-center gap-1.5">
-                                  <Badge
-                                    variant="secondary"
-                                    className="font-mono text-[10px]"
-                                  >
-                                    organization
-                                  </Badge>
-                                  <Badge
-                                    variant="info"
-                                    className="text-[10px] shrink-0"
-                                  >
-                                    Coming soon
-                                  </Badge>
-                                </div>
                                 <h3 className="text-[13px] font-semibold text-foreground">
                                   Org keys
                                 </h3>
@@ -1952,14 +1929,16 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                 </Button>
                               </div>
                             </div>
-                          </div>
-                          <div className="rounded-lg border border-border bg-muted/20 px-4 py-3">
-                            <p className="text-[12px] text-muted-foreground">
-                              <Info className="mb-0.5 mr-2 inline-block h-4 w-4 align-middle" />
-                              Organization-level keys will be manageable here
-                              once available. Meanwhile, use project keys for
-                              server-side access.
-                            </p>
+                              </div>
+                              <div className="mt-4 rounded-lg border border-border bg-muted/20 px-4 py-3">
+                                <p className="text-[12px] text-muted-foreground">
+                                  <Info className="mb-0.5 mr-2 inline-block h-4 w-4 align-middle" />
+                                  Organization-level keys will be manageable here
+                                  once available. Meanwhile, use project keys for
+                                  server-side access.
+                                </p>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       ) : settingsSubTab === 'members' ? (
