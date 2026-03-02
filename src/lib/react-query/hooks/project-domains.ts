@@ -241,12 +241,9 @@ export function useDeleteDomain(
       const projectSdk = sdk.forProject(projectId, region)
       return await projectSdk.proxy.deleteRule({ ruleId })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['proxy-rules', 'project', projectId],
-      })
-      queryClient.invalidateQueries({
-        queryKey: Dependencies.DOMAINS,
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['proxy-rules'],
       })
     },
   })

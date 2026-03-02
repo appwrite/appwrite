@@ -35,6 +35,7 @@ import {
   useOrganizationDomains,
 } from '@/lib/react-query/hooks'
 import { ViewLogsDialog } from '@/components/pages/projects/$projectId/settings/domains/ViewLogs'
+import { DeleteDomainDialog } from '@/components/pages/projects/$projectId/settings/domains/DeleteDomain'
 import { VerifyDomain } from './_components/VerifyDomain'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
@@ -49,6 +50,7 @@ export function SiteDomainsView() {
   const [pageSize, setPageSize] = useState(DOMAINS_PER_PAGE)
   const [verifyOpen, setVerifyOpen] = useState(false)
   const [viewLogsOpen, setViewLogsOpen] = useState(false)
+  const [deleteDomainOpen, setDeleteDomainOpen] = useState(false)
   const [selectedRule, setSelectedRule] = useState<Models.ProxyRule | null>(null)
   const [viewLogsRule, setViewLogsRule] = useState<Models.ProxyRule | null>(null)
   const search = { search: '' } // TODO: Add search support if needed
@@ -89,9 +91,9 @@ export function SiteDomainsView() {
     setViewLogsOpen(true)
   }
 
-  const handleDelete = (_ruleId: string) => {
-    // TODO: Implement delete with confirmation
-    toast.info('Delete domain coming soon')
+  const handleDelete = (rule: Models.ProxyRule) => {
+    setSelectedRule(rule)
+    setDeleteDomainOpen(true)
   }
 
   if (domainsLoading) {
@@ -257,7 +259,7 @@ export function SiteDomainsView() {
                                 DNS Records
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                onClick={() => handleDelete(ruleData.$id)}
+                                onClick={() => handleDelete(ruleData)}
                               >
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Delete
@@ -285,33 +287,6 @@ export function SiteDomainsView() {
               }}
               itemLabel="domains"
             />
-            {selectedRule && (
-              <VerifyDomain
-                open={verifyOpen}
-                onOpenChange={setVerifyOpen}
-                projectId={projectId ?? ''}
-                rule={selectedRule}
-                region={project?.region}
-                onVerifySuccess={() => {
-                  setVerifyOpen(false)
-                  setSelectedRule(null)
-                }}
-                onReconfigure={() => {
-                  setVerifyOpen(false)
-                  setSelectedRule(null)
-                }}
-              />
-            )}
-            {viewLogsRule && (
-              <ViewLogsDialog
-                open={viewLogsOpen}
-                onOpenChange={(open) => {
-                  setViewLogsOpen(open)
-                  if (!open) setViewLogsRule(null)
-                }}
-                rule={viewLogsRule}
-              />
-            )}
           </>
         ) : (
           <EmptyState
@@ -327,6 +302,48 @@ export function SiteDomainsView() {
           />
         )}
       </div>
+
+      {selectedRule && (
+        <>
+          <VerifyDomain
+            open={verifyOpen}
+            onOpenChange={setVerifyOpen}
+            projectId={projectId ?? ''}
+            rule={selectedRule}
+            region={project?.region}
+            onVerifySuccess={() => {
+              setVerifyOpen(false)
+              setSelectedRule(null)
+            }}
+            onReconfigure={() => {
+              setVerifyOpen(false)
+              setSelectedRule(null)
+            }}
+          />
+          <DeleteDomainDialog
+            open={deleteDomainOpen}
+            onOpenChange={setDeleteDomainOpen}
+            projectId={projectId ?? ''}
+            region={project?.region}
+            rule={selectedRule}
+            onDeleteSuccess={() => {
+              toast.success('Domain has been deleted')
+              setDeleteDomainOpen(false)
+              setSelectedRule(null)
+            }}
+          />
+        </>
+      )}
+      {viewLogsRule && (
+        <ViewLogsDialog
+          open={viewLogsOpen}
+          onOpenChange={(open) => {
+            setViewLogsOpen(open)
+            if (!open) setViewLogsRule(null)
+          }}
+          rule={viewLogsRule}
+        />
+      )}
     </div>
   )
 }

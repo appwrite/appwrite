@@ -35,6 +35,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { VerifyDomain } from './_components/VerifyDomain'
 import { ViewLogsDialog } from '@/components/pages/projects/$projectId/settings/domains/ViewLogs'
+import { DeleteDomainDialog } from '@/components/pages/projects/$projectId/settings/domains/DeleteDomain'
 import { getDomainStatusBadgeConfig } from '@/lib/utils/status-badge'
 import { getApexDomain } from '@/lib/utils/proxy-domains'
 import { toast } from 'sonner'
@@ -68,6 +69,7 @@ export function View() {
   const [pageSize, setPageSize] = useState(DOMAINS_PER_PAGE)
   const [verifyOpen, setVerifyOpen] = useState(false)
   const [viewLogsOpen, setViewLogsOpen] = useState(false)
+  const [deleteDomainOpen, setDeleteDomainOpen] = useState(false)
   const [selectedRule, setSelectedRule] = useState<Models.ProxyRule | null>(null)
   const [viewLogsRule, setViewLogsRule] = useState<Models.ProxyRule | null>(null)
   const search = { search: '' }
@@ -103,8 +105,9 @@ export function View() {
     setViewLogsOpen(true)
   }
 
-  const handleDelete = (_ruleId: string) => {
-    toast.info('Delete domain coming soon')
+  const handleDelete = (rule: Models.ProxyRule) => {
+    setSelectedRule(rule)
+    setDeleteDomainOpen(true)
   }
 
   if (domainsLoading) {
@@ -256,7 +259,7 @@ export function View() {
                                 DNS Records
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                onClick={() => handleDelete(ruleData.$id)}
+                                onClick={() => handleDelete(ruleData)}
                               >
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Delete
@@ -301,24 +304,38 @@ export function View() {
         )}
 
         {selectedRule && (
-          <VerifyDomain
-            open={verifyOpen}
-            onOpenChange={setVerifyOpen}
-            projectId={projectId ?? ''}
-            rule={selectedRule}
-            region={project?.region}
-            onVerifySuccess={() => {
-              setSelectedRule(null)
-            }}
-            onReconfigure={() => {
-              setVerifyOpen(false)
-              setSelectedRule(null)
-              navigate({
-                to: '/projects/$projectId/sites/$siteId/domains/add',
-                params: { projectId: projectId!, siteId: siteId! },
-              })
-            }}
-          />
+          <>
+            <VerifyDomain
+              open={verifyOpen}
+              onOpenChange={setVerifyOpen}
+              projectId={projectId ?? ''}
+              rule={selectedRule}
+              region={project?.region}
+              onVerifySuccess={() => {
+                setSelectedRule(null)
+              }}
+              onReconfigure={() => {
+                setVerifyOpen(false)
+                setSelectedRule(null)
+                navigate({
+                  to: '/projects/$projectId/sites/$siteId/domains/add',
+                  params: { projectId: projectId!, siteId: siteId! },
+                })
+              }}
+            />
+            <DeleteDomainDialog
+              open={deleteDomainOpen}
+              onOpenChange={setDeleteDomainOpen}
+              projectId={projectId ?? ''}
+              region={project?.region}
+              rule={selectedRule}
+              onDeleteSuccess={() => {
+                toast.success('Domain has been deleted')
+                setDeleteDomainOpen(false)
+                setSelectedRule(null)
+              }}
+            />
+          </>
         )}
         {viewLogsRule && (
           <ViewLogsDialog
