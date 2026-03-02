@@ -821,16 +821,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
             ```diff
             {{diff}}
             ```
-            
-            Respond with only valid JSON in this exact structure — no markdown fencing, no commentary:
-            {
-              "bump": "major" | "minor" | "patch",
-              "version": "<new version>",
-              "changelog": [
-                "<entry 1>",
-                "<entry 2>"
-              ]
-            }
             PROMPT;
 
             $options = (new DiffCheckOptions())
