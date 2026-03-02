@@ -1747,22 +1747,6 @@ export function TableView({
               </div>
             )}
           </div>
-          <div className="shrink-0 border-t border-border px-2 py-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-9 w-full gap-2 pl-6 pr-6 text-[13px] font-medium"
-                  onClick={() => setCreateTableDialogOpen(true)}
-                >
-                  <Plus className="h-4 w-4" />
-                  Create table
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="top">Create table</TooltipContent>
-            </Tooltip>
-          </div>
           <div className="shrink-0 border-t border-border px-2 py-1.5">
             <div className="flex items-center justify-between gap-1 text-[11px] text-muted-foreground">
               <span className="shrink-0 tabular-nums">
@@ -1798,6 +1782,17 @@ export function TableView({
                 </Button>
               </div>
             </div>
+          </div>
+          <div className="shrink-0 border-t border-border px-2 py-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 w-full gap-2 pl-6 pr-6 text-[13px] font-medium"
+              onClick={() => setCreateTableDialogOpen(true)}
+            >
+              <Plus className="h-4 w-4" />
+              Create table
+            </Button>
           </div>
         </div>
 
@@ -5972,9 +5967,9 @@ function RowsSpreadsheet({
                       >
                         {sortBy === col ? (
                           sortOrder === 'asc' ? (
-                            <ArrowUp className="h-3 w-3 shrink-0 text-foreground" />
+                            <ArrowUp className="h-3 w-3 shrink-0 text-chart-brand" />
                           ) : (
-                            <ArrowDown className="h-3 w-3 shrink-0 text-foreground" />
+                            <ArrowDown className="h-3 w-3 shrink-0 text-chart-brand" />
                           )
                         ) : (
                           <ArrowUpDown className="h-3 w-3 shrink-0 text-muted-foreground" />
@@ -5997,9 +5992,9 @@ function RowsSpreadsheet({
                   >
                     {sortBy === '$createdAt' ? (
                       sortOrder === 'asc' ? (
-                        <ArrowUp className="h-3 w-3 shrink-0 text-foreground" />
+                        <ArrowUp className="h-3 w-3 shrink-0 text-chart-brand" />
                       ) : (
-                        <ArrowDown className="h-3 w-3 shrink-0 text-foreground" />
+                        <ArrowDown className="h-3 w-3 shrink-0 text-chart-brand" />
                       )
                     ) : (
                       <ArrowUpDown className="h-3 w-3 shrink-0 text-muted-foreground" />
@@ -6020,9 +6015,9 @@ function RowsSpreadsheet({
                   >
                     {sortBy === '$updatedAt' ? (
                       sortOrder === 'asc' ? (
-                        <ArrowUp className="h-3 w-3 shrink-0 text-foreground" />
+                        <ArrowUp className="h-3 w-3 shrink-0 text-chart-brand" />
                       ) : (
-                        <ArrowDown className="h-3 w-3 shrink-0 text-foreground" />
+                        <ArrowDown className="h-3 w-3 shrink-0 text-chart-brand" />
                       )
                     ) : (
                       <ArrowUpDown className="h-3 w-3 shrink-0 text-muted-foreground" />
