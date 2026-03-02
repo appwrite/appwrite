@@ -5215,16 +5215,16 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "2.0.0",
+            "version": "2.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "058049326e04a2a0c2f0ce8ad00c7e84825aba14"
+                "reference": "92a1650824ba0c5e6a1bc46e622ac87c50a08920"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/058049326e04a2a0c2f0ce8ad00c7e84825aba14",
-                "reference": "058049326e04a2a0c2f0ce8ad00c7e84825aba14",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/92a1650824ba0c5e6a1bc46e622ac87c50a08920",
+                "reference": "92a1650824ba0c5e6a1bc46e622ac87c50a08920",
                 "shasum": ""
             },
             "require": {
@@ -5258,9 +5258,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/vcs/issues",
-                "source": "https://github.com/utopia-php/vcs/tree/2.0.0"
+                "source": "https://github.com/utopia-php/vcs/tree/2.0.1"
             },
-            "time": "2026-02-25T11:36:45+00:00"
+            "time": "2026-02-27T12:18:49+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -6432,11 +6432,11 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "1.12.32",
+            "version": "1.12.33",
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/2770dcdf5078d0b0d53f94317e06affe88419aa8",
-                "reference": "2770dcdf5078d0b0d53f94317e06affe88419aa8",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/37982d6fc7cbb746dda7773530cda557cdf119e1",
+                "reference": "37982d6fc7cbb746dda7773530cda557cdf119e1",
                 "shasum": ""
             },
             "require": {
@@ -6481,7 +6481,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-09-30T10:16:31+00:00"
+            "time": "2026-02-28T20:30:03+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
