@@ -1,22 +1,24 @@
 /**
  * Buy Domain Wizard
  *
- * Full-screen wizard for buying a domain. Optimistically shows popular TLDs as
- * user types (no backend call). Prices will load with animation once API is connected.
+ * Full-screen wizard for buying a domain. Fetches prices via batched getPrice
+ * calls (one per TLD in parallel) for fast results.
  */
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Search, ArrowRight, XCircle } from 'lucide-react'
+import { Search, ArrowRight, XCircle, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
+import { Badge } from '@/components/ui/badge'
+import { useDomainPrices } from '@/lib/react-query/hooks/domains'
 
-// Most popular TLDs - optimistic display without backend
+// TLDs to request from the API (popular options for domain suggestions)
 const POPULAR_TLDS = [
   'com',
   'net',
@@ -34,132 +36,11 @@ const POPULAR_TLDS = [
   'site',
   'tech',
   'cloud',
-  'software',
-  'digital',
-  'world',
-  'info',
-  'biz',
-  'us',
-  'uk',
-  'eu',
-  'de',
-  'fr',
-  'es',
-  'it',
-  'nl',
-  'in',
-  'au',
-  'ca',
-  'tv',
-  'fm',
-  'cc',
-  'ws',
   'blog',
-  'studio',
-  'design',
-  'agency',
-  'live',
-  'today',
-  'life',
-  'team',
-  'company',
-  'solutions',
-  'work',
-  'email',
-  'cool',
-  'guru',
-  'expert',
-  'zone',
-  'space',
-  'link',
-  'click',
-  'name',
   'pro',
-  'mobi',
   'top',
-  'win',
-  'bet',
-  'web',
-  'host',
-  'network',
-  'systems',
-  'codes',
-  'build',
-  'run',
-  'tools',
-  'ventures',
-  'capital',
-  'media',
-  'news',
-  'social',
-  'club',
-  'community',
-  'directory',
-  'land',
-  'house',
-  'properties',
-  'cars',
-  'bike',
-  'fitness',
-  'health',
-  'dog',
-  'pet',
-  'photo',
-  'video',
-  'music',
-  'art',
-  'gallery',
-  'education',
-  'academy',
-  'school',
-  'university',
-  'law',
-  'legal',
-  'tax',
-  'finance',
-  'money',
-  'cash',
-  'wiki',
+  'live',
 ]
-
-// Default mock price when TLD not in map (will be replaced by API)
-const DEFAULT_PRICE = { price: 12.99, renewal: 14.99 }
-
-// Mock prices (will be replaced by API)
-const MOCK_PRICES: Record<string, { price: number; renewal: number }> = {
-  com: { price: 12.99, renewal: 14.99 },
-  net: { price: 11.99, renewal: 13.99 },
-  org: { price: 9.99, renewal: 11.99 },
-  io: { price: 39.99, renewal: 44.99 },
-  co: { price: 29.99, renewal: 34.99 },
-  dev: { price: 14.99, renewal: 16.99 },
-  app: { price: 14.99, renewal: 16.99 },
-  ai: { price: 89.99, renewal: 99.99 },
-  xyz: { price: 1.99, renewal: 14.99 },
-  me: { price: 19.99, renewal: 22.99 },
-  shop: { price: 3.99, renewal: 19.99 },
-  store: { price: 3.99, renewal: 19.99 },
-  online: { price: 2.99, renewal: 14.99 },
-  site: { price: 2.99, renewal: 14.99 },
-  tech: { price: 4.99, renewal: 24.99 },
-  cloud: { price: 24.99, renewal: 29.99 },
-  software: { price: 19.99, renewal: 24.99 },
-  digital: { price: 14.99, renewal: 19.99 },
-  world: { price: 14.99, renewal: 19.99 },
-  info: { price: 4.99, renewal: 14.99 },
-  biz: { price: 12.99, renewal: 14.99 },
-  us: { price: 9.99, renewal: 12.99 },
-  uk: { price: 9.99, renewal: 12.99 },
-  eu: { price: 12.99, renewal: 16.99 },
-  de: { price: 9.99, renewal: 12.99 },
-  fr: { price: 9.99, renewal: 12.99 },
-  tv: { price: 29.99, renewal: 34.99 },
-  fm: { price: 19.99, renewal: 24.99 },
-  blog: { price: 14.99, renewal: 19.99 },
-  pro: { price: 14.99, renewal: 19.99 },
-  top: { price: 2.99, renewal: 14.99 },
-  live: { price: 14.99, renewal: 19.99 },
-}
 
 type DomainSuggestion = {
   full: string
@@ -168,6 +49,7 @@ type DomainSuggestion = {
   price?: number
   renewal?: number
   taken?: boolean
+  premium?: boolean
   isPerfectMatch?: boolean
 }
 
@@ -175,7 +57,7 @@ export function BuyDomainWizard() {
   const { orgId } = useParams({ strict: false })
   const navigate = useNavigate()
   const [searchValue, setSearchValue] = useState('')
-  const [priceLoadedFor, setPriceLoadedFor] = useState<Set<string>>(new Set())
+  const [debouncedSearch, setDebouncedSearch] = useState('')
 
   const fallbackPath = `/organizations/${orgId}/domains/`
 
@@ -194,32 +76,51 @@ export function BuyDomainWizard() {
     return v
   }, [normalizedSearch])
 
-  // Mock: domains that appear as taken (will be replaced by API)
-  const MOCK_TAKEN = new Set(['com', 'net'])
+  // Debounce baseName for API calls
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(baseName), 300)
+    return () => clearTimeout(timer)
+  }, [baseName])
 
-  // Optimistic suggestions: base + popular TLDs (instant, no backend)
+  const { pricesByDomain, error } = useDomainPrices(
+    debouncedSearch,
+    POPULAR_TLDS,
+  )
+
+  // API data map: domain -> { price, available } from getPrice
+  const apiDataByDomain = useMemo(() => {
+    const map = new Map<
+      string,
+      { price?: number; available: boolean; premium?: boolean }
+    >()
+    pricesByDomain.forEach((data, domain) => {
+      map.set(domain, { price: data.price, available: data.available })
+    })
+    return map
+  }, [pricesByDomain])
+
+  // Optimistic: show suggestions immediately (baseName + TLDs), merge API data when it arrives
   const suggestions = useMemo((): DomainSuggestion[] => {
     if (!baseName || baseName.length < 2) return []
-    const hasExactMatch = POPULAR_TLDS.some((tld) => `${baseName}.${tld}` === normalizedSearch)
-    const items = POPULAR_TLDS.map((tld) => {
+    const hasExactMatch = POPULAR_TLDS.some(
+      (tld) => `${baseName}.${tld}` === normalizedSearch,
+    )
+    return POPULAR_TLDS.map((tld) => {
       const full = `${baseName}.${tld}`
-      const mock = MOCK_PRICES[tld] ?? DEFAULT_PRICE
-      const loaded = priceLoadedFor.has(full)
-      const taken = loaded && MOCK_TAKEN.has(tld)
+      const apiData = apiDataByDomain.get(full)
       const isExactMatch = full === normalizedSearch
-      const isPreferredCom = tld === 'com' && normalizedSearch === baseName && !hasExactMatch
-      const isPerfectMatch = isExactMatch || isPreferredCom
+      const isPreferredCom =
+        tld === 'com' && normalizedSearch === baseName && !hasExactMatch
       return {
         full,
         tld,
-        priceLoaded: loaded,
-        price: loaded && mock && !taken ? mock.price : undefined,
-        renewal: loaded && mock ? mock.renewal : undefined,
-        taken,
-        isPerfectMatch,
+        priceLoaded: apiData != null,
+        price: apiData?.price ?? undefined,
+        taken: apiData ? !apiData.available : undefined,
+        premium: apiData?.premium,
+        isPerfectMatch: isExactMatch || isPreferredCom,
       }
-    })
-    return [...items].sort((a, b) => {
+    }).sort((a, b) => {
       const aExact = a.full === normalizedSearch ? 1 : 0
       const bExact = b.full === normalizedSearch ? 1 : 0
       if (aExact !== bExact) return bExact - aExact
@@ -227,27 +128,9 @@ export function BuyDomainWizard() {
       const bCom = b.tld === 'com' ? 1 : 0
       return bCom - aCom
     })
-  }, [baseName, normalizedSearch, priceLoadedFor])
+  }, [baseName, normalizedSearch, apiDataByDomain])
 
-  // Simulate price loading (will be replaced by API call)
-  const loadPricesForCurrent = useCallback(() => {
-    if (!baseName) return
-    const timer = setTimeout(() => {
-      setPriceLoadedFor((prev) => {
-        const next = new Set(prev)
-        POPULAR_TLDS.forEach((tld) => next.add(`${baseName}.${tld}`))
-        return next
-      })
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [baseName])
-
-  useEffect(() => {
-    if (!baseName) return
-    return loadPricesForCurrent()
-  }, [baseName, loadPricesForCurrent])
-
-  const handleSelectDomain = (full: string) => {
+  const handleSelectDomain = (_full: string) => {
     toast.info(
       'Domain purchase will be available soon. The API integration is coming this week.',
     )
@@ -263,9 +146,7 @@ export function BuyDomainWizard() {
         <div className="flex gap-2 justify-end w-full">
           <Button
             variant="outline"
-            onClick={() =>
-              navigate({ to: '/organizations/$orgId/domains/', params: { orgId: orgId! } })
-            }
+            onClick={() => navigate({ to: '..' })}
           >
             Cancel
           </Button>
@@ -304,6 +185,10 @@ export function BuyDomainWizard() {
           <p className="text-[12px] text-muted-foreground">
             Type at least 2 characters to see suggestions
           </p>
+        ) : baseName.length >= 2 && error ? (
+          <p className="text-[12px] text-destructive">
+            Failed to load domain prices. Please try again.
+          </p>
         ) : null}
       </div>
     </WizardLayout>
@@ -317,7 +202,8 @@ function DomainCard({
   suggestion: DomainSuggestion
   onSelect: (full: string) => void
 }) {
-  const { full, tld, priceLoaded, price, taken, isPerfectMatch } = suggestion
+  const { full, tld, priceLoaded, price, taken, premium, isPerfectMatch } =
+    suggestion
 
   return (
     <div
@@ -330,7 +216,7 @@ function DomainCard({
             : 'border-border/60 bg-card/40 transition-all duration-150 hover:border-foreground/15 hover:bg-muted/30',
       )}
     >
-      <div className="flex items-baseline gap-1 min-w-0">
+      <div className="flex items-baseline gap-1.5 min-w-0">
         <span
           className={cn(
             'font-mono text-[14px] font-medium tracking-tight truncate',
@@ -347,6 +233,15 @@ function DomainCard({
         >
           .{tld}
         </span>
+        {premium && (
+          <Badge
+            variant="info"
+            className="ml-auto shrink-0 gap-0.5 px-1.5 py-0 text-[10px] font-medium"
+          >
+            <Sparkles className="h-3 w-3" />
+            Premium
+          </Badge>
+        )}
       </div>
       <div className="flex items-center justify-between gap-3">
         {priceLoaded ? (
@@ -355,14 +250,18 @@ function DomainCard({
               <XCircle className="h-3.5 w-3.5" />
               Taken
             </span>
-          ) : price != null ? (
+          ) : price != null && price > 0 ? (
             <span className="font-mono text-[13px] font-semibold tabular-nums text-foreground animate-in fade-in-0 slide-in-from-bottom-1 duration-200">
-              ${price.toFixed(2)}
+              ${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               <span className="font-normal text-[11px] text-muted-foreground">
                 /yr
               </span>
             </span>
-          ) : null
+          ) : (
+            <span className="text-[12px] text-muted-foreground animate-in fade-in-0 slide-in-from-bottom-1 duration-200">
+              {premium ? 'Contact for price' : '—'}
+            </span>
+          )
         ) : (
           <Skeleton className="h-4 w-14 rounded bg-muted/60" />
         )}

@@ -6,6 +6,7 @@
  */
 
 import {
+  useQueries,
   useQuery,
   useMutation,
   useQueryClient,
@@ -73,6 +74,17 @@ export async function fetchDomain(domainId: string) {
   const response = await sdk.forConsole.domains.get({ domainId })
   return response
 }
+
+/**
+ * Query function to fetch price for a single domain (getPrice API)
+ */
+export async function fetchDomainPrice(domain: string) {
+  const response = await sdk.forConsole.domains.getPrice({
+    domain: domain.toLowerCase(),
+  })
+  return response
+}
+
 
 // ============================================================================
 // MUTATION FUNCTIONS
@@ -459,6 +471,18 @@ export function domainQueryOptions(domainId: string | null | undefined) {
 }
 
 /**
+ * Query options for fetching a single domain price
+ */
+export function domainPriceQueryOptions(domain: string | null | undefined) {
+  return queryOptions({
+    queryKey: ['domain-price', domain],
+    queryFn: () => fetchDomainPrice(domain!),
+    enabled: !!domain && domain.length >= 4,
+    staleTime: 60 * 1000,
+  })
+}
+
+/**
  * Query options for fetching DNS records for a domain
  */
 export function domainRecordsQueryOptions(
@@ -525,6 +549,56 @@ export function useOrganizationDomains(
     isFetching,
     error,
     refetch,
+  }
+}
+
+/**
+ * Hook to fetch domain prices via batched getPrice calls
+ *
+ * Fires one getPrice request per TLD in parallel. Results stream in as each
+ * completes for fast perceived performance.
+ *
+ * @param baseName - Base name (e.g. "myapp")
+ * @param tlds - TLDs to fetch prices for
+ * @returns Map of domain -> { price, available }, loading/error state
+ */
+export function useDomainPrices(
+  baseName: string | null | undefined,
+  tlds: string[] = [],
+) {
+  const domains = useMemo(
+    () =>
+      baseName && baseName.length >= 2
+        ? tlds.map((tld) => `${baseName}.${tld}`)
+        : [],
+    [baseName, tlds],
+  )
+
+  const queries = useQueries({
+    queries: domains.map((domain) => domainPriceQueryOptions(domain)),
+  })
+
+  const pricesByDomain = useMemo(() => {
+    const map = new Map<string, { price: number; available: boolean }>()
+    for (let i = 0; i < domains.length; i++) {
+      const { data } = queries[i]
+      if (data) {
+        map.set(domains[i], {
+          price: data.price,
+          available: data.available,
+        })
+      }
+    }
+    return map
+  }, [domains, queries])
+
+  const hasError = queries.some((q) => q.error)
+  const isFetching = queries.some((q) => q.isFetching)
+
+  return {
+    pricesByDomain,
+    isFetching,
+    error: hasError ? queries.find((q) => q.error)?.error : undefined,
   }
 }
 
