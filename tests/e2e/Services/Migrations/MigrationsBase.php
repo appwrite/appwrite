@@ -7,6 +7,7 @@ use Tests\E2E\Client;
 use Tests\E2E\General\UsageTest;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Services\Functions\FunctionsBase;
+use Utopia\Console;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -1015,6 +1016,158 @@ trait MigrationsBase
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ]);
+    }
+
+    /**
+     * Sites
+     */
+    public function testAppwriteMigrationSite(): void
+    {
+        $site = $this->client->call(Client::METHOD_POST, '/sites', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'siteId' => ID::unique(),
+            'name' => 'Test Site',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'adapter' => 'static',
+            'outputDirectory' => './',
+        ]);
+
+        $this->assertEquals(201, $site['headers']['status-code'], 'Create site failed: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
+        $this->assertNotEmpty($site['body']['$id']);
+
+        $siteId = $site['body']['$id'];
+
+        // Create deployment
+        $deployment = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments', [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'code' => $this->packageSite('static'),
+            'activate' => true,
+        ]);
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $this->assertNotEmpty($deployment['body']['$id']);
+
+        $deploymentId = $deployment['body']['$id'];
+
+        // Wait for deployment to be ready
+        $this->assertEventually(function () use ($siteId, $deploymentId) {
+            $response = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/deployments/' . $deploymentId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals('ready', $response['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($response['body'], JSON_PRETTY_PRINT));
+        }, 300000, 500);
+
+        // Create environment variable
+        $variable = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/variables', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'key' => 'TEST_VAR',
+            'value' => 'test_value',
+        ]);
+
+        $this->assertEquals(201, $variable['headers']['status-code']);
+
+        // Perform migration
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_SITE,
+                Resource::TYPE_SITE_DEPLOYMENT,
+                Resource::TYPE_SITE_VARIABLE,
+            ],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals('completed', $result['status']);
+        $this->assertEquals([Resource::TYPE_SITE, Resource::TYPE_SITE_DEPLOYMENT, Resource::TYPE_SITE_VARIABLE], $result['resources']);
+
+        foreach ([Resource::TYPE_SITE, Resource::TYPE_SITE_DEPLOYMENT, Resource::TYPE_SITE_VARIABLE] as $resource) {
+            $this->assertArrayHasKey($resource, $result['statusCounters']);
+            $this->assertEquals(0, $result['statusCounters'][$resource]['error']);
+            $this->assertEquals(0, $result['statusCounters'][$resource]['pending']);
+            $this->assertEquals(1, $result['statusCounters'][$resource]['success']);
+            $this->assertEquals(0, $result['statusCounters'][$resource]['processing']);
+            $this->assertEquals(0, $result['statusCounters'][$resource]['warning']);
+        }
+
+        // Verify site in destination
+        $response = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertEquals($siteId, $response['body']['$id']);
+        $this->assertEquals('Test Site', $response['body']['name']);
+        $this->assertEquals('node-22', $response['body']['buildRuntime']);
+        $this->assertEquals('other', $response['body']['framework']);
+        $this->assertEquals('static', $response['body']['adapter']);
+
+        // Verify deployment in destination
+        $this->assertEventually(function () use ($siteId) {
+            $deployments = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/deployments', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getDestinationProject()['$id'],
+                'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+            ]);
+
+            $this->assertEquals(200, $deployments['headers']['status-code']);
+            $this->assertNotEmpty($deployments['body']);
+            $this->assertEquals(1, $deployments['body']['total']);
+            $this->assertEquals('ready', $deployments['body']['deployments'][0]['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployments['body']['deployments'][0], JSON_PRETTY_PRINT));
+        }, 100000, 500);
+
+        // Verify variable in destination
+        $variables = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/variables', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $variables['headers']['status-code']);
+        $this->assertEquals(1, $variables['body']['total']);
+        $this->assertEquals('TEST_VAR', $variables['body']['variables'][0]['key']);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/sites/' . $siteId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/sites/' . $siteId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+    }
+
+    private function packageSite(string $site): CURLFile
+    {
+        $stdout = '';
+        $stderr = '';
+        $folderPath = realpath(__DIR__ . '/../../../resources/sites') . "/$site";
+        $tarPath = "$folderPath/code.tar.gz";
+
+        Console::execute("cd $folderPath && tar --exclude code.tar.gz -czf code.tar.gz .", '', $stdout, $stderr);
+
+        return new CURLFile($tarPath, 'application/x-gzip', \basename($tarPath));
     }
 
     /**
