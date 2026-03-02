@@ -486,9 +486,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 $useAi = ($ai !== 'no');
                 $apiKey = $useAi ? System::getEnv('_APP_ASSISTANT_OPENAI_API_KEY', '') : '';
                 $aiChangelog = ''; // Track AI-generated changelog for PR description
-                Console::info('Checking for _APP_ASSISTANT_OPENAI_API_KEY... [' . (! empty($apiKey) ? 'FOUND' : 'NOT FOUND') . ']');
+
                 if (! empty($apiKey) && ! $examplesOnly) {
-                    Console::info("Using AI to determine version bump and changelog for {$language['name']} SDK...");
+                    Console::info("Analyzing SDK changes with AI...");
                     $aiResult = $this->generateVersionAndChangelog($language, $result);
 
                     if ($aiResult !== null) {
@@ -502,6 +502,12 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         // Update the changelog file
                         $this->updateChangelogFile($language['changelog'], $newVersion, $newChangelog);
 
+                        // Also update CHANGELOG.md in the generated SDK directory
+                        $sdkChangelogPath = $result . '/CHANGELOG.md';
+                        if (file_exists($sdkChangelogPath)) {
+                            $this->updateChangelogFile($sdkChangelogPath, $newVersion, $newChangelog);
+                        }
+
                         // Reload the language config with updated values
                         $language['version'] = $newVersion;
 
@@ -512,10 +518,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         } catch (\Throwable $exception) {
                             Console::error($exception->getMessage());
                         }
-
-                        Console::success("AI determined version: {$newVersion} ({$aiResult['versionBump']} bump)");
                     } else {
-                        Console::warning('AI version generation failed, using existing version');
+                        Console::warning('AI analysis failed, using existing version');
                     }
                 }
 
@@ -524,33 +528,45 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
                 $repoBranch = $language['repoBranch'] ?? 'main';
                 if ($git && ! empty($gitUrl)) {
+                    Console::info("Preparing {$language['name']} SDK repository...");
+
                     \exec('rm -rf ' . $target . ' && \
                         mkdir -p ' . $target . ' && \
                         cd ' . $target . ' && \
-                        git init && \
+                        git init --quiet && \
                         git config core.ignorecase false && \
                         git config pull.rebase false && \
+                        git config advice.defaultBranchName false && \
                         git remote add origin ' . $gitUrl . ' && \
-                        git fetch origin && \
+                        git fetch origin --quiet --no-tags --depth 1 ' . $repoBranch . ' 2>&1 | grep -v "^remote:" | grep -v "^From " | grep -v "^ \* " || true && \
                         (git checkout -f ' . $repoBranch . ' 2>/dev/null || git checkout -b ' . $repoBranch . ') && \
-                        git pull origin ' . $repoBranch . ' && \
+                        git pull origin ' . $repoBranch . ' --quiet --no-tags 2>&1 | grep -v "^From " | grep -v "^ \* " || true && \
                         (git checkout -f ' . $gitBranch . ' 2>/dev/null || git checkout -b ' . $gitBranch . ') && \
-                        (git fetch origin ' . $gitBranch . ' 2>/dev/null || git push -u origin ' . $gitBranch . ') && \
+                        (git fetch origin ' . $gitBranch . ' --quiet --no-tags --depth 1 2>/dev/null || git push -u origin ' . $gitBranch . ' --quiet 2>&1 | grep -v "^remote:" || true) && \
                         git reset --hard origin/' . $gitBranch . ' 2>/dev/null || true && \
-                        (test -d .github && cp -r .github /tmp/.github-backup-$$ || true) && \
-                        git rm -rf --cached . && \
-                        git clean -fdx -e .git -e .github && \
+                        (if [ -d .github ]; then cp -r .github /tmp/.github-backup-$$ 2>/dev/null; fi) && \
+                        git rm -rf --cached . 2>/dev/null && \
+                        git clean -fdx -e .git -e .github 2>/dev/null && \
                         cp -r ' . $result . '/. ' . $target . '/ && \
-                        (test -d /tmp/.github-backup-$$ && cp -rn /tmp/.github-backup-$$/.github . && rm -rf /tmp/.github-backup-$$ || true) && \
+                        (if [ -d /tmp/.github-backup-$$/.github ]; then cp -rn /tmp/.github-backup-$$/.github . 2>/dev/null && rm -rf /tmp/.github-backup-$$; fi) && \
                         git add -A && \
-                        git commit -m "' . $message . '" && \
-                        git push -u origin ' . $gitBranch . '
-                    ');
+                        git commit -m "' . $message . '" --quiet && \
+                        git push -u origin ' . $gitBranch . ' --quiet 2>&1 | grep -E "^(To |   |[0-9a-f]+\\.\\.[0-9a-f]+)" || true
+                    ', $gitOutput, $gitReturnCode);
+
+                    if ($gitReturnCode !== 0) {
+                        Console::warning("Git operations completed with warnings (exit code: {$gitReturnCode})");
+                    }
 
                     Console::success("Pushed {$language['name']} SDK to {$gitUrl}");
                     if ($git) {
                         $prTitle = "feat: {$language['name']} SDK update for version {$language['version']}";
-                        $prBody = "This PR contains updates to the {$language['name']} SDK for version {$language['version']} . ";
+
+                        // Build PR body with AI changelog if available
+                        $prBody = "This PR contains updates to the {$language['name']} SDK for version {$language['version']}.";
+                        if (!empty($aiChangelog) && $aiChangelog !== '* No user-facing SDK changes.') {
+                            $prBody .= "\n\n## Changes\n\n{$aiChangelog}";
+                        }
                         $repoName = $language['gitUserName'] . '/' . $language['gitRepoName'];
 
                         Console::info("Creating pull request for {$language['name']} SDK...");
@@ -778,10 +794,12 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 - `patch`: backward-compatible fixes or small improvements.
 
                 Changelog rules:
-                - Include only user-facing SDK changes.
-                - Exclude internal/project-infra changes (for example `.github/workflows/**`, `.github/ISSUE_TEMPLATE/**`, CI/release automation/template cleanup).
-                - Never add "Internal housekeeping" style entries.
-                - If only excluded changes exist, return exactly: `* No user-facing SDK changes.`
+                - Keep entries brief and direct (15 words or less each)
+                - USER-FACING: Source code changes, commands/params, docs, examples, scripts
+                - EXCLUDE: .github/, CI configs, internal tooling
+                - Format: "Breaking: Removed X" or "Added Y feature" or "Fixed Z bug"
+                - One change per bullet, avoid combining multiple changes
+                - If no user-facing changes: `* No user-facing SDK changes.`
 
                 Diff context:
                 - Stats: {{diff_stats}}
@@ -805,11 +823,13 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 ->setExcludePaths([
                     '.github/workflows/**',
                     '.github/ISSUE_TEMPLATE/**',
+                    '.git/**',
                 ])
                 ->setMaxDiffLines(500)
                 ->setUserId('sdk-analyst');
 
             Console::info("Running DiffCheck for {$language['name']} SDK...");
+
             $result = (new DiffCheck())->run(
                 runner: $adapter,
                 base: DiffCheckRepository::remote($gitUrl, $repoBranch),
@@ -819,7 +839,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
             );
 
             if (!$result['hasChanges']) {
-                Console::warning("No changes detected for {$language['name']} SDK");
+                Console::info("✓ No changes detected - SDK is up to date");
                 return null;
             }
 
@@ -831,15 +851,11 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 return null;
             }
 
-            Console::log('AI raw response:');
-            Console::log($responseContent);
-            Console::log('--- End of AI response ---');
-
             $parsed = json_decode($responseContent, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
                 Console::warning('Failed to parse AI response as JSON: ' . json_last_error_msg());
-                Console::log('Raw response that failed to parse:');
+                Console::log('Raw response:');
                 Console::log($responseContent);
 
                 return null;
@@ -850,7 +866,14 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 return null;
             }
 
-            Console::info("AI analysis complete - Version bump: {$parsed['versionBump']}, New version: {$parsed['version']}");
+            Console::success("✓ Analysis complete");
+            Console::log("  Version: {$language['version']} → {$parsed['version']} ({$parsed['versionBump']} bump)");
+            Console::log("  Changelog:");
+            foreach (explode("\n", $parsed['changelog']) as $line) {
+                if (trim($line)) {
+                    Console::log("    {$line}");
+                }
+            }
 
             return [
                 'version' => $parsed['version'],
