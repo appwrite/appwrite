@@ -512,11 +512,11 @@ class Realtime extends MessagingAdapter
                     $channels = [];
 
                     // sending legacy + tablesdb events to both legacy and tablesdb
-                    $channels = array_merge(
+                    $channels = array_values(array_merge(
                         self::getDatabaseChannels('legacy', $database->getId(), $resourceId, $payload->getId(), 'databases'),
                         self::getDatabaseChannels('tablesdb', $database->getId(), $resourceId, $payload->getId(), 'databases'),
                         self::getDatabaseChannels('tablesdb', $database->getId(), $resourceId, $payload->getId())
-                    );
+                    ));
 
                     $roles = $collection->getAttribute('documentSecurity', false)
                         ? \array_merge($collection->getRead(), $payload->getRead())
