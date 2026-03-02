@@ -725,7 +725,7 @@ class Event
             $events = $pairedEvents;
         }
         // mirrored events can have duplicates in case of smaller events
-        return array_unique($events);
+        return array_values(array_unique($events));
     }
 
     /**

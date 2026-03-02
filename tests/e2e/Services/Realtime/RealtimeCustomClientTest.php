@@ -123,6 +123,8 @@ class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($response['data']);
         $this->assertNotEmpty($response['data']['user']);
         $this->assertCount(16, $response['data']['channels']);
+        $this->assertIsList($response['data']['channels']);
+        $this->assertTrue(array_is_list($response['data']['channels']));
         $this->assertContains('account', $response['data']['channels']);
         $this->assertContains('account.' . $userId, $response['data']['channels']);
         $this->assertContains('files', $response['data']['channels']);
@@ -818,7 +820,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(6, $response['data']['channels']);
+        $this->assertCount(8, $response['data']['channels']);
         $this->assertContains('documents', $response['data']['channels']);
         $this->assertContains('databases.' . $databaseId . '.collections.' . $actorsId . '.documents.' . $documentId, $response['data']['channels']);
         $this->assertContains('databases.' . $databaseId . '.collections.' . $actorsId . '.documents', $response['data']['channels']);
@@ -863,7 +865,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(6, $response['data']['channels']);
+        $this->assertCount(8, $response['data']['channels']);
         $this->assertContains('documents', $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}", $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents", $response['data']['channels']);
@@ -919,7 +921,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(6, $response['data']['channels']);
+        $this->assertCount(8, $response['data']['channels']);
         $this->assertContains('documents', $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}", $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents", $response['data']['channels']);
@@ -975,7 +977,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(6, $response['data']['channels']);
+        $this->assertCount(8, $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.create", $response['data']['events']);
         $this->assertContains("databases.*.collections.*.documents.*.create", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}.collections.*.documents.*.create", $response['data']['events']);
@@ -1007,7 +1009,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(6, $response['data']['channels']);
+        $this->assertCount(8, $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.create", $response['data']['events']);
         $this->assertContains("databases.*.collections.*.documents.*.create", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}.collections.*.documents.*.create", $response['data']['events']);
@@ -1056,7 +1058,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(6, $response['data']['channels']);
+        $this->assertCount(8, $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.update", $response['data']['events']);
         $this->assertContains("databases.*.collections.*.documents.*.update", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}.collections.*.documents.*.update", $response['data']['events']);
@@ -1084,7 +1086,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(6, $response['data']['channels']);
+        $this->assertCount(8, $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.update", $response['data']['events']);
         $this->assertContains("databases.*.collections.*.documents.*.update", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}.collections.*.documents.*.update", $response['data']['events']);
@@ -1112,7 +1114,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(6, $response['data']['channels']);
+        $this->assertCount(8, $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.update", $response['data']['events']);
         $this->assertContains("databases.*.collections.*.documents.*.update", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}.collections.*.documents.*.update", $response['data']['events']);
@@ -1149,7 +1151,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(6, $response['data']['channels']);
+        $this->assertCount(8, $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.delete", $response['data']['events']);
         $this->assertContains("databases.*.collections.*.documents.*.delete", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}.collections.*.documents.*.delete", $response['data']['events']);
@@ -1178,7 +1180,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(6, $response['data']['channels']);
+        $this->assertCount(8, $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.delete", $response['data']['events']);
         $this->assertContains("databases.*.collections.*.documents.*.delete", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}.collections.*.documents.*.delete", $response['data']['events']);
@@ -1207,7 +1209,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(6, $response['data']['channels']);
+        $this->assertCount(8, $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.delete", $response['data']['events']);
         $this->assertContains("databases.*.collections.*.documents.*.delete", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}.collections.*.documents.*.delete", $response['data']['events']);
@@ -1254,7 +1256,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(6, $response['data']['channels']);
+        $this->assertCount(8, $response['data']['channels']);
 
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.upsert", $response['data']['events']);
         $this->assertContains("databases.*.collections.*.documents.*.upsert", $response['data']['events']);
@@ -1771,7 +1773,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(6, $response['data']['channels']);
+        $this->assertCount(8, $response['data']['channels']);
 
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.upsert", $response['data']['events']);
         $this->assertContains("databases.*.collections.*.documents.*.upsert", $response['data']['events']);
@@ -1809,7 +1811,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(6, $response['data']['channels']);
+        $this->assertCount(8, $response['data']['channels']);
 
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$response['data']['payload']['$id']}.upsert", $response['data']['events']);
         $this->assertContains("databases.*.collections.*.documents.*.upsert", $response['data']['events']);
@@ -1951,7 +1953,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(6, $response['data']['channels']);
+        $this->assertCount(8, $response['data']['channels']);
         $this->assertContains('documents', $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}", $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents", $response['data']['channels']);
@@ -1990,7 +1992,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(6, $response['data']['channels']);
+        $this->assertCount(8, $response['data']['channels']);
         $this->assertContains('documents', $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}", $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents", $response['data']['channels']);
@@ -2040,7 +2042,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(6, $response['data']['channels']);
+        $this->assertCount(8, $response['data']['channels']);
         $this->assertContains('documents', $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents.{$documentId}", $response['data']['channels']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.documents", $response['data']['channels']);
@@ -2565,17 +2567,66 @@ class RealtimeCustomClientTest extends Scope
         $session = $user['session'] ?? '';
         $projectId = $this->getProject()['$id'];
 
+        /**
+         * Create a shared TablesDB database using the /tablesdb API.
+         * This database will then be accessed via both /databases and /tablesdb routes.
+         */
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], $this->getHeaders()), [
+        ]), [
             'databaseId' => ID::unique(),
-            'name' => 'TablesDB Realtime DB',
+            'name' => 'TablesDB Cross API Realtime DB',
         ]);
 
         $databaseId = $database['body']['$id'];
 
+        $this->assertEquals(201, $database['headers']['status-code']);
+
+        /**
+         * Legacy collection in the shared database (/databases API).
+         */
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Legacy Actors',
+            'permissions' => [
+                Permission::create(Role::user($user['$id'])),
+            ],
+            'documentSecurity' => true,
+        ]);
+
+        $collectionId = $collection['body']['$id'];
+
+        $attribute = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->assertEquals(202, $attribute['headers']['status-code']);
+
+        $this->assertEventually(function () use ($databaseId, $collectionId) {
+            $attribute = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/name', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+
+            $this->assertEquals('available', $attribute['body']['status']);
+        }, 30000, 250);
+
+        /**
+         * TablesDB table in the same database (/tablesdb API).
+         */
         $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -2616,20 +2667,92 @@ class RealtimeCustomClientTest extends Scope
             $this->assertEquals('available', $column['body']['status']);
         }, 120000, 500);
 
-        $client = $this->getWebsocket(['documents', 'collections'], [
+        /**
+         * Two different clients subscribing via legacy (documents/collections)
+         * and new (rows/tables) channels.
+         */
+        $clientLegacy = $this->getWebsocket(['documents', 'collections'], [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_' . $projectId . '=' . $session,
         ]);
 
-        $response = json_decode($client->receive(), true);
+        $response = json_decode($clientLegacy->receive(), true);
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
         $this->assertEquals('connected', $response['type']);
         $this->assertNotEmpty($response['data']);
-        $this->assertCount(2, $response['data']['channels']);
         $this->assertContains('documents', $response['data']['channels']);
 
+        $clientTables = $this->getWebsocket(['rows', 'tables'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]);
+
+        $response = json_decode($clientTables->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertContains('rows', $response['data']['channels']);
+
+        /**
+         * 1) Operation via legacy /databases API (document create).
+         * Both clients should receive an event that includes both document-
+         * style and row-style channels on the shared database.
+         */
+        $documentId = ID::unique();
+
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => $documentId,
+            'data' => [
+                'name' => 'Legacy Chris Evans',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $document['headers']['status-code']);
+
+        $legacyEventForLegacyClient = json_decode($clientLegacy->receive(), true);
+        $legacyEventForTablesClient = json_decode($clientTables->receive(), true);
+
+        foreach ([$legacyEventForLegacyClient, $legacyEventForTablesClient] as $event) {
+            $this->assertArrayHasKey('type', $event);
+            $this->assertArrayHasKey('data', $event);
+            $this->assertEquals('event', $event['type']);
+            $this->assertNotEmpty($event['data']);
+            $this->assertArrayHasKey('timestamp', $event['data']);
+
+            $channels = $event['data']['channels'];
+
+            // Legacy-style channels
+            $this->assertContains('documents', $channels);
+            $this->assertContains("databases.{$databaseId}.collections.{$collectionId}.documents", $channels);
+            $this->assertContains("databases.{$databaseId}.collections.{$collectionId}.documents.{$documentId}", $channels);
+
+            // New rows-style channels mirrored for legacy API
+            $this->assertContains('rows', $channels);
+            $this->assertContains("databases.{$databaseId}.tables.{$collectionId}.rows", $channels);
+            $this->assertContains("databases.{$databaseId}.tables.{$collectionId}.rows.{$documentId}", $channels);
+
+            // TablesDB-prefixed channels should also be present for a tablesdb database
+            $this->assertContains("tablesdb.{$databaseId}.tables.{$collectionId}.rows", $channels);
+            $this->assertContains("tablesdb.{$databaseId}.tables.{$collectionId}.rows.{$documentId}", $channels);
+        }
+
+        /**
+         * 2) Operation via /tablesdb API (row create).
+         * Both clients should again receive an event that now also includes
+         * the tablesdb-prefixed channels alongside the databases-prefixed ones.
+         */
         $rowId = ID::unique();
 
         $row = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', array_merge([
@@ -2650,31 +2773,296 @@ class RealtimeCustomClientTest extends Scope
 
         $this->assertEquals(201, $row['headers']['status-code']);
 
+        $tablesEventForLegacyClient = json_decode($clientLegacy->receive(), true);
+        $tablesEventForTablesClient = json_decode($clientTables->receive(), true);
+
+        foreach ([$tablesEventForLegacyClient, $tablesEventForTablesClient] as $event) {
+            $this->assertArrayHasKey('type', $event);
+            $this->assertArrayHasKey('data', $event);
+            $this->assertEquals('event', $event['type']);
+            $this->assertNotEmpty($event['data']);
+            $this->assertArrayHasKey('timestamp', $event['data']);
+
+            $channels = $event['data']['channels'];
+
+            // Core tablesdb row channels
+            $this->assertContains('rows', $channels);
+            $this->assertContains("tablesdb.{$databaseId}.tables.{$tableId}.rows", $channels);
+            $this->assertContains("tablesdb.{$databaseId}.tables.{$tableId}.rows.{$rowId}", $channels);
+
+            // Collections/legacy-style compatibility channels
+            $this->assertContains('documents', $channels);
+            $this->assertContains("databases.{$databaseId}.tables.{$tableId}.rows", $channels);
+            $this->assertContains("databases.{$databaseId}.tables.{$tableId}.rows.{$rowId}", $channels);
+            $this->assertContains("databases.{$databaseId}.collections.{$tableId}.documents", $channels);
+            $this->assertContains("databases.{$databaseId}.collections.{$tableId}.documents.{$rowId}", $channels);
+
+            $this->assertContains("databases.{$databaseId}.tables.{$tableId}.rows.{$rowId}.create", $event['data']['events']);
+            $this->assertNotEmpty($event['data']['payload']);
+            $this->assertEquals('Chris Evans', $event['data']['payload']['name']);
+        }
+
+        /**
+         * 3) Legacy database accessed via /tablesdb routes.
+         * A database created via /databases but operated on via /tablesdb
+         * should also expose both legacy and tablesdb-prefixed channels.
+         */
+        $legacyDatabase = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Legacy DB via TablesDB Route',
+        ]);
+
+        $this->assertEquals(201, $legacyDatabase['headers']['status-code']);
+
+        $legacyDatabaseId = $legacyDatabase['body']['$id'];
+
+        $legacyTable = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $legacyDatabaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()), [
+            'tableId' => ID::unique(),
+            'name' => 'Legacy Actors',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $legacyTableId = $legacyTable['body']['$id'];
+
+        $legacyColumn = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $legacyDatabaseId . '/tables/' . $legacyTableId . '/columns/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()), [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->assertEquals(202, $legacyColumn['headers']['status-code']);
+
+        $this->assertEventually(function () use ($legacyDatabaseId, $legacyTableId) {
+            $column = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $legacyDatabaseId . '/tables/' . $legacyTableId . '/columns/name', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $column['headers']['status-code']);
+            $this->assertEquals('available', $column['body']['status']);
+        }, 120000, 500);
+
+        $legacyRowId = ID::unique();
+
+        $legacyRow = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $legacyDatabaseId . '/tables/' . $legacyTableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()), [
+            'rowId' => $legacyRowId,
+            'data' => [
+                'name' => 'Legacy Tables Route',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $legacyRow['headers']['status-code']);
+
+        $legacyTablesEventForLegacyClient = json_decode($clientLegacy->receive(), true);
+        $legacyTablesEventForTablesClient = json_decode($clientTables->receive(), true);
+
+        foreach ([$legacyTablesEventForLegacyClient, $legacyTablesEventForTablesClient] as $event) {
+            $this->assertArrayHasKey('type', $event);
+            $this->assertArrayHasKey('data', $event);
+            $this->assertEquals('event', $event['type']);
+            $this->assertNotEmpty($event['data']);
+            $this->assertArrayHasKey('timestamp', $event['data']);
+
+            $channels = $event['data']['channels'];
+            $events = $event['data']['events'];
+            $this->assertIsList($channels);
+            $this->assertIsList($events);
+
+            // Core tablesdb row channels for legacy db accessed via tablesdb
+            $this->assertContains('rows', $channels);
+            $this->assertContains("tablesdb.{$legacyDatabaseId}.tables.{$legacyTableId}.rows", $channels);
+            $this->assertContains("tablesdb.{$legacyDatabaseId}.tables.{$legacyTableId}.rows.{$legacyRowId}", $channels);
+
+            // Legacy compatibility channels must also exist
+            $this->assertContains('documents', $channels);
+            $this->assertContains("databases.{$legacyDatabaseId}.tables.{$legacyTableId}.rows", $channels);
+            $this->assertContains("databases.{$legacyDatabaseId}.tables.{$legacyTableId}.rows.{$legacyRowId}", $channels);
+            $this->assertContains("databases.{$legacyDatabaseId}.collections.{$legacyTableId}.documents", $channels);
+            $this->assertContains("databases.{$legacyDatabaseId}.collections.{$legacyTableId}.documents.{$legacyRowId}", $channels);
+        }
+
+        $clientLegacy->close();
+        $clientTables->close();
+    }
+
+    public function testChannelTablesDBRowUpdate()
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        /**
+         * Create a tablesdb database + table + column + row.
+         */
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()), [
+            'databaseId' => ID::unique(),
+            'name' => 'Row Update DB',
+        ]);
+
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()), [
+            'tableId' => ID::unique(),
+            'name' => 'Assembly',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $table['headers']['status-code']);
+        $tableId = $table['body']['$id'];
+
+        $column = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()), [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->assertEquals(202, $column['headers']['status-code']);
+
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            $column = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/name', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $column['headers']['status-code']);
+            $this->assertEquals('available', $column['body']['status']);
+        }, 120000, 500);
+
+        // Seed a row so we can listen to its update
+        $rowId = ID::unique();
+
+        $row = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()), [
+            'rowId' => $rowId,
+            'data' => [
+                'name' => 'Initial Name',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $row['headers']['status-code']);
+
+        /**
+         * Subscribe to a specific row channel using both legacy and tablesdb-style prefixes.
+         * This mimics a client subscribing to a concrete "resource" channel and
+         * expecting a single event list for updates.
+         */
+        $client = $this->getWebsocket([
+            "databases.{$databaseId}.tables.{$tableId}.rows.{$rowId}",
+            "tablesdb.{$databaseId}.tables.{$tableId}.rows.{$rowId}",
+        ], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]);
+
         $response = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
-        $this->assertEquals('event', $response['type']);
+        $this->assertEquals('connected', $response['type']);
         $this->assertNotEmpty($response['data']);
-        $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertIsList($response['data']['channels']);
 
-        // Core channels for tablesdb row events
-        $this->assertContains('rows', $response['data']['channels']);
+        /**
+         * Trigger a row update via the dedicated /tablesdb row update endpoint.
+         * Event label: databases.[databaseId].tables.[tableId].rows.[rowId].update
+         * Our Event + Realtime logic should enrich this to include:
+         * - databases.{dbId}.tables.{tableId}.rows.{rowId}.update
+         * - tablesdb.{dbId}.tables.{tableId}.rows.{rowId}.update
+         */
+        $update = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $rowId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'name' => 'Updated Name',
+            ],
+        ]);
 
-        $this->assertContains("tablesdb.{$databaseId}.tables.{$tableId}.rows", $response['data']['channels']);
-        $this->assertContains("tablesdb.{$databaseId}.tables.{$tableId}.rows.{$rowId}", $response['data']['channels']);
+        $this->assertEquals(200, $update['headers']['status-code']);
 
-        // Collections-style compatibility channels
-        $this->assertContains('documents', $response['data']['channels']);
-        $this->assertContains("databases.{$databaseId}.tables.{$tableId}.rows", $response['data']['channels']);
-        $this->assertContains("databases.{$databaseId}.tables.{$tableId}.rows.{$rowId}", $response['data']['channels']);
-        $this->assertContains("databases.{$databaseId}.collections.{$tableId}.documents", $response['data']['channels']);
-        $this->assertContains("databases.{$databaseId}.collections.{$tableId}.documents.{$rowId}", $response['data']['channels']);
+        $event = json_decode($client->receive(), true);
 
-        // Primary event should still be present
-        $this->assertContains("databases.{$databaseId}.tables.{$tableId}.rows.{$rowId}.create", $response['data']['events']);
-        $this->assertNotEmpty($response['data']['payload']);
-        $this->assertEquals('Chris Evans', $response['data']['payload']['name']);
+        $this->assertArrayHasKey('type', $event);
+        $this->assertArrayHasKey('data', $event);
+        $this->assertEquals('event', $event['type']);
+        $this->assertNotEmpty($event['data']);
+        $this->assertArrayHasKey('timestamp', $event['data']);
+
+        $channels = $event['data']['channels'];
+        $events = $event['data']['events'];
+
+        // Ensure channels and events are list-type arrays
+        $this->assertIsList($channels);
+        $this->assertIsList($events);
+
+        // Legacy + tablesdb row channels must be present
+        $this->assertContains('rows', $channels);
+        $this->assertContains("databases.{$databaseId}.tables.{$tableId}.rows", $channels);
+        $this->assertContains("databases.{$databaseId}.tables.{$tableId}.rows.{$rowId}", $channels);
+        $this->assertContains("tablesdb.{$databaseId}.tables.{$tableId}.rows", $channels);
+        $this->assertContains("tablesdb.{$databaseId}.tables.{$tableId}.rows.{$rowId}", $channels);
+
+        // Both databases.* and tablesdb.* update events should be emitted
+        $this->assertContains("databases.{$databaseId}.tables.{$tableId}.rows.{$rowId}.update", $events);
+        $this->assertContains("tablesdb.{$databaseId}.tables.{$tableId}.rows.{$rowId}.update", $events);
+
+        $this->assertNotEmpty($event['data']['payload']);
+        $this->assertEquals('Updated Name', $event['data']['payload']['name']);
 
         $client->close();
     }
