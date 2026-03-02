@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Databases\Transactions;
 
 use Tests\E2E\Client;
+use Tests\E2E\Scopes\SchemaPolling;
 use Tests\E2E\Traits\DatabasesUrlHelpers;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -11,6 +12,7 @@ use Utopia\Database\Helpers\Role;
 trait TransactionPermissionsBase
 {
     use DatabasesUrlHelpers;
+    use SchemaPolling;
 
     protected static string $permissionsDatabase = '';
 

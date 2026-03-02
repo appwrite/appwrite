@@ -170,7 +170,7 @@ class XList extends Action
                         }, $cachedDocuments);
                         $documentsCacheHit = true;
                     } else {
-                        $documents = $dbForProject->find($collectionTableId, $queries);
+                        $documents = $dbForDatabases->find($collectionTableId, $queries);
 
                         // Convert Document objects to arrays for caching
                         $documentsArray = \array_map(function ($doc) {

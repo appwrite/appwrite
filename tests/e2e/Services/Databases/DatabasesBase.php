@@ -3323,6 +3323,10 @@ trait DatabasesBase
 
     public function testListDocumentsWithCache(): void
     {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+            return;
+        }
         $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
         $docIds = $data['documentIds'];
@@ -3453,6 +3457,10 @@ trait DatabasesBase
 
     public function testListDocumentsCacheBustedByAttributeChange(): void
     {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+            return;
+        }
         $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
         $docIds = $data['documentIds'];
