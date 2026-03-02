@@ -781,38 +781,57 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
             );
 
             $prompt = <<<PROMPT
-                Analyze the following git diff for the {$language['name']} SDK and determine:
-
-                Required output:
-                1. The appropriate version bump (`major`, `minor`, or `patch`) using semantic versioning.
-                2. The new version number (current version: {$language['version']}).
-                3. A clear, user-facing changelog.
-
-                Semantic versioning rules:
-                - `major`: breaking, non-backward-compatible changes.
-                - `minor`: backward-compatible new features.
-                - `patch`: backward-compatible fixes or small improvements.
-
-                Changelog rules:
-                - Keep entries brief and direct (15 words or less each)
-                - USER-FACING: Source code changes, commands/params, docs, examples, scripts
-                - EXCLUDE: .github/, CI configs, internal tooling
-                - Format: "Breaking: Removed X" or "Added Y feature" or "Fixed Z bug"
-                - Group related changes together (e.g., "Added A, B, and C options" not separate bullets)
-                - If no user-facing changes: `* No user-facing SDK changes.`
-
-                Diff context:
-                - Stats: {{diff_stats}}
-                - Base repository: {{base}}
-                - Generated SDK path: {{target}}
-
-                Git diff (truncated to 500 lines):
-                ```diff
-                {{diff}}
-                ```
-
-                Provide your analysis in the requested JSON format.
-                PROMPT;
+            You are a technical writer generating a changelog for the {$language['name']} SDK release.
+            
+            Analyze the git diff below and return a JSON response with the version bump type, new version number, and changelog.
+            
+            ## Versioning
+            
+            Current version: {$language['version']}
+            
+            Determine the semantic version bump:
+            - `major`: Breaking changes (removed/renamed public APIs, changed method signatures, dropped support)
+            - `minor`: New features that are backward-compatible (new methods, new optional parameters, new classes)
+            - `patch`: Bug fixes, documentation updates, refactors with no API surface change
+            
+            When multiple change types are present, use the highest severity bump.
+            
+            ## Changelog guidelines
+            
+            Write from the SDK consumer's perspective. Each entry should be a single line, max 15 words, in past tense.
+            
+            Prefixes by category:
+            - **Breaking:** renamed/removed/changed APIs → "Breaking: Renamed `oldMethod()` to `newMethod()`"
+            - **Added:** new features/options/endpoints → "Added `streamResponse` option to client configuration"
+            - **Fixed:** bug fixes/corrections → "Fixed incorrect timeout handling in retry logic"
+            - **Updated:** dependency bumps, doc improvements → "Updated authentication examples for OAuth 2.0 flow"
+            
+            Rules:
+            - Only include changes visible to SDK users (public API, behavior, docs, examples, CLI)
+            - Ignore: CI/CD pipelines (.github/), internal tooling, code formatting, test infrastructure
+            - Consolidate related changes into one entry (e.g., "Added `timeout`, `retries`, and `baseUrl` options" not three separate lines)
+            - If the diff contains zero user-facing changes, return a single entry: "No user-facing SDK changes"
+            - Do not speculate — only document what the diff explicitly shows
+            
+            ## Diff context
+            
+            - Stats: {{diff_stats}}
+            - Base repository: {{base}}
+            - Generated SDK path: {{target}}
+            ```diff
+            {{diff}}
+            ```
+            
+            Respond with only valid JSON in this exact structure — no markdown fencing, no commentary:
+            {
+              "bump": "major" | "minor" | "patch",
+              "version": "<new version>",
+              "changelog": [
+                "<entry 1>",
+                "<entry 2>"
+              ]
+            }
+            PROMPT;
 
             $options = (new DiffCheckOptions())
                 ->setSchema($schema)
