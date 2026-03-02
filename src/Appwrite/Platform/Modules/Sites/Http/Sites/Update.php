@@ -63,7 +63,7 @@ class Update extends Base
                     )
                 ]
             ))
-            ->param('siteId', '', new UID(), 'Site ID.')
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Site name. Max length: 128 chars.')
             ->param('framework', '', new WhiteList(\array_keys(Config::getParam('frameworks')), true), 'Sites framework.')
             ->param('enabled', true, new Boolean(), 'Is site enabled? When set to \'disabled\', users cannot access the site but Server SDKs with and API key can still access the site. No data is lost when this is toggled.', true)
@@ -190,11 +190,9 @@ class Update extends Base
             $repositoryInternalId = '';
         }
 
-        // Git connect logic
         if (!$isConnected && !empty($providerRepositoryId)) {
             $teamId = $project->getAttribute('teamId', '');
-
-            $repository = $dbForPlatform->createDocument('repositories', new Document([
+            $repository = new Document([
                 '$id' => ID::unique(),
                 '$permissions' => $this->getPermissions($teamId, $project->getId()),
                 'installationId' => $installation->getId(),
@@ -206,8 +204,8 @@ class Update extends Base
                 'resourceInternalId' => $site->getSequence(),
                 'resourceType' => 'site',
                 'providerPullRequestIds' => []
-            ]));
-
+            ]);
+            $repository = $dbForPlatform->createDocument('repositories', $repository);
             $repositoryId = $repository->getId();
             $repositoryInternalId = $repository->getSequence();
         }

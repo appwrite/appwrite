@@ -8,8 +8,14 @@ use Utopia\System\System;
 
 trait SchedulesBase
 {
-    public function testCreateProject(): array
+    protected static array $cachedScheduleProjectData = [];
+
+    protected function setupScheduleProjectData(): array
     {
+        if (!empty(self::$cachedScheduleProjectData)) {
+            return self::$cachedScheduleProjectData;
+        }
+
         $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -52,9 +58,11 @@ trait SchedulesBase
 
         $this->assertEquals(201, $key['headers']['status-code']);
 
-        return [
+        self::$cachedScheduleProjectData = [
             'projectId' => $projectId,
             'apiKey' => $key['body']['secret'],
         ];
+
+        return self::$cachedScheduleProjectData;
     }
 }

@@ -152,6 +152,8 @@ class Create extends Action
         $repository['pushedAt'] = $repository['pushed_at'] ?? '';
         $repository['organization'] = $installation->getAttribute('organization', '');
         $repository['provider'] = $installation->getAttribute('provider', '');
+        $repository['providerInstallationId'] = $installation->getAttribute('providerInstallationId', '');
+        $repository['authorized'] = true;
 
         $response->dynamic(new Document($repository), Response::MODEL_PROVIDER_REPOSITORY);
     }

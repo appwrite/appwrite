@@ -142,6 +142,18 @@ class Databases extends Action
         $size = $attribute->getAttribute('size', 0);
         $required = $attribute->getAttribute('required', false);
         $default = $attribute->getAttribute('default', null);
+
+        // Cast default to correct PHP type after queue deserialization
+        // Float/int/bool values may be converted to strings during serialization
+        if ($default !== null) {
+            $default = match ($type) {
+                Database::VAR_FLOAT => \floatval($default),
+                Database::VAR_INTEGER => \intval($default),
+                Database::VAR_BOOLEAN => \boolval($default),
+                default => $default,
+            };
+        }
+
         $signed = $attribute->getAttribute('signed', true);
         $array = $attribute->getAttribute('array', false);
         $format = $attribute->getAttribute('format', '');

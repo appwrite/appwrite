@@ -27,6 +27,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
@@ -295,12 +296,40 @@ Http::init()
                 throw new Exception(Exception::USER_UNAUTHORIZED);
             }
 
-            $scopes = []; // Reset scope if admin
-            foreach ($adminRoles as $role) {
-                $scopes = \array_merge($scopes, $roles[$role]['scopes']);
+            $projectId = $project->getId();
+            if ($projectId === 'console' && str_starts_with($route->getPath(), '/v1/projects/:projectId')) {
+                $uri = $request->getURI();
+                $projectId = explode('/', $uri)[3];
             }
 
-            $authorization->setDefaultStatus(false);  // Cancel security segmentation for admin users.
+            // Base scopes for admin users to allow listing teams and projects.
+            // Useful for those who have project-specific roles but don't have team-wide role.
+            $scopes = ['teams.read', 'projects.read'];
+            foreach ($adminRoles as $adminRole) {
+                $isTeamWideRole = !str_starts_with($adminRole, 'project-');
+                $isProjectSpecificRole = $projectId !== 'console' && str_starts_with($adminRole, 'project-' . $projectId);
+
+                if ($isTeamWideRole || $isProjectSpecificRole) {
+                    $role = match (str_starts_with($adminRole, 'project-')) {
+                        true => substr($adminRole, strrpos($adminRole, '-') + 1),
+                        false => $adminRole,
+                    };
+                    $roleScopes = $roles[$role]['scopes'] ?? [];
+                    $scopes = \array_merge($scopes, $roleScopes);
+                    $authorization->addRole($role);
+                }
+            }
+
+            /**
+             * For console projects resource, we use platform DB.
+             * Enabling authorization restricts admin user to the projects they have access to.
+             */
+            if ($project->getId() === 'console' && ($route->getPath() === '/v1/projects' || $route->getPath() === '/v1/projects/:projectId')) {
+                $authorization->setDefaultStatus(true);
+            } else {
+                // Otherwise, disable authorization checks.
+                $authorization->setDefaultStatus(false);
+            }
         }
 
         $scopes = \array_unique($scopes);
@@ -308,6 +337,21 @@ Http::init()
         $authorization->addRole($role);
         foreach ($user->getRoles($authorization) as $authRole) {
             $authorization->addRole($authRole);
+        }
+
+        /**
+         * We disable authorization checks above to ensure other endpoints (list teams, members, etc.) will continue working.
+         * But, for actions on resources (sites, functions, etc.) in a non-console project, we explicitly check
+         * whether the admin user has necessary permission on the project (sites, functions, etc. don't have permissions associated to them).
+         */
+        if (empty($apiKey) && !$user->isEmpty() && $project->getId() !== 'console' && $mode === APP_MODE_ADMIN) {
+            $input = new Input(Database::PERMISSION_READ, $project->getPermissionsByType(Database::PERMISSION_READ));
+            $initialStatus = $authorization->getStatus();
+            $authorization->enable();
+            if (!$authorization->isValid($input)) {
+                throw new Exception(Exception::PROJECT_NOT_FOUND);
+            }
+            $authorization->setStatus($initialStatus);
         }
 
         // Step 6: Update project and user last activity
@@ -324,10 +368,10 @@ Http::init()
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
                 $user->setAttribute('accessedAt', DateTime::now());
 
-                if (APP_MODE_ADMIN !== $mode) {
+                if ($project->getId() !== 'console' && APP_MODE_ADMIN !== $mode) {
                     $dbForProject->updateDocument('users', $user->getId(), $user);
                 } else {
-                    $dbForPlatform->updateDocument('users', $user->getId(), $user);
+                    $authorization->skip(fn () => $dbForPlatform->updateDocument('users', $user->getId(), $user));
                 }
             }
         }
@@ -429,6 +473,7 @@ Http::init()
         /*
         * Abuse Check
         */
+
         $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
         $timeLimitArray = [];
 
@@ -464,6 +509,7 @@ Http::init()
 
             $abuse = new Abuse($timeLimit);
             $remaining = $timeLimit->remaining();
+
             $limit = $timeLimit->limit();
             $time = $timeLimit->time() + $route->getLabel('abuse-time', 3600);
 
@@ -884,14 +930,19 @@ Http::shutdown()
                 $accessedAt = $cacheLog->getAttribute('accessedAt', 0);
                 $now = DateTime::now();
                 if ($cacheLog->isEmpty()) {
-                    $authorization->skip(fn () => $dbForProject->createDocument('cache', new Document([
-                        '$id' => $key,
-                        'resource' => $resource,
-                        'resourceType' => $resourceType,
-                        'mimeType' => $response->getContentType(),
-                        'accessedAt' => $now,
-                        'signature' => $signature,
-                    ])));
+                    try {
+                        $authorization->skip(fn () => $dbForProject->createDocument('cache', new Document([
+                            '$id' => $key,
+                            'resource' => $resource,
+                            'resourceType' => $resourceType,
+                            'mimeType' => $response->getContentType(),
+                            'accessedAt' => $now,
+                            'signature' => $signature,
+                        ])));
+                    } catch (DuplicateException) {
+                        // Race condition: another concurrent request already created the cache document
+                        $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
+                    }
                 } elseif (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $accessedAt) {
                     $cacheLog->setAttribute('accessedAt', $now);
                     $authorization->skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));

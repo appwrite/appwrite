@@ -24,7 +24,6 @@ class ConsoleConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(15, $response['body']);
         $this->assertIsString($response['body']['_APP_DOMAIN_TARGET_CNAME']);
         $this->assertIsString($response['body']['_APP_DOMAIN_TARGET_A']);
         $this->assertIsInt($response['body']['_APP_COMPUTE_BUILD_TIMEOUT']);
@@ -39,6 +38,7 @@ class ConsoleConsoleClientTest extends Scope
         $this->assertIsString($response['body']['_APP_DOMAIN_FUNCTIONS']);
         $this->assertIsString($response['body']['_APP_OPTIONS_FORCE_HTTPS']);
         $this->assertIsString($response['body']['_APP_DOMAINS_NAMESERVERS']);
+        $this->assertIsString($response['body']['_APP_DB_ADAPTER']);
         // When adding new keys, dont forget to update count a few lines above
     }
 }

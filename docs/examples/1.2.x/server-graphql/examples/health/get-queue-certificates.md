@@ -1,5 +1,0 @@
-query {
-    healthGetQueueCertificates {
-        size
-    }
-}
