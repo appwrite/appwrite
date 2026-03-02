@@ -564,12 +564,16 @@ class Install extends Action
                 $currentStep = InstallerServer::STEP_DOCKER_CONTAINERS;
                 $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_IN_PROGRESS, $messages);
                 $this->runDockerCompose($input, $isLocalInstall, $useExistingConfig, $isCLI);
-                $this->connectInstallerToAppwriteNetwork();
+                $onNetwork = $this->connectInstallerToAppwriteNetwork();
+
+                $apiUrl = $onNetwork
+                    ? self::APPWRITE_API_URL
+                    : 'http://' . ($input['_APP_DOMAIN'] ?? 'localhost') . ':' . $httpPort;
 
                 $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_COMPLETED, $messages);
 
                 if (!$isUpgrade) {
-                    $this->createInitialAdminAccount($account, $progress);
+                    $this->createInitialAdminAccount($account, $progress, $apiUrl);
                 }
 
                 // Track installs
@@ -598,7 +602,7 @@ class Install extends Action
         }
     }
 
-    private function createInitialAdminAccount(array $account, ?callable $progress): void
+    private function createInitialAdminAccount(array $account, ?callable $progress, string $apiUrl = self::APPWRITE_API_URL): void
     {
         $name = $account['name'] ?? 'Admin';
         $email = $account['email'] ?? null;
@@ -616,7 +620,7 @@ class Install extends Action
                 messageOverride: 'Creating Appwrite account'
             );
 
-            $this->waitForApiReady();
+            $this->waitForApiReady($apiUrl);
 
             // Create account and session
             $userId = $this->makeApiCall('/v1/account', [
@@ -624,12 +628,12 @@ class Install extends Action
                 'email' => $email,
                 'password' => $password,
                 'name' => $name
-            ]);
+            ], false, $apiUrl);
 
             $session = $this->makeApiCall('/v1/account/sessions/email', [
                 'email' => $email,
                 'password' => $password
-            ], true);
+            ], true, $apiUrl);
 
             $this->updateProgress(
                 $progress,
@@ -638,6 +642,7 @@ class Install extends Action
                 details: [
                     'userId' => $userId,
                     'sessionId' => $session['id'],
+                    'sessionSecret' => $session['secret'],
                     'sessionExpire' => $session['expire'] ?? null
                 ],
                 messageOverride: 'Account created successfully'
@@ -704,12 +709,12 @@ class Install extends Action
         }
     }
 
-    private function waitForApiReady(): void
+    private function waitForApiReady(string $apiUrl = self::APPWRITE_API_URL): void
     {
         $client = new Client();
-        $pingHealth = function () use ($client): bool {
+        $pingHealth = function () use ($client, $apiUrl): bool {
             try {
-                return $client->fetch(self::APPWRITE_API_URL . '/v1/health/version')->getStatusCode() === 200;
+                return $client->fetch($apiUrl . '/v1/health/version')->getStatusCode() === 200;
             } catch (\Throwable) {
                 return false;
             }
@@ -729,14 +734,16 @@ class Install extends Action
     }
 
     /* easier to just connect and call appwrite endpoint */
-    private function connectInstallerToAppwriteNetwork(): void
+    private function connectInstallerToAppwriteNetwork(): bool
     {
         $network = escapeshellarg('appwrite');
         $container = escapeshellarg(InstallerServer::DEFAULT_CONTAINER);
-        @exec("docker network connect $network $container 2>/dev/null");
+        $exitCode = 1;
+        @exec("docker network connect $network $container 2>/dev/null", $output, $exitCode);
+        return $exitCode === 0;
     }
 
-    private function makeApiCall(string $endpoint, array $body, bool $extractSession = false)
+    private function makeApiCall(string $endpoint, array $body, bool $extractSession = false, string $apiUrl = self::APPWRITE_API_URL)
     {
         $client = new Client();
         $client
@@ -744,7 +751,7 @@ class Install extends Action
             ->addHeader('Content-Type', 'application/json')
             ->addHeader('X-Appwrite-Project', 'console');
 
-        $url = self::APPWRITE_API_URL . $endpoint;
+        $url = $apiUrl . $endpoint;
         $response = $client->fetch($url, Client::METHOD_POST, $body);
 
         if ($response->getStatusCode() !== 201) {
