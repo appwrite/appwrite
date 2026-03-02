@@ -1071,7 +1071,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     volumes:
-      - appwrite-postgresql:/var/lib/postgresql/data:rw
+      - appwrite-postgresql:/var/lib/postgresql:rw
     environment:
       - POSTGRES_DB=${_APP_DB_SCHEMA}
       - POSTGRES_USER=${_APP_DB_USER}
