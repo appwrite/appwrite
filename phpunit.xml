@@ -5,7 +5,7 @@
          bootstrap="app/init.php"
          colors="true"
          processIsolation="false"
-         stopOnFailure="false"
+         stopOnFailure="true"
          cacheDirectory=".phpunit.cache"
 >
     <extensions>

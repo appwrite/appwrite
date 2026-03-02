@@ -3533,10 +3533,11 @@ trait DatabasesBase
         $this->assertEquals(200, $response['headers']['status-code']);
 
         /**
+         * todo:shmuel move this tests please
+         */
+        /**
          * Use specific X-Appwrite-Response-Format 1.8.0
          */
-        shmuel fix this
-
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $document['$collectionId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

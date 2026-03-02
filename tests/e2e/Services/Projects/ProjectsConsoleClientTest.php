@@ -397,7 +397,9 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        check this
+        /**
+         * todo: shmuel move this
+         */
         /**
          * Test old version select queries are failing
          */
@@ -432,8 +434,6 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertArrayHasKey('$id', $project);
         $this->assertArrayHasKey('name', $project);
         $this->assertArrayNotHasKey('platforms', $project);
-
-        return $data;
     }
 
     #[Group('projectsCRUD')]
