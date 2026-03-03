@@ -124,24 +124,15 @@ export function ApiKeysList({
                       {apiKey.name}
                     </p>
                     {expirationStatus?.isExpired ? (
-                      <Badge
-                        variant="error"
-                        className="text-[10px] shrink-0"
-                      >
+                      <Badge variant="error" className="text-[10px] shrink-0">
                         Expired
                       </Badge>
                     ) : expirationStatus?.isExpiringSoon ? (
-                      <Badge
-                        variant="warning"
-                        className="text-[10px] shrink-0"
-                      >
+                      <Badge variant="warning" className="text-[10px] shrink-0">
                         Expires soon
                       </Badge>
                     ) : null}
-                    <Badge
-                      variant="info"
-                      className="text-[10px] shrink-0"
-                    >
+                    <Badge variant="info" className="text-[10px] shrink-0">
                       {apiKey.scopes.length === 0
                         ? 'No scopes'
                         : `${apiKey.scopes.length} scope${apiKey.scopes.length !== 1 ? 's' : ''}`}
@@ -182,7 +173,9 @@ export function ApiKeysList({
                       <span className="text-[12px] text-muted-foreground whitespace-nowrap hidden md:inline">
                         {apiKey.expire ? (
                           <>
-                            {expirationStatus?.isExpired ? 'Expired' : 'Expires'}{' '}
+                            {expirationStatus?.isExpired
+                              ? 'Expired'
+                              : 'Expires'}{' '}
                             <DateTooltip
                               date={apiKey.expire}
                               className="text-[12px] text-muted-foreground"

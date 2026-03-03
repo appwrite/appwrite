@@ -373,7 +373,7 @@ export function BuildLogsView({
   const lineNumberWidth = `${lineNumberDigits + 3}ch`
 
   return (
-    <div className={`py-4 min-w-0 relative ${className}`}>
+    <div className={`py-4 min-w-0 min-h-full relative ${className}`}>
       {/* Vertical border between line numbers and content */}
       <>
         <div

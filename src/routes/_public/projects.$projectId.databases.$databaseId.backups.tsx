@@ -1,4 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import {
   projectQueryOptions,
   databaseQueryOptions,
@@ -11,6 +12,15 @@ const TABLES_PER_PAGE = 100
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/$databaseId/backups',
 )({
+  beforeLoad: ({ params }) => {
+    if (!getActiveProfileFeatures().databaseBackups) {
+      throw redirect({
+        to: '/projects/$projectId/databases/$databaseId',
+        params: { projectId: params.projectId, databaseId: params.databaseId },
+        replace: true,
+      })
+    }
+  },
   head: () => ({ meta: [{ title: pageTitle('Database', 'Databases') }] }),
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return

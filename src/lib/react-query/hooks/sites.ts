@@ -309,15 +309,14 @@ export async function fetchSiteDomains(
   }
 
   const projectSdk = sdk.forProject(projectId)
-  // Match query structure from legacy console: filters, then limit/offset, then orderDesc
   const defaultQueries = [
     Query.equal('type', ['deployment', 'redirect']),
     Query.equal('deploymentResourceType', 'site'),
     Query.equal('deploymentResourceId', siteId),
     Query.equal('trigger', 'manual'),
+    Query.orderDesc('$createdAt'),
     Query.limit(limit),
     Query.offset(page * limit),
-    Query.orderDesc('$updatedAt'),
   ]
 
   const response = await projectSdk.proxy.listRules({
@@ -925,11 +924,12 @@ export function useDeleteSiteDeployment(
       }
       return await deleteSiteDeployment(projectId, siteId, deploymentId)
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch deployments list so the UI updates (list uses refetchOnMount: false)
+      await queryClient.refetchQueries({
         queryKey: Dependencies.DEPLOYMENTS,
       })
-      queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: Dependencies.SITE,
       })
     },
@@ -1451,6 +1451,72 @@ export function useCreateSiteDomain(projectId: string | null | undefined) {
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.proxy.createSiteRule({
         domain,
+        siteId,
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['proxy-rules'],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to create a site domain rule with ACTIVE, BRANCH, or REDIRECT behaviour
+ */
+export function useCreateSiteDomainRule(projectId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (params: {
+      domain: string
+      siteId: string
+      behaviour: 'active' | 'branch' | 'redirect'
+      branch?: string
+      redirectUrl?: string
+      statusCode?: string
+    }) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      const projectSdk = sdk.forProject(projectId)
+      const { domain, siteId, behaviour, branch, redirectUrl, statusCode } =
+        params
+      const domainNorm = domain.trim().toLowerCase()
+
+      if (behaviour === 'redirect') {
+        if (!redirectUrl?.trim() || !statusCode) {
+          throw new Error('Redirect URL and status code are required')
+        }
+        const { ProxyResourceType, StatusCode } = await import(
+          '@appwrite.io/console'
+        )
+        const codeMap: Record<string, (typeof StatusCode)[keyof typeof StatusCode]> = {
+          '301': StatusCode.MovedPermanently301,
+          '302': StatusCode.Found302,
+          '307': StatusCode.TemporaryRedirect307,
+          '308': StatusCode.PermanentRedirect308,
+        }
+        return await projectSdk.proxy.createRedirectRule({
+          domain: domainNorm,
+          url: redirectUrl.trim(),
+          statusCode: codeMap[statusCode] ?? StatusCode.Found302,
+          resourceId: siteId,
+          resourceType: ProxyResourceType.Site,
+        })
+      }
+
+      if (behaviour === 'branch' && branch) {
+        return await projectSdk.proxy.createSiteRule({
+          domain: domainNorm,
+          siteId,
+          branch,
+        })
+      }
+
+      return await projectSdk.proxy.createSiteRule({
+        domain: domainNorm,
         siteId,
       })
     },

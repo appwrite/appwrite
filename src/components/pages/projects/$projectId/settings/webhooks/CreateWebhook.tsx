@@ -142,6 +142,7 @@ export function CreateWebhookDialog({
           {currentStep === 'events' && (
             <div className="space-y-4">
               <EventSelector
+                projectId={projectId}
                 selectedEvents={events}
                 onEventsChange={setEvents}
                 maxEvents={100}

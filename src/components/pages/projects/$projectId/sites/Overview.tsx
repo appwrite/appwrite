@@ -22,8 +22,6 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { DeploymentInfo } from '@/components/global/shared/DeploymentInfo'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Info } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -208,11 +206,11 @@ export function View() {
         deploymentId: activeDeployment.$id,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
         queryKey: [...Dependencies.DEPLOYMENTS],
       })
-      queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: [...Dependencies.SITE],
       })
       toast.success('Deployment rebuild started')
@@ -235,11 +233,11 @@ export function View() {
         deploymentId: activeDeployment.$id,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
         queryKey: [...Dependencies.DEPLOYMENTS],
       })
-      queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: [...Dependencies.SITE],
       })
       toast.success('Deployment activated successfully')
@@ -260,11 +258,11 @@ export function View() {
         'Cannot delete the active deployment. Please activate another deployment first.',
       )
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
         queryKey: [...Dependencies.DEPLOYMENTS],
       })
-      queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: [...Dependencies.SITE],
       })
       toast.success('Deployment deleted successfully')
@@ -287,22 +285,18 @@ export function View() {
     <div className="flex-1">
       <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6 pt-4 sm:pt-6">
         <div className="space-y-6">
-          {isBuilding && (
-            <Alert variant="default" className="border-blue-500/30">
-              <Info className="h-4 w-4 text-blue-500" />
-              <AlertDescription className="text-[12px] text-blue-600/80 dark:text-blue-400/80">
-                Your site is currently being deployed.
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {/* Active Deployment Card */}
-          {activeDeployment && activeDeployment.status === 'ready' && (
+          {/* Active Deployment Card - show for both ready and building; realtime updates when status becomes ready */}
+          {activeDeployment && (
             <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-              <div className="px-6 py-4">
+              <div className="px-6 py-4 flex items-center gap-2">
                 <h3 className="text-[15px] font-semibold text-foreground">
                   Active deployment
                 </h3>
+                {isBuilding && (
+                  <Badge variant="warning" className="text-[10px] shrink-0">
+                    Building
+                  </Badge>
+                )}
               </div>
               <div className="border-t border-border" />
               <div className="px-6 py-4">
@@ -360,9 +354,10 @@ export function View() {
                                 href={`https://${rule.domain}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="block font-mono text-[11px] text-primary hover:underline"
+                                className="inline-flex items-center gap-1.5 font-mono text-[11px] text-primary hover:underline"
                               >
                                 {rule.domain}
+                                <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
                               </a>
                             ))}
                             {hasMoreDomains && (

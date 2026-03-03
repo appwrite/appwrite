@@ -3,10 +3,12 @@ import {
   useContext,
   useState,
   useCallback,
+  useMemo,
   type ReactNode,
 } from 'react'
 import { X, ImageIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 export interface PromoBannerItem {
   id: string
@@ -29,10 +31,20 @@ function PromoBannerComponent({
   onDismissAll,
 }: PromoBannerProps) {
   const [expandedIndex, setExpandedIndex] = useState(0)
+  const { features } = useConsoleProfile()
 
-  if (banners.length === 0) return null
+  // Filter out AI assistant banner when feature is disabled
+  const filteredBanners = useMemo(
+    () =>
+      banners.filter(
+        (b) => b.ctaUrl !== '/ai-assistant' || features.aiAssistant,
+      ),
+    [banners, features.aiAssistant],
+  )
 
-  const visibleBanners = banners.slice(0, 3)
+  if (filteredBanners.length === 0) return null
+
+  const visibleBanners = filteredBanners.slice(0, 3)
 
   return (
     <div className="fixed bottom-4 left-4 z-50">
@@ -84,8 +96,10 @@ function PromoBannerComponent({
                       onClick={(e) => {
                         e.stopPropagation()
                         onDismiss(banner.id)
-                        if (expandedIndex >= banners.length - 1) {
-                          setExpandedIndex(Math.max(0, banners.length - 2))
+                        if (expandedIndex >= filteredBanners.length - 1) {
+                          setExpandedIndex(
+                            Math.max(0, filteredBanners.length - 2),
+                          )
                         }
                       }}
                       className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-md bg-background/80 text-muted-foreground backdrop-blur-sm transition-colors hover:bg-background hover:text-foreground"
@@ -132,10 +146,10 @@ function PromoBannerComponent({
       </div>
 
       {/* Stack indicator & dismiss all */}
-      {banners.length > 1 && (
+      {filteredBanners.length > 1 && (
         <div className="mt-3 flex items-center justify-between px-1">
           <div className="flex items-center gap-1.5">
-            {visibleBanners.map((_, index) => (
+            {filteredBanners.slice(0, 3).map((_, index) => (
               <button
                 key={index}
                 onClick={() => setExpandedIndex(index)}
@@ -147,9 +161,9 @@ function PromoBannerComponent({
                 )}
               />
             ))}
-            {banners.length > 3 && (
+            {filteredBanners.length > 3 && (
               <span className="ml-1.5 text-[11px] text-muted-foreground">
-                +{banners.length - 3} more
+                +{filteredBanners.length - 3} more
               </span>
             )}
           </div>

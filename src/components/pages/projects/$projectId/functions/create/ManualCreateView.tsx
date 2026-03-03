@@ -21,7 +21,7 @@ import {
 import { IdInput } from '@/components/ui/id-input'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
-import { Loader2, Upload } from 'lucide-react'
+import { Upload } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { ID } from '@appwrite.io/console'
@@ -36,6 +36,8 @@ import {
   hasUnavailableSpecifications,
 } from '@/lib/specifications'
 import { useFunctionWizard } from './WizardContext'
+import { FunctionDomainCard } from './_components/FunctionDomainCard'
+import { EnvironmentVariablesCard } from '@/components/global/shared/EnvironmentVariablesCard'
 import type { FunctionWizardVariable } from './RepositoryConfigView'
 
 interface ManualCreateViewProps {
@@ -47,7 +49,7 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const { generateDomain } = useFunctionWizard()
+  const { generateDomain, updateFormData } = useFunctionWizard()
 
   const [functionName, setFunctionName] = useState('')
   const [functionId, setFunctionId] = useState<string | undefined>()
@@ -145,18 +147,19 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
         commands: commands.trim() || undefined,
       })
 
+      updateFormData({
+        createdFunctionId: finalFunctionId,
+        createdDeploymentId: deployment.$id,
+      })
+
       await queryClient.refetchQueries({
         queryKey: ['functions', 'project', projectId],
       })
 
-      toast.success('Function created')
       navigate({
-        to: '/projects/$projectId/functions/$functionId/deployments/$deploymentId',
-        params: {
-          projectId,
-          functionId: finalFunctionId,
-          deploymentId: deployment.$id,
-        },
+        to: '/projects/$projectId/functions/create/deploying',
+        params: { projectId },
+        search: { functionId: finalFunctionId, deploymentId: deployment.$id },
       })
     } catch (err: unknown) {
       toast.error(err?.message || 'Failed to create function')
@@ -210,14 +213,7 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
               !file
             }
           >
-            {isDeploying ? (
-              <>
-                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                Creating...
-              </>
-            ) : (
-              'Create and deploy'
-            )}
+            Create and deploy
           </Button>
         </>
       }
@@ -338,23 +334,12 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
         </div>
       </div>
 
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden mb-6">
-        <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Domain</h3>
-        </div>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4">
-          <Input
-            value={domain}
-            onChange={(e) => {
-              setDomain(e.target.value)
-              setDomainValid(e.target.value.trim().length > 0)
-            }}
-            placeholder="my-function.appwrite.network"
-            className="h-9 text-[13px]"
-          />
-        </div>
-      </div>
+      <FunctionDomainCard
+        domain={domain}
+        setDomain={setDomain}
+        domainValid={domainValid}
+        setDomainValid={setDomainValid}
+      />
 
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden mb-6">
         <div className="px-6 py-4">
@@ -386,70 +371,7 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
         </div>
       </div>
 
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">
-            Environment variables
-          </h3>
-        </div>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4 space-y-3">
-          {variables.map((v, i) => (
-            <div key={i} className="flex gap-2 items-center">
-              <Input
-                placeholder="Key"
-                value={v.key}
-                onChange={(e) =>
-                  setVariables((prev) =>
-                    prev.map((x, j) =>
-                      j === i ? { ...x, key: e.target.value } : x,
-                    ),
-                  )
-                }
-                className="h-9 text-[13px] flex-1"
-              />
-              <Input
-                type={v.secret ? 'password' : 'text'}
-                placeholder="Value"
-                value={v.value}
-                onChange={(e) =>
-                  setVariables((prev) =>
-                    prev.map((x, j) =>
-                      j === i ? { ...x, value: e.target.value } : x,
-                    ),
-                  )
-                }
-                className="h-9 text-[13px] flex-1"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-9 w-9 p-0"
-                onClick={() =>
-                  setVariables((prev) => prev.filter((_, j) => j !== i))
-                }
-              >
-                ×
-              </Button>
-            </div>
-          ))}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-9 text-[12px]"
-            onClick={() =>
-              setVariables((prev) => [
-                ...prev,
-                { key: '', value: '', secret: false },
-              ])
-            }
-          >
-            Add variable
-          </Button>
-        </div>
-      </div>
+      <EnvironmentVariablesCard variables={variables} onChange={setVariables} />
     </WizardLayout>
   )
 }

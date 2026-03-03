@@ -47,6 +47,7 @@ import {
 import type { Models } from '@appwrite.io/console'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { ConnectProject } from '../shared/ConnectProject'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 interface OverviewTab {
   id: string
@@ -135,6 +136,7 @@ export function View({ projectId }: ViewProps) {
   const [selectedKeyId, setSelectedKeyId] = useState<string | null>(null)
   const [connectDialogOpen, setConnectDialogOpen] = useState(false)
   const [connectInitialSdk, setConnectInitialSdk] = useState<string>('web')
+  const { features } = useConsoleProfile()
   const handleConnectPlatform = (platform?: string) => {
     const sdkMap: Record<string, string> = {
       web: 'web',
@@ -366,7 +368,7 @@ export function View({ projectId }: ViewProps) {
                   <TooltipTrigger asChild>
                     <button
                       onClick={() => copyToClipboard(projectId, 'projectId')}
-                      className="flex min-w-0 items-center gap-1.5 rounded-md bg-muted/50 px-2.5 py-1.5 font-mono text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      className="flex min-w-0 cursor-pointer items-center gap-1.5 rounded-md bg-muted/50 px-2.5 py-1.5 font-mono text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                     >
                       <span className="truncate max-w-[120px] sm:max-w-[180px]">
                         {projectId}
@@ -390,7 +392,7 @@ export function View({ projectId }: ViewProps) {
                       onClick={() =>
                         copyToClipboard(projectEndpoint, 'endpoint')
                       }
-                      className="flex min-w-0 items-center gap-1.5 rounded-md bg-muted/50 px-2.5 py-1.5 text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      className="flex min-w-0 cursor-pointer items-center gap-1.5 rounded-md bg-muted/50 px-2.5 py-1.5 text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                     >
                       <Link className="h-3.5 w-3.5 shrink-0" />
                       <span className="truncate max-w-[100px] sm:max-w-[160px] font-mono">
@@ -418,7 +420,8 @@ export function View({ projectId }: ViewProps) {
 
       {/* Content area */}
       <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
-        {/* Charts card */}
+        {/* Charts card - usage stats (cloud only) */}
+        {features.usageStats && (
         <div className="@container rounded-xl border border-border bg-card/50">
           {/* Metric Tabs Row - inside the card */}
           <div className="border-b border-border px-5">
@@ -443,7 +446,7 @@ export function View({ projectId }: ViewProps) {
                         aria-selected={isActive}
                         onClick={() => setActiveTab(tab.id)}
                         className={cn(
-                          'relative flex min-w-[150px] flex-col gap-0.5 px-4 py-3 text-left transition-colors first:pl-0 rounded-sm',
+                          'relative flex min-w-[150px] flex-col gap-0.5 px-4 py-3 text-left cursor-pointer focus:cursor-pointer focus-visible:cursor-pointer transition-colors first:pl-0 rounded-sm',
                           'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                           isActive
                             ? 'text-foreground'
@@ -595,9 +598,10 @@ export function View({ projectId }: ViewProps) {
             </div>
           )}
         </div>
+        )}
 
         {/* Integrations Section */}
-        <div className="mt-6">
+        <div className={features.usageStats ? 'mt-6' : 'mt-0'}>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-[15px] font-semibold text-foreground">Apps</h2>
             <Button

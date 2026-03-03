@@ -564,7 +564,7 @@ export function BucketSettings() {
           <div className="px-6 py-4">
             <p className="text-[13px] text-muted-foreground">
               Update your bucket's display name. This will be visible to all
-              team members.
+              organization members.
             </p>
             <Input
               value={bucketName}
@@ -893,7 +893,7 @@ export function BucketSettings() {
                     onClick={() => {
                       if (orgId) {
                         navigate({
-                          to: '/organizations/$orgId/billing',
+                          to: '/organizations/$orgId/settings/billing',
                           params: { orgId },
                         })
                       }
@@ -991,7 +991,7 @@ export function BucketSettings() {
                       className="h-auto p-0 text-[12px] font-medium underline"
                       onClick={() => {
                         navigate({
-                          to: '/organizations/$orgId/billing',
+                          to: '/organizations/$orgId/settings/billing',
                           params: { orgId },
                         })
                       }}

@@ -9,7 +9,6 @@ import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query'
 import { useTheme } from 'next-themes'
 import { Globe, List, LayoutGrid } from 'lucide-react'
 import { ServiceHeader } from '../shared/ServiceHeader'
-import { CopyableId } from '@/components/global/shared/CopyableId'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
@@ -40,6 +39,7 @@ import {
   fetchProjectSites,
 } from '@/lib/react-query/hooks'
 import { sdk } from '@/lib/appwrite/sdk'
+import { formatDistanceToNow } from 'date-fns'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
@@ -314,6 +314,9 @@ export function View() {
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                         Site
                       </TableHead>
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                        Last deployment
+                      </TableHead>
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
                         Created
                       </TableHead>
@@ -331,7 +334,7 @@ export function View() {
                           className={cn(
                             'cursor-pointer transition-colors border-b border-border/50',
                             selectedSites.has(siteData.$id)
-                              ? 'bg-sky-100 dark:bg-sky-950'
+                              ? 'bg-muted'
                               : 'hover:bg-muted/30',
                           )}
                           onClick={(e) => {
@@ -417,11 +420,35 @@ export function View() {
                                   <p className="truncate text-[13px] font-medium text-foreground group-hover:text-primary transition-colors">
                                     {siteData.name || 'Unnamed Site'}
                                   </p>
-                                  <div className="mt-0.5">
-                                    <CopyableId id={siteData.$id} size="xs" />
-                                  </div>
                                 </div>
                               </div>
+                            </Link>
+                          </TableCell>
+                          <TableCell className="px-4 py-3">
+                            <Link
+                              to="/projects/$projectId/sites/$siteId/"
+                              params={{
+                                projectId: projectId!,
+                                siteId: siteData.$id,
+                              }}
+                              className="block"
+                            >
+                              {siteData.latestDeploymentCreatedAt ? (
+                                <span className="text-[12px] text-muted-foreground">
+                                  Deployed{' '}
+                                  {formatDistanceToNow(
+                                    new Date(
+                                      siteData.latestDeploymentCreatedAt,
+                                    ),
+                                    { addSuffix: false },
+                                  )}{' '}
+                                  ago
+                                </span>
+                              ) : (
+                                <span className="text-[12px] text-muted-foreground/50 italic">
+                                  —
+                                </span>
+                              )}
                             </Link>
                           </TableCell>
                           <TableCell className="px-4 py-3">
@@ -501,7 +528,7 @@ export function View() {
                 </p>
               </div>
             ) : paginatedSites.length > 0 ? (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {paginatedSites.map((site) => {
                   const siteData = site as Models.Site
                   const screenshotUrl = getScreenshotUrl(siteData)
@@ -563,14 +590,18 @@ export function View() {
                                 <h3 className="truncate text-[14px] font-medium text-foreground">
                                   {siteData.name || 'Unnamed Site'}
                                 </h3>
-                                <div className="mt-1.5">
-                                  <CopyableId
-                                    id={siteData.$id}
-                                    size="xs"
-                                    maxWidth={120}
-                                    tooltipSide="bottom"
-                                  />
-                                </div>
+                                {siteData.latestDeploymentCreatedAt && (
+                                  <p className="mt-2 text-[11px] text-muted-foreground">
+                                    Deployed{' '}
+                                    {formatDistanceToNow(
+                                      new Date(
+                                        siteData.latestDeploymentCreatedAt,
+                                      ),
+                                      { addSuffix: false },
+                                    )}{' '}
+                                    ago
+                                  </p>
+                                )}
                               </div>
                             </div>
                           </div>

@@ -1,4 +1,5 @@
 import { ShieldCheck } from 'lucide-react'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 /**
  * ConsoleFooter Component
@@ -17,10 +18,13 @@ import { ShieldCheck } from 'lucide-react'
  */
 export function ConsoleFooter() {
   const currentYear = new Date().getFullYear()
+  const { features } = useConsoleProfile()
 
   const resourceLinks = [
     { label: 'Docs', href: 'https://appwrite.io/docs' },
-    { label: 'Status', href: 'https://status.appwrite.online' },
+    ...(features.systemStatus
+      ? [{ label: 'Status' as const, href: 'https://status.appwrite.online' }]
+      : []),
   ]
 
   const legalLinks = [
@@ -49,7 +53,7 @@ export function ConsoleFooter() {
 
   return (
     <footer className="@container flex h-[54px] shrink-0 items-center border-t border-border px-3">
-      <div className="mx-auto w-full max-w-7xl flex items-center justify-between gap-2 overflow-hidden">
+      <div className="mx-auto w-full max-w-7xl flex items-center justify-between gap-2 overflow-visible">
         {/* Left section: Logo, Resource Links, and Social Icons */}
         <div className="flex items-center gap-2 min-w-0 flex-shrink">
           {/* Logo - inline SVG with currentColor so theme (black/white) works on Safari/iOS */}

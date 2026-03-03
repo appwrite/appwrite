@@ -18,6 +18,8 @@ import {
   CheckCircle2,
   AlertCircle,
   ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
   Calendar,
   Link2,
   Fingerprint,
@@ -27,7 +29,7 @@ import {
   Check,
   BarChart3,
   Network,
-  Sparkles,
+  Lightbulb,
   BookOpen,
   ExternalLink,
   Download,
@@ -88,6 +90,8 @@ import { ExportImportView } from './ExportImportView'
 import { CreateDatabase } from './CreateDatabase'
 import { CreateTable } from './CreateTable'
 import { TableContextMenu } from './_components/TableContextMenu'
+import { DatabaseSelector } from './_components/DatabaseSelector'
+import { TableSelector } from './_components/TableSelector'
 import { RowContextMenu } from './_components/RowContextMenu'
 import { ImportCsv } from './_components/ImportCsv'
 import { ExportCsv } from './_components/ExportCsv'
@@ -106,6 +110,7 @@ import {
   getClaudeDeepLink,
 } from '@/lib/utils/database-schema-export'
 import { useDebugMode } from '@/components/global/providers/DebugMode'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import type { Models } from '@appwrite.io/console'
 
 /** Database list item: API may return extra backup/createdAt fields */
@@ -236,9 +241,9 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 // Reusable table styles for spreadsheet views
-const stickyTheadClass =
-  'sticky top-0 z-20 bg-background shadow-[inset_0_1px_0_0_#d1d5db,inset_0_-1px_0_0_#d1d5db] dark:shadow-[inset_0_1px_0_0_rgb(255_255_255_/_0.1),inset_0_-1px_0_0_rgb(255_255_255_/_0.1)]'
-const headerCellBorderClass = 'border-r border-gray-300 dark:border-border'
+const stickyTheadClass = 'sticky top-0 z-20 bg-background'
+const headerCellBorderClass =
+  'border-r border-gray-200 dark:border-border shadow-[inset_0_1px_0_0_#d1d5db,inset_0_-1px_0_0_#d1d5db] dark:shadow-[inset_0_1px_0_0_rgb(255_255_255_/_0.1),inset_0_-1px_0_0_rgb(255_255_255_/_0.1)]'
 const bodyCellBorderClass =
   'border-b border-r border-gray-200 dark:border-border'
 const lastCellBorderClass = 'border-b border-gray-200 dark:border-border'
@@ -335,6 +340,8 @@ export function View() {
   const databasesLimit = organizationPlan?.databases ?? 0
   const isCreateDisabled =
     databasesLimit > 0 && totalDatabasesCount >= databasesLimit
+
+  const { features } = useConsoleProfile()
 
   // Clear selection when navigating or when search changes
   useEffect(() => {
@@ -529,9 +536,11 @@ export function View() {
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
                         Status
                       </TableHead>
-                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
-                        Backups
-                      </TableHead>
+                      {features.databaseBackups && (
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
+                          Backups
+                        </TableHead>
+                      )}
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
                         Created
                       </TableHead>
@@ -557,7 +566,7 @@ export function View() {
                           className={cn(
                             'cursor-pointer transition-colors border-b border-border/50',
                             selectedDatabases.has(db.$id)
-                              ? 'bg-sky-100 dark:bg-sky-950'
+                              ? 'bg-muted'
                               : 'hover:bg-muted/30',
                           )}
                           onClick={(e) => {
@@ -630,31 +639,33 @@ export function View() {
                               )}
                             </div>
                           </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <div className="flex items-center justify-center">
-                              {(db as DatabaseWithBackup).hasBackupPolicy ? (
-                                <Badge
-                                  variant="success"
-                                  className="gap-1.5 text-[11px] font-medium border px-2 py-0.5"
-                                >
-                                  <CheckCircle2 className="h-3 w-3" />
-                                  {(db as DatabaseWithBackup)
-                                    .backupPolicyCount > 0
-                                    ? `${(db as DatabaseWithBackup).backupPolicyCount} ${(db as DatabaseWithBackup).backupPolicyCount === 1 ? 'policy' : 'policies'}`
-                                    : (db as DatabaseWithBackup).backupPolicy
-                                        ?.name || 'Enabled'}
-                                </Badge>
-                              ) : (
-                                <Badge
-                                  variant="warning"
-                                  className="gap-1.5 text-[11px] font-medium border px-2 py-0.5"
-                                >
-                                  <AlertCircle className="h-3 w-3" />
-                                  None
-                                </Badge>
-                              )}
-                            </div>
-                          </TableCell>
+                          {features.databaseBackups && (
+                            <TableCell className="px-4 py-3">
+                              <div className="flex items-center justify-center">
+                                {(db as DatabaseWithBackup).hasBackupPolicy ? (
+                                  <Badge
+                                    variant="success"
+                                    className="gap-1.5 text-[11px] font-medium border px-2 py-0.5"
+                                  >
+                                    <CheckCircle2 className="h-3 w-3" />
+                                    {(db as DatabaseWithBackup)
+                                      .backupPolicyCount > 0
+                                      ? `${(db as DatabaseWithBackup).backupPolicyCount} ${(db as DatabaseWithBackup).backupPolicyCount === 1 ? 'policy' : 'policies'}`
+                                      : (db as DatabaseWithBackup).backupPolicy
+                                          ?.name || 'Enabled'}
+                                  </Badge>
+                                ) : (
+                                  <Badge
+                                    variant="warning"
+                                    className="gap-1.5 text-[11px] font-medium border px-2 py-0.5"
+                                  >
+                                    <AlertCircle className="h-3 w-3" />
+                                    None
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                          )}
                           <TableCell className="px-4 py-3">
                             <Link
                               to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
@@ -751,31 +762,37 @@ export function View() {
                       statusLabel={
                         db.enabled === false ? 'Disabled' : undefined
                       }
-                      metadata={[
-                        {
-                          label: '',
-                          value: (db as DatabaseWithBackup).hasBackupPolicy ? (
-                            <Badge
-                              variant="success"
-                              className="gap-1.5 text-[11px] font-medium"
-                            >
-                              <CheckCircle2 className="h-3 w-3" />
-                              {(db as DatabaseWithBackup).backupPolicyCount > 0
-                                ? `${(db as DatabaseWithBackup).backupPolicyCount} ${(db as DatabaseWithBackup).backupPolicyCount === 1 ? 'policy' : 'policies'}`
-                                : (db as DatabaseWithBackup).backupPolicy
-                                    ?.name || 'Backup Enabled'}
-                            </Badge>
-                          ) : (
-                            <Badge
-                              variant="warning"
-                              className="gap-1.5 text-[11px] font-medium"
-                            >
-                              <AlertCircle className="h-3 w-3" />
-                              No backup policies
-                            </Badge>
-                          ),
-                        },
-                      ]}
+                      metadata={
+                        features.databaseBackups
+                          ? [
+                              {
+                                label: '',
+                                value: (db as DatabaseWithBackup)
+                                  .hasBackupPolicy ? (
+                                  <Badge
+                                    variant="success"
+                                    className="gap-1.5 text-[11px] font-medium"
+                                  >
+                                    <CheckCircle2 className="h-3 w-3" />
+                                    {(db as DatabaseWithBackup)
+                                      .backupPolicyCount > 0
+                                      ? `${(db as DatabaseWithBackup).backupPolicyCount} ${(db as DatabaseWithBackup).backupPolicyCount === 1 ? 'policy' : 'policies'}`
+                                      : (db as DatabaseWithBackup).backupPolicy
+                                          ?.name || 'Backup Enabled'}
+                                  </Badge>
+                                ) : (
+                                  <Badge
+                                    variant="warning"
+                                    className="gap-1.5 text-[11px] font-medium"
+                                  >
+                                    <AlertCircle className="h-3 w-3" />
+                                    No backup policies
+                                  </Badge>
+                                ),
+                              },
+                            ]
+                          : []
+                      }
                     />
                   </Link>
                 ),
@@ -895,6 +912,7 @@ export function DatabaseDetailLayout({
   })
   const navigate = useNavigate()
   const [tablesExpanded, setTablesExpanded] = useState(true)
+  const { features } = useConsoleProfile()
 
   const database = databases.find((db) => db.$id === databaseId)
   const dbTables = collections.filter((c) => c.databaseId === databaseId)
@@ -933,7 +951,7 @@ export function DatabaseDetailLayout({
         <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
           <button
             onClick={handleBack}
-            className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="flex h-6 w-6 cursor-pointer items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
@@ -1016,13 +1034,18 @@ export function DatabaseDetailLayout({
               )}
 
               {/* Create Table Button */}
-              <button
-                onClick={() => setCreateTableDialogOpen(true)}
-                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground cursor-pointer"
-              >
-                <Plus className="h-3.5 w-3.5 shrink-0" />
-                <span className="text-[13px]">Create table</span>
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => setCreateTableDialogOpen(true)}
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground cursor-pointer"
+                  >
+                    <Plus className="h-3.5 w-3.5 shrink-0" />
+                    <span className="text-[13px]">Create table</span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right">Create table</TooltipContent>
+              </Tooltip>
             </div>
           )}
 
@@ -1036,24 +1059,28 @@ export function DatabaseDetailLayout({
             <span className="text-[13px]">Security</span>
           </Link>
 
-          {/* Insights Link - Coming Soon */}
-          <span className="flex w-full cursor-not-allowed items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground/50">
-            <BarChart3 className="h-3.5 w-3.5 shrink-0" />
-            <span className="flex-1 text-[13px]">Insights</span>
-            <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-              Soon
-            </span>
-          </span>
-
-          {/* Backups Link */}
-          <Link
-            to="/projects/$projectId/databases/$databaseId/backups"
-            params={{ projectId, databaseId }}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
-          >
-            <Archive className="h-3.5 w-3.5 shrink-0" />
-            <span className="text-[13px]">Backups</span>
-          </Link>
+          {features.databaseInsights && (
+            <>
+              {/* Insights Link - Coming Soon */}
+              <span className="flex w-full cursor-not-allowed items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground/50">
+                <BarChart3 className="h-3.5 w-3.5 shrink-0" />
+                <span className="flex-1 text-[13px]">Insights</span>
+                <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                  Soon
+                </span>
+              </span>
+            </>
+          )}
+          {features.databaseBackups && (
+            <Link
+              to="/projects/$projectId/databases/$databaseId/backups"
+              params={{ projectId, databaseId }}
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+            >
+              <Archive className="h-3.5 w-3.5 shrink-0" />
+              <span className="text-[13px]">Backups</span>
+            </Link>
+          )}
 
           {/* Settings Link */}
           <Link
@@ -1148,6 +1175,7 @@ export function TableView({
   const navigate = useNavigate()
   const isDatabaseLevelView = tableId === '-' || databaseTab != null
   const { isDebugModeOpen } = useDebugMode()
+  const { features } = useConsoleProfile()
 
   // Debug: create 50 random tables (only when debug mode is open and on tables list)
   const createFiftyTablesMutation = useMutation({
@@ -1467,7 +1495,7 @@ export function TableView({
           <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
             <button
               onClick={handleBackToDatabases}
-              className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              className="flex h-6 w-6 cursor-pointer items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
               aria-label="Back to databases"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -1538,15 +1566,19 @@ export function TableView({
                 </SelectContent>
               </Select>
             </div>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8 shrink-0"
-              onClick={() => setCreateDatabaseDialogOpen(true)}
-              title="Create database"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8 shrink-0"
+                  onClick={() => setCreateDatabaseDialogOpen(true)}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Create database</TooltipContent>
+            </Tooltip>
           </div>
         </div>
 
@@ -1635,7 +1667,7 @@ export function TableView({
                 Loading…
               </div>
             ) : (
-              <div className="space-y-0.5 border-l border-border pl-2.5 pr-1 py-1">
+              <div className="space-y-0.5 px-2.5 py-1">
                 {displayedSidebarTables.map((table) => {
                   const isTableSelected =
                     selectedTable?.$id === table.$id && !databaseTab
@@ -1715,17 +1747,6 @@ export function TableView({
               </div>
             )}
           </div>
-          <div className="shrink-0 border-t border-border px-2 py-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 w-full gap-2 pl-6 pr-6 text-[13px] font-medium"
-              onClick={() => setCreateTableDialogOpen(true)}
-            >
-              <Plus className="h-4 w-4" />
-              Create table
-            </Button>
-          </div>
           <div className="shrink-0 border-t border-border px-2 py-1.5">
             <div className="flex items-center justify-between gap-1 text-[11px] text-muted-foreground">
               <span className="shrink-0 tabular-nums">
@@ -1762,6 +1783,17 @@ export function TableView({
               </div>
             </div>
           </div>
+          <div className="shrink-0 border-t border-border px-2 py-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 w-full gap-2 pl-6 pr-6 text-[13px] font-medium"
+              onClick={() => setCreateTableDialogOpen(true)}
+            >
+              <Plus className="h-4 w-4" />
+              Create table
+            </Button>
+          </div>
         </div>
 
         {/* 4. Sticky bottom: Nav links (match main sidebar item size and spacing) */}
@@ -1792,32 +1824,36 @@ export function TableView({
             <Lock className="h-3.5 w-3.5 shrink-0" />
             <span>Security</span>
           </Link>
-          <Link
-            to="/projects/$projectId/databases/$databaseId/tables/$tableId/insights"
-            params={{ projectId, databaseId, tableId }}
-            className={cn(
-              'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
-              databaseTab === 'insights'
-                ? 'bg-accent text-foreground'
-                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-            )}
-          >
-            <BarChart3 className="h-3.5 w-3.5 shrink-0" />
-            <span>Insights</span>
-          </Link>
-          <Link
-            to="/projects/$projectId/databases/$databaseId/tables/$tableId/backups"
-            params={{ projectId, databaseId, tableId }}
-            className={cn(
-              'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
-              databaseTab === 'backups'
-                ? 'bg-accent text-foreground'
-                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-            )}
-          >
-            <Archive className="h-3.5 w-3.5 shrink-0" />
-            <span>Backups</span>
-          </Link>
+          {features.databaseInsights && (
+            <Link
+              to="/projects/$projectId/databases/$databaseId/tables/$tableId/insights"
+              params={{ projectId, databaseId, tableId }}
+              className={cn(
+                  'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
+                  databaseTab === 'insights'
+                    ? 'bg-accent text-foreground'
+                    : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+                )}
+            >
+              <BarChart3 className="h-3.5 w-3.5 shrink-0" />
+              <span>Insights</span>
+            </Link>
+          )}
+          {features.databaseBackups && (
+            <Link
+              to="/projects/$projectId/databases/$databaseId/tables/$tableId/backups"
+              params={{ projectId, databaseId, tableId }}
+              className={cn(
+                  'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
+                  databaseTab === 'backups'
+                    ? 'bg-accent text-foreground'
+                    : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+                )}
+              >
+                <Archive className="h-3.5 w-3.5 shrink-0" />
+              <span>Backups</span>
+            </Link>
+          )}
           <Link
             to="/projects/$projectId/databases/$databaseId/tables/$tableId/export-import"
             params={{ projectId, databaseId, tableId }}
@@ -1977,7 +2013,7 @@ export function TableView({
                 }}
                 className="h-9"
               >
-                <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                <Lightbulb className="h-3.5 w-3.5 mr-1.5" />
                 Suggest columns
               </Button>
             ) : activeTab === 'indexes' ? (
@@ -1991,7 +2027,7 @@ export function TableView({
                 }}
                 className="h-9"
               >
-                <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                <Lightbulb className="h-3.5 w-3.5 mr-1.5" />
                 Suggest indexes
               </Button>
             ) : undefined
@@ -2015,73 +2051,133 @@ export function TableView({
             ) : undefined
           }
           contentAfterBorder={
-            database && (database as Models.Database).enabled === false ? (
-              <div className="border-b border-border bg-amber-500/5">
-                <div className="px-4 py-3 sm:px-6">
-                  <Alert
-                    variant="default"
-                    className="border-amber-500/30 bg-transparent"
-                  >
-                    <AlertCircle className="h-4 w-4 text-amber-500" />
-                    <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-                      Database is disabled
-                    </AlertTitle>
-                    <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
-                      <span className="inline">
-                        This database is disabled and not accessible to end
-                        users through the API. Console actions remain available.{' '}
-                        <Link
-                          to="/projects/$projectId/databases/$databaseId/settings"
-                          params={{ projectId, databaseId }}
-                          className="font-medium underline hover:no-underline inline"
-                        >
-                          Enable it in the Settings tab
-                        </Link>{' '}
-                        to make it available to end users.
-                      </span>
-                    </AlertDescription>
-                  </Alert>
-                </div>
+            <>
+              {/* Mobile DB + table selector - above toolbar, shows when sidebar is hidden */}
+              <div className="flex flex-col gap-2 border-b border-border px-4 py-3 lg:hidden">
+                <DatabaseSelector
+                  projectId={projectId}
+                  value={databaseId}
+                  selectedName={database?.name}
+                  onSelect={async (newDatabaseId) => {
+                    try {
+                      const tablesData =
+                        await queryClient.ensureQueryData(
+                          tablesQueryOptions(
+                            projectId,
+                            newDatabaseId,
+                            0,
+                            100,
+                            undefined,
+                          ),
+                        )
+                      const sorted = [...(tablesData.tables || [])].sort(
+                        (a: { name?: string }, b: { name?: string }) => {
+                          const nameA = a.name?.toLowerCase() || ''
+                          const nameB = b.name?.toLowerCase() || ''
+                          return nameA.localeCompare(nameB)
+                        },
+                      )
+                      const firstTable = sorted[0] as { $id?: string } | undefined
+                      navigate({
+                        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+                        params: {
+                          projectId,
+                          databaseId: newDatabaseId,
+                          tableId: firstTable?.$id ?? '-',
+                        },
+                      })
+                    } catch {
+                      navigate({
+                        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+                        params: {
+                          projectId,
+                          databaseId: newDatabaseId,
+                          tableId: '-',
+                        },
+                      })
+                    }
+                  }}
+                  onCreateClick={() => setCreateDatabaseDialogOpen(true)}
+                />
+                <TableSelector
+                  projectId={projectId}
+                  databaseId={databaseId}
+                  value={tableId}
+                  selectedName={selectedTable?.name}
+                  onSelect={(newTableId) => {
+                    navigate({
+                      to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+                      params: {
+                        projectId,
+                        databaseId,
+                        tableId: newTableId,
+                      },
+                    })
+                  }}
+                  onCreateClick={() => setCreateTableDialogOpen(true)}
+                  empty={dbTables.length === 0}
+                />
               </div>
-            ) : tableDataForStatus && !tableDataForStatus.enabled ? (
-              <div className="border-b border-border bg-amber-500/5">
-                <div className="px-4 py-3 sm:px-6">
-                  <Alert
-                    variant="default"
-                    className="border-amber-500/30 bg-transparent"
-                  >
-                    <AlertCircle className="h-4 w-4 text-amber-500" />
-                    <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-                      Table is disabled
-                    </AlertTitle>
-                    <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
-                      <span className="inline">
-                        This table is currently disabled.{' '}
-                        <Link
-                          to="/projects/$projectId/databases/$databaseId/tables/$tableId/settings"
-                          params={{ projectId, databaseId, tableId }}
-                          className="font-medium underline hover:no-underline inline"
-                        >
-                          Enable it in the Settings tab
-                        </Link>{' '}
-                        to access its data and functionality.
-                      </span>
-                    </AlertDescription>
-                  </Alert>
+              {database && (database as Models.Database).enabled === false ? (
+                <div className="border-b border-border bg-amber-500/5">
+                  <div className="px-4 py-3 sm:px-6">
+                    <Alert
+                      variant="default"
+                      className="border-amber-500/30 bg-transparent"
+                    >
+                      <AlertCircle className="h-4 w-4 text-amber-500" />
+                      <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
+                        Database is disabled
+                      </AlertTitle>
+                      <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
+                        <span className="inline">
+                          This database is disabled and not accessible to end
+                          users through the API. Console actions remain
+                          available.{' '}
+                          <Link
+                            to="/projects/$projectId/databases/$databaseId/settings"
+                            params={{ projectId, databaseId }}
+                            className="font-medium underline hover:no-underline inline"
+                          >
+                            Enable it in the Settings tab
+                          </Link>{' '}
+                          to make it available to end users.
+                        </span>
+                      </AlertDescription>
+                    </Alert>
+                  </div>
                 </div>
-              </div>
-            ) : undefined
+              ) : tableDataForStatus && !tableDataForStatus.enabled ? (
+                <div className="border-b border-border bg-amber-500/5">
+                  <div className="px-4 py-3 sm:px-6">
+                    <Alert
+                      variant="default"
+                      className="border-amber-500/30 bg-transparent"
+                    >
+                      <AlertCircle className="h-4 w-4 text-amber-500" />
+                      <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
+                        Table is disabled
+                      </AlertTitle>
+                      <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
+                        <span className="inline">
+                          This table is currently disabled.{' '}
+                          <Link
+                            to="/projects/$projectId/databases/$databaseId/tables/$tableId/settings"
+                            params={{ projectId, databaseId, tableId }}
+                            className="font-medium underline hover:no-underline inline"
+                          >
+                            Enable it in the Settings tab
+                          </Link>{' '}
+                          to access its data and functionality.
+                        </span>
+                      </AlertDescription>
+                    </Alert>
+                  </div>
+                </div>
+              ) : null}
+            </>
           }
         />
-
-        {/* Mobile back button - shows when sidebar is hidden */}
-        <button
-          onClick={handleBackToDatabase}
-          className="flex items-center gap-2 border-b border-border px-4 py-2 text-[13px] text-muted-foreground transition-colors hover:text-foreground lg:hidden"
-        >
-          <ChevronLeft className="h-4 w-4" />
-          Back to {database.name}
-        </button>
 
         <div className={cn('flex-1 min-h-0 overflow-y-auto')}>
           {isDatabaseLevelView ? (
@@ -2197,6 +2293,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [tablesExpanded, setTablesExpanded] = useState(true)
+  const { features } = useConsoleProfile()
   const [createTableDialogOpen, setCreateTableDialogOpen] = useState(false)
 
   const database = databases.find((db) => db.$id === databaseId)
@@ -2253,7 +2350,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
         <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
           <button
             onClick={handleBack}
-            className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="flex h-6 w-6 cursor-pointer items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
@@ -2284,13 +2381,18 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
           {tablesExpanded && (
             <div className="ml-3 mt-0.5 border-l border-border pl-2">
               {/* Create Table Button */}
-              <button
-                onClick={() => setCreateTableDialogOpen(true)}
-                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground cursor-pointer"
-              >
-                <Plus className="h-3.5 w-3.5 shrink-0" />
-                <span className="text-[13px]">Create table</span>
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => setCreateTableDialogOpen(true)}
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground cursor-pointer"
+                  >
+                    <Plus className="h-3.5 w-3.5 shrink-0" />
+                    <span className="text-[13px]">Create table</span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right">Create table</TooltipContent>
+              </Tooltip>
             </div>
           )}
 
@@ -2304,24 +2406,28 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
             <span className="text-[13px]">Security</span>
           </Link>
 
-          {/* Insights Link - Coming Soon */}
-          <span className="flex w-full cursor-not-allowed items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground/50">
-            <BarChart3 className="h-3.5 w-3.5 shrink-0" />
-            <span className="flex-1 text-[13px]">Insights</span>
-            <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-              Soon
-            </span>
-          </span>
-
-          {/* Backups Link */}
-          <Link
-            to="/projects/$projectId/databases/$databaseId/backups"
-            params={{ projectId, databaseId }}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
-          >
-            <Archive className="h-3.5 w-3.5 shrink-0" />
-            <span className="text-[13px]">Backups</span>
-          </Link>
+          {features.databaseInsights && (
+            <>
+              {/* Insights Link - Coming Soon */}
+              <span className="flex w-full cursor-not-allowed items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground/50">
+                <BarChart3 className="h-3.5 w-3.5 shrink-0" />
+                <span className="flex-1 text-[13px]">Insights</span>
+                <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                  Soon
+                </span>
+              </span>
+            </>
+          )}
+          {features.databaseBackups && (
+            <Link
+              to="/projects/$projectId/databases/$databaseId/backups"
+              params={{ projectId, databaseId }}
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+            >
+              <Archive className="h-3.5 w-3.5 shrink-0" />
+              <span className="text-[13px]">Backups</span>
+            </Link>
+          )}
 
           {/* Settings Link */}
           <Link
@@ -2340,7 +2446,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
         {/* Mobile back button */}
         <button
           onClick={handleBack}
-          className="flex items-center gap-2 border-b border-border px-4 py-2 text-[13px] text-muted-foreground transition-colors hover:text-foreground lg:hidden"
+          className="flex cursor-pointer items-center gap-2 border-b border-border px-4 py-2 text-[13px] text-muted-foreground transition-colors hover:text-foreground lg:hidden"
         >
           <ChevronLeft className="h-4 w-4" />
           Back to databases
@@ -2718,50 +2824,85 @@ export function DatabaseOverview({
     })
   }
 
-  const databaseTabs: Tab[] = [
-    {
-      id: 'tables',
-      label: 'Tables',
-      to: '/projects/$projectId/databases/$databaseId/',
-      params: { projectId, databaseId },
-    },
-    {
-      id: 'visualizer',
-      label: 'Visualizer',
-      to: '/projects/$projectId/databases/$databaseId/visualizer',
-      params: { projectId, databaseId },
-    },
-    {
-      id: 'security',
-      label: 'Security',
-      to: '/projects/$projectId/databases/$databaseId/security',
-      params: { projectId, databaseId },
-    },
-    {
-      id: 'insights',
-      label: 'Insights',
-      to: '/projects/$projectId/databases/$databaseId/insights',
-      params: { projectId, databaseId },
-    },
-    {
-      id: 'backups',
-      label: 'Backups',
-      to: '/projects/$projectId/databases/$databaseId/backups',
-      params: { projectId, databaseId },
-    },
-    {
-      id: 'export-import',
-      label: 'Export / Import',
-      to: '/projects/$projectId/databases/$databaseId/export-import',
-      params: { projectId, databaseId },
-    },
-    {
-      id: 'settings',
-      label: 'Settings',
-      to: '/projects/$projectId/databases/$databaseId/settings',
-      params: { projectId, databaseId },
-    },
-  ]
+  const { features } = useConsoleProfile()
+
+  // Redirect from backups/insights when feature disabled
+  useEffect(() => {
+    if (
+      (activeTab === 'backups' && !features.databaseBackups) ||
+      (activeTab === 'insights' && !features.databaseInsights)
+    ) {
+      navigate({
+        to: '/projects/$projectId/databases/$databaseId',
+        params: { projectId, databaseId },
+        replace: true,
+      })
+    }
+  }, [
+    activeTab,
+    features.databaseBackups,
+    features.databaseInsights,
+    projectId,
+    databaseId,
+    navigate,
+  ])
+
+  const databaseTabs: Tab[] = useMemo(
+    () =>
+      [
+        {
+          id: 'tables',
+          label: 'Tables',
+          to: '/projects/$projectId/databases/$databaseId/',
+          params: { projectId, databaseId },
+        },
+        {
+          id: 'visualizer',
+          label: 'Visualizer',
+          to: '/projects/$projectId/databases/$databaseId/visualizer',
+          params: { projectId, databaseId },
+        },
+        {
+          id: 'security',
+          label: 'Security',
+          to: '/projects/$projectId/databases/$databaseId/security',
+          params: { projectId, databaseId },
+        },
+        ...(features.databaseInsights
+          ? [
+              {
+                id: 'insights' as const,
+                label: 'Insights',
+                to: '/projects/$projectId/databases/$databaseId/insights',
+                params: { projectId, databaseId },
+              },
+            ]
+          : []),
+        ...(features.databaseBackups
+          ? [
+              {
+                id: 'backups' as const,
+                label: 'Backups',
+                to: '/projects/$projectId/databases/$databaseId/backups',
+                params: { projectId, databaseId },
+              },
+            ]
+          : []),
+        {
+          id: 'export-import',
+          label: 'Export / Import',
+          to: '/projects/$projectId/databases/$databaseId/export-import',
+          params: { projectId, databaseId },
+        },
+        {
+          id: 'settings',
+          label: 'Settings',
+          to: '/projects/$projectId/databases/$databaseId/settings',
+          params: { projectId, databaseId },
+        },
+      ] as Tab[],
+    [projectId, databaseId, features.databaseBackups, features.databaseInsights],
+  )
 
   // Tables are already paginated by the API
   const paginatedTables = dbTables
@@ -2818,10 +2959,10 @@ export function DatabaseOverview({
         ),
       )
     },
-    onSuccess: () => {
-      // Invalidate and refetch tables
-      queryClient.invalidateQueries({
-        queryKey: ['tables', 'project', projectId, 'database', databaseId],
+    onSuccess: async () => {
+      // Refetch tables list so the UI updates (list uses refetchOnMount: false)
+      await queryClient.refetchQueries({
+        queryKey: ['tables', 'project', projectId, databaseId],
       })
       toast.success(
         `Successfully deleted ${selectedTables.size} table${selectedTables.size > 1 ? 's' : ''}`,
@@ -2909,7 +3050,7 @@ export function DatabaseOverview({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 w-7 p-0"
+                className="h-7 w-7 cursor-pointer p-0"
                 onClick={handleBack}
               >
                 <ArrowLeft className="h-4 w-4" />
@@ -3114,7 +3255,7 @@ export function DatabaseOverview({
                           className={cn(
                             'cursor-pointer transition-colors border-b border-border/50',
                             selectedTables.has(table.$id)
-                              ? 'bg-sky-100 dark:bg-sky-950'
+                              ? 'bg-muted'
                               : 'hover:bg-muted/30',
                           )}
                           onClick={(e) => {
@@ -3463,7 +3604,7 @@ export function DatabaseOverview({
                 <div className="px-6 py-4">
                   <p className="text-[13px] text-muted-foreground">
                     Update your database's display name. This will be visible to
-                    all team members.
+                    all organization members.
                   </p>
                   <Input
                     value={databaseName}
@@ -4234,11 +4375,7 @@ function RowEditDrawer({
                               (k) => k !== '$createdAt' && k !== '$updatedAt',
                             ),
                           ]
-                        : [
-                            '$createdAt',
-                            '$updatedAt',
-                            ...Object.keys(row.data),
-                          ]
+                        : ['$createdAt', '$updatedAt', ...Object.keys(row.data)]
                       ).map((key) => {
                         const value = isCreateMode
                           ? formData[key]
@@ -4932,7 +5069,13 @@ function RowsSpreadsheet({
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
   const [requestedPage, setRequestedPage] = useState(1)
   const [displayedPage, setDisplayedPage] = useState(1)
+  const [displayedSortBy, setDisplayedSortBy] = useState<string>('$createdAt')
+  const [displayedSortOrder, setDisplayedSortOrder] = useState<'asc' | 'desc'>(
+    'desc',
+  )
   const [pageSize, setPageSize] = useState(25)
+  const [sortBy, setSortBy] = useState<string>('$createdAt')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [editDrawerOpen, setEditDrawerOpen] = useState(false)
   const [drawerInitialTab, setDrawerInitialTab] = useState<
     'data' | 'permissions' | null
@@ -4960,7 +5103,11 @@ function RowsSpreadsheet({
     setSelectedRows(new Set())
     setDeleteDialogOpen(false)
     setRequestedPage(1)
-    setDisplayedPage(1) // Reset to first page when switching tables
+    setDisplayedPage(1)
+    setDisplayedSortBy('$createdAt')
+    setDisplayedSortOrder('desc')
+    setSortBy('$createdAt')
+    setSortOrder('desc')
   }, [location.pathname, projectId, databaseId, tableId])
 
   // Fetch data for the requested page (triggers load when user changes page)
@@ -4976,9 +5123,11 @@ function RowsSpreadsheet({
     requestedPage - 1,
     pageSize,
     '',
+    sortOrder,
+    sortBy,
   )
 
-  // Fetch data for the displayed page (what we show - stays until new page is ready)
+  // Fetch data for the displayed view (what we show - stays until new data is ready)
   const {
     rows: apiRows,
     total: displayedRowsTotal,
@@ -4990,14 +5139,33 @@ function RowsSpreadsheet({
     displayedPage - 1,
     pageSize,
     '',
+    displayedSortOrder,
+    displayedSortBy,
   )
 
-  // Update displayed page only when requested page data is ready (no flash)
+  // Update displayed page/sort only when requested data is ready (no loading flash)
   useEffect(() => {
-    if (!rowsFetching && requestedPage !== displayedPage && !rowsLoading) {
+    if (
+      !rowsFetching &&
+      !rowsLoading &&
+      (requestedPage !== displayedPage ||
+        sortBy !== displayedSortBy ||
+        sortOrder !== displayedSortOrder)
+    ) {
       setDisplayedPage(requestedPage)
+      setDisplayedSortBy(sortBy)
+      setDisplayedSortOrder(sortOrder)
     }
-  }, [rowsFetching, rowsLoading, requestedPage, displayedPage])
+  }, [
+    rowsFetching,
+    rowsLoading,
+    requestedPage,
+    displayedPage,
+    sortBy,
+    sortOrder,
+    displayedSortBy,
+    displayedSortOrder,
+  ])
 
   // Only show full loading when we have no data to display (initial load)
   const showRowsLoading = displayedRowsLoading && apiRows.length === 0
@@ -5007,11 +5175,12 @@ function RowsSpreadsheet({
   // Notify parent of row count changes (only when count actually changes)
   const prevRowsTotalRef = useRef<number | null>(null)
   useEffect(() => {
-    if (onRowsCountChange && prevRowsTotalRef.current !== rowsTotal) {
-      prevRowsTotalRef.current = rowsTotal
-      onRowsCountChange(rowsTotal)
+    const total = displayedRowsTotal ?? rowsTotal
+    if (onRowsCountChange && prevRowsTotalRef.current !== total) {
+      prevRowsTotalRef.current = total
+      onRowsCountChange(total)
     }
-  }, [rowsTotal, onRowsCountChange])
+  }, [displayedRowsTotal, rowsTotal, onRowsCountChange])
 
   // Expose refetch function to parent component
   useEffect(() => {
@@ -5108,7 +5277,9 @@ function RowsSpreadsheet({
     return {
       $id: row.$id,
       $sequence: row.$sequence,
-      rowNumber: rowsTotal - (currentPageIndexed * pageSize + index),
+      rowNumber:
+        (displayedRowsTotal ?? rowsTotal) -
+        (currentPageIndexed * pageSize + index),
       data,
       $createdAt: row.$createdAt,
       $updatedAt: row.$updatedAt,
@@ -5154,6 +5325,29 @@ function RowsSpreadsheet({
     setRequestedPage(1)
     setDisplayedPage(1)
     setSelectedRows(new Set()) // Clear selection on page size change
+  }
+
+  const handleSortColumn = (columnKey: string) => {
+    if (sortBy === columnKey) {
+      // 3-click cycle: asc → desc → reset to default
+      if (sortOrder === 'asc') {
+        setSortOrder('desc')
+      } else {
+        // sortOrder === 'desc': reset to default (or toggle if $createdAt)
+        if (columnKey === '$createdAt') {
+          setSortOrder('asc')
+        } else {
+          setSortBy('$createdAt')
+          setSortOrder('desc')
+        }
+      }
+    } else {
+      setSortBy(columnKey)
+      setSortOrder('asc')
+    }
+    setRequestedPage(1)
+    setDisplayedPage(1)
+    setSelectedRows(new Set())
   }
 
   const handleRowClick = (row: RowData) => {
@@ -5323,9 +5517,9 @@ function RowsSpreadsheet({
         ),
       )
     },
-    onSuccess: () => {
-      // Invalidate and refetch rows
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch rows list so the UI updates (list uses refetchOnMount: false)
+      await queryClient.refetchQueries({
         queryKey: ['rows', 'project', projectId, databaseId, tableId],
       })
       toast.success(
@@ -5540,7 +5734,7 @@ function RowsSpreadsheet({
               >
                 <div className="flex items-start gap-3 p-4">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-                    <Sparkles className="h-5 w-5 text-muted-foreground" />
+                    <Lightbulb className="h-5 w-5 text-muted-foreground" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 className="text-sm font-medium text-foreground">
@@ -5681,7 +5875,7 @@ function RowsSpreadsheet({
   return (
     <div className="flex h-full flex-col min-h-0">
       {/* Scrollable table area */}
-      <div className="min-h-0 flex-1 overflow-auto overscroll-contain touch-pan-y">
+      <div className="min-h-0 flex-1 overflow-auto overscroll-contain">
         <table className="w-full border-collapse">
           <colgroup>
             <col style={{ width: '40px' }} />
@@ -5723,11 +5917,25 @@ function RowsSpreadsheet({
               </th>
               <th className={cn('w-[180px] px-3 py-2', headerCellBorderClass)}>
                 <div className="flex items-center gap-2">
-                  <Fingerprint className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Fingerprint className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                   <span className="text-[12px] font-medium text-foreground">
                     $id
                   </span>
-                  <ArrowUpDown className="ml-auto h-3 w-3 text-muted-foreground" />
+                  <button
+                    type="button"
+                    onClick={() => handleSortColumn('$id')}
+                    className="ml-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  >
+                    {sortBy === '$id' ? (
+                      sortOrder === 'asc' ? (
+                        <ArrowUp className="h-3 w-3 shrink-0 text-foreground" />
+                      ) : (
+                        <ArrowDown className="h-3 w-3 shrink-0 text-foreground" />
+                      )
+                    ) : (
+                      <ArrowUpDown className="h-3 w-3 shrink-0 text-muted-foreground" />
+                    )}
+                  </button>
                 </div>
               </th>
               {columns.map((col: string) => {
@@ -5748,31 +5956,73 @@ function RowsSpreadsheet({
                     )}
                   >
                     <div className="flex items-center gap-2">
-                      <ColumnIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                      <ColumnIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                       <span className="text-[12px] font-medium text-foreground">
                         {col}
                       </span>
-                      <ArrowUpDown className="ml-auto h-3 w-3 text-muted-foreground" />
+                      <button
+                        type="button"
+                        onClick={() => handleSortColumn(col)}
+                        className="ml-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      >
+                        {sortBy === col ? (
+                          sortOrder === 'asc' ? (
+                            <ArrowUp className="h-3 w-3 shrink-0 text-chart-brand" />
+                          ) : (
+                            <ArrowDown className="h-3 w-3 shrink-0 text-chart-brand" />
+                          )
+                        ) : (
+                          <ArrowUpDown className="h-3 w-3 shrink-0 text-muted-foreground" />
+                        )}
+                      </button>
                     </div>
                   </th>
                 )
               })}
               <th className={cn('w-[180px] px-3 py-2', headerCellBorderClass)}>
                 <div className="flex items-center gap-2">
-                  <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Calendar className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                   <span className="text-[12px] font-medium text-foreground">
                     $createdAt
                   </span>
-                  <ArrowUpDown className="ml-auto h-3 w-3 text-muted-foreground" />
+                  <button
+                    type="button"
+                    onClick={() => handleSortColumn('$createdAt')}
+                    className="ml-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  >
+                    {sortBy === '$createdAt' ? (
+                      sortOrder === 'asc' ? (
+                        <ArrowUp className="h-3 w-3 shrink-0 text-chart-brand" />
+                      ) : (
+                        <ArrowDown className="h-3 w-3 shrink-0 text-chart-brand" />
+                      )
+                    ) : (
+                      <ArrowUpDown className="h-3 w-3 shrink-0 text-muted-foreground" />
+                    )}
+                  </button>
                 </div>
               </th>
               <th className={cn('w-[180px] px-3 py-2', headerCellBorderClass)}>
                 <div className="flex items-center gap-2">
-                  <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Calendar className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                   <span className="text-[12px] font-medium text-foreground">
                     $updatedAt
                   </span>
-                  <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
+                  <button
+                    type="button"
+                    onClick={() => handleSortColumn('$updatedAt')}
+                    className="ml-auto cursor-pointer rounded p-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  >
+                    {sortBy === '$updatedAt' ? (
+                      sortOrder === 'asc' ? (
+                        <ArrowUp className="h-3 w-3 shrink-0 text-chart-brand" />
+                      ) : (
+                        <ArrowDown className="h-3 w-3 shrink-0 text-chart-brand" />
+                      )
+                    ) : (
+                      <ArrowUpDown className="h-3 w-3 shrink-0 text-muted-foreground" />
+                    )}
+                  </button>
                 </div>
               </th>
               <th
@@ -5815,7 +6065,7 @@ function RowsSpreadsheet({
                   className={cn(
                     'group cursor-pointer transition-colors',
                     selectedRows.has(row.$id)
-                      ? 'bg-sky-100 dark:bg-sky-950'
+                      ? 'bg-muted'
                       : 'hover:bg-muted/50',
                   )}
                   onClick={() => handleRowClick(row)}
@@ -5829,7 +6079,7 @@ function RowsSpreadsheet({
                     className={cn(
                       'sticky left-0 w-10 border-b border-gray-200 dark:border-border bg-background px-2 py-1.5',
                       'shadow-[inset_-1px_0_0_0_#d1d5db] dark:shadow-[inset_-1px_0_0_0_rgb(255_255_255_/_0.1)]',
-                      selectedRows.has(row.$id) && 'bg-sky-100 dark:bg-sky-950',
+                      selectedRows.has(row.$id) && 'bg-muted',
                     )}
                   >
                     <Checkbox
@@ -5934,7 +6184,7 @@ function RowsSpreadsheet({
                     className={cn(
                       'sticky right-0 border-b border-gray-200 dark:border-border bg-background p-0',
                       'shadow-[inset_1px_0_0_0_#d1d5db] dark:shadow-[inset_1px_0_0_0_rgb(255_255_255_/_0.1)]',
-                      selectedRows.has(row.$id) && 'bg-sky-100 dark:bg-sky-950',
+                      selectedRows.has(row.$id) && 'bg-muted',
                     )}
                     style={{
                       width: '40px',
@@ -6955,7 +7205,7 @@ function ColumnsSpreadsheet({
     <div className="flex h-full flex-col relative">
       <div
         className={cn(
-          'flex-1 overflow-auto overscroll-contain touch-pan-y',
+          'flex-1 overflow-auto overscroll-contain',
           suggestedColumns.length > 0 && 'pb-24',
         )}
       >
@@ -7190,7 +7440,7 @@ function ColumnsSpreadsheet({
         <div className="absolute bottom-4 left-1/2 z-50 -translate-x-1/2">
           <div className="flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
             <Badge variant="secondary" className="h-6 px-2.5">
-              <Sparkles className="h-3 w-3 mr-1.5" />
+              <Lightbulb className="h-3 w-3 mr-1.5" />
               {suggestedColumns.length} suggestion
               {suggestedColumns.length !== 1 ? 's' : ''}
             </Badge>
@@ -7303,7 +7553,7 @@ function ColumnsSpreadsheet({
               <div className="border-t border-border" />
               <div className="px-6 pb-4 pt-0 mt-8 mb-4 flex flex-col items-center justify-center gap-4">
                 <div className="relative">
-                  <Sparkles className="h-12 w-12 text-amber-500 animate-pulse" />
+                  <Lightbulb className="h-12 w-12 text-amber-500 animate-pulse" />
                   <div className="absolute inset-0 bg-amber-500/20 rounded-full animate-ping" />
                 </div>
                 <p className="text-[13px] text-muted-foreground text-center">
@@ -7758,7 +8008,7 @@ function IndexesSpreadsheet({
     <div className="flex h-full flex-col relative">
       <div
         className={cn(
-          'flex-1 overflow-y-auto overscroll-contain touch-pan-y',
+          'flex-1 overflow-y-auto overscroll-contain',
           suggestedIndexes.length > 0 && 'pb-24',
         )}
       >
@@ -8049,7 +8299,7 @@ function IndexesSpreadsheet({
               <div className="border-t border-border" />
               <div className="px-6 pb-4 pt-0 mt-8 mb-4 flex flex-col items-center justify-center gap-4">
                 <div className="relative">
-                  <Sparkles className="h-12 w-12 text-amber-500 animate-pulse" />
+                  <Lightbulb className="h-12 w-12 text-amber-500 animate-pulse" />
                   <div className="absolute inset-0 bg-amber-500/20 rounded-full animate-ping" />
                 </div>
                 <p className="text-[13px] text-muted-foreground text-center">
@@ -8111,7 +8361,7 @@ function IndexesSpreadsheet({
         <div className="absolute bottom-4 left-1/2 z-50 -translate-x-1/2">
           <div className="flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
             <Badge variant="secondary" className="h-6 px-2.5">
-              <Sparkles className="h-3 w-3 mr-1.5" />
+              <Lightbulb className="h-3 w-3 mr-1.5" />
               {suggestedIndexes.length} suggestion
               {suggestedIndexes.length !== 1 ? 's' : ''}
             </Badge>

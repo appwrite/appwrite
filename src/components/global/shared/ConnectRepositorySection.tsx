@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/select'
 import { VCSDetectionType } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
-import { Loader2, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { useCreateVcsRepository } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import { RepositoryPicker } from '@/components/global/shared/RepositoryPicker'
@@ -200,7 +200,7 @@ export function ConnectRepositorySection({
       repositoryOwner: undefined,
     })
     setRepositoryName(suggestedRepoName)
-    setRepositoryBehaviour('new')
+    setRepositoryBehaviour('existing')
   }
 
   // No installations: show Connect to GitHub only
@@ -448,14 +448,7 @@ export function ConnectRepositorySection({
               }
               className="h-9 text-[13px]"
             >
-              {createRepositoryMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                  Creating…
-                </>
-              ) : (
-                'Create'
-              )}
+              Create
             </Button>
           </div>
         )}

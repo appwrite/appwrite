@@ -10,7 +10,6 @@ import {
 import { usePresetRecords, useCreateDnsRecord } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import { Loader2 } from 'lucide-react'
 
 interface AddPresetDialogProps {
   open: boolean
@@ -146,9 +145,6 @@ export function AddPresetDialog({
             }
             className="gap-2"
           >
-            {createRecordMutation.isPending && (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            )}
             Add preset
           </Button>
         </div>

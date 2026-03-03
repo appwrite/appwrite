@@ -16,7 +16,7 @@ import {
   ChevronDown,
   Menu,
   type LucideIcon,
-} from 'lucide-react'
+} from '@/lib/icons'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
@@ -75,7 +75,7 @@ const iconMap: Record<string, LucideIcon> = {
 // ============================================================================
 
 interface UsageViewProps {
-  plan?: 'free' | 'pro' | 'scale' | 'enterprise'
+  plan?: 'free' | 'pro' | 'custom'
   className?: string
 }
 

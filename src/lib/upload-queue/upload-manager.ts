@@ -145,9 +145,7 @@ class UploadManager {
         pendingUploads.length,
       )
 
-      await Promise.all(
-        Array.from({ length: workerCount }, () => runNext()),
-      )
+      await Promise.all(Array.from({ length: workerCount }, () => runNext()))
     } finally {
       this.processingQueue = false
 

@@ -200,9 +200,7 @@ export function PaymentHistory() {
               <th className="px-6 py-2.5 text-right text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                 Amount
               </th>
-              <th className="px-6 py-2.5 text-right text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                Actions
-              </th>
+              <th className="px-6 py-2.5 text-right text-[11px] font-medium uppercase tracking-wider text-muted-foreground" />
             </tr>
           </thead>
           <tbody className="divide-y divide-border">

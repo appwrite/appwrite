@@ -22,6 +22,7 @@ import {
   Building2,
 } from 'lucide-react'
 import { useOrganizationPlan } from '@/lib/react-query/hooks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { getSupportHoursInLocalTime } from '@/lib/support'
 
 const CONTACT_SALES_URL =
@@ -42,9 +43,13 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
 
   // Fetch organization plan to check for premium support
   const { plan: organizationPlan } = useOrganizationPlan(orgId)
+  const { features } = useConsoleProfile()
 
   // Check if the plan supports premium support
   const hasPremiumSupport = organizationPlan?.premiumSupport === true
+
+  // "More options" applies when Contact Support section has content; otherwise these are the primary options
+  const hasContactSupportOptions = hasPremiumSupport || features.billing
 
   // Determine badge theme based on current theme
   const badgeTheme = resolvedTheme === 'dark' ? 'dark' : 'light'
@@ -79,7 +84,7 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-muted-foreground hover:bg-accent hover:text-foreground"
+              className="h-9 w-9 text-muted-foreground hover:bg-accent hover:text-foreground"
             >
               <Headphones className="h-4 w-4" />
               <span className="sr-only">Support</span>
@@ -100,7 +105,9 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
             <div className="flex-1 space-y-1">
               <h4 className="text-sm font-medium">Contact Support</h4>
               <p className="text-xs text-muted-foreground">
-                Get help from our support team
+                {hasContactSupportOptions
+                  ? 'Get help from our support team'
+                  : 'Community and enterprise resources'}
               </p>
             </div>
           </div>
@@ -149,7 +156,7 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
                 Contact Support
               </Button>
             )
-          ) : (
+          ) : features.billing ? (
             <>
               <p className="mt-3 text-xs text-muted-foreground">
                 Upgrade your plan to get email support.
@@ -163,7 +170,7 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
                 Upgrade
               </Button>
             </>
-          )}
+          ) : null}
         </div>
 
         <Separator />
@@ -171,7 +178,7 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
         {/* Enterprise & Community */}
         <div className="p-4">
           <h4 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            More options
+            {hasContactSupportOptions ? 'More options' : 'Support'}
           </h4>
 
           <div className="space-y-2">
@@ -243,36 +250,39 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
           </div>
         </div>
 
-        <Separator />
-
-        {/* Status Page */}
-        <div className="p-4">
-          <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10">
-              <Activity className="h-4 w-4 text-emerald-500" />
+        {features.systemStatus && (
+          <>
+            <Separator />
+            {/* Status Page - cloud only */}
+            <div className="p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10">
+                  <Activity className="h-4 w-4 text-emerald-500" />
+                </div>
+                <div className="flex-1 space-y-1">
+                  <h4 className="text-sm font-medium">System Status</h4>
+                  <p className="text-xs text-muted-foreground">
+                    Check the current status of our services
+                  </p>
+                </div>
+              </div>
+              <div className="mt-3 overflow-hidden rounded-lg border border-border bg-background px-2.5 pt-2.5 pb-1.5">
+                <iframe
+                  className={`block w-full transition-opacity duration-500 ${
+                    isIframeLoaded ? 'opacity-100' : 'opacity-0'
+                  }`}
+                  title="Appwrite Status"
+                  src={`https://status.appwrite.online/badge?theme=${badgeTheme}`}
+                  height="35"
+                  frameBorder="0"
+                  scrolling="no"
+                  onLoad={() => setIsIframeLoaded(true)}
+                  style={{ colorScheme: 'none', display: 'block' }}
+                />
+              </div>
             </div>
-            <div className="flex-1 space-y-1">
-              <h4 className="text-sm font-medium">System Status</h4>
-              <p className="text-xs text-muted-foreground">
-                Check the current status of our services
-              </p>
-            </div>
-          </div>
-          <div className="mt-3 overflow-hidden rounded-lg border border-border bg-background px-2.5 pt-2.5 pb-1.5">
-            <iframe
-              className={`block w-full transition-opacity duration-500 ${
-                isIframeLoaded ? 'opacity-100' : 'opacity-0'
-              }`}
-              title="Appwrite Status"
-              src={`https://status.appwrite.online/badge?theme=${badgeTheme}`}
-              height="35"
-              frameBorder="0"
-              scrolling="no"
-              onLoad={() => setIsIframeLoaded(true)}
-              style={{ colorScheme: 'none', display: 'block' }}
-            />
-          </div>
-        </div>
+          </>
+        )}
       </PopoverContent>
     </Popover>
   )

@@ -1032,9 +1032,7 @@ export function View() {
                           Topic name
                         </TableHead>
                         {isDraft && (
-                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[80px]">
-                            Actions
-                          </TableHead>
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[80px]" />
                         )}
                       </TableRow>
                     </TableHeader>
@@ -1163,9 +1161,7 @@ export function View() {
                           Identifier
                         </TableHead>
                         {isDraft && (
-                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[80px]">
-                            Actions
-                          </TableHead>
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[80px]" />
                         )}
                       </TableRow>
                     </TableHeader>

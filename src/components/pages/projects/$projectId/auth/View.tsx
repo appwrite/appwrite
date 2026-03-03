@@ -151,6 +151,23 @@ export function View() {
     }
   }, [search?.create, createUserDialogOpen, navigate, location.pathname])
 
+  // Open create team drawer when ?create=team (e.g. from command center)
+  useEffect(() => {
+    if (search?.create === 'team' && !createTeamDialogOpen) {
+      setCreateTeamDialogOpen(true)
+      navigate({
+        to: location.pathname,
+        search: (prev: Record<string, unknown>) => {
+          if (!prev || typeof prev !== 'object') return {}
+          const next = { ...prev }
+          delete next.create
+          return Object.keys(next).length === 0 ? {} : next
+        },
+        replace: true,
+      })
+    }
+  }, [search?.create, createTeamDialogOpen, navigate, location.pathname])
+
   // Pagination state for users (1-indexed for UI)
   const [usersRequestedPage, setUsersRequestedPage] = useState(1)
   const [usersDisplayedPage, setUsersDisplayedPage] = useState(1)
@@ -640,8 +657,8 @@ export function View() {
         activeTab={activeTab}
         searchPlaceholder={
           activeTab === 'security' ||
-          activeTab === 'settings' ||
-          activeTab === 'templates'
+            activeTab === 'settings' ||
+            activeTab === 'templates'
             ? undefined
             : `Search ${activeTab}...`
         }
@@ -685,7 +702,7 @@ export function View() {
           (activeTab === 'security' ||
             activeTab === 'templates' ||
             activeTab === 'settings') &&
-            'pt-4 sm:pt-6',
+          'pt-4 sm:pt-6',
         )}
       >
         {activeTab === 'users' && (
@@ -779,164 +796,42 @@ export function View() {
                                   })
                                 }}
                               >
-                              <TableCell
-                                onClick={(e) => e.stopPropagation()}
-                                className="px-4 py-3"
-                              >
-                                <Checkbox
-                                  checked={selectedUsers.has(user.$id)}
-                                  onCheckedChange={() => toggleUser(user.$id)}
-                                />
-                              </TableCell>
-                              <TableCell className="px-4 py-3">
-                                <Link
-                                  to="/projects/$projectId/auth/users/$userId"
-                                  params={{
-                                    projectId: projectId!,
-                                    userId: user.$id,
-                                  }}
-                                  className="block group"
+                                <TableCell
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="px-4 py-3"
                                 >
-                                  <div className="flex items-center gap-3 min-w-0">
-                                    <InitialsAvatar
-                                      name={user.name || user.email || ''}
-                                      size="sm"
-                                      className="shrink-0"
-                                    />
-                                    <div className="flex-1 min-w-0">
-                                      <p className="truncate text-[13px] font-medium text-foreground group-hover:text-primary transition-colors">
-                                        {user.name || 'No name'}
-                                      </p>
-                                      <div className="mt-0.5">
-                                        <CopyableId id={user.$id} size="xs" />
+                                  <Checkbox
+                                    checked={selectedUsers.has(user.$id)}
+                                    onCheckedChange={() => toggleUser(user.$id)}
+                                  />
+                                </TableCell>
+                                <TableCell className="px-4 py-3">
+                                  <Link
+                                    to="/projects/$projectId/auth/users/$userId"
+                                    params={{
+                                      projectId: projectId!,
+                                      userId: user.$id,
+                                    }}
+                                    className="block group"
+                                  >
+                                    <div className="flex items-center gap-3 min-w-0">
+                                      <InitialsAvatar
+                                        name={user.name || user.email || ''}
+                                        size="sm"
+                                        className="shrink-0"
+                                      />
+                                      <div className="flex-1 min-w-0">
+                                        <p className="truncate text-[13px] font-medium text-foreground group-hover:text-primary transition-colors">
+                                          {user.name || 'No name'}
+                                        </p>
+                                        <div className="mt-0.5">
+                                          <CopyableId id={user.$id} size="xs" />
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
-                                </Link>
-                              </TableCell>
-                              <TableCell className="px-4 py-3">
-                                <Link
-                                  to="/projects/$projectId/auth/users/$userId"
-                                  params={{
-                                    projectId: projectId!,
-                                    userId: user.$id,
-                                  }}
-                                  className="block"
-                                >
-                                  <div className="space-y-1">
-                                    {hasEmail && (
-                                      <div className="flex items-center gap-1.5 min-w-0">
-                                        <Mail className="h-3 w-3 shrink-0 text-muted-foreground/60" />
-                                        <span className="truncate text-[12px] text-foreground font-medium">
-                                          {user.email}
-                                        </span>
-                                      </div>
-                                    )}
-                                    {hasPhone && (
-                                      <div className="flex items-center gap-1.5 min-w-0">
-                                        <Phone className="h-3 w-3 shrink-0 text-muted-foreground/60" />
-                                        <span className="truncate text-[12px] text-foreground font-medium">
-                                          {user.phone}
-                                        </span>
-                                      </div>
-                                    )}
-                                    {!hasEmail && !hasPhone && (
-                                      <span className="text-[12px] text-muted-foreground">
-                                        -
-                                      </span>
-                                    )}
-                                  </div>
-                                </Link>
-                              </TableCell>
-                              <TableCell className="px-4 py-3">
-                                <Link
-                                  to="/projects/$projectId/auth/users/$userId"
-                                  params={{
-                                    projectId: projectId!,
-                                    userId: user.$id,
-                                  }}
-                                  className="block"
-                                >
-                                  <div className="flex items-center justify-center gap-2 flex-wrap">
-                                    {isBlocked ? (
-                                      <Badge
-                                        variant="error"
-                                        className="text-[10px] shrink-0"
-                                      >
-                                        Blocked
-                                      </Badge>
-                                    ) : (
-                                      <>
-                                        {hasEmail && (
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <Badge
-                                                variant={
-                                                  emailVerified
-                                                    ? 'success'
-                                                    : 'warning'
-                                                }
-                                                className="text-[10px] shrink-0"
-                                              >
-                                                {emailVerified ? (
-                                                  <CheckCircle2 className="h-3 w-3" />
-                                                ) : (
-                                                  <XCircle className="h-3 w-3" />
-                                                )}
-                                                Email
-                                              </Badge>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                              <p className="text-xs">
-                                                Email{' '}
-                                                {emailVerified
-                                                  ? 'verified'
-                                                  : 'unverified'}
-                                              </p>
-                                            </TooltipContent>
-                                          </Tooltip>
-                                        )}
-                                        {hasPhone && (
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <Badge
-                                                variant={
-                                                  phoneVerified
-                                                    ? 'success'
-                                                    : 'warning'
-                                                }
-                                                className="text-[10px] shrink-0"
-                                              >
-                                                {phoneVerified ? (
-                                                  <CheckCircle2 className="h-3 w-3" />
-                                                ) : (
-                                                  <XCircle className="h-3 w-3" />
-                                                )}
-                                                Phone
-                                              </Badge>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                              <p className="text-xs">
-                                                Phone{' '}
-                                                {phoneVerified
-                                                  ? 'verified'
-                                                  : 'unverified'}
-                                              </p>
-                                            </TooltipContent>
-                                          </Tooltip>
-                                        )}
-                                        {!hasEmail && !hasPhone && (
-                                          <span className="text-[11px] text-muted-foreground">
-                                            -
-                                          </span>
-                                        )}
-                                      </>
-                                    )}
-                                  </div>
-                                </Link>
-                              </TableCell>
-                              <TableCell className="px-4 py-3">
-                                <div className="flex items-center justify-center">
+                                  </Link>
+                                </TableCell>
+                                <TableCell className="px-4 py-3">
                                   <Link
                                     to="/projects/$projectId/auth/users/$userId"
                                     params={{
@@ -945,72 +840,194 @@ export function View() {
                                     }}
                                     className="block"
                                   >
-                                    {user.mfaEnabled ? (
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <div className="flex items-center justify-center">
-                                            <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
-                                          </div>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <p className="text-xs">
-                                            Multi-factor authentication enabled
-                                          </p>
-                                        </TooltipContent>
-                                      </Tooltip>
+                                    <div className="space-y-1">
+                                      {hasEmail && (
+                                        <div className="flex items-center gap-1.5 min-w-0">
+                                          <Mail className="h-3 w-3 shrink-0 text-muted-foreground/60" />
+                                          <span className="truncate text-[12px] text-foreground font-medium">
+                                            {user.email}
+                                          </span>
+                                        </div>
+                                      )}
+                                      {hasPhone && (
+                                        <div className="flex items-center gap-1.5 min-w-0">
+                                          <Phone className="h-3 w-3 shrink-0 text-muted-foreground/60" />
+                                          <span className="truncate text-[12px] text-foreground font-medium">
+                                            {user.phone}
+                                          </span>
+                                        </div>
+                                      )}
+                                      {!hasEmail && !hasPhone && (
+                                        <span className="text-[12px] text-muted-foreground">
+                                          -
+                                        </span>
+                                      )}
+                                    </div>
+                                  </Link>
+                                </TableCell>
+                                <TableCell className="px-4 py-3">
+                                  <Link
+                                    to="/projects/$projectId/auth/users/$userId"
+                                    params={{
+                                      projectId: projectId!,
+                                      userId: user.$id,
+                                    }}
+                                    className="block"
+                                  >
+                                    <div className="flex items-center justify-center gap-2 flex-wrap">
+                                      {isBlocked ? (
+                                        <Badge
+                                          variant="error"
+                                          className="text-[10px] shrink-0"
+                                        >
+                                          Blocked
+                                        </Badge>
+                                      ) : (
+                                        <>
+                                          {hasEmail && (
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <Badge
+                                                  variant={
+                                                    emailVerified
+                                                      ? 'success'
+                                                      : 'warning'
+                                                  }
+                                                  className="text-[10px] shrink-0"
+                                                >
+                                                  {emailVerified ? (
+                                                    <CheckCircle2 className="h-3 w-3" />
+                                                  ) : (
+                                                    <XCircle className="h-3 w-3" />
+                                                  )}
+                                                  Email
+                                                </Badge>
+                                              </TooltipTrigger>
+                                              <TooltipContent>
+                                                <p className="text-xs">
+                                                  Email{' '}
+                                                  {emailVerified
+                                                    ? 'verified'
+                                                    : 'unverified'}
+                                                </p>
+                                              </TooltipContent>
+                                            </Tooltip>
+                                          )}
+                                          {hasPhone && (
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <Badge
+                                                  variant={
+                                                    phoneVerified
+                                                      ? 'success'
+                                                      : 'warning'
+                                                  }
+                                                  className="text-[10px] shrink-0"
+                                                >
+                                                  {phoneVerified ? (
+                                                    <CheckCircle2 className="h-3 w-3" />
+                                                  ) : (
+                                                    <XCircle className="h-3 w-3" />
+                                                  )}
+                                                  Phone
+                                                </Badge>
+                                              </TooltipTrigger>
+                                              <TooltipContent>
+                                                <p className="text-xs">
+                                                  Phone{' '}
+                                                  {phoneVerified
+                                                    ? 'verified'
+                                                    : 'unverified'}
+                                                </p>
+                                              </TooltipContent>
+                                            </Tooltip>
+                                          )}
+                                          {!hasEmail && !hasPhone && (
+                                            <span className="text-[11px] text-muted-foreground">
+                                              -
+                                            </span>
+                                          )}
+                                        </>
+                                      )}
+                                    </div>
+                                  </Link>
+                                </TableCell>
+                                <TableCell className="px-4 py-3">
+                                  <div className="flex items-center justify-center">
+                                    <Link
+                                      to="/projects/$projectId/auth/users/$userId"
+                                      params={{
+                                        projectId: projectId!,
+                                        userId: user.$id,
+                                      }}
+                                      className="block"
+                                    >
+                                      {user.mfaEnabled ? (
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <div className="flex items-center justify-center">
+                                              <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                            </div>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p className="text-xs">
+                                              Multi-factor authentication enabled
+                                            </p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      ) : (
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <div className="flex items-center justify-center">
+                                              <XCircle className="h-4 w-4 text-muted-foreground/40" />
+                                            </div>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p className="text-xs">
+                                              Multi-factor authentication not
+                                              enabled
+                                            </p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      )}
+                                    </Link>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="px-4 py-3">
+                                  <Link
+                                    to="/projects/$projectId/auth/users/$userId"
+                                    params={{
+                                      projectId: projectId!,
+                                      userId: user.$id,
+                                    }}
+                                    className="block text-right"
+                                  >
+                                    <DateTooltip
+                                      date={new Date(user.createdAt)}
+                                      className="text-[12px] text-muted-foreground font-mono"
+                                    />
+                                  </Link>
+                                </TableCell>
+                                <TableCell className="px-4 py-3">
+                                  <Link
+                                    to="/projects/$projectId/auth/users/$userId"
+                                    params={{
+                                      projectId: projectId!,
+                                      userId: user.$id,
+                                    }}
+                                    className="block text-right"
+                                  >
+                                    {user.accessedAt ? (
+                                      <span className="text-[12px] text-muted-foreground font-mono">
+                                        {formatLastAccessed(user.accessedAt)}
+                                      </span>
                                     ) : (
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <div className="flex items-center justify-center">
-                                            <XCircle className="h-4 w-4 text-muted-foreground/40" />
-                                          </div>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <p className="text-xs">
-                                            Multi-factor authentication not
-                                            enabled
-                                          </p>
-                                        </TooltipContent>
-                                      </Tooltip>
+                                      <span className="text-[12px] text-muted-foreground/50 italic">
+                                        Never
+                                      </span>
                                     )}
                                   </Link>
-                                </div>
-                              </TableCell>
-                              <TableCell className="px-4 py-3">
-                                <Link
-                                  to="/projects/$projectId/auth/users/$userId"
-                                  params={{
-                                    projectId: projectId!,
-                                    userId: user.$id,
-                                  }}
-                                  className="block text-right"
-                                >
-                                  <DateTooltip
-                                    date={new Date(user.createdAt)}
-                                    className="text-[12px] text-muted-foreground font-mono"
-                                  />
-                                </Link>
-                              </TableCell>
-                              <TableCell className="px-4 py-3">
-                                <Link
-                                  to="/projects/$projectId/auth/users/$userId"
-                                  params={{
-                                    projectId: projectId!,
-                                    userId: user.$id,
-                                  }}
-                                  className="block text-right"
-                                >
-                                  {user.accessedAt ? (
-                                    <span className="text-[12px] text-muted-foreground font-mono">
-                                      {formatLastAccessed(user.accessedAt)}
-                                    </span>
-                                  ) : (
-                                    <span className="text-[12px] text-muted-foreground/50 italic">
-                                      Never
-                                    </span>
-                                  )}
-                                </Link>
-                              </TableCell>
+                                </TableCell>
                               </TableRow>
                             </UserContextMenu>
                           )
@@ -1254,56 +1271,56 @@ export function View() {
                                 })
                               }}
                             >
-                            <TableCell
-                              onClick={(e) => e.stopPropagation()}
-                              className="px-4 py-3"
-                            >
-                              <Checkbox
-                                checked={selectedTeams.has(team.id)}
-                                onCheckedChange={() => toggleTeam(team.id)}
-                              />
-                            </TableCell>
-                            <TableCell className="px-4 py-3">
-                              <Link
-                                to="/projects/$projectId/auth/teams/$teamId"
-                                params={{
-                                  projectId: projectId!,
-                                  teamId: team.id,
-                                }}
-                                className="block group"
+                              <TableCell
+                                onClick={(e) => e.stopPropagation()}
+                                className="px-4 py-3"
                               >
-                                <div className="flex items-center gap-3 min-w-0">
-                                  <InitialsAvatar
-                                    name={team.name || ''}
-                                    size="sm"
-                                    className="shrink-0"
-                                  />
-                                  <div className="flex-1 min-w-0">
-                                    <p className="truncate text-[13px] font-medium text-foreground group-hover:text-primary transition-colors">
-                                      {team.name || 'No name'}
-                                    </p>
-                                    <div className="mt-0.5">
-                                      <CopyableId id={team.id} size="xs" />
+                                <Checkbox
+                                  checked={selectedTeams.has(team.id)}
+                                  onCheckedChange={() => toggleTeam(team.id)}
+                                />
+                              </TableCell>
+                              <TableCell className="px-4 py-3">
+                                <Link
+                                  to="/projects/$projectId/auth/teams/$teamId"
+                                  params={{
+                                    projectId: projectId!,
+                                    teamId: team.id,
+                                  }}
+                                  className="block group"
+                                >
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    <InitialsAvatar
+                                      name={team.name || ''}
+                                      size="sm"
+                                      className="shrink-0"
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                      <p className="truncate text-[13px] font-medium text-foreground group-hover:text-primary transition-colors">
+                                        {team.name || 'No name'}
+                                      </p>
+                                      <div className="mt-0.5">
+                                        <CopyableId id={team.id} size="xs" />
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                              </Link>
-                            </TableCell>
-                            <TableCell className="px-4 py-3">
-                              <Link
-                                to="/projects/$projectId/auth/teams/$teamId"
-                                params={{
-                                  projectId: projectId!,
-                                  teamId: team.id,
-                                }}
-                                className="block text-right"
-                              >
-                                <DateTooltip
-                                  date={new Date(team.createdAt)}
-                                  className="text-[12px] text-muted-foreground font-mono"
-                                />
-                              </Link>
-                            </TableCell>
+                                </Link>
+                              </TableCell>
+                              <TableCell className="px-4 py-3">
+                                <Link
+                                  to="/projects/$projectId/auth/teams/$teamId"
+                                  params={{
+                                    projectId: projectId!,
+                                    teamId: team.id,
+                                  }}
+                                  className="block text-right"
+                                >
+                                  <DateTooltip
+                                    date={new Date(team.createdAt)}
+                                    className="text-[12px] text-muted-foreground font-mono"
+                                  />
+                                </Link>
+                              </TableCell>
                             </TableRow>
                           </TeamContextMenu>
                         ))}

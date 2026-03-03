@@ -1,9 +1,10 @@
 /**
  * Shared repository picker for connecting to a Git repository.
- * Used in site creation wizard and site settings "Connect repository" modal.
+ * Used in site creation wizard, site settings, and function settings
+ * "Connect repository" modal.
  *
  * Features: installation selector with "Add account", search, repo list with
- * framework icon, pagination, "Can't find a repository?" note, optional
+ * framework/runtime icon, pagination, "Can't find a repository?" note, optional
  * "Create a new site" link.
  */
 
@@ -19,6 +20,7 @@ import {
 } from '@/components/ui/select'
 import { SimplePagination } from '@/components/global/shared/Pagination'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
+import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Search, Lock, Plus, RefreshCw } from 'lucide-react'
@@ -80,7 +82,9 @@ export interface RepositoryPickerProps {
   onInstallationChange: (installationId: string) => void
   /** For connect mode: which repo is currently selected */
   selectedRepositoryId?: string
-  onRepositorySelect: (repo: Models.ProviderRepositoryFramework) => void
+  onRepositorySelect: (
+    repo: Models.ProviderRepositoryFramework | Models.ProviderRepositoryRuntime,
+  ) => void
   /** create = wizard (Connect button per row); connect = modal (select one then Confirm) */
   mode: 'create' | 'connect'
   /** Framework for sites, Runtime for functions. Default Framework. */
@@ -139,10 +143,20 @@ export function RepositoryPicker({
   )
 
   const repositories = useMemo(() => {
+    const data = repositoriesData as
+      | Models.ProviderRepositoryFrameworkList
+      | Models.ProviderRepositoryRuntimeList
+      | undefined
     if (vcsType === VCSDetectionType.Runtime) {
-      return repositoriesData?.runtimeProviderRepositories || []
+      return (
+        (data as Models.ProviderRepositoryRuntimeList)
+          ?.runtimeProviderRepositories ?? []
+      )
     }
-    return repositoriesData?.frameworkProviderRepositories || []
+    return (
+      (data as Models.ProviderRepositoryFrameworkList)
+        ?.frameworkProviderRepositories ?? []
+    )
   }, [repositoriesData, vcsType])
   const hasMoreRepos = repositories.length === REPO_PAGE_SIZE
   const selectedInstallation = installations.find(
@@ -291,7 +305,11 @@ export function RepositoryPicker({
                   )}
                 >
                   {repositories.map(
-                    (repo: Models.ProviderRepositoryFramework) => {
+                    (
+                      repo:
+                        | Models.ProviderRepositoryFramework
+                        | Models.ProviderRepositoryRuntime,
+                    ) => {
                       const isSelected = selectedRepositoryId === repo.id
                       return (
                         <div
@@ -319,10 +337,20 @@ export function RepositoryPicker({
                           tabIndex={mode === 'connect' ? 0 : undefined}
                         >
                           <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-muted/50 text-muted-foreground">
-                            {repo.framework ? (
+                            {'framework' in repo && repo.framework ? (
                               <FrameworkIcon
                                 framework={repo.framework}
                                 size="sm"
+                              />
+                            ) : 'runtime' in repo &&
+                              (repo as Models.ProviderRepositoryRuntime)
+                                .runtime ? (
+                              <RuntimeIcon
+                                runtime={
+                                  (repo as Models.ProviderRepositoryRuntime)
+                                    .runtime
+                                }
+                                className="h-3.5 w-3.5"
                               />
                             ) : (
                               <ProviderIcon
@@ -357,11 +385,24 @@ export function RepositoryPicker({
                               Connect
                             </Button>
                           )}
-                          {mode === 'connect' && isSelected && (
-                            <span className="text-[12px] font-medium text-primary shrink-0">
-                              Selected
-                            </span>
-                          )}
+                          {mode === 'connect' &&
+                            (isSelected ? (
+                              <span className="text-[12px] font-medium text-primary shrink-0">
+                                Selected
+                              </span>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-[12px] shrink-0"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  onRepositorySelect(repo)
+                                }}
+                              >
+                                Connect
+                              </Button>
+                            ))}
                         </div>
                       )
                     },

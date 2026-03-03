@@ -207,9 +207,7 @@ All tables must use consistent styling matching the users table pattern for visu
     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
       Another Column
     </TableHead>
-    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[100px]">
-      Actions
-    </TableHead>
+    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[100px]" />
   </TableRow>
 </TableHeader>
 ```
@@ -232,8 +230,9 @@ All tables must use consistent styling matching the users table pattern for visu
 
 - **Header Row**: Always use `hover:bg-transparent border-b border-border` on `TableRow` in `TableHeader`
 - **TableHead**: Always include `px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider`
-- **Column Names**: Use uppercase/capitalized text (e.g., "User ID", "Created At", "Actions")
+- **Column Names**: Use uppercase/capitalized text (e.g., "User ID", "Created At"). Never use "Actions" as a column title—leave the actions column header empty.
 - **TableCell**: Always use `px-4 py-3` for consistent padding
+- **Actions column**: Never title it "Actions"—use an empty `TableHead` (e.g. `<TableHead className="... text-right w-[100px]" />`).
 - **Special Cases**:
   - First column with checkbox: Keep `w-[40px] px-4` on `TableHead`, add `py-3` to `TableCell`
   - Columns with `pl-6 sm:pl-8`: Add `py-3` to maintain vertical consistency
@@ -947,15 +946,34 @@ Follow the modal structure pattern above. For no-content modals, skip content se
 | Button during action   | Keep text, use `disabled` state                                                                                                                                       |
 | Unavailable action     | Disable button with tooltip, don't hide                                                                                                                               |
 | Service avatar         | `bg-muted text-muted-foreground` (never colored)                                                                                                                      |
-| Badge style            | Use status variants (`error`, `warning`, `success`, `info`) for same design; `text-[10px] shrink-0` when inline with text                                               |
+| Badge style            | Use status variants (`error`, `warning`, `success`, `info`) for same design; `text-[10px] shrink-0` when inline with text                                             |
 | Icon spacing           | `mr-1.5` or `gap-1.5`                                                                                                                                                 |
 | Date display           | Always include DateTooltip                                                                                                                                            |
 | Route prefetch         | All crucial data at route level                                                                                                                                       |
 | Detail page (no flash) | Loader returns data; route passes `initialData` to View; View uses `initialData` for first paint (see "Detail page: no loading flash")                                |
 | Models types           | Always `Models.*` from `@appwrite.io/console`                                                                                                                         |
 | Table header           | `hover:bg-transparent border-b border-border` on row, `px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider` on head                    |
+| Actions column         | Never use "Actions" as title—use empty `TableHead`                                                                                                                     |
 | Table cells            | `px-4 py-3` on all cells (preserve special padding like `pl-6 sm:pl-8` where needed)                                                                                  |
 | Long-running progress  | One panel per scope; flat list of cards (no wrapper per type); same card style + ProgressBarRow; per-card dismiss; auto-action only on status transition to completed |
+
+---
+
+## Console Profiles
+
+Profiles control which features are available based on deployment type (cloud vs self-hosted).
+
+**Profiles:**
+- **Cloud** (default): Full feature set – billing, domains, usage stats, activity, org roles, system status, account MFA, account identities
+- **Self-hosted**: Cloud-only features disabled
+
+**Env var:** `VITE_CONSOLE_PROFILE=cloud` or `VITE_CONSOLE_PROFILE=self-hosted`
+
+**Debug mode:** When debug menu is open (press `.`), use Console profile submenu to override the env-selected profile. Override is stored in localStorage and takes precedence until "Use env var" is selected.
+
+**Feature flags:** Use `useConsoleProfile()` or `getActiveProfileFeatures()` to check feature flags (e.g. `features.billing`, `features.domains`, `features.compliance`, `features.databaseBackups`).
+
+**Feature-driven keys:** Each flag must map to a single, specific feature. Do not use generic or grouped flags (e.g. `orgCloudSettings`, `databaseCloudFeatures`). Split into explicit flags per feature (e.g. `compliance`, `oauthApps`, `orgApiKeys` for org settings; `databaseBackups`, `databaseInsights` for database).
 
 ---
 

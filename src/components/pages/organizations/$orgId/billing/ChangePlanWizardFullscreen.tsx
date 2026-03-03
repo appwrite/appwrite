@@ -7,7 +7,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle } from '@/lib/icons'
 import { toast } from 'sonner'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import {
@@ -167,7 +167,7 @@ export function ChangePlanWizardFullscreen() {
           })
           toast.success('Payment confirmed successfully')
           navigate({
-            to: '/organizations/$orgId/billing',
+            to: '/organizations/$orgId/settings/billing',
             params: { orgId: organizationId },
           })
         } catch (error) {
@@ -387,7 +387,7 @@ export function ChangePlanWizardFullscreen() {
 
       // If successful, invalidate and navigate
       toast.success('Plan updated successfully')
-      navigate({ to: '/organizations/$orgId/billing', params: { orgId } })
+      navigate({ to: '/organizations/$orgId/settings/billing', params: { orgId } })
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : 'Failed to update plan',
@@ -430,7 +430,7 @@ export function ChangePlanWizardFullscreen() {
       }
 
       toast.success('Plan updated successfully')
-      navigate({ to: '/organizations/$orgId/billing', params: { orgId } })
+      navigate({ to: '/organizations/$orgId/settings/billing', params: { orgId } })
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : 'Failed to update plan',
@@ -609,11 +609,11 @@ export function ChangePlanWizardFullscreen() {
           {selectedPlan === BillingPlanTier.Tier1 && (
             <Alert>
               <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Monthly Charges for Extra Team Members</AlertTitle>
+              <AlertTitle>Monthly Charges for Extra Organization Members</AlertTitle>
               <AlertDescription className="mt-2">
                 {targetPlanInfo?.addons?.seats?.price
-                  ? `You will be charged $${targetPlanInfo.addons.seats.price} per month for each team member beyond the plan limit.`
-                  : 'You will be charged for each team member beyond the plan limit.'}
+                  ? `You will be charged $${targetPlanInfo.addons.seats.price} per month for each organization member beyond the plan limit.`
+                  : 'You will be charged for each organization member beyond the plan limit.'}
               </AlertDescription>
             </Alert>
           )}
@@ -626,7 +626,7 @@ export function ChangePlanWizardFullscreen() {
                 Your plan will change on{' '}
                 {organization?.billingPlanDowngrade?.date ||
                   'the end of your billing period'}
-                . You will lose access to premium features and team members
+                . You will lose access to premium features and organization members
                 beyond the free limit will be removed.
                 <a
                   href="https://appwrite.io/docs/migration"

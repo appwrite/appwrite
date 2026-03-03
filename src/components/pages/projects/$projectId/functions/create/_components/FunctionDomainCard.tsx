@@ -1,0 +1,152 @@
+/**
+ * Function Domain Card
+ *
+ * Lets users choose between Edge (.appwrite.network) and Region
+ * (.<region>.appwrite.run) endpoints per Appwrite Network docs.
+ * Both support custom domains post-deployment.
+ */
+
+import { useEffect } from 'react'
+import { DomainInput } from '@/components/global/shared/DomainInput'
+import { useFunctionWizard } from '../WizardContext'
+import { Network, Building2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
+
+const FUNCTION_DOMAINS_URL =
+  'https://appwrite.io/docs/products/functions/domains'
+const NETWORK_EDGES_URL = 'https://appwrite.io/docs/products/network/edges'
+const NETWORK_REGIONS_URL = 'https://appwrite.io/docs/products/network/regions'
+
+export interface FunctionDomainCardProps {
+  domain: string
+  setDomain: (v: string) => void
+  domainValid: boolean
+  setDomainValid: (v: boolean) => void
+}
+
+function extractSubdomain(fullDomain: string): string {
+  const first = fullDomain.split('.')[0]
+  return first || ''
+}
+
+export function FunctionDomainCard({
+  domain,
+  setDomain,
+  domainValid: _domainValid,
+  setDomainValid,
+}: FunctionDomainCardProps) {
+  const { endpointType, setEndpointType, baseDomain, region } =
+    useFunctionWizard()
+
+  useEffect(() => {
+    const sub = extractSubdomain(domain)
+    if (sub) setDomain(`${sub}.${baseDomain}`)
+  }, [baseDomain, setDomain])
+
+  const sub = extractSubdomain(domain)
+  const edgeUrl = sub
+    ? `https://${sub}.appwrite.network`
+    : 'https://[name].appwrite.network'
+  const regionUrl =
+    sub && region
+      ? `https://${sub}.${region}.appwrite.run`
+      : `https://[name].${region || 'region'}.appwrite.run`
+
+  return (
+    <div className="rounded-xl border border-border bg-card/50 overflow-hidden mb-6">
+      <div className="px-6 py-4">
+        <h3 className="text-[15px] font-semibold text-foreground">Domain</h3>
+        <p className="text-[12px] text-muted-foreground mt-1">
+          Pick where your function runs. Both support custom domains after
+          deployment.{' '}
+          <a
+            href={NETWORK_REGIONS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-foreground hover:underline font-medium"
+          >
+            Region
+          </a>
+          {' · '}
+          <a
+            href={NETWORK_EDGES_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-foreground hover:underline font-medium"
+          >
+            Edge
+          </a>
+        </p>
+      </div>
+      <div className="border-t border-border" />
+      <div className="px-6 py-4 space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              setEndpointType('region')
+              if (sub && region) setDomain(`${sub}.${region}.appwrite.run`)
+            }}
+            className={cn(
+              'text-left rounded-lg border p-4 transition-all cursor-pointer',
+              endpointType === 'region'
+                ? 'border-foreground bg-primary/5'
+                : 'border-border hover:border-muted-foreground/50',
+            )}
+          >
+            <Building2 className="h-5 w-5 text-muted-foreground mb-2" />
+            <div className="text-[13px] font-semibold">Region compute</div>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Data sovereignty, compliance
+            </p>
+            <code className="mt-2 block text-[11px] text-muted-foreground font-mono truncate">
+              {regionUrl}
+            </code>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setEndpointType('edge')
+              if (sub) setDomain(`${sub}.appwrite.network`)
+            }}
+            className={cn(
+              'text-left rounded-lg border p-4 transition-all cursor-pointer',
+              endpointType === 'edge'
+                ? 'border-foreground bg-primary/5'
+                : 'border-border hover:border-muted-foreground/50',
+            )}
+          >
+            <Network className="h-5 w-5 text-muted-foreground mb-2" />
+            <div className="text-[13px] font-semibold">Edge network</div>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Geo-routed, lowest latency
+            </p>
+            <code className="mt-2 block text-[11px] text-muted-foreground font-mono truncate">
+              {edgeUrl}
+            </code>
+          </button>
+        </div>
+        <DomainInput
+          value={domain}
+          onChange={setDomain}
+          onValidChange={setDomainValid}
+          baseDomain={baseDomain}
+          placeholder="my-function"
+        />
+      </div>
+      <div className="px-6 py-4 border-t border-border bg-muted/20">
+        <p className="text-[11px] text-muted-foreground">
+          Custom domain can be added in function settings.{' '}
+          <a
+            href={FUNCTION_DOMAINS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-foreground hover:underline font-medium"
+          >
+            Learn more
+          </a>
+        </p>
+      </div>
+    </div>
+  )
+}

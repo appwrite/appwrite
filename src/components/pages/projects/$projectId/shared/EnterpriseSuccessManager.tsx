@@ -39,7 +39,7 @@ export function EnterpriseSuccessManager({
             Your success team
           </h3>
           <span className="rounded-full bg-purple-500/20 px-2 py-0.5 text-[10px] font-medium text-purple-600 dark:text-purple-300">
-            Enterprise
+            Custom
           </span>
         </div>
         <p className="mt-1 text-[13px] text-muted-foreground">

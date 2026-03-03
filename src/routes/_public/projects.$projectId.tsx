@@ -12,6 +12,7 @@ import {
   organizationPlanQueryOptions,
   useProject,
 } from '@/lib/react-query/hooks'
+import { consoleVariablesQueryOptions } from '@/lib/react-query/hooks/console-variables'
 import { ErrorComponent } from '@/components/error/Component'
 
 export const Route = createFileRoute('/_public/projects/$projectId')({
@@ -43,6 +44,14 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
               // Ignore errors for optional prefetch - plan might not be available
             })
         }
+
+        // Prefetch console variables (CNAME, A, AAAA, nameservers, CAA) for domain verification.
+        // Loaded once per project region and cached for the session.
+        await queryClient
+          .ensureQueryData(consoleVariablesQueryOptions(projectData?.region))
+          .catch(() => {
+            // Ignore errors - VerifyDomainContent will show error state if needed
+          })
       } catch (error) {
         // Don't throw - let the component handle the error to avoid blocking navigation
         // The component will check the error and display appropriate message

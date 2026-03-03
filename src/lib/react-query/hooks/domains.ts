@@ -6,6 +6,7 @@
  */
 
 import {
+  useQueries,
   useQuery,
   useMutation,
   useQueryClient,
@@ -73,6 +74,21 @@ export async function fetchDomain(domainId: string) {
   const response = await sdk.forConsole.domains.get({ domainId })
   return response
 }
+
+/**
+ * Query function to fetch price for a single domain (getPrice API).
+ * For .ai TLD always requests 2-year price; otherwise uses API default (typically 1 year).
+ */
+export async function fetchDomainPrice(domain: string) {
+  const normalized = domain.toLowerCase()
+  const periodYears = normalized.endsWith('.ai') ? 2 : undefined
+  const response = await sdk.forConsole.domains.getPrice({
+    domain: normalized,
+    ...(periodYears != null && { periodYears }),
+  })
+  return response
+}
+
 
 // ============================================================================
 // MUTATION FUNCTIONS
@@ -459,6 +475,18 @@ export function domainQueryOptions(domainId: string | null | undefined) {
 }
 
 /**
+ * Query options for fetching a single domain price
+ */
+export function domainPriceQueryOptions(domain: string | null | undefined) {
+  return queryOptions({
+    queryKey: ['domain-price', domain],
+    queryFn: () => fetchDomainPrice(domain!),
+    enabled: !!domain && domain.length >= 4,
+    staleTime: 60 * 1000,
+  })
+}
+
+/**
  * Query options for fetching DNS records for a domain
  */
 export function domainRecordsQueryOptions(
@@ -529,6 +557,65 @@ export function useOrganizationDomains(
 }
 
 /**
+ * Hook to fetch domain prices via batched getPrice calls
+ *
+ * Fires one getPrice request per TLD in parallel. Results stream in as each
+ * completes for fast perceived performance.
+ *
+ * @param baseName - Base name (e.g. "myapp")
+ * @param tlds - TLDs to fetch prices for
+ * @returns Map of domain -> { price, available, periodYears?, premium? }, loading/error state.
+ *   price is total cost; periodYears is 1+ (price covers that many years).
+ */
+export function useDomainPrices(
+  baseName: string | null | undefined,
+  tlds: string[] = [],
+) {
+  const domains = useMemo(
+    () =>
+      baseName && baseName.length >= 2
+        ? tlds.map((tld) => `${baseName}.${tld}`)
+        : [],
+    [baseName, tlds],
+  )
+
+  const queries = useQueries({
+    queries: domains.map((domain) => domainPriceQueryOptions(domain)),
+  })
+
+  const pricesByDomain = useMemo(() => {
+    const map = new Map<
+      string,
+      { price: number; available: boolean; periodYears?: number; premium?: boolean }
+    >()
+    for (let i = 0; i < domains.length; i++) {
+      const { data } = queries[i]
+      if (data) {
+        map.set(domains[i], {
+          price: data.price,
+          available: data.available,
+          periodYears:
+            typeof (data as { periodYears?: number }).periodYears === 'number'
+              ? (data as { periodYears: number }).periodYears
+              : 1,
+          premium: (data as { premium?: boolean }).premium,
+        })
+      }
+    }
+    return map
+  }, [domains, queries])
+
+  const hasError = queries.some((q) => q.error)
+  const isFetching = queries.some((q) => q.isFetching)
+
+  return {
+    pricesByDomain,
+    isFetching,
+    error: hasError ? queries.find((q) => q.error)?.error : undefined,
+  }
+}
+
+/**
  * Hook to fetch a single domain by ID
  *
  * @param domainId - The domain ID
@@ -579,11 +666,12 @@ export function useDeleteOrganizationDomain(
     mutationFn: async (domainId: string) => {
       return await deleteOrganizationDomain(domainId)
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch domains list so the UI updates (list uses refetchOnMount: false)
+      await queryClient.refetchQueries({
         queryKey: ['domains', 'organization', organizationId],
       })
-      queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: Dependencies.DOMAINS,
       })
     },
@@ -810,11 +898,12 @@ export function useDeleteDnsRecord(domainId: string | null | undefined) {
       }
       return await deleteDnsRecord(domainId, recordId)
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch DNS records list so the UI updates (list uses refetchOnMount: false)
+      await queryClient.refetchQueries({
         queryKey: ['dns-records', 'domain', domainId],
       })
-      queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: ['domain', domainId],
       })
     },

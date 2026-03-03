@@ -8,14 +8,13 @@ import type { Activities } from '@/server/lib/appwrite.types'
 const PLAN_TIME_LIMITS = {
   free: 1 * 60 * 60 * 1000, // 1 hour
   pro: 7 * 24 * 60 * 60 * 1000, // 7 days
-  scale: 30 * 24 * 60 * 60 * 1000, // 30 days (same as enterprise)
-  enterprise: 30 * 24 * 60 * 60 * 1000, // 30 days
+  custom: 30 * 24 * 60 * 60 * 1000, // 30 days
 } as const
 
 export type PlanType = keyof typeof PLAN_TIME_LIMITS
 
 const listActivitiesSchema = z.object({
-  plan: z.enum(['free', 'pro', 'scale', 'enterprise']).default('free'),
+  plan: z.enum(['free', 'pro', 'custom']).default('free'),
   action: z.string().optional(),
   resourceType: z.string().optional(),
   userId: z.string().optional(),

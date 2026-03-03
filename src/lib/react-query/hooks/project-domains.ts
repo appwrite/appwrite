@@ -4,7 +4,12 @@
  * Handles domain/proxy rule fetching, creation, verification, and deletion.
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 import { Query } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { Dependencies } from './dependencies'
@@ -32,7 +37,11 @@ export async function fetchProjectDomains(
   }
 
   const projectSdk = sdk.forProject(projectId, region)
-  const queries = [Query.equal('type', 'api'), Query.equal('trigger', 'manual')]
+  const queries = [
+    Query.equal('type', 'api'),
+    Query.equal('trigger', 'manual'),
+    Query.orderDesc('$createdAt'),
+  ]
 
   const response = await projectSdk.proxy.listRules({
     queries,
@@ -43,6 +52,34 @@ export async function fetchProjectDomains(
     rules: response.rules || [],
     total: response.total || 0,
   }
+}
+
+// ============================================================================
+// QUERY OPTIONS
+// ============================================================================
+
+/**
+ * Query options for fetching proxy rules (domains) for a project
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query
+ * configuration and prevent duplicate API calls.
+ */
+export function projectDomainsQueryOptions(
+  projectId: string | null | undefined,
+  region?: string,
+  search?: string,
+) {
+  return queryOptions({
+    queryKey: ['proxy-rules', 'project', projectId, region, search],
+    queryFn: () => fetchProjectDomains(projectId!, region, search),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
 }
 
 // ============================================================================
@@ -62,12 +99,9 @@ export function useProjectDomains(
   region?: string,
   search?: string,
 ) {
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['proxy-rules', 'project', projectId, region, search],
-    queryFn: () => fetchProjectDomains(projectId!, region, search),
-    enabled: !!projectId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  const { data, isLoading, error, refetch } = useQuery(
+    projectDomainsQueryOptions(projectId, region, search),
+  )
 
   return {
     rules: data?.rules || [],
@@ -207,12 +241,9 @@ export function useDeleteDomain(
       const projectSdk = sdk.forProject(projectId, region)
       return await projectSdk.proxy.deleteRule({ ruleId })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['proxy-rules', 'project', projectId],
-      })
-      queryClient.invalidateQueries({
-        queryKey: Dependencies.DOMAINS,
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['proxy-rules'],
       })
     },
   })

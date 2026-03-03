@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import {
@@ -12,30 +11,21 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { sdk } from '@/lib/appwrite/sdk'
+import { sdk, getApiEndpoint } from '@/lib/appwrite/sdk'
 import type { Models } from '@appwrite.io/console'
-import { VCSDetectionType } from '@appwrite.io/console'
 import {
   useRepository,
   useVcsInstallations,
-  useRepositories,
+  useProject,
 } from '@/lib/react-query/hooks'
 import { GitBranch, Lock, ExternalLink, Loader2, X } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
-import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { BranchSelector } from '@/components/global/shared/BranchSelector'
 import { RootDirectoryPicker } from '@/components/global/shared/RootDirectoryPicker'
+import { RepositoryPicker } from '@/components/global/shared/RepositoryPicker'
 
 // GitHub Icon Component
 function GitHubIcon({ className }: { className?: string }) {
@@ -75,9 +65,6 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
   const [selectedInstallationId, setSelectedInstallationId] =
     useState<string>('')
   const [selectedRepositoryId, setSelectedRepositoryId] = useState<string>('')
-  const [repositorySearch, setRepositorySearch] = useState('')
-  const [repositoryPage, setRepositoryPage] = useState(0)
-  const [debouncedSearch, setDebouncedSearch] = useState('')
 
   // Fetch repository details if connected
   const hasRepository = func.installationId && func.providerRepositoryId
@@ -91,25 +78,17 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
   // Fetch installations for connect modal
   const { data: installationsData } = useVcsInstallations(projectId)
 
-  // Fetch repositories for selected installation
-  const { data: repositoriesData, isLoading: repositoriesLoading } =
-    useRepositories(
-      projectId,
-      selectedInstallationId || null,
-      VCSDetectionType.Runtime,
-      repositoryPage,
-      5,
-      debouncedSearch || undefined,
-    )
+  const { project } = useProject(projectId ?? undefined)
 
-  // Debounce search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(repositorySearch)
-      setRepositoryPage(0) // Reset to first page on search
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [repositorySearch])
+  const getGitHubAuthUrl = useMemo(() => {
+    if (typeof window === 'undefined' || !projectId || !func.$id) return '#'
+    const origin = window.location.origin
+    const redirectUrl = `${origin}/projects/${projectId}/functions/${func.$id}/settings`
+    const successUrl = encodeURIComponent(redirectUrl)
+    const failureUrl = encodeURIComponent(redirectUrl)
+    const projectEndpoint = getApiEndpoint(project?.region)
+    return `${projectEndpoint}/vcs/github/authorize?project=${projectId}&success=${successUrl}&failure=${failureUrl}&mode=admin`
+  }, [projectId, func.$id, project?.region])
 
   // Initialize selected installation when installations load
   useEffect(() => {
@@ -210,8 +189,6 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
       toast.success('Repository connected successfully')
       setConnectDialogOpen(false)
       setSelectedRepositoryId('')
-      setRepositorySearch('')
-      setRepositoryPage(0)
       queryClient.invalidateQueries({
         queryKey: ['function', 'project', projectId, func.$id],
       })
@@ -292,10 +269,6 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
     disconnectRepositoryMutation.mutate()
   }
 
-  const repositories = useMemo(() => {
-    return repositoriesData?.runtimeProviderRepositories || []
-  }, [repositoriesData])
-
   const hasChanges = useMemo(() => {
     return (
       selectedBranch !== func.providerBranch ||
@@ -328,7 +301,10 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
             />
             <Dialog
               open={connectDialogOpen}
-              onOpenChange={setConnectDialogOpen}
+              onOpenChange={(open) => {
+                setConnectDialogOpen(open)
+                if (open) setSelectedRepositoryId('')
+              }}
             >
               <DialogTrigger asChild>
                 <Button size="sm" className="h-9 text-[13px] mt-4">
@@ -337,132 +313,41 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
               </DialogTrigger>
               <DialogContent className="sm:max-w-2xl p-0">
                 <DialogHeader className="px-6 pt-6 text-left">
-                  <DialogTitle>Connect Repository</DialogTitle>
+                  <DialogTitle>Connect repository</DialogTitle>
                   <DialogDescription className="text-[13px] mt-2">
-                    Select a Git installation and repository to connect to this
-                    function
+                    Select a GitHub installation and repository to connect to
+                    this function
                   </DialogDescription>
                 </DialogHeader>
                 <div className="border-t border-border" />
-                <div className="px-6 pb-4 pt-0 max-h-[500px] overflow-y-auto">
-                  <div className="space-y-4">
-                    {/* Installation selector */}
-                    <div>
-                      <Label htmlFor="installation" className="text-[13px]">
-                        Installation
-                      </Label>
-                      {installationsData?.installations &&
-                      installationsData.installations.length > 0 ? (
-                        <Select
-                          value={selectedInstallationId}
-                          onValueChange={setSelectedInstallationId}
-                        >
-                          <SelectTrigger
-                            id="installation"
-                            className="mt-2 h-9 border-border bg-background text-[13px]"
-                          >
-                            <SelectValue placeholder="Select installation" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {installationsData.installations.map(
-                              (installation) => (
-                                <SelectItem
-                                  key={installation.$id}
-                                  value={installation.$id}
-                                >
-                                  {installation.organization}
-                                </SelectItem>
-                              ),
-                            )}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <p className="mt-2 text-[13px] text-muted-foreground">
-                          No installations available. Please add an installation
-                          in project settings.
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Repository search and list */}
-                    {selectedInstallationId && (
-                      <div>
-                        <Label htmlFor="repository" className="text-[13px]">
-                          Repository
-                        </Label>
-                        <Input
-                          id="repository"
-                          value={repositorySearch}
-                          onChange={(e) => setRepositorySearch(e.target.value)}
-                          placeholder="Search repositories..."
-                          className="mt-2 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                        />
-                        {repositoriesLoading ? (
-                          <div className="mt-4 flex items-center justify-center py-8">
-                            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                          </div>
-                        ) : repositories.length > 0 ? (
-                          <div className="mt-4 space-y-2 max-h-[300px] overflow-y-auto">
-                            {repositories.map((repo) => (
-                              <button
-                                key={repo.id}
-                                onClick={() => setSelectedRepositoryId(repo.id)}
-                                className={cn(
-                                  'flex w-full items-center gap-3 rounded-md border border-border bg-background px-3 py-2 text-left transition-colors hover:bg-accent',
-                                  selectedRepositoryId === repo.id &&
-                                    'bg-accent',
-                                )}
-                              >
-                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-muted">
-                                  {repo.runtime ? (
-                                    <RuntimeIcon
-                                      runtime={repo.runtime}
-                                      className="h-4 w-4"
-                                    />
-                                  ) : (
-                                    <GitHubIcon className="h-4 w-4 text-muted-foreground" />
-                                  )}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2">
-                                    <p className="truncate text-[13px] font-medium text-foreground">
-                                      {repo.organization}/{repo.name}
-                                    </p>
-                                    {repo.private && (
-                                      <Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                                    )}
-                                  </div>
-                                  {repo.pushedAt && (
-                                    <p className="text-[12px] text-muted-foreground">
-                                      Updated{' '}
-                                      <DateTooltip date={repo.pushedAt} />
-                                    </p>
-                                  )}
-                                </div>
-                                {selectedRepositoryId === repo.id && (
-                                  <div className="h-2 w-2 shrink-0 rounded-full bg-primary" />
-                                )}
-                              </button>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="mt-4 text-[13px] text-muted-foreground">
-                            No repositories found
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                <div className="px-6 pb-4 pt-4 max-h-[70vh] overflow-y-auto">
+                  <RepositoryPicker
+                    projectId={projectId}
+                    getGitHubAuthUrl={getGitHubAuthUrl}
+                    installations={installationsData?.installations ?? []}
+                    selectedInstallationId={selectedInstallationId}
+                    onInstallationChange={setSelectedInstallationId}
+                    selectedRepositoryId={selectedRepositoryId}
+                    onRepositorySelect={(repo) =>
+                      setSelectedRepositoryId(repo.id)
+                    }
+                    mode="connect"
+                    detectionType="runtime"
+                  />
                 </div>
                 <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                   <Button
                     variant="outline"
+                    size="sm"
+                    className="h-9 text-[13px]"
                     onClick={() => setConnectDialogOpen(false)}
                     disabled={connectRepositoryMutation.isPending}
                   >
                     Cancel
                   </Button>
                   <Button
+                    size="sm"
+                    className="h-9 text-[13px]"
                     onClick={handleConnectRepository}
                     disabled={
                       !selectedInstallationId ||

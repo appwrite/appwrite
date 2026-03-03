@@ -1400,7 +1400,7 @@ export function ConnectProject({
                   aria-selected={isActive}
                   onClick={() => setConnectTab(tabId)}
                   className={cn(
-                    'relative flex shrink-0 cursor-pointer items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
+                    'relative flex shrink-0 cursor-pointer focus:cursor-pointer focus-visible:cursor-pointer items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
                     'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                     isActive
                       ? 'text-foreground'

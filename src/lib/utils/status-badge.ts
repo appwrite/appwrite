@@ -103,17 +103,15 @@ export function getInvoiceStatusColor(status: InvoiceStatus): string {
 /**
  * Plan types for organizations
  */
-export type PlanType = 'enterprise' | 'scale' | 'pro' | 'free'
+export type PlanType = 'free' | 'pro' | 'custom'
 
 /**
  * Get plan badge color classes
  */
 export function getPlanBadgeColor(plan: PlanType): string {
   switch (plan) {
-    case 'enterprise':
+    case 'custom':
       return 'bg-purple-500/10 text-purple-600 dark:text-purple-300 border-purple-500/20'
-    case 'scale':
-      return 'bg-blue-500/10 text-blue-600 dark:text-blue-300 border-blue-500/20'
     case 'pro':
       return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border-emerald-500/20'
     case 'free':
@@ -202,21 +200,45 @@ export function getMigrationStatusVariant(
  */
 export type DomainStatus = 'verified' | 'verifying' | 'unverified' | 'created'
 
+/** Status-style badge variant per AGENTS.md */
+export type DomainStatusBadgeVariant = 'success' | 'processing' | 'error'
+
 /**
- * Get domain status badge variant
+ * Get domain status badge variant (status-style: success, processing, error)
  */
 export function getDomainStatusVariant(
   status: DomainStatus,
-): 'default' | 'secondary' | 'destructive' | null {
+): DomainStatusBadgeVariant | null {
   switch (status) {
     case 'verified':
-      return null // No badge for verified domains
+      return null
     case 'verifying':
-      return 'secondary'
+      return 'processing'
     case 'unverified':
     case 'created':
-      return 'destructive'
+      return 'error'
     default:
-      return 'secondary'
+      return 'processing'
+  }
+}
+
+/**
+ * Get domain status badge config for rendering
+ */
+export function getDomainStatusBadgeConfig(status: string): {
+  variant: DomainStatusBadgeVariant | 'success'
+  label: string
+} {
+  switch (status) {
+    case 'verified':
+      return { variant: 'success', label: 'Verified' }
+    case 'verifying':
+      return { variant: 'processing', label: 'Generating certificate' }
+    case 'created':
+      return { variant: 'error', label: 'Verification failed' }
+    case 'unverified':
+      return { variant: 'error', label: 'Certificate generation failed' }
+    default:
+      return { variant: 'processing', label: status }
   }
 }

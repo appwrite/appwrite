@@ -4,6 +4,7 @@
  * Handles auth limits, sessions, passwords, OAuth providers, and MFA.
  */
 
+import { useCallback } from 'react'
 import {
   useMutation,
   useQuery,
@@ -592,4 +593,63 @@ export function useToggleFeatureNotification() {
       queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
     },
   })
+}
+
+// ============================================================================
+// SIDEBAR COLLAPSED PREFERENCE
+// ============================================================================
+
+/**
+ * Hook to manage navigation sidebar collapsed state persisted in account preferences.
+ * Reads from account.prefs.sidebarCollapsed and persists on toggle.
+ *
+ * Must be used within RequireAuth (or where account is available).
+ */
+export function useSidebarCollapsed(account: { prefs?: Record<string, unknown> } | undefined) {
+  const queryClient = useQueryClient()
+
+  const accountPrefs = account?.prefs
+  const collapsed =
+    accountPrefs?.sidebarCollapsed === true ||
+    accountPrefs?.sidebarCollapsed === 'true'
+
+  const updateMutation = useMutation({
+    mutationFn: async (value: boolean) => {
+      const currentAccount = queryClient.getQueryData<{
+        prefs?: Record<string, unknown>
+      }>(['account', 'console'])
+      if (!currentAccount) {
+        throw new Error('Account data not available')
+      }
+      return await updateAccountPrefs({
+        ...currentAccount.prefs,
+        sidebarCollapsed: value,
+      })
+    },
+    onMutate: async (value) => {
+      const currentAccount = queryClient.getQueryData<{
+        prefs?: Record<string, unknown>
+      }>(['account', 'console'])
+      if (currentAccount) {
+        queryClient.setQueryData(['account', 'console'], {
+          ...currentAccount,
+          prefs: { ...currentAccount.prefs, sidebarCollapsed: value },
+        })
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    },
+  })
+
+  const setCollapsed = useCallback(
+    (value: boolean | ((prev: boolean) => boolean)) => {
+      const nextValue =
+        typeof value === 'function' ? value(collapsed) : value
+      updateMutation.mutate(nextValue)
+    },
+    [collapsed, updateMutation],
+  )
+
+  return { collapsed, setCollapsed }
 }

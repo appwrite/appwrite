@@ -80,6 +80,7 @@ export function CreateExecutionDrawer({
     projectId,
     functionId,
     func?.deploymentId ?? undefined,
+    { enabled: open },
   )
 
   const hostnames = useMemo(

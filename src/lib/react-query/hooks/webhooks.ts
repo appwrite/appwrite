@@ -4,7 +4,12 @@
  * Handles webhook fetching, creation, updating, and deletion.
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  queryOptions,
+} from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
 import { Dependencies } from './dependencies'
 import { DEFAULT_STALE_TIME } from './constants'
@@ -34,6 +39,29 @@ export async function fetchProjectWebhooks(projectId: string) {
 }
 
 // ============================================================================
+// QUERY OPTIONS
+// ============================================================================
+
+/**
+ * Query options for fetching webhooks for a project
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function webhooksQueryOptions(projectId: string | null | undefined) {
+  return queryOptions({
+    queryKey: ['webhooks', 'project', projectId],
+    queryFn: () => fetchProjectWebhooks(projectId!),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+// ============================================================================
 // HOOKS
 // ============================================================================
 
@@ -44,12 +72,9 @@ export async function fetchProjectWebhooks(projectId: string) {
  * @returns Webhooks list with loading state
  */
 export function useProjectWebhooks(projectId: string | null | undefined) {
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['webhooks', 'project', projectId],
-    queryFn: () => fetchProjectWebhooks(projectId!),
-    enabled: !!projectId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  const { data, isLoading, error, refetch } = useQuery(
+    webhooksQueryOptions(projectId),
+  )
 
   return {
     webhooks: data?.webhooks || [],

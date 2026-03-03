@@ -46,6 +46,9 @@ interface ServiceHeaderProps {
   onSearchChange?: (value: string) => void
   createLabel?: string
   onCreate?: () => void
+  /** When provided with createParams, renders a Link instead of onClick button (more reliable for navigation) */
+  createTo?: string
+  createParams?: Record<string, string>
   createDisabled?: boolean
   showFilters?: boolean
   onFilterClick?: () => void
@@ -98,6 +101,8 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
       onSearchChange,
       createLabel,
       onCreate,
+      createTo,
+      createParams,
       createDisabled = false,
       showFilters = false,
       onFilterClick,
@@ -128,7 +133,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
     const hasToolbar =
       onSearchChange ||
       showFilters ||
-      (createLabel && onCreate) ||
+      (createLabel && (onCreate || (createTo && createParams))) ||
       rightContent ||
       showRefresh ||
       showImport ||
@@ -212,7 +217,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
               aria-selected={isActive}
               onClick={() => onTabChange?.(tab.id)}
               className={cn(
-                'relative flex shrink-0 cursor-pointer items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
+                'relative flex shrink-0 cursor-pointer focus:cursor-pointer focus-visible:cursor-pointer items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
                 'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                 isActive
                   ? 'text-foreground'
@@ -452,31 +457,52 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
               {beforeCreateButtons}
 
               {/* Create Button */}
-              {createLabel && onCreate && (
+              {createLabel && (onCreate || (createTo && createParams)) && (
                 <TooltipProvider delayDuration={0}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div>
-                        <Button
-                          size="sm"
-                          onClick={onCreate}
-                          disabled={createDisabled}
-                          className="h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                          style={{ backgroundColor: '#f02e65' }}
-                        >
-                          <Plus className="h-4 w-4" />
-                          {createLabel}
-                        </Button>
+                        {createTo && createParams ? (
+                          <Link
+                            to={createTo as unknown}
+                            params={createParams}
+                            className={cn(
+                              'inline-flex h-9 items-center justify-center gap-2 rounded-md px-4 text-[13px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed',
+                              createDisabled && 'pointer-events-none opacity-50',
+                            )}
+                            style={{
+                              backgroundColor: createDisabled
+                                ? undefined
+                                : '#f02e65',
+                            }}
+                          >
+                            <Plus className="h-4 w-4" />
+                            {createLabel}
+                          </Link>
+                        ) : (
+                          <Button
+                            size="sm"
+                            onClick={onCreate}
+                            disabled={createDisabled}
+                            className="h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                            style={{ backgroundColor: '#f02e65' }}
+                          >
+                            <Plus className="h-4 w-4" />
+                            {createLabel}
+                          </Button>
+                        )}
                       </div>
                     </TooltipTrigger>
-                    {createDisabled && (
-                      <TooltipContent side="bottom">
+                    <TooltipContent side="bottom">
+                      {createDisabled ? (
                         <p>
                           You've reached the limit for this resource on your
                           plan
                         </p>
-                      </TooltipContent>
-                    )}
+                      ) : (
+                        createLabel
+                      )}
+                    </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               )}

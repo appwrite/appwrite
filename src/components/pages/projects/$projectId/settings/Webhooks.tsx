@@ -1,5 +1,4 @@
 import { useState, useMemo, useEffect } from 'react'
-import { useNavigate } from '@tanstack/react-router'
 import { useProjectWebhooks } from '@/lib/react-query/hooks'
 import {
   Table,
@@ -11,10 +10,12 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, Webhook as WebhookIcon } from 'lucide-react'
+import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
-import { CreateWebhookDialog } from './webhooks/CreateWebhook'
+import { WebhookDrawer } from './webhooks/WebhookDrawer'
+import type { Models } from '@appwrite.io/console'
 
 interface WebhooksProps {
   projectId: string
@@ -25,17 +26,19 @@ export function Webhooks({
   projectId,
   searchValue: searchValueProp = '',
 }: WebhooksProps) {
-  const navigate = useNavigate()
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
-  const [createWebhookOpen, setCreateWebhookOpen] = useState(false)
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [selectedWebhook, setSelectedWebhook] =
+    useState<Models.Webhook | null>(null)
 
   const { webhooks, isLoading } = useProjectWebhooks(projectId)
 
   // Listen for create event from ServiceHeader
   useEffect(() => {
     const handleCreate = () => {
-      setCreateWebhookOpen(true)
+      setSelectedWebhook(null)
+      setDrawerOpen(true)
     }
     window.addEventListener('settings-create-webhook', handleCreate)
     return () => {
@@ -103,10 +106,10 @@ export function Webhooks({
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                     Enabled
                   </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
                     Created
                   </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
                     Updated
                   </TableHead>
                 </TableRow>
@@ -116,23 +119,19 @@ export function Webhooks({
                   <TableRow
                     key={webhook.$id}
                     className="cursor-pointer"
-                    onClick={() =>
-                      navigate({
-                        to: '/projects/$projectId/settings/webhooks/$webhookId',
-                        params: { projectId, webhookId: webhook.$id },
-                      })
-                    }
+                    onClick={() => {
+                      setSelectedWebhook(webhook)
+                      setDrawerOpen(true)
+                    }}
                   >
                     <TableCell className="px-4 py-3">
-                      <code className="text-[13px] font-mono text-muted-foreground">
-                        {webhook.$id.slice(0, 8)}...
-                      </code>
+                      <CopyableId id={webhook.$id} size="xs" />
                     </TableCell>
                     <TableCell className="px-4 py-3 font-medium">
                       {webhook.name}
                     </TableCell>
                     <TableCell className="px-4 py-3">
-                      <Badge variant="secondary" className="text-[12px]">
+                      <Badge variant="info" className="text-[10px] shrink-0">
                         {webhook.events?.length || 0} events
                       </Badge>
                     </TableCell>
@@ -143,19 +142,19 @@ export function Webhooks({
                     </TableCell>
                     <TableCell className="px-4 py-3">
                       {webhook.enabled ? (
-                        <Badge variant="default" className="text-[12px]">
+                        <Badge variant="success" className="text-[10px] shrink-0">
                           Enabled
                         </Badge>
                       ) : (
-                        <Badge variant="secondary" className="text-[12px]">
+                        <Badge variant="inactive" className="text-[10px] shrink-0">
                           Disabled
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell className="px-4 py-3">
+                    <TableCell className="px-4 py-3 text-right">
                       <DateTooltip date={webhook.$createdAt} />
                     </TableCell>
-                    <TableCell className="px-4 py-3">
+                    <TableCell className="px-4 py-3 text-right">
                       <DateTooltip date={webhook.$updatedAt} />
                     </TableCell>
                   </TableRow>
@@ -181,17 +180,12 @@ export function Webhooks({
         </>
       )}
 
-      {/* Create Webhook Dialog */}
-      <CreateWebhookDialog
-        open={createWebhookOpen}
-        onOpenChange={setCreateWebhookOpen}
+      <WebhookDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
         projectId={projectId}
-        onCreateSuccess={(webhookId) => {
-          navigate({
-            to: '/projects/$projectId/settings/webhooks/$webhookId',
-            params: { projectId, webhookId },
-          })
-        }}
+        webhook={selectedWebhook}
+        onSuccess={() => setSelectedWebhook(null)}
       />
     </div>
   )

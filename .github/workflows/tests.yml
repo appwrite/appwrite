@@ -1,0 +1,31 @@
+name: Unit Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Unit Tests
+        run: bun test:unit
+        env:
+          VITE_APPWRITE_ENDPOINT: http://appwrite.test/v1
+          PUBLIC_APPWRITE_ENDPOINT: http://appwrite.test/v1
+
+      - name: Build
+        run: bun run build

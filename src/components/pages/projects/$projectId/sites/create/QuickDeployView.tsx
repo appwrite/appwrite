@@ -470,7 +470,6 @@ export function QuickDeployView({
         variables={variables}
         onChange={setVariables}
         disabled={isDeploying}
-        defaultOpen={envKeysList.length > 0}
       />
 
       {/* Domain section */}

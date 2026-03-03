@@ -380,99 +380,99 @@ export function View() {
                               })
                             }}
                           >
-                          <TableCell
-                            onClick={(e) => e.stopPropagation()}
-                            className="px-4 py-3"
-                          >
-                            <Checkbox
-                              checked={selectedBuckets.has(bucketData.$id)}
-                              onCheckedChange={() =>
-                                toggleBucket(bucketData.$id)
-                              }
-                            />
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <Link
-                              to="/projects/$projectId/storage/$bucketId/"
-                              params={{
-                                projectId: projectId!,
-                                bucketId: bucketData.$id,
-                              }}
-                              className="block group"
+                            <TableCell
+                              onClick={(e) => e.stopPropagation()}
+                              className="px-4 py-3"
                             >
-                              <div className="flex items-center gap-3 min-w-0">
-                                <div className="flex-1 min-w-0">
-                                  <p className="truncate text-[13px] font-medium text-foreground group-hover:text-primary transition-colors">
-                                    {bucketData.name}
-                                  </p>
-                                  <div className="mt-0.5">
-                                    <CopyableId id={bucketData.$id} size="xs" />
+                              <Checkbox
+                                checked={selectedBuckets.has(bucketData.$id)}
+                                onCheckedChange={() =>
+                                  toggleBucket(bucketData.$id)
+                                }
+                              />
+                            </TableCell>
+                            <TableCell className="px-4 py-3">
+                              <Link
+                                to="/projects/$projectId/storage/$bucketId/"
+                                params={{
+                                  projectId: projectId!,
+                                  bucketId: bucketData.$id,
+                                }}
+                                className="block group"
+                              >
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div className="flex-1 min-w-0">
+                                    <p className="truncate text-[13px] font-medium text-foreground group-hover:text-primary transition-colors">
+                                      {bucketData.name}
+                                    </p>
+                                    <div className="mt-0.5">
+                                      <CopyableId id={bucketData.$id} size="xs" />
+                                    </div>
                                   </div>
                                 </div>
+                              </Link>
+                            </TableCell>
+                            <TableCell className="px-4 py-3">
+                              <div className="flex items-center justify-center">
+                                {isDisabled ? (
+                                  <Badge
+                                    variant="error"
+                                    className="text-[11px] font-medium border px-2 py-0.5"
+                                  >
+                                    Disabled
+                                  </Badge>
+                                ) : (
+                                  <Badge
+                                    variant="success"
+                                    className="text-[11px] font-medium border px-2 py-0.5"
+                                  >
+                                    Enabled
+                                  </Badge>
+                                )}
                               </div>
-                            </Link>
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <div className="flex items-center justify-center">
-                              {isDisabled ? (
-                                <Badge
-                                  variant="error"
-                                  className="text-[11px] font-medium border px-2 py-0.5"
-                                >
-                                  Disabled
-                                </Badge>
-                              ) : (
-                                <Badge
-                                  variant="success"
-                                  className="text-[11px] font-medium border px-2 py-0.5"
-                                >
-                                  Enabled
-                                </Badge>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <Link
-                              to="/projects/$projectId/storage/$bucketId/"
-                              params={{
-                                projectId: projectId!,
-                                bucketId: bucketData.$id,
-                              }}
-                              className="block text-right"
-                            >
-                              {bucketData.$createdAt ? (
-                                <DateTooltip
-                                  date={bucketData.$createdAt}
-                                  className="text-[12px] text-muted-foreground font-mono"
-                                />
-                              ) : (
-                                <span className="text-[12px] text-muted-foreground/50 italic">
-                                  N/A
-                                </span>
-                              )}
-                            </Link>
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <Link
-                              to="/projects/$projectId/storage/$bucketId/"
-                              params={{
-                                projectId: projectId!,
-                                bucketId: bucketData.$id,
-                              }}
-                              className="block text-right"
-                            >
-                              {bucketData.$updatedAt ? (
-                                <DateTooltip
-                                  date={bucketData.$updatedAt}
-                                  className="text-[12px] text-muted-foreground font-mono"
-                                />
-                              ) : (
-                                <span className="text-[12px] text-muted-foreground/50 italic">
-                                  N/A
-                                </span>
-                              )}
-                            </Link>
-                          </TableCell>
+                            </TableCell>
+                            <TableCell className="px-4 py-3">
+                              <Link
+                                to="/projects/$projectId/storage/$bucketId/"
+                                params={{
+                                  projectId: projectId!,
+                                  bucketId: bucketData.$id,
+                                }}
+                                className="block text-right"
+                              >
+                                {bucketData.$createdAt ? (
+                                  <DateTooltip
+                                    date={bucketData.$createdAt}
+                                    className="text-[12px] text-muted-foreground font-mono"
+                                  />
+                                ) : (
+                                  <span className="text-[12px] text-muted-foreground/50 italic">
+                                    N/A
+                                  </span>
+                                )}
+                              </Link>
+                            </TableCell>
+                            <TableCell className="px-4 py-3">
+                              <Link
+                                to="/projects/$projectId/storage/$bucketId/"
+                                params={{
+                                  projectId: projectId!,
+                                  bucketId: bucketData.$id,
+                                }}
+                                className="block text-right"
+                              >
+                                {bucketData.$updatedAt ? (
+                                  <DateTooltip
+                                    date={bucketData.$updatedAt}
+                                    className="text-[12px] text-muted-foreground font-mono"
+                                  />
+                                ) : (
+                                  <span className="text-[12px] text-muted-foreground/50 italic">
+                                    N/A
+                                  </span>
+                                )}
+                              </Link>
+                            </TableCell>
                           </TableRow>
                         </BucketContextMenu>
                       )
@@ -532,38 +532,38 @@ export function View() {
                           statusLabel={isDisabled ? 'Disabled' : undefined}
                           metadata={[
                             ...(bucketData.compression &&
-                            bucketData.compression !== 'none'
+                              bucketData.compression !== 'none'
                               ? [
-                                  {
-                                    label: 'Compression',
-                                    value:
-                                      bucketData.compression === 'gzip'
-                                        ? 'Gzip'
-                                        : bucketData.compression === 'zstd'
-                                          ? 'Zstd'
-                                          : bucketData.compression,
-                                  },
-                                ]
+                                {
+                                  label: 'Compression',
+                                  value:
+                                    bucketData.compression === 'gzip'
+                                      ? 'Gzip'
+                                      : bucketData.compression === 'zstd'
+                                        ? 'Zstd'
+                                        : bucketData.compression,
+                                },
+                              ]
                               : []),
                             ...(bucketData.maximumFileSize &&
-                            bucketData.maximumFileSize > 0
+                              bucketData.maximumFileSize > 0
                               ? [
-                                  {
-                                    label: 'Max size',
-                                    value: formatBytes(
-                                      bucketData.maximumFileSize,
-                                    ),
-                                  },
-                                ]
+                                {
+                                  label: 'Max size',
+                                  value: formatBytes(
+                                    bucketData.maximumFileSize,
+                                  ),
+                                },
+                              ]
                               : []),
                             ...(bucketData.allowedFileExtensions &&
-                            bucketData.allowedFileExtensions.length > 0
+                              bucketData.allowedFileExtensions.length > 0
                               ? [
-                                  {
-                                    label: 'Extensions',
-                                    value: `${bucketData.allowedFileExtensions.length} ${bucketData.allowedFileExtensions.length === 1 ? 'type' : 'types'}`,
-                                  },
-                                ]
+                                {
+                                  label: 'Extensions',
+                                  value: `${bucketData.allowedFileExtensions.length} ${bucketData.allowedFileExtensions.length === 1 ? 'type' : 'types'}`,
+                                },
+                              ]
                               : []),
                             {
                               label: 'Encrypted',

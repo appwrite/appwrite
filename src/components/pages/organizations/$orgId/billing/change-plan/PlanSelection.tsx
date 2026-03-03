@@ -9,7 +9,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { Info, ExternalLink } from 'lucide-react'
+import { Info, ExternalLink } from '@/lib/icons'
 import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
 import { cn } from '@/lib/utils'
 
@@ -32,21 +32,13 @@ export function PlanSelection({
   hasFreeOrgs,
   variant = 'card',
 }: PlanSelectionProps) {
-  // Filter out Scale plan (not shown in UI per instructions)
-  // Handle empty plans object gracefully
   const availablePlans =
-    plans && typeof plans === 'object'
-      ? Object.entries(plans).filter(([key]) => {
-          const planName = getPlanNameFromTier(key)
-          return planName !== 'scale'
-        })
-      : []
+    plans && typeof plans === 'object' ? Object.entries(plans) : []
 
   const getPlanDisplayName = (planTier: string) => {
     const planName = getPlanNameFromTier(planTier)
     if (planName === 'free') return 'Free'
     if (planName === 'pro') return 'Pro'
-    if (planName === 'scale') return 'Scale'
     return 'Custom'
   }
 

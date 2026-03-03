@@ -35,7 +35,7 @@ export interface UsageData {
   categories: UsageCategory[]
   billingCycleStart: number
   billingCycleEnd: number
-  plan: 'free' | 'pro' | 'scale' | 'enterprise'
+  plan: 'free' | 'pro' | 'custom'
 }
 
 export type UsageState = 'loading' | 'success' | 'error' | 'empty'
@@ -169,21 +169,7 @@ export const planQuotas = {
     realtime: { connections: 500 },
     messaging: { messages: 100_000, topics: 500, sms: 100 },
   },
-  scale: {
-    compute: { executions: 10_000_000, gbHours: 2000 },
-    auth: { mau: 500_000, otp: 500, signUps: null },
-    databases: {
-      reads: 25_000_000,
-      writes: 10_000_000,
-      collections: 2000,
-      documents: null,
-    },
-    storage: { bytes: 500 * 1000 * 1000 * 1000, operations: 10_000_000 }, // 500 GB
-    bandwidth: { egress: 1000 * 1000 * 1000 * 1000, ingress: null }, // 1 TB
-    realtime: { connections: 2500 },
-    messaging: { messages: 500_000, topics: 2000, sms: 500 },
-  },
-  enterprise: {
+  custom: {
     compute: { executions: null, gbHours: null },
     auth: { mau: null, otp: null, signUps: null },
     databases: {
@@ -204,7 +190,7 @@ export const planQuotas = {
 // ============================================================================
 
 export function generateMockUsageData(
-  plan: 'free' | 'pro' | 'scale' | 'enterprise' = 'pro',
+  plan: 'free' | 'pro' | 'custom' = 'pro',
 ): UsageData {
   const quotas = planQuotas[plan]
   const now = Date.now()

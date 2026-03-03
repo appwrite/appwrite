@@ -36,16 +36,25 @@ const COUNTRY_COORDINATES: Record<string, [number, number]> = {
   SG: [103.8198, 1.3521], // Singapore
 }
 
-interface MapProps extends Omit<maplibregl.MapOptions, 'container' | 'style'> {
+interface MapProps
+  extends Omit<maplibregl.MapOptions, 'container' | 'style'> {
   children?: React.ReactNode
   styles?: {
     light?: string | maplibregl.StyleSpecification
     dark?: string | maplibregl.StyleSpecification
   }
   projection?: maplibregl.ProjectionSpecification
+  /** When true, disables scroll-to-zoom so wheel events propagate (e.g. for page scroll) */
+  disableScrollZoom?: boolean
 }
 
-export function Map({ children, styles, projection, ...mapOptions }: MapProps) {
+export function Map({
+  children,
+  styles,
+  projection,
+  disableScrollZoom,
+  ...mapOptions
+}: MapProps) {
   const { theme } = useTheme()
   const mapContainerRef = React.useRef<HTMLDivElement>(null)
   const mapRef = React.useRef<maplibregl.Map | null>(null)
@@ -121,6 +130,9 @@ export function Map({ children, styles, projection, ...mapOptions }: MapProps) {
         setMapInstance(map)
 
         map.on('load', () => {
+          if (disableScrollZoom && map.scrollZoom) {
+            map.scrollZoom.disable()
+          }
           setIsLoaded(true)
           // Force resize after load
           setTimeout(() => {
@@ -191,7 +203,7 @@ export function Map({ children, styles, projection, ...mapOptions }: MapProps) {
       }
       setIsLoaded(false)
     }
-  }, [mapStyle, theme, JSON.stringify(mapOptions), projection])
+  }, [mapStyle, theme, disableScrollZoom, JSON.stringify(mapOptions), projection])
 
   return (
     <MapContext.Provider value={{ map: mapInstance, isLoaded }}>

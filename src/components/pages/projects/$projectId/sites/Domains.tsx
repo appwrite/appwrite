@@ -1,11 +1,13 @@
-import { useState } from 'react'
-import { useParams } from '@tanstack/react-router'
+import { useState, useMemo } from 'react'
+import { useParams, useNavigate } from '@tanstack/react-router'
 import {
   MoreHorizontal,
-  AlertCircle,
   Loader2,
-  CheckCircle2,
   Globe,
+  FileText,
+  RefreshCw,
+  Trash2,
+  ExternalLink,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Pagination } from '@/components/global/shared/Pagination'
@@ -26,48 +28,34 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
-import { useSiteDomains } from '@/lib/react-query/hooks'
 import {
-  getDomainStatusVariant,
-  getStatusColor,
-  type DomainStatus,
-} from '@/lib/utils/status-badge'
-import { cn } from '@/lib/utils'
+  useSiteDomains,
+  useProject,
+  useOrganizationDomains,
+} from '@/lib/react-query/hooks'
+import { VerifyDomain } from './_components/VerifyDomain'
+import { ViewLogsDialog } from '@/components/pages/projects/$projectId/settings/domains/ViewLogs'
+import { DeleteDomainDialog } from '@/components/pages/projects/$projectId/settings/domains/DeleteDomain'
+import { getDomainStatusBadgeConfig } from '@/lib/utils/status-badge'
+import { getApexDomain } from '@/lib/utils/proxy-domains'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 
 const DOMAINS_PER_PAGE = 25
 
 function getStatusBadge(status: string) {
-  const variant = getDomainStatusVariant(status as DomainStatus)
-
-  if (variant === null) {
-    return (
-      <Badge
-        variant="outline"
-        className={cn('gap-1.5 border', getStatusColor('verified'))}
-      >
-        <CheckCircle2 className="h-3 w-3" />
-        Verified
-      </Badge>
-    )
-  }
-
-  const statusConfig: Record<
-    string,
-    { icon: typeof AlertCircle; label: string; spin?: boolean }
-  > = {
-    created: { icon: AlertCircle, label: 'Verification failed' },
-    verifying: { icon: Loader2, label: 'Generating certificate', spin: true },
-    unverified: { icon: AlertCircle, label: 'Certificate generation failed' },
-  }
-
-  const config = statusConfig[status] || { icon: AlertCircle, label: status }
-  const Icon = config.icon
-
+  const config = getDomainStatusBadgeConfig(status)
   return (
-    <Badge variant={variant} className="gap-1.5">
-      <Icon className={cn('h-3 w-3', config.spin && 'animate-spin')} />
+    <Badge
+      variant={config.variant}
+      className="text-[10px] shrink-0 gap-1.5"
+      title={
+        status === 'verifying'
+          ? 'SSL certificate is being issued. This usually takes a couple of minutes.'
+          : undefined
+      }
+    >
+      {status === 'verifying' && <Loader2 className="h-3 w-3 animate-spin" />}
       {config.label}
     </Badge>
   )
@@ -75,9 +63,16 @@ function getStatusBadge(status: string) {
 
 export function View() {
   const { projectId, siteId } = useParams({ strict: false })
+  const navigate = useNavigate()
+  const { project } = useProject(projectId)
   const [currentPage, setCurrentPage] = useState(0)
   const [pageSize, setPageSize] = useState(DOMAINS_PER_PAGE)
-  const search = { search: '' } // TODO: Add search support if needed
+  const [verifyOpen, setVerifyOpen] = useState(false)
+  const [viewLogsOpen, setViewLogsOpen] = useState(false)
+  const [deleteDomainOpen, setDeleteDomainOpen] = useState(false)
+  const [selectedRule, setSelectedRule] = useState<Models.ProxyRule | null>(null)
+  const [viewLogsRule, setViewLogsRule] = useState<Models.ProxyRule | null>(null)
+  const search = { search: '' }
 
   const searchValue = search?.search || ''
 
@@ -87,19 +82,32 @@ export function View() {
     isLoading: domainsLoading,
   } = useSiteDomains(projectId, siteId, currentPage, pageSize, searchValue)
 
-  const handleRetry = () => {
-    // TODO: Implement retry verification
-    toast.info('Retry verification coming soon')
+  const { domains: orgDomains } = useOrganizationDomains(
+    project?.teamId,
+    0,
+    500,
+  )
+  const apexToOrgDomainId = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const d of orgDomains) {
+      if (d.domain) map.set(d.domain.toLowerCase(), d.$id)
+    }
+    return map
+  }, [orgDomains])
+
+  const handleRetry = (rule: Models.ProxyRule) => {
+    setSelectedRule(rule)
+    setVerifyOpen(true)
   }
 
-  const handleViewLogs = () => {
-    // TODO: Open logs modal
-    toast.info('View logs coming soon')
+  const handleViewLogs = (rule: Models.ProxyRule) => {
+    setViewLogsRule(rule)
+    setViewLogsOpen(true)
   }
 
-  const handleDelete = () => {
-    // TODO: Implement delete with confirmation
-    toast.info('Delete domain coming soon')
+  const handleDelete = (rule: Models.ProxyRule) => {
+    setSelectedRule(rule)
+    setDeleteDomainOpen(true)
   }
 
   if (domainsLoading) {
@@ -112,7 +120,7 @@ export function View() {
 
   return (
     <div className="flex-1">
-      <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6 pt-4 sm:pt-6">
+      <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6">
         {/* Domains Table */}
         {rules.length > 0 ? (
           <>
@@ -132,9 +140,7 @@ export function View() {
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                       Created
                     </TableHead>
-                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[100px]">
-                      Actions
-                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[80px]"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -148,9 +154,10 @@ export function View() {
                             href={`https://${ruleData.domain}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="font-mono text-[13px] text-foreground hover:underline"
+                            className="inline-flex items-center gap-1.5 font-mono text-[13px] text-foreground hover:underline"
                           >
                             {ruleData.domain}
+                            <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
                           </a>
                         </TableCell>
                         <TableCell className="px-4 py-3 text-[13px] text-muted-foreground">
@@ -166,45 +173,100 @@ export function View() {
                           )}
                         </TableCell>
                         <TableCell className="px-4 py-3">
-                          {getStatusBadge(ruleData.status)}
+                          <div className="flex items-center gap-2">
+                            {getStatusBadge(ruleData.status)}
+                            {ruleData.status !== 'verified' && (
+                              <Button
+                                variant="link"
+                                size="sm"
+                                className="h-auto p-0 text-[13px]"
+                                onClick={() => handleViewLogs(ruleData)}
+                              >
+                                View logs
+                              </Button>
+                            )}
+                            {(ruleData.status === 'created' ||
+                              ruleData.status === 'unverified') && (
+                              <Button
+                                variant="link"
+                                size="sm"
+                                className="h-auto p-0 text-[13px]"
+                                onClick={() => handleRetry(ruleData)}
+                              >
+                                Retry
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell className="px-4 py-3">
                           <DateTooltip date={ruleData.$createdAt} />
                         </TableCell>
                         <TableCell className="px-4 py-3 text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-8 w-8 p-0"
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              {(ruleData.status === 'created' ||
-                                ruleData.status === 'unverified') && (
-                                <DropdownMenuItem
-                                  onClick={() => handleRetry(ruleData.$id)}
+                          <div className="flex justify-end">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0"
                                 >
-                                  Retry
-                                </DropdownMenuItem>
-                              )}
-                              {ruleData.logs && ruleData.logs.length > 0 && (
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                              {ruleData.status !== 'verified' && (
                                 <DropdownMenuItem
-                                  onClick={() => handleViewLogs(ruleData.$id)}
+                                  onClick={() => handleViewLogs(ruleData)}
                                 >
+                                  <FileText className="mr-2 h-4 w-4" />
                                   View logs
                                 </DropdownMenuItem>
                               )}
+                              {(ruleData.status === 'created' ||
+                                ruleData.status === 'unverified') && (
+                                <DropdownMenuItem
+                                  onClick={() => handleRetry(ruleData)}
+                                >
+                                  <RefreshCw className="mr-2 h-4 w-4" />
+                                  Retry
+                                </DropdownMenuItem>
+                              )}
                               <DropdownMenuItem
-                                onClick={() => handleDelete(ruleData.$id)}
+                                onClick={() => {
+                                  const apex = getApexDomain(ruleData.domain)
+                                  const orgDomainId = apex
+                                    ? apexToOrgDomainId.get(apex.toLowerCase())
+                                    : undefined
+                                  if (project?.teamId && orgDomainId) {
+                                    navigate({
+                                      to: '/organizations/$orgId/domains/$domainId',
+                                      params: {
+                                        orgId: project.teamId,
+                                        domainId: orgDomainId,
+                                      },
+                                    })
+                                  }
+                                }}
+                                disabled={
+                                  !project?.teamId ||
+                                  !getApexDomain(ruleData.domain) ||
+                                  !apexToOrgDomainId.has(
+                                    getApexDomain(ruleData.domain)?.toLowerCase() ?? '',
+                                  )
+                                }
                               >
+                                <FileText className="mr-2 h-4 w-4" />
+                                DNS Records
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleDelete(ruleData)}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
                                 Delete
                               </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </TableCell>
                       </TableRow>
                     )
@@ -238,6 +300,51 @@ export function View() {
             isEmpty={!searchValue}
             hasFilters={!!searchValue}
             variant="card"
+          />
+        )}
+
+        {selectedRule && (
+          <>
+            <VerifyDomain
+              open={verifyOpen}
+              onOpenChange={setVerifyOpen}
+              projectId={projectId ?? ''}
+              rule={selectedRule}
+              region={project?.region}
+              onVerifySuccess={() => {
+                setSelectedRule(null)
+              }}
+              onReconfigure={() => {
+                setVerifyOpen(false)
+                setSelectedRule(null)
+                navigate({
+                  to: '/projects/$projectId/sites/$siteId/domains/add',
+                  params: { projectId: projectId!, siteId: siteId! },
+                })
+              }}
+            />
+            <DeleteDomainDialog
+              open={deleteDomainOpen}
+              onOpenChange={setDeleteDomainOpen}
+              projectId={projectId ?? ''}
+              region={project?.region}
+              rule={selectedRule}
+              onDeleteSuccess={() => {
+                toast.success('Domain has been deleted')
+                setDeleteDomainOpen(false)
+                setSelectedRule(null)
+              }}
+            />
+          </>
+        )}
+        {viewLogsRule && (
+          <ViewLogsDialog
+            open={viewLogsOpen}
+            onOpenChange={(open) => {
+              setViewLogsOpen(open)
+              if (!open) setViewLogsRule(null)
+            }}
+            rule={viewLogsRule}
           />
         )}
       </div>

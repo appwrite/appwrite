@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/auth/teams/View'
+import { projectQueryOptions } from '@/lib/react-query/hooks'
 import { fetchTeam, fetchTeamMemberships } from '@/lib/react-query/hooks/users'
-
 import { pageTitle } from '@/lib/utils/page-title'
 
 const MEMBERSHIPS_PER_PAGE = 25
@@ -25,8 +25,10 @@ export const Route = createFileRoute(
     const { projectId, teamId } = params
     const { queryClient } = context
 
-    // Fetch critical data before rendering to prevent layout shifts
     if (projectId && teamId) {
+      // Fetch project first so setProjectRegion runs and project-scoped calls use the correct regional endpoint
+      await queryClient.ensureQueryData(projectQueryOptions(projectId))
+      // Fetch critical data before rendering to prevent layout shifts
       await Promise.all([
         // Fetch team - blocks navigation until ready
         queryClient.fetchQuery({

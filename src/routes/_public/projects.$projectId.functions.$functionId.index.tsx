@@ -13,7 +13,7 @@ import {
 import { pageTitle } from '@/lib/utils/page-title'
 
 const DEPLOYMENTS_PER_PAGE = 25
-const DOMAINS_LIMIT = 20 // Fetch enough to ensure we have 3 after filtering by active deployment
+const DOMAINS_LIMIT = 25 // Align with domains tab to share cache; overview card shows 3
 
 const searchSchema = z.object({
   page: z.number().int().min(1).optional().catch(undefined),
@@ -65,9 +65,9 @@ export const Route = createFileRoute(
           DEPLOYMENTS_PER_PAGE,
         ),
       ),
-      // Fetch domains/rules (for overview card) - blocks navigation until ready
+      // Fetch domains/rules (for overview card) - use same params as domains tab to share cache
       queryClient.ensureQueryData(
-        functionDomainsQueryOptions(projectId, functionId, 0, DOMAINS_LIMIT),
+        functionDomainsQueryOptions(projectId, functionId, 0, DOMAINS_LIMIT, ''),
       ),
       // Fetch runtimes (for runtime name display) - blocks navigation until ready
       queryClient.ensureQueryData(projectRuntimesQueryOptions(projectId)),

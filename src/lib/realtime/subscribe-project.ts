@@ -63,6 +63,33 @@ function mergeMigrationPayloadIntoCache(
   )
 }
 
+/**
+ * Merge a rule realtime payload into all proxy-rules list caches.
+ * Avoids refetching on every rule status update (e.g. 18 rules → 18 refetches).
+ */
+function mergeRulePayloadIntoCache(
+  queryClient: QueryClient,
+  payload: Record<string, unknown>,
+): void {
+  const id = payload.$id as string | undefined
+  if (!id) return
+
+  queryClient.setQueriesData(
+    { queryKey: ['proxy-rules'], exact: false },
+    (old: unknown) => {
+      const data = old as
+        | { rules?: Array<Record<string, unknown>>; total?: number }
+        | undefined
+      if (!data?.rules || !Array.isArray(data.rules)) return old
+      const idx = data.rules.findIndex((r) => r.$id === id)
+      if (idx < 0) return old
+      const next = [...data.rules]
+      next[idx] = { ...next[idx], ...payload }
+      return { ...data, rules: next }
+    },
+  )
+}
+
 /** Check if the event list includes an event that starts with the given prefix */
 function eventMatches(events: string[], prefix: string): boolean {
   return events.some((e) => e === prefix || e.startsWith(prefix))
@@ -226,12 +253,34 @@ function handleRealtimeEvent(
   }
 
   if (hasEvent(events, REALTIME_EVENTS.RULES_UPDATE)) {
-    queryClient.invalidateQueries({
-      queryKey: ['proxy-rules', 'project', projectId],
-    })
-    queryClient.invalidateQueries({
-      queryKey: ['proxy-rule', 'project', projectId],
-    })
+    const payload = response.payload
+    if (
+      payload != null &&
+      typeof payload === 'object' &&
+      payload !== null &&
+      '$id' in payload
+    ) {
+      // Merge updated rule into proxy-rules list caches so status updates in real
+      // time without refetching. Avoids N refetches when N rules emit updates.
+      mergeRulePayloadIntoCache(
+        queryClient,
+        payload as Record<string, unknown>,
+      )
+      // Update single-rule cache if it exists
+      const ruleId = (payload as Record<string, unknown>).$id as string
+      queryClient.setQueriesData(
+        { queryKey: ['proxy-rule'], exact: false },
+        (old: unknown) => {
+          const data = old as Record<string, unknown> | undefined
+          if (!data || data.$id !== ruleId) return old
+          return { ...data, ...payload }
+        },
+      )
+    } else {
+      // No payload (e.g. delete) – invalidate so lists refetch
+      queryClient.invalidateQueries({ queryKey: ['proxy-rules'] })
+      queryClient.invalidateQueries({ queryKey: ['proxy-rule'] })
+    }
   }
 }
 

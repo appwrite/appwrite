@@ -1,6 +1,7 @@
 import {
   HeadContent,
   Scripts,
+  ScriptOnce,
   createRootRouteWithContext,
 } from '@tanstack/react-router'
 import appCss from '../styles.css?url'
@@ -32,6 +33,21 @@ interface MyRouterContext {
   queryClient: QueryClient
 }
 
+/**
+ * Inline script that runs before first paint (via ScriptOnce). Applies theme
+ * class to <html> so the initial loader respects user choice first, then
+ * system preference. Must match next-themes storageKey ("theme") and logic.
+ */
+const THEME_SCRIPT = `(function(){
+  try {
+    var t = localStorage.getItem('theme') || 'system';
+    var r = t === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : t;
+    var e = document.documentElement;
+    ['light','dark','system','crazy','stealth'].forEach(function(c){e.classList.remove(c);});
+    e.classList.add(r);
+  } catch (e) {}
+})()`
+
 const scripts: React.DetailedHTMLProps<
   React.ScriptHTMLAttributes<HTMLScriptElement>,
   HTMLScriptElement
@@ -59,7 +75,8 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       },
       {
         name: 'viewport',
-        content: 'width=device-width, initial-scale=1',
+        content:
+          'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover',
       },
       {
         title: 'Appwrite Console',
@@ -146,6 +163,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body suppressHydrationWarning>
+        <ScriptOnce>{THEME_SCRIPT}</ScriptOnce>
         <DynamicFavicon />
         <UploadWarning />
         <ClientThemeProvider>
@@ -163,7 +181,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
               <DebugModeProvider>
                 <AIChatProvider>
                   <PromoBannerProvider>
-                    <div className="flex h-screen w-screen overflow-hidden root-container">
+                    <div className="flex w-screen overflow-hidden root-container">
                       <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
                         {children}
                       </div>

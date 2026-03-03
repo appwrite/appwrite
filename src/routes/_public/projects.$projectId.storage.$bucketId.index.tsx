@@ -1,9 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/storage/$bucketId/View'
-import { fetchBucket, fetchBucketFiles } from '@/lib/react-query/hooks'
+import {
+  fetchBucket,
+  bucketFilesQueryOptions,
+} from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
-
-const FILES_PER_PAGE = 25
+import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/storage/$bucketId/',
@@ -25,34 +27,24 @@ export const Route = createFileRoute(
     const { queryClient } = context
 
     if (projectId && bucketId) {
-      // Fetch critical data before rendering to prevent layout shifts
-      await Promise.all([
-        // Fetch bucket - blocks navigation until ready
+      // Fetch critical data before navigation completes to prevent layout shifts
+      const [bucket] = await Promise.all([
         queryClient.fetchQuery({
           queryKey: ['bucket', 'project', projectId, bucketId],
           queryFn: () => fetchBucket(projectId, bucketId),
           staleTime: 30 * 1000,
         }),
-        // Fetch first page of files - blocks navigation until ready
-        queryClient.fetchQuery({
-          queryKey: [
-            'files',
-            'project',
+        // Prefetch first page of files - blocks until ready, uses cache if fresh
+        queryClient.ensureQueryData(
+          bucketFilesQueryOptions(
             projectId,
-            'bucket',
             bucketId,
             0,
-            FILES_PER_PAGE,
+            DEFAULT_PAGE_SIZE,
             '',
-          ],
-          queryFn: () =>
-            fetchBucketFiles(projectId, bucketId, 0, FILES_PER_PAGE, ''),
-          staleTime: 30 * 1000,
-        }),
+          ),
+        ),
       ])
-      const bucket = queryClient.getQueryData<
-        Awaited<ReturnType<typeof fetchBucket>>
-      >(['bucket', 'project', projectId, bucketId])
       return { bucket }
     }
   },

@@ -930,7 +930,7 @@ export function View() {
                   disabled={isCompressing}
                 >
                   <Download className="h-4 w-4" />
-                  {isCompressing ? 'Compressing...' : 'Prepare for deployment'}
+                  Prepare for deployment
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom">

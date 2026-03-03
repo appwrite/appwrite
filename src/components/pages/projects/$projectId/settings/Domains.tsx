@@ -1,6 +1,10 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { useProjectDomains, useProject } from '@/lib/react-query/hooks'
+import {
+  useProjectDomains,
+  useProject,
+  useOrganizationDomains,
+} from '@/lib/react-query/hooks'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -17,15 +21,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
-import {
-  getDomainStatusVariant,
-  type DomainStatus,
-} from '@/lib/utils/status-badge'
-import { cn } from '@/lib/utils'
+import { getDomainStatusBadgeConfig } from '@/lib/utils/status-badge'
 import {
   MoreHorizontal,
   ExternalLink,
-  AlertCircle,
   Loader2,
   FileText,
   RefreshCw,
@@ -36,7 +35,7 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
 import type { Models } from '@appwrite.io/console'
-import { AddDomainDialog } from './domains/AddDomain'
+import { getApexDomain } from '@/lib/utils/proxy-domains'
 import { VerifyDomainDialog } from './domains/VerifyDomain'
 import { DeleteDomainDialog } from './domains/DeleteDomain'
 import { ViewLogsDialog } from './domains/ViewLogs'
@@ -57,7 +56,6 @@ export function Domains({
 
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
-  const [addDomainOpen, setAddDomainOpen] = useState(false)
   const [verifyDomainOpen, setVerifyDomainOpen] = useState(false)
   const [deleteDomainOpen, setDeleteDomainOpen] = useState(false)
   const [viewLogsOpen, setViewLogsOpen] = useState(false)
@@ -71,40 +69,32 @@ export function Domains({
     region,
     searchValueProp,
   )
-
-  // Listen for create event from ServiceHeader
-  useEffect(() => {
-    const handleCreate = () => {
-      setAddDomainOpen(true)
+  const { domains: orgDomains } = useOrganizationDomains(
+    project?.teamId,
+    0,
+    500,
+  )
+  const apexToOrgDomainId = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const d of orgDomains) {
+      if (d.domain) map.set(d.domain.toLowerCase(), d.$id)
     }
-    window.addEventListener('settings-create-domain', handleCreate)
-    return () => {
-      window.removeEventListener('settings-create-domain', handleCreate)
-    }
-  }, [])
+    return map
+  }, [orgDomains])
 
   const getStatusBadge = (status: string) => {
-    const variant = getDomainStatusVariant(status as DomainStatus)
-
-    if (variant === null) {
-      return null // No badge for verified domains
-    }
-
-    const statusConfig: Record<
-      string,
-      { icon: typeof AlertCircle; label: string; spin?: boolean }
-    > = {
-      created: { icon: AlertCircle, label: 'Verification failed' },
-      verifying: { icon: Loader2, label: 'Generating certificate', spin: true },
-      unverified: { icon: AlertCircle, label: 'Certificate generation failed' },
-    }
-
-    const config = statusConfig[status] || { icon: AlertCircle, label: status }
-    const Icon = config.icon
-
+    const config = getDomainStatusBadgeConfig(status)
     return (
-      <Badge variant={variant} className="gap-1.5">
-        <Icon className={cn('h-3 w-3', config.spin && 'animate-spin')} />
+      <Badge
+        variant={config.variant}
+        className="text-[10px] shrink-0 gap-1.5"
+        title={
+          status === 'verifying'
+            ? 'SSL certificate is being issued. This usually takes a couple of minutes.'
+            : undefined
+        }
+      >
+        {status === 'verifying' && <Loader2 className="h-3 w-3 animate-spin" />}
         {config.label}
       </Badge>
     )
@@ -129,11 +119,6 @@ export function Domains({
     return status === 'created' || status === 'unverified'
   }
 
-  const canViewLogs = (rule: Models.ProxyRule) => {
-    return (
-      rule.logs && (rule.status === 'verifying' || rule.status === 'unverified')
-    )
-  }
 
   // Filter rules by search
   const filteredRules = useMemo(() => {
@@ -188,7 +173,7 @@ export function Domains({
                   <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                     Created
                   </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[50px]"></TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[80px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -199,15 +184,25 @@ export function Domains({
                         href={`https://${rule.domain}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 font-medium text-foreground hover:underline"
+                        className="inline-flex items-center gap-1.5 font-mono text-[13px] font-medium text-foreground hover:underline"
                       >
                         {rule.domain}
-                        <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+                        <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
                       </a>
                     </TableCell>
                     <TableCell className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         {getStatusBadge(rule.status)}
+                        {rule.status !== 'verified' && (
+                          <Button
+                            variant="link"
+                            size="sm"
+                            className="h-auto p-0 text-[13px]"
+                            onClick={() => handleViewLogs(rule)}
+                          >
+                            View logs
+                          </Button>
+                        )}
                         {canRetry(rule.status) && (
                           <Button
                             variant="link"
@@ -221,21 +216,25 @@ export function Domains({
                       </div>
                     </TableCell>
                     <TableCell className="px-4 py-3">
-                      <DateTooltip date={rule.$createdAt} />
+                      <DateTooltip
+                        date={rule.$createdAt}
+                        className="text-[12px] text-muted-foreground"
+                      />
                     </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                          >
+                    <TableCell className="px-4 py-3 text-right">
+                      <div className="flex justify-end">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                            >
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          {canViewLogs(rule) && (
+                          {rule.status !== 'verified' && (
                             <DropdownMenuItem
                               onClick={() => handleViewLogs(rule)}
                             >
@@ -250,11 +249,24 @@ export function Domains({
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuItem
-                            onClick={() =>
-                              navigate({
-                                to: '/projects/$projectId/settings/domains/$ruleId',
-                                params: { projectId, ruleId: rule.$id },
-                              })
+                            onClick={() => {
+                              const apex = getApexDomain(rule.domain)
+                              const orgDomainId = apex
+                                ? apexToOrgDomainId.get(apex.toLowerCase())
+                                : undefined
+                              if (project?.teamId && orgDomainId) {
+                                navigate({
+                                  to: '/organizations/$orgId/domains/$domainId',
+                                  params: { orgId: project.teamId, domainId: orgDomainId },
+                                })
+                              }
+                            }}
+                            disabled={
+                              !project?.teamId ||
+                              !getApexDomain(rule.domain) ||
+                              !apexToOrgDomainId.has(
+                                getApexDomain(rule.domain)?.toLowerCase() ?? '',
+                              )
                             }
                           >
                             <FileText className="mr-2 h-4 w-4" />
@@ -266,6 +278,7 @@ export function Domains({
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -290,24 +303,6 @@ export function Domains({
         </>
       )}
 
-      {/* Dialogs */}
-      <AddDomainDialog
-        open={addDomainOpen}
-        onOpenChange={setAddDomainOpen}
-        projectId={projectId}
-        region={region}
-        onCreateSuccess={(rule) => {
-          if (rule.status === 'verified') {
-            toast.success('Domain added successfully')
-            setAddDomainOpen(false)
-          } else {
-            setAddDomainOpen(false)
-            setSelectedRule(rule)
-            setVerifyDomainOpen(true)
-          }
-        }}
-      />
-
       {selectedRule && (
         <>
           <VerifyDomainDialog
@@ -316,6 +311,17 @@ export function Domains({
             projectId={projectId}
             region={region}
             rule={selectedRule}
+            onReconfigure={(reconfigureDomain) => {
+              setVerifyDomainOpen(false)
+              setSelectedRule(null)
+              navigate({
+                to: '/projects/$projectId/settings/domains/add',
+                params: { projectId },
+                search: reconfigureDomain
+                  ? { domain: reconfigureDomain }
+                  : undefined,
+              })
+            }}
             onVerifySuccess={() => {
               toast.success('Domain verified successfully')
               setVerifyDomainOpen(false)

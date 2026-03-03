@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { useIsMobile } from '@/hooks/use-mobile'
 import {
@@ -18,7 +18,6 @@ import {
   FolderOpen,
   Play,
   UserPlus,
-  Upload,
   Terminal,
   Keyboard,
   ArrowRight,
@@ -26,9 +25,10 @@ import {
   Plus,
   Building2,
   CreditCard,
+  ShieldCheck,
   X,
-  Sparkles,
   BarChart2,
+  Radio,
   type LucideIcon,
 } from 'lucide-react'
 import {
@@ -50,7 +50,9 @@ import {
   useProjectTeams,
   useProjectBuckets,
   useProjectFunctions,
+  useProjectSites,
 } from '@/lib/react-query/hooks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 // Command types
 type CommandType =
@@ -81,12 +83,26 @@ interface CommandGroup {
 
 type CommandCenterContext = 'project' | 'org'
 
+export type CreateResourceType =
+  | 'database'
+  | 'bucket'
+  | 'user'
+  | 'team'
+  | 'function'
+  | 'site'
+
 interface CommandCenterProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onNavigate?: (section: string) => void
+  /** Navigate to a specific resource (e.g. database, user) - goes to detail page */
+  onNavigateToResource?: (section: string, resourceId: string) => void
+  /** Navigate and open the create modal/wizard for the given resource type */
+  onCreateResource?: (type: CreateResourceType) => void
   context?: CommandCenterContext
   onOrgNavigate?: (tab: string) => void
+  /** Callback when "Invite Member" is selected (org context) */
+  onInviteMember?: () => void
   projectId?: string | null
   orgId?: string | null
 }
@@ -95,8 +111,11 @@ export function CommandCenter({
   open,
   onOpenChange,
   onNavigate,
+  onNavigateToResource,
+  onCreateResource,
   context = 'project',
   onOrgNavigate,
+  onInviteMember,
   projectId,
   orgId,
 }: CommandCenterProps) {
@@ -108,11 +127,15 @@ export function CommandCenter({
     | 'teams'
     | 'buckets'
     | 'functions'
+    | 'sites'
     | 'projects'
     | null
   >(null)
+  const displayedResourceCommandsRef = useRef<CommandItemType[]>([])
+  const prevSearchScopeRef = useRef<typeof searchScope>(null)
   const currentPage = pages[pages.length - 1]
   const isMobile = useIsMobile()
+  const { features } = useConsoleProfile()
 
   // Fetch resources based on context - only when there's a search query or scope
   const hasSearch = search.trim().length > 0
@@ -187,6 +210,15 @@ export function CommandCenter({
       shouldFetch && searchScope === 'functions' ? search : undefined,
     )
 
+  const { sites: projectSites, isLoading: sitesLoading } = useProjectSites(
+    isProjectContext && projectId && shouldFetch && searchScope === 'sites'
+      ? projectId
+      : null,
+    0,
+    100,
+    shouldFetch && searchScope === 'sites' ? search : undefined,
+  )
+
   // Reset state when dialog closes
   useEffect(() => {
     if (!open) {
@@ -195,6 +227,40 @@ export function CommandCenter({
       setSearchScope(null)
     }
   }, [open])
+
+  // Only show search results (scope badge + resources) after fetch completes - keep current view until then
+  const isScopeLoading = useMemo(() => {
+    if (!searchScope) return false
+    switch (searchScope) {
+      case 'databases':
+        return databasesLoading
+      case 'users':
+        return usersLoading
+      case 'teams':
+        return teamsLoading
+      case 'buckets':
+        return bucketsLoading
+      case 'functions':
+        return functionsLoading
+      case 'sites':
+        return sitesLoading
+      case 'projects':
+        return orgProjectsLoading
+      default:
+        return false
+    }
+  }, [
+    searchScope,
+    databasesLoading,
+    usersLoading,
+    teamsLoading,
+    bucketsLoading,
+    functionsLoading,
+    sitesLoading,
+    orgProjectsLoading,
+  ])
+  // Focus effect: only run when we first get results (for initial scope entry)
+  const hasShownScopeResults = useRef(false)
 
   // Organization navigation commands
   const orgNavigationCommands: CommandItemType[] = useMemo(
@@ -225,47 +291,72 @@ export function CommandCenter({
           onOpenChange(false)
         },
       },
-      {
-        id: 'nav-domains',
-        label: 'Go to Domains',
-        description: 'Manage custom domains',
-        icon: Globe,
-        type: 'navigation',
-        shortcut: 'G D',
-        keywords: ['dns', 'url', 'hosting'],
-        action: () => {
-          onOrgNavigate?.('domains')
-          onOpenChange(false)
-        },
-      },
+      ...(features.domains
+        ? [
+            {
+              id: 'nav-domains',
+              label: 'Go to Domains',
+              description: 'Manage custom domains',
+              icon: Globe,
+              type: 'navigation' as const,
+              shortcut: 'G D',
+              keywords: ['dns', 'url', 'hosting'],
+              action: () => {
+                onOrgNavigate?.('domains')
+                onOpenChange(false)
+              },
+            },
+          ]
+        : []),
       {
         id: 'nav-members',
         label: 'Go to Members',
-        description: 'Team members and roles',
+        description: 'Organization members and roles',
         icon: Users,
-        type: 'navigation',
+        type: 'navigation' as const,
         shortcut: 'G M',
         keywords: ['team', 'users', 'roles', 'permissions'],
         action: () => {
-          onOrgNavigate?.('members')
+          onOrgNavigate?.('settings/members')
           onOpenChange(false)
         },
       },
-      {
-        id: 'nav-billing',
-        label: 'Go to Billing',
-        description: 'Billing and subscription',
-        icon: CreditCard,
-        type: 'navigation',
-        shortcut: 'G B',
-        keywords: ['payment', 'subscription', 'invoice'],
-        action: () => {
-          onOrgNavigate?.('billing')
-          onOpenChange(false)
-        },
-      },
+      ...(features.billing
+        ? [
+            {
+              id: 'nav-billing',
+              label: 'Go to Billing',
+              description: 'Billing and subscription',
+              icon: CreditCard,
+              type: 'navigation' as const,
+              shortcut: 'G B',
+              keywords: ['payment', 'subscription', 'invoice'],
+              action: () => {
+                onOrgNavigate?.('settings/billing')
+                onOpenChange(false)
+              },
+            },
+          ]
+        : []),
+      ...(features.compliance
+        ? [
+            {
+              id: 'nav-compliance',
+              label: 'Go to Compliance',
+              description: 'DPA, BAA, SOC 2',
+              icon: ShieldCheck,
+              type: 'navigation' as const,
+              shortcut: 'G C',
+              keywords: ['compliance', 'dpa', 'baa', 'soc2', 'hipaa', 'gdpr'],
+              action: () => {
+                onOrgNavigate?.('settings/compliance')
+                onOpenChange(false)
+              },
+            },
+          ]
+        : []),
     ],
-    [onOrgNavigate, onOpenChange],
+    [onOrgNavigate, onOpenChange, features.domains, features.billing, features.compliance],
   )
 
   // Organization create commands
@@ -285,12 +376,12 @@ export function CommandCenter({
       },
       {
         id: 'create-team',
-        label: 'Create Team',
-        description: 'Create a new team',
+        label: 'Create Organization',
+        description: 'Create a new organization',
         icon: Building2,
         type: 'create',
         shortcut: 'C T',
-        keywords: ['new', 'add', 'organization'],
+        keywords: ['new', 'add', 'organization', 'team'],
         action: () => {
           onOpenChange(false)
         },
@@ -298,17 +389,18 @@ export function CommandCenter({
       {
         id: 'invite-member',
         label: 'Invite Member',
-        description: 'Invite a team member',
+        description: 'Invite an organization member',
         icon: UserPlus,
         type: 'create',
         shortcut: 'C M',
         keywords: ['new', 'add', 'user'],
         action: () => {
           onOpenChange(false)
+          onInviteMember?.()
         },
       },
     ],
-    [onOpenChange],
+    [onOpenChange, onInviteMember],
   )
 
   // Organization resource search
@@ -336,7 +428,7 @@ export function CommandCenter({
     return items
   }, [orgProjects, orgProjectsLoading])
 
-  // Project navigation commands
+  // Project navigation commands (order matches left sidebar)
   const navigationCommands: CommandItemType[] = useMemo(
     () => [
       {
@@ -353,15 +445,26 @@ export function CommandCenter({
         },
       },
       {
-        id: 'nav-databases',
-        label: 'Go to Databases',
-        description: 'Manage databases and collections',
-        icon: Database,
+        id: 'nav-apps',
+        label: 'Go to Apps',
+        description: 'Apps and platforms',
+        icon: Plug,
         type: 'navigation',
-        shortcut: 'G D',
-        keywords: ['db', 'collections', 'documents'],
+        keywords: ['connect', 'apps', 'platforms'],
         action: () => {
-          onNavigate?.('databases')
+          onNavigate?.('apps')
+          onOpenChange(false)
+        },
+      },
+      {
+        id: 'nav-api-keys',
+        label: 'Go to API Keys',
+        description: 'Manage API keys',
+        icon: Key,
+        type: 'navigation',
+        keywords: ['keys', 'tokens', 'secrets'],
+        action: () => {
+          onNavigate?.('api-keys')
           onOpenChange(false)
         },
       },
@@ -375,6 +478,19 @@ export function CommandCenter({
         keywords: ['users', 'authentication', 'login'],
         action: () => {
           onNavigate?.('auth')
+          onOpenChange(false)
+        },
+      },
+      {
+        id: 'nav-databases',
+        label: 'Go to Databases',
+        description: 'Manage databases and collections',
+        icon: Database,
+        type: 'navigation',
+        shortcut: 'G D',
+        keywords: ['db', 'collections', 'documents'],
+        action: () => {
+          onNavigate?.('databases')
           onOpenChange(false)
         },
       },
@@ -410,33 +526,10 @@ export function CommandCenter({
         description: 'Push notifications and messages',
         icon: MessageSquare,
         type: 'navigation',
+        shortcut: 'G M',
         keywords: ['notifications', 'push', 'sms'],
         action: () => {
           onNavigate?.('messaging')
-          onOpenChange(false)
-        },
-      },
-      {
-        id: 'nav-apps',
-        label: 'Go to Apps',
-        description: 'Apps and platforms',
-        icon: Plug,
-        type: 'navigation',
-        keywords: ['connect', 'apps', 'platforms'],
-        action: () => {
-          onNavigate?.('apps')
-          onOpenChange(false)
-        },
-      },
-      {
-        id: 'nav-api-keys',
-        label: 'Go to API Keys',
-        description: 'Manage API keys',
-        icon: Key,
-        type: 'navigation',
-        keywords: ['keys', 'tokens', 'secrets'],
-        action: () => {
-          onNavigate?.('api-keys')
           onOpenChange(false)
         },
       },
@@ -446,36 +539,57 @@ export function CommandCenter({
         description: 'Deployed websites',
         icon: Globe,
         type: 'navigation',
+        shortcut: 'G W',
         keywords: ['hosting', 'deploy', 'web'],
         action: () => {
           onNavigate?.('sites')
           onOpenChange(false)
         },
       },
+      ...(features.activity
+        ? [
+            {
+              id: 'nav-activity',
+              label: 'Go to Activity',
+              description: 'Activity logs',
+              icon: Activity,
+              type: 'navigation' as const,
+              keywords: ['logs', 'events', 'history'],
+              action: () => {
+                onNavigate?.('activity')
+                onOpenChange(false)
+              },
+            },
+          ]
+        : []),
       {
-        id: 'nav-activity',
-        label: 'Go to Activity',
-        description: 'Activity logs',
-        icon: Activity,
-        type: 'navigation',
-        keywords: ['logs', 'events', 'history'],
+        id: 'nav-realtime',
+        label: 'Go to Realtime',
+        description: 'Realtime channels and messages',
+        icon: Radio,
+        type: 'navigation' as const,
+        keywords: ['realtime', 'channels', 'websocket'],
         action: () => {
-          onNavigate?.('activity')
+          onNavigate?.('realtime')
           onOpenChange(false)
         },
       },
-      {
-        id: 'nav-usage',
-        label: 'Go to Usage',
-        description: 'Usage statistics',
-        icon: BarChart3,
-        type: 'navigation',
-        keywords: ['stats', 'metrics', 'usage'],
-        action: () => {
-          onNavigate?.('usage')
-          onOpenChange(false)
-        },
-      },
+      ...(features.usageStats
+        ? [
+            {
+              id: 'nav-usage',
+              label: 'Go to Usage',
+              description: 'Usage statistics',
+              icon: BarChart3,
+              type: 'navigation' as const,
+              keywords: ['stats', 'metrics', 'usage'],
+              action: () => {
+                onNavigate?.('usage')
+                onOpenChange(false)
+              },
+            },
+          ]
+        : []),
       {
         id: 'nav-analytics',
         label: 'Go to Analytics',
@@ -485,18 +599,6 @@ export function CommandCenter({
         keywords: ['analytics', 'insights', 'tracking', 'website'],
         action: () => {
           onNavigate?.('analytics')
-          onOpenChange(false)
-        },
-      },
-      {
-        id: 'nav-imagine',
-        label: 'Go to Imagine',
-        description: 'AI-powered project generation',
-        icon: Sparkles,
-        type: 'navigation',
-        keywords: ['imagine', 'ai', 'generate', 'create'],
-        action: () => {
-          onNavigate?.('imagine')
           onOpenChange(false)
         },
       },
@@ -514,10 +616,10 @@ export function CommandCenter({
         },
       },
     ],
-    [onNavigate, onOpenChange],
+    [onNavigate, onOpenChange, features.activity, features.usageStats],
   )
 
-  // Create commands
+  // Create commands - use onCreateResource to open modal/wizard, fallback to onNavigate
   const createCommands: CommandItemType[] = useMemo(
     () => [
       {
@@ -529,32 +631,11 @@ export function CommandCenter({
         shortcut: 'C D',
         keywords: ['new', 'add'],
         action: () => {
-          onNavigate?.('databases')
-          onOpenChange(false)
-        },
-      },
-      {
-        id: 'create-collection',
-        label: 'Create Collection',
-        description: 'Create a new collection',
-        icon: FolderOpen,
-        type: 'create',
-        shortcut: 'C C',
-        keywords: ['new', 'add', 'table'],
-        action: () => {
-          onNavigate?.('databases')
-          onOpenChange(false)
-        },
-      },
-      {
-        id: 'create-document',
-        label: 'Create Document',
-        description: 'Create a new document',
-        icon: FileText,
-        type: 'create',
-        keywords: ['new', 'add', 'record'],
-        action: () => {
-          onNavigate?.('databases')
+          if (onCreateResource) {
+            onCreateResource('database')
+          } else {
+            onNavigate?.('databases')
+          }
           onOpenChange(false)
         },
       },
@@ -567,7 +648,11 @@ export function CommandCenter({
         shortcut: 'C B',
         keywords: ['new', 'add', 'storage'],
         action: () => {
-          onNavigate?.('storage')
+          if (onCreateResource) {
+            onCreateResource('bucket')
+          } else {
+            onNavigate?.('storage')
+          }
           onOpenChange(false)
         },
       },
@@ -580,7 +665,28 @@ export function CommandCenter({
         shortcut: 'C F',
         keywords: ['new', 'add', 'serverless'],
         action: () => {
-          onNavigate?.('functions')
+          if (onCreateResource) {
+            onCreateResource('function')
+          } else {
+            onNavigate?.('functions')
+          }
+          onOpenChange(false)
+        },
+      },
+      {
+        id: 'create-site',
+        label: 'Create Site',
+        description: 'Create a new site',
+        icon: Globe,
+        type: 'create',
+        shortcut: 'C S',
+        keywords: ['new', 'add', 'hosting', 'deploy'],
+        action: () => {
+          if (onCreateResource) {
+            onCreateResource('site')
+          } else {
+            onNavigate?.('sites')
+          }
           onOpenChange(false)
         },
       },
@@ -593,24 +699,33 @@ export function CommandCenter({
         shortcut: 'C U',
         keywords: ['new', 'add', 'account'],
         action: () => {
-          onNavigate?.('auth')
+          if (onCreateResource) {
+            onCreateResource('user')
+          } else {
+            onNavigate?.('auth')
+          }
           onOpenChange(false)
         },
       },
       {
-        id: 'upload-file',
-        label: 'Upload File',
-        description: 'Upload a file to storage',
-        icon: Upload,
+        id: 'create-team',
+        label: 'Create Team',
+        description: 'Create a new team',
+        icon: Building2,
         type: 'create',
-        keywords: ['new', 'add', 'import'],
+        shortcut: 'C T',
+        keywords: ['new', 'add', 'group'],
         action: () => {
-          onNavigate?.('storage')
+          if (onCreateResource) {
+            onCreateResource('team')
+          } else {
+            onNavigate?.('auth')
+          }
           onOpenChange(false)
         },
       },
     ],
-    [onNavigate, onOpenChange],
+    [onCreateResource, onNavigate, onOpenChange],
   )
 
   // Quick actions
@@ -625,19 +740,23 @@ export function CommandCenter({
         keywords: ['run', 'trigger', 'invoke'],
         action: () => setPages([...pages, 'functions']),
       },
-      {
-        id: 'action-view-logs',
-        label: 'View Logs',
-        description: 'View activity logs',
-        icon: Terminal,
-        type: 'action',
-        shortcut: isMobile ? undefined : 'L',
-        keywords: ['console', 'debug', 'output'],
-        action: () => {
-          onNavigate?.('activity')
-          onOpenChange(false)
-        },
-      },
+      ...(features.activity
+        ? [
+            {
+              id: 'action-view-logs',
+              label: 'View Logs',
+              description: 'View activity logs',
+              icon: Terminal,
+              type: 'action' as const,
+              shortcut: isMobile ? undefined : ('L' as const),
+              keywords: ['console', 'debug', 'output'],
+              action: () => {
+                onNavigate?.('activity')
+                onOpenChange(false)
+              },
+            },
+          ]
+        : []),
     ]
 
     // Only show keyboard shortcuts on non-touch devices
@@ -655,7 +774,7 @@ export function CommandCenter({
     }
 
     return commands
-  }, [onNavigate, onOpenChange, pages, isMobile])
+  }, [onNavigate, onOpenChange, pages, isMobile, features.activity])
 
   // Org-specific actions
   const orgActionCommands: CommandItemType[] = useMemo(() => {
@@ -741,6 +860,18 @@ export function CommandCenter({
           setSearch('')
         },
       },
+      {
+        id: 'search-sites',
+        label: 'Search Sites',
+        description: 'Find sites in this project',
+        icon: Globe,
+        type: 'search',
+        keywords: ['site', 'hosting', 'deploy', 'web', 'search'],
+        action: () => {
+          setSearchScope('sites')
+          setSearch('')
+        },
+      },
     ],
     [],
   )
@@ -765,25 +896,30 @@ export function CommandCenter({
   )
 
   // Search resources (databases, users, teams, buckets, functions)
-  // Only show resources of the active search scope
-  const resourceCommands: CommandItemType[] = useMemo(() => {
+  // Only show resources of the active search scope when fetch has completed
+  const resolvedResourceCommands: CommandItemType[] = useMemo(() => {
     const items: CommandItemType[] = []
 
-    // Only show resources if we have an active search scope
+    // Only show resources if we have an active search scope and data is resolved
     if (!searchScope) return items
 
     // Databases
     if (searchScope === 'databases' && projectDatabases && !databasesLoading) {
       projectDatabases.forEach((db: unknown) => {
+        const dbId = (db as { $id: string }).$id
         items.push({
-          id: `db-${db.$id}`,
-          label: db.name,
-          description: `Database · ${db.$id}`,
+          id: `db-${dbId}`,
+          label: (db as { name: string }).name,
+          description: `Database · ${dbId}`,
           icon: Database,
           type: 'search',
           keywords: ['database', 'db'],
           action: () => {
-            onNavigate?.('databases')
+            if (onNavigateToResource) {
+              onNavigateToResource('databases', dbId)
+            } else {
+              onNavigate?.('databases')
+            }
             onOpenChange(false)
           },
         })
@@ -801,7 +937,11 @@ export function CommandCenter({
           type: 'search',
           keywords: ['user', 'account', 'auth'],
           action: () => {
-            onNavigate?.('auth')
+            if (onNavigateToResource) {
+              onNavigateToResource('auth/users', user.$id)
+            } else {
+              onNavigate?.('auth')
+            }
             onOpenChange(false)
           },
         })
@@ -819,7 +959,11 @@ export function CommandCenter({
           type: 'search',
           keywords: ['team', 'organization'],
           action: () => {
-            onNavigate?.('auth')
+            if (onNavigateToResource) {
+              onNavigateToResource('auth/teams', team.id)
+            } else {
+              onNavigate?.('auth')
+            }
             onOpenChange(false)
           },
         })
@@ -837,7 +981,11 @@ export function CommandCenter({
           type: 'search',
           keywords: ['bucket', 'storage', 'file'],
           action: () => {
-            onNavigate?.('storage')
+            if (onNavigateToResource) {
+              onNavigateToResource('storage', bucket.$id)
+            } else {
+              onNavigate?.('storage')
+            }
             onOpenChange(false)
           },
         })
@@ -855,7 +1003,33 @@ export function CommandCenter({
           type: 'search',
           keywords: ['function', 'serverless', 'lambda'],
           action: () => {
-            onNavigate?.('functions')
+            if (onNavigateToResource) {
+              onNavigateToResource('functions', fn.$id)
+            } else {
+              onNavigate?.('functions')
+            }
+            onOpenChange(false)
+          },
+        })
+      })
+    }
+
+    // Sites
+    if (searchScope === 'sites' && projectSites && !sitesLoading) {
+      projectSites.forEach((site: { $id: string; name: string }) => {
+        items.push({
+          id: `site-${site.$id}`,
+          label: site.name,
+          description: `Site · ${site.$id}`,
+          icon: Globe,
+          type: 'search',
+          keywords: ['site', 'hosting', 'deploy', 'web'],
+          action: () => {
+            if (onNavigateToResource) {
+              onNavigateToResource('sites', site.$id)
+            } else {
+              onNavigate?.('sites')
+            }
             onOpenChange(false)
           },
         })
@@ -892,11 +1066,30 @@ export function CommandCenter({
     bucketsLoading,
     projectFunctions,
     functionsLoading,
+    projectSites,
+    sitesLoading,
     orgProjects,
     orgProjectsLoading,
     onNavigate,
+    onNavigateToResource,
     onOpenChange,
   ])
+
+  // Keep previous results visible while loading - only update when fetch completes (stale-while-revalidate)
+  useEffect(() => {
+    if (searchScope !== prevSearchScopeRef.current) {
+      prevSearchScopeRef.current = searchScope
+      displayedResourceCommandsRef.current = []
+    }
+  }, [searchScope])
+  useEffect(() => {
+    if (!isScopeLoading && searchScope) {
+      displayedResourceCommandsRef.current = resolvedResourceCommands
+    }
+  }, [isScopeLoading, searchScope, resolvedResourceCommands])
+  const resourceCommands = isScopeLoading
+    ? displayedResourceCommandsRef.current
+    : resolvedResourceCommands
 
   // Recent items (simulated)
   const recentCommands: CommandItemType[] = useMemo(
@@ -977,13 +1170,14 @@ export function CommandCenter({
               { keys: ['G', 'D'], description: 'Go to Domains' },
               { keys: ['G', 'M'], description: 'Go to Members' },
               { keys: ['G', 'B'], description: 'Go to Billing' },
+              { keys: ['G', 'C'], description: 'Go to Compliance' },
             ],
           },
           {
             label: 'Create',
             shortcuts: [
               { keys: ['C', 'P'], description: 'Create Project' },
-              { keys: ['C', 'T'], description: 'Create Team' },
+              { keys: ['C', 'T'], description: 'Create Organization' },
               { keys: ['C', 'M'], description: 'Invite Member' },
             ],
           },
@@ -1006,6 +1200,8 @@ export function CommandCenter({
               { keys: ['G', 'A'], description: 'Go to Auth' },
               { keys: ['G', 'S'], description: 'Go to Storage' },
               { keys: ['G', 'F'], description: 'Go to Functions' },
+              { keys: ['G', 'M'], description: 'Go to Messaging' },
+              { keys: ['G', 'W'], description: 'Go to Sites' },
               { keys: ['G', 'U'], description: 'Go to Usage' },
               { keys: ['G', ','], description: 'Go to Settings' },
             ],
@@ -1014,10 +1210,11 @@ export function CommandCenter({
             label: 'Create',
             shortcuts: [
               { keys: ['C', 'D'], description: 'Create Database' },
-              { keys: ['C', 'C'], description: 'Create Collection' },
               { keys: ['C', 'B'], description: 'Create Bucket' },
               { keys: ['C', 'F'], description: 'Create Function' },
+              { keys: ['C', 'S'], description: 'Create Site' },
               { keys: ['C', 'U'], description: 'Create User' },
+              { keys: ['C', 'T'], description: 'Create Team' },
             ],
           },
           {
@@ -1036,7 +1233,7 @@ export function CommandCenter({
   const filteredGroups = useMemo(() => {
     const isOrgContext = context === 'org'
 
-    // If we have an active search scope, show resources for that scope
+    // When scope is set, ALWAYS show resources view - never switch to main command search while typing
     if (searchScope) {
       const scopeLabel =
         searchScope === 'databases'
@@ -1049,7 +1246,9 @@ export function CommandCenter({
                 ? 'Buckets'
                 : searchScope === 'functions'
                   ? 'Functions'
-                  : 'Projects'
+                  : searchScope === 'sites'
+                    ? 'Sites'
+                    : 'Projects'
 
       return [
         {
@@ -1079,10 +1278,10 @@ export function CommandCenter({
         {
           id: 'navigation',
           label: 'Navigation',
-          commands: navigationCommands.slice(0, 8),
+          commands: navigationCommands,
         },
         { id: 'search', label: 'Search', commands: searchCommands },
-        { id: 'create', label: 'Create', commands: createCommands.slice(0, 4) },
+        { id: 'create', label: 'Create', commands: createCommands },
         { id: 'actions', label: 'Actions', commands: actionCommands },
       ]
     }
@@ -1093,12 +1292,14 @@ export function CommandCenter({
           ...orgNavigationCommands,
           ...orgCreateCommands,
           ...orgActionCommands,
+          ...orgSearchCommands,
           ...orgResourceCommands,
         ]
       : [
           ...navigationCommands,
           ...createCommands,
           ...actionCommands,
+          ...searchCommands,
           ...resourceCommands,
         ]
 
@@ -1152,6 +1353,26 @@ export function CommandCenter({
     orgSearchCommands,
     searchCommands,
   ])
+
+  // Focus search input when first entering scope and results arrive
+  useEffect(() => {
+    if (
+      searchScope &&
+      !isScopeLoading &&
+      displayedResourceCommandsRef.current.length > 0 &&
+      !hasShownScopeResults.current
+    ) {
+      hasShownScopeResults.current = true
+      requestAnimationFrame(() => {
+        const input = document.querySelector<HTMLInputElement>(
+          '[data-slot="command-input"]',
+        )
+        input?.focus()
+      })
+    } else if (!searchScope) {
+      hasShownScopeResults.current = false
+    }
+  }, [searchScope, isScopeLoading])
 
   // Handle keyboard navigation within pages and scope removal
   const handleKeyDown = useCallback(
@@ -1413,7 +1634,7 @@ export function CommandCenter({
                 searchScope
                   ? `Search ${searchScope}...`
                   : context === 'org'
-                    ? 'Search projects, teams, or commands...'
+                    ? 'Search projects or type a command...'
                     : 'Type a command or search...'
               }
               value={search}
@@ -1432,7 +1653,7 @@ export function CommandCenter({
           <CommandList
             className={cn(
               'p-2',
-              isMobile ? 'flex-1 max-h-none' : 'max-h-[400px]',
+              isMobile ? 'flex-1 min-h-0' : 'h-[min(600px,70vh)]',
             )}
           >
             <CommandEmpty className="py-6 text-center text-[13px] text-muted-foreground">

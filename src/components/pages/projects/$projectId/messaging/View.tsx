@@ -548,7 +548,7 @@ export function View() {
                             className={cn(
                               'cursor-pointer transition-colors border-b border-border/50',
                               selectedItems.has(message.$id)
-                                ? 'bg-sky-100 dark:bg-sky-950'
+                                ? 'bg-muted'
                                 : 'hover:bg-muted/30',
                             )}
                             onClick={(e) => {
@@ -675,7 +675,7 @@ export function View() {
                             className={cn(
                               'cursor-pointer transition-colors border-b border-border/50',
                               selectedItems.has(topic.$id)
-                                ? 'bg-sky-100 dark:bg-sky-950'
+                                ? 'bg-muted'
                                 : 'hover:bg-muted/30',
                             )}
                             onClick={(e) => {
@@ -778,7 +778,7 @@ export function View() {
                             className={cn(
                               'cursor-pointer transition-colors border-b border-border/50',
                               selectedItems.has(provider.$id)
-                                ? 'bg-sky-100 dark:bg-sky-950'
+                                ? 'bg-muted'
                                 : 'hover:bg-muted/30',
                             )}
                             onClick={(e) => {

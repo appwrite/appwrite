@@ -185,11 +185,11 @@ export function View() {
           {activeTab === 'overview' && <TeamOverview />}
           {activeTab === 'members' && (
             <TeamMembers
-                searchValue={membersSearchValue}
-                onSearchChange={setMembersSearchValue}
-                createDialogOpen={createMembershipDialogOpen}
-                onCreateDialogOpenChange={setCreateMembershipDialogOpen}
-              />
+              searchValue={membersSearchValue}
+              onSearchChange={setMembersSearchValue}
+              createDialogOpen={createMembershipDialogOpen}
+              onCreateDialogOpenChange={setCreateMembershipDialogOpen}
+            />
           )}
         </div>
       </div>

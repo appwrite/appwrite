@@ -1,5 +1,5 @@
 {
-  "name": "template-tanstack-start",
+  "name": "vibes",
   "private": true,
   "type": "module",
   "scripts": {
@@ -14,7 +14,12 @@
     "format": "prettier --write .",
     "generate:routes": "tsr generate",
     "generate:icons": "node scripts/generate-apple-icons.js",
-    "clean": "rm -rf .output dist node_modules/.vite .nitro .tanstack"
+    "clean": "rm -rf .output dist node_modules/.vite .nitro .tanstack",
+    "test:unit": "vitest run",
+    "test:e2e:ui": "playwright test --ui",
+    "e2e": "playwright test",
+    "install-browsers": "playwright install --with-deps chromium",
+    "check": "tsc --noEmit"
   },
   "dependencies": {
     "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@c6f60aa",
@@ -83,17 +88,20 @@
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.0.2",
     "tailwindcss": "^4.1.13",
+    "tldts": "^7.0.23",
     "tw-animate-css": "^1.3.6",
     "vaul": "^1.1.2",
     "vite-tsconfig-paths": "^5.1.4",
     "zod": "^4.1.11"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@tanstack/eslint-config": "^0.3.0",
     "@tanstack/nitro-v2-vite-plugin": "^1.132.40",
     "@tanstack/router-cli": "^1.132.21",
-    "@testing-library/dom": "^10.4.0",
-    "@testing-library/react": "^16.2.0",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/bun": "^1.2.22",
     "@types/node": "^22.12.0",
     "@types/prismjs": "^1.26.6",
@@ -101,6 +109,7 @@
     "@types/react-dom": "^19.1.9",
     "@typescript-eslint/eslint-plugin": "^8.50.0",
     "@vitejs/plugin-react": "^5.0.3",
+    "dotenv": "^16.4.5",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-unused-imports": "^4.3.0",
     "jsdom": "^26.0.0",
@@ -110,6 +119,7 @@
     "vite": "npm:rolldown-vite@latest",
     "vite-plugin-devtools-json": "^1.0.0",
     "vitest": "^3.0.5",
+    "vitest-mock-extended": "^3.1.0",
     "web-vitals": "^4.2.4"
   }
 }

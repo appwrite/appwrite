@@ -25,6 +25,7 @@ import {
   SelectTrigger,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
 import { toast } from 'sonner'
@@ -40,6 +41,8 @@ interface InviteMembersDialogProps {
   organizationId: string
   currentMemberCount: number
   memberLimit: number | null
+  /** Called after invites are successfully sent */
+  onSuccess?: () => void
 }
 
 const ROLE_OPTIONS = [
@@ -81,10 +84,12 @@ export function InviteMembersDialog({
   organizationId,
   currentMemberCount,
   memberLimit,
+  onSuccess,
 }: InviteMembersDialogProps) {
   const queryClient = useQueryClient()
+  const { features } = useConsoleProfile()
   const [invites, setInvites] = useState<InviteMember[]>([
-    { email: '', role: 'developer' },
+    { email: '', role: 'owner' },
   ])
   const [touchedFields, setTouchedFields] = useState<Set<number>>(new Set())
 
@@ -120,8 +125,9 @@ export function InviteMembersDialog({
   // Create membership mutation
   const createMembershipMutation = useMutation({
     mutationFn: async (invite: InviteMember) => {
-      // Map role to array format (Appwrite expects roles as array)
-      const roles = [invite.role]
+      // When orgRoles disabled, all members are owners
+      const role = features.orgRoles ? invite.role : 'owner'
+      const roles = [role]
 
       // Construct the redirect URL for accepting the invitation
       const acceptUrl = `${window.location.origin}/join`
@@ -153,6 +159,7 @@ export function InviteMembersDialog({
         toast.success(
           `Successfully invited ${successes} member${successes !== 1 ? 's' : ''}`,
         )
+        onSuccess?.()
       }
 
       if (failures > 0) {
@@ -174,7 +181,7 @@ export function InviteMembersDialog({
       })
 
       // Reset and close
-      setInvites([{ email: '', role: 'developer' }])
+      setInvites([{ email: '', role: features.orgRoles ? 'developer' : 'owner' }])
       onOpenChange(false)
     } catch (error) {
       toast.error(
@@ -193,14 +200,14 @@ export function InviteMembersDialog({
       toast.error('Member limit reached')
       return
     }
-    setInvites([...invites, { email: '', role: 'developer' }])
+    setInvites([...invites, { email: '', role: features.orgRoles ? 'developer' : 'owner' }])
   }
 
   // Remove invite row
   const handleRemoveInvite = (index: number) => {
     if (invites.length === 1) {
       // Keep at least one row, just clear it
-      setInvites([{ email: '', role: 'developer' }])
+      setInvites([{ email: '', role: features.orgRoles ? 'developer' : 'owner' }])
     } else {
       setInvites(invites.filter((_, i) => i !== index))
     }
@@ -219,7 +226,7 @@ export function InviteMembersDialog({
   // Reset form when dialog closes
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
-      setInvites([{ email: '', role: 'developer' }])
+      setInvites([{ email: '', role: features.orgRoles ? 'developer' : 'owner' }])
       setTouchedFields(new Set())
     }
     onOpenChange(newOpen)
@@ -231,7 +238,7 @@ export function InviteMembersDialog({
         <DialogHeader className="px-6 pt-6 text-left">
           <DialogTitle>Invite Members</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Invite team members to your organization. They'll receive an email
+            Invite organization members to your organization. They'll receive an email
             invitation to join.
           </DialogDescription>
         </DialogHeader>
@@ -317,7 +324,8 @@ export function InviteMembersDialog({
                     )}
                   </div>
 
-                  {/* Role Select */}
+                  {/* Role Select - hidden when orgRoles disabled (all members are owners) */}
+                  {features.orgRoles && (
                   <div className="w-36 shrink-0">
                     <Select
                       value={invite.role}
@@ -360,6 +368,7 @@ export function InviteMembersDialog({
                       </SelectContent>
                     </Select>
                   </div>
+                  )}
 
                   {/* Remove Button */}
                   {invites.length > 1 && (

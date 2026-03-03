@@ -1098,11 +1098,7 @@ export function useOrganizations() {
 
     return organizationsData.teams.map((org: unknown) => {
       // Map billingPlan to plan name using the filter
-      const planName = getPlanNameFromTier(org.billingPlan)
-      // Map 'custom' to 'enterprise' for compatibility with Organization type
-      const plan = (
-        planName === 'custom' ? 'enterprise' : planName
-      ) as Organization['plan']
+      const plan = getPlanNameFromTier(org.billingPlan) as Organization['plan']
 
       return {
         $id: org.$id,
@@ -1161,9 +1157,7 @@ export function useOrganizationById(orgId: string | null | undefined) {
     if (!orgData) return null
 
     const planName = getPlanNameFromTier(orgData.billingPlan)
-    const plan = (
-      planName === 'custom' ? 'enterprise' : planName
-    ) as Organization['plan']
+    const plan = planName as Organization['plan']
 
     return {
       ...orgData,

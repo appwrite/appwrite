@@ -17,6 +17,11 @@ import {
   useRefresh,
 } from '@/components/global/shared/RefreshContext'
 import { CreateExecutionDrawer } from './CreateExecutionDrawer'
+import { CreateDeploymentDropdown } from '../shared/CreateDeploymentDropdown'
+import { CreateGitDeploymentModal } from '../shared/CreateGitDeploymentModal'
+import { CreateCliDeploymentModal } from '../shared/CreateCliDeploymentModal'
+import { CreateManualDeploymentModal } from '../shared/CreateManualDeploymentModal'
+import { CreateDeploymentProvider } from '../shared/CreateDeploymentContext'
 
 export function Layout() {
   return (
@@ -145,11 +150,9 @@ function FunctionLayoutContent() {
     })
   }
 
-  const handleCreateDeployment = () => {
-    // TODO: Open create deployment dialog
-    toast.info('Deployment creation coming soon')
-  }
-
+  const [gitDeployOpen, setGitDeployOpen] = useState(false)
+  const [cliDeployOpen, setCliDeployOpen] = useState(false)
+  const [manualDeployOpen, setManualDeployOpen] = useState(false)
   const [executeDrawerOpen, setExecuteDrawerOpen] = useState(false)
 
   const handleCreateExecution = () => {
@@ -168,8 +171,10 @@ function FunctionLayoutContent() {
   }
 
   const handleAddDomain = () => {
-    // TODO: Open add domain dialog
-    toast.info('Add domain functionality coming soon')
+    navigate({
+      to: '/projects/$projectId/functions/$functionId/domains/add',
+      params: { projectId: projectId!, functionId: functionId! },
+    })
   }
 
   if (isLoading) {
@@ -283,79 +288,120 @@ function FunctionLayoutContent() {
     ) : undefined
 
   return (
-    <div className="flex flex-col">
-      <ServiceHeader
-        title={
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" asChild className="h-7 w-7 p-0">
-              <Link
-                to="/projects/$projectId/functions"
-                params={{ projectId: projectId! }}
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
-            </Button>
-            <span>{func.name || 'Unnamed Function'}</span>
-          </div>
-        }
-        tabs={tabs}
-        activeTab={activeTab}
-        fullWidthBorder
-        searchPlaceholder={
-          activeTab === 'domains' ? 'Search domain...' : undefined
-        }
-        searchValue={activeTab === 'domains' ? domainsSearchValue : undefined}
-        onSearchChange={
-          activeTab === 'domains' ? handleDomainsSearchChange : undefined
-        }
-        showFilters={activeTab === 'deployments' || activeTab === 'executions'}
-        onFilterClick={
-          activeTab === 'deployments' || activeTab === 'executions'
-            ? handleFilterClick
-            : undefined
-        }
-        showRefresh={activeTab === 'executions' && hasRefreshHandler}
-        onRefresh={activeTab === 'executions' ? triggerRefresh : undefined}
-        isRefreshing={isRefreshing}
-        createLabel={
-          activeTab === 'deployments'
-            ? 'Create deployment'
-            : activeTab === 'executions'
-              ? 'Create execution'
-              : activeTab === 'domains'
-                ? 'Add domain'
-                : undefined
-        }
-        onCreate={
-          activeTab === 'deployments'
-            ? handleCreateDeployment
-            : activeTab === 'executions'
-              ? handleCreateExecution
-              : activeTab === 'domains'
-                ? handleAddDomain
-                : undefined
-        }
-        createDisabled={activeTab === 'executions' && !func?.deploymentId}
-        contentAfterBorder={
-          disabledAlert || configAlert ? (
-            <div>
-              {disabledAlert}
-              {configAlert}
+    <CreateDeploymentProvider
+      onOpenGit={() => setGitDeployOpen(true)}
+      onOpenCli={() => setCliDeployOpen(true)}
+      onOpenManual={() => setManualDeployOpen(true)}
+    >
+      <div className="flex flex-col">
+        <ServiceHeader
+          title={
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" asChild className="h-7 w-7 p-0">
+                <Link
+                  to="/projects/$projectId/functions"
+                  params={{ projectId: projectId! }}
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Link>
+              </Button>
+              <span>{func.name || 'Unnamed Function'}</span>
             </div>
-          ) : undefined
-        }
-      />
-      <div className="flex-1">
-        <Outlet />
-      </div>
-      {func && functionId && (
-        <CreateExecutionDrawer
-          open={executeDrawerOpen}
-          onOpenChange={setExecuteDrawerOpen}
-          functionId={functionId}
-          func={func}
+          }
+          tabs={tabs}
+          activeTab={activeTab}
+          fullWidthBorder
+          searchPlaceholder={
+            activeTab === 'domains' ? 'Search domain...' : undefined
+          }
+          searchValue={activeTab === 'domains' ? domainsSearchValue : undefined}
+          onSearchChange={
+            activeTab === 'domains' ? handleDomainsSearchChange : undefined
+          }
+          showFilters={
+            activeTab === 'deployments' || activeTab === 'executions'
+          }
+          onFilterClick={
+            activeTab === 'deployments' || activeTab === 'executions'
+              ? handleFilterClick
+              : undefined
+          }
+          showRefresh={activeTab === 'executions' && hasRefreshHandler}
+          onRefresh={activeTab === 'executions' ? triggerRefresh : undefined}
+          isRefreshing={isRefreshing}
+          beforeCreateButtons={
+            activeTab === 'deployments' ? (
+              <CreateDeploymentDropdown
+                onSelectGit={() => setGitDeployOpen(true)}
+                onSelectCli={() => setCliDeployOpen(true)}
+                onSelectManual={() => setManualDeployOpen(true)}
+              />
+            ) : undefined
+          }
+          createLabel={
+            activeTab === 'deployments'
+              ? undefined
+              : activeTab === 'executions'
+                ? 'Create execution'
+                : activeTab === 'domains'
+                  ? 'Add domain'
+                  : undefined
+          }
+          onCreate={
+            activeTab === 'deployments'
+              ? undefined
+              : activeTab === 'executions'
+                ? handleCreateExecution
+                : activeTab === 'domains'
+                  ? handleAddDomain
+                  : undefined
+          }
+          createDisabled={activeTab === 'executions' && !func?.deploymentId}
+          contentAfterBorder={
+            disabledAlert || configAlert ? (
+              <div>
+                {disabledAlert}
+                {configAlert}
+              </div>
+            ) : undefined
+          }
         />
-      )}
-    </div>
+        <div className="flex-1">
+          <Outlet />
+        </div>
+        {func && functionId && projectId && (
+          <>
+            <CreateExecutionDrawer
+              open={executeDrawerOpen}
+              onOpenChange={setExecuteDrawerOpen}
+              functionId={functionId}
+              func={func}
+            />
+            <CreateGitDeploymentModal
+              open={gitDeployOpen}
+              onOpenChange={setGitDeployOpen}
+              resourceType="function"
+              projectId={projectId}
+              resourceId={functionId}
+              resource={func}
+            />
+            <CreateCliDeploymentModal
+              open={cliDeployOpen}
+              onOpenChange={setCliDeployOpen}
+              resourceType="function"
+              projectId={projectId}
+              resourceId={functionId}
+            />
+            <CreateManualDeploymentModal
+              open={manualDeployOpen}
+              onOpenChange={setManualDeployOpen}
+              resourceType="function"
+              projectId={projectId}
+              resourceId={functionId}
+            />
+          </>
+        )}
+      </div>
+    </CreateDeploymentProvider>
   )
 }

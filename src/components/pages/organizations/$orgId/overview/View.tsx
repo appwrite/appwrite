@@ -30,7 +30,13 @@ import {
   Edit,
   Eye,
   CreditCard,
-} from 'lucide-react'
+  Settings,
+  X,
+  KeyRound,
+  Info,
+  ExternalLink,
+  ChevronRight,
+} from '@/lib/icons'
 import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
 import { RegionFlag } from '@/components/global/shared/RegionFlag'
 import { type Organization, type TeamMember } from '@/lib/utils/mock-data'
@@ -59,6 +65,13 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import {
@@ -88,6 +101,7 @@ import { cn } from '@/lib/utils'
 import { getPlanBadgeColor } from '@/lib/utils/plan-badge'
 import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
 import { BillingTab } from '../billing/BillingTab'
+import { ComplianceTab } from '../settings/ComplianceTab'
 import { View as DomainsView } from '../domains/View'
 import { EnterpriseSuccessManager } from '@/components/pages/projects/$projectId/shared/EnterpriseSuccessManager'
 import { Pagination } from '@/components/global/shared/Pagination'
@@ -96,6 +110,7 @@ import { InviteMembersDialog } from './InviteMembers'
 import { CreateOrganizationDialog } from './CreateOrganization'
 import { CreateProjectDialog } from './CreateProjectDialog'
 import { useCreateOrganization } from '@/lib/react-query/hooks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   Table,
   TableBody,
@@ -104,8 +119,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { ComingSoonView } from '@/components/global/shared/ComingSoonView'
 
 // Environment variables for whitelabeling
 const COMPANY_NAME = import.meta.env.VITE_COMPANY_NAME || 'Appwrite'
@@ -203,8 +220,10 @@ function ProjectCardFooter({
   )
 }
 
+import { ProjectSelector } from '@/components/global/shared/ProjectSelector'
+
 interface OrgOverviewProps {
-  tab?: 'projects' | 'members' | 'domains' | 'billing' | 'settings'
+  tab?: 'projects' | 'domains' | 'settings'
   children?: React.ReactNode
 }
 
@@ -217,6 +236,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const search = useSearch({ strict: false })
   const matches = useMatches()
   const [searchQuery, setSearchQuery] = useState('')
+  const { features } = useConsoleProfile()
 
   // Check if we're on a domain detail route using route matches and pathname (for navigation transitions)
   const isDomainDetailRoute = useMemo(() => {
@@ -296,20 +316,15 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
     if (orgIndex >= 0) {
       // Check if there's a tab segment after orgId
-      // pathParts structure: ['organizations', 'orgId', 'tab?']
+      // pathParts structure: ['organizations', 'orgId', 'tab?', 'subTab?']
       if (pathParts[orgIndex + 2]) {
         const tabFromPath = pathParts[orgIndex + 2]
-        if (
-          ['projects', 'members', 'domains', 'billing', 'settings'].includes(
-            tabFromPath,
-          )
-        ) {
-          return tabFromPath as
-            | 'projects'
-            | 'members'
-            | 'domains'
-            | 'billing'
-            | 'settings'
+        // settings and settings/billing both map to 'settings' tab
+        if (tabFromPath === 'settings') {
+          return 'settings'
+        }
+        if (['projects', 'domains'].includes(tabFromPath)) {
+          return tabFromPath as 'projects' | 'domains'
         }
       }
     }
@@ -317,10 +332,24 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     // Default to projects for index route (/organizations/:orgId or /organizations/:orgId/)
     return 'projects'
   }, [tabProp, location.pathname, isDomainDetailRoute])
+
+  // Settings sub-tab (when on settings): 'overview' | 'members' | 'billing' | 'compliance' | 'oauth-apps' | 'api-keys'
+  const settingsSubTab = useMemo(() => {
+    const pathParts = location.pathname.split('/').filter(Boolean)
+    const orgIndex = pathParts.findIndex((part) => part === 'organizations')
+    if (orgIndex >= 0 && pathParts[orgIndex + 2] === 'settings') {
+      const subTab = pathParts[orgIndex + 3]
+      if (subTab === 'members') return 'members'
+      if (subTab === 'billing') return 'billing'
+      if (subTab === 'compliance') return 'compliance'
+      if (subTab === 'oauth-apps') return 'oauth-apps'
+      if (subTab === 'api-keys') return 'api-keys'
+      return 'overview'
+    }
+    return 'overview'
+  }, [location.pathname])
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)
   const [orgSwitcherOpen, setOrgSwitcherOpen] = useState(false)
-  const [deleteConfirmation, setDeleteConfirmation] = useState('')
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
   const [updateRoleDialogOpen, setUpdateRoleDialogOpen] = useState(false)
   const [removeMemberDialogOpen, setRemoveMemberDialogOpen] = useState(false)
@@ -330,6 +359,37 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   >('developer')
   const [createOrgDialogOpen, setCreateOrgDialogOpen] = useState(false)
   const [createProjectDialogOpen, setCreateProjectDialogOpen] = useState(false)
+  const [deleteOrgDialogOpen, setDeleteOrgDialogOpen] = useState(false)
+  const [deleteOrgConfirmation, setDeleteOrgConfirmation] = useState('')
+
+  // Redirect from disabled settings sub-tabs
+  useEffect(() => {
+    if (settingsSubTab === 'billing' && !features.billing) {
+      navigate({
+        to: '/organizations/$orgId/settings',
+        params: { orgId: orgId! },
+        replace: true,
+      })
+    } else if (
+      (settingsSubTab === 'compliance' && !features.compliance) ||
+      (settingsSubTab === 'oauth-apps' && !features.oauthApps) ||
+      (settingsSubTab === 'api-keys' && !features.orgApiKeys)
+    ) {
+      navigate({
+        to: '/organizations/$orgId/settings',
+        params: { orgId: orgId! },
+        replace: true,
+      })
+    }
+  }, [
+    settingsSubTab,
+    features.billing,
+    features.compliance,
+    features.oauthApps,
+    features.orgApiKeys,
+    orgId,
+    navigate,
+  ])
 
   // Command center shortcut (Cmd+K / Ctrl+K)
   useKeyboardShortcut('meta+k', () => {
@@ -353,6 +413,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const activeProjectsPage = displayedPage
   const [activeMembershipsPage, setActiveMembershipsPage] = useState(0)
   const [membershipsSearchQuery, setMembershipsSearchQuery] = useState('')
+  const [settingsNavSearch, setSettingsNavSearch] = useState('')
 
   // Fetch organizations from Console SDK (prefetched by route loader)
   const { data: organizationsData, isLoading: organizationsLoading } = useQuery(
@@ -376,10 +437,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         const planName = getPlanNameFromTier(
           org.billingPlan ?? (org.prefs as { tier?: string })?.tier ?? 'free',
         )
-        // Map 'custom' to 'enterprise' for compatibility with Organization type
-        const plan = (
-          planName === 'custom' ? 'enterprise' : planName
-        ) as Organization['plan']
+        const plan = planName as Organization['plan']
 
         return {
           $id: org.$id,
@@ -405,7 +463,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   useEffect(() => {
     if (selectedOrg) {
       setOrgName(selectedOrg.name)
-      setDeleteConfirmation('')
+      setDeleteOrgConfirmation('')
       // Reset pagination when org changes
       setRequestedPage(1)
       setDisplayedPage(1)
@@ -535,19 +593,17 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
   // Mutation to delete organization
   const deleteOrgMutation = useMutation({
-    mutationFn: async (orgId: string) => {
-      await sdk.forConsole.organizations.delete({ organizationId: orgId })
+    mutationFn: async (orgIdToDelete: string) => {
+      await sdk.forConsole.organizations.delete({
+        organizationId: orgIdToDelete,
+      })
     },
     onSuccess: () => {
-      // Invalidate organizations query to refetch the list
       queryClient.invalidateQueries({ queryKey: ['organizations', 'console'] })
       toast.success('Organization deleted successfully')
+      setDeleteOrgDialogOpen(false)
+      setDeleteOrgConfirmation('')
 
-      // Close the dialog and reset confirmation
-      setDeleteDialogOpen(false)
-      setDeleteConfirmation('')
-
-      // Navigate to the first available organization or home
       const remainingOrgs = organizations.filter(
         (org: Organization) => org.$id !== orgId,
       )
@@ -558,11 +614,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           replace: true,
         })
       } else {
-        // No organizations left, navigate to home or projects
-        navigate({
-          to: '/',
-          replace: true,
-        })
+        navigate({ to: '/', replace: true })
       }
     },
     onError: (error: Error) => {
@@ -794,12 +846,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     return isNaN(limitNum as number) ? null : limitNum
   }, [organizationPlan])
 
-  // Check if the plan supports success team (enterprise plans)
+  // Check if the plan supports success team (custom plans)
   const supportsSuccessTeam = useMemo(() => {
     if (!organizationPlan) return false
-    // Check if plan name is enterprise or if it's a custom/enterprise tier
     const planName = organizationPlan.name?.toLowerCase() || ''
-    return planName === 'enterprise' || selectedOrg?.plan === 'enterprise'
+    return planName === 'custom' || selectedOrg?.plan === 'custom'
   }, [organizationPlan, selectedOrg])
 
   // Fetch memberships for the selected organization
@@ -821,7 +872,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   // Update membership role mutation
   const updateRoleMutation = useUpdateMembershipRole(orgId)
 
-  // Remove team member mutation
+  // Remove organization member mutation
   const removeMemberMutation = useRemoveTeamMember(orgId)
 
   // Reset memberships pagination when search query changes
@@ -829,27 +880,24 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     setActiveMembershipsPage(0)
   }, [membershipsSearchQuery])
 
-  // Org tabs
+  // Org tabs (billing is under settings)
   const orgTabs = useMemo(() => {
     if (!selectedOrg) return []
 
-    return [
+    const tabs = [
       { id: 'projects', label: 'Projects', to: '/organizations/$orgId' },
-      {
-        id: 'members',
-        label: 'Members',
-        to: '/organizations/$orgId/members',
-      },
-      { id: 'domains', label: 'Domains', to: '/organizations/$orgId/domains/' },
-      { id: 'billing', label: 'Billing', to: '/organizations/$orgId/billing' },
+      ...(features.domains
+        ? [{ id: 'domains' as const, label: 'Domains', to: '/organizations/$orgId/domains/' as const }]
+        : []),
       {
         id: 'settings',
         label: 'Settings',
         to: '/organizations/$orgId/settings',
       },
     ]
+    return tabs
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedOrg, orgId])
+  }, [selectedOrg, orgId, features.domains])
 
   const filteredProjectsByTeam = projectsByTeam
     .map(({ team, projects }) => ({
@@ -863,10 +911,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const handleOrgNavigate = (tab: string) => {
     const tabRoutes: Record<string, string> = {
       projects: '/organizations/$orgId',
-      members: '/organizations/$orgId/members',
       domains: '/organizations/$orgId/domains/',
-      billing: '/organizations/$orgId/billing',
       settings: '/organizations/$orgId/settings',
+      'settings/members': '/organizations/$orgId/settings/members',
+      'settings/billing': '/organizations/$orgId/settings/billing',
+      'settings/compliance': '/organizations/$orgId/settings/compliance',
     }
 
     const route = tabRoutes[tab]
@@ -885,13 +934,20 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     // Navigate to the new organization route, preserving the current tab
     const tabRoutes: Record<string, string> = {
       projects: '/organizations/$orgId',
-      members: '/organizations/$orgId/members',
       domains: '/organizations/$orgId/domains/',
-      billing: '/organizations/$orgId/billing',
       settings: '/organizations/$orgId/settings',
     }
 
+    // Preserve settings sub-tab when switching orgs
+    const settingsSubRoute =
+      activeTab === 'settings' &&
+      ['members', 'billing', 'compliance', 'oauth-apps', 'api-keys'].includes(
+        settingsSubTab,
+      )
+        ? `/organizations/$orgId/settings/${settingsSubTab}`
+        : null
     const route =
+      settingsSubRoute ||
       (activeTab && tabRoutes[activeTab as keyof typeof tabRoutes]) ||
       '/organizations/$orgId'
     navigate({
@@ -931,7 +987,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   onOpenChange={setOrgSwitcherOpen}
                 >
                   <PopoverTrigger asChild>
-                    <button className="group flex min-w-0 h-8 items-center gap-2 rounded-lg px-2 -ml-2 transition-colors hover:bg-accent">
+                    <button className="group flex min-w-0 h-8 cursor-pointer items-center gap-2 rounded-lg px-2 -ml-2 transition-colors hover:bg-accent">
                       <InitialsAvatar name={selectedOrg.name} size="sm" />
                       <h1 className="truncate text-[13px] font-semibold text-foreground">
                         {selectedOrg.name}
@@ -962,7 +1018,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                           key={org.$id}
                           onClick={() => handleSelectOrg(org)}
                           className={cn(
-                            'flex w-full items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-accent',
+                            'flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-accent',
                             selectedOrg.$id === org.$id && 'bg-accent',
                           )}
                         >
@@ -998,7 +1054,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                           setOrgSwitcherOpen(false)
                           setCreateOrgDialogOpen(true)
                         }}
-                        className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                        className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                       >
                         <Plus className="h-4 w-4" />
                         Create organization
@@ -1007,20 +1063,26 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   </PopoverContent>
                 </Popover>
               )}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 rounded-lg hover:bg-accent"
-                onClick={() => setCreateOrgDialogOpen(true)}
-                title="Create organization"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 rounded-lg hover:bg-accent"
+                    onClick={() => setCreateOrgDialogOpen(true)}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Create organization</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
 
-            {/* Right: Team Avatars + Invite Button */}
+            {/* Right: Organization Member Avatars + Invite Button */}
             <div className="flex shrink-0 items-center gap-3">
-              {/* Stacked Team Member Avatars - Reserve space even when loading */}
+              {/* Stacked Organization Member Avatars - Reserve space even when loading */}
               {selectedOrg && (
                 <div className="flex items-center">
                   {membershipsLoading ? (
@@ -1046,7 +1108,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
                       return (
                         <Link
-                          to="/organizations/$orgId/members"
+                          to="/organizations/$orgId/settings/members"
                           params={{ orgId: orgId! }}
                           className="flex -space-x-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer hover:opacity-90 transition-opacity"
                           title="View members"
@@ -1117,7 +1179,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   <TooltipContent>
                     <p className="text-xs">
                       Your current plan does not support additional members.
-                      Upgrade your plan to invite team members.
+                      Upgrade your plan to invite organization members.
                     </p>
                   </TooltipContent>
                 </Tooltip>
@@ -1158,7 +1220,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         </div>
 
         {/* Plan Limit Alert - After Tabs */}
-        {activeTab === 'members' &&
+        {(activeTab === 'settings' && settingsSubTab === 'members') &&
           (() => {
             if (!organizationPlan) return null
 
@@ -1547,368 +1609,752 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   </>
                 )}
 
-                {activeTab === 'members' && (
-                  <>
-                    {/* Error State */}
-                    {membershipsError && (
-                      <div className="flex flex-col items-center justify-center py-16 text-center">
-                        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-                          <Users className="h-6 w-6 text-muted-foreground" />
+                {activeTab === 'settings' && (
+                  <div className="flex flex-col gap-4 lg:flex-row lg:gap-8">
+                    {(() => {
+                      const allNavItems = [
+                        {
+                          id: 'overview',
+                          label: 'General',
+                          to: '/organizations/$orgId/settings',
+                          icon: Settings,
+                          keywords: [
+                            'general',
+                            'overview',
+                            'name',
+                            'delete',
+                          ],
+                        },
+                        {
+                          id: 'members' as const,
+                          label: 'Members',
+                          to: '/organizations/$orgId/settings/members' as const,
+                          icon: Users,
+                          keywords: [
+                            'members',
+                            'team',
+                            'invite',
+                            'roles',
+                          ],
+                        },
+                        ...(features.billing
+                          ? [
+                              {
+                                id: 'billing' as const,
+                                label: 'Billing',
+                                to: '/organizations/$orgId/settings/billing' as const,
+                                icon: CreditCard,
+                                keywords: [
+                                  'billing',
+                                  'payment',
+                                  'invoice',
+                                  'subscription',
+                                ],
+                              },
+                            ]
+                          : []),
+                        ...(features.compliance
+                          ? [
+                              {
+                                id: 'compliance' as const,
+                                label: 'Compliance',
+                                to: '/organizations/$orgId/settings/compliance' as const,
+                                icon: ShieldCheck,
+                                keywords: [
+                                  'compliance',
+                                  'dpa',
+                                  'baa',
+                                  'soc2',
+                                  'hipaa',
+                                  'gdpr',
+                                ],
+                              },
+                            ]
+                          : []),
+                        ...(features.oauthApps
+                          ? [
+                              {
+                                id: 'oauth-apps' as const,
+                                label: 'OAuth apps',
+                                to: '/organizations/$orgId/settings/oauth-apps' as const,
+                                icon: KeyRound,
+                                keywords: ['oauth', 'sso', 'apps', 'login'],
+                              },
+                            ]
+                          : []),
+                        ...(features.orgApiKeys
+                          ? [
+                              {
+                                id: 'api-keys' as const,
+                                label: 'API keys',
+                                to: '/organizations/$orgId/settings/api-keys' as const,
+                                icon: Key,
+                                keywords: ['api', 'keys', 'credentials'],
+                              },
+                            ]
+                          : []),
+                      ]
+                      const navItems = allNavItems
+
+                      return (
+                        <>
+                          {/* Mobile: compact dropdown instead of second tab row */}
+                          <div className="lg:hidden" aria-label="Settings section">
+                            <Select
+                              value={settingsSubTab}
+                              onValueChange={(value) => {
+                                const item = navItems.find(
+                                  (n) => n.id === value,
+                                )
+                                if (item) {
+                                  navigate({
+                                    to: item.to as unknown,
+                                    params: { orgId: orgId! } as unknown,
+                                  })
+                                }
+                              }}
+                            >
+                              <SelectTrigger
+                                size="sm"
+                                className="w-full h-9 text-[13px]"
+                              >
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {navItems.map((item) => (
+                                  <SelectItem
+                                    key={item.id}
+                                    value={item.id}
+                                    className="text-[13px]"
+                                  >
+                                    <span className="flex items-center gap-2">
+                                      <item.icon className="h-4 w-4 shrink-0" />
+                                      {item.label}
+                                    </span>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* Desktop: vertical sidebar with search */}
+                          <nav
+                            className="hidden lg:flex sticky top-4 w-48 shrink-0 flex-col gap-2 self-start"
+                            aria-label="Settings navigation"
+                          >
+                            <div className="relative w-full mb-2">
+                              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                              <Input
+                                placeholder="Search settings..."
+                                value={settingsNavSearch}
+                                onChange={(e) =>
+                                  setSettingsNavSearch(e.target.value)}
+                                className={cn(
+                                  'h-9 w-full rounded-md border border-border bg-accent/50 pl-10 pr-4 text-[13px] text-foreground placeholder:text-muted-foreground outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50',
+                                  settingsNavSearch && 'pr-9',
+                                )}
+                              />
+                              {settingsNavSearch && (
+                                <button
+                                  type="button"
+                                  onClick={() => setSettingsNavSearch('')}
+                                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground rounded p-0.5"
+                                  aria-label="Clear search"
+                                >
+                                  <X className="h-3.5 w-3.5" />
+                                </button>
+                              )}
+                            </div>
+                            {(() => {
+                              const q = settingsNavSearch.trim().toLowerCase()
+                              const filtered = q
+                                ? navItems.filter((item) => {
+                                    const matchLabel = item.label
+                                      .toLowerCase()
+                                      .includes(q)
+                                    const matchKeyword = item.keywords.some(
+                                      (k) => k.includes(q),
+                                    )
+                                    return matchLabel || matchKeyword
+                                  })
+                                : navItems
+                              if (filtered.length === 0) {
+                                return (
+                                  <p className="px-3 py-2 text-[12px] text-muted-foreground">
+                                    No matching settings
+                                  </p>
+                                )
+                              }
+                              return filtered.map((item) => {
+                                const Icon = item.icon
+                                return (
+                                  <Link
+                                    key={item.id}
+                                    to={item.to as unknown}
+                                    params={{ orgId: orgId! } as unknown}
+                                    className={cn(
+                                      'flex items-center gap-2 rounded-md px-3 py-2 text-[13px] font-medium transition-colors',
+                                      settingsSubTab === item.id
+                                        ? 'bg-accent text-foreground'
+                                        : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+                                    )}
+                                  >
+                                    <Icon className="h-4 w-4 shrink-0" />
+                                    {item.label}
+                                  </Link>
+                                )
+                              })
+                            })()}
+                          </nav>
+                        </>
+                      )
+                    })()}
+                    <div className="min-w-0 flex-1">
+                      {settingsSubTab === 'billing' ? (
+                        <BillingTab />
+                      ) : settingsSubTab === 'compliance' ? (
+                        <ComplianceTab />
+                      ) : settingsSubTab === 'oauth-apps' ? (
+                        <ComingSoonView title="OAuth apps" comingSoon />
+                      ) : settingsSubTab === 'api-keys' ? (
+                        <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6">
+                          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                            <div className="px-6 py-4">
+                              <h3 className="text-[15px] font-semibold text-foreground">
+                                API key types
+                              </h3>
+                              <p className="mt-1 text-[13px] text-muted-foreground">
+                                Keys apply at different levels. Each key has its
+                                own permissions (scopes) to control access.
+                              </p>
+                            </div>
+                            <div className="border-t border-border" />
+                            <div className="px-6 py-4">
+                              <div className="grid gap-4 sm:grid-cols-3">
+                            {/* Project keys */}
+                            <div className="rounded-xl border border-border bg-card/50 overflow-hidden transition-colors hover:border-border/80">
+                              <div className="px-4 py-3">
+                                <h3 className="text-[13px] font-semibold text-foreground">
+                                  Project keys
+                                </h3>
+                                <p className="mt-1 text-[12px] text-muted-foreground leading-relaxed">
+                                  Databases, storage, users, functions. One
+                                  project per key.
+                                </p>
+                              </div>
+                              <div className="flex min-h-9 w-full items-center border-t border-border px-4 py-3 bg-muted/20">
+                                {activeProjects.length > 0 ? (
+                                  <ProjectSelector
+                                    orgTeamId={orgTeamId}
+                                    getProjectLink={(projectId) => ({
+                                      to: '/projects/$projectId/api-keys',
+                                      params: { projectId },
+                                    })}
+                                    showApiKeysCount
+                                  />
+                                ) : (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-9 w-full justify-between text-[13px] font-normal"
+                                    asChild
+                                  >
+                                    <Link
+                                      to="/organizations/$orgId"
+                                      params={{ orgId: orgId ?? '' }}
+                                      className="inline-flex items-center gap-1.5"
+                                    >
+                                      Create a project first
+                                      <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+                                    </Link>
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                            {/* Account scope */}
+                            <div className="rounded-xl border border-border bg-card/50 overflow-hidden transition-colors hover:border-border/80">
+                              <div className="px-4 py-3">
+                                <h3 className="text-[13px] font-semibold text-foreground">
+                                  Account keys
+                                </h3>
+                                <p className="mt-1 text-[12px] text-muted-foreground leading-relaxed">
+                                  Account-level ops, CLI auth, sessions. Per-user
+                                  credentials.
+                                </p>
+                              </div>
+                              <div className="flex min-h-9 w-full items-center border-t border-border px-4 py-3 bg-muted/20">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-9 w-full justify-between text-[13px] font-normal"
+                                  asChild
+                                >
+                                  <Link
+                                    to="/account"
+                                    className="inline-flex items-center gap-1.5"
+                                  >
+                                    Account settings
+                                    <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+                                  </Link>
+                                </Button>
+                              </div>
+                            </div>
+                            {/* Organization scope */}
+                            <div className="rounded-xl border border-border bg-card/50 overflow-hidden transition-colors hover:border-border/80">
+                              <div className="px-4 py-3">
+                                <h3 className="text-[13px] font-semibold text-foreground">
+                                  Org keys
+                                </h3>
+                                <p className="mt-1 text-[12px] text-muted-foreground leading-relaxed">
+                                  Billing, team, cross-project. One key for the
+                                  whole org.
+                                </p>
+                              </div>
+                              <div className="flex min-h-9 w-full items-center border-t border-border px-4 py-3 bg-muted/20">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-9 w-full justify-between text-[13px] font-normal"
+                                  asChild
+                                >
+                                  <a
+                                    href="https://appwrite.io/docs/advanced/platform/api-keys"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1.5"
+                                  >
+                                    Docs
+                                    <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                                  </a>
+                                </Button>
+                              </div>
+                            </div>
+                              </div>
+                              <div className="mt-4 rounded-lg border border-border bg-muted/20 px-4 py-3">
+                                <p className="text-[12px] text-muted-foreground">
+                                  <Info className="mb-0.5 mr-2 inline-block h-4 w-4 align-middle" />
+                                  Organization-level keys will be manageable here
+                                  once available. Meanwhile, use project keys for
+                                  server-side access.
+                                </p>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        <h3 className="text-[15px] font-medium text-foreground">
-                          Failed to load members
-                        </h3>
-                        <p className="mt-1 text-[13px] text-muted-foreground">
-                          {membershipsError instanceof Error
-                            ? membershipsError.message
-                            : 'An error occurred'}
-                        </p>
+                      ) : settingsSubTab === 'members' ? (
+                        <>
+                          {/* Error State */}
+                          {membershipsError && (
+                            <div className="flex flex-col items-center justify-center py-16 text-center">
+                              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+                                <Users className="h-6 w-6 text-muted-foreground" />
+                              </div>
+                              <h3 className="text-[15px] font-medium text-foreground">
+                                Failed to load members
+                              </h3>
+                              <p className="mt-1 text-[13px] text-muted-foreground">
+                                {membershipsError instanceof Error
+                                  ? membershipsError.message
+                                  : 'An error occurred'}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Members Content */}
+                          {!membershipsError && (
+                            <>
+                              {/* Toolbar: Search + Invite */}
+                              <div className="mb-4 flex items-center gap-3">
+                                <div className="relative w-64">
+                                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                  <Input
+                                    placeholder="Search members..."
+                                    value={membershipsSearchQuery}
+                                    onChange={(e) =>
+                                      setMembershipsSearchQuery(e.target.value)
+                                    }
+                                    className="h-9 border-border bg-accent/50 pl-10 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                                  />
+                                </div>
+
+                                {supportsAdditionalMembers ? (
+                                  <Button
+                                    className="ml-auto h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90"
+                                    style={{ backgroundColor: '#f02e65' }}
+                                    onClick={() => setInviteDialogOpen(true)}
+                                  >
+                                    <Plus className="h-4 w-4" />
+                                    Invite
+                                  </Button>
+                                ) : (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span>
+                                        <Button
+                                          className="ml-auto h-9 gap-2 text-[13px] font-medium text-white cursor-not-allowed opacity-50"
+                                          style={{ backgroundColor: '#f02e65' }}
+                                          disabled
+                                        >
+                                          <UserPlus className="h-4 w-4" />
+                                          Invite member
+                                        </Button>
+                                      </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p className="text-xs">
+                                        Upgrade your plan to invite team
+                                        members.
+                                      </p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                )}
+                              </div>
+
+                              {/* Members List or Empty State */}
+                              {membershipsLoading ? (
+                                <div className="flex flex-col items-center justify-center py-16 text-center">
+                                  <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+                                    <Users className="h-6 w-6 text-muted-foreground" />
+                                  </div>
+                                  <p className="text-[13px] text-muted-foreground">
+                                    Loading members...
+                                  </p>
+                                </div>
+                              ) : memberships.length > 0 ? (
+                                <>
+                                  <div className="rounded-lg border border-border bg-card overflow-hidden">
+                                    <Table>
+                                      <TableHeader>
+                                        <TableRow className="hover:bg-transparent border-b border-border">
+                                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                                            Member
+                                          </TableHead>
+                                          {features.orgRoles && (
+                                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
+                                            Role
+                                          </TableHead>
+                                          )}
+                                          {features.accountMfa && (
+                                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center hidden sm:table-cell">
+                                            MFA
+                                          </TableHead>
+                                          )}
+                                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right hidden sm:table-cell">
+                                            Joined
+                                          </TableHead>
+                                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[40px]"></TableHead>
+                                        </TableRow>
+                                      </TableHeader>
+                                      <TableBody>
+                                        {memberships.map((member: TeamMember) => (
+                                          <TableRow
+                                            key={member.$id}
+                                            className="border-b border-border/50 hover:bg-muted/30 transition-colors"
+                                          >
+                                            <TableCell className="px-4 py-3">
+                                              <div className="flex items-center gap-3 min-w-0">
+                                                <InitialsAvatar
+                                                  name={
+                                                    member.userName ||
+                                                    member.userEmail
+                                                  }
+                                                  size="sm"
+                                                  className="shrink-0"
+                                                />
+                                                <div className="flex-1 min-w-0">
+                                                  <div className="flex items-center gap-2 flex-wrap">
+                                                    <p className="truncate text-[13px] font-medium text-foreground">
+                                                      {member.userName ||
+                                                        member.userEmail}
+                                                    </p>
+                                                    {member.status ===
+                                                      'pending' && (
+                                                      <Badge
+                                                        variant="secondary"
+                                                        className="text-[11px] font-medium border px-2 py-0.5 shrink-0"
+                                                      >
+                                                        Pending
+                                                      </Badge>
+                                                    )}
+                                                  </div>
+                                                  <div className="mt-0.5">
+                                                    <p className="truncate text-[12px] text-muted-foreground">
+                                                      {member.userEmail}
+                                                    </p>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </TableCell>
+                                            {features.orgRoles && (
+                                            <TableCell className="px-4 py-3">
+                                              <div className="flex items-center justify-center">
+                                                <Badge
+                                                  variant="secondary"
+                                                  className={cn(
+                                                    'inline-flex items-center gap-1 text-[11px] font-medium border px-2 py-0.5',
+                                                  )}
+                                                >
+                                                  {member.role === 'owner' && (
+                                                    <Shield className="h-3 w-3" />
+                                                  )}
+                                                  {member.role
+                                                    .charAt(0)
+                                                    .toUpperCase() +
+                                                    member.role.slice(1)}
+                                                </Badge>
+                                              </div>
+                                            </TableCell>
+                                            )}
+                                            {features.accountMfa && (
+                                            <TableCell className="px-4 py-3 hidden sm:table-cell">
+                                              <div className="flex items-center justify-center">
+                                                {member.status ===
+                                                'pending' ? (
+                                                  <span className="text-muted-foreground/50 text-[12px]">
+                                                    —
+                                                  </span>
+                                                ) : member.mfaEnabled ? (
+                                                  <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                      <div className="flex items-center justify-center">
+                                                        <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                                      </div>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                      <p className="text-xs">
+                                                        Multi-factor
+                                                        authentication enabled
+                                                      </p>
+                                                    </TooltipContent>
+                                                  </Tooltip>
+                                                ) : (
+                                                  <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                      <div className="flex items-center justify-center">
+                                                        <XCircle className="h-4 w-4 text-muted-foreground/40" />
+                                                      </div>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                      <p className="text-xs">
+                                                        Multi-factor
+                                                        authentication not
+                                                        enabled
+                                                      </p>
+                                                    </TooltipContent>
+                                                  </Tooltip>
+                                                )}
+                                              </div>
+                                            </TableCell>
+                                            )}
+                                            <TableCell className="px-4 py-3 hidden sm:table-cell">
+                                              <div className="text-right">
+                                                {member.status ===
+                                                'pending' ? (
+                                                  <span className="text-[12px] text-muted-foreground/70 italic">
+                                                    Invited
+                                                  </span>
+                                                ) : (
+                                                  <DateTooltip
+                                                    date={new Date(
+                                                      member.joinedAt,
+                                                    )}
+                                                    className="text-[12px] text-muted-foreground font-mono"
+                                                  />
+                                                )}
+                                              </div>
+                                            </TableCell>
+                                            <TableCell className="px-4 py-3">
+                                              <div className="flex items-center justify-end">
+                                                {member.status ===
+                                                'pending' ? (
+                                                  <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                      <button className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                      </button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent
+                                                      align="end"
+                                                      className="w-48"
+                                                    >
+                                                      <DropdownMenuItem
+                                                        onClick={async () => {
+                                                          try {
+                                                            const roles =
+                                                              member.roles &&
+                                                              member.roles
+                                                                .length > 0
+                                                                ? member.roles
+                                                                : [member.role]
+                                                            await resendInviteMutation.mutateAsync(
+                                                              {
+                                                                membershipId:
+                                                                  member.membershipId ||
+                                                                  member.$id,
+                                                                email:
+                                                                  member.userEmail,
+                                                                roles,
+                                                              },
+                                                            )
+                                                            toast.success(
+                                                              'Invitation resent successfully',
+                                                            )
+                                                          } catch (
+                                                            error: unknown
+                                                          ) {
+                                                            toast.error(
+                                                              error?.message ||
+                                                                'Failed to resend invitation',
+                                                            )
+                                                          }
+                                                        }}
+                                                        disabled={
+                                                          resendInviteMutation.isPending
+                                                        }
+                                                      >
+                                                        <Mail className="mr-2 h-4 w-4" />
+                                                        {resendInviteMutation.isPending
+                                                          ? 'Resending...'
+                                                          : 'Resend invitation'}
+                                                      </DropdownMenuItem>
+                                                      <DropdownMenuSeparator />
+                                                      <DropdownMenuItem
+                                                        onClick={() => {
+                                                          setSelectedMember(
+                                                            member,
+                                                          )
+                                                          setRemoveMemberDialogOpen(
+                                                            true,
+                                                          )
+                                                        }}
+                                                        className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
+                                                      >
+                                                        <Trash2 className="mr-2 h-4 w-4" />
+                                                        Remove from team
+                                                      </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                  </DropdownMenu>
+                                                ) : (
+                                                  <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                      <button className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                      </button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent
+                                                      align="end"
+                                                      className="w-48"
+                                                    >
+                                                      {features.orgRoles && (
+                                                        <>
+                                                          <DropdownMenuItem
+                                                            onClick={() => {
+                                                              setSelectedMember(
+                                                                member,
+                                                              )
+                                                              const role =
+                                                                member.role as
+                                                                  | 'owner'
+                                                                  | 'developer'
+                                                                  | 'editor'
+                                                                  | 'analyst'
+                                                                  | 'billing'
+                                                              setSelectedRole(role)
+                                                              setUpdateRoleDialogOpen(
+                                                                true,
+                                                              )
+                                                            }}
+                                                          >
+                                                            <UserCog className="mr-2 h-4 w-4" />
+                                                            Update role
+                                                          </DropdownMenuItem>
+                                                          <DropdownMenuSeparator />
+                                                        </>
+                                                      )}
+                                                      <DropdownMenuItem
+                                                        onClick={() => {
+                                                          setSelectedMember(
+                                                            member,
+                                                          )
+                                                          setRemoveMemberDialogOpen(
+                                                            true,
+                                                          )
+                                                        }}
+                                                        className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
+                                                      >
+                                                        <Trash2 className="mr-2 h-4 w-4" />
+                                                        Remove from team
+                                                      </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                  </DropdownMenu>
+                                                )}
+                                              </div>
+                                            </TableCell>
+                                          </TableRow>
+                                        ))}
+                                      </TableBody>
+                                    </Table>
+                                  </div>
+
+                                  {membershipsTotal > MEMBERSHIPS_PER_PAGE && (
+                                    <Pagination
+                                      currentPage={
+                                        activeMembershipsPage + 1
+                                      }
+                                      totalItems={membershipsTotal}
+                                      pageSize={MEMBERSHIPS_PER_PAGE}
+                                      onPageChange={(page: number) =>
+                                        setActiveMembershipsPage(page - 1)
+                                      }
+                                      onPageSizeChange={() => {}}
+                                      itemLabel="members"
+                                    />
+                                  )}
+                                </>
+                              ) : (
+                                <EmptyState
+                                  icon={Users}
+                                  title="No members found"
+                                  description={
+                                    membershipsSearchQuery
+                                      ? undefined
+                                      : 'Invite organization members to collaborate on your projects'
+                                  }
+                                  isEmpty={!membershipsSearchQuery}
+                                  hasFilters={!!membershipsSearchQuery}
+                                  variant="centered"
+                                  iconSize="md"
+                                />
+                              )}
+                            </>
+                          )}
+                        </>
+                      ) : (
+                        <div className="space-y-6">
+                    {/* Organization ID */}
+                    {selectedOrg && (
+                      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                        <div className="px-6 py-4">
+                          <h3 className="text-[15px] font-semibold text-foreground">
+                            Organization ID
+                          </h3>
+                        </div>
+                        <div className="border-t border-border" />
+                        <div className="px-6 py-4">
+                          <p className="text-[13px] text-muted-foreground mb-3">
+                            Use this ID when integrating with the Appwrite API,
+                            webhooks, or SDKs. Support may also ask for this ID
+                            when assisting with issues.
+                          </p>
+                          <CopyableId
+                            id={selectedOrg.$id}
+                            size="md"
+                            maxWidth={240}
+                          />
+                        </div>
                       </div>
                     )}
 
-                    {/* Members Content */}
-                    {!membershipsError && (
-                      <>
-                        {/* Toolbar: Search + Invite */}
-                        <div className="mb-4 flex items-center gap-3">
-                          <div className="relative w-64">
-                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                            <Input
-                              placeholder="Search members..."
-                              value={membershipsSearchQuery}
-                              onChange={(e) =>
-                                setMembershipsSearchQuery(e.target.value)
-                              }
-                              className="h-9 border-border bg-accent/50 pl-10 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                            />
-                          </div>
-
-                          {supportsAdditionalMembers ? (
-                            <Button
-                              className="ml-auto h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90"
-                              style={{ backgroundColor: '#f02e65' }}
-                              onClick={() => setInviteDialogOpen(true)}
-                            >
-                              <Plus className="h-4 w-4" />
-                              Invite
-                            </Button>
-                          ) : (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span>
-                                  <Button
-                                    className="ml-auto h-9 gap-2 text-[13px] font-medium text-white cursor-not-allowed opacity-50"
-                                    style={{ backgroundColor: '#f02e65' }}
-                                    disabled
-                                  >
-                                    <UserPlus className="h-4 w-4" />
-                                    Invite member
-                                  </Button>
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p className="text-xs">
-                                  Upgrade your plan to invite team members.
-                                </p>
-                              </TooltipContent>
-                            </Tooltip>
-                          )}
-                        </div>
-
-                        {/* Members List or Empty State */}
-                        {membershipsLoading ? (
-                          <div className="flex flex-col items-center justify-center py-16 text-center">
-                            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-                              <Users className="h-6 w-6 text-muted-foreground" />
-                            </div>
-                            <p className="text-[13px] text-muted-foreground">
-                              Loading members...
-                            </p>
-                          </div>
-                        ) : memberships.length > 0 ? (
-                          <>
-                            <div className="rounded-lg border border-border bg-card overflow-hidden">
-                              <Table>
-                                <TableHeader>
-                                  <TableRow className="hover:bg-transparent border-b border-border">
-                                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                      Member
-                                    </TableHead>
-                                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
-                                      Role
-                                    </TableHead>
-                                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center hidden sm:table-cell">
-                                      MFA
-                                    </TableHead>
-                                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right hidden sm:table-cell">
-                                      Joined
-                                    </TableHead>
-                                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[40px]"></TableHead>
-                                  </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                  {memberships.map((member: TeamMember) => (
-                                    <TableRow
-                                      key={member.$id}
-                                      className="border-b border-border/50 hover:bg-muted/30 transition-colors"
-                                    >
-                                      <TableCell className="px-4 py-3">
-                                        <div className="flex items-center gap-3 min-w-0">
-                                          <InitialsAvatar
-                                            name={
-                                              member.userName ||
-                                              member.userEmail
-                                            }
-                                            size="sm"
-                                            className="shrink-0"
-                                          />
-                                          <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 flex-wrap">
-                                              <p className="truncate text-[13px] font-medium text-foreground">
-                                                {member.userName ||
-                                                  member.userEmail}
-                                              </p>
-                                              {member.status === 'pending' && (
-                                                <Badge
-                                                  variant="secondary"
-                                                  className="text-[11px] font-medium border px-2 py-0.5 shrink-0"
-                                                >
-                                                  Pending
-                                                </Badge>
-                                              )}
-                                            </div>
-                                            <div className="mt-0.5">
-                                              <p className="truncate text-[12px] text-muted-foreground">
-                                                {member.userEmail}
-                                              </p>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </TableCell>
-                                      <TableCell className="px-4 py-3">
-                                        <div className="flex items-center justify-center">
-                                          <Badge
-                                            variant="secondary"
-                                            className={cn(
-                                              'inline-flex items-center gap-1 text-[11px] font-medium border px-2 py-0.5',
-                                            )}
-                                          >
-                                            {member.role === 'owner' && (
-                                              <Shield className="h-3 w-3" />
-                                            )}
-                                            {member.role
-                                              .charAt(0)
-                                              .toUpperCase() +
-                                              member.role.slice(1)}
-                                          </Badge>
-                                        </div>
-                                      </TableCell>
-                                      <TableCell className="px-4 py-3 hidden sm:table-cell">
-                                        <div className="flex items-center justify-center">
-                                          {member.status === 'pending' ? (
-                                            <span className="text-muted-foreground/50 text-[12px]">
-                                              —
-                                            </span>
-                                          ) : member.mfaEnabled ? (
-                                            <Tooltip>
-                                              <TooltipTrigger asChild>
-                                                <div className="flex items-center justify-center">
-                                                  <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
-                                                </div>
-                                              </TooltipTrigger>
-                                              <TooltipContent>
-                                                <p className="text-xs">
-                                                  Multi-factor authentication
-                                                  enabled
-                                                </p>
-                                              </TooltipContent>
-                                            </Tooltip>
-                                          ) : (
-                                            <Tooltip>
-                                              <TooltipTrigger asChild>
-                                                <div className="flex items-center justify-center">
-                                                  <XCircle className="h-4 w-4 text-muted-foreground/40" />
-                                                </div>
-                                              </TooltipTrigger>
-                                              <TooltipContent>
-                                                <p className="text-xs">
-                                                  Multi-factor authentication
-                                                  not enabled
-                                                </p>
-                                              </TooltipContent>
-                                            </Tooltip>
-                                          )}
-                                        </div>
-                                      </TableCell>
-                                      <TableCell className="px-4 py-3 hidden sm:table-cell">
-                                        <div className="text-right">
-                                          {member.status === 'pending' ? (
-                                            <span className="text-[12px] text-muted-foreground/70 italic">
-                                              Invited
-                                            </span>
-                                          ) : (
-                                            <DateTooltip
-                                              date={new Date(member.joinedAt)}
-                                              className="text-[12px] text-muted-foreground font-mono"
-                                            />
-                                          )}
-                                        </div>
-                                      </TableCell>
-                                      <TableCell className="px-4 py-3">
-                                        <div className="flex items-center justify-end">
-                                          {member.status === 'pending' ? (
-                                            <DropdownMenu>
-                                              <DropdownMenuTrigger asChild>
-                                                <button className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
-                                                  <MoreHorizontal className="h-4 w-4" />
-                                                </button>
-                                              </DropdownMenuTrigger>
-                                              <DropdownMenuContent
-                                                align="end"
-                                                className="w-48"
-                                              >
-                                                <DropdownMenuItem
-                                                  onClick={async () => {
-                                                    try {
-                                                      // Use the roles array from the member object, or fallback to single role
-                                                      const roles =
-                                                        member.roles &&
-                                                        member.roles.length > 0
-                                                          ? member.roles
-                                                          : [member.role]
-                                                      await resendInviteMutation.mutateAsync(
-                                                        {
-                                                          membershipId:
-                                                            member.membershipId ||
-                                                            member.$id,
-                                                          email:
-                                                            member.userEmail,
-                                                          roles,
-                                                        },
-                                                      )
-                                                      toast.success(
-                                                        'Invitation resent successfully',
-                                                      )
-                                                    } catch (error: unknown) {
-                                                      toast.error(
-                                                        error?.message ||
-                                                          'Failed to resend invitation',
-                                                      )
-                                                    }
-                                                  }}
-                                                  disabled={
-                                                    resendInviteMutation.isPending
-                                                  }
-                                                >
-                                                  <Mail className="mr-2 h-4 w-4" />
-                                                  {resendInviteMutation.isPending
-                                                    ? 'Resending...'
-                                                    : 'Resend invitation'}
-                                                </DropdownMenuItem>
-                                                <DropdownMenuSeparator />
-                                                <DropdownMenuItem
-                                                  onClick={() => {
-                                                    setSelectedMember(member)
-                                                    setRemoveMemberDialogOpen(
-                                                      true,
-                                                    )
-                                                  }}
-                                                  className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
-                                                >
-                                                  <Trash2 className="mr-2 h-4 w-4" />
-                                                  Remove from team
-                                                </DropdownMenuItem>
-                                              </DropdownMenuContent>
-                                            </DropdownMenu>
-                                          ) : (
-                                            <DropdownMenu>
-                                              <DropdownMenuTrigger asChild>
-                                                <button className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
-                                                  <MoreHorizontal className="h-4 w-4" />
-                                                </button>
-                                              </DropdownMenuTrigger>
-                                              <DropdownMenuContent
-                                                align="end"
-                                                className="w-48"
-                                              >
-                                                <DropdownMenuItem
-                                                  onClick={() => {
-                                                    setSelectedMember(member)
-                                                    const role = member.role as
-                                                      | 'owner'
-                                                      | 'developer'
-                                                      | 'editor'
-                                                      | 'analyst'
-                                                      | 'billing'
-                                                    setSelectedRole(role)
-                                                    setUpdateRoleDialogOpen(
-                                                      true,
-                                                    )
-                                                  }}
-                                                >
-                                                  <UserCog className="mr-2 h-4 w-4" />
-                                                  Update role
-                                                </DropdownMenuItem>
-                                                <DropdownMenuSeparator />
-                                                <DropdownMenuItem
-                                                  onClick={() => {
-                                                    setSelectedMember(member)
-                                                    setRemoveMemberDialogOpen(
-                                                      true,
-                                                    )
-                                                  }}
-                                                  className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
-                                                >
-                                                  <Trash2 className="mr-2 h-4 w-4" />
-                                                  Remove from team
-                                                </DropdownMenuItem>
-                                              </DropdownMenuContent>
-                                            </DropdownMenu>
-                                          )}
-                                        </div>
-                                      </TableCell>
-                                    </TableRow>
-                                  ))}
-                                </TableBody>
-                              </Table>
-                            </div>
-
-                            {/* Pagination for Memberships */}
-                            {membershipsTotal > MEMBERSHIPS_PER_PAGE && (
-                              <Pagination
-                                currentPage={activeMembershipsPage + 1}
-                                totalItems={membershipsTotal}
-                                pageSize={MEMBERSHIPS_PER_PAGE}
-                                onPageChange={(page: number) =>
-                                  setActiveMembershipsPage(page - 1)
-                                }
-                                onPageSizeChange={() => {}} // Page size is fixed
-                                itemLabel="members"
-                              />
-                            )}
-                          </>
-                        ) : (
-                          <EmptyState
-                            icon={Users}
-                            title="No members found"
-                            description={
-                              membershipsSearchQuery
-                                ? undefined
-                                : 'Invite team members to collaborate on your projects'
-                            }
-                            isEmpty={!membershipsSearchQuery}
-                            hasFilters={!!membershipsSearchQuery}
-                            variant="centered"
-                            iconSize="md"
-                          />
-                        )}
-                      </>
-                    )}
-                  </>
-                )}
-
-                {activeTab === 'settings' && (
-                  <div className="space-y-6">
                     {/* Update Organization Name */}
                     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                       <div className="px-6 py-4">
@@ -1920,7 +2366,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                       <div className="px-6 py-4">
                         <p className="text-[13px] text-muted-foreground">
                           Update your organization's display name. This will be
-                          visible to all team members.
+                          visible to all organization members.
                         </p>
                         <Input
                           value={orgName}
@@ -1957,150 +2403,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                       </div>
                     </div>
 
-                    {/* DPA - Data Processing Agreement */}
-                    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                      <div className="px-6 py-4">
-                        <h3 className="text-[15px] font-semibold text-foreground">
-                          Data Processing Agreement (DPA)
-                        </h3>
-                      </div>
-                      <div className="border-t border-border" />
-                      <div className="px-6 py-4">
-                        <p className="text-[13px] text-muted-foreground">
-                          A DPA is a legally binding document that outlines how
-                          {COMPANY_NAME} processes personal data on your behalf.
-                          It's required for GDPR compliance when handling EU
-                          residents' data.
-                        </p>
-                        <div className="flex items-start gap-3 mt-3">
-                          <FileText className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                          <p className="text-[13px] text-muted-foreground">
-                            Download the DPA, review it with your legal team,
-                            sign it, and send a copy to{' '}
-                            <span className="font-medium text-foreground">
-                              {LEGAL_EMAIL}
-                            </span>
-                            . We'll countersign and return a fully executed copy
-                            within 5 business days.
-                          </p>
-                        </div>
-                      </div>
-                      <div className="px-6 py-4 border-t border-border bg-muted/30">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-9 text-[13px]"
-                          onClick={() => {
-                            window.open(
-                              '/legal/dpa.pdf',
-                              '_blank',
-                              'noopener,noreferrer',
-                            )
-                          }}
-                        >
-                          Download DPA
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* BAA - Business Associate Agreement */}
-                    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                      <div className="px-6 py-4">
-                        <h3 className="text-[15px] font-semibold text-foreground">
-                          Business Associate Agreement (BAA)
-                        </h3>
-                      </div>
-                      <div className="border-t border-border" />
-                      <div className="px-6 py-4">
-                        <p className="text-[13px] text-muted-foreground">
-                          A BAA is required under HIPAA when a service provider
-                          handles Protected Health Information (PHI) on behalf
-                          of a covered entity. If your application processes,
-                          stores, or transmits health-related data of US
-                          patients, you'll need a BAA in place.
-                        </p>
-                        <div className="flex items-start gap-3 mt-3">
-                          <ShieldCheck className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                          <p className="text-[13px] text-muted-foreground">
-                            <span className="font-medium text-foreground">
-                              Who needs this:
-                            </span>{' '}
-                            Healthcare providers, health plans, healthcare
-                            clearinghouses, and their business associates
-                            building HIPAA-compliant applications.
-                          </p>
-                        </div>
-                      </div>
-                      <div className="px-6 py-4 border-t border-border bg-muted/30">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-9 text-[13px]"
-                          onClick={() => {
-                            window.open(
-                              CONTACT_SALES_URL,
-                              '_blank',
-                              'noopener,noreferrer',
-                            )
-                          }}
-                        >
-                          Contact Sales
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* SOC-2 Compliance */}
-                    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                      <div className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-[15px] font-semibold text-foreground">
-                            SOC 2 Type II Report
-                          </h3>
-                          <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                            Enterprise
-                          </span>
-                        </div>
-                      </div>
-                      <div className="border-t border-border" />
-                      <div className="px-6 py-4">
-                        <p className="text-[13px] text-muted-foreground">
-                          SOC 2 Type II is an auditing standard that verifies a
-                          service provider's security controls over an extended
-                          period. It demonstrates that {COMPANY_NAME} maintains
-                          rigorous security practices for data protection,
-                          availability, and confidentiality.
-                        </p>
-                        <div className="flex items-start gap-3 mt-3">
-                          <Shield className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                          <p className="text-[13px] text-muted-foreground">
-                            <span className="font-medium text-foreground">
-                              Why it matters:
-                            </span>{' '}
-                            Many enterprise customers and regulated industries
-                            require SOC 2 compliance from their vendors. Access
-                            to our SOC 2 report is available on Enterprise
-                            plans.
-                          </p>
-                        </div>
-                      </div>
-                      <div className="px-6 py-4 border-t border-border bg-muted/30">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-9 text-[13px]"
-                          onClick={() => {
-                            window.open(
-                              CONTACT_SALES_URL,
-                              '_blank',
-                              'noopener,noreferrer',
-                            )
-                          }}
-                        >
-                          Contact Sales
-                        </Button>
-                      </div>
-                    </div>
-
                     {/* Delete Organization */}
                     <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
                       <div className="px-6 py-4">
@@ -2118,7 +2420,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                         {/* Organization Info Summary */}
                         {selectedOrg && (
                           <div className="flex items-center gap-3 mt-4">
-                            <InitialsAvatar name={selectedOrg.name} size="md" />
+                            <InitialsAvatar
+                              name={selectedOrg.name}
+                              size="md"
+                            />
                             <div className="flex-1 min-w-0">
                               <p className="text-[14px] font-medium text-foreground truncate">
                                 {selectedOrg.name}
@@ -2131,33 +2436,30 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               </p>
                             </div>
 
-                            {/* Member Avatars */}
                             {memberships.length > 0 && (
                               <div className="flex items-center gap-2">
                                 <Link
-                                  to="/organizations/$orgId/members"
+                                  to="/organizations/$orgId/settings/members"
                                   params={{ orgId: orgId! }}
                                   className="flex -space-x-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer hover:opacity-90 transition-opacity"
                                   title="View members"
-                                  onClick={() => setDeleteDialogOpen(false)}
+                                  onClick={() => setDeleteOrgDialogOpen(false)}
                                 >
                                   {memberships
                                     .slice(0, 4)
-                                    .map(
-                                      (member: TeamMember, index: number) => (
-                                        <div
-                                          key={member.$id}
-                                          className="relative rounded-full border-2 border-background"
-                                          style={{ zIndex: 4 - index }}
-                                          title={member.userName}
-                                        >
-                                          <InitialsAvatar
-                                            name={member.userName}
-                                            size="sm"
-                                          />
-                                        </div>
-                                      ),
-                                    )}
+                                    .map((member: TeamMember, index: number) => (
+                                      <div
+                                        key={member.$id}
+                                        className="relative rounded-full border-2 border-background"
+                                        style={{ zIndex: 4 - index }}
+                                        title={member.userName}
+                                      >
+                                        <InitialsAvatar
+                                          name={member.userName}
+                                          size="sm"
+                                        />
+                                      </div>
+                                    ))}
                                   {membershipsTotal > 4 && (
                                     <div
                                       className="relative flex h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-muted text-[10px] font-medium text-muted-foreground"
@@ -2175,8 +2477,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
                       <div className="px-6 py-4 border-t border-destructive/20 bg-destructive/5">
                         <Dialog
-                          open={deleteDialogOpen}
-                          onOpenChange={setDeleteDialogOpen}
+                          open={deleteOrgDialogOpen}
+                          onOpenChange={setDeleteOrgDialogOpen}
                         >
                           <DialogTrigger asChild>
                             <Button
@@ -2216,12 +2518,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                       </p>
                                       <p className="text-[11px] text-muted-foreground">
                                         {membershipsTotal} member
-                                        {membershipsTotal !== 1 ? 's' : ''} will
-                                        lose access • {activeProjectsTotal}{' '}
+                                        {membershipsTotal !== 1 ? 's' : ''}{' '}
+                                        will lose access • {activeProjectsTotal}{' '}
                                         project
-                                        {activeProjectsTotal !== 1
-                                          ? 's'
-                                          : ''}{' '}
+                                        {activeProjectsTotal !== 1 ? 's' : ''}{' '}
                                         will be deleted
                                       </p>
                                     </div>
@@ -2262,10 +2562,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                 to confirm
                               </label>
                               <Input
-                                value={deleteConfirmation}
+                                value={deleteOrgConfirmation}
                                 onChange={(e) =>
-                                  setDeleteConfirmation(e.target.value)
-                                }
+                                  setDeleteOrgConfirmation(e.target.value)}
                                 placeholder="Enter organization name"
                                 className="mt-2 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-red-500/50 focus:ring-0"
                               />
@@ -2277,8 +2576,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                 size="sm"
                                 className="h-9 text-[13px]"
                                 onClick={() => {
-                                  setDeleteDialogOpen(false)
-                                  setDeleteConfirmation('')
+                                  setDeleteOrgDialogOpen(false)
+                                  setDeleteOrgConfirmation('')
                                 }}
                               >
                                 Cancel
@@ -2289,13 +2588,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                 className="h-9 text-[13px]"
                                 disabled={
                                   !selectedOrg ||
-                                  deleteConfirmation !== selectedOrg.name ||
+                                  deleteOrgConfirmation !== selectedOrg.name ||
                                   deleteOrgMutation.isPending
                                 }
                                 onClick={() => {
                                   if (
                                     selectedOrg &&
-                                    deleteConfirmation === selectedOrg.name
+                                    deleteOrgConfirmation === selectedOrg.name
                                   ) {
                                     deleteOrgMutation.mutate(selectedOrg.$id)
                                   }
@@ -2308,10 +2607,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                         </Dialog>
                       </div>
                     </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
-
-                {activeTab === 'billing' && <BillingTab />}
 
                 {activeTab === 'domains' && <DomainsView />}
               </>
@@ -2326,6 +2626,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         onOpenChange={setCommandCenterOpen}
         context="org"
         onOrgNavigate={handleOrgNavigate}
+        onInviteMember={() => setInviteDialogOpen(true)}
         orgId={orgId}
       />
 
@@ -2337,6 +2638,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           organizationId={orgId}
           currentMemberCount={membershipsTotal}
           memberLimit={memberLimit}
+          onSuccess={() => {
+            if (activeTab !== 'settings' || settingsSubTab !== 'members') {
+              handleOrgNavigate('settings/members')
+            }
+          }}
         />
       )}
 

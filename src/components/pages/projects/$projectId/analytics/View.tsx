@@ -17,6 +17,7 @@ import {
   Smartphone,
   Monitor,
   Tablet,
+  Bot,
 } from 'lucide-react'
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -65,6 +66,7 @@ const trackedWebsites = [
       bounceRate: 42.1,
       bounceRateChange: -5.8,
     },
+    traffic: { human: 82, ai: 18 },
     topPages: ['/pricing', '/features', '/docs'],
     devices: { desktop: 62, mobile: 31, tablet: 7 },
     createdAt: '2024-01-15T10:30:00Z',
@@ -88,6 +90,7 @@ const trackedWebsites = [
       bounceRate: 28.5,
       bounceRateChange: -12.4,
     },
+    traffic: { human: 61, ai: 39 },
     topPages: ['/getting-started', '/api-reference', '/tutorials'],
     devices: { desktop: 78, mobile: 18, tablet: 4 },
     createdAt: '2024-02-20T14:15:00Z',
@@ -111,6 +114,7 @@ const trackedWebsites = [
       bounceRate: 15.2,
       bounceRateChange: -1.5,
     },
+    traffic: { human: 96, ai: 4 },
     topPages: ['/dashboard', '/settings', '/billing'],
     devices: { desktop: 85, mobile: 12, tablet: 3 },
     createdAt: '2024-03-05T09:00:00Z',
@@ -134,6 +138,7 @@ const trackedWebsites = [
       bounceRate: 0,
       bounceRateChange: 0,
     },
+    traffic: { human: 0, ai: 0 },
     topPages: [],
     devices: { desktop: 0, mobile: 0, tablet: 0 },
     createdAt: '2024-03-10T16:30:00Z',
@@ -207,6 +212,41 @@ function AppwriteSitesBadge() {
         </TooltipTrigger>
         <TooltipContent side="top">
           <p>Linked to Appwrite Sites deployment</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  )
+}
+
+function TrafficBreakdown({
+  traffic,
+}: {
+  traffic: { human: number; ai: number }
+}) {
+  const total = traffic.human + traffic.ai
+  if (total === 0) return null
+
+  return (
+    <TooltipProvider delayDuration={0}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 rounded-md bg-muted/50 px-2 py-0.5">
+              <Users className="h-3 w-3 text-muted-foreground" />
+              <span className="text-[10px] font-medium tabular-nums text-muted-foreground">
+                {traffic.human}%
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 rounded-md bg-violet-500/10 px-2 py-0.5">
+              <Bot className="h-3 w-3 text-violet-600 dark:text-violet-400" />
+              <span className="text-[10px] font-medium tabular-nums text-violet-600 dark:text-violet-400">
+                {traffic.ai}%
+              </span>
+            </div>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="top">
+          <p>Human vs AI traffic (last 30 days)</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
@@ -427,7 +467,10 @@ export function View() {
 
                       {/* Footer */}
                       <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
-                        <DeviceBreakdown devices={site.devices} />
+                        <div className="flex items-center gap-3">
+                          <TrafficBreakdown traffic={site.traffic} />
+                          <DeviceBreakdown devices={site.devices} />
+                        </div>
                         {site.lastActivity && (
                           <DateTooltip
                             date={new Date(site.lastActivity)}
@@ -500,6 +543,9 @@ export function View() {
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
                       Bounce Rate
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
+                      Traffic
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[120px]">
                       Last Activity
@@ -603,6 +649,18 @@ export function View() {
                           <span className="text-[13px] text-muted-foreground">
                             {site.stats.bounceRate}%
                           </span>
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        <Link
+                          to="/projects/$projectId/analytics/$websiteId"
+                          params={{
+                            projectId: projectId as string,
+                            websiteId: site.id,
+                          }}
+                          className="block"
+                        >
+                          <TrafficBreakdown traffic={site.traffic} />
                         </Link>
                       </TableCell>
                       <TableCell>

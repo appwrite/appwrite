@@ -8,7 +8,6 @@ import {
 } from '@tanstack/react-router'
 import { useQueryClient, useMutation } from '@tanstack/react-query'
 import {
-  Info,
   MoreHorizontal,
   Clock,
   Trash2,
@@ -46,7 +45,6 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
@@ -90,6 +88,8 @@ import { DeploymentDownloadType } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
+import { useCreateDeployment } from '../shared/CreateDeploymentContext'
+import { CreateDeploymentDropdown } from '../shared/CreateDeploymentDropdown'
 
 const DEPLOYMENTS_PER_PAGE = 25
 const SCREENSHOTS_BUCKET_ID = 'screenshots'
@@ -478,11 +478,11 @@ export function View() {
         deploymentId: activeDeploymentResolved.$id,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
         queryKey: [...Dependencies.DEPLOYMENTS],
       })
-      queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: ['site', 'project', projectId, siteId],
       })
       toast.success('Deployment rebuild started')
@@ -505,11 +505,11 @@ export function View() {
         deploymentId: activeDeploymentResolved.$id,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
         queryKey: [...Dependencies.DEPLOYMENTS],
       })
-      queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: ['site', 'project', projectId, siteId],
       })
       toast.success('Deployment activated successfully')
@@ -567,11 +567,11 @@ export function View() {
         ),
       )
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
         queryKey: Dependencies.DEPLOYMENTS,
       })
-      queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: ['site', 'project', projectId, siteId],
       })
       toast.success(
@@ -647,6 +647,8 @@ export function View() {
     setSelectedDeployments(new Set()) // Clear selection on page size change
   }
 
+  const createDeployment = useCreateDeployment()
+
   // Only show full loading state on initial load when there's no data
   if ((siteLoading || deploymentsLoading) && deployments.length === 0) {
     return (
@@ -660,36 +662,24 @@ export function View() {
 
   return (
     <div ref={scrollContainerRef} className="flex-1">
-      <div className="mx-auto w-full max-w-7xl px-4 pb-4 pt-6 sm:px-6 sm:pb-6">
+      <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6">
         <div className="space-y-6">
-          {isBuilding && (
-            <div className="border-b border-border bg-blue-500/5">
-              <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
-                <Alert
-                  variant="default"
-                  className="border-blue-500/30 bg-transparent"
-                >
-                  <Info className="h-4 w-4 text-blue-500" />
-                  <AlertDescription className="text-[12px] text-blue-600/80 dark:text-blue-400/80">
-                    Your site is currently being deployed.
-                  </AlertDescription>
-                </Alert>
-              </div>
-            </div>
-          )}
-
-          {/* Active Deployment Card */}
+          {/* Active Deployment Card - show for both ready and building so it stays the same; realtime updates when status becomes ready */}
           {activeDeploymentResolved &&
-            activeDeploymentResolved.status === 'ready' &&
             (() => {
               const cardDeployment =
                 activeDeploymentForCard ?? activeDeploymentResolved
               return (
                 <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                  <div className="px-6 py-4">
+                  <div className="px-6 py-4 flex items-center gap-2">
                     <h3 className="text-[15px] font-semibold text-foreground">
                       Active deployment
                     </h3>
+                    {isBuilding && (
+                      <Badge variant="warning" className="text-[10px] shrink-0">
+                        Building
+                      </Badge>
+                    )}
                   </div>
                   <div className="border-t border-border" />
                   <div className="px-6 py-4">
@@ -1000,9 +990,10 @@ export function View() {
                                     href={`https://${rule.domain}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="block text-[13px] font-mono text-foreground hover:underline"
+                                    className="inline-flex items-center gap-1.5 text-[13px] font-mono text-foreground hover:underline"
                                   >
                                     {rule.domain}
+                                    <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
                                   </a>
                                 ))}
                               </div>
@@ -1215,41 +1206,6 @@ export function View() {
               )
             })()}
 
-          {/* Building State */}
-          {isBuilding && (
-            <div className="flex h-full items-center justify-center py-16">
-              <div className="text-center">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-                  <Clock className="h-5 w-5 text-muted-foreground animate-spin" />
-                </div>
-                <p className="mb-1 text-[14px] font-medium text-foreground">
-                  Deployment is still building
-                </p>
-                <p className="mb-4 text-[13px] text-muted-foreground">
-                  This may take a few minutes. We'll update automatically when
-                  it's ready.
-                </p>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    if (activeDeploymentResolved) {
-                      navigate({
-                        to: '/projects/$projectId/sites/$siteId/deployments/$deploymentId',
-                        params: {
-                          projectId: projectId!,
-                          siteId: siteId!,
-                          deploymentId: activeDeploymentResolved.$id,
-                        },
-                      })
-                    }
-                  }}
-                >
-                  View logs
-                </Button>
-              </div>
-            </div>
-          )}
-
           {/* No Active Deployment */}
           {!activeDeploymentResolved && !isBuilding && (
             <div className="flex h-full items-center justify-center py-16">
@@ -1260,9 +1216,16 @@ export function View() {
                 <p className="mb-1 text-[14px] font-medium text-foreground">
                   There is no active deployment
                 </p>
-                <p className="text-[13px] text-muted-foreground">
+                <p className="mb-4 text-[13px] text-muted-foreground">
                   Create your first deployment to activate this site.
                 </p>
+                {createDeployment && (
+                  <CreateDeploymentDropdown
+                    onSelectGit={createDeployment.openGitModal}
+                    onSelectCli={createDeployment.openCliModal}
+                    onSelectManual={createDeployment.openManualModal}
+                  />
+                )}
               </div>
             </div>
           )}
@@ -1331,7 +1294,7 @@ export function View() {
                           key={deploymentData.$id}
                           className={cn(
                             selectedDeployments.has(deploymentData.$id)
-                              ? 'bg-sky-100 dark:bg-sky-950'
+                              ? 'bg-muted'
                               : 'hover:bg-muted/50',
                             'cursor-pointer',
                           )}
@@ -1731,6 +1694,26 @@ export function View() {
               isEmpty={true}
               variant="card"
               iconSize="md"
+              children={
+                createDeployment ? (
+                  <div className="flex flex-col items-center text-center mt-4">
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                      <Clock className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                    <p className="mb-1 text-[14px] font-medium text-foreground">
+                      No deployments yet
+                    </p>
+                    <p className="mb-4 text-[13px] text-muted-foreground">
+                      Create your first deployment to get started
+                    </p>
+                    <CreateDeploymentDropdown
+                      onSelectGit={createDeployment.openGitModal}
+                      onSelectCli={createDeployment.openCliModal}
+                      onSelectManual={createDeployment.openManualModal}
+                    />
+                  </div>
+                ) : undefined
+              }
             />
           )}
         </div>

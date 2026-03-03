@@ -62,7 +62,8 @@ export function TeamMembers({
   const [selectedMemberships, setSelectedMemberships] = useState<Set<string>>(
     new Set(),
   )
-  const [internalCreateDialogOpen, setInternalCreateDialogOpen] = useState(false)
+  const [internalCreateDialogOpen, setInternalCreateDialogOpen] =
+    useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [selectedMembership, setSelectedMembership] =
     useState<Models.Membership | null>(null)
@@ -267,7 +268,7 @@ export function TeamMembers({
                       className={cn(
                         'cursor-pointer transition-colors border-b border-border/50',
                         selectedMemberships.has(membership.$id)
-                          ? 'bg-sky-100 dark:bg-sky-950'
+                          ? 'bg-muted'
                           : 'hover:bg-muted/30',
                       )}
                       onClick={() => openDrawer(membership)}
@@ -471,7 +472,7 @@ function CreateMembershipDialog({
   }
 
   const handleSubmit = () => {
-    if (!email.trim() || roles.length === 0) {
+    if (!email.trim()) {
       return
     }
     onSubmit({ email: email.trim(), name: name.trim() || undefined, roles })
@@ -514,9 +515,7 @@ function CreateMembershipDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="roles">
-                Roles <span className="text-destructive">*</span>
-              </Label>
+              <Label htmlFor="roles">Roles</Label>
               <div className="space-y-2">
                 <div className="flex gap-2">
                   <Input
@@ -591,7 +590,7 @@ function CreateMembershipDialog({
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={!email.trim() || roles.length === 0 || isLoading}
+            disabled={!email.trim() || isLoading}
           >
             Create
           </Button>
@@ -600,4 +599,3 @@ function CreateMembershipDialog({
     </Dialog>
   )
 }
-

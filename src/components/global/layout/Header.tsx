@@ -50,6 +50,7 @@ import { FeedbackPopover } from '@/components/global/shared/FeedbackPopover'
 import { useAIChat } from '@/components/global/providers/AIChat'
 import { Button } from '@/components/ui/button'
 import { useOrganizationPlan } from '@/lib/react-query/hooks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 interface ConsoleHeaderProps {
   onMenuClick?: () => void
@@ -92,6 +93,7 @@ export function ConsoleHeader({
 
   // Fetch organization plan to check if upgrade button should be shown
   const { plan: organizationPlan } = useOrganizationPlan(orgId)
+  const { features } = useConsoleProfile()
 
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text)
@@ -118,16 +120,20 @@ export function ConsoleHeader({
   const is2FAEnabled =
     account?.mfa === true || account?.twoFactorAuthenticatorEnabled === true
 
+  const hasSidebar = !isOrgOverview
+  const logoColumnWidth = 60
+
   return (
     <div className="@container w-full">
       <header
         className={cn(
-          'flex h-14 min-h-14 flex-wrap items-center justify-between gap-1 sm:gap-2 border-b border-border bg-background px-3 sm:px-4 @[1000px]:px-6',
+          'flex h-14 min-h-14 flex-wrap items-center justify-between gap-1 sm:gap-2 border-b border-border bg-background',
+          'pl-3 pr-3 sm:pl-4 sm:pr-4 @[1000px]:pr-6 lg:pl-0',
           className,
         )}
       >
-        {/* Left: Menu + Logo + Project Selector */}
-        <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+        {/* Left: Menu + Logo (+ nav border when project) + Project Selector */}
+        <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-2">
           {/* Mobile menu button - only show when in project context and sidebar is hidden */}
           {!isOrgOverview && (
             <button
@@ -138,39 +144,62 @@ export function ConsoleHeader({
             </button>
           )}
 
-          {/* Logo - links back to org overview */}
+          {/* Logo - 60px column matches collapsed nav; never shifts; optional spacer + border continues from nav */}
           {(() => {
-            // Use project's teamId when in project context, otherwise fall back to account prefs
-            const orgId =
+            const linkOrgId =
               project?.teamId ||
               (account?.prefs?.organization as string | undefined)
-            if (orgId) {
+            const logoLink = (childClassName?: string) => (
+              <Link
+                to={linkOrgId ? '/organizations/$orgId' : '/'}
+                params={linkOrgId ? { orgId: linkOrgId } : undefined}
+                className={cn(
+                  'group inline-flex size-10 shrink-0 items-center justify-center rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
+                  childClassName,
+                )}
+              >
+                <img
+                  src="/logo.svg"
+                  alt="Appwrite"
+                  className="h-6 w-6 transition-transform duration-150 ease-out group-hover:scale-[1.04]"
+                />
+              </Link>
+            )
+
+            if (hasSidebar) {
               return (
-                <Link
-                  to="/organizations/$orgId"
-                  params={{ orgId }}
-                  className="-ml-[1px] -mr-[1px] flex shrink-0 items-center"
-                >
-                  <img src="/logo.svg" alt="Appwrite" className="h-5 w-5" />
-                </Link>
+                <>
+                  {/* Desktop: 60px logo column, border continues from nav */}
+                  <div
+                    className="hidden h-14 shrink-0 items-center justify-center border-r border-border lg:flex"
+                    style={{ width: logoColumnWidth }}
+                  >
+                    {logoLink()}
+                  </div>
+                  {/* Mobile */}
+                  {logoLink('lg:hidden')}
+                </>
               )
             }
+
+            /* Org: same 60px column */
             return (
-              <Link
-                to="/"
-                className="-ml-[1px] -mr-[1px] flex shrink-0 items-center"
-              >
-                <img src="/logo.svg" alt="Appwrite" className="h-5 w-5" />
-              </Link>
+              <>
+                <div
+                  className="hidden h-14 shrink-0 items-center justify-center lg:flex"
+                  style={{ width: logoColumnWidth }}
+                >
+                  {logoLink()}
+                </div>
+                {logoLink('lg:hidden')}
+              </>
             )
           })()}
 
-          {/* Divider and Project Selector - only show when in project context */}
+          {/* Project Selector - only show when in project context */}
           {!isOrgOverview && (
             <>
-              {/* Divider */}
-              <div className="mx-1 hidden h-5 w-px shrink-0 bg-border @[700px]:block" />
-
+              <div className="hidden w-2 shrink-0 lg:block" />
               {/* Project Selector */}
               <div className="hidden min-w-0 @[700px]:block">
                 <ProjectSelector projectId={projectId} />
@@ -186,7 +215,7 @@ export function ConsoleHeader({
                         <TooltipTrigger asChild>
                           <button
                             type="button"
-                            className="flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer hidden @[700px]:flex text-[13px]"
+                            className="flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer hidden @[700px]:flex text-[13px]"
                             onClick={() => setConnectDialogOpen(true)}
                           >
                             <Plug2 className="h-4 w-4" />
@@ -209,11 +238,18 @@ export function ConsoleHeader({
               {/* Create Button */}
               <div className="hidden @[700px]:block shrink-0">
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer">
-                      <Plus className="h-4 w-4" />
-                    </button>
-                  </DropdownMenuTrigger>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <DropdownMenuTrigger asChild>
+                        <button className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer">
+                          <Plus className="h-4 w-4" />
+                        </button>
+                      </DropdownMenuTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Create</p>
+                    </TooltipContent>
+                  </Tooltip>
                   <DropdownMenuContent align="start" className="w-56">
                     <DropdownMenuItem
                       onClick={() => {
@@ -272,7 +308,7 @@ export function ConsoleHeader({
                         <DropdownMenuSeparator />
                         {/* Resources Category */}
                         <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                          Resources
+                          Build
                         </DropdownMenuLabel>
                         <DropdownMenuItem
                           onClick={() => {
@@ -384,7 +420,7 @@ export function ConsoleHeader({
             <>
               <button
                 onClick={openCommandCenter}
-                className="hidden h-8 cursor-pointer items-center gap-2 rounded-md border border-border bg-accent/50 px-3 text-[13px] text-muted-foreground transition-colors hover:border-border hover:bg-accent @[700px]:flex shrink-0"
+                className="hidden h-9 cursor-pointer items-center gap-2 rounded-md border border-border bg-accent/50 px-3 text-[13px] text-muted-foreground transition-colors hover:border-border hover:bg-accent @[700px]:flex shrink-0"
               >
                 <Search className="h-3.5 w-3.5 shrink-0" />
                 <span className="hidden @[850px]:inline">Search...</span>
@@ -396,7 +432,7 @@ export function ConsoleHeader({
               {/* Mobile search icon */}
               <button
                 onClick={openCommandCenter}
-                className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[700px]:hidden"
+                className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[700px]:hidden"
               >
                 <Search className="h-4 w-4" />
               </button>
@@ -423,34 +459,37 @@ export function ConsoleHeader({
             />
           </div>
 
-          {/* Help/Assistant - hidden on small containers */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={toggleChat}
-                className="hidden h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[1000px]:flex"
-              >
-                <MessageSquare className="h-4 w-4" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Assistant</p>
-            </TooltipContent>
-          </Tooltip>
+          {/* Help/Assistant - hidden on small containers, cloud only */}
+          {features.aiAssistant && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={toggleChat}
+                  className="hidden h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[1000px]:flex"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Assistant</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
 
           {/* Divider before Upgrade Button - hidden on small containers */}
-          {orgId && (
+          {features.billing && orgId && (
             <div className="mx-1 sm:mx-2 hidden h-5 w-px shrink-0 bg-border @[850px]:block" />
           )}
 
           {/* Upgrade Button - hidden on small containers */}
-          {orgId && (
-            <div className="hidden @[850px]:flex shrink-0">
+          {features.billing && orgId && (
+            <div className="hidden @[850px]:flex shrink-0 rounded-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1 focus-within:ring-offset-background">
               <div className="upgrade-button-wrapper">
                 <Button
                   asChild
                   size="sm"
-                  className="h-8 shrink-0 cursor-pointer bg-blue-600 px-3 text-[12px] font-semibold text-white hover:bg-blue-700 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-700 relative z-10 rounded-[calc(0.375rem-1px)]"
+                  variant="default"
+                  className="h-9 shrink-0 cursor-pointer px-3 text-[12px] font-semibold relative z-10 rounded-[calc(0.375rem-1px)]"
                 >
                   <Link
                     to="/organizations/$orgId/change-plan"
@@ -526,27 +565,28 @@ export function ConsoleHeader({
                   </div>
                 </div>
 
-                {/* 2FA Status */}
-                <div>
-                  <p className="text-[11px] text-muted-foreground mb-1.5">
-                    2FA
-                  </p>
-                  <div className="flex items-center gap-2">
-                    {is2FAEnabled ? (
-                      <>
-                        <Shield className="h-3.5 w-3.5 text-emerald-500" />
-                        <p className="text-[14px] text-foreground">Enabled</p>
-                      </>
-                    ) : (
-                      <>
-                        <Shield className="h-3.5 w-3.5 text-muted-foreground" />
-                        <p className="text-[14px] text-muted-foreground">
-                          Disabled
-                        </p>
-                      </>
-                    )}
+                {features.accountMfa && (
+                  <div>
+                    <p className="text-[11px] text-muted-foreground mb-1.5">
+                      2FA
+                    </p>
+                    <div className="flex items-center gap-2">
+                        {is2FAEnabled ? (
+                          <>
+                            <Shield className="h-3.5 w-3.5 text-emerald-500" />
+                            <p className="text-[14px] text-foreground">Enabled</p>
+                          </>
+                        ) : (
+                          <>
+                            <Shield className="h-3.5 w-3.5 text-muted-foreground" />
+                            <p className="text-[14px] text-muted-foreground">
+                              Disabled
+                            </p>
+                          </>
+                        )}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Account ID */}
                 {accountId && (
@@ -598,15 +638,17 @@ export function ConsoleHeader({
                 </Link>
               </DropdownMenuItem>
 
-              <DropdownMenuItem asChild>
-                <Link
-                  to="/account/payments"
-                  className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
-                >
-                  <CreditCard className="h-4 w-4" />
-                  <span>Payments</span>
-                </Link>
-              </DropdownMenuItem>
+              {features.billing && (
+                <DropdownMenuItem asChild>
+                  <Link
+                    to="/account/payments"
+                    className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+                  >
+                    <CreditCard className="h-4 w-4" />
+                    <span>Payments</span>
+                  </Link>
+                </DropdownMenuItem>
+              )}
 
               <DropdownMenuSeparator className="my-1 bg-border" />
 

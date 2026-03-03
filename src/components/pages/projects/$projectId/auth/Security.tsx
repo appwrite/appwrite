@@ -1508,7 +1508,7 @@ function MembershipsPrivacyCard({
               Memberships privacy
             </h3>
             <p className="text-[13px] text-muted-foreground mt-1">
-              Set privacy preferences to manage which details team members can
+              Set privacy preferences to manage which details organization members can
               view about one another.
             </p>
           </div>

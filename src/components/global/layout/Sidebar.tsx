@@ -1,7 +1,10 @@
-import { useRef, useCallback, useState, useMemo } from 'react'
+import { useRef, useCallback, useMemo } from 'react'
 import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/components/global/auth/RequireAuth'
+import { useSidebarCollapsed } from '@/lib/react-query/hooks'
 import { useDebugMode } from '@/components/global/providers/DebugMode'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   LayoutDashboard,
   Database,
@@ -216,9 +219,11 @@ export function ConsoleSidebar({
   onMobileClose,
   className,
 }: ConsoleSidebarProps) {
-  const [collapsed, setCollapsed] = useState(false)
+  const { account } = useAuth()
+  const { collapsed, setCollapsed } = useSidebarCollapsed(account)
   const navRef = useRef<HTMLElement>(null)
   const { isDebugModeOpen } = useDebugMode()
+  const { features } = useConsoleProfile()
 
   const { overviewItem, settingsItem } = getNavItems(projectId)
 
@@ -227,12 +232,15 @@ export function ConsoleSidebar({
     return categories
       .map((cat) => ({
         ...cat,
-        items: isDebugModeOpen
-          ? cat.items
-          : cat.items.filter((item) => !item.comingSoon),
+        items: (isDebugModeOpen ? cat.items : cat.items.filter((item) => !item.comingSoon))
+          .filter((item) => {
+            if (item.id === 'usage') return features.usageStats
+            if (item.id === 'activity') return features.activity
+            return true
+          }),
       }))
       .filter((cat) => cat.items.length > 0)
-  }, [projectId, isDebugModeOpen])
+  }, [projectId, isDebugModeOpen, features.usageStats, features.activity])
 
   // Handle keyboard navigation within sidebar
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -397,7 +405,7 @@ export function ConsoleSidebar({
         {/* Collapse Toggle - positioned on the border */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute right-0 top-1/2 z-10 flex h-6 w-6 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="absolute right-0 top-1/2 z-10 flex h-6 w-6 -translate-y-1/2 translate-x-1/2 cursor-pointer items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           <ChevronLeft
@@ -452,7 +460,7 @@ export function ConsoleSidebar({
           </div>
           <button
             onClick={onMobileClose}
-            className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label="Close navigation"
           >
             <X className="h-5 w-5" />

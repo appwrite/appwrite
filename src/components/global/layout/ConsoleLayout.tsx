@@ -3,6 +3,7 @@ import { ConsoleHeader } from './Header'
 import { ConsoleSidebar } from './Sidebar'
 import { ConsoleFooter } from './Footer'
 import { ConsoleBanner } from './ConsoleBanner'
+import { SkipToContent } from './SkipToContent'
 import { NativeAppBar } from './NativeAppBar'
 import { PaymentAlert } from '@/components/pages/projects/$projectId/shared/PaymentAlert'
 import { cn } from '@/lib/utils'
@@ -103,6 +104,7 @@ export function ConsoleLayout({
     <div
       className={cn('flex h-full flex-col bg-background', layoutContainerClass)}
     >
+      <SkipToContent />
       {/* Sticky header section - takes space in flex layout */}
       <div className="flex-shrink-0 sticky top-0 z-30 flex flex-col bg-background">
         {showNativeAppBar && <NativeAppBar />}
@@ -138,6 +140,8 @@ export function ConsoleLayout({
 
         {/* Main content area */}
         <main
+          id="main-content"
+          tabIndex={-1}
           className={cn(
             'flex-1 bg-background flex flex-col min-h-0',
             fixedLayout ? 'overflow-hidden' : 'overflow-y-auto',

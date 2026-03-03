@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback } from 'react'
 import { useRef, useEffect } from 'react'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   X,
   Send,
@@ -95,6 +96,7 @@ const DEFAULT_WIDTH = 400
 const STORAGE_KEY = 'ai-chat-panel-width'
 
 export function AIChatPanel() {
+  const { features } = useConsoleProfile()
   const { isOpen, closeChat, messages, isLoading, setMessages, setIsLoading } =
     useAIChat()
   const [input, setInput] = useState('')
@@ -170,6 +172,8 @@ export function AIChatPanel() {
       document.body.style.userSelect = ''
     }
   }, [isResizing])
+
+  if (!features.aiAssistant) return null
 
   const handleSend = async (content: string = input) => {
     if (!content.trim() || isLoading) return

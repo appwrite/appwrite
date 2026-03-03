@@ -19,7 +19,7 @@ import {
   X,
   AlertCircle,
   Info,
-} from 'lucide-react'
+} from '@/lib/icons'
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Pagination } from '@/components/global/shared/Pagination'
@@ -297,8 +297,7 @@ const mockActivities = generateMockActivities()
 const PLAN_TIME_LIMITS: Record<PlanType, { label: string; hours: number }> = {
   free: { label: '1 hour', hours: 1 },
   pro: { label: '7 days', hours: 7 * 24 },
-  scale: { label: '30 days', hours: 30 * 24 },
-  enterprise: { label: '30 days', hours: 30 * 24 },
+  custom: { label: '30 days', hours: 30 * 24 },
 }
 
 // Filter options
