@@ -11,6 +11,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Services\Functions\FunctionsBase;
+use Tests\E2E\Services\Realtime\RealtimeBase;
 use Tests\E2E\Services\Sites\SitesBase;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -23,6 +24,7 @@ class UsageTest extends Scope
     use ProjectCustom;
     use SideServer;
     use FunctionsBase;
+    use RealtimeBase;
     use SitesBase {
         FunctionsBase::createDeployment insteadof SitesBase;
         FunctionsBase::setupDeployment insteadof SitesBase;
@@ -1406,6 +1408,176 @@ class UsageTest extends Scope
             $this->assertEquals($projectMetrics['executionsTotal'] + 1, $response['body']['executionsTotal']);
             $this->assertGreaterThan($projectMetrics['executionsMbSecondsTotal'], $response['body']['executionsMbSecondsTotal']);
         });
+    }
+
+    public function testRealtimeUsageMetrics(): void
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        // Baseline realtime usage before opening a new connection
+        $baseline = $this->client->call(
+            Client::METHOD_GET,
+            '/project/usage',
+            $this->getConsoleHeaders(),
+            [
+                'period' => '1h',
+                'startDate' => self::getToday(),
+                'endDate' => self::getTomorrow(),
+            ]
+        );
+
+        $connectionsBefore = $baseline['body']['realtimeConnectionsTotal'] ?? 0;
+        $messagesBefore = $baseline['body']['realtimeMessagesTotal'] ?? 0;
+
+        $connectionCount = 3;
+        $clients = [];
+
+        for ($i = 0; $i < $connectionCount; $i++) {
+            $client = $this->getWebsocket(['documents'], [
+                'origin' => 'http://localhost',
+                'cookie' => 'a_session_' . $projectId . '=' . $session,
+            ], null);
+
+            $connected = json_decode($client->receive(), true);
+            $this->assertEquals('connected', $connected['type']);
+
+            $clients[] = $client;
+        }
+
+        try {
+            $database = $this->client->call(Client::METHOD_POST, '/databases', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'databaseId' => ID::unique(),
+                'name' => 'Realtime Usage DB',
+            ]);
+
+            $databaseId = $database['body']['$id'];
+
+            $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'collectionId' => ID::unique(),
+                'name' => 'Realtime Usage Collection',
+                'permissions' => [
+                    Permission::create(Role::user($user['$id'])),
+                ],
+                'documentSecurity' => true,
+            ]);
+
+            $collectionId = $collection['body']['$id'];
+
+            $attribute = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'key' => 'name',
+                'size' => 256,
+                'required' => true,
+            ]);
+
+            $this->assertEquals(202, $attribute['headers']['status-code']);
+
+            $this->assertEventually(function () use ($databaseId, $collectionId, $projectId) {
+                $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/name', [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $projectId,
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]);
+                $this->assertEquals('available', $response['body']['status']);
+            }, 30000, 250);
+
+            $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], $this->getHeaders()), [
+                'documentId' => ID::unique(),
+                'data' => [
+                    'name' => 'Realtime Usage Doc',
+                ],
+                'permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
+            ]);
+
+            $this->assertEquals(201, $document['headers']['status-code']);
+
+            $event = json_decode($clients[0]->receive(), true);
+            $this->assertEquals('event', $event['type']);
+
+            // After creating a document we expect all connections to receive an event
+            $this->assertEventually(function () use ($connectionsBefore, $messagesBefore, $connectionCount) {
+                $response = $this->client->call(
+                    Client::METHOD_GET,
+                    '/project/usage',
+                    $this->getConsoleHeaders(),
+                    [
+                        'period' => '1h',
+                        'startDate' => self::getToday(),
+                        'endDate' => self::getTomorrow(),
+                    ]
+                );
+
+                $this->assertEquals(200, $response['headers']['status-code']);
+
+                $this->assertArrayHasKey('realtimeConnectionsTotal', $response['body']);
+                $this->assertArrayHasKey('realtimeMessagesTotal', $response['body']);
+                $this->assertArrayHasKey('realtimeBandwidthTotal', $response['body']);
+                $this->assertArrayHasKey('realtimeConnections', $response['body']);
+                $this->assertArrayHasKey('realtimeMessages', $response['body']);
+                $this->assertArrayHasKey('realtimeBandwidth', $response['body']);
+
+                // We expect exactly $connectionCount additional open connections and $connectionCount additional message deliveries
+                $this->assertEquals($connectionsBefore + $connectionCount, $response['body']['realtimeConnectionsTotal']);
+                $this->assertEquals($messagesBefore + $connectionCount, $response['body']['realtimeMessagesTotal']);
+                $this->assertGreaterThan(0, $response['body']['realtimeBandwidthTotal']);
+
+                $this->validateDates($response['body']['realtimeConnections']);
+                $this->validateDates($response['body']['realtimeMessages']);
+                $this->validateDates($response['body']['realtimeBandwidth']);
+            }, 60000, 2000);
+
+            // Now close a single connection and ensure the counters reflect it
+            $clients[0]->close();
+
+            $this->assertEventually(function () use ($connectionsBefore, $messagesBefore, $connectionCount) {
+                $response = $this->client->call(
+                    Client::METHOD_GET,
+                    '/project/usage',
+                    $this->getConsoleHeaders(),
+                    [
+                        'period' => '1h',
+                        'startDate' => self::getToday(),
+                        'endDate' => self::getTomorrow(),
+                    ]
+                );
+
+                $this->assertEquals(200, $response['headers']['status-code']);
+
+                $this->assertArrayHasKey('realtimeConnectionsTotal', $response['body']);
+                $this->assertArrayHasKey('realtimeMessagesTotal', $response['body']);
+                $this->assertArrayHasKey('realtimeBandwidthTotal', $response['body']);
+
+                // One of the connections is closed, so we expect one less open connection.
+                // Messages and bandwidth are cumulative and should not decrease.
+                $this->assertEquals($connectionsBefore + $connectionCount - 1, $response['body']['realtimeConnectionsTotal']);
+                $this->assertEquals($messagesBefore + $connectionCount, $response['body']['realtimeMessagesTotal']);
+                $this->assertGreaterThan(0, $response['body']['realtimeBandwidthTotal']);
+            }, 60000, 2000);
+        } finally {
+            foreach ($clients as $client) {
+                $client->close();
+            }
+        }
     }
 
     public function tearDown(): void

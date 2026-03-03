@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Messaging\Adapter\Realtime;
@@ -37,6 +38,7 @@ use Utopia\DSN\DSN;
 use Utopia\Http\Http;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
+use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
@@ -221,6 +223,31 @@ if (!function_exists('getTelemetry')) {
         }
 
         return $ctx['telemetry'] = new NoTelemetry();
+    }
+}
+
+if (!function_exists('queueForStatsUsage')) {
+    function getQueueForStatsUsageForProject(Document $project): StatsUsage
+    {
+        $ctx = Coroutine::getContext();
+
+        if (!isset($ctx['queueForStatsUsage'])) {
+            $ctx['queueForStatsUsage'] = [];
+        }
+
+        if (isset($ctx['queueForStatsUsage'][$project->getSequence()])) {
+            return $ctx['queueForStatsUsage'][$project->getSequence()];
+        }
+
+        global $register;
+
+        /** @var Group $pools */
+        $pools = $register->get('pools');
+
+        $queue = new StatsUsage(new BrokerPool(publisher: $pools->get('publisher')));
+        $queue->setProject($project);
+
+        return $ctx['queueForStatsUsage'][$project->getSequence()] = $queue;
     }
 }
 
@@ -545,20 +572,59 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 }
 
                 $total = 0;
+                $outboundBytes = 0;
+
                 foreach ($groups as $group) {
                     $data = $event['data'];
                     $data['subscriptions'] = $group['subscriptions'];
 
-                    $server->send($group['ids'], json_encode([
+                    $payloadJson = json_encode([
                         'type' => 'event',
                         'data' => $data
-                    ]));
-                    $total += count($group['ids']);
+                    ]);
+
+                    $server->send($group['ids'], $payloadJson);
+
+                    $count = count($group['ids']);
+                    $total += $count;
+                    $outboundBytes += strlen($payloadJson) * $count;
                 }
 
                 if ($total > 0) {
                     $register->get('telemetry.messageSentCounter')->add($total);
                     $stats->incr($event['project'], 'messages', $total);
+
+                    $projectId = $event['project'] ?? null;
+
+                    if (!empty($projectId)) {
+                        try {
+                            $consoleDB = getConsoleDB();
+                            /** @var Document $project */
+                            $project = $consoleDB->getAuthorization()->skip(
+                                fn () => $consoleDB->getDocument('projects', $projectId)
+                            );
+
+                            if (!$project->isEmpty()) {
+                                $queueForStatsUsage = getQueueForStatsUsageForProject($project);
+
+                                $queueForStatsUsage->addMetric(
+                                    METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT,
+                                    $total
+                                );
+
+                                if ($outboundBytes > 0) {
+                                    $queueForStatsUsage->addMetric(
+                                        METRIC_REALTIME_OUTBOUND,
+                                        $outboundBytes
+                                    );
+                                }
+
+                                $queueForStatsUsage->trigger();
+                            }
+                        } catch (Throwable $th) {
+                            logError($th, 'realtimeUsageOutbound', tags: ['projectId' => $projectId]);
+                        }
+                    }
                 }
             });
         } catch (Throwable $th) {
@@ -707,6 +773,16 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         ]);
         $stats->incr($project->getId(), 'connections');
         $stats->incr($project->getId(), 'connectionsTotal');
+
+        try {
+            $queueForStatsUsage = getQueueForStatsUsageForProject($project);
+            $queueForStatsUsage
+                ->addMetric(METRIC_REALTIME_CONNECTIONS, 1)
+                ->trigger();
+        } catch (\Throwable $th) {
+            logError($th, 'realtimeUsageConnections', project: $project);
+        }
+
     } catch (Throwable $th) {
         logError($th, 'realtime', project: $project, user: $logUser, authorization: $authorization);
 
@@ -748,6 +824,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
     $authorization = null;
 
     try {
+        $rawSize = \strlen($message);
         $response = new Response(new SwooleResponse());
         $projectId = $realtime->connections[$connection]['projectId'] ?? null;
 
@@ -784,6 +861,18 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
 
         if ($abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
             throw new Exception(Exception::REALTIME_TOO_MANY_MESSAGES, 'Too many messages.');
+        }
+
+        // Record realtime inbound bytes for this project
+        if ($project !== null && !$project->isEmpty()) {
+            try {
+                $queueForStatsUsage = getQueueForStatsUsageForProject($project);
+                $queueForStatsUsage
+                    ->addMetric(METRIC_REALTIME_INBOUND, $rawSize)
+                    ->trigger();
+            } catch (Throwable $th) {
+                logError($th, 'realtimeUsageInbound', project: $project);
+            }
         }
 
         $message = json_decode($message, true);
@@ -905,6 +994,18 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register) {
     if (array_key_exists($connection, $realtime->connections)) {
         $stats->decr($realtime->connections[$connection]['projectId'], 'connectionsTotal');
         $register->get('telemetry.connectionCounter')->add(-1);
+
+        $projectId = $realtime->connections[$connection]['projectId'];
+
+        $consoleDB = getConsoleDB();
+        $project = $consoleDB->getAuthorization()->skip(
+            fn () => $consoleDB->getDocument('projects', $projectId)
+        );
+
+        if (!$project->isEmpty()) {
+            $queue = getQueueForStatsUsageForProject($project);
+            $queue->addMetric(METRIC_REALTIME_CONNECTIONS, -1)->trigger();
+        }
     }
     $realtime->unsubscribe($connection);
 
