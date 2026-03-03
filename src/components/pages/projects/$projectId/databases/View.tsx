@@ -7460,7 +7460,13 @@ function ColumnsSpreadsheet({
                   Default
                 </span>
               </th>
-              <th className="w-10 px-2 py-2"></th>
+              <th
+                className={cn(
+                  'w-10 px-2 py-2 bg-background',
+                  'shadow-[inset_0_1px_0_0_#d1d5db,inset_0_-1px_0_0_#d1d5db]',
+                  'dark:shadow-[inset_0_1px_0_0_rgb(255_255_255_/_0.1),inset_0_-1px_0_0_rgb(255_255_255_/_0.1)]',
+                )}
+              />
             </tr>
           </thead>
           <tbody>
@@ -8271,7 +8277,13 @@ function IndexesSpreadsheet({
                   Status
                 </span>
               </th>
-              <th className="w-10 px-2 py-2"></th>
+              <th
+                className={cn(
+                  'w-10 px-2 py-2 bg-background',
+                  'shadow-[inset_0_1px_0_0_#d1d5db,inset_0_-1px_0_0_#d1d5db]',
+                  'dark:shadow-[inset_0_1px_0_0_rgb(255_255_255_/_0.1),inset_0_-1px_0_0_rgb(255_255_255_/_0.1)]',
+                )}
+              />
             </tr>
           </thead>
           <tbody>
