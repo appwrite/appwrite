@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import {
   Outlet,
   useParams,
@@ -6,7 +6,14 @@ import {
   useLocation,
 } from '@tanstack/react-router'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
-import { useProjectSite, useSiteDeployment } from '@/lib/react-query/hooks'
+import {
+  useProjectSite,
+  useSiteDeployment,
+  useProject,
+  useOrganizationScopes,
+} from '@/lib/react-query/hooks'
+import { canShowSiteSettingsTab } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Info, ArrowLeft } from 'lucide-react'
@@ -40,6 +47,11 @@ function SiteLayoutContent() {
     siteId,
     site?.deploymentId ?? undefined,
   )
+  const { project } = useProject(projectId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
+  const showSettingsTab = canShowSiteSettingsTab(access, features)
+
   const isBuilding = useMemo(
     () =>
       activeDeployment?.status === 'building' ||
@@ -79,32 +91,51 @@ function SiteLayoutContent() {
     return 'deployments'
   }, [location.pathname])
 
-  const tabs: Tab[] = [
-    {
-      id: 'deployments',
-      label: 'Deployments',
-      to: '/projects/$projectId/sites/$siteId',
-      params: { projectId: projectId!, siteId: siteId! },
-    },
-    {
-      id: 'logs',
-      label: 'Logs',
-      to: '/projects/$projectId/sites/$siteId/logs',
-      params: { projectId: projectId!, siteId: siteId! },
-    },
-    {
-      id: 'domains',
-      label: 'Domains',
-      to: '/projects/$projectId/sites/$siteId/domains',
-      params: { projectId: projectId!, siteId: siteId! },
-    },
-    {
-      id: 'settings',
-      label: 'Settings',
-      to: '/projects/$projectId/sites/$siteId/settings',
-      params: { projectId: projectId!, siteId: siteId! },
-    },
-  ]
+  const tabs: Tab[] = useMemo(
+    () => [
+      {
+        id: 'deployments',
+        label: 'Deployments',
+        to: '/projects/$projectId/sites/$siteId',
+        params: { projectId: projectId!, siteId: siteId! },
+      },
+      {
+        id: 'logs',
+        label: 'Logs',
+        to: '/projects/$projectId/sites/$siteId/logs',
+        params: { projectId: projectId!, siteId: siteId! },
+      },
+      {
+        id: 'domains',
+        label: 'Domains',
+        to: '/projects/$projectId/sites/$siteId/domains',
+        params: { projectId: projectId!, siteId: siteId! },
+      },
+      ...(showSettingsTab
+        ? [
+            {
+              id: 'settings' as const,
+              label: 'Settings',
+              to: '/projects/$projectId/sites/$siteId/settings',
+              params: { projectId: projectId!, siteId: siteId! },
+            },
+          ]
+        : []),
+    ],
+    [projectId, siteId, showSettingsTab],
+  )
+
+  // Redirect from settings when user lacks permission
+  useEffect(() => {
+    if (showSettingsTab || !projectId || !siteId) return
+    if (activeTab === 'settings') {
+      navigate({
+        to: '/projects/$projectId/sites/$siteId',
+        params: { projectId, siteId },
+        replace: true,
+      })
+    }
+  }, [showSettingsTab, activeTab, projectId, siteId, navigate])
 
   return (
     <CreateDeploymentProvider

@@ -18,8 +18,11 @@ import {
   useProjectFunctions,
   useProject,
   useOrganizationPlan,
+  useOrganizationScopes,
   fetchProjectFunctions,
 } from '@/lib/react-query/hooks'
+import { canCreateFunction } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import type { Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import {
@@ -145,14 +148,18 @@ export function View() {
 
   // Get organization plan to check limits
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
 
   // Total count of all functions (without search) - for limit checking
   const totalFunctionsCount = totalFunctionsData?.total || 0
 
-  // Check if create button should be disabled
+  // Check if create button should be disabled (plan limit or missing write scope)
+  const noCreatePermission = !canCreateFunction(access, features)
   const functionsLimit = organizationPlan?.functions ?? 0
   const isCreateDisabled =
-    functionsLimit > 0 && totalFunctionsCount >= functionsLimit
+    noCreatePermission ||
+    (functionsLimit > 0 && totalFunctionsCount >= functionsLimit)
 
   // Handle GitHub redirect
   useEffect(() => {
@@ -253,6 +260,11 @@ export function View() {
             activeTab === 'functions' ? handleCreateFunction : undefined
           }
           createDisabled={activeTab === 'functions' ? isCreateDisabled : false}
+          createDisabledTooltip={
+            activeTab === 'functions' && noCreatePermission
+              ? "You don't have permission to create functions."
+              : undefined
+          }
           fullWidthBorder
           beforeCreateButtons={
             activeTab === 'functions' ? (
@@ -309,6 +321,11 @@ export function View() {
         createLabel={getCreateLabel()}
         onCreate={activeTab === 'functions' ? handleCreateFunction : undefined}
         createDisabled={activeTab === 'functions' ? isCreateDisabled : false}
+        createDisabledTooltip={
+          activeTab === 'functions' && noCreatePermission
+            ? "You don't have permission to create functions."
+            : undefined
+        }
         fullWidthBorder
         beforeCreateButtons={
           activeTab === 'functions' ? (

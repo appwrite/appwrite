@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/functions/Settings'
 import {
   projectQueryOptions,
@@ -8,6 +8,7 @@ import {
   projectVariablesQueryOptions,
 } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
+import { canAccessFunctionSecuritySettings } from '@/lib/console-rbac-loader'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/functions/$functionId/settings',
@@ -20,15 +21,23 @@ export const Route = createFileRoute(
     ],
   }),
   loader: async ({ params, context }) => {
-    // Only run on client side (SDK requires browser environment)
-    if (typeof window === 'undefined') {
-      return
-    }
+    if (typeof window === 'undefined') return
 
     const { projectId, functionId } = params
     const { queryClient } = context
 
-    // Fetch project first so setProjectRegion runs and project-scoped calls use the correct regional endpoint
+    const canAccess = await canAccessFunctionSecuritySettings(
+      queryClient,
+      projectId,
+    )
+    if (!canAccess) {
+      throw redirect({
+        to: '/projects/$projectId/functions/$functionId',
+        params: { projectId, functionId },
+        replace: true,
+      })
+    }
+
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
 
     // Fetch critical data before rendering to prevent layout shifts

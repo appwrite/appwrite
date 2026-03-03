@@ -18,6 +18,15 @@ import {
 } from '@/lib/constants/billing-plan'
 import type { Organization } from '@/lib/utils/mock-data'
 import { sdk } from '@/lib/appwrite/sdk'
+import {
+  DEFAULT_ROLES,
+  DEFAULT_SCOPES,
+  deriveAccessFromRolesScopes,
+  type OrganizationRolesScopes,
+  type ConsoleAccess,
+  FULL_ACCESS,
+} from '@/lib/console-roles'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
 import {
   DEFAULT_STALE_TIME,
@@ -97,6 +106,36 @@ export async function fetchOrganizationPlan(orgId: string) {
   }
   const response = await sdk.forConsole.organizations.getPlan(orgId)
   return response
+}
+
+/**
+ * Query function to fetch current user's roles and scopes for an organization.
+ * Use in organization context (orgId) or project context (project's teamId).
+ * When API is unavailable or fails, returns defaultRoles and defaultScopes (full access).
+ */
+export async function fetchOrganizationScopes(
+  organizationId: string,
+): Promise<OrganizationRolesScopes> {
+  if (!organizationId) {
+    return { roles: [...DEFAULT_ROLES], scopes: [...DEFAULT_SCOPES] }
+  }
+  try {
+    const orgService = sdk.forConsole.organizations as unknown as {
+      getScopes?(params: {
+        organizationId: string
+      }): Promise<{ roles?: string[]; scopes?: string[] }>
+    }
+    if (typeof orgService.getScopes !== 'function') {
+      return { roles: [...DEFAULT_ROLES], scopes: [...DEFAULT_SCOPES] }
+    }
+    const response = await orgService.getScopes({ organizationId })
+    return {
+      roles: response.roles ?? [...DEFAULT_ROLES],
+      scopes: response.scopes ?? [...DEFAULT_SCOPES],
+    }
+  } catch {
+    return { roles: [...DEFAULT_ROLES], scopes: [...DEFAULT_SCOPES] }
+  }
 }
 
 /**
@@ -1011,6 +1050,29 @@ export function organizationPlanQueryOptions(orgId: string | null | undefined) {
 }
 
 /**
+ * Query options for fetching current user's roles and scopes for an organization.
+ * Only enabled when profile supports org roles (orgRoles) and organizationId is set.
+ * Used in both organization context (orgId) and project context (project's teamId).
+ */
+export function organizationScopesQueryOptions(
+  organizationId: string | null | undefined,
+) {
+  const features = getActiveProfileFeatures()
+  const enabled = !!organizationId && !!features.orgRoles
+  return queryOptions({
+    queryKey: ['organization', 'scopes', organizationId],
+    queryFn: () => fetchOrganizationScopes(organizationId!),
+    enabled,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: organizationId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
  * Query options for fetching all available billing plans
  *
  * This can be used in both route loaders and hooks to ensure consistent query configuration.
@@ -1193,6 +1255,49 @@ export function useOrganizationPlan(orgId: string | null | undefined) {
     plan: planData,
     isLoading,
     error,
+    refetch,
+  }
+}
+
+/**
+ * Hook to get current user's roles, scopes, and derived access for an organization.
+ * Use in organization context (orgId) or project context (project's teamId).
+ * When profile does not support roles (orgRoles: false), returns full access without fetching.
+ */
+export function useOrganizationScopes(
+  organizationId: string | null | undefined,
+): {
+  roles: string[]
+  scopes: string[]
+  access: ConsoleAccess
+  isLoading: boolean
+  error: Error | null
+  refetch: () => void
+} {
+  const features = getActiveProfileFeatures()
+  const shouldFetch = !!organizationId && features.orgRoles
+
+  const { data, isLoading, error, refetch } = useQuery({
+    ...organizationScopesQueryOptions(organizationId),
+    enabled: shouldFetch,
+  })
+
+  const roles = data?.roles ?? [...DEFAULT_ROLES]
+  const scopes = data?.scopes ?? [...DEFAULT_SCOPES]
+  const access = useMemo<ConsoleAccess>(
+    () =>
+      shouldFetch && data
+        ? deriveAccessFromRolesScopes(data.roles, data.scopes)
+        : FULL_ACCESS,
+    [shouldFetch, data],
+  )
+
+  return {
+    roles,
+    scopes,
+    access,
+    isLoading: shouldFetch ? isLoading : false,
+    error: error as Error | null,
     refetch,
   }
 }

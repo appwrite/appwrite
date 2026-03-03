@@ -5,7 +5,13 @@ import { ServiceHeader } from '../shared/ServiceHeader'
 import { ConnectProject } from '../shared/ConnectProject'
 import { PlatformIcon } from '@/components/global/shared/Icon'
 import { EmptyState } from '@/components/global/shared/EmptyState'
-import { usePlatforms } from '@/lib/react-query/hooks'
+import {
+  usePlatforms,
+  useProject,
+  useOrganizationScopes,
+} from '@/lib/react-query/hooks'
+import { canCreatePlatform } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { getPlatformDisplayName } from '@/lib/utils/platform'
 import type { Models } from '@appwrite.io/console'
 
@@ -54,6 +60,11 @@ export function View({ initialData }: ViewProps = {}) {
     : (initialData?.platforms ?? [])
   const showLoading = isLoading && platforms.length === 0 && !initialData
 
+  const { project } = useProject(projectId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
+  const noCreatePermission = !canCreatePlatform(access, features)
+
   const filteredPlatforms = useMemo(() => {
     if (!searchValue.trim()) return platforms
     const q = searchValue.toLowerCase()
@@ -82,6 +93,12 @@ export function View({ initialData }: ViewProps = {}) {
         onSearchChange={setSearchValue}
         createLabel="Add app"
         onCreate={handleAddApp}
+        createDisabled={noCreatePermission}
+        createDisabledTooltip={
+          noCreatePermission
+            ? "You don't have permission to add apps."
+            : undefined
+        }
         showFilters={false}
         fullWidthBorder
       />

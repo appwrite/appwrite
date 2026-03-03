@@ -15,7 +15,10 @@ import {
   useProjectProviders,
   useProject,
   useOrganizationPlan,
+  useOrganizationScopes,
 } from '@/lib/react-query/hooks'
+import { canWriteMessages, canWriteTopics, canWriteProviders } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -201,6 +204,22 @@ export function View() {
 
   // Get organization plan to check limits
   useOrganizationPlan(project?.teamId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
+
+  const noCreatePermission =
+    activeTab === 'messages'
+      ? !canWriteMessages(access, features)
+      : activeTab === 'topics'
+        ? !canWriteTopics(access, features)
+        : !canWriteProviders(access, features)
+  const createPermissionTooltip = noCreatePermission
+    ? activeTab === 'messages'
+      ? "You don't have permission to create messages."
+      : activeTab === 'topics'
+        ? "You don't have permission to create topics."
+        : "You don't have permission to create providers."
+    : undefined
 
   // Clear selection when navigating or searching
   useEffect(() => {
@@ -452,6 +471,8 @@ export function View() {
         onSearchChange={handleSearchChange}
         createLabel={getCreateLabel()}
         onCreate={handleCreateClick}
+        createDisabled={noCreatePermission}
+        createDisabledTooltip={createPermissionTooltip}
         fullWidthBorder
         rightContent={<ViewToggle />}
       />

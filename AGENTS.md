@@ -932,6 +932,7 @@ Follow the modal structure pattern above. For no-content modals, skip content se
 | Actions column         | Never use "Actions" as title—use empty `TableHead`                                                                                                                     |
 | Table cells            | `px-4 py-3` on all cells (preserve special padding like `pl-6 sm:pl-8` where needed)                                                                                  |
 | Long-running progress  | One panel per scope; flat list of cards (no wrapper per type); same card style + ProgressBarRow; per-card dismiss; auto-action only on status transition to completed |
+| RBAC (roles)           | Use **feature check methods** from `@/lib/console-access-checks` only; never check `access.isOwner` or `access.canWrite*` directly. Use `canAccess*` from `console-rbac-loader` in route loaders. See "Role-based access control (RBAC)". |
 
 ---
 
@@ -950,6 +951,148 @@ Profiles control which features are available based on deployment type (cloud vs
 **Feature flags:** Use `useConsoleProfile()` or `getActiveProfileFeatures()` to check feature flags (e.g. `features.billing`, `features.domains`, `features.compliance`, `features.databaseBackups`).
 
 **Feature-driven keys:** Each flag must map to a single, specific feature. Do not use generic or grouped flags (e.g. `orgCloudSettings`, `databaseCloudFeatures`). Split into explicit flags per feature (e.g. `compliance`, `oauthApps`, `orgApiKeys` for org settings; `databaseBackups`, `databaseInsights` for database).
+
+---
+
+## Role-based access control (RBAC)
+
+Access is driven by **organization roles and scopes** when the Console profile has `orgRoles: true` (e.g. cloud). When `orgRoles` is false (e.g. self-hosted), all users are treated as having full access. Use the same patterns everywhere so screens and components stay consistent.
+
+### When RBAC applies
+
+- **Profile**: Check `features.orgRoles` from `useConsoleProfile()` or `getActiveProfileFeatures()`. If `false`, do not gate by role/scope; show everything.
+- **Context**: For **project** screens use the project’s organization (`project.teamId`). For **organization** screens use `orgId`. Resolve scopes for that organization via `useOrganizationScopes(orgIdOrTeamId)` or loader helpers in `console-rbac-loader.ts`.
+
+### Key files and hooks
+
+| File / hook | Purpose |
+|-------------|--------|
+| `src/lib/console-roles.ts` | `ConsoleAccess` type, `deriveAccessFromRolesScopes`, `FULL_ACCESS` when roles disabled |
+| `src/lib/console-access-checks.ts` | **Single source of truth** for all permission checks. Use these functions in UI and routes; **never** check `access.isOwner`, `access.canWrite*`, etc. directly. |
+| `src/lib/console-rbac-loader.ts` | Async `canAccess*` helpers for **route loaders** (delegate to `console-access-checks` internally) |
+| `useOrganizationScopes(organizationId)` | Returns `{ access: ConsoleAccess, ... }`; pass `access` and `features` into functions from `console-access-checks` |
+| `useProject(projectId)` | Returns `project` (includes `teamId`) so you can pass `project?.teamId` to `useOrganizationScopes` |
+| `useConsoleProfile()` | Returns `features`; pass to `console-access-checks` functions that need `orgRoles` or other flags |
+
+### Rules
+
+1. **Use feature check methods only**  
+   **Never** read `access.isOwner`, `access.isDeveloper`, `access.canWrite*`, or `access.canSee*` directly in components or routes. Always use a function from `@/lib/console-access-checks` (e.g. `canShowBucketSecuritySettings(access, features)`, `canCreateProject(access, features)`). This keeps rules reusable, consistent, and maintainable.
+
+2. **Components (UI)**  
+   Use `useOrganizationScopes(project?.teamId)` or `useOrganizationScopes(orgId)` and `useConsoleProfile()`. Call the appropriate check from `console-access-checks` (e.g. `showSecuritySettings = canShowBucketSecuritySettings(access, features)`), then:
+   - Filter **tabs** (e.g. hide Security/Settings/Variables when `!showSecuritySettings`)
+   - **Disable** create buttons with a tooltip using `!canCreateX(access, features)` and a permission message
+   - Hide or show **sidebar** items (e.g. `canSeeProjectNavItem`, `canShowProjectSettings`, `canShowConnectSection`), **Command Center** commands, org **tabs** (e.g. `canShowOrgDomainsTab`, `canShowOrgSettingsTab`)
+
+3. **Route loaders (blocking access)**  
+   For Security, Settings, Variables, or other write-only pages, use the **loader** so unauthorized users never see the page. Import the matching helper from `@/lib/console-rbac-loader` and redirect when `!canAccess`:
+   - Project resources: `canAccessDatabaseSecuritySettings`, `canAccessProjectSettings`, `canAccessAuthSecuritySettings`, `canAccessBucketSecuritySettings`, `canAccessFunctionSecuritySettings`, `canAccessSiteSettings`, `canAccessTopicSettings`
+   - Organization: `canAccessOrganizationSettings` (owner-only org settings), `canAccessOrganizationDomains` (owner or developer)
+
+4. **Redirect from disallowed tabs**  
+   In the same view that builds the tabs, add a `useEffect`: if the user is on a tab they’re not allowed (e.g. `activeTab === 'security' && !showSecuritySettings`), navigate to a safe tab (e.g. first tab or list).
+
+5. **Command Center and global nav**  
+   Use the same `console-access-checks` functions (e.g. `canShowProjectSettings`, `canShowConnectSection`, `canCreateBucket`) to hide or disable navigation/create commands and filter the keyboard-shortcuts reference.
+
+6. **Adding new checks**  
+   When you need a new permission rule, add a single function in `console-access-checks.ts` (and use it in loaders via `console-rbac-loader` if a route must be blocked). Do not scatter role/scope logic in components.
+
+### Examples
+
+**1. Hiding tabs on a detail page (e.g. bucket Security/Settings)**
+
+```tsx
+import { canShowBucketSecuritySettings } from '@/lib/console-access-checks'
+
+const { project } = useProject(projectId)
+const { features } = useConsoleProfile()
+const { access } = useOrganizationScopes(project?.teamId)
+const showSecuritySettings = canShowBucketSecuritySettings(access, features)
+
+const tabs = useMemo(() => [
+  { id: 'files', label: 'Files', to: '...', params: { ... } },
+  ...(showSecuritySettings
+    ? [
+        { id: 'security', label: 'Security', to: '...', params: { ... } },
+        { id: 'settings', label: 'Settings', to: '...', params: { ... } },
+      ]
+    : []),
+], [projectId, bucketId, showSecuritySettings])
+```
+
+**2. Redirect when user is on a tab they can’t access**
+
+```tsx
+useEffect(() => {
+  if (showSecuritySettings || !projectId || !bucketId) return
+  if (activeTab === 'security' || activeTab === 'settings') {
+    navigate({ to: '/projects/$projectId/storage/$bucketId', params: { projectId, bucketId }, replace: true })
+  }
+}, [showSecuritySettings, activeTab, projectId, bucketId, navigate])
+```
+
+**3. Route loader: block Security/Settings page**
+
+```tsx
+import { canAccessBucketSecuritySettings } from '@/lib/console-rbac-loader'
+
+loader: async ({ params, context }) => {
+  if (typeof window === 'undefined') return
+  const { projectId, bucketId } = params
+  const { queryClient } = context
+  if (!projectId || !bucketId) return
+  const canAccess = await canAccessBucketSecuritySettings(queryClient, projectId)
+  if (!canAccess) {
+    throw redirect({ to: '/projects/$projectId/storage/$bucketId', params: { projectId, bucketId }, replace: true })
+  }
+},
+```
+
+**4. Disable create button with tooltip (ServiceHeader / list view)**
+
+```tsx
+import { canCreateBucket } from '@/lib/console-access-checks'
+
+const noCreatePermission = !canCreateBucket(access, features)
+const createPermissionTooltip = noCreatePermission ? "You don't have permission to create buckets." : undefined
+
+<ServiceHeader
+  createLabel="Create bucket"
+  onCreate={handleCreate}
+  createDisabled={noCreatePermission}
+  createDisabledTooltip={createPermissionTooltip}
+  ...
+/>
+```
+
+**5. Command Center: hide or disable by access**
+
+Use `console-access-checks` (e.g. `canShowProjectSettings`, `canShowConnectSection`, `canShowOrgDomainsTab`, `canCreateBucket`) so navigation and create commands are filtered by the same rules as the rest of the app.
+
+### Mapping: screen/component type → what to use
+
+| Screen / component type | Where to gate | What to use |
+|-------------------------|----------------|-------------|
+| Service detail tabs (Security, Settings, Variables) | View that renders `ServiceHeader` + tabs | `canShowXSecuritySettings(access, features)` or `canShowTopicSettingsTab` etc.; filter tabs, add redirect `useEffect` |
+| Security/Settings/Variables **route** (URL) | Route file | `canAccess*` from `console-rbac-loader` in **loader**; `throw redirect(...)` if `!canAccess` |
+| Create buttons (list, header, dialogs) | Same view as list/header | `!canCreateX(access, features)`; set `createDisabled` and `createDisabledTooltip` (prefer disable + tooltip over hiding) |
+| Sidebar (project Settings, Connect, Get started) | Layout/sidebar component | `canShowProjectSettings`, `canShowConnectSection`, `canShowGetStartedSection`, `canSeeProjectNavItem` from `console-access-checks` |
+| Command Center (nav, create, org) | CommandCenter.tsx | Same `console-access-checks` functions; hide or disable commands and shortcuts accordingly |
+| Org overview (tabs, invite, Domains, Settings sub-tabs) | Org overview View | `canShowOrgDomainsTab`, `canShowOrgSettingsTab`, `canAccessOrgSettings*`, `getFirstAllowedOrgSettingsPath`, `canInviteOrgMember`, `canCreateProject` from `console-access-checks` |
+
+### Adding a new gated area
+
+1. **New project resource (e.g. “X” with Security/Settings)**  
+   - In **console-access-checks.ts**: add e.g. `canShowXSecuritySettings(access, features)` using `whenOrgRoles(access, features, access.canWriteX)`. In **console-rbac-loader.ts**: add `canAccessXSecuritySettings(queryClient, projectId)` that gets access and returns `canShowXSecuritySettings(access, getActiveProfileFeatures())`.  
+   - In **route loaders** for `.../security` and `.../settings`: call that helper and `throw redirect` when `!canAccess`.  
+   - In the **detail View**: use `showSecuritySettings = canShowXSecuritySettings(access, features)`; filter tabs and add redirect `useEffect`.
+
+2. **New org-level area (e.g. “Y” for owner and developer)**  
+   - In **console-access-checks.ts**: add e.g. `canShowOrgYTab(access, features)` or `canAccessOrgY(access, features)`.  
+   - If a route must be blocked: add `canAccessOrganizationY` in console-rbac-loader that uses the new check; use it in the route loader.  
+   - In the org View: show the tab or nav item using the new check; redirect from the sub-route when the user lands without access (e.g. `getFirstAllowedOrgSettingsPath` for settings).
 
 ---
 

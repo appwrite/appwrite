@@ -1,6 +1,12 @@
 import { Outlet, useParams, useNavigate } from '@tanstack/react-router'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
-import { useProjectSite } from '@/lib/react-query/hooks'
+import {
+  useProjectSite,
+  useProject,
+  useOrganizationScopes,
+} from '@/lib/react-query/hooks'
+import { canShowSiteSettingsTab } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useMemo } from 'react'
 import { useLocation } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
@@ -25,6 +31,10 @@ function SiteLayoutContent() {
   const navigate = useNavigate()
   const { isRefreshing, triggerRefresh, hasRefreshHandler } = useRefresh()
   const { data: site } = useProjectSite(projectId, siteId)
+  const { project } = useProject(projectId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
+  const showSettingsTab = canShowSiteSettingsTab(access, features)
 
   const handleBack = () => {
     navigate({
@@ -54,32 +64,39 @@ function SiteLayoutContent() {
     return 'deployments'
   }, [location.pathname])
 
-  const tabs: Tab[] = [
-    {
-      id: 'deployments',
-      label: 'Deployments',
-      to: '/projects/$projectId/sites/$siteId',
-      params: { projectId: projectId!, siteId: siteId! },
-    },
-    {
-      id: 'logs',
-      label: 'Logs',
-      to: '/projects/$projectId/sites/$siteId/logs',
-      params: { projectId: projectId!, siteId: siteId! },
-    },
-    {
-      id: 'domains',
-      label: 'Domains',
-      to: '/projects/$projectId/sites/$siteId/domains',
-      params: { projectId: projectId!, siteId: siteId! },
-    },
-    {
-      id: 'settings',
-      label: 'Settings',
-      to: '/projects/$projectId/sites/$siteId/settings',
-      params: { projectId: projectId!, siteId: siteId! },
-    },
-  ]
+  const tabs: Tab[] = useMemo(
+    () => [
+      {
+        id: 'deployments',
+        label: 'Deployments',
+        to: '/projects/$projectId/sites/$siteId',
+        params: { projectId: projectId!, siteId: siteId! },
+      },
+      {
+        id: 'logs',
+        label: 'Logs',
+        to: '/projects/$projectId/sites/$siteId/logs',
+        params: { projectId: projectId!, siteId: siteId! },
+      },
+      {
+        id: 'domains',
+        label: 'Domains',
+        to: '/projects/$projectId/sites/$siteId/domains',
+        params: { projectId: projectId!, siteId: siteId! },
+      },
+      ...(showSettingsTab
+        ? [
+            {
+              id: 'settings' as const,
+              label: 'Settings',
+              to: '/projects/$projectId/sites/$siteId/settings',
+              params: { projectId: projectId!, siteId: siteId! },
+            },
+          ]
+        : []),
+    ],
+    [projectId, siteId, showSettingsTab],
+  )
 
   return (
     <div className="flex flex-col">

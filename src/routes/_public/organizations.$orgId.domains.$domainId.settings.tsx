@@ -1,7 +1,8 @@
 import { View } from '@/components/pages/organizations/$orgId/domains/$domainId/View'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { fetchDomain, fetchOrganizations } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
+import { canAccessOrganizationDomains } from '@/lib/console-rbac-loader'
 
 const STALE_TIME = 30 * 1000
 
@@ -18,12 +19,20 @@ export const Route = createFileRoute(
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return
 
-    const { domainId } = params
+    const { orgId, domainId } = params
     const { queryClient } = context
 
-    if (!domainId) return
+    if (!orgId || !domainId) return
 
-    // Same pattern as bucket settings: fetchQuery with exact keys matching hooks. Blocks navigation until ready.
+    const canAccess = await canAccessOrganizationDomains(queryClient, orgId)
+    if (!canAccess) {
+      throw redirect({
+        to: '/organizations/$orgId/domains/$domainId',
+        params: { orgId, domainId },
+        replace: true,
+      })
+    }
+
     await Promise.all([
       queryClient.fetchQuery({
         queryKey: ['domain', domainId],

@@ -23,7 +23,10 @@ import {
   useCreateProjectUser,
   useCreateProjectTeam,
   useProject,
+  useOrganizationScopes,
 } from '@/lib/react-query/hooks'
+import { canShowAuthSecuritySettings, canCreateUser, canCreateTeam } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   deleteProjectUser,
@@ -121,6 +124,13 @@ export function View() {
     // Default to users for index route (/projects/:projectId/auth or /projects/:projectId/auth/)
     return 'users'
   }, [location.pathname])
+
+  const { project } = useProject(projectId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
+  const showAuthSecuritySettings =
+    canShowAuthSecuritySettings(access, features)
+
   const [usersSearchValue, setUsersSearchValue] = useState('')
   const [teamsSearchValue, setTeamsSearchValue] = useState('')
   const [usersViewMode, setUsersViewMode] = useState<'list' | 'grid'>('list')
@@ -500,27 +510,47 @@ export function View() {
         to: '/projects/$projectId/auth/teams',
         params: { projectId: projectId as string },
       },
-      {
-        id: 'security',
-        label: 'Security',
-        to: '/projects/$projectId/auth/security',
-        params: { projectId: projectId as string },
-      },
-      {
-        id: 'templates',
-        label: 'Templates',
-        to: '/projects/$projectId/auth/templates',
-        params: { projectId: projectId as string },
-      },
-      {
-        id: 'settings',
-        label: 'Settings',
-        to: '/projects/$projectId/auth/settings',
-        params: { projectId: projectId as string },
-      },
+      ...(showAuthSecuritySettings
+        ? [
+            {
+              id: 'security' as const,
+              label: 'Security',
+              to: '/projects/$projectId/auth/security',
+              params: { projectId: projectId as string },
+            },
+            {
+              id: 'templates' as const,
+              label: 'Templates',
+              to: '/projects/$projectId/auth/templates',
+              params: { projectId: projectId as string },
+            },
+            {
+              id: 'settings' as const,
+              label: 'Settings',
+              to: '/projects/$projectId/auth/settings',
+              params: { projectId: projectId as string },
+            },
+          ]
+        : []),
     ],
-    [projectId],
+    [projectId, showAuthSecuritySettings],
   )
+
+  // Redirect from security/templates/settings when user lacks permission
+  useEffect(() => {
+    if (showAuthSecuritySettings || !projectId) return
+    if (
+      activeTab === 'security' ||
+      activeTab === 'settings' ||
+      activeTab === 'templates'
+    ) {
+      navigate({
+        to: '/projects/$projectId/auth/',
+        params: { projectId },
+        replace: true,
+      })
+    }
+  }, [showAuthSecuritySettings, activeTab, projectId, navigate])
 
   const getCreateLabel = () => {
     switch (activeTab) {
@@ -573,9 +603,21 @@ export function View() {
     }
   }
 
-  // Get project data for SMTP status
-  const { project } = useProject(projectId)
+  // Get project data for SMTP status (project, features, access already from above)
   const isSmtpEnabled = (project as unknown)?.smtpEnabled ?? false
+
+  const noCreatePermission =
+    activeTab === 'users'
+      ? !canCreateUser(access, features)
+      : activeTab === 'teams'
+        ? !canCreateTeam(access, features)
+        : false
+  const createPermissionTooltip =
+    noCreatePermission && activeTab === 'users'
+      ? "You don't have permission to create users."
+      : noCreatePermission && activeTab === 'teams'
+        ? "You don't have permission to create teams."
+        : undefined
 
   // SMTP alert for templates tab
   const smtpAlert =
@@ -676,6 +718,8 @@ export function View() {
         }
         createLabel={activeTab === 'templates' ? undefined : getCreateLabel()}
         onCreate={activeTab === 'templates' ? undefined : handleCreateClick}
+        createDisabled={noCreatePermission}
+        createDisabledTooltip={createPermissionTooltip}
         showFilters={activeTab === 'users'}
         fullWidthBorder
         contentAfterBorder={smtpAlert}

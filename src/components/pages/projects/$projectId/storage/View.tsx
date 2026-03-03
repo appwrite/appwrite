@@ -7,8 +7,11 @@ import {
   Dependencies,
   useProject,
   useOrganizationPlan,
+  useOrganizationScopes,
   fetchProjectBuckets,
 } from '@/lib/react-query/hooks'
+import { canCreateBucket } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { ResourceCard } from '../shared/ResourceCard'
 import { CopyableId } from '@/components/global/shared/CopyableId'
@@ -127,6 +130,8 @@ export function View() {
   // Get project to get teamId for organization plan
   // Data is guaranteed to be available from route loader (fetchQuery blocks navigation)
   const { project } = useProject(projectId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
 
   // Get organization plan to check limits
   // Data is guaranteed to be available from route loader if project has teamId
@@ -138,7 +143,10 @@ export function View() {
 
   // Check if create button should be disabled
   const bucketsLimit = organizationPlan?.buckets ?? 0
-  const isCreateDisabled = bucketsLimit > 0 && totalBucketsCount >= bucketsLimit
+  const noCreatePermission = !canCreateBucket(access, features)
+  const isCreateDisabled =
+    noCreatePermission ||
+    (bucketsLimit > 0 && totalBucketsCount >= bucketsLimit)
 
   // Clear selection when navigating or when search changes
   useEffect(() => {
@@ -287,6 +295,11 @@ export function View() {
         createLabel="Create bucket"
         onCreate={() => setCreateBucketDialogOpen(true)}
         createDisabled={isCreateDisabled}
+        createDisabledTooltip={
+          noCreatePermission
+            ? "You don't have permission to create buckets."
+            : undefined
+        }
         showFilters={false}
         fullWidthBorder
         rightContent={<ViewToggle />}

@@ -28,7 +28,8 @@ import { useAuth } from '@/components/global/auth/RequireAuth'
 import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/ProjectSelector'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { useNavigate } from '@tanstack/react-router'
-import { useProject } from '@/lib/react-query/hooks'
+import { useProject, useOrganizationScopes } from '@/lib/react-query/hooks'
+import { canShowConnectSection } from '@/lib/console-access-checks'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -86,6 +87,9 @@ export function ConsoleHeader({
 
   // Fetch current project to get teamId when in project context
   const { project } = useProject(projectId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
+  const showConnectAndCreate = canShowConnectSection(access, features)
 
   // Get organization ID for upgrade button
   const orgId =
@@ -93,7 +97,6 @@ export function ConsoleHeader({
 
   // Fetch organization plan to check if upgrade button should be shown
   const { plan: organizationPlan } = useOrganizationPlan(orgId)
-  const { features } = useConsoleProfile()
 
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text)
@@ -205,8 +208,9 @@ export function ConsoleHeader({
                 <ProjectSelector projectId={projectId} />
               </div>
 
-              {/* Connect button - show when project has never received a ping */}
-              {project &&
+              {/* Connect button - only owners/developers; show when project has never received a ping */}
+              {showConnectAndCreate &&
+                project &&
                 (project.pingCount === 0 || !project.pingedAt) &&
                 projectId && (
                   <>
@@ -235,9 +239,10 @@ export function ConsoleHeader({
                   </>
                 )}
 
-              {/* Create Button */}
-              <div className="hidden @[700px]:block shrink-0">
-                <DropdownMenu>
+              {/* Create Button - only owners and developers */}
+              {showConnectAndCreate && (
+                <div className="hidden @[700px]:block shrink-0">
+                  <DropdownMenu>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <DropdownMenuTrigger asChild>
@@ -409,6 +414,7 @@ export function ConsoleHeader({
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
+              )}
             </>
           )}
         </div>

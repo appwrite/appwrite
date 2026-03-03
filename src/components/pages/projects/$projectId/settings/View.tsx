@@ -1,5 +1,11 @@
 import { useMemo, useState } from 'react'
 import { useParams, useLocation } from '@tanstack/react-router'
+import {
+  useProject,
+  useOrganizationScopes,
+} from '@/lib/react-query/hooks'
+import { canWriteDomains, canWriteWebhooks } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { ProjectSettingsOverview } from './Overview'
 import { Domains } from './Domains'
@@ -73,6 +79,21 @@ export function View() {
     [projectId],
   )
 
+  const { project } = useProject(projectId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
+  const noDomainsPermission = !canWriteDomains(access, features)
+  const noWebhooksPermission = !canWriteWebhooks(access, features)
+  const createDisabled =
+    (activeTab === 'domains' && noDomainsPermission) ||
+    (activeTab === 'webhooks' && noWebhooksPermission)
+  const createDisabledTooltip =
+    activeTab === 'domains' && noDomainsPermission
+      ? "You don't have permission to add domains."
+      : activeTab === 'webhooks' && noWebhooksPermission
+        ? "You don't have permission to create webhooks."
+        : undefined
+
   // Determine search and create props based on active tab
   const hasSearch = activeTab !== 'overview' && activeTab !== 'smtp'
   const searchPlaceholder = hasSearch ? `Search ${activeTab}...` : undefined
@@ -113,6 +134,8 @@ export function View() {
         createTo={createTo}
         createParams={createParams}
         onCreate={handleCreate}
+        createDisabled={createDisabled}
+        createDisabledTooltip={createDisabledTooltip}
       />
 
       <div className="flex-1">

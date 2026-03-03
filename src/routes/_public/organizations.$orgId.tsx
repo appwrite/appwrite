@@ -4,9 +4,11 @@ import { RequireAuth } from '@/components/global/auth/RequireAuth'
 import {
   organizationsQueryOptions,
   organizationPlanQueryOptions,
+  organizationScopesQueryOptions,
   activeProjectsQueryOptions,
   organizationMembershipsQueryOptions,
 } from '@/lib/react-query/hooks'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { z } from 'zod'
 
@@ -38,24 +40,29 @@ export const Route = createFileRoute('/_public/organizations/$orgId')({
           )
         })
 
-        await Promise.race([
-          Promise.all([
-            queryClient.ensureQueryData(organizationPlanQueryOptions(orgId)),
-            queryClient.ensureQueryData(organizationsQueryOptions()),
-            queryClient.ensureQueryData(
-              activeProjectsQueryOptions(orgId, 0, DEFAULT_PAGE_SIZE, ''),
+        const loaders: Promise<unknown>[] = [
+          queryClient.ensureQueryData(organizationPlanQueryOptions(orgId)),
+          queryClient.ensureQueryData(organizationsQueryOptions()),
+          queryClient.ensureQueryData(
+            activeProjectsQueryOptions(orgId, 0, DEFAULT_PAGE_SIZE, ''),
+          ),
+          queryClient.ensureQueryData(
+            organizationMembershipsQueryOptions(
+              orgId,
+              0,
+              DEFAULT_PAGE_SIZE,
+              '',
             ),
+          ),
+        ]
+        if (getActiveProfileFeatures().orgRoles) {
+          loaders.push(
             queryClient.ensureQueryData(
-              organizationMembershipsQueryOptions(
-                orgId,
-                0,
-                DEFAULT_PAGE_SIZE,
-                '',
-              ),
-            ),
-          ]),
-          timeoutPromise,
-        ])
+              organizationScopesQueryOptions(orgId),
+            ).catch(() => {}),
+          )
+        }
+        await Promise.race([Promise.all(loaders), timeoutPromise])
       } catch (error) {
         // Don't block navigation if fetch fails or times out - component will handle
         console.warn('Failed to fetch organization data in loader:', error)

@@ -50,6 +50,8 @@ interface ServiceHeaderProps {
   createTo?: string
   createParams?: Record<string, string>
   createDisabled?: boolean
+  /** Tooltip when create is disabled (e.g. plan limit or missing permission) */
+  createDisabledTooltip?: string
   showFilters?: boolean
   onFilterClick?: () => void
   /** When true, the tabs border extends full-width while tabs content stays constrained */
@@ -104,6 +106,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
       createTo,
       createParams,
       createDisabled = false,
+      createDisabledTooltip,
       showFilters = false,
       onFilterClick,
       fullWidthBorder = false,
@@ -462,23 +465,24 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div>
-                        {createTo && createParams ? (
+                        {createTo && createParams && !createDisabled ? (
                           <Link
                             to={createTo as unknown}
                             params={createParams}
-                            className={cn(
-                              'inline-flex h-9 items-center justify-center gap-2 rounded-md px-4 text-[13px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed',
-                              createDisabled && 'pointer-events-none opacity-50',
-                            )}
-                            style={{
-                              backgroundColor: createDisabled
-                                ? undefined
-                                : '#f02e65',
-                            }}
+                            className="inline-flex h-9 items-center justify-center gap-2 rounded-md px-4 text-[13px] font-medium text-white transition-opacity hover:opacity-90"
+                            style={{ backgroundColor: '#f02e65' }}
                           >
                             <Plus className="h-4 w-4" />
                             {createLabel}
                           </Link>
+                        ) : createTo && createParams && createDisabled ? (
+                          <span
+                            className="inline-flex h-9 cursor-not-allowed items-center justify-center gap-2 rounded-md px-4 text-[13px] font-medium text-white opacity-50"
+                            style={{ backgroundColor: '#f02e65' }}
+                          >
+                            <Plus className="h-4 w-4" />
+                            {createLabel}
+                          </span>
                         ) : (
                           <Button
                             size="sm"
@@ -496,8 +500,8 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                     <TooltipContent side="bottom">
                       {createDisabled ? (
                         <p>
-                          You've reached the limit for this resource on your
-                          plan
+                          {createDisabledTooltip ??
+                            "You've reached the limit for this resource on your plan"}
                         </p>
                       ) : (
                         createLabel

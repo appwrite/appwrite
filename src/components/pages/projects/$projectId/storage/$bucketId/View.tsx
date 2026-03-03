@@ -45,6 +45,9 @@ import {
 } from '@/components/ui/dialog'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useProject, useOrganizationScopes } from '@/lib/react-query/hooks'
+import { canShowBucketSecuritySettings } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -74,6 +77,11 @@ export function View() {
   })
   const navigate = useNavigate()
   const location = useLocation()
+  const { project } = useProject(projectId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
+  const showSecuritySettings =
+    canShowBucketSecuritySettings(access, features)
 
   // Derive active tab from pathname
   const activeTab = useMemo(() => {
@@ -157,8 +165,8 @@ export function View() {
   const showFilesLoading =
     displayedFilesLoading && (displayedFilesData?.files?.length ?? 0) === 0
 
-  const tabs: Tab[] = useMemo(
-    () => [
+  const tabs: Tab[] = useMemo(() => {
+    const base: Tab[] = [
       {
         id: 'files',
         label: 'Files',
@@ -168,27 +176,43 @@ export function View() {
           bucketId: bucketId as string,
         },
       },
-      {
-        id: 'security',
-        label: 'Security',
-        to: '/projects/$projectId/storage/$bucketId/security',
-        params: {
-          projectId: projectId as string,
-          bucketId: bucketId as string,
-        },
-      },
-      {
-        id: 'settings',
-        label: 'Settings',
-        to: '/projects/$projectId/storage/$bucketId/settings',
-        params: {
-          projectId: projectId as string,
-          bucketId: bucketId as string,
-        },
-      },
-    ],
-    [projectId, bucketId],
-  )
+      ...(showSecuritySettings
+        ? [
+            {
+              id: 'security' as const,
+              label: 'Security',
+              to: '/projects/$projectId/storage/$bucketId/security',
+              params: {
+                projectId: projectId as string,
+                bucketId: bucketId as string,
+              },
+            },
+            {
+              id: 'settings' as const,
+              label: 'Settings',
+              to: '/projects/$projectId/storage/$bucketId/settings',
+              params: {
+                projectId: projectId as string,
+                bucketId: bucketId as string,
+              },
+            },
+          ]
+        : []),
+    ]
+    return base
+  }, [projectId, bucketId, showSecuritySettings])
+
+  // Redirect from security/settings when user lacks permission
+  useEffect(() => {
+    if (showSecuritySettings || !projectId || !bucketId) return
+    if (activeTab === 'security' || activeTab === 'settings') {
+      navigate({
+        to: '/projects/$projectId/storage/$bucketId',
+        params: { projectId, bucketId },
+        replace: true,
+      })
+    }
+  }, [showSecuritySettings, activeTab, projectId, bucketId, navigate])
 
   // Handle file upload - queues in background
   const handleFileUpload = async (data: {

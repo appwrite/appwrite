@@ -2,7 +2,15 @@ import { useRef, useCallback, useMemo } from 'react'
 import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/components/global/auth/RequireAuth'
-import { useSidebarCollapsed } from '@/lib/react-query/hooks'
+import { useSidebarCollapsed, useProject, useOrganizationScopes } from '@/lib/react-query/hooks'
+import {
+  canSeeProjectNavItem,
+  canSeeUsageNav,
+  canSeeActivityNav,
+  canSeeProjects,
+  canShowProjectSettings,
+  canShowGetStartedSection,
+} from '@/lib/console-access-checks'
 import { useDebugMode } from '@/components/global/providers/DebugMode'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
@@ -224,6 +232,10 @@ export function ConsoleSidebar({
   const navRef = useRef<HTMLElement>(null)
   const { isDebugModeOpen } = useDebugMode()
   const { features } = useConsoleProfile()
+  const { project } = useProject(projectId)
+  const { access, isLoading: scopesLoading } = useOrganizationScopes(
+    project?.teamId,
+  )
 
   const { overviewItem, settingsItem } = getNavItems(projectId)
 
@@ -234,15 +246,22 @@ export function ConsoleSidebar({
         ...cat,
         items: (isDebugModeOpen ? cat.items : cat.items.filter((item) => !item.comingSoon))
           .filter((item) => {
-            if (item.id === 'usage') return features.usageStats
-            if (item.id === 'activity') return features.activity
-            return true
+            if (item.id === 'usage') return features.usageStats && canSeeUsageNav(access, features)
+            if (item.id === 'activity') return features.activity && canSeeActivityNav(access, features)
+            return canSeeProjectNavItem(access, features, item.id)
           }),
       }))
       .filter((cat) => cat.items.length > 0)
-  }, [projectId, isDebugModeOpen, features.usageStats, features.activity])
+  }, [projectId, isDebugModeOpen, features.usageStats, features.activity, features.orgRoles, access])
 
-  // Handle keyboard navigation within sidebar
+  const showOverview = canSeeProjects(access, features)
+  // Hide project Settings from left nav when user lacks write access (e.g. analyst).
+  // When org roles are on, only show after scopes have loaded so we don't flash Settings.
+  const showSettings =
+    !features.orgRoles || (!scopesLoading && canShowProjectSettings(access, features))
+  const showGetStarted = canShowGetStartedSection(access, features)
+
+  // Handle keyboard navigation within sidebar within sidebar
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (!navRef.current) return
 
@@ -424,19 +443,25 @@ export function ConsoleSidebar({
           role="navigation"
           aria-label="Main navigation"
         >
-          {/* Onboarding Card */}
-          <OnboardingCard projectId={projectId} collapsed={collapsed} />
+          {/* Onboarding Card - only owners and developers */}
+          {showGetStarted && (
+            <OnboardingCard projectId={projectId} collapsed={collapsed} />
+          )}
 
           {/* Overview */}
-          <div className="space-y-0.5">{renderNavItem(overviewItem)}</div>
+          {showOverview && (
+            <div className="space-y-0.5">{renderNavItem(overviewItem)}</div>
+          )}
 
           {visibleCategories.map((category) => renderCategory(category))}
         </nav>
 
         {/* Settings */}
-        <div className="flex h-[54px] w-full items-center border-t border-border px-3">
-          <div className="w-full">{renderNavItem(settingsItem)}</div>
-        </div>
+        {showSettings && (
+          <div className="flex h-[54px] w-full items-center border-t border-border px-3">
+            <div className="w-full">{renderNavItem(settingsItem)}</div>
+          </div>
+        )}
       </aside>
 
       {/* Mobile Sidebar */}
@@ -478,19 +503,25 @@ export function ConsoleSidebar({
           role="navigation"
           aria-label="Mobile navigation"
         >
-          {/* Onboarding Card */}
-          <OnboardingCard projectId={projectId} collapsed={false} />
+          {/* Onboarding Card - only owners and developers */}
+          {showGetStarted && (
+            <OnboardingCard projectId={projectId} collapsed={false} />
+          )}
 
           {/* Overview */}
-          <div className="space-y-0.5">{renderNavItem(overviewItem, true)}</div>
+          {showOverview && (
+            <div className="space-y-0.5">{renderNavItem(overviewItem, true)}</div>
+          )}
 
           {visibleCategories.map((category) => renderCategory(category, true))}
         </nav>
 
         {/* Settings */}
-        <div className="border-t border-border px-4 py-3">
-          {renderNavItem(settingsItem, true)}
-        </div>
+        {showSettings && (
+          <div className="border-t border-border px-4 py-3">
+            {renderNavItem(settingsItem, true)}
+          </div>
+        )}
       </aside>
     </TooltipProvider>
   )

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import {
   useParams,
   useLocation,
@@ -6,7 +6,9 @@ import {
   useNavigate,
 } from '@tanstack/react-router'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
-import { useProjectFunction } from '@/lib/react-query/hooks'
+import { useProjectFunction, useProject, useOrganizationScopes } from '@/lib/react-query/hooks'
+import { canShowFunctionSecuritySettings } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { ArrowLeft, AlertCircle } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
@@ -38,6 +40,10 @@ function FunctionLayoutContent() {
   const { isRefreshing, triggerRefresh, hasRefreshHandler } = useRefresh()
 
   const { data: func, isLoading } = useProjectFunction(projectId, functionId)
+  const { project } = useProject(projectId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
+  const showSecuritySettings = canShowFunctionSecuritySettings(access, features)
 
   // Get search value from URL
   const searchParams = new URLSearchParams(
@@ -79,8 +85,8 @@ function FunctionLayoutContent() {
     return 'deployments'
   }, [location.pathname])
 
-  const tabs: Tab[] = useMemo(
-    () => [
+  const tabs: Tab[] = useMemo(() => {
+    const base: Tab[] = [
       {
         id: 'deployments',
         label: 'Deployments',
@@ -108,36 +114,61 @@ function FunctionLayoutContent() {
           functionId: functionId as string,
         },
       },
-      {
-        id: 'variables',
-        label: 'Variables',
-        to: '/projects/$projectId/functions/$functionId/variables',
-        params: {
-          projectId: projectId as string,
-          functionId: functionId as string,
-        },
-      },
-      {
-        id: 'security',
-        label: 'Security',
-        to: '/projects/$projectId/functions/$functionId/security',
-        params: {
-          projectId: projectId as string,
-          functionId: functionId as string,
-        },
-      },
-      {
-        id: 'settings',
-        label: 'Settings',
-        to: '/projects/$projectId/functions/$functionId/settings',
-        params: {
-          projectId: projectId as string,
-          functionId: functionId as string,
-        },
-      },
-    ],
-    [projectId, functionId],
-  )
+      ...(showSecuritySettings
+        ? [
+            {
+              id: 'variables' as const,
+              label: 'Variables',
+              to: '/projects/$projectId/functions/$functionId/variables',
+              params: {
+                projectId: projectId as string,
+                functionId: functionId as string,
+              },
+            },
+            {
+              id: 'security' as const,
+              label: 'Security',
+              to: '/projects/$projectId/functions/$functionId/security',
+              params: {
+                projectId: projectId as string,
+                functionId: functionId as string,
+              },
+            },
+            {
+              id: 'settings' as const,
+              label: 'Settings',
+              to: '/projects/$projectId/functions/$functionId/settings',
+              params: {
+                projectId: projectId as string,
+                functionId: functionId as string,
+              },
+            },
+          ]
+        : []),
+    ]
+    return base
+  }, [projectId, functionId, showSecuritySettings])
+
+  // Redirect from variables/security/settings when user lacks permission
+  useEffect(() => {
+    if (
+      showSecuritySettings ||
+      !projectId ||
+      !functionId
+    )
+      return
+    if (
+      activeTab === 'variables' ||
+      activeTab === 'security' ||
+      activeTab === 'settings'
+    ) {
+      navigate({
+        to: '/projects/$projectId/functions/$functionId',
+        params: { projectId, functionId },
+        replace: true,
+      })
+    }
+  }, [showSecuritySettings, activeTab, projectId, functionId, navigate])
 
   const handleDomainsSearchChange = (value: string) => {
     navigate({

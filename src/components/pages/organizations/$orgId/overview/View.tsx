@@ -48,10 +48,24 @@ import {
   organizationsQueryOptions,
   activeProjectsQueryOptions,
   useOrganizationPlan,
+  useOrganizationScopes,
   useResendMembershipInvite,
   useUpdateMembershipRole,
   useRemoveTeamMember,
 } from '@/lib/react-query/hooks'
+import {
+  canSeeProjects,
+  canShowOrgDomainsTab,
+  canShowOrgSettingsTab,
+  canAccessOrgSettingsOverview,
+  canAccessOrgSettingsMembers,
+  canAccessOrgSettingsBilling,
+  canAccessOrgSettingsCompliance,
+  canAccessOrgSettingsOAuthOrApiKeys,
+  getFirstAllowedOrgSettingsPath,
+  canInviteOrgMember,
+  canCreateProject,
+} from '@/lib/console-access-checks'
 
 import {
   Popover,
@@ -237,6 +251,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const matches = useMatches()
   const [searchQuery, setSearchQuery] = useState('')
   const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(orgId)
 
   // Check if we're on a domain detail route using route matches and pathname (for navigation transitions)
   const isDomainDetailRoute = useMemo(() => {
@@ -362,7 +377,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const [deleteOrgDialogOpen, setDeleteOrgDialogOpen] = useState(false)
   const [deleteOrgConfirmation, setDeleteOrgConfirmation] = useState('')
 
-  // Redirect from disabled settings sub-tabs
+  // Redirect from disabled settings sub-tabs (feature flags or role-based)
   useEffect(() => {
     if (settingsSubTab === 'billing' && !features.billing) {
       navigate({
@@ -370,7 +385,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         params: { orgId: orgId! },
         replace: true,
       })
-    } else if (
+      return
+    }
+    if (
       (settingsSubTab === 'compliance' && !features.compliance) ||
       (settingsSubTab === 'oauth-apps' && !features.oauthApps) ||
       (settingsSubTab === 'api-keys' && !features.orgApiKeys)
@@ -380,13 +397,34 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         params: { orgId: orgId! },
         replace: true,
       })
+      return
+    }
+    if (features.orgRoles && activeTab === 'settings') {
+      const allowed =
+        (settingsSubTab === 'members' && canAccessOrgSettingsMembers(access)) ||
+        (settingsSubTab === 'billing' && canAccessOrgSettingsBilling(access)) ||
+        (settingsSubTab === 'overview' && canAccessOrgSettingsOverview(access)) ||
+        (settingsSubTab === 'compliance' && canAccessOrgSettingsCompliance(access)) ||
+        (settingsSubTab === 'oauth-apps' && canAccessOrgSettingsOAuthOrApiKeys(access)) ||
+        (settingsSubTab === 'api-keys' && canAccessOrgSettingsOAuthOrApiKeys(access))
+      if (!allowed) {
+        const firstAllowed = getFirstAllowedOrgSettingsPath(
+          access,
+          features,
+          '/organizations/$orgId/settings',
+        )
+        navigate({
+          to: firstAllowed as '/organizations/$orgId/settings',
+          params: { orgId: orgId! },
+          replace: true,
+        })
+      }
     }
   }, [
+    activeTab,
     settingsSubTab,
-    features.billing,
-    features.compliance,
-    features.oauthApps,
-    features.orgApiKeys,
+    features,
+    access,
     orgId,
     navigate,
   ])
@@ -880,24 +918,30 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     setActiveMembershipsPage(0)
   }, [membershipsSearchQuery])
 
-  // Org tabs (billing is under settings)
+  // Org tabs (billing is under settings). When profile supports roles, gate by access.
   const orgTabs = useMemo(() => {
     if (!selectedOrg) return []
 
-    const tabs = [
-      { id: 'projects', label: 'Projects', to: '/organizations/$orgId' },
-      ...(features.domains
-        ? [{ id: 'domains' as const, label: 'Domains', to: '/organizations/$orgId/domains/' as const }]
-        : []),
-      {
+    const tabs: { id: string; label: string; to: string }[] = []
+    if (canSeeProjects(access, features)) {
+      tabs.push({ id: 'projects', label: 'Projects', to: '/organizations/$orgId' })
+    }
+    if (canShowOrgDomainsTab(access, features)) {
+      tabs.push({
+        id: 'domains',
+        label: 'Domains',
+        to: '/organizations/$orgId/domains/',
+      })
+    }
+    if (canShowOrgSettingsTab(access)) {
+      tabs.push({
         id: 'settings',
         label: 'Settings',
         to: '/organizations/$orgId/settings',
-      },
-    ]
+      })
+    }
     return tabs
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedOrg, orgId, features.domains])
+  }, [selectedOrg, access, features])
 
   const filteredProjectsByTeam = projectsByTeam
     .map(({ team, projects }) => ({
@@ -1150,8 +1194,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 </div>
               )}
 
-              {/* Invite Button */}
-              {supportsAdditionalMembers ? (
+              {/* Invite: only owners when roles enabled; hidden for non-owners */}
+              {supportsAdditionalMembers && canInviteOrgMember(access, features) && (
                 <Button
                   size="sm"
                   variant="outline"
@@ -1161,28 +1205,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   <UserPlus className="h-3.5 w-3.5" />
                   Invite
                 </Button>
-              ) : (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled
-                        className="h-8 gap-2 border-border text-[13px] text-muted-foreground cursor-not-allowed opacity-50"
-                      >
-                        <UserPlus className="h-3.5 w-3.5" />
-                        Invite
-                      </Button>
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-xs">
-                      Your current plan does not support additional members.
-                      Upgrade your plan to invite organization members.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
               )}
             </div>
           </div>
@@ -1447,6 +1469,29 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                           </div>
 
                           {(() => {
+                            if (!canCreateProject(access, features)) {
+                              return (
+                                <TooltipProvider delayDuration={0}>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="ml-auto">
+                                        <Button
+                                          className="h-9 gap-2 text-[13px] font-medium text-white opacity-50 cursor-not-allowed"
+                                          style={{ backgroundColor: '#f02e65' }}
+                                          disabled
+                                        >
+                                          <Plus className="h-4 w-4" />
+                                          Create project
+                                        </Button>
+                                      </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>You don&apos;t have permission to create projects.</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )
+                            }
                             if (!organizationPlan) {
                               return (
                                 <Button
@@ -1694,7 +1739,17 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                             ]
                           : []),
                       ]
-                      const navItems = allNavItems
+                      const navItems = features.orgRoles
+                        ? allNavItems.filter((item) => {
+                            if (item.id === 'overview') return canAccessOrgSettingsOverview(access)
+                            if (item.id === 'members') return canAccessOrgSettingsMembers(access)
+                            if (item.id === 'billing') return canAccessOrgSettingsBilling(access)
+                            if (item.id === 'compliance') return canAccessOrgSettingsCompliance(access)
+                            if (['oauth-apps', 'api-keys'].includes(item.id))
+                              return canAccessOrgSettingsOAuthOrApiKeys(access)
+                            return true
+                          })
+                        : allNavItems
 
                       return (
                         <>
@@ -1963,7 +2018,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                           {/* Members Content */}
                           {!membershipsError && (
                             <>
-                              {/* Toolbar: Search + Invite */}
+                              {/* Toolbar: Search + Invite (Invite only for owners when roles enabled) */}
                               <div className="mb-4 flex items-center gap-3">
                                 <div className="relative w-64">
                                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -1977,7 +2032,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                   />
                                 </div>
 
-                                {supportsAdditionalMembers ? (
+                                {supportsAdditionalMembers && canInviteOrgMember(access, features) ? (
                                   <Button
                                     className="ml-auto h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90"
                                     style={{ backgroundColor: '#f02e65' }}
@@ -1986,7 +2041,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                     <Plus className="h-4 w-4" />
                                     Invite
                                   </Button>
-                                ) : (
+                                ) : supportsAdditionalMembers ? null : (
                                   <Tooltip>
                                     <TooltipTrigger asChild>
                                       <span>
@@ -2245,7 +2300,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                       align="end"
                                                       className="w-48"
                                                     >
-                                                      {features.orgRoles && (
+                                                      {canInviteOrgMember(access, features) && (
                                                         <>
                                                           <DropdownMenuItem
                                                             onClick={() => {
@@ -2271,20 +2326,22 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                           <DropdownMenuSeparator />
                                                         </>
                                                       )}
-                                                      <DropdownMenuItem
-                                                        onClick={() => {
-                                                          setSelectedMember(
-                                                            member,
-                                                          )
-                                                          setRemoveMemberDialogOpen(
-                                                            true,
-                                                          )
-                                                        }}
-                                                        className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
-                                                      >
-                                                        <Trash2 className="mr-2 h-4 w-4" />
-                                                        Remove from team
-                                                      </DropdownMenuItem>
+                                                      {canInviteOrgMember(access, features) && (
+                                                        <DropdownMenuItem
+                                                          onClick={() => {
+                                                            setSelectedMember(
+                                                              member,
+                                                            )
+                                                            setRemoveMemberDialogOpen(
+                                                              true,
+                                                            )
+                                                          }}
+                                                          className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
+                                                        >
+                                                          <Trash2 className="mr-2 h-4 w-4" />
+                                                          Remove from team
+                                                        </DropdownMenuItem>
+                                                      )}
                                                     </DropdownMenuContent>
                                                   </DropdownMenu>
                                                 )}
@@ -2626,7 +2683,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         onOpenChange={setCommandCenterOpen}
         context="org"
         onOrgNavigate={handleOrgNavigate}
-        onInviteMember={() => setInviteDialogOpen(true)}
+        onInviteMember={
+          canInviteOrgMember(access, features) && supportsAdditionalMembers
+            ? () => setInviteDialogOpen(true)
+            : undefined
+        }
         orgId={orgId}
       />
 

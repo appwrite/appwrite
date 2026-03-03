@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { TableView } from '@/components/pages/projects/$projectId/databases/View'
 import {
   projectQueryOptions,
@@ -9,6 +9,7 @@ import {
   tableQueryOptions,
 } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
+import { canAccessTableSecuritySettings } from '@/lib/console-rbac-loader'
 
 const TABLES_PER_PAGE = 100
 
@@ -33,6 +34,18 @@ export const Route = createFileRoute(
 
     if (!projectId || !databaseId || !tableId) {
       return
+    }
+
+    const canAccess = await canAccessTableSecuritySettings(
+      queryClient,
+      projectId,
+    )
+    if (!canAccess) {
+      throw redirect({
+        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+        params: { projectId, databaseId, tableId },
+        replace: true,
+      })
     }
 
     // Fetch project first so setProjectRegion runs and project-scoped calls use the correct regional endpoint

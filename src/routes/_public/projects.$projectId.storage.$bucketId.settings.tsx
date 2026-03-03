@@ -1,7 +1,8 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/storage/$bucketId/View'
 import { fetchBucket } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
+import { canAccessBucketSecuritySettings } from '@/lib/console-rbac-loader'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/storage/$bucketId/settings',
@@ -14,23 +15,30 @@ export const Route = createFileRoute(
     ],
   }),
   loader: async ({ params, context }) => {
-    // Only run on client side (SDK requires browser environment)
-    if (typeof window === 'undefined') {
-      return
-    }
+    if (typeof window === 'undefined') return
 
     const { projectId, bucketId } = params
     const { queryClient } = context
 
-    if (projectId && bucketId) {
-      // Fetch critical data before rendering to prevent layout shifts
-      // fetchQuery blocks navigation until ready
-      await queryClient.fetchQuery({
-        queryKey: ['bucket', 'project', projectId, bucketId],
-        queryFn: () => fetchBucket(projectId, bucketId),
-        staleTime: 30 * 1000,
+    if (!projectId || !bucketId) return
+
+    const canAccess = await canAccessBucketSecuritySettings(
+      queryClient,
+      projectId,
+    )
+    if (!canAccess) {
+      throw redirect({
+        to: '/projects/$projectId/storage/$bucketId',
+        params: { projectId, bucketId },
+        replace: true,
       })
     }
+
+    await queryClient.fetchQuery({
+      queryKey: ['bucket', 'project', projectId, bucketId],
+      queryFn: () => fetchBucket(projectId, bucketId),
+      staleTime: 30 * 1000,
+    })
   },
   component: BucketSettingsPage,
 })

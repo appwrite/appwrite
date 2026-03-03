@@ -11,7 +11,11 @@ import {
   useUpdateApiKey,
   useDeleteApiKey,
   fetchApiKeys,
+  useProject,
+  useOrganizationScopes,
 } from '@/lib/react-query/hooks'
+import { canCreateKey } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import type { ApiKey } from '../shared/ApiKeysList'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
@@ -74,6 +78,11 @@ export function View({ initialData }: ViewProps = {}) {
   const filteredApiKeys = apiKeys.filter((key) =>
     key.name.toLowerCase().includes(searchValue.toLowerCase()),
   )
+
+  const { project } = useProject(projectId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
+  const noCreatePermission = !canCreateKey(access, features)
 
   // Clear selection when search changes
   useEffect(() => {
@@ -203,6 +212,12 @@ export function View({ initialData }: ViewProps = {}) {
         onSearchChange={handleSearchChange}
         createLabel="Create API key"
         onCreate={() => setCreateDrawerOpen(true)}
+        createDisabled={noCreatePermission}
+        createDisabledTooltip={
+          noCreatePermission
+            ? "You don't have permission to create API keys."
+            : undefined
+        }
         showFilters={false}
         fullWidthBorder
       />
@@ -261,9 +276,11 @@ export function View({ initialData }: ViewProps = {}) {
                     {supportedLanguages.map(({ id, name }) => (
                       <Button
                         key={id}
-                        onClick={() => setCreateDrawerOpen(true)}
+                        onClick={() => !noCreatePermission && setCreateDrawerOpen(true)}
                         variant="outline"
                         size="lg"
+                        disabled={noCreatePermission}
+                        title={noCreatePermission ? "You don't have permission to create API keys." : undefined}
                       >
                         <LanguageIcon language={id} size="sm" />
                         <span>{name}</span>

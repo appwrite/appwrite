@@ -69,6 +69,7 @@ import {
   deleteProjectTable,
   useProject,
   useOrganizationPlan,
+  useOrganizationScopes,
   fetchProjectDatabases,
   createProjectDatabase,
   createProjectTable,
@@ -110,6 +111,12 @@ import {
   getClaudeDeepLink,
 } from '@/lib/utils/database-schema-export'
 import { useDebugMode } from '@/components/global/providers/DebugMode'
+import {
+  canCreateDatabase,
+  canCreateRow,
+  canShowTableSecuritySettings,
+  canShowDatabaseSecuritySettings,
+} from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import type { Models } from '@appwrite.io/console'
 
@@ -332,16 +339,18 @@ export function View() {
 
   // Get organization plan to check limits
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
 
   // Total count of all databases (without search) - for limit checking
   const totalDatabasesCount = totalDatabasesData?.total || 0
 
-  // Check if create button should be disabled
+  // Check if create button should be disabled (plan limit or missing write scope)
+  const noCreateDbPermission = !canCreateDatabase(access, features)
   const databasesLimit = organizationPlan?.databases ?? 0
   const isCreateDisabled =
-    databasesLimit > 0 && totalDatabasesCount >= databasesLimit
-
-  const { features } = useConsoleProfile()
+    noCreateDbPermission ||
+    (databasesLimit > 0 && totalDatabasesCount >= databasesLimit)
 
   // Clear selection when navigating or when search changes
   useEffect(() => {
@@ -489,6 +498,11 @@ export function View() {
         createLabel="Create database"
         onCreate={() => setCreateDatabaseDialogOpen(true)}
         createDisabled={isCreateDisabled}
+        createDisabledTooltip={
+          noCreateDbPermission
+            ? "You don't have permission to create databases."
+            : undefined
+        }
         showFilters={false}
         fullWidthBorder
         rightContent={<ViewToggle />}
@@ -1206,9 +1220,6 @@ export function TableView({
   const [sidebarTablesSortBy, setSidebarTablesSortBy] =
     useState<TablesSortBy>('$createdAt')
 
-  // Fetch all databases for the switcher
-  const { databases: allDatabases } = useProjectDatabases(projectId, 0, 100, '')
-
   // Fetch database
   const { database, isLoading: databaseLoading } = useProjectDatabase(
     projectId,
@@ -1248,15 +1259,6 @@ export function TableView({
       ? lastSidebarTablesRef.current
       : sidebarTables
 
-  // Sort databases by name in ascending order
-  const sortedDatabases = useMemo(() => {
-    return [...allDatabases].sort((a, b) => {
-      const nameA = a.name?.toLowerCase() || ''
-      const nameB = b.name?.toLowerCase() || ''
-      return nameA.localeCompare(nameB)
-    })
-  }, [allDatabases])
-
   // Reset sidebar to page 1 when search, sort, or database changes
   useEffect(() => {
     setSidebarTablesPage(1)
@@ -1289,6 +1291,37 @@ export function TableView({
 
   const { project } = useProject(projectId)
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  const { access } = useOrganizationScopes(project?.teamId)
+  const showTableSecuritySettings =
+    canShowTableSecuritySettings(access, features)
+  const noCreateTablePermission = !canShowTableSecuritySettings(access, features)
+  const noCreateDbPermission = !canCreateDatabase(access, features)
+  const noCreateRowPermission = !canCreateRow(access, features)
+  const createPermissionTooltip =
+    "You don't have permission to perform this action."
+
+  // Redirect from table security/settings when user lacks permission
+  useEffect(() => {
+    if (
+      !showTableSecuritySettings &&
+      selectedTable &&
+      (activeTab === 'security' || activeTab === 'settings')
+    ) {
+      navigate({
+        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+        params: { projectId, databaseId, tableId },
+        replace: true,
+      })
+    }
+  }, [
+    showTableSecuritySettings,
+    activeTab,
+    selectedTable,
+    projectId,
+    databaseId,
+    tableId,
+    navigate,
+  ])
 
   // Reset rows total when switching tables
   useEffect(() => {
@@ -1402,38 +1435,50 @@ export function TableView({
     effectiveTableId,
   )
 
-  const tableTabs: Tab[] = [
-    {
-      id: 'rows',
-      label: 'Rows',
-      to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
-      params: { projectId, databaseId, tableId },
-    },
-    {
-      id: 'columns',
-      label: 'Columns',
-      to: '/projects/$projectId/databases/$databaseId/tables/$tableId/columns',
-      params: { projectId, databaseId, tableId },
-    },
-    {
-      id: 'indexes',
-      label: 'Indexes',
-      to: '/projects/$projectId/databases/$databaseId/tables/$tableId/indexes',
-      params: { projectId, databaseId, tableId },
-    },
-    {
-      id: 'security',
-      label: 'Security',
-      to: '/projects/$projectId/databases/$databaseId/tables/$tableId/security',
-      params: { projectId, databaseId, tableId },
-    },
-    {
-      id: 'settings',
-      label: 'Settings',
-      to: '/projects/$projectId/databases/$databaseId/tables/$tableId/settings',
-      params: { projectId, databaseId, tableId },
-    },
-  ]
+  const tableTabs: Tab[] = useMemo(() => {
+    const all: Tab[] = [
+      {
+        id: 'rows',
+        label: 'Rows',
+        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+        params: { projectId, databaseId, tableId },
+      },
+      {
+        id: 'columns',
+        label: 'Columns',
+        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/columns',
+        params: { projectId, databaseId, tableId },
+      },
+      {
+        id: 'indexes',
+        label: 'Indexes',
+        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/indexes',
+        params: { projectId, databaseId, tableId },
+      },
+      ...(showTableSecuritySettings
+        ? [
+            {
+              id: 'security' as const,
+              label: 'Security',
+              to: '/projects/$projectId/databases/$databaseId/tables/$tableId/security',
+              params: { projectId, databaseId, tableId },
+            },
+            {
+              id: 'settings' as const,
+              label: 'Settings',
+              to: '/projects/$projectId/databases/$databaseId/tables/$tableId/settings',
+              params: { projectId, databaseId, tableId },
+            },
+          ]
+        : []),
+    ]
+    return all
+  }, [
+    projectId,
+    databaseId,
+    tableId,
+    showTableSecuritySettings,
+  ])
 
   const getCreateLabel = () => {
     switch (activeTab) {
@@ -1505,80 +1550,52 @@ export function TableView({
             </span>
           </div>
           <div className="flex min-w-0 items-center gap-2 px-2 py-2">
-            <div className="min-w-0 flex-1 [&_[data-slot=select-trigger]]:h-8">
-              <Select
-                value={databaseId}
-                onValueChange={async (newDatabaseId) => {
-                  try {
-                    const tablesData = await queryClient.ensureQueryData(
-                      tablesQueryOptions(
-                        projectId,
-                        newDatabaseId,
-                        0,
-                        100,
-                        undefined,
-                      ),
-                    )
-                    const sorted = [...(tablesData.tables || [])].sort(
-                      (a: { name?: string }, b: { name?: string }) => {
-                        const nameA = a.name?.toLowerCase() || ''
-                        const nameB = b.name?.toLowerCase() || ''
-                        return nameA.localeCompare(nameB)
-                      },
-                    )
-                    const firstTable = sorted[0] as { $id?: string } | undefined
-                    navigate({
-                      to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
-                      params: {
-                        projectId,
-                        databaseId: newDatabaseId,
-                        tableId: firstTable?.$id ?? '-',
-                      },
-                    })
-                  } catch {
-                    navigate({
-                      to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
-                      params: {
-                        projectId,
-                        databaseId: newDatabaseId,
-                        tableId: '-',
-                      },
-                    })
-                  }
-                }}
-              >
-                <SelectTrigger className="h-8 w-full text-[13px]">
-                  <SelectValue placeholder="Select database" />
-                </SelectTrigger>
-                <SelectContent>
-                  {sortedDatabases.map((db) => (
-                    <SelectItem
-                      key={db.$id}
-                      value={db.$id}
-                      className="text-[13px]"
-                    >
-                      <span className="flex items-center gap-1.5">
-                        <Database className="h-4 w-4 shrink-0 text-muted-foreground" />
-                        {db.name}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8 shrink-0"
-                  onClick={() => setCreateDatabaseDialogOpen(true)}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">Create database</TooltipContent>
-            </Tooltip>
+            <DatabaseSelector
+              projectId={projectId}
+              value={databaseId}
+              selectedName={database?.name}
+              createDisabled={noCreateDbPermission}
+              createDisabledTooltip={createPermissionTooltip}
+              onSelect={async (newDatabaseId) => {
+                try {
+                  const tablesData = await queryClient.ensureQueryData(
+                    tablesQueryOptions(
+                      projectId,
+                      newDatabaseId,
+                      0,
+                      100,
+                      undefined,
+                    ),
+                  )
+                  const sorted = [...(tablesData.tables || [])].sort(
+                    (a: { name?: string }, b: { name?: string }) => {
+                      const nameA = a.name?.toLowerCase() || ''
+                      const nameB = b.name?.toLowerCase() || ''
+                      return nameA.localeCompare(nameB)
+                    },
+                  )
+                  const firstTable = sorted[0] as { $id?: string } | undefined
+                  navigate({
+                    to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+                    params: {
+                      projectId,
+                      databaseId: newDatabaseId,
+                      tableId: firstTable?.$id ?? '-',
+                    },
+                  })
+                } catch {
+                  navigate({
+                    to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+                    params: {
+                      projectId,
+                      databaseId: newDatabaseId,
+                      tableId: '-',
+                    },
+                  })
+                }
+              }}
+              onCreateClick={() => setCreateDatabaseDialogOpen(true)}
+            />
           </div>
         </div>
 
@@ -1677,6 +1694,7 @@ export function TableView({
                       projectId={projectId!}
                       databaseId={databaseId}
                       table={table}
+                      showSecuritySettings={showTableSecuritySettings}
                       onCreateSimilar={async (newTableId) => {
                         await queryClient.refetchQueries({
                           queryKey: [
@@ -1784,15 +1802,27 @@ export function TableView({
             </div>
           </div>
           <div className="shrink-0 border-t border-border px-2 py-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 w-full gap-2 pl-6 pr-6 text-[13px] font-medium"
-              onClick={() => setCreateTableDialogOpen(true)}
-            >
-              <Plus className="h-4 w-4" />
-              Create table
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="block w-full">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 w-full gap-2 pl-6 pr-6 text-[13px] font-medium"
+                    onClick={() => setCreateTableDialogOpen(true)}
+                    disabled={noCreateTablePermission}
+                  >
+                    <Plus className="h-4 w-4" />
+                    Create table
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                {noCreateTablePermission
+                  ? createPermissionTooltip
+                  : 'Create table'}
+              </TooltipContent>
+            </Tooltip>
           </div>
         </div>
 
@@ -1811,19 +1841,21 @@ export function TableView({
             <Network className="h-3.5 w-3.5 shrink-0" />
             <span>Visualizer</span>
           </Link>
-          <Link
-            to="/projects/$projectId/databases/$databaseId/tables/$tableId/db-security"
-            params={{ projectId, databaseId, tableId }}
-            className={cn(
-              'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
-              databaseTab === 'db-security'
-                ? 'bg-accent text-foreground'
-                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-            )}
-          >
-            <Lock className="h-3.5 w-3.5 shrink-0" />
-            <span>Security</span>
-          </Link>
+          {!noCreateDbPermission && (
+            <Link
+              to="/projects/$projectId/databases/$databaseId/tables/$tableId/db-security"
+              params={{ projectId, databaseId, tableId }}
+              className={cn(
+                'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
+                databaseTab === 'db-security'
+                  ? 'bg-accent text-foreground'
+                  : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+              )}
+            >
+              <Lock className="h-3.5 w-3.5 shrink-0" />
+              <span>Security</span>
+            </Link>
+          )}
           {features.databaseInsights && (
             <Link
               to="/projects/$projectId/databases/$databaseId/tables/$tableId/insights"
@@ -1867,19 +1899,21 @@ export function TableView({
             <Download className="h-3.5 w-3.5 shrink-0" />
             <span>Export / Import</span>
           </Link>
-          <Link
-            to="/projects/$projectId/databases/$databaseId/tables/$tableId/db-settings"
-            params={{ projectId, databaseId, tableId }}
-            className={cn(
-              'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
-              databaseTab === 'db-settings'
-                ? 'bg-accent text-foreground'
-                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-            )}
-          >
-            <Settings className="h-3.5 w-3.5 shrink-0" />
-            <span>Settings</span>
-          </Link>
+          {!noCreateDbPermission && (
+            <Link
+              to="/projects/$projectId/databases/$databaseId/tables/$tableId/db-settings"
+              params={{ projectId, databaseId, tableId }}
+              className={cn(
+                'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
+                databaseTab === 'db-settings'
+                  ? 'bg-accent text-foreground'
+                  : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+              )}
+            >
+              <Settings className="h-3.5 w-3.5 shrink-0" />
+              <span>Settings</span>
+            </Link>
+          )}
         </div>
       </div>
 
@@ -1934,6 +1968,17 @@ export function TableView({
                 : setSearchValue
           }
           createLabel={isDatabaseLevelView ? undefined : getCreateLabel()}
+          createDisabled={
+            !isDatabaseLevelView &&
+            (activeTab === 'rows'
+              ? noCreateRowPermission
+              : (activeTab === 'columns' || activeTab === 'indexes')
+                ? noCreateTablePermission
+                : false)
+          }
+          createDisabledTooltip={
+            !isDatabaseLevelView ? createPermissionTooltip : undefined
+          }
           onCreate={
             isDatabaseLevelView
               ? undefined
@@ -2002,35 +2047,41 @@ export function TableView({
             !isDatabaseLevelView && activeTab === 'rows' && !hasRows
           }
           beforeCreateButtons={
-            isDatabaseLevelView ? undefined : activeTab === 'columns' ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  if (openSuggestColumnsDialogRef.current) {
-                    openSuggestColumnsDialogRef.current()
-                  }
-                }}
-                className="h-9"
-              >
-                <Lightbulb className="h-3.5 w-3.5 mr-1.5" />
-                Suggest columns
-              </Button>
-            ) : activeTab === 'indexes' ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  if (openSuggestIndexesDialogRef.current) {
-                    openSuggestIndexesDialogRef.current()
-                  }
-                }}
-                className="h-9"
-              >
-                <Lightbulb className="h-3.5 w-3.5 mr-1.5" />
-                Suggest indexes
-              </Button>
-            ) : undefined
+            isDatabaseLevelView || !showTableSecuritySettings
+              ? undefined
+              : activeTab === 'columns'
+                ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (openSuggestColumnsDialogRef.current) {
+                          openSuggestColumnsDialogRef.current()
+                        }
+                      }}
+                      className="h-9"
+                    >
+                      <Lightbulb className="h-3.5 w-3.5 mr-1.5" />
+                      Suggest columns
+                    </Button>
+                  )
+                : activeTab === 'indexes'
+                  ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (openSuggestIndexesDialogRef.current) {
+                            openSuggestIndexesDialogRef.current()
+                          }
+                        }}
+                        className="h-9"
+                      >
+                        <Lightbulb className="h-3.5 w-3.5 mr-1.5" />
+                        Suggest indexes
+                      </Button>
+                    )
+                  : undefined
           }
           collapsible={!isDatabaseLevelView}
           fullWidthBorder
@@ -2058,6 +2109,8 @@ export function TableView({
                   projectId={projectId}
                   value={databaseId}
                   selectedName={database?.name}
+                  createDisabled={noCreateDbPermission}
+                  createDisabledTooltip={createPermissionTooltip}
                   onSelect={async (newDatabaseId) => {
                     try {
                       const tablesData =
@@ -2104,6 +2157,8 @@ export function TableView({
                   databaseId={databaseId}
                   value={tableId}
                   selectedName={selectedTable?.name}
+                  createDisabled={noCreateTablePermission}
+                  createDisabledTooltip={createPermissionTooltip}
                   onSelect={(newTableId) => {
                     navigate({
                       to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
@@ -2193,6 +2248,8 @@ export function TableView({
               {activeTab === 'rows' && (
                 <RowsSpreadsheet
                   table={selectedTable}
+                  canWriteRows={!noCreateRowPermission}
+                  canWriteTables={!noCreateTablePermission}
                   onRefetchReady={(refetchFn) => {
                     rowsRefetchRef.current = refetchFn
                   }}
@@ -2206,6 +2263,7 @@ export function TableView({
               {activeTab === 'columns' && (
                 <ColumnsSpreadsheet
                   table={selectedTable}
+                  canWriteTables={!noCreateTablePermission}
                   onCreateReady={(openDialog) => {
                     openCreateColumnDialogRef.current = openDialog
                   }}
@@ -2217,6 +2275,7 @@ export function TableView({
               {activeTab === 'indexes' && (
                 <IndexesSpreadsheet
                   table={selectedTable}
+                  canWriteTables={!noCreateTablePermission}
                   onCreateReady={(openDialog) => {
                     openCreateIndexDialogRef.current = openDialog
                   }}
@@ -2825,6 +2884,12 @@ export function DatabaseOverview({
   }
 
   const { features } = useConsoleProfile()
+  const { project } = useProject(projectId)
+  const { access } = useOrganizationScopes(project?.teamId)
+  const showDbSecuritySettings =
+    canShowDatabaseSecuritySettings(access, features)
+  const noCreateTablePermission = !canShowTableSecuritySettings(access, features)
+  const showTableSecuritySettings = canShowTableSecuritySettings(access, features)
 
   // Redirect from backups/insights when feature disabled
   useEffect(() => {
@@ -2847,6 +2912,26 @@ export function DatabaseOverview({
     navigate,
   ])
 
+  // Redirect from security/settings when user lacks permission
+  useEffect(() => {
+    if (
+      !showDbSecuritySettings &&
+      (activeTab === 'security' || activeTab === 'settings')
+    ) {
+      navigate({
+        to: '/projects/$projectId/databases/$databaseId',
+        params: { projectId, databaseId },
+        replace: true,
+      })
+    }
+  }, [
+    showDbSecuritySettings,
+    activeTab,
+    projectId,
+    databaseId,
+    navigate,
+  ])
+
   const databaseTabs: Tab[] = useMemo(
     () =>
       [
@@ -2862,12 +2947,16 @@ export function DatabaseOverview({
           to: '/projects/$projectId/databases/$databaseId/visualizer',
           params: { projectId, databaseId },
         },
-        {
-          id: 'security',
-          label: 'Security',
-          to: '/projects/$projectId/databases/$databaseId/security',
-          params: { projectId, databaseId },
-        },
+        ...(showDbSecuritySettings
+          ? [
+              {
+                id: 'security' as const,
+                label: 'Security',
+                to: '/projects/$projectId/databases/$databaseId/security',
+                params: { projectId, databaseId },
+              },
+            ]
+          : []),
         ...(features.databaseInsights
           ? [
               {
@@ -2894,14 +2983,24 @@ export function DatabaseOverview({
           to: '/projects/$projectId/databases/$databaseId/export-import',
           params: { projectId, databaseId },
         },
-        {
-          id: 'settings',
-          label: 'Settings',
-          to: '/projects/$projectId/databases/$databaseId/settings',
-          params: { projectId, databaseId },
-        },
+        ...(showDbSecuritySettings
+          ? [
+              {
+                id: 'settings' as const,
+                label: 'Settings',
+                to: '/projects/$projectId/databases/$databaseId/settings',
+                params: { projectId, databaseId },
+              },
+            ]
+          : []),
       ] as Tab[],
-    [projectId, databaseId, features.databaseBackups, features.databaseInsights],
+    [
+      projectId,
+      databaseId,
+      features.databaseBackups,
+      features.databaseInsights,
+      showDbSecuritySettings,
+    ],
   )
 
   // Tables are already paginated by the API
@@ -3068,6 +3167,14 @@ export function DatabaseOverview({
             activeTab === 'tables' ? handleSearchChange : undefined
           }
           createLabel={activeTab === 'tables' ? 'Create table' : undefined}
+          createDisabled={
+            activeTab === 'tables' ? noCreateTablePermission : false
+          }
+          createDisabledTooltip={
+            activeTab === 'tables'
+              ? "You don't have permission to perform this action."
+              : undefined
+          }
           onCreate={
             activeTab === 'tables'
               ? () => setCreateTableDialogOpen(true)
@@ -3292,6 +3399,7 @@ export function DatabaseOverview({
                               projectId={projectId}
                               databaseId={databaseId}
                               table={table}
+                              showSecuritySettings={showTableSecuritySettings}
                               onCreateSimilar={async () => {
                                 await queryClient.refetchQueries({
                                   queryKey: [
@@ -5050,6 +5158,9 @@ interface SpreadsheetProps {
   onCreateReady?: (openDialog: () => void) => void
   onSuggestReady?: (openDialog: () => void) => void
   onRowsCountChange?: (count: number) => void
+  /** When false, create row/column and suggest actions are disabled (e.g. read-only roles) */
+  canWriteRows?: boolean
+  canWriteTables?: boolean
 }
 
 function RowsSpreadsheet({
@@ -5058,6 +5169,8 @@ function RowsSpreadsheet({
   onCreateRowReady,
   onCreateColumnReady,
   onRowsCountChange,
+  canWriteRows = true,
+  canWriteTables = true,
 }: SpreadsheetProps) {
   const params = useParams({
     strict: false,
@@ -5728,62 +5841,104 @@ function RowsSpreadsheet({
             </div>
             <div className="grid grid-cols-2 gap-3 w-full max-w-2xl">
               {/* Row 1 */}
-              <Card
-                onClick={handleSuggestColumns}
-                className="cursor-pointer transition-colors hover:bg-accent/50 p-0 gap-0 shadow-none"
-              >
-                <div className="flex items-start gap-3 p-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-                    <Lightbulb className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="text-sm font-medium text-foreground">
-                      Suggest columns
-                    </h3>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Use AI to generate columns
-                    </p>
-                  </div>
-                </div>
-              </Card>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Card
+                    onClick={canWriteTables ? handleSuggestColumns : undefined}
+                    className={cn(
+                      'p-0 gap-0 shadow-none',
+                      canWriteTables
+                        ? 'cursor-pointer transition-colors hover:bg-accent/50'
+                        : 'cursor-not-allowed opacity-60',
+                    )}
+                  >
+                    <div className="flex items-start gap-3 p-4">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                        <Lightbulb className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-sm font-medium text-foreground">
+                          Suggest columns
+                        </h3>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Use AI to generate columns
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  {canWriteTables
+                    ? 'Use AI to generate columns'
+                    : "You don't have permission to perform this action."}
+                </TooltipContent>
+              </Tooltip>
               {hasCustomColumns ? (
-                <Card
-                  onClick={handleCreateRow}
-                  className="cursor-pointer transition-colors hover:bg-accent/50 p-0 gap-0 shadow-none"
-                >
-                  <div className="flex items-start gap-3 p-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-                      <Plus className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="text-sm font-medium text-foreground">
-                        Create row
-                      </h3>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Add a new row to this table
-                      </p>
-                    </div>
-                  </div>
-                </Card>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Card
+                      onClick={canWriteRows ? handleCreateRow : undefined}
+                      className={cn(
+                        'p-0 gap-0 shadow-none',
+                        canWriteRows
+                          ? 'cursor-pointer transition-colors hover:bg-accent/50'
+                          : 'cursor-not-allowed opacity-60',
+                      )}
+                    >
+                      <div className="flex items-start gap-3 p-4">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                          <Plus className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-sm font-medium text-foreground">
+                            Create row
+                          </h3>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Add a new row to this table
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    {canWriteRows
+                      ? 'Add a new row to this table'
+                      : "You don't have permission to perform this action."}
+                  </TooltipContent>
+                </Tooltip>
               ) : (
-                <Card
-                  onClick={handleCreateColumn}
-                  className="cursor-pointer transition-colors hover:bg-accent/50 p-0 gap-0 shadow-none"
-                >
-                  <div className="flex items-start gap-3 p-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-                      <Plus className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="text-sm font-medium text-foreground">
-                        Create column
-                      </h3>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Create columns manually
-                      </p>
-                    </div>
-                  </div>
-                </Card>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Card
+                      onClick={canWriteTables ? handleCreateColumn : undefined}
+                      className={cn(
+                        'p-0 gap-0 shadow-none',
+                        canWriteTables
+                          ? 'cursor-pointer transition-colors hover:bg-accent/50'
+                          : 'cursor-not-allowed opacity-60',
+                      )}
+                    >
+                      <div className="flex items-start gap-3 p-4">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                          <Plus className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-sm font-medium text-foreground">
+                            Create column
+                          </h3>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Create columns manually
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    {canWriteTables
+                      ? 'Create columns manually'
+                      : "You don't have permission to perform this action."}
+                  </TooltipContent>
+                </Tooltip>
               )}
               {/* Row 2 */}
               <Card
@@ -6035,17 +6190,30 @@ function RowsSpreadsheet({
               >
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleCreateColumn()
-                      }}
-                      className="absolute inset-0 flex cursor-pointer items-center justify-center transition-colors hover:bg-muted/50"
-                    >
-                      <Plus className="h-4 w-4 text-muted-foreground" />
-                    </button>
+                    <span className="absolute inset-0 flex items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          if (canWriteTables) handleCreateColumn()
+                        }}
+                        disabled={!canWriteTables}
+                        className={cn(
+                          'flex items-center justify-center transition-colors',
+                          canWriteTables
+                            ? 'cursor-pointer hover:bg-muted/50'
+                            : 'cursor-not-allowed opacity-50',
+                        )}
+                      >
+                        <Plus className="h-4 w-4 text-muted-foreground" />
+                      </button>
+                    </span>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom">Create column</TooltipContent>
+                  <TooltipContent side="bottom">
+                    {canWriteTables
+                      ? 'Create column'
+                      : "You don't have permission to perform this action."}
+                  </TooltipContent>
                 </Tooltip>
               </th>
             </tr>
@@ -6385,6 +6553,7 @@ function ColumnsSpreadsheet({
   table,
   onCreateReady,
   onSuggestReady,
+  canWriteTables = true,
 }: SpreadsheetProps) {
   const params = useParams({
     strict: false,
@@ -7418,13 +7587,31 @@ function ColumnsSpreadsheet({
       {/* Footer */}
       <div className="flex items-center justify-between border-t border-border px-4 py-2 text-[12px] text-muted-foreground">
         <div className="flex items-center gap-2">
-          <button
-            onClick={handleCreateColumn}
-            className="flex items-center gap-1.5 hover:text-foreground transition-colors"
-          >
-            <Plus className="h-3.5 w-3.5 cursor-pointer" />
-            <span>Create column</span>
-          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex">
+                <button
+                  type="button"
+                  onClick={handleCreateColumn}
+                  disabled={!canWriteTables}
+                  className={cn(
+                    'flex items-center gap-1.5 transition-colors',
+                    canWriteTables
+                      ? 'hover:text-foreground cursor-pointer'
+                      : 'cursor-not-allowed opacity-50',
+                  )}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>Create column</span>
+                </button>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              {canWriteTables
+                ? 'Create column'
+                : "You don't have permission to perform this action."}
+            </TooltipContent>
+          </Tooltip>
         </div>
         <div className="flex items-center gap-4">
           {suggestedColumns.length > 0 && (
@@ -7622,6 +7809,7 @@ function IndexesSpreadsheet({
   table,
   onCreateReady,
   onSuggestReady,
+  canWriteTables = true,
 }: SpreadsheetProps) {
   const params = useParams({
     strict: false,
@@ -8210,13 +8398,31 @@ function IndexesSpreadsheet({
       {/* Footer */}
       <div className="flex items-center justify-between border-t border-border px-4 py-2 text-[12px] text-muted-foreground">
         <div className="flex items-center gap-2">
-          <button
-            onClick={handleCreateIndex}
-            className="flex items-center gap-1.5 hover:text-foreground transition-colors"
-          >
-            <Plus className="h-3.5 w-3.5 cursor-pointer" />
-            <span>Create index</span>
-          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex">
+                <button
+                  type="button"
+                  onClick={handleCreateIndex}
+                  disabled={!canWriteTables}
+                  className={cn(
+                    'flex items-center gap-1.5 transition-colors',
+                    canWriteTables
+                      ? 'hover:text-foreground cursor-pointer'
+                      : 'cursor-not-allowed opacity-50',
+                  )}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>Create index</span>
+                </button>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              {canWriteTables
+                ? 'Create index'
+                : "You don't have permission to perform this action."}
+            </TooltipContent>
+          </Tooltip>
         </div>
         <div className="flex items-center gap-2">
           {suggestedIndexes.length > 0 && (

@@ -36,8 +36,11 @@ import {
   Dependencies,
   useProject,
   useOrganizationPlan,
+  useOrganizationScopes,
   fetchProjectSites,
 } from '@/lib/react-query/hooks'
+import { canCreateSite } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { sdk } from '@/lib/appwrite/sdk'
 import { formatDistanceToNow } from 'date-fns'
 import { toast } from 'sonner'
@@ -136,13 +139,18 @@ export function View() {
 
   // Get organization plan to check limits
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
 
   // Total count of all sites (without search) - for limit checking
   const totalSitesCount = totalSitesData?.total || 0
 
-  // Check if create button should be disabled
+  // Check if create button should be disabled (plan limit or missing write scope)
+  const noCreatePermission = !canCreateSite(access, features)
   const sitesLimit = organizationPlan?.sites ?? 0
-  const isCreateDisabled = sitesLimit > 0 && totalSitesCount >= sitesLimit
+  const isCreateDisabled =
+    noCreatePermission ||
+    (sitesLimit > 0 && totalSitesCount >= sitesLimit)
 
   // Clear selection when navigating or when search changes
   useEffect(() => {
@@ -269,6 +277,11 @@ export function View() {
           })
         }}
         createDisabled={isCreateDisabled}
+        createDisabledTooltip={
+          noCreatePermission
+            ? "You don't have permission to create sites."
+            : undefined
+        }
         showFilters={false}
         fullWidthBorder
         rightContent={<ViewToggle />}
