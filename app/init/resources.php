@@ -1304,7 +1304,7 @@ Http::setResource('team', function (Document $project, Database $dbForPlatform, 
     });
 
     return $team;
-}, ['project', 'dbForPlatform', 'utopia', 'request', 'authorization']);
+}, ['project', 'dbForPlatform', 'route', 'request', 'authorization']);
 
 Http::setResource(
     'isResourceBlocked',
