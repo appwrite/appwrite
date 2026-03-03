@@ -76,11 +76,15 @@ export async function fetchDomain(domainId: string) {
 }
 
 /**
- * Query function to fetch price for a single domain (getPrice API)
+ * Query function to fetch price for a single domain (getPrice API).
+ * For .ai TLD always requests 2-year price; otherwise uses API default (typically 1 year).
  */
 export async function fetchDomainPrice(domain: string) {
+  const normalized = domain.toLowerCase()
+  const periodYears = normalized.endsWith('.ai') ? 2 : undefined
   const response = await sdk.forConsole.domains.getPrice({
-    domain: domain.toLowerCase(),
+    domain: normalized,
+    ...(periodYears != null && { periodYears }),
   })
   return response
 }
@@ -560,7 +564,8 @@ export function useOrganizationDomains(
  *
  * @param baseName - Base name (e.g. "myapp")
  * @param tlds - TLDs to fetch prices for
- * @returns Map of domain -> { price, available }, loading/error state
+ * @returns Map of domain -> { price, available, periodYears?, premium? }, loading/error state.
+ *   price is total cost; periodYears is 1+ (price covers that many years).
  */
 export function useDomainPrices(
   baseName: string | null | undefined,
@@ -579,13 +584,21 @@ export function useDomainPrices(
   })
 
   const pricesByDomain = useMemo(() => {
-    const map = new Map<string, { price: number; available: boolean }>()
+    const map = new Map<
+      string,
+      { price: number; available: boolean; periodYears?: number; premium?: boolean }
+    >()
     for (let i = 0; i < domains.length; i++) {
       const { data } = queries[i]
       if (data) {
         map.set(domains[i], {
           price: data.price,
           available: data.available,
+          periodYears:
+            typeof (data as { periodYears?: number }).periodYears === 'number'
+              ? (data as { periodYears: number }).periodYears
+              : 1,
+          premium: (data as { premium?: boolean }).premium,
         })
       }
     }

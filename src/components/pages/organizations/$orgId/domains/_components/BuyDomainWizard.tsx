@@ -1,25 +1,28 @@
 /**
  * Buy Domain Wizard
  *
- * Full-screen wizard for buying a domain. Fetches prices via batched getPrice
- * calls (one per TLD in parallel) for fast results.
+ * Full-screen wizard for buying a domain. Shows all TLDs; fetches prices only
+ * for those visible (initial batch + when scrolled into view).
  */
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Search, ArrowRight, XCircle, Sparkles } from 'lucide-react'
+import { Search, ArrowRight, XCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { useDomainPrices } from '@/lib/react-query/hooks/domains'
 
-// TLDs to request from the API (popular options for domain suggestions)
-const POPULAR_TLDS = [
+/** Number of TLDs to fetch on first paint (above the fold) */
+const INITIAL_VISIBLE_COUNT = 24
+
+/** All TLDs shown in the wizard; prices are fetched only for visible cards */
+const ALL_TLDS = [
   'com',
   'net',
   'org',
@@ -40,6 +43,151 @@ const POPULAR_TLDS = [
   'pro',
   'top',
   'live',
+  'info',
+  'biz',
+  'name',
+  'mobi',
+  'asia',
+  'tel',
+  'travel',
+  'jobs',
+  'academy',
+  'agency',
+  'art',
+  'bar',
+  'cafe',
+  'camp',
+  'capital',
+  'care',
+  'careers',
+  'center',
+  'cheap',
+  'church',
+  'city',
+  'claims',
+  'cleaning',
+  'clinic',
+  'club',
+  'codes',
+  'coffee',
+  'community',
+  'company',
+  'computer',
+  'construction',
+  'contractors',
+  'cooking',
+  'cool',
+  'coupons',
+  'credit',
+  'creditcard',
+  'dental',
+  'digital',
+  'direct',
+  'directory',
+  'discount',
+  'education',
+  'email',
+  'energy',
+  'engineer',
+  'engineering',
+  'enterprises',
+  'equipment',
+  'estate',
+  'events',
+  'exchange',
+  'expert',
+  'express',
+  'family',
+  'finance',
+  'financial',
+  'fish',
+  'fitness',
+  'fund',
+  'furniture',
+  'gallery',
+  'garden',
+  'gifts',
+  'gratis',
+  'graphics',
+  'guru',
+  'health',
+  'healthcare',
+  'hockey',
+  'holdings',
+  'hospital',
+  'house',
+  'immo',
+  'immobilien',
+  'industries',
+  'international',
+  'investments',
+  'law',
+  'legal',
+  'life',
+  'loan',
+  'loans',
+  'maison',
+  'management',
+  'market',
+  'marketing',
+  'media',
+  'memorial',
+  'money',
+  'movie',
+  'network',
+  'news',
+  'ninja',
+  'partners',
+  'parts',
+  'photo',
+  'photography',
+  'photos',
+  'pictures',
+  'pizza',
+  'place',
+  'plumbing',
+  'plus',
+  'productions',
+  'properties',
+  'property',
+  'recipes',
+  'rent',
+  'repair',
+  'report',
+  'reviews',
+  'run',
+  'sale',
+  'school',
+  'services',
+  'solutions',
+  'space',
+  'studio',
+  'style',
+  'supplies',
+  'supply',
+  'support',
+  'surgery',
+  'systems',
+  'tax',
+  'taxi',
+  'team',
+  'technology',
+  'theater',
+  'tips',
+  'today',
+  'tools',
+  'training',
+  'ventures',
+  'video',
+  'villas',
+  'vision',
+  'watch',
+  'website',
+  'wiki',
+  'works',
+  'world',
+  'wtf',
+  'zone',
 ]
 
 type DomainSuggestion = {
@@ -47,6 +195,8 @@ type DomainSuggestion = {
   tld: string
   priceLoaded: boolean
   price?: number
+  /** Number of years the price covers (from getPrice periodYears; default 1) */
+  periodYears?: number
   renewal?: number
   taken?: boolean
   premium?: boolean
@@ -60,6 +210,14 @@ export function BuyDomainWizard() {
   const [debouncedSearch, setDebouncedSearch] = useState('')
 
   const fallbackPath = `/organizations/${orgId}/domains/`
+
+  // Only fetch prices for TLDs that have been visible (initial batch + when scrolled into view)
+  const [requestedTlds, setRequestedTlds] = useState<string[]>(() =>
+    ALL_TLDS.slice(0, INITIAL_VISIBLE_COUNT),
+  )
+  const addRequestedTld = useCallback((tld: string) => {
+    setRequestedTlds((prev) => (prev.includes(tld) ? prev : [...prev, tld]))
+  }, [])
 
   // Normalized search (for exact match comparison)
   const normalizedSearch = useMemo(
@@ -76,25 +234,36 @@ export function BuyDomainWizard() {
     return v
   }, [normalizedSearch])
 
-  // Debounce baseName for API calls
+  // Debounce baseName for API calls (wait for typing to settle before fetching prices)
+  const DEBOUNCE_MS = 500
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(baseName), 300)
+    const timer = setTimeout(() => setDebouncedSearch(baseName), DEBOUNCE_MS)
     return () => clearTimeout(timer)
   }, [baseName])
 
   const { pricesByDomain, error } = useDomainPrices(
     debouncedSearch,
-    POPULAR_TLDS,
+    requestedTlds,
   )
 
-  // API data map: domain -> { price, available } from getPrice
+  // API data map: domain -> { price, available, periodYears, premium } from getPrice
   const apiDataByDomain = useMemo(() => {
     const map = new Map<
       string,
-      { price?: number; available: boolean; premium?: boolean }
+      {
+        price?: number
+        available: boolean
+        periodYears?: number
+        premium?: boolean
+      }
     >()
     pricesByDomain.forEach((data, domain) => {
-      map.set(domain, { price: data.price, available: data.available })
+      map.set(domain, {
+        price: data.price,
+        available: data.available,
+        periodYears: data.periodYears ?? 1,
+        premium: data.premium,
+      })
     })
     return map
   }, [pricesByDomain])
@@ -102,10 +271,10 @@ export function BuyDomainWizard() {
   // Optimistic: show suggestions immediately (baseName + TLDs), merge API data when it arrives
   const suggestions = useMemo((): DomainSuggestion[] => {
     if (!baseName || baseName.length < 2) return []
-    const hasExactMatch = POPULAR_TLDS.some(
+    const hasExactMatch = ALL_TLDS.some(
       (tld) => `${baseName}.${tld}` === normalizedSearch,
     )
-    return POPULAR_TLDS.map((tld) => {
+    return ALL_TLDS.map((tld) => {
       const full = `${baseName}.${tld}`
       const apiData = apiDataByDomain.get(full)
       const isExactMatch = full === normalizedSearch
@@ -116,6 +285,7 @@ export function BuyDomainWizard() {
         tld,
         priceLoaded: apiData != null,
         price: apiData?.price ?? undefined,
+        periodYears: apiData?.periodYears ?? 1,
         taken: apiData ? !apiData.available : undefined,
         premium: apiData?.premium,
         isPerfectMatch: isExactMatch || isPreferredCom,
@@ -178,6 +348,7 @@ export function BuyDomainWizard() {
                 key={s.full}
                 suggestion={s}
                 onSelect={handleSelectDomain}
+                onVisible={() => addRequestedTld(s.tld)}
               />
             ))}
           </div>
@@ -195,18 +366,46 @@ export function BuyDomainWizard() {
   )
 }
 
+function formatPricePeriod(periodYears: number): string {
+  if (periodYears <= 1) return '/yr'
+  return `/${periodYears} yrs`
+}
+
 function DomainCard({
   suggestion,
   onSelect,
+  onVisible,
 }: {
   suggestion: DomainSuggestion
   onSelect: (full: string) => void
+  onVisible?: () => void
 }) {
-  const { full, tld, priceLoaded, price, taken, premium, isPerfectMatch } =
+  const { full, tld, priceLoaded, price, periodYears = 1, taken, premium, isPerfectMatch } =
     suggestion
+  const cardRef = useRef<HTMLDivElement>(null)
+  const hasReportedVisible = useRef(false)
+
+  useEffect(() => {
+    if (!onVisible || hasReportedVisible.current) return
+    const el = cardRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (hasReportedVisible.current) return
+        if (entries[0]?.isIntersecting) {
+          hasReportedVisible.current = true
+          onVisible()
+        }
+      },
+      { rootMargin: '100px', threshold: 0 },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [onVisible])
 
   return (
     <div
+      ref={cardRef}
       className={cn(
         'group flex flex-col gap-3 rounded-xl border px-4 py-3.5 backdrop-blur-sm',
         taken
@@ -236,35 +435,36 @@ function DomainCard({
         {premium && (
           <Badge
             variant="info"
-            className="ml-auto shrink-0 gap-0.5 px-1.5 py-0 text-[10px] font-medium"
+            className="ml-auto shrink-0 px-1.5 py-0 text-[10px] font-medium"
           >
-            <Sparkles className="h-3 w-3" />
             Premium
           </Badge>
         )}
       </div>
-      <div className="flex items-center justify-between gap-3">
-        {priceLoaded ? (
-          taken ? (
-            <span className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground animate-in fade-in-0 slide-in-from-bottom-1 duration-200">
-              <XCircle className="h-3.5 w-3.5" />
-              Taken
-            </span>
-          ) : price != null && price > 0 ? (
-            <span className="font-mono text-[13px] font-semibold tabular-nums text-foreground animate-in fade-in-0 slide-in-from-bottom-1 duration-200">
-              ${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              <span className="font-normal text-[11px] text-muted-foreground">
-                /yr
+      <div className="flex items-center justify-between gap-3 min-h-8">
+        <div className="min-h-5 flex items-center">
+          {priceLoaded ? (
+            taken ? (
+              <span className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground animate-in fade-in-0 slide-in-from-bottom-1 duration-200">
+                <XCircle className="h-3.5 w-3.5" />
+                Taken
               </span>
-            </span>
+            ) : price != null && price > 0 ? (
+              <span className="font-mono text-[13px] font-semibold tabular-nums text-foreground animate-in fade-in-0 slide-in-from-bottom-1 duration-200">
+                ${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                <span className="font-normal text-[11px] text-muted-foreground">
+                  {formatPricePeriod(periodYears)}
+                </span>
+              </span>
+            ) : (
+              <span className="text-[12px] text-muted-foreground animate-in fade-in-0 slide-in-from-bottom-1 duration-200">
+                {premium ? 'Contact for price' : '—'}
+              </span>
+            )
           ) : (
-            <span className="text-[12px] text-muted-foreground animate-in fade-in-0 slide-in-from-bottom-1 duration-200">
-              {premium ? 'Contact for price' : '—'}
-            </span>
-          )
-        ) : (
-          <Skeleton className="h-4 w-14 rounded bg-muted/60" />
-        )}
+            <Skeleton className="h-4 w-14 rounded bg-muted/60" />
+          )}
+        </div>
         {!taken && (
           <Button
             size="sm"
