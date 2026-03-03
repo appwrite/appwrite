@@ -849,7 +849,10 @@ class Deletes extends Action
             $processResource = function (string $type) use ($dbForProject, $delete, $resourceType) {
                 $this->listByGroup(
                     collection: $type,
-                    queries: [Query::select(['$id', '$sequence'])],
+                    queries: [
+                        Query::select('$id'),
+                        Query::select('$sequence')
+                    ],
                     database: $dbForProject,
                     callback: function (Document $resource) use ($dbForProject, $delete, $type) {
                         $delete($dbForProject, $resource->getSequence(), $type);
