@@ -115,12 +115,15 @@ Http::post('/v1/graphql/mutation')
     ->inject('promiseAdapter')
     ->action(function (Request $request, Response $response, GQLSchema $schema, Adapter $promiseAdapter) {
         $query = $request->getParams();
+        $type = $request->getHeader('content-type', '');
 
-        if ($request->getHeader('x-sdk-graphql') == 'true') {
-            $query = $query['query'];
+        if (empty($query) && \str_starts_with($type, 'application/json')) {
+            $rawPayload = $request->getRawPayload();
+            $decoded = \json_decode($rawPayload, true);
+            if (\is_array($decoded)) {
+                $query = $decoded;
+            }
         }
-
-        $type = $request->getHeader('content-type');
 
         if (\str_starts_with($type, 'application/graphql')) {
             $query = parseGraphql($request);
@@ -128,6 +131,10 @@ Http::post('/v1/graphql/mutation')
 
         if (\str_starts_with($type, 'multipart/form-data')) {
             $query = parseMultipart($query, $request);
+        }
+
+        if ($request->getHeader('x-sdk-graphql') == 'true' && isset($query['query'])) {
+            $query = $query['query'];
         }
 
         $output = execute($schema, $promiseAdapter, $query);
@@ -166,12 +173,15 @@ Http::post('/v1/graphql')
     ->inject('promiseAdapter')
     ->action(function (Request $request, Response $response, GQLSchema $schema, Adapter $promiseAdapter) {
         $query = $request->getParams();
+        $type = $request->getHeader('content-type', '');
 
-        if ($request->getHeader('x-sdk-graphql') == 'true') {
-            $query = $query['query'];
+        if (empty($query) && \str_starts_with($type, 'application/json')) {
+            $rawPayload = $request->getRawPayload();
+            $decoded = \json_decode($rawPayload, true);
+            if (\is_array($decoded)) {
+                $query = $decoded;
+            }
         }
-
-        $type = $request->getHeader('content-type');
 
         if (\str_starts_with($type, 'application/graphql')) {
             $query = parseGraphql($request);
@@ -179,6 +189,10 @@ Http::post('/v1/graphql')
 
         if (\str_starts_with($type, 'multipart/form-data')) {
             $query = parseMultipart($query, $request);
+        }
+
+        if ($request->getHeader('x-sdk-graphql') == 'true' && isset($query['query'])) {
+            $query = $query['query'];
         }
 
         $output = execute($schema, $promiseAdapter, $query);
