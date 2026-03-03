@@ -1,7 +1,11 @@
 parameters:
   level: 8
   paths:
+    - src/Utopia/Bus
+    - src/Appwrite/Bus
     - src/Appwrite/Transformation
+  bootstrapFiles:
+    - app/init/constants.php
   scanDirectories:
     - vendor/swoole/ide-helper
   excludePaths:

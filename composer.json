@@ -19,7 +19,8 @@
     "autoload": {
         "psr-4": {
             "Appwrite\\": "src/Appwrite",
-            "Executor\\": "src/Executor"
+            "Executor\\": "src/Executor",
+            "Utopia\\Bus\\": "src/Utopia/Bus"
         }
     },
     "autoload-dev": {
