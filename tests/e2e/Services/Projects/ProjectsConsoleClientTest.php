@@ -398,9 +398,6 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
 
         /**
-         * todo: shmuel move this
-         */
-        /**
          * Test old version select queries are failing
          */
         $list = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
@@ -428,7 +425,7 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $list['headers']['status-code']);
-        $this->assertEquals(5, $list['body']['total']);
+        $this->assertEquals(6, $list['body']['total']);
         $project = $list['body']['projects'][0];
         $this->assertEquals('Project Test', $project['name']);
         $this->assertArrayHasKey('$id', $project);

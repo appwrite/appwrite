@@ -3283,7 +3283,9 @@ trait DatabasesBase
         // Filter to setup documents only, since other tests may have created additional docs in this collection.
         $baseQueries = [
             Query::equal('$id', $docIds)->toString(),
-            Query::select(['title', 'releaseYear', '$id'])->toString(),
+            Query::select('title')->toString(),
+            Query::select('releaseYear')->toString(),
+            Query::select('$id')->toString(),
             Query::orderAsc('releaseYear')->toString(),
         ];
 
@@ -3352,7 +3354,7 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'queries' => [
                 Query::equal('$id', $docIds)->toString(),
-                Query::select(['title'])->toString(),
+                Query::select('title')->toString(),
                 Query::orderAsc('releaseYear')->toString(),
             ],
             'ttl' => 10,
@@ -3374,7 +3376,9 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'queries' => [
                 Query::equal('$id', $docIds)->toString(),
-                Query::select(['title', 'releaseYear', '$id'])->toString(),
+                Query::select('title')->toString(),
+                Query::select('releaseYear')->toString(),
+                Query::select('$id')->toString(),
                 Query::orderAsc('releaseYear')->toString(),
             ],
         ]);
@@ -3413,7 +3417,8 @@ trait DatabasesBase
         // Use different select queries from testListDocumentsWithCache to avoid cache key collision.
         $queries = [
             Query::equal('$id', $docIds)->toString(),
-            Query::select(['title', '$id'])->toString(),
+            Query::select('title')->toString(),
+            Query::select('$id')->toString(),
             Query::orderAsc('$createdAt')->toString(),
         ];
 
@@ -3533,12 +3538,10 @@ trait DatabasesBase
         $this->assertEquals(200, $response['headers']['status-code']);
 
         /**
-         * todo:shmuel move this tests please
-         */
-        /**
          * Use specific X-Appwrite-Response-Format 1.8.0
          */
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $document['$collectionId'] . '/documents', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $document[$this->getContainerIdResponseKey()], $document['$id']), array_merge([
+        //$response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $document['$collectionId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'X-Appwrite-Response-Format' => '1.8.0',
