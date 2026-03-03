@@ -53,6 +53,12 @@ class MigrationReport extends Model
                 'default' => 0,
                 'example' => 20,
             ])
+            ->addRule(Resource::TYPE_PLATFORM, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of platforms to be migrated.',
+                'default' => 0,
+                'example' => 5,
+            ])
             ->addRule(Resource::TYPE_SITE, [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Number of sites to be migrated.',
