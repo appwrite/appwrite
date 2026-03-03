@@ -725,7 +725,9 @@ class Event
             $events = $pairedEvents;
         }
         // mirrored events can have duplicates in case of smaller events
-        return array_unique($events);
+        // array unique can turns list to hasmap in case duplicates present
+        // so forcing array value will turn this to array list always
+        return array_values(array_unique($events));
     }
 
     /**

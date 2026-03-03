@@ -510,25 +510,13 @@ class Realtime extends MessagingAdapter
                     $collectionId = $payload->getAttribute('$collectionId', '');
                     $resourceId = $tableId ?: $collectionId;
                     $channels = [];
-                    // backward compat(tablesdb will have databases channels + tablesdb prefixed channels)
-                    if ($parts[0] === 'databases' || $parts[0] === 'tablesdb') {
-                        $prefix = 'databases';
 
-                        $channels = self::getDatabaseChannels('legacy', $database->getId(), $resourceId, $payload->getId(), $prefix);
-
-                        $channels = array_unique([
-                            ...$channels,
-                            ...self::getDatabaseChannels('tablesdb', $database->getId(), $resourceId, $payload->getId(), $prefix)
-                        ]);
-                    }
-
-                    // prefixed channels -> tablesdb
-                    if ($parts[0] !== 'databases') {
-                        $channels = array_unique([
-                            ...$channels,
-                            ...self::getDatabaseChannels($parts[0], $database->getId(), $resourceId, $payload->getId()),
-                        ]);
-                    }
+                    // sending legacy + tablesdb events to both legacy and tablesdb
+                    $channels = array_values(array_unique(array_merge(
+                        self::getDatabaseChannels('legacy', $database->getId(), $resourceId, $payload->getId(), 'databases'),
+                        self::getDatabaseChannels('tablesdb', $database->getId(), $resourceId, $payload->getId(), 'databases'),
+                        self::getDatabaseChannels('tablesdb', $database->getId(), $resourceId, $payload->getId())
+                    )));
 
                     $roles = $collection->getAttribute('documentSecurity', false)
                         ? \array_merge($collection->getRead(), $payload->getRead())
@@ -620,6 +608,7 @@ class Realtime extends MessagingAdapter
                 $channels[] = "{$basePrefix}.{$databaseId}.collections.{$resourceId}.documents";
                 $channels[] = "{$basePrefix}.{$databaseId}.collections.{$resourceId}.documents.{$payloadId}";
                 break;
+
             case 'tablesdb':
                 $channels[] = 'rows';
                 $channels[] = "{$basePrefix}.{$databaseId}.tables.{$resourceId}.rows";
