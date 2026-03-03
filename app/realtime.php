@@ -226,7 +226,7 @@ if (!function_exists('getTelemetry')) {
     }
 }
 
-if (!function_exists('queueForStatsUsage')) {
+if (!function_exists('getQueueForStatsUsageForProject')) {
     function getQueueForStatsUsageForProject(Document $project): StatsUsage
     {
         $ctx = Coroutine::getContext();
