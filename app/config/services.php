@@ -188,7 +188,7 @@ return [
         'name' => 'VCS',
         'subtitle' => 'The VCS service allows you to interact with providers like GitHub, GitLab etc.',
         'description' => '',
-        'controller' => 'api/vcs.php',
+        'controller' => '', // Uses modules
         'sdk' => false,
         'docs' => false,
         'docsUrl' => '',
