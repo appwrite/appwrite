@@ -53,6 +53,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
+use Utopia\Http\Route;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
@@ -1264,13 +1265,12 @@ Http::setResource('devKey', function (Request $request, Document $project, array
     return $key;
 }, ['request', 'project', 'servers', 'dbForPlatform', 'authorization']);
 
-Http::setResource('team', function (Document $project, Database $dbForPlatform, Http $utopia, Request $request, Authorization $authorization) {
+Http::setResource('team', function (Document $project, Database $dbForPlatform, Route $route, Request $request, Authorization $authorization) {
     $teamInternalId = '';
     if ($project->getId() !== 'console') {
         $teamInternalId = $project->getAttribute('teamInternalId', '');
     } else {
-        $route = $utopia->match($request);
-        $path = !empty($route) ? $route->getPath() : $request->getURI();
+        $path = $route->getPath() ?? $request->getURI();
         $orgHeader = $request->getHeader('x-appwrite-organization', '');
         if (str_starts_with($path, '/v1/projects/:projectId')) {
             $uri = $request->getURI();
