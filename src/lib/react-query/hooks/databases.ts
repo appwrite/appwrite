@@ -906,6 +906,7 @@ export async function createProjectTableColumn(
   }
 
   const projectSdk = sdk.forProject(projectId)
+  const data = columnData as Record<string, unknown>
   const {
     key,
     type,
@@ -916,10 +917,11 @@ export async function createProjectTableColumn(
     min,
     max,
     elements,
-    encrypt,
-  } = columnData
+  } = data
+  // TablesDB create methods only add encrypt to payload when typeof encrypt !== 'undefined'. Always pass explicit boolean for text types.
+  const encrypt = data.encrypt === true
 
-  // Call the appropriate method based on column type
+  // Call the appropriate method based on column type (TablesDB: createXColumn with databaseId, tableId, key, ...)
   switch (type) {
     case 'varchar':
       return await projectSdk.tablesDB.createVarcharColumn({
@@ -930,6 +932,7 @@ export async function createProjectTableColumn(
         required,
         xdefault,
         array,
+        encrypt,
       })
     case 'text':
       return await projectSdk.tablesDB.createTextColumn({
@@ -939,6 +942,7 @@ export async function createProjectTableColumn(
         required,
         xdefault,
         array,
+        encrypt,
       })
     case 'mediumtext':
       return await projectSdk.tablesDB.createMediumtextColumn({
@@ -948,6 +952,7 @@ export async function createProjectTableColumn(
         required,
         xdefault,
         array,
+        encrypt,
       })
     case 'longtext':
       return await projectSdk.tablesDB.createLongtextColumn({
@@ -957,6 +962,7 @@ export async function createProjectTableColumn(
         required,
         xdefault,
         array,
+        encrypt,
       })
     case 'string':
       return await projectSdk.tablesDB.createStringColumn({
@@ -1079,6 +1085,7 @@ export async function updateProjectTableColumn(
   }
 
   const projectSdk = sdk.forProject(projectId)
+  const data = columnData as Record<string, unknown>
   const {
     type,
     required = false,
@@ -1088,7 +1095,10 @@ export async function updateProjectTableColumn(
     max,
     elements,
     newKey,
-  } = columnData
+  } = data
+  // Explicit boolean so API receives true/false, not undefined
+  const encrypt =
+    typeof data.encrypt === 'boolean' ? data.encrypt : false
 
   // Call the appropriate update method based on column type
   switch (type) {
@@ -1101,6 +1111,7 @@ export async function updateProjectTableColumn(
         xdefault,
         size,
         newKey,
+        encrypt,
       })
     case 'text':
       return await projectSdk.tablesDB.updateTextColumn({
@@ -1110,6 +1121,7 @@ export async function updateProjectTableColumn(
         required,
         xdefault,
         newKey,
+        encrypt,
       })
     case 'mediumtext':
       return await projectSdk.tablesDB.updateMediumtextColumn({
@@ -1119,6 +1131,7 @@ export async function updateProjectTableColumn(
         required,
         xdefault,
         newKey,
+        encrypt,
       })
     case 'longtext':
       return await projectSdk.tablesDB.updateLongtextColumn({
@@ -1128,6 +1141,7 @@ export async function updateProjectTableColumn(
         required,
         xdefault,
         newKey,
+        encrypt,
       })
     case 'string':
       return await projectSdk.tablesDB.updateStringColumn({
@@ -1138,6 +1152,7 @@ export async function updateProjectTableColumn(
         xdefault,
         size,
         newKey,
+        encrypt,
       })
     case 'integer':
       return await projectSdk.tablesDB.updateIntegerColumn({

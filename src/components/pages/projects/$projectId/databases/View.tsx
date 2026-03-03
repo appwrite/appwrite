@@ -6762,7 +6762,12 @@ function ColumnsSpreadsheet({
           suggestionType === 'string' || suggestionType === 'varchar'
             ? suggestion.size
             : undefined,
-        encrypt: suggestionType === 'string' ? suggestion.encrypt : undefined,
+        encrypt:
+          ['string', 'text', 'mediumtext', 'longtext', 'varchar'].includes(
+            suggestionType,
+          )
+            ? suggestion.encrypt
+            : undefined,
         min: suggestion.min,
         max: suggestion.max,
         elements: suggestion.elements,
@@ -7437,6 +7442,16 @@ function ColumnsSpreadsheet({
               </th>
               <th
                 className={cn(
+                  'min-w-[80px] px-3 py-2 text-left',
+                  headerCellBorderClass,
+                )}
+              >
+                <span className="text-[12px] font-medium text-foreground">
+                  Encrypted
+                </span>
+              </th>
+              <th
+                className={cn(
                   'min-w-[120px] px-3 py-2 text-left',
                   headerCellBorderClass,
                 )}
@@ -7541,6 +7556,15 @@ function ColumnsSpreadsheet({
                   </td>
                   <td className={cn('px-3 py-2', bodyCellBorderClass)}>
                     {col.array ? (
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    ) : (
+                      <span className="text-[12px] text-muted-foreground">
+                        —
+                      </span>
+                    )}
+                  </td>
+                  <td className={cn('px-3 py-2', bodyCellBorderClass)}>
+                    {col.encrypt ? (
                       <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                     ) : (
                       <span className="text-[12px] text-muted-foreground">

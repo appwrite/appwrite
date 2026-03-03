@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { Input } from '@/components/ui/input'
@@ -76,6 +76,18 @@ export interface ColumnFormData {
 const VARCHAR_SIZE_MIN = 1
 const VARCHAR_SIZE_MAX = 16_383
 
+/** Text-like column types that support encryption in the API */
+const TEXT_TYPES_WITH_ENCRYPT: ColumnType[] = [
+  'string',
+  'text',
+  'mediumtext',
+  'longtext',
+  'varchar',
+]
+
+const ENCRYPT_DESCRIPTION =
+  'Values are encrypted at rest (AES-128-GCM). No plain text is stored. Encrypted columns cannot be used in filters or queries.'
+
 interface ColumnDrawerProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -151,6 +163,8 @@ export function ColumnDrawer({
   const [enumElements, setEnumElements] = useState<string[]>([''])
   const [enumElementInput, setEnumElementInput] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
+  // Ref to avoid stale state when user checks Encrypted then immediately submits (state may not have flushed)
+  const encryptCheckedRef = useRef<boolean>(false)
 
   // Initialize form data from column
   useEffect(() => {
@@ -168,6 +182,13 @@ export function ColumnDrawer({
         data.encrypt = column.encrypt || false
       } else if (column.type === 'varchar') {
         data.size = column.size ?? 255
+        data.encrypt = column.encrypt || false
+      } else if (
+        column.type === 'text' ||
+        column.type === 'mediumtext' ||
+        column.type === 'longtext'
+      ) {
+        data.encrypt = column.encrypt || false
       } else if (column.type === 'integer' || column.type === 'double') {
         data.min = column.min
         data.max = column.max
@@ -183,6 +204,7 @@ export function ColumnDrawer({
       }
 
       setFormData(data)
+      encryptCheckedRef.current = data.encrypt === true
     } else {
       // Reset form for create mode
       setFormData({
@@ -194,6 +216,7 @@ export function ColumnDrawer({
       setEnumElements([''])
       setEnumElementInput('')
       setErrors({})
+      encryptCheckedRef.current = false
     }
   }, [column, open])
 
@@ -282,6 +305,9 @@ export function ColumnDrawer({
         formData.size > VARCHAR_SIZE_MAX
       ) {
         newErrors.size = `Size is required and must be between ${VARCHAR_SIZE_MIN} and ${VARCHAR_SIZE_MAX}`
+      } else if (formData.encrypt && formData.size < 150) {
+        newErrors.size =
+          'Encrypted varchar columns require a minimum size of 150'
       } else if (
         !isEditMode &&
         table?.bytesUsed !== undefined &&
@@ -347,6 +373,12 @@ export function ColumnDrawer({
       // For spatial types, array is not supported
       if (['point', 'linestring', 'polygon'].includes(formData.type)) {
         submitData.array = false
+      }
+
+      // Explicit boolean for encryption so API always receives true/false.
+      // Use ref so we get the latest checkbox value even if state hasn't flushed (e.g. user checks then immediately submits).
+      if (TEXT_TYPES_WITH_ENCRYPT.includes(formData.type)) {
+        submitData.encrypt = encryptCheckedRef.current === true
       }
 
       await onSubmit(submitData)
@@ -446,12 +478,17 @@ export function ColumnDrawer({
               <Select
                 value={formData.type}
                 onValueChange={(value) => {
-                  setFormData((prev) => ({
-                    ...prev,
-                    type: value as ColumnType,
-                    // Reset type-specific fields
-                    size: value === 'varchar' ? 255 : undefined,
-                    encrypt: false,
+                  const newType = value as ColumnType
+                  setFormData((prev) => {
+                    const keepEncrypt = TEXT_TYPES_WITH_ENCRYPT.includes(newType)
+                    const nextEncrypt = keepEncrypt ? prev.encrypt ?? false : false
+                    encryptCheckedRef.current = nextEncrypt
+                    return {
+                      ...prev,
+                      type: newType,
+                      // Reset type-specific fields
+                      size: newType === 'varchar' ? 255 : undefined,
+                      encrypt: nextEncrypt,
                     min: undefined,
                     max: undefined,
                     elements: undefined,
@@ -461,12 +498,13 @@ export function ColumnDrawer({
                     twoWayKey: undefined,
                     onDelete: undefined,
                     array:
-                      value === 'point' ||
-                      value === 'linestring' ||
-                      value === 'polygon'
+                      newType === 'point' ||
+                      newType === 'linestring' ||
+                      newType === 'polygon'
                         ? false
                         : prev.array,
-                  }))
+                    }
+                  })
                   if (value === 'enum') {
                     setEnumElements([''])
                   }
@@ -526,45 +564,6 @@ export function ColumnDrawer({
                     </p>
                   )}
                 </div>
-
-                {!isEditMode && (
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="column-encrypt"
-                      checked={formData.encrypt || false}
-                      onCheckedChange={(checked) => {
-                        setFormData((prev) => ({
-                          ...prev,
-                          encrypt: checked as boolean,
-                          size:
-                            checked && (!prev.size || prev.size < 150)
-                              ? 150
-                              : prev.size,
-                        }))
-                      }}
-                      disabled={isLoading}
-                    />
-                    <Label
-                      htmlFor="column-encrypt"
-                      className="text-[12px] font-normal cursor-pointer"
-                    >
-                      Encrypted
-                    </Label>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className="h-3.5 w-3.5 text-muted-foreground" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p className="text-[12px]">
-                            Protect column against data leaks for best privacy
-                            compliance. Encrypted columns cannot be queried.
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                )}
               </>
             )}
 
@@ -590,7 +589,7 @@ export function ColumnDrawer({
                       }))
                     }}
                     placeholder="255"
-                    min={VARCHAR_SIZE_MIN}
+                    min={formData.encrypt ? 150 : VARCHAR_SIZE_MIN}
                     max={VARCHAR_SIZE_MAX}
                     disabled={isLoading}
                     className={errors.size ? 'border-destructive' : ''}
@@ -600,12 +599,18 @@ export function ColumnDrawer({
                       {errors.size}
                     </p>
                   )}
+                  {formData.encrypt && (
+                    <p className="text-[11px] text-muted-foreground">
+                      Encrypted varchar columns require a minimum size of 150.
+                    </p>
+                  )}
                   <p className="text-[11px] text-muted-foreground">
                     Between {VARCHAR_SIZE_MIN.toLocaleString()} and{' '}
                     {VARCHAR_SIZE_MAX.toLocaleString()} characters. Stored in
                     row (counts toward 64 KB row limit).
                   </p>
                 </div>
+
                 {!isEditMode &&
                   table?.bytesUsed !== undefined &&
                   table?.bytesMax !== undefined &&
@@ -643,21 +648,27 @@ export function ColumnDrawer({
               </>
             )}
 
-            {/* Text / Mediumtext / Longtext static hints */}
+            {/* Text / Mediumtext / Longtext: static hints + encryption */}
             {formData.type === 'text' && (
-              <p className="text-[11px] text-muted-foreground">
-                Maximum size: 16,383 characters.
-              </p>
+              <>
+                <p className="text-[11px] text-muted-foreground">
+                  Maximum size: 16,383 characters.
+                </p>
+              </>
             )}
             {formData.type === 'mediumtext' && (
-              <p className="text-[11px] text-muted-foreground">
-                Maximum size: 4,194,303 characters.
-              </p>
+              <>
+                <p className="text-[11px] text-muted-foreground">
+                  Maximum size: 4,194,303 characters.
+                </p>
+              </>
             )}
             {formData.type === 'longtext' && (
-              <p className="text-[11px] text-muted-foreground">
-                Maximum size: 1,073,741,823 characters.
-              </p>
+              <>
+                <p className="text-[11px] text-muted-foreground">
+                  Maximum size: 1,073,741,823 characters.
+                </p>
+              </>
             )}
 
             {/* Integer/Float-specific fields */}
@@ -1359,6 +1370,50 @@ export function ColumnDrawer({
                 )}
               </div>
             )}
+
+            {!isEditMode &&
+              TEXT_TYPES_WITH_ENCRYPT.includes(formData.type) && (
+                <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                  <div className="px-6 py-4">
+                    <h3 className="text-[15px] font-semibold text-foreground">
+                      At-rest encryption
+                    </h3>
+                    <p className="text-[13px] text-muted-foreground mt-2">
+                      {ENCRYPT_DESCRIPTION}
+                    </p>
+                  </div>
+                  <div className="border-t border-border" />
+                  <div className="px-6 py-4">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="column-encrypt"
+                        checked={formData.encrypt || false}
+                        onCheckedChange={(checked) => {
+                          const value = checked === true
+                          encryptCheckedRef.current = value
+                          setFormData((prev) => ({
+                            ...prev,
+                            encrypt: value,
+                            ...((formData.type === 'string' ||
+                              formData.type === 'varchar') &&
+                              value &&
+                              (!prev.size || prev.size < 150)
+                              ? { size: 150 }
+                              : {}),
+                          }))
+                        }}
+                        disabled={isLoading}
+                      />
+                      <Label
+                        htmlFor="column-encrypt"
+                        className="text-[13px] font-medium cursor-pointer"
+                      >
+                        Enable
+                      </Label>
+                    </div>
+                  </div>
+                </div>
+              )}
           </div>
 
           <div className="flex-shrink-0 px-6 py-4 border-t border-border bg-muted/30 flex flex-col gap-2 sm:flex-row sm:justify-start">
