@@ -1175,7 +1175,7 @@ trait MigrationsBase
      */
     public function testGetAppwriteConsoleKey(): void
     {
-        $response = $this->client->call(Client::METHOD_GET, '/migrations/appwrite/console-key', [
+        $response = $this->client->call(Client::METHOD_POST, '/migrations/appwrite/console-key', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -1229,7 +1229,7 @@ trait MigrationsBase
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PLATFORM]['warning']);
 
         // Get a console key for the destination project to access console-scoped endpoints
-        $consoleKeyResponse = $this->client->call(Client::METHOD_GET, '/migrations/appwrite/console-key', [
+        $consoleKeyResponse = $this->client->call(Client::METHOD_POST, '/migrations/appwrite/console-key', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],

@@ -694,14 +694,14 @@ Http::get('/v1/migrations/:migrationId')
         $response->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
-Http::get('/v1/migrations/appwrite/console-key')
+Http::post('/v1/migrations/appwrite/console-key')
     ->groups(['api', 'migrations'])
-    ->desc('Generate console API key for migration')
+    ->desc('Create console API key for migration')
     ->label('scope', 'migrations.write')
     ->label('sdk', new Method(
         namespace: 'migrations',
         group: null,
-        name: 'getAppwriteConsoleKey',
+        name: 'createAppwriteConsoleKey',
         description: '/docs/references/migrations/migration-appwrite-console-key.md',
         auth: [AuthType::KEY],
         responses: [
