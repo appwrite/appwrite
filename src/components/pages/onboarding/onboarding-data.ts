@@ -1,4 +1,5 @@
 // Onboarding mock data and types
+import { getBaseEndpoint } from '@/lib/appwrite/sdk'
 
 export type OnboardingIntent =
   | 'deploy-site'
@@ -369,29 +370,32 @@ export const codeSnippets = {
     ruby: 'gem install appwrite',
     deno: "import { Client } from 'https://deno.land/x/appwrite/mod.ts'",
   },
-  initClient: {
-    web: `import { Client } from 'appwrite';
+  get initClient() {
+    const endpoint = getBaseEndpoint()
+    return {
+      web: `import { Client } from 'appwrite';
 
 const client = new Client()
-    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setEndpoint('${endpoint}')
     .setProject('<PROJECT_ID>');`,
-    node: `const { Client } = require('node-appwrite');
+      node: `const { Client } = require('node-appwrite');
 
 const client = new Client()
-    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setEndpoint('${endpoint}')
     .setProject('<PROJECT_ID>')
     .setKey('<API_KEY>');`,
-    python: `from appwrite.client import Client
+      python: `from appwrite.client import Client
 
 client = Client()
-client.set_endpoint('https://cloud.appwrite.io/v1')
+client.set_endpoint('${endpoint}')
 client.set_project('<PROJECT_ID>')
 client.set_key('<API_KEY>')`,
-    flutter: `import 'package:appwrite/appwrite.dart';
+      flutter: `import 'package:appwrite/appwrite.dart';
 
 final client = Client()
-    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setEndpoint('${endpoint}')
     .setProject('<PROJECT_ID>');`,
+    }
   },
   createAccount: {
     web: `import { Account, ID } from 'appwrite';

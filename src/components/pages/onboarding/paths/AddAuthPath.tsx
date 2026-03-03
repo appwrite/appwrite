@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useOnboarding } from '../OnboardingLayout'
+import { getBaseEndpoint } from '@/lib/appwrite/sdk'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import {
@@ -148,7 +149,7 @@ export function AddAuthPath() {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Endpoint</span>
                   <code className="rounded bg-muted px-2 py-0.5 font-mono text-xs">
-                    https://cloud.appwrite.io/v1
+                    {getBaseEndpoint()}
                   </code>
                 </div>
               </div>
