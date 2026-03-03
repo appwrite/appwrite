@@ -3541,7 +3541,7 @@ trait DatabasesBase
          * Use specific X-Appwrite-Response-Format 1.8.0
          */
         $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $document[$this->getContainerIdResponseKey()]), array_merge([
-        //$response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $document['$collectionId'] . '/documents', array_merge([
+            //$response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $document['$collectionId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'X-Appwrite-Response-Format' => '1.8.0',
