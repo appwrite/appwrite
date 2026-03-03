@@ -573,7 +573,7 @@ export function useDomainPrices(
 ) {
   const domains = useMemo(
     () =>
-      baseName && baseName.length >= 2
+      baseName && baseName.length >= 1
         ? tlds.map((tld) => `${baseName}.${tld}`)
         : [],
     [baseName, tlds],
