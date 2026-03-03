@@ -288,7 +288,6 @@ export function UserContextMenu({
           <ContextMenuSeparator />
           <ContextMenuItem
             onSelect={handleDeleteClick}
-            className="text-destructive focus:text-destructive"
           >
             <ContextMenuIcon icon={Trash2} />
             Delete
