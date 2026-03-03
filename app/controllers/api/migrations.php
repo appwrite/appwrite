@@ -697,7 +697,7 @@ Http::get('/v1/migrations/:migrationId')
 Http::get('/v1/migrations/appwrite/console-key')
     ->groups(['api', 'migrations'])
     ->desc('Generate console API key for migration')
-    ->label('scope', 'migrations.read')
+    ->label('scope', 'migrations.write')
     ->label('sdk', new Method(
         namespace: 'migrations',
         group: null,
