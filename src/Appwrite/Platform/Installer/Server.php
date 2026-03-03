@@ -61,6 +61,7 @@ class Server
         require_once __DIR__ . '/Http/Installer/Status.php';
         require_once __DIR__ . '/Http/Installer/Validate.php';
         require_once __DIR__ . '/Http/Installer/Complete.php';
+        require_once __DIR__ . '/Http/Installer/Shutdown.php';
         require_once __DIR__ . '/Http/Installer/Install.php';
         require_once __DIR__ . '/Http/Installer/Error.php';
 

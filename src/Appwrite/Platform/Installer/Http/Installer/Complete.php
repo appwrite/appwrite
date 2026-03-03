@@ -4,16 +4,12 @@ namespace Appwrite\Platform\Installer\Http\Installer;
 
 use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server;
-use Swoole\Http\Server as SwooleServer;
-use Swoole\Timer;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Http\Adapter\Swoole\Response;
 use Utopia\Platform\Action;
 
 class Complete extends Action
 {
-    private const int SHUTDOWN_DELAY_SECONDS = 5;
-
     public static function getName(): string
     {
         return 'installerComplete';
@@ -28,11 +24,10 @@ class Complete extends Action
             ->inject('request')
             ->inject('response')
             ->inject('installerState')
-            ->inject('swooleServer')
             ->callback($this->action(...));
     }
 
-    public function action(Request $request, Response $response, State $state, ?SwooleServer $swooleServer): void
+    public function action(Request $request, Response $response, State $state): void
     {
         if (!Validate::validateCsrf($request)) {
             $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
@@ -75,11 +70,5 @@ class Complete extends Action
         @unlink(Server::INSTALLER_CONFIG_FILE);
 
         $response->json(['success' => true]);
-
-        if ($swooleServer) {
-            Timer::after(self::SHUTDOWN_DELAY_SECONDS * 1000, function () use ($swooleServer) {
-                $swooleServer->shutdown();
-            });
-        }
     }
 }
