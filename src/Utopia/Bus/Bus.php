@@ -35,26 +35,17 @@ class Bus
         $resolver = $this->resolver;
         $listeners = $this->listeners[$event::class] ?? [];
 
-        /** @var array<array{Listener, array<mixed>}> $resolved */
-        $resolved = [];
         foreach ($listeners as $listener) {
             $deps = array_map($resolver, $listener->getInjections());
-            $resolved[] = [$listener, $deps];
-        }
-
-        go(function () use ($resolved, $event) {
-            foreach ($resolved as [$listener, $deps]) {
-                $action = 'listener.' . $listener::getName();
-                Span::init($action);
-                Span::add('bus.event', $event::class);
-                try {
-                    ($listener->getCallback())($event, ...$deps);
-                } catch (\Throwable $e) {
-                    Span::error($e);
-                } finally {
-                    Span::current()?->finish();
-                }
+            Span::init('listener.' . $listener::getName());
+            Span::add('bus.event', $event::class);
+            try {
+                ($listener->getCallback())($event, ...$deps);
+            } catch (\Throwable $e) {
+                Span::error($e);
+            } finally {
+                Span::current()?->finish();
             }
-        });
+        }
     }
 }
