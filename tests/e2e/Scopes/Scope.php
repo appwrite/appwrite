@@ -43,21 +43,184 @@ abstract class Scope extends TestCase
         $this->client = null;
     }
 
-    protected function getLastEmail(int $limit = 1): array
+    /**
+     * @var array|null Cached console variables
+     */
+    protected static ?array $consoleVariables = null;
+
+    /**
+     * Fetch console variables from the API
+     */
+    protected function getConsoleVariables(): array
     {
-        sleep(3);
-
-        $emails = json_decode(file_get_contents('http://maildev:1080/email'), true);
-
-        if ($emails && is_array($emails)) {
-            if ($limit === 1) {
-                return end($emails);
-            } else {
-                return array_slice($emails, -1 * $limit);
-            }
+        if (self::$consoleVariables !== null) {
+            return self::$consoleVariables;
         }
 
-        return [];
+        $root = $this->getRoot();
+
+        $response = $this->client->call(Client::METHOD_GET, '/console/variables', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $root['session'],
+        ]);
+
+        self::$consoleVariables = $response['body'] ?? [];
+
+        return self::$consoleVariables;
+    }
+
+    /**
+     * Check if the database adapter supports relationships
+     */
+    protected function getSupportForRelationships(): bool
+    {
+        return $this->getConsoleVariables()['supportForRelationships'] ?? true;
+    }
+
+    /**
+     * Check if the database adapter supports operators
+     */
+    protected function getSupportForOperators(): bool
+    {
+        return $this->getConsoleVariables()['supportForOperators'] ?? true;
+    }
+
+    /**
+     * Check if the database adapter supports spatial attributes
+     */
+    protected function getSupportForSpatials(): bool
+    {
+        return $this->getConsoleVariables()['supportForSpatials'] ?? true;
+    }
+
+    /**
+     * Check if the database adapter supports spatial indexes on nullable columns
+     */
+    protected function getSupportForSpatialIndexNull(): bool
+    {
+        return $this->getConsoleVariables()['supportForSpatialIndexNull'] ?? false;
+    }
+
+    /**
+     * Check if the database adapter supports fulltext wildcard search
+     */
+    protected function getSupportForFulltextWildcard(): bool
+    {
+        return $this->getConsoleVariables()['supportForFulltextWildcard'] ?? true;
+    }
+
+    /**
+     * Check if the database adapter supports multiple fulltext indexes per collection
+     */
+    protected function getSupportForMultipleFulltextIndexes(): bool
+    {
+        return $this->getConsoleVariables()['supportForMultipleFulltextIndexes'] ?? true;
+    }
+
+    /**
+     * Check if the database adapter supports resizing attributes
+     */
+    protected function getSupportForAttributeResizing(): bool
+    {
+        return $this->getConsoleVariables()['supportForAttributeResizing'] ?? true;
+    }
+
+    /**
+     * Check if the database adapter supports fixed schemas with row width limits
+     */
+    protected function getSupportForSchemas(): bool
+    {
+        return $this->getConsoleVariables()['supportForSchemas'] ?? true;
+    }
+
+    /**
+     * Get the maximum index length supported by the database adapter
+     */
+    protected function getMaxIndexLength(): int
+    {
+        return $this->getConsoleVariables()['maxIndexLength'] ?? 768;
+    }
+
+    /**
+     * Check if the database adapter uses integer sequence IDs
+     */
+    protected function getSupportForIntegerIds(): bool
+    {
+        return $this->getConsoleVariables()['supportForIntegerIds'] ?? true;
+    }
+
+    protected function getLastEmail(int $limit = 1, ?callable $probe = null): array
+    {
+        $result = [];
+        $this->assertEventually(function () use (&$result, $limit, $probe) {
+            $emails = json_decode(file_get_contents('http://maildev:1080/email'), true);
+
+            $this->assertNotEmpty($emails, 'Maildev should have at least one email');
+            $this->assertIsArray($emails);
+
+            if ($probe !== null && $limit === 1) {
+                for ($i = count($emails) - 1; $i >= 0; $i--) {
+                    try {
+                        $probe($emails[$i]);
+                        $result = $emails[$i];
+                        return;
+                    } catch (\Throwable) {
+                        continue;
+                    }
+                }
+                $this->fail('No email matching probe found');
+            } elseif ($limit === 1) {
+                $result = end($emails);
+            } else {
+                $result = array_slice($emails, -1 * $limit);
+                $this->assertCount($limit, $result, "Expected {$limit} emails but only got " . count($result));
+            }
+
+            $this->assertNotEmpty($result, 'Expected email result to be non-empty');
+        }, 15_000, 500);
+
+        return $result;
+    }
+
+    /**
+     * Get the last email sent to a specific address.
+     * This is more reliable than getLastEmail() when tests run in parallel.
+     */
+    protected function getLastEmailByAddress(string $address, ?callable $probe = null): array
+    {
+        $result = [];
+        $this->assertEventually(function () use (&$result, $address, $probe) {
+            $emails = json_decode(file_get_contents('http://maildev:1080/email'), true);
+
+            $this->assertNotEmpty($emails, 'Maildev should have at least one email');
+            $this->assertIsArray($emails);
+
+            // Search from the end (most recent) to the beginning
+            for ($i = count($emails) - 1; $i >= 0; $i--) {
+                $email = $emails[$i];
+                if (isset($email['to']) && is_array($email['to'])) {
+                    foreach ($email['to'] as $recipient) {
+                        if (isset($recipient['address']) && $recipient['address'] === $address) {
+                            if ($probe !== null) {
+                                try {
+                                    $probe($email);
+                                } catch (\Throwable) {
+                                    continue 2;
+                                }
+                            }
+                            $result = $email;
+                            return;
+                        }
+                    }
+                }
+            }
+
+            $this->fail("No email found for address: {$address}" . ($probe !== null ? ' matching probe' : ''));
+        }, 15_000, 500);
+
+        return $result;
     }
 
     protected function extractQueryParamsFromEmailLink(string $html): array
@@ -126,16 +289,121 @@ abstract class Scope extends TestCase
     }
 
     /**
-     * @deprecated Use assertLastRequest instead. Used only historically in webhook tests
+     * @deprecated Use getLastRequestForProject instead. Used only historically in webhook tests
      */
-    protected function getLastRequest(): array
+    protected function getLastRequest(?callable $probe = null): array
     {
-        $hostname = 'request-catcher-webhook';
+        $project = $this->getProject();
+        $this->assertArrayHasKey('$id', $project, 'Project must have an $id');
+        return $this->getLastRequestForProject($project['$id'], self::REQUEST_TYPE_WEBHOOK, [], 10, 500, $probe);
+    }
 
-        sleep(2);
+    /**
+     * Get the last webhook request for a specific project.
+     * Polls with retry to handle parallel test race conditions.
+     */
+    protected function getLastRequestForProject(
+        string $projectId,
+        string $type = self::REQUEST_TYPE_WEBHOOK,
+        array $queryParams = [],
+        int $maxAttempts = 10,
+        int $delayMs = 500,
+        ?callable $probe = null
+    ): array {
+        $hostname = match ($type) {
+            self::REQUEST_TYPE_WEBHOOK => 'request-catcher-webhook',
+            self::REQUEST_TYPE_SMS => 'request-catcher-sms',
+            default => throw new \Exception('Invalid request catcher type.'),
+        };
+        $enforceProjectId = $type === self::REQUEST_TYPE_WEBHOOK;
 
-        $request = json_decode(file_get_contents('http://' . $hostname . ':5000/__last_request__'), true);
-        $request['data'] = json_decode($request['data'], true);
+        if (empty($queryParams)) {
+            $queryParams = [
+                'header_X-Appwrite-Webhook-Project-Id' => $projectId,
+            ];
+        }
+
+        $query = http_build_query($queryParams);
+
+        for ($attempt = 0; $attempt < $maxAttempts; $attempt++) {
+            $requests = json_decode(file_get_contents('http://' . $hostname . ':5000/__find_request__?' . $query), true);
+            if (is_array($requests)) {
+                for ($i = count($requests) - 1; $i >= 0; $i--) {
+                    $request = $this->decodeRequestData($requests[$i]);
+                    if ($probe !== null) {
+                        try {
+                            $probe($request);
+                            return $request;
+                        } catch (\Throwable $error) {
+                            continue;
+                        }
+                    }
+
+                    if ($enforceProjectId) {
+                        $requestProjectId = $request['headers']['X-Appwrite-Webhook-Project-Id'] ?? '';
+                        if ($requestProjectId === $projectId) {
+                            return $request;
+                        }
+                    } else {
+                        return $request;
+                    }
+                }
+            }
+
+            usleep($delayMs * 1000);
+        }
+
+        $requests = json_decode(file_get_contents('http://' . $hostname . ':5000/__find_request__?' . $query), true);
+        if (is_array($requests)) {
+            for ($i = count($requests) - 1; $i >= 0; $i--) {
+                $request = $this->decodeRequestData($requests[$i]);
+                if ($probe !== null) {
+                    try {
+                        $probe($request);
+                        return $request;
+                    } catch (\Throwable $error) {
+                        continue;
+                    }
+                }
+
+                if ($enforceProjectId) {
+                    $requestProjectId = $request['headers']['X-Appwrite-Webhook-Project-Id'] ?? '';
+                    if ($requestProjectId === $projectId) {
+                        return $request;
+                    }
+                } else {
+                    return $request;
+                }
+            }
+        }
+
+        return [];
+    }
+
+    protected function decodeRequestData(array $request): array
+    {
+        if (!array_key_exists('data', $request)) {
+            return $request;
+        }
+
+        if (is_array($request['data'])) {
+            return $request;
+        }
+
+        if (!is_string($request['data']) || $request['data'] === '') {
+            return $request;
+        }
+
+        $decoded = json_decode($request['data'], true);
+        if (json_last_error() === JSON_ERROR_NONE) {
+            $request['data'] = $decoded;
+            return $request;
+        }
+
+        parse_str($request['data'], $parsed);
+        if (!empty($parsed)) {
+            $request['data'] = $parsed;
+        }
 
         return $request;
     }
@@ -164,7 +432,8 @@ abstract class Scope extends TestCase
             return self::$root;
         }
 
-        $email = uniqid() . 'user@localhost.test';
+        // Use more entropy to avoid collisions in parallel test execution
+        $email = uniqid('', true) . getmypid() . bin2hex(random_bytes(4)) . '@localhost.test';
         $password = 'password';
         $name = 'User Name';
 
@@ -190,13 +459,11 @@ abstract class Scope extends TestCase
             'password' => $password,
         ]);
 
-        $session = $session['cookies']['a_session_console'];
-
         self::$root = [
             '$id' => ID::custom($root['body']['$id']),
             'name' => $root['body']['name'],
             'email' => $root['body']['email'],
-            'session' => $session,
+            'session' => $session['cookies']['a_session_console'],
         ];
 
         return self::$root;
@@ -212,18 +479,21 @@ abstract class Scope extends TestCase
      */
     public function getUser(bool $fresh = false): array
     {
-        if (!$fresh && isset(self::$user[$this->getProject()['$id']])) {
-            return self::$user[$this->getProject()['$id']];
+        $projectId = $this->getProject()['$id'];
+
+        if (!$fresh && isset(self::$user[$projectId])) {
+            return self::$user[$projectId];
         }
 
-        $email = uniqid() . 'user@localhost.test';
+        // Use more entropy to avoid collisions in parallel test execution
+        $email = uniqid('', true) . getmypid() . bin2hex(random_bytes(4)) . '@localhost.test';
         $password = 'password';
         $name = 'User Name';
 
         $user = $this->client->call(Client::METHOD_POST, '/account', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $projectId,
         ], [
             'userId' => ID::unique(),
             'email' => $email,
@@ -236,22 +506,20 @@ abstract class Scope extends TestCase
         $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $projectId,
         ], [
             'email' => $email,
             'password' => $password,
         ]);
 
-        $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
-
-        self::$user[$this->getProject()['$id']] = [
+        self::$user[$projectId] = [
             '$id' => ID::custom($user['body']['$id']),
             'name' => $user['body']['name'],
             'email' => $user['body']['email'],
-            'session' => $token,
+            'session' => $session['cookies']['a_session_' . $projectId],
             'sessionId' => $session['body']['$id'],
         ];
 
-        return self::$user[$this->getProject()['$id']];
+        return self::$user[$projectId];
     }
 }

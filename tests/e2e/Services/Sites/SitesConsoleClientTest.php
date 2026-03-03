@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Sites;
 
+use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -14,9 +15,7 @@ class SitesConsoleClientTest extends Scope
     use SideConsole;
     use SitesBase;
 
-    /**
-     * @group screenshots
-    */
+    #[Group('screenshots')]
     public function testSiteScreenshot(): void
     {
         $siteId = $this->setupSite([

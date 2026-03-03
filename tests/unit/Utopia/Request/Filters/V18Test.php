@@ -4,6 +4,7 @@ namespace Tests\Unit\Utopia\Request\Filters;
 
 use Appwrite\Utopia\Request\Filter;
 use Appwrite\Utopia\Request\Filters\V18;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class V18Test extends TestCase
@@ -22,7 +23,7 @@ class V18Test extends TestCase
     {
     }
 
-    public function deleteMfaAuthenticatorProvider()
+    public static function deleteMfaAuthenticatorProvider(): array
     {
         return [
             'remove otp' => [
@@ -37,9 +38,7 @@ class V18Test extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider deleteMfaAuthenticatorProvider
-     */
+    #[DataProvider('deleteMfaAuthenticatorProvider')]
     public function testdeleteMfaAuthenticator(array $content, array $expected): void
     {
         $model = 'account.deleteMfaAuthenticator';

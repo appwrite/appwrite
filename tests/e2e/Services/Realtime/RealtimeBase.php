@@ -10,7 +10,7 @@ trait RealtimeBase
     private function getWebsocket(
         array $channels = [],
         array $headers = [],
-        string $projectId = null,
+        ?string $projectId = null,
         ?array $queries = null
     ): WebSocketClient {
         if (is_null($projectId)) {
@@ -63,7 +63,7 @@ trait RealtimeBase
             "ws://appwrite.test/v1/realtime?" . $queryString,
             [
                 "headers" => $headers,
-                "timeout" => 30,
+                "timeout" => 45,
             ]
         );
     }
@@ -84,7 +84,7 @@ trait RealtimeBase
             "ws://appwrite.test/v1/realtime?" . $queryString,
             [
                 "headers" => $headers,
-                "timeout" => 30,
+                "timeout" => 45,
             ]
         );
     }
@@ -129,6 +129,25 @@ trait RealtimeBase
         );
         \usleep(250000); // 250ms
         $this->expectException(ConnectionException::class); // Check if server disconnected client
+        $client->close();
+    }
+
+    public function testConnectionRegionCheck(): void
+    {
+        /**
+         * Test for SUCCESS
+         * A project whose region matches the server region should connect successfully.
+         */
+        $client = $this->getWebsocket(['documents']);
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertArrayHasKey('channels', $response['data']);
+        $this->assertContains('documents', $response['data']['channels']);
+
         $client->close();
     }
 }

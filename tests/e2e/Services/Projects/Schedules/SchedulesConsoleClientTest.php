@@ -16,13 +16,58 @@ class SchedulesConsoleClientTest extends Scope
     use SchedulesBase;
     use SideClient;
 
-    /**
-     * @depends testCreateProject
-     */
-    public function testCreateSchedule($data): array
+    protected static array $cachedScheduleData = [];
+
+    protected function setupScheduleData(): array
     {
-        $id = $data['projectId'] ?? '';
-        $apiKey = $data['apiKey'] ?? '';
+        if (!empty(self::$cachedScheduleData)) {
+            return self::$cachedScheduleData;
+        }
+
+        $data = $this->setupScheduleProjectData();
+        $id = $data['projectId'];
+        $apiKey = $data['apiKey'];
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-key' => $apiKey,
+        ], [
+            'functionId' => ID::unique(),
+            'name' => 'Test Schedule Function',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'execute' => ['any'],
+        ]);
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+        $functionId = $function['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/schedules', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'resourceType' => 'function',
+            'resourceId' => $functionId,
+            'schedule' => '0 0 * * *',
+            'active' => true,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        self::$cachedScheduleData = array_merge($data, [
+            'scheduleId' => $response['body']['$id'],
+            'functionId' => $functionId,
+        ]);
+
+        return self::$cachedScheduleData;
+    }
+
+    public function testCreateSchedule(): void
+    {
+        $data = $this->setupScheduleProjectData();
+        $id = $data['projectId'];
+        $apiKey = $data['apiKey'];
 
         /**
          * Test for SUCCESS
@@ -80,11 +125,6 @@ class SchedulesConsoleClientTest extends Scope
 
         $this->assertEquals(201, $responseWithData['headers']['status-code']);
         $this->assertEquals($scheduleData, $responseWithData['body']['data']);
-
-        $data = array_merge($data, [
-            'scheduleId' => $response['body']['$id'],
-            'functionId' => $functionId,
-        ]);
 
         /**
          * Test for FAILURE
@@ -158,17 +198,13 @@ class SchedulesConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    /**
-     * @depends testCreateSchedule
-     */
-    public function testGetSchedule($data): array
+    public function testGetSchedule(): void
     {
-        $id = $data['projectId'] ?? '';
-        $scheduleId = $data['scheduleId'] ?? '';
+        $data = $this->setupScheduleData();
+        $id = $data['projectId'];
+        $scheduleId = $data['scheduleId'];
 
         /**
          * Test for SUCCESS
@@ -195,16 +231,12 @@ class SchedulesConsoleClientTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    /**
-     * @depends testCreateSchedule
-     */
-    public function testListSchedules($data): array
+    public function testListSchedules(): void
     {
-        $id = $data['projectId'] ?? '';
+        $data = $this->setupScheduleData();
+        $id = $data['projectId'];
 
         /**
          * Test for SUCCESS
@@ -284,16 +316,12 @@ class SchedulesConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    /**
-     * @depends testCreateSchedule
-     */
-    public function testScheduleProjectIsolation($data): void
+    public function testScheduleProjectIsolation(): void
     {
-        $scheduleId = $data['scheduleId'] ?? '';
+        $data = $this->setupScheduleData();
+        $scheduleId = $data['scheduleId'];
 
         // Create a second project
         $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([

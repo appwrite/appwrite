@@ -59,7 +59,8 @@ class Mapper
             'none' => Types::json(),
             'any' => Types::json(),
             'array' => Types::json(),
-            'enum' => Type::string()
+            'enum' => Type::string(),
+            'id' => Type::string()
         ];
 
         foreach ($defaults as $type => $default) {

@@ -98,16 +98,14 @@ jobs:
           fail-on-cache-miss: true
 
       - name: Load and Start Appwrite
+        timeout-minutes: 3
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose up -d
-          sleep 10
-
-      - name: Logs
-        run: docker compose logs appwrite
-
-      - name: Doctor
-        run: docker compose exec -T appwrite doctor
+          until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
+            echo "Waiting for Appwrite to be ready..."
+            sleep 2
+          done
 
       - name: Environment Variables
         run: docker compose exec -T appwrite vars
@@ -115,8 +113,9 @@ jobs:
       - name: Run Unit Tests
         uses: itznotabug/php-retry@v3
         with:
-          max_attempts: 3
-          timeout_minutes: 30
+          max_attempts: 2
+          retry_wait_seconds: 300
+          timeout_minutes: 15
           job_id: ${{ job.check_run_id }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           test_dir: tests/unit
@@ -144,11 +143,15 @@ jobs:
           fail-on-cache-miss: true
 
       - name: Load and Start Appwrite
+        timeout-minutes: 3
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose up -d
-          sleep 10
-          
+          until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
+            echo "Waiting for Appwrite to be ready..."
+            sleep 2
+          done
+
       - name: Wait for Open Runtimes
         timeout-minutes: 3
         run: |
@@ -160,8 +163,9 @@ jobs:
       - name: Run General Tests
         uses: itznotabug/php-retry@v3
         with:
-          max_attempts: 3
-          timeout_minutes: 30
+          max_attempts: 2
+          retry_wait_seconds: 300
+          timeout_minutes: 15
           job_id: ${{ job.check_run_id }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           test_dir: tests/e2e/General
@@ -173,10 +177,8 @@ jobs:
       - name: Failure Logs
         if: failure()
         run: |
-          echo "=== Appwrite Worker Builds Logs ==="
-          docker compose logs appwrite-worker-builds
-          echo "=== OpenRuntimes Executor Logs ==="
-          docker compose logs openruntimes-executor
+          echo "=== Appwrite Logs ==="
+          docker compose logs
 
   e2e_service_test:
     name: E2E Service Test
@@ -190,15 +192,14 @@ jobs:
       matrix:
         db_adapter: [
           MARIADB,
-          POSTGRESQL
+          POSTGRESQL,
+          MONGODB
         ]
-
         service: [
           Account,
           Avatars,
           Console,
-          Databases/Legacy,
-          Databases/TablesDB,
+          Databases,
           Functions,
           FunctionsSchedule,
           GraphQL,
@@ -228,12 +229,37 @@ jobs:
           path: /tmp/${{ env.IMAGE }}.tar
           fail-on-cache-miss: true
 
+      - name: Set DB Adapter environment
+        id: set-db-env
+        run: |
+          DB_ADAPTER_LOWER=$(echo "${{ matrix.db_adapter }}" | tr 'A-Z' 'a-z')
+          echo "COMPOSE_PROFILES=${DB_ADAPTER_LOWER}" >> $GITHUB_ENV
+          
+          if [ "${{ matrix.db_adapter }}" = "MARIADB" ]; then
+            echo "_APP_DB_ADAPTER=mariadb" >> $GITHUB_ENV
+            echo "_APP_DB_HOST=mariadb" >> $GITHUB_ENV
+            echo "_APP_DB_PORT=3306" >> $GITHUB_ENV
+          elif [ "${{ matrix.db_adapter }}" = "MONGODB" ]; then
+            echo "_APP_DB_ADAPTER=mongodb" >> $GITHUB_ENV
+            echo "_APP_DB_HOST=mongodb" >> $GITHUB_ENV
+            echo "_APP_DB_PORT=27017" >> $GITHUB_ENV
+          elif [ "${{ matrix.db_adapter }}" = "POSTGRESQL" ]; then
+            echo "_APP_DB_ADAPTER=postgresql" >> $GITHUB_ENV
+            echo "_APP_DB_HOST=postgresql" >> $GITHUB_ENV
+            echo "_APP_DB_PORT=5432" >> $GITHUB_ENV
+          fi
+
       - name: Load and Start Appwrite
+        timeout-minutes: 3
+        env:
+          _APP_BROWSER_HOST: http://invalid-browser/v1
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
-          sed -i 's|^_APP_BROWSER_HOST=.*|_APP_BROWSER_HOST=http://invalid-browser/v1|' .env
           docker compose up -d
-          sleep 30
+          until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
+            echo "Waiting for Appwrite to be ready..."
+            sleep 2
+          done
 
       - name: Wait for Open Runtimes
         timeout-minutes: 3
@@ -246,50 +272,38 @@ jobs:
       - name: Run ${{ matrix.service }} tests with Project table mode
         uses: itznotabug/php-retry@v3
         with:
-          max_attempts: 3
-          timeout_minutes: 30
+          max_attempts: 2
+          retry_wait_seconds: 300
+          timeout_minutes: 20
           job_id: ${{ job.check_run_id }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           test_dir: tests/e2e/Services/${{ matrix.service }}
           command: |
             echo "Using project tables"
+            SERVICE_PATH="/usr/src/code/tests/e2e/Services/${{ matrix.service }}"
 
-            export _APP_DATABASE_SHARED_TABLES=
-            export _APP_DATABASE_SHARED_TABLES_V1=
+            # Services that rely on sequential test method execution (shared static state)
+            FUNCTIONAL_FLAG="--functional"
+            case "${{ matrix.service }}" in
+              Databases|Functions|Realtime) FUNCTIONAL_FLAG="" ;;
+            esac
 
-            # Set DB Adapter Specific ENV Vars using if-elif
-            if [ "${{ matrix.db_adapter }}" = "MARIADB" ]; then
-              export _APP_DB_ADAPTER=mariadb
-              export _APP_DB_HOST=mariadb
-              export _APP_DB_PORT=3306
-              export _APP_DB_SCHEMA=appwrite
-            elif [ "${{ matrix.db_adapter }}" = "POSTGRESQL" ]; then
-              export _APP_DB_ADAPTER=postgresql
-              export _APP_DB_HOST=postgresql
-              export _APP_DB_PORT=5432
-              export _APP_DB_SCHEMA=appwrite
-            else
-              echo "Unknown DB adapter: ${{ matrix.db_adapter }}"
-              exit 1
-            fi
-
+            echo "Running with paratest (parallel) for: ${{ matrix.service }} ${FUNCTIONAL_FLAG:+(functional)}"
             docker compose exec -T \
-              -e _APP_DATABASE_SHARED_TABLES \
-              -e _APP_DATABASE_SHARED_TABLES_V1 \
-              -e _APP_DB_ADAPTER \
-              -e _APP_DB_HOST \
-              -e _APP_DB_PORT \
-              -e _APP_DB_SCHEMA \
+              -e _APP_DATABASE_SHARED_TABLES="" \
+              -e _APP_DATABASE_SHARED_TABLES_V1="" \
+              -e _APP_DB_ADAPTER="${{ env._APP_DB_ADAPTER }}" \
+              -e _APP_DB_HOST="${{ env._APP_DB_HOST }}" \
+              -e _APP_DB_PORT="${{ env._APP_DB_PORT }}" \
+              -e _APP_DB_SCHEMA=appwrite \
               -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
-              appwrite test /usr/src/code/tests/e2e/Services/${{ matrix.service }} --debug --exclude-group abuseEnabled,screenshots
+              appwrite vendor/bin/paratest --processes $(nproc) $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --exclude-group ciIgnore --log-junit tests/e2e/Services/${{ matrix.service }}/junit.xml
 
       - name: Failure Logs
         if: failure()
         run: |
-          echo "=== Appwrite Worker Builds Logs ==="
-          docker compose logs appwrite-worker-builds
-          echo "=== OpenRuntimes Executor Logs ==="
-          docker compose logs openruntimes-executor
+          echo "=== Appwrite Logs ==="
+          docker compose logs
 
   e2e_shared_mode_test:
     name: E2E Shared Mode Service Test
@@ -307,8 +321,7 @@ jobs:
             Account,
             Avatars,
             Console,
-            Databases/Legacy,
-            Databases/TablesDB,
+            Databases,
             Functions,
             FunctionsSchedule,
             GraphQL,
@@ -344,10 +357,14 @@ jobs:
           fail-on-cache-miss: true
 
       - name: Load and Start Appwrite
+        timeout-minutes: 3
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose up -d
-          sleep 30
+          until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
+            echo "Waiting for Appwrite to be ready..."
+            sleep 2
+          done
 
       - name: Wait for Open Runtimes
         timeout-minutes: 3
@@ -360,8 +377,9 @@ jobs:
       - name: Run ${{ matrix.service }} tests with ${{ matrix.tables-mode }} table mode
         uses: itznotabug/php-retry@v3
         with:
-          max_attempts: 3
-          timeout_minutes: 30
+          max_attempts: 2
+          retry_wait_seconds: 300
+          timeout_minutes: 20
           job_id: ${{ job.check_run_id }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           test_dir: tests/e2e/Services/${{ matrix.service }}
@@ -375,12 +393,20 @@ jobs:
               export _APP_DATABASE_SHARED_TABLES=database_db_main
               export _APP_DATABASE_SHARED_TABLES_V1=
             fi
-        
+
+            SERVICE_PATH="/usr/src/code/tests/e2e/Services/${{ matrix.service }}"
+
+            # Services that rely on sequential test method execution (shared static state)
+            FUNCTIONAL_FLAG="--functional"
+            case "${{ matrix.service }}" in
+              Databases|Functions|Realtime) FUNCTIONAL_FLAG="" ;;
+            esac
+
             docker compose exec -T \
               -e _APP_DATABASE_SHARED_TABLES \
               -e _APP_DATABASE_SHARED_TABLES_V1 \
               -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
-              appwrite test /usr/src/code/tests/e2e/Services/${{ matrix.service }} --debug --exclude-group abuseEnabled,screenshots
+              appwrite vendor/bin/paratest --processes $(nproc) $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --exclude-group ciIgnore --log-junit tests/e2e/Services/${{ matrix.service }}/junit.xml
 
       - name: Failure Logs
         if: failure()
@@ -409,17 +435,22 @@ jobs:
           fail-on-cache-miss: true
 
       - name: Load and Start Appwrite
+        timeout-minutes: 3
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           sed -i 's/_APP_OPTIONS_ABUSE=disabled/_APP_OPTIONS_ABUSE=enabled/' .env
           docker compose up -d
-          sleep 30
+          until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
+            echo "Waiting for Appwrite to be ready..."
+            sleep 2
+          done
 
       - name: Run Projects tests in dedicated table mode
         uses: itznotabug/php-retry@v3
         with:
-          max_attempts: 3
-          timeout_minutes: 30
+          max_attempts: 2
+          retry_wait_seconds: 300
+          timeout_minutes: 15
           job_id: ${{ job.check_run_id }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           test_dir: tests/e2e/Services/Projects
@@ -469,17 +500,22 @@ jobs:
           fail-on-cache-miss: true
 
       - name: Load and Start Appwrite
+        timeout-minutes: 3
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           sed -i 's/_APP_OPTIONS_ABUSE=disabled/_APP_OPTIONS_ABUSE=enabled/' .env
           docker compose up -d
-          sleep 30
+          until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
+            echo "Waiting for Appwrite to be ready..."
+            sleep 2
+          done
 
       - name: Run Projects tests in ${{ matrix.tables-mode }} table mode
         uses: itznotabug/php-retry@v3
         with:
-          max_attempts: 3
-          timeout_minutes: 30
+          max_attempts: 2
+          retry_wait_seconds: 300
+          timeout_minutes: 15
           job_id: ${{ job.check_run_id }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           test_dir: tests/e2e/Services/Projects
@@ -527,17 +563,30 @@ jobs:
           fail-on-cache-miss: true
 
       - name: Load and Start Appwrite
+        timeout-minutes: 3
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           sed -i 's/_APP_OPTIONS_ABUSE=disabled/_APP_OPTIONS_ABUSE=enabled/' .env
           docker compose up -d
-          sleep 30
+          until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
+            echo "Waiting for Appwrite to be ready..."
+            sleep 2
+          done
+
+      - name: Wait for Open Runtimes
+        timeout-minutes: 3
+        run: |
+          while ! docker compose logs openruntimes-executor | grep -q "Executor is ready."; do
+            echo "Waiting for Executor to come online"
+            sleep 1
+          done
 
       - name: Run Site tests with browser connected in dedicated table mode
         uses: itznotabug/php-retry@v3
         with:
-          max_attempts: 3
-          timeout_minutes: 30
+          max_attempts: 2
+          retry_wait_seconds: 300
+          timeout_minutes: 15
           job_id: ${{ job.check_run_id }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           test_dir: tests/e2e/Services/Sites
@@ -588,17 +637,30 @@ jobs:
           fail-on-cache-miss: true
 
       - name: Load and Start Appwrite
+        timeout-minutes: 3
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           sed -i 's/_APP_OPTIONS_ABUSE=disabled/_APP_OPTIONS_ABUSE=enabled/' .env
           docker compose up -d
-          sleep 30
+          until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
+            echo "Waiting for Appwrite to be ready..."
+            sleep 2
+          done
+
+      - name: Wait for Open Runtimes
+        timeout-minutes: 3
+        run: |
+          while ! docker compose logs openruntimes-executor | grep -q "Executor is ready."; do
+            echo "Waiting for Executor to come online"
+            sleep 1
+          done
 
       - name: Run Site tests with browser connected in ${{ matrix.tables-mode }} table mode
         uses: itznotabug/php-retry@v3
         with:
-          max_attempts: 3
-          timeout_minutes: 30
+          max_attempts: 2
+          retry_wait_seconds: 300
+          timeout_minutes: 15
           job_id: ${{ job.check_run_id }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           test_dir: tests/e2e/Services/Sites

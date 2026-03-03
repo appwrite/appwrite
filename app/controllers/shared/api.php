@@ -27,6 +27,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
@@ -472,6 +473,7 @@ Http::init()
         /*
         * Abuse Check
         */
+
         $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
         $timeLimitArray = [];
 
@@ -507,6 +509,7 @@ Http::init()
 
             $abuse = new Abuse($timeLimit);
             $remaining = $timeLimit->remaining();
+
             $limit = $timeLimit->limit();
             $time = $timeLimit->time() + $route->getLabel('abuse-time', 3600);
 
@@ -927,14 +930,19 @@ Http::shutdown()
                 $accessedAt = $cacheLog->getAttribute('accessedAt', 0);
                 $now = DateTime::now();
                 if ($cacheLog->isEmpty()) {
-                    $authorization->skip(fn () => $dbForProject->createDocument('cache', new Document([
-                        '$id' => $key,
-                        'resource' => $resource,
-                        'resourceType' => $resourceType,
-                        'mimeType' => $response->getContentType(),
-                        'accessedAt' => $now,
-                        'signature' => $signature,
-                    ])));
+                    try {
+                        $authorization->skip(fn () => $dbForProject->createDocument('cache', new Document([
+                            '$id' => $key,
+                            'resource' => $resource,
+                            'resourceType' => $resourceType,
+                            'mimeType' => $response->getContentType(),
+                            'accessedAt' => $now,
+                            'signature' => $signature,
+                        ])));
+                    } catch (DuplicateException) {
+                        // Race condition: another concurrent request already created the cache document
+                        $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
+                    }
                 } elseif (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $accessedAt) {
                     $cacheLog->setAttribute('accessedAt', $now);
                     $authorization->skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
