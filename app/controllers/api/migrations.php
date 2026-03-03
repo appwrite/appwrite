@@ -17,6 +17,7 @@ use Utopia\Compression\Algorithms\Zstd;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
@@ -741,7 +742,8 @@ Http::get('/v1/migrations/appwrite/console-key')
         ]);
 
         $response->dynamic(new Document([
-            'key' => API_KEY_DYNAMIC . '_' . $consoleKey,
+            'key'    => API_KEY_DYNAMIC . '_' . $consoleKey,
+            'expire' => DateTime::addSeconds(new \DateTime(), APP_CONSOLE_KEY_TTL),
         ]), Response::MODEL_MIGRATION_KEY);
     });
 

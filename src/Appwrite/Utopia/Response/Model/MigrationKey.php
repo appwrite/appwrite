@@ -15,6 +15,12 @@ class MigrationKey extends Model
                 'description' => 'Temporary API key for settings migration.',
                 'default' => '',
                 'example' => 'dynamic_eyJ...',
+            ])
+            ->addRule('expire', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Key expiration date in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ]);
     }
 
