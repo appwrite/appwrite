@@ -1173,13 +1173,32 @@ trait MigrationsBase
     /**
      * Integrations
      */
-    public function testAppwriteMigrationPlatform(): void
+    public function testGetAppwriteConsoleKey(): void
     {
-        // Create platform on source project
-        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $this->getProject()['$id'] . '/platforms', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/migrations/appwrite/console-key', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['key']);
+        $this->assertStringStartsWith('dynamic_', $response['body']['key']);
+        $this->assertNotEmpty($response['body']['expire']);
+        $this->assertGreaterThan(new \DateTime(), new \DateTime($response['body']['expire']));
+    }
+
+    public function testAppwriteMigrationPlatform(): void
+    {
+        $consoleSessionHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ];
+
+        // Create platform on source project
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $this->getProject()['$id'] . '/platforms', $consoleSessionHeaders, [
             'type' => 'web',
             'name' => 'Test Platform',
             'hostname' => 'localhost',
@@ -1209,11 +1228,22 @@ trait MigrationsBase
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PLATFORM]['processing']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PLATFORM]['warning']);
 
-        // Verify platform on destination project
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $this->getDestinationProject()['$id'] . '/platforms', array_merge([
+        // Get a console key for the destination project to access console-scoped endpoints
+        $consoleKeyResponse = $this->client->call(Client::METHOD_GET, '/migrations/appwrite/console-key', [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $consoleKeyResponse['headers']['status-code']);
+        $destConsoleKey = $consoleKeyResponse['body']['key'];
+
+        // Verify platform on destination project using console key
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $this->getDestinationProject()['$id'] . '/platforms', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'x-appwrite-key' => $destConsoleKey,
+        ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
@@ -1234,17 +1264,15 @@ trait MigrationsBase
         $this->assertEquals('Test Platform', $foundPlatform['name']);
         $this->assertEquals('localhost', $foundPlatform['hostname']);
 
-        // Cleanup on destination
-        $this->client->call(Client::METHOD_DELETE, '/projects/' . $this->getDestinationProject()['$id'] . '/platforms/' . $foundPlatform['$id'], array_merge([
+        // Cleanup on destination using console key
+        $this->client->call(Client::METHOD_DELETE, '/projects/' . $this->getDestinationProject()['$id'] . '/platforms/' . $foundPlatform['$id'], [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
+            'x-appwrite-project' => 'console',
+            'x-appwrite-key' => $destConsoleKey,
+        ]);
 
-        // Cleanup on source
-        $this->client->call(Client::METHOD_DELETE, '/projects/' . $this->getProject()['$id'] . '/platforms/' . $platform['$id'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
+        // Cleanup on source using console project + session auth
+        $this->client->call(Client::METHOD_DELETE, '/projects/' . $this->getProject()['$id'] . '/platforms/' . $platform['$id'], $consoleSessionHeaders);
     }
 
     /**
