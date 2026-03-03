@@ -2,14 +2,13 @@ import { useState } from 'react'
 import {
   Copy,
   Users,
-  Pencil,
-  Plus,
   Trash2,
-  UserPlus,
   ExternalLink,
   Square,
   Link2,
   FileJson,
+  LayoutList,
+  Activity,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -76,32 +75,18 @@ export function TeamContextMenu({
     },
   })
 
-  const handleUpdateTeam = () => {
-    navigate({
-      to: '/projects/$projectId/auth/teams/$teamId',
-      params: { projectId, teamId: team.id },
-      hash: 'team-details',
-    })
-  }
-
-  const handleAddPreferences = () => {
-    navigate({
-      to: '/projects/$projectId/auth/teams/$teamId',
-      params: { projectId, teamId: team.id },
-      hash: 'team-preferences',
-    })
-  }
-
-  const handleAddMembers = () => {
-    navigate({
-      to: '/projects/$projectId/auth/teams/$teamId/members',
-      params: { projectId, teamId: team.id },
-    })
-  }
-
   const teamHref = buildConsoleUrl(
     `/projects/${projectId}/auth/teams/${team.id}`,
   )
+
+  const navigateToTab = (tab: string) => {
+    const base = `/projects/${projectId}/auth/teams/${team.id}`
+    const path = tab === 'overview' ? base : `${base}/${tab}`
+    navigate({
+      to: path as '/projects/$projectId/auth/teams/$teamId',
+      params: { projectId, teamId: team.id },
+    })
+  }
 
   const handleDeleteClick = () => {
     setDeleteDialogOpen(true)
@@ -114,19 +99,26 @@ export function TeamContextMenu({
       <ContextMenu>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
         <ContextMenuContent className="w-56">
-          <ContextMenuItem onSelect={handleUpdateTeam}>
-            <ContextMenuIcon icon={Pencil} />
-            Update
-          </ContextMenuItem>
-          <ContextMenuItem onSelect={handleAddPreferences}>
-            <ContextMenuIcon icon={Plus} />
-            Add preferences
-          </ContextMenuItem>
-          <ContextMenuSeparator />
-          <ContextMenuItem onSelect={handleAddMembers}>
-            <ContextMenuIcon icon={UserPlus} />
-            Add members
-          </ContextMenuItem>
+          <ContextMenuSub>
+            <ContextMenuSubTrigger>
+              <ContextMenuIcon icon={LayoutList} />
+              Tabs
+            </ContextMenuSubTrigger>
+            <ContextMenuSubContent>
+              <ContextMenuItem onSelect={() => navigateToTab('overview')}>
+                <ContextMenuIcon icon={LayoutList} />
+                Overview
+              </ContextMenuItem>
+              <ContextMenuItem onSelect={() => navigateToTab('members')}>
+                <ContextMenuIcon icon={Users} />
+                Members
+              </ContextMenuItem>
+              <ContextMenuItem onSelect={() => navigateToTab('activity')}>
+                <ContextMenuIcon icon={Activity} />
+                Activity
+              </ContextMenuItem>
+            </ContextMenuSubContent>
+          </ContextMenuSub>
           <ContextMenuSeparator />
           <ContextMenuSub>
             <ContextMenuSubTrigger>

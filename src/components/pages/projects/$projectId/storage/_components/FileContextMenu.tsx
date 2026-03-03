@@ -1,14 +1,13 @@
 import { useState } from 'react'
 import {
   Copy,
-  Pencil,
-  Download,
-  ShieldCheck,
   Trash2,
   Link2,
   ExternalLink,
   Square,
   FileJson,
+  LayoutList,
+  Shield,
 } from 'lucide-react'
 import {
   ContextMenu,
@@ -81,26 +80,11 @@ export function FileContextMenu({
     },
   })
 
-  const handleUpdate = () => {
+  const navigateToTab = (tab: string) => {
+    const base = `/projects/${projectId}/storage/${bucketId}/files/${file.id}`
+    const path = tab === 'overview' ? base : `${base}/${tab}`
     navigate({
-      to: '/projects/$projectId/storage/$bucketId/files/$fileId',
-      params: { projectId, bucketId, fileId: file.id },
-    })
-  }
-
-  const handleDownload = () => {
-    const projectSdk = sdk.forProject(projectId)
-    const url = projectSdk.storage.getFileDownload({
-      bucketId,
-      fileId: file.id,
-    })
-    const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
-    window.open(urlWithMode, '_blank', 'noopener,noreferrer')
-  }
-
-  const handleManagePermissions = () => {
-    navigate({
-      to: '/projects/$projectId/storage/$bucketId/files/$fileId/security',
+      to: path as '/projects/$projectId/storage/$bucketId/files/$fileId',
       params: { projectId, bucketId, fileId: file.id },
     })
   }
@@ -121,19 +105,22 @@ export function FileContextMenu({
       <ContextMenu>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
         <ContextMenuContent className="w-56">
-          <ContextMenuItem onSelect={handleUpdate} disabled={disabled}>
-            <ContextMenuIcon icon={Pencil} />
-            Update
-          </ContextMenuItem>
-          <ContextMenuItem onSelect={handleDownload} disabled={disabled}>
-            <ContextMenuIcon icon={Download} />
-            Download
-          </ContextMenuItem>
-          <ContextMenuSeparator />
-          <ContextMenuItem onSelect={handleManagePermissions} disabled={disabled}>
-            <ContextMenuIcon icon={ShieldCheck} />
-            Manage permissions
-          </ContextMenuItem>
+          <ContextMenuSub>
+            <ContextMenuSubTrigger>
+              <ContextMenuIcon icon={LayoutList} />
+              Tabs
+            </ContextMenuSubTrigger>
+            <ContextMenuSubContent>
+              <ContextMenuItem onSelect={() => navigateToTab('overview')}>
+                <ContextMenuIcon icon={LayoutList} />
+                Overview
+              </ContextMenuItem>
+              <ContextMenuItem onSelect={() => navigateToTab('security')}>
+                <ContextMenuIcon icon={Shield} />
+                Security
+              </ContextMenuItem>
+            </ContextMenuSubContent>
+          </ContextMenuSub>
           <ContextMenuSeparator />
           <ContextMenuSub>
             <ContextMenuSubTrigger>

@@ -1,18 +1,17 @@
 import { useState } from 'react'
 import {
   Copy,
-  Mail,
-  Phone,
   User2,
-  Pencil,
-  Plus,
-  BadgeCheck,
-  ShieldOff,
   Trash2,
   ExternalLink,
   Square,
   Link2,
   FileJson,
+  LayoutList,
+  Users,
+  Shield,
+  Target,
+  Activity,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -35,12 +34,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { useNavigate } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import {
-  deleteProjectUser,
-  useUpdateUserEmailVerification,
-  useUpdateUserPhoneVerification,
-  useUpdateUserStatus,
-} from '@/lib/react-query/hooks/users'
+import { deleteProjectUser } from '@/lib/react-query/hooks/users'
 import {
   buildConsoleUrl,
   copyToClipboard,
@@ -74,22 +68,8 @@ export function UserContextMenu({
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const updateEmailVerification = useUpdateUserEmailVerification(
-    projectId,
-    user.$id,
-  )
-  const updatePhoneVerification = useUpdateUserPhoneVerification(
-    projectId,
-    user.$id,
-  )
-  const updateStatus = useUpdateUserStatus(projectId, user.$id)
 
-  const hasEmail = !!user.email
-  const hasPhone = !!user.phone
   const hasName = !!user.name
-  const emailVerified = !!user.emailVerification
-  const phoneVerified = !!user.phoneVerification
-  const isBlocked = user.status === false
 
   const deleteMutation = useMutation({
     mutationFn: () => deleteProjectUser(projectId, user.$id),
@@ -105,65 +85,16 @@ export function UserContextMenu({
     },
   })
 
-  const handleUpdateUser = () => {
-    navigate({
-      to: '/projects/$projectId/auth/users/$userId',
-      params: { projectId, userId: user.$id },
-      hash: 'user-details',
-    })
-  }
-
-  const handleAddPreferences = () => {
-    navigate({
-      to: '/projects/$projectId/auth/users/$userId',
-      params: { projectId, userId: user.$id },
-      hash: 'user-preferences',
-    })
-  }
-
   const userHref = buildConsoleUrl(
     `/projects/${projectId}/auth/users/${user.$id}`,
   )
 
-  const handleVerifyEmail = () => {
-    if (!hasEmail || updateEmailVerification.isPending) return
-    updateEmailVerification.mutate(!emailVerified, {
-      onSuccess: () => {
-        toast.success(
-          `Email has been ${emailVerified ? 'unverified' : 'verified'}`,
-        )
-      },
-      onError: (error: Error) => {
-        toast.error(error.message || 'Failed to update email verification')
-      },
-    })
-  }
-
-  const handleVerifyPhone = () => {
-    if (!hasPhone || updatePhoneVerification.isPending) return
-    updatePhoneVerification.mutate(!phoneVerified, {
-      onSuccess: () => {
-        toast.success(
-          `Phone has been ${phoneVerified ? 'unverified' : 'verified'}`,
-        )
-      },
-      onError: (error: Error) => {
-        toast.error(error.message || 'Failed to update phone verification')
-      },
-    })
-  }
-
-  const handleToggleBlock = () => {
-    if (updateStatus.isPending) return
-    updateStatus.mutate(isBlocked ? true : false, {
-      onSuccess: () => {
-        toast.success(
-          `Account ${isBlocked ? 'unblocked' : 'blocked'} successfully`,
-        )
-      },
-      onError: (error: Error) => {
-        toast.error(error.message || 'Failed to update account status')
-      },
+  const navigateToTab = (tab: string) => {
+    const base = `/projects/${projectId}/auth/users/${user.$id}`
+    const path = tab === 'overview' ? base : `${base}/${tab}`
+    navigate({
+      to: path as '/projects/$projectId/auth/users/$userId',
+      params: { projectId, userId: user.$id },
     })
   }
 
@@ -176,41 +107,35 @@ export function UserContextMenu({
       <ContextMenu>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
         <ContextMenuContent className="w-56">
-          <ContextMenuItem onSelect={handleUpdateUser}>
-            <ContextMenuIcon icon={Pencil} />
-            Update
-          </ContextMenuItem>
-          <ContextMenuItem onSelect={handleAddPreferences}>
-            <ContextMenuIcon icon={Plus} />
-            Add preferences
-          </ContextMenuItem>
-          <ContextMenuSeparator />
           <ContextMenuSub>
             <ContextMenuSubTrigger>
-              <ContextMenuIcon icon={BadgeCheck} />
-              Verify account
+              <ContextMenuIcon icon={LayoutList} />
+              Tabs
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
-              <ContextMenuItem
-                onSelect={handleVerifyEmail}
-                disabled={!hasEmail || updateEmailVerification.isPending}
-              >
-                <ContextMenuIcon icon={Mail} />
-                {emailVerified ? 'Unverify email' : 'Verify email'}
+              <ContextMenuItem onSelect={() => navigateToTab('overview')}>
+                <ContextMenuIcon icon={LayoutList} />
+                Overview
               </ContextMenuItem>
-              <ContextMenuItem
-                onSelect={handleVerifyPhone}
-                disabled={!hasPhone || updatePhoneVerification.isPending}
-              >
-                <ContextMenuIcon icon={Phone} />
-                {phoneVerified ? 'Unverify phone' : 'Verify phone'}
+              <ContextMenuItem onSelect={() => navigateToTab('memberships')}>
+                <ContextMenuIcon icon={Users} />
+                Memberships
+              </ContextMenuItem>
+              <ContextMenuItem onSelect={() => navigateToTab('identities')}>
+                <ContextMenuIcon icon={Shield} />
+                Identities
+              </ContextMenuItem>
+              <ContextMenuItem onSelect={() => navigateToTab('targets')}>
+                <ContextMenuIcon icon={Target} />
+                Targets
+              </ContextMenuItem>
+              <ContextMenuItem onSelect={() => navigateToTab('sessions')}>
+                <ContextMenuIcon icon={Activity} />
+                Sessions
               </ContextMenuItem>
             </ContextMenuSubContent>
           </ContextMenuSub>
-          <ContextMenuItem onSelect={handleToggleBlock}>
-            <ContextMenuIcon icon={ShieldOff} />
-            {isBlocked ? 'Unblock account' : 'Block account'}
-          </ContextMenuItem>
+          <ContextMenuSeparator />
           <ContextMenuSub>
             <ContextMenuSubTrigger>
               <ContextMenuIcon icon={Copy} />
@@ -227,22 +152,6 @@ export function UserContextMenu({
                 >
                   <ContextMenuIcon icon={User2} />
                   Copy name
-                </ContextMenuItem>
-              )}
-              {hasEmail && (
-                <ContextMenuItem
-                  onSelect={() => copyToClipboard('Email', user.email)}
-                >
-                  <ContextMenuIcon icon={Mail} />
-                  Copy email
-                </ContextMenuItem>
-              )}
-              {hasPhone && (
-                <ContextMenuItem
-                  onSelect={() => copyToClipboard('Phone', user.phone)}
-                >
-                  <ContextMenuIcon icon={Phone} />
-                  Copy phone
                 </ContextMenuItem>
               )}
               <ContextMenuItem onSelect={() => copyToClipboard('Link', userHref)}>
