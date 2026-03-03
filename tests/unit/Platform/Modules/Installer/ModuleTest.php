@@ -5,6 +5,7 @@ namespace Tests\Unit\Platform\Modules\Installer;
 use Appwrite\Platform\Installer\Http\Installer\Complete;
 use Appwrite\Platform\Installer\Http\Installer\Error;
 use Appwrite\Platform\Installer\Http\Installer\Install;
+use Appwrite\Platform\Installer\Http\Installer\Shutdown;
 use Appwrite\Platform\Installer\Http\Installer\Status;
 use Appwrite\Platform\Installer\Http\Installer\Validate;
 use Appwrite\Platform\Installer\Http\Installer\View;
@@ -39,11 +40,12 @@ class ModuleTest extends TestCase
         $service = reset($services);
         $actions = $service->getActions();
 
-        $this->assertCount(6, $actions);
+        $this->assertCount(7, $actions);
         $this->assertArrayHasKey('installerView', $actions);
         $this->assertArrayHasKey('installerStatus', $actions);
         $this->assertArrayHasKey('installerValidate', $actions);
         $this->assertArrayHasKey('installerComplete', $actions);
+        $this->assertArrayHasKey('installerShutdown', $actions);
         $this->assertArrayHasKey('installerInstall', $actions);
         $this->assertArrayHasKey('installerError', $actions);
     }
@@ -89,7 +91,18 @@ class ModuleTest extends TestCase
         $this->assertEquals(Action::HTTP_REQUEST_METHOD_POST, $action->getHttpMethod());
         $this->assertEquals('/install/complete', $action->getHttpPath());
         $this->assertEquals(Action::TYPE_DEFAULT, $action->getType());
-        $this->assertActionInjects($action, ['request', 'response', 'installerState', 'swooleServer']);
+        $this->assertActionInjects($action, ['request', 'response', 'installerState']);
+    }
+
+    public function testShutdownAction(): void
+    {
+        $action = $this->getAction('installerShutdown');
+
+        $this->assertEquals('installerShutdown', Shutdown::getName());
+        $this->assertEquals(Action::HTTP_REQUEST_METHOD_POST, $action->getHttpMethod());
+        $this->assertEquals('/install/shutdown', $action->getHttpPath());
+        $this->assertEquals(Action::TYPE_DEFAULT, $action->getType());
+        $this->assertActionInjects($action, ['response', 'swooleServer']);
     }
 
     public function testInstallAction(): void
@@ -240,6 +253,7 @@ class ModuleTest extends TestCase
         $this->assertEquals('installerStatus', Status::getName());
         $this->assertEquals('installerValidate', Validate::getName());
         $this->assertEquals('installerComplete', Complete::getName());
+        $this->assertEquals('installerShutdown', Shutdown::getName());
         $this->assertEquals('installerInstall', Install::getName());
         $this->assertEquals('installerError', Error::getName());
     }
@@ -256,6 +270,7 @@ class ModuleTest extends TestCase
         $this->assertInstanceOf(Status::class, $actions['installerStatus']);
         $this->assertInstanceOf(Validate::class, $actions['installerValidate']);
         $this->assertInstanceOf(Complete::class, $actions['installerComplete']);
+        $this->assertInstanceOf(Shutdown::class, $actions['installerShutdown']);
         $this->assertInstanceOf(Install::class, $actions['installerInstall']);
         $this->assertInstanceOf(Error::class, $actions['installerError']);
     }
@@ -277,7 +292,7 @@ class ModuleTest extends TestCase
 
     public function testPostRoutesUsePostMethod(): void
     {
-        $postActions = ['installerValidate', 'installerComplete', 'installerInstall'];
+        $postActions = ['installerValidate', 'installerComplete', 'installerShutdown', 'installerInstall'];
         foreach ($postActions as $name) {
             $action = $this->getAction($name);
             $this->assertEquals(
