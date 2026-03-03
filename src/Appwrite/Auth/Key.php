@@ -28,6 +28,8 @@ class Key
         protected bool $projectCheckDisabled = false,
         protected bool $previewAuthDisabled = false,
         protected bool $deploymentStatusIgnored = false,
+        protected string $scopedProjectId = '',
+        protected string $source = '',
     ) {
     }
 
@@ -103,6 +105,16 @@ class Key
         return $this->projectCheckDisabled;
     }
 
+    public function getScopedProjectId(): string
+    {
+        return $this->scopedProjectId;
+    }
+
+    public function getSource(): string
+    {
+        return $this->source;
+    }
+
     /**
      * Decode the given secret key into a Key object, containing the project ID, type, role, scopes, and name.
      * Can be a stored API key or a dynamic key (JWT).
@@ -161,7 +173,15 @@ class Key
                 $projectCheckDisabled = $payload['projectCheckDisabled'] ?? false;
                 $previewAuthDisabled = $payload['previewAuthDisabled'] ?? false;
                 $deploymentStatusIgnored = $payload['deploymentStatusIgnored'] ?? false;
-                $scopes = \array_merge($payload['scopes'] ?? [], $scopes);
+                $scopedProjectId = $payload['scopedProjectId'] ?? '';
+                $source = $payload['source'] ?? '';
+
+                // Keys with a scoped project are restricted — only use explicit JWT scopes
+                if (!empty($scopedProjectId)) {
+                    $scopes = $payload['scopes'] ?? [];
+                } else {
+                    $scopes = \array_merge($payload['scopes'] ?? [], $scopes);
+                }
 
                 if (!$projectCheckDisabled && $projectId !== $project->getId()) {
                     return $guestKey;
@@ -181,7 +201,9 @@ class Key
                     $bannerDisabled,
                     $projectCheckDisabled,
                     $previewAuthDisabled,
-                    $deploymentStatusIgnored
+                    $deploymentStatusIgnored,
+                    $scopedProjectId,
+                    $source
                 );
             case API_KEY_STANDARD:
                 $key = $project->find(
