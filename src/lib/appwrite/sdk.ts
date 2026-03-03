@@ -34,10 +34,25 @@ import {
 } from '@appwrite.io/console'
 
 /**
+ * True when the endpoint host is a known multi-region Appwrite cloud host
+ * (e.g. cloud.appwrite.io or stage.cloud.appwrite.io). For those hosts we
+ * build regional URLs by prefixing the region subdomain; for single-node or
+ * custom hosts we do not add a region subdomain.
+ */
+function isMultiRegionSupported(url: URL): boolean {
+  const host = url.hostname.toLowerCase()
+  return (
+    host === 'cloud.appwrite.io' || host.endsWith('.cloud.appwrite.io')
+  )
+}
+
+/**
  * Single source of truth for API endpoints.
  * - No region: returns base endpoint (VITE_APPWRITE_ENDPOINT or current host).
- * - With region: returns region-specific endpoint (e.g. https://nyc.cloud.appwrite.io/v1).
- * Use this everywhere when constructing API URLs.
+ * - With region: when the base is a multi-region cloud host, returns
+ *   region-specific endpoint by prefixing the region subdomain to the base
+ *   host (e.g. base https://stage.cloud.appwrite.io/v1 → https://fra.stage.cloud.appwrite.io/v1).
+ *   Follows the same pattern as the reference Console (getApiEndpoint + getSubdomain).
  */
 export function getApiEndpoint(region?: string): string {
   const baseEndpoint =
@@ -50,14 +65,22 @@ export function getApiEndpoint(region?: string): string {
     throw new Error('VITE_APPWRITE_ENDPOINT is not configured')
   }
 
-  if (region && region.trim().toLowerCase() !== 'unknown') {
-    const normalizedRegion = region.trim().toLowerCase().replace(/\s+/g, '')
-    if (normalizedRegion) {
-      return `https://${normalizedRegion}.cloud.appwrite.io/v1`
-    }
+  let url: URL
+  try {
+    url = new URL(baseEndpoint)
+  } catch {
+    throw new Error('VITE_APPWRITE_ENDPOINT is not a valid URL')
   }
 
-  return baseEndpoint
+  const protocol = url.protocol
+  const hostname = url.hostname
+
+  const subdomain =
+    region && region.trim().toLowerCase() !== 'unknown' && isMultiRegionSupported(url)
+      ? `${region.trim().toLowerCase().replace(/\s+/g, '')}.`
+      : ''
+
+  return `${protocol}//${subdomain}${hostname}/v1`
 }
 
 /** Base endpoint (console / default). Use for console-level URLs. */

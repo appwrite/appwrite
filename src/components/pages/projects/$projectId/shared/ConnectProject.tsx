@@ -27,7 +27,7 @@ import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useProject } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import { getApiEndpoint } from '@/lib/appwrite/sdk'
+import { getApiEndpoint, getBaseEndpoint } from '@/lib/appwrite/sdk'
 import { PlatformIcon } from '@/components/global/shared/Icon'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { PackageManagerIcon } from '@/components/global/shared/PackageManagerIcon'
@@ -1827,7 +1827,7 @@ export function ConnectProject({
                   3. Connect to this project
                 </h4>
                 <CodeBlock
-                  code={`appwrite client --endpoint ${endpoint ?? 'https://cloud.appwrite.io/v1'} --project-id ${projectId ?? 'YOUR_PROJECT_ID'}`}
+                  code={`appwrite client --endpoint ${endpoint ?? getBaseEndpoint()} --project-id ${projectId ?? 'YOUR_PROJECT_ID'}`}
                   language="bash"
                   label="Terminal"
                   showCopy
