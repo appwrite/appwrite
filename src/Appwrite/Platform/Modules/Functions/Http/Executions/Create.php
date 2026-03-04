@@ -261,6 +261,18 @@ class Create extends Base
             }
         }
 
+        // Rebuild $headers as an associative array from allowed headers only
+        $headers = [];
+        foreach ($headersFiltered as $header) {
+            $headers[$header['name']] = $header['value'];
+        }
+
+        // Set server-authoritative geo headers ALWAYS overwriting any client values to prevent IP spoofing
+        if (!empty($ip)) {
+            $headers['x-real-ip'] = $ip;
+            $headers['x-forwarded-for'] = $ip;
+        }
+
 
 
         $status = $async ? 'waiting' : 'processing';
