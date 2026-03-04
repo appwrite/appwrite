@@ -26,7 +26,7 @@ App::init()
         }
 
         if (!$isSessionFresh) {
-            throw new Exception(Exception::USER_CHALLENGE_REQUIRED);
+            throw new Exception(Exception::USER_CHALLENGE_REQUIRED, 'MFA session is no longer fresh. Re-authentication required.');
         }
     });
 
@@ -44,7 +44,7 @@ App::init()
             $record = $geodb->get($request->getIP()) ?? [];
             $country = $record['country']['iso_code'] ?? '';
             if (in_array($country, $countries)) {
-                throw new Exception(Exception::GENERAL_REGION_ACCESS_DENIED);
+                throw new Exception(Exception::GENERAL_REGION_ACCESS_DENIED, "Access denied from restricted country: {$country}");
             }
         }
 
@@ -102,6 +102,7 @@ App::init()
                 break;
 
             default:
-                throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Unsupported authentication route');
+                $authType = $route->getLabel('auth.type', 'unknown');
+                throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, "Unsupported authentication route: '{$authType}'");
         }
     });
