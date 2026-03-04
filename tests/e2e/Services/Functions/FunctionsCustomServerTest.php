@@ -207,17 +207,14 @@ class FunctionsCustomServerTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Specs function',
             'runtime' => 'node-22',
-            'buildSpecification' => $specifications['body']['specifications'][0]['slug'],
-            'runtimeSpecification' => $specifications['body']['specifications'][1]['slug'],
+            'specification' => $specifications['body']['specifications'][0]['slug']
         ]);
         $this->assertEquals(201, $function['headers']['status-code']);
-        $this->assertEquals($specifications['body']['specifications'][0]['slug'], $function['body']['buildSpecification']);
-        $this->assertEquals($specifications['body']['specifications'][1]['slug'], $function['body']['runtimeSpecification']);
+        $this->assertEquals($specifications['body']['specifications'][0]['slug'], $function['body']['specification']);
 
         $function = $this->getFunction($function['body']['$id']);
         $this->assertEquals(200, $function['headers']['status-code']);
-        $this->assertEquals($specifications['body']['specifications'][0]['slug'], $function['body']['buildSpecification']);
-        $this->assertEquals($specifications['body']['specifications'][1]['slug'], $function['body']['runtimeSpecification']);
+        $this->assertEquals($specifications['body']['specifications'][0]['slug'], $function['body']['specification']);
 
         $this->cleanupFunction($function['body']['$id']);
 
@@ -225,15 +222,7 @@ class FunctionsCustomServerTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Specs function',
             'runtime' => 'node-22',
-            'buildSpecification' => 'cheap-please'
-        ]);
-        $this->assertEquals(400, $function['headers']['status-code']);
-
-        $function = $this->createFunction([
-            'functionId' => ID::unique(),
-            'name' => 'Specs function',
-            'runtime' => 'node-22',
-            'runtimeSpecification' => 'cheap-please'
+            'specification' => 'cheap-please'
         ]);
         $this->assertEquals(400, $function['headers']['status-code']);
     }
@@ -1563,12 +1552,12 @@ class FunctionsCustomServerTest extends Scope
             'timeout' => 15,
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
-            'runtimeSpecification' => Specification::S_1VCPU_1GB,
+            'specification' => Specification::S_1VCPU_1GB,
         ]);
 
         $this->assertEquals(200, $function['headers']['status-code']);
         $this->assertNotEmpty($function['body']['$id']);
-        $this->assertEquals(Specification::S_1VCPU_1GB, $function['body']['runtimeSpecification']);
+        $this->assertEquals(Specification::S_1VCPU_1GB, $function['body']['specification']);
 
         // Verify the updated specs
         $execution = $this->createExecution($functionId);
@@ -1597,12 +1586,12 @@ class FunctionsCustomServerTest extends Scope
             'timeout' => 15,
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
-            'runtimeSpecification' => Specification::S_1VCPU_512MB,
+            'specification' => Specification::S_1VCPU_512MB,
         ]);
 
         $this->assertEquals(200, $function['headers']['status-code']);
         $this->assertNotEmpty($function['body']['$id']);
-        $this->assertEquals(Specification::S_1VCPU_512MB, $function['body']['runtimeSpecification']);
+        $this->assertEquals(Specification::S_1VCPU_512MB, $function['body']['specification']);
 
         // Verify the updated specs
         $execution = $this->createExecution($functionId);
@@ -1627,31 +1616,11 @@ class FunctionsCustomServerTest extends Scope
             'timeout' => 15,
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
-            'buildSpecification' => 's-2vcpu-512mb', // Invalid specification
+            'specification' => 's-2vcpu-512mb', // Invalid specification
         ]);
 
         $this->assertEquals(400, $function['headers']['status-code']);
-        $this->assertStringStartsWith('Invalid `buildSpecification` param: Specification must be one of:', $function['body']['message']);
-
-        $function = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Test1',
-            'events' => [
-                'users.*.update.name',
-                'users.*.update.email',
-            ],
-            'timeout' => 15,
-            'runtime' => 'node-22',
-            'entrypoint' => 'index.js',
-            'runtimeSpecification' => 's-2vcpu-512mb', // Invalid specification
-        ]);
-
-        $this->assertEquals(400, $function['headers']['status-code']);
-        $this->assertStringStartsWith('Invalid `runtimeSpecification` param: Specification must be one of:', $function['body']['message']);
-
-        return $data;
+        $this->assertStringStartsWith('Invalid `specification` param: Specification must be one of:', $function['body']['message']);
     }
 
     public function testDeleteDeployment(): void
@@ -2252,8 +2221,6 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertArrayNotHasKey('scopes', $response['body']);
         $this->assertArrayNotHasKey('specification', $response['body']);
-        $this->assertArrayNotHasKey('buildSpecification', $response['body']);
-        $this->assertArrayNotHasKey('runtimeSpecification', $response['body']);
 
         // get function with 1.5.0 response format header
         $function = $this->client->call(Client::METHOD_GET, '/functions/' . $response['body']['$id'], array_merge([
@@ -2264,31 +2231,13 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(200, $function['headers']['status-code']);
         $this->assertArrayNotHasKey('scopes', $function['body']);
-        $this->assertArrayNotHasKey('buildSpecification', $function['body']);
-        $this->assertArrayNotHasKey('runtimeSpecification', $function['body']);
         $this->assertArrayNotHasKey('specification', $function['body']);
 
-        // get function with 1.8.0 response format header
-        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $response['body']['$id'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-response-format' => '1.8.0', // add response format header
-        ], $this->getHeaders()));
-
-        $this->assertEquals(200, $function['headers']['status-code']);
-        $this->assertArrayHasKey('scopes', $function['body']);
-        $this->assertArrayHasKey('specification', $function['body']);
-        $this->assertArrayNotHasKey('buildSpecification', $function['body']);
-        $this->assertArrayNotHasKey('runtimeSpecification', $function['body']);
-
-        // get function with latest version
         $function = $this->getFunction($function['body']['$id']);
 
         $this->assertEquals(200, $function['headers']['status-code']);
         $this->assertArrayHasKey('scopes', $function['body']);
-        $this->assertArrayNotHasKey('specification', $function['body']);
-        $this->assertArrayHasKey('buildSpecification', $function['body']);
-        $this->assertArrayHasKey('runtimeSpecification', $function['body']);
+        $this->assertArrayHasKey('specification', $function['body']);
 
         $functionId = $function['body']['$id'] ?? '';
         $this->cleanupFunction($functionId);
@@ -2438,17 +2387,15 @@ class FunctionsCustomServerTest extends Scope
             'entrypoint' => 'index.js',
             'logging' => false,
             'execute' => ['any'],
-            'buildSpecification' => Specification::S_2VCPU_2GB,
-            'runtimeSpecification' => Specification::S_1VCPU_1GB,
+            'specification' => Specification::S_2VCPU_2GB,
             'commands' => 'echo $APPWRITE_FUNCTION_MEMORY:$APPWRITE_FUNCTION_CPUS',
         ]);
 
         $this->assertEquals(201, $function['headers']['status-code']);
-        $this->assertEquals(Specification::S_2VCPU_2GB, $function['body']['buildSpecification']);
-        $this->assertEquals(Specification::S_1VCPU_1GB, $function['body']['runtimeSpecification']);
+        $this->assertEquals(Specification::S_2VCPU_2GB, $function['body']['specification']);
         $this->assertNotEmpty($function['body']['$id']);
 
-        $functionId = $function['body']['$id'] ?? '';
+        $functionId = $functionId = $function['body']['$id'] ?? '';
 
         $deploymentId = $this->setupDeployment($functionId, [
             'code' => $this->packageFunction('basic'),
@@ -2467,8 +2414,8 @@ class FunctionsCustomServerTest extends Scope
         $this->assertNotEmpty($execution['body']['$id']);
 
         $executionResponse = json_decode($execution['body']['responseBody'], true);
-        $this->assertEquals('1024', $executionResponse['APPWRITE_FUNCTION_MEMORY']);
-        $this->assertEquals('1', $executionResponse['APPWRITE_FUNCTION_CPUS']);
+        $this->assertEquals('2048', $executionResponse['APPWRITE_FUNCTION_MEMORY']);
+        $this->assertEquals('2', $executionResponse['APPWRITE_FUNCTION_CPUS']);
 
         $this->cleanupFunction($functionId);
     }
@@ -2836,120 +2783,5 @@ class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString('a', $errors);
 
         $this->cleanupFunction($functionId);
-    }
-
-    public function testFunctionDeploymentRetention(): void
-    {
-        $functionIds = [];
-
-        // Default
-        $response = $this->createFunction([
-            'functionId' => ID::unique(),
-            'name' => 'Test retention function',
-            'runtime' => 'node-22',
-        ]);
-        $this->assertSame(201, $response['headers']['status-code']);
-        $this->assertSame(0, $response['body']['deploymentRetention']);
-        $functionIds[] = $response['body']['$id'];
-
-        $response = $this->getFunction($response['body']['$id']);
-        $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame(0, $response['body']['deploymentRetention']);
-
-        // Success values
-        $response = $this->createFunction([
-            'functionId' => ID::unique(),
-            'name' => 'Test retention function',
-            'runtime' => 'node-22',
-            'deploymentRetention' => 0
-        ]);
-        $this->assertSame(201, $response['headers']['status-code']);
-        $this->assertSame(0, $response['body']['deploymentRetention']);
-        $functionIds[] = $response['body']['$id'];
-
-        $response = $this->getFunction($response['body']['$id']);
-        $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame(0, $response['body']['deploymentRetention']);
-
-        $response = $this->createFunction([
-            'functionId' => ID::unique(),
-            'name' => 'Test retention function',
-            'runtime' => 'node-22',
-            'deploymentRetention' => 180
-        ]);
-        $this->assertSame(201, $response['headers']['status-code']);
-        $this->assertSame(180, $response['body']['deploymentRetention']);
-        $functionIds[] = $response['body']['$id'];
-
-        $response = $this->getFunction($response['body']['$id']);
-        $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame(180, $response['body']['deploymentRetention']);
-
-        // Failure values
-        $response = $this->createFunction([
-            'functionId' => ID::unique(),
-            'name' => 'Test retention function',
-            'runtime' => 'node-22',
-            'deploymentRetention' => 999999
-        ]);
-        $this->assertSame(400, $response['headers']['status-code']);
-
-        $response = $this->createFunction([
-            'functionId' => ID::unique(),
-            'name' => 'Test retention function',
-            'runtime' => 'node-22',
-            'deploymentRetention' => -1
-        ]);
-        $this->assertSame(400, $response['headers']['status-code']);
-
-        // Update flow
-        $response = $this->createFunction([
-            'functionId' => ID::unique(),
-            'name' => 'Test retention function',
-            'runtime' => 'node-22',
-            'deploymentRetention' => 180
-        ]);
-        $this->assertSame(201, $response['headers']['status-code']);
-        $this->assertSame(180, $response['body']['deploymentRetention']);
-        $functionIds[] = $response['body']['$id'];
-        $functionIdForUpdate = $response['body']['$id'];
-
-        $response = $this->updateFunction($functionIdForUpdate, [
-            'name' => 'Test retention function',
-            'deploymentRetention' => 90
-        ]);
-        $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame(90, $response['body']['deploymentRetention']);
-
-        $response = $this->getFunction($functionIdForUpdate);
-        $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame(90, $response['body']['deploymentRetention']);
-
-        $response = $this->updateFunction($functionIdForUpdate, [
-            'name' => 'Test retention function',
-        ]);
-        $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame(0, $response['body']['deploymentRetention']);
-
-        $response = $this->getFunction($functionIdForUpdate);
-        $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame(0, $response['body']['deploymentRetention']);
-
-        // Failed update flow
-        $response = $this->updateFunction($functionIdForUpdate, [
-            'name' => 'Test retention function',
-            'deploymentRetention' => -1
-        ]);
-        $this->assertSame(400, $response['headers']['status-code']);
-
-        $response = $this->updateFunction($functionIdForUpdate, [
-            'name' => 'Test retention function',
-            'deploymentRetention' => 999999
-        ]);
-        $this->assertSame(400, $response['headers']['status-code']);
-
-        foreach ($functionIds as $functionId) {
-            $this->cleanupFunction($functionId);
-        }
     }
 }

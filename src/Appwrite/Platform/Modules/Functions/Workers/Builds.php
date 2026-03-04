@@ -255,8 +255,7 @@ class Builds extends Action
         $version = $this->getVersion($resource);
         $runtime = $this->getRuntime($resource, $version);
 
-        // TODO: backwards-compatibility dual-read, remove eventually.
-        $spec = Config::getParam('specifications')[$resource->getAttribute('buildSpecification', $resource->getAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT))];
+        $spec = Config::getParam('specifications')[$resource->getAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
 
         if ($resource->getCollection() === 'functions' && \is_null($runtime)) {
             throw new \Exception('Runtime "' . $resource->getAttribute('runtime', '') . '" is not supported');
@@ -1190,8 +1189,7 @@ class Builds extends Action
 
     protected function sendUsage(Document $resource, Document $deployment, Document $project, StatsUsage $queue): void
     {
-        // TODO: backwards-compatibility dual-read, remove eventually.
-        $spec = Config::getParam('specifications')[$resource->getAttribute('buildSpecification', $resource->getAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT))];
+        $spec = Config::getParam('specifications')[$resource->getAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
 
         switch ($deployment->getAttribute('status')) {
             case 'ready':
