@@ -100,7 +100,14 @@ App::post('/v1/projects')
     ->inject('hooks')
     ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Request $request, Response $response, Database $dbForPlatform, Cache $cache, Group $pools, Hooks $hooks) {
 
+
         $team = $dbForPlatform->getDocument('teams', $teamId);
+
+        // Force default region if called from migration
+        if (isset($_SERVER['HTTP_X_MIGRATION']) && $_SERVER['HTTP_X_MIGRATION'] === 'true') {
+            $region = 'default';
+        }
+
 
         if ($team->isEmpty()) {
             throw new Exception(Exception::TEAM_NOT_FOUND);

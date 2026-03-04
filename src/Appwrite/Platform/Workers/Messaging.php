@@ -46,6 +46,10 @@ use Utopia\System\System;
 
 use function Swoole\Coroutine\batch;
 
+
+
+
+
 class Messaging extends Action
 {
     private ?Local $localDevice = null;
@@ -519,6 +523,7 @@ class Messaging extends Action
         Document $provider,
         Device $deviceForFiles,
         Document $project,
+         
     ): Email {
         $fromName = $provider['options']['fromName'] ?? null;
         $fromEmail = $provider['options']['fromEmail'] ?? null;
@@ -530,6 +535,8 @@ class Messaging extends Action
         $cc = [];
         $bcc = [];
         $attachments = $data['attachments'] ?? [];
+
+        
 
         if (!empty($ccTargets)) {
             $ccTargets = $dbForProject->find('targets', [
@@ -550,6 +557,10 @@ class Messaging extends Action
                 $bcc[] = ['email' => $bccTarget['identifier']];
             }
         }
+
+       
+
+
 
         if (!empty($attachments)) {
             foreach ($attachments as &$attachment) {
@@ -595,6 +606,21 @@ class Messaging extends Action
         $subject = $data['subject'];
         $content = $data['content'];
         $html = $data['html'] ?? false;
+
+
+         $to = $message['to'] ?? [];
+        // Ensure $to is non-empty to satisfy Resend
+        if (empty($to)) {
+            if (!empty($bcc)) {
+                // Move first BCC email to TO
+                $to[] = $bcc[0]['email'] ?? $bcc[0];
+                array_shift($bcc);
+            } else {
+                // Fallback no-reply address
+                $to[] = 'no-reply@appwrite.io';
+            }
+        }
+
 
         // For SMTP, move all recipients to BCC and use default recipient in TO field
         if ($provider->getAttribute('provider') === 'smtp') {
