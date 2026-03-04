@@ -332,6 +332,17 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Stripe',
     ],
+    'tiktok' => [
+        'name' => 'TikTok',
+        'developers' => 'https://developers.tiktok.com/doc/login-kit-web',
+        'icon' => 'icon-tiktok',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\TikTok',
+    ],
     'tradeshift' => [
         'name' => 'Tradeshift',
         'developers' => 'https://developers.tradeshift.com/docs/api',
