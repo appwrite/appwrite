@@ -12,7 +12,6 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Realtime;
-use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
@@ -38,6 +37,7 @@ use Utopia\Http\Http;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Validator\WhiteList;
+use Appwrite\Usage\Context;
 
 $parseLabel = function (string $label, array $responsePayload, array $requestParams, User $user) {
     preg_match_all('/{(.*?)}/', $label, $matches);
@@ -447,7 +447,7 @@ Http::init()
     ->inject('queueForDeletes')
     ->inject('queueForDatabase')
     ->inject('queueForBuilds')
-    ->inject('queueForStatsUsage')
+    ->inject('usage')
     ->inject('queueForFunctions')
     ->inject('queueForMails')
     ->inject('dbForProject')
@@ -460,7 +460,7 @@ Http::init()
     ->inject('telemetry')
     ->inject('platform')
     ->inject('authorization')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Mail $queueForMails, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform, Authorization $authorization) {
+    ->action(function (Http $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Context $usage, Func $queueForFunctions, Mail $queueForMails, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform, Authorization $authorization) {
 
         $route = $utopia->getRoute();
 
@@ -566,7 +566,7 @@ Http::init()
 
         if (!empty($apiKey) && !empty($apiKey->getDisabledMetrics())) {
             foreach ($apiKey->getDisabledMetrics() as $key) {
-                $queueForStatsUsage->disableMetric($key);
+                $usage->disableMetric($key);
             }
         }
 
@@ -602,7 +602,7 @@ Http::init()
             if (!empty($data) && !$cacheLog->isEmpty()) {
                 $usageMetric = $route->getLabel('usage.metric', null);
                 if ($usageMetric === METRIC_AVATARS_SCREENSHOTS_GENERATED) {
-                    $queueForStatsUsage->disableMetric(METRIC_AVATARS_SCREENSHOTS_GENERATED);
+                    $usage->disableMetric(METRIC_AVATARS_SCREENSHOTS_GENERATED);
                 }
                 $parts = explode('/', $cacheLog->getAttribute('resourceType', ''));
                 $type = $parts[0] ?? null;
@@ -736,7 +736,8 @@ Http::shutdown()
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForAudits')
-    ->inject('queueForStatsUsage')
+    ->inject('usage')
+    ->inject('publisherForUsage')
     ->inject('queueForDeletes')
     ->inject('queueForDatabase')
     ->inject('queueForBuilds')
@@ -749,7 +750,7 @@ Http::shutdown()
     ->inject('timelimit')
     ->inject('eventProcessor')
     ->inject('bus')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Audit $queueForAudits, StatsUsage $queueForStatsUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus) use ($parseLabel) {
+    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Audit $queueForAudits, Context $usage, \Appwrite\Event\Publisher\Usage $publisherForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -968,9 +969,16 @@ Http::shutdown()
                 ));
             }
 
-            $queueForStatsUsage
-                ->setProject($project)
-                ->trigger();
+            // Publish usage metrics if context has data
+            if (!$usage->isEmpty()) {
+                $message = new \Appwrite\Event\Message\Usage(
+                    project: $project,
+                    metrics: $usage->getMetrics(),
+                    reduce: $usage->getReduce()
+                );
+
+                $publisherForUsage->enqueue($message);
+            }
         }
     });
 

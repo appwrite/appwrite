@@ -249,7 +249,7 @@ $setResource('publisherStatsUsage', function (BrokerPool $publisher) {
 $setResource('publisherMessaging', function (BrokerPool $publisher) {
     return $publisher;
 }, ['publisher']);
-$setResource('queueForStatsUsage', function (Publisher $publisher) {
+$setResource('usage', function (Publisher $publisher) {
     return new StatsUsage($publisher);
 }, ['publisher']);
 $setResource('queueForStatsResources', function (Publisher $publisher) {

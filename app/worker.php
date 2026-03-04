@@ -48,6 +48,7 @@ use Utopia\Storage\Device\Telemetry as TelemetryDevice;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
+use Appwrite\Usage\Context;
 
 Runtime::enableCoroutine();
 require_once __DIR__ . '/init/span.php';
@@ -310,8 +311,13 @@ Server::setResource('consumerStatsUsage', function (BrokerPool $consumer) {
     return $consumer;
 }, ['consumer']);
 
-Server::setResource('queueForStatsUsage', function (Publisher $publisher) {
-    return new StatsUsage($publisher);
+Server::setResource('usage', function () {
+    return new Context();
+}, []);
+Server::setResource('publisherForUsage', function (Publisher $publisher) {
+    $queueName = System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME);
+    $queue = new \Utopia\Queue\Queue($queueName, 'utopia-queue');
+    return new \Appwrite\Event\Publisher\Usage($publisher, $queue);
 }, ['publisher']);
 
 Server::setResource('queueForDatabase', function (Publisher $publisher) {

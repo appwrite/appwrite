@@ -1,0 +1,45 @@
+<?php
+
+namespace Appwrite\Event\Message;
+
+use Utopia\Database\Document;
+
+class Usage extends Base
+{
+    /**
+     * @param Document $project
+     * @param array<array{key: string, value: int}> $metrics
+     * @param array<Document> $reduce
+     */
+    public function __construct(
+        public readonly Document $project,
+        public readonly array $metrics,
+        public readonly array $reduce = [],
+    ) {
+    }
+
+    /**
+     * @return array
+     */
+    public function toArray(): array
+    {
+        return [
+            'project' => $this->project->getArrayCopy(),
+            'metrics' => $this->metrics,
+            'reduce' => array_map(fn(Document $doc) => $doc->getArrayCopy(), $this->reduce),
+        ];
+    }
+
+    /**
+     * @param array $data
+     * @return static
+     */
+    public static function fromArray(array $data): static
+    {
+        return new self(
+            project: new Document($data['project'] ?? []),
+            metrics: $data['metrics'] ?? [],
+            reduce: array_map(fn(array $doc) => new Document($doc), $data['reduce'] ?? []),
+        );
+    }
+}

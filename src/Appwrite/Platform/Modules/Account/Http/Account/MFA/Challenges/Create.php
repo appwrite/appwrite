@@ -7,7 +7,6 @@ use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
-use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -32,6 +31,7 @@ use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Validator\FileName;
 use Utopia\System\System;
 use Utopia\Validator\WhiteList;
+use Appwrite\Usage\Context;
 
 class Create extends Action
 {
@@ -104,7 +104,7 @@ class Create extends Action
             ->inject('queueForMessaging')
             ->inject('queueForMails')
             ->inject('timelimit')
-            ->inject('queueForStatsUsage')
+            ->inject('usage')
             ->inject('plan')
             ->inject('proofForToken')
             ->inject('proofForCode')
@@ -124,7 +124,7 @@ class Create extends Action
         Messaging $queueForMessaging,
         Mail $queueForMails,
         callable $timelimit,
-        StatsUsage $queueForStatsUsage,
+        Context $usage,
         array $plan,
         ProofsToken $proofForToken,
         ProofsCode $proofForCode
@@ -201,13 +201,13 @@ class Create extends Action
                     $countryCode = $helper->parse($phone)->getCountryCode();
 
                     if (!empty($countryCode)) {
-                        $queueForStatsUsage
+                        $usage
                             ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                     }
                 } catch (NumberParseException $e) {
                     // Ignore invalid phone number for country code stats
                 }
-                $queueForStatsUsage
+                $usage
                     ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
                     ->setProject($project)
                     ->trigger();

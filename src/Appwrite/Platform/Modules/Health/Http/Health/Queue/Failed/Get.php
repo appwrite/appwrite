@@ -12,9 +12,9 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Screenshot;
 use Appwrite\Event\StatsResources;
-use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Base;
 use Appwrite\SDK\AuthType;
@@ -79,7 +79,7 @@ class Get extends Base
             ->inject('queueForMails')
             ->inject('queueForFunctions')
             ->inject('queueForStatsResources')
-            ->inject('queueForStatsUsage')
+            ->inject('publisherForUsage')
             ->inject('queueForWebhooks')
             ->inject('queueForCertificates')
             ->inject('queueForBuilds')
@@ -99,7 +99,7 @@ class Get extends Base
         Mail $queueForMails,
         Func $queueForFunctions,
         StatsResources $queueForStatsResources,
-        StatsUsage $queueForStatsUsage,
+        UsagePublisher $publisherForUsage,
         Webhook $queueForWebhooks,
         Certificate $queueForCertificates,
         Build $queueForBuilds,
@@ -116,7 +116,7 @@ class Get extends Base
             System::getEnv('_APP_MAILS_QUEUE_NAME', Event::MAILS_QUEUE_NAME) => $queueForMails,
             System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME) => $queueForFunctions,
             System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME) => $queueForStatsResources,
-            System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME) => $queueForStatsUsage,
+            System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME) => $publisherForUsage,
             System::getEnv('_APP_WEBHOOK_QUEUE_NAME', Event::WEBHOOK_QUEUE_NAME) => $queueForWebhooks,
             System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME) => $queueForCertificates,
             System::getEnv('_APP_BUILDS_QUEUE_NAME', Event::BUILDS_QUEUE_NAME) => $queueForBuilds,

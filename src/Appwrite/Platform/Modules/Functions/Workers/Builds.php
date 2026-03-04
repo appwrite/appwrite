@@ -7,7 +7,6 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Screenshot;
-use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Utopia\Response\Model\Deployment;
@@ -36,6 +35,7 @@ use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
+use Appwrite\Usage\Context;
 
 class Builds extends Action
 {
@@ -60,7 +60,7 @@ class Builds extends Action
             ->inject('queueForWebhooks')
             ->inject('queueForFunctions')
             ->inject('queueForRealtime')
-            ->inject('queueForStatsUsage')
+            ->inject('usage')
             ->inject('cache')
             ->inject('dbForProject')
             ->inject('deviceForFunctions')
@@ -82,7 +82,7 @@ class Builds extends Action
      * @param Webhook $queueForWebhooks
      * @param Func $queueForFunctions
      * @param Realtime $queueForRealtime
-     * @param StatsUsage $queueForStatsUsage
+     * @param Context $usage
      * @param Cache $cache
      * @param Database $dbForProject
      * @param Device $deviceForFunctions
@@ -103,7 +103,7 @@ class Builds extends Action
         Webhook $queueForWebhooks,
         Func $queueForFunctions,
         Realtime $queueForRealtime,
-        StatsUsage $queueForStatsUsage,
+        Context $usage,
         Cache $cache,
         Database $dbForProject,
         Device $deviceForFunctions,
@@ -145,7 +145,7 @@ class Builds extends Action
                     $queueForFunctions,
                     $queueForRealtime,
                     $queueForEvents,
-                    $queueForStatsUsage,
+                    $usage,
                     $dbForPlatform,
                     $dbForProject,
                     $github,
@@ -175,7 +175,7 @@ class Builds extends Action
      * @param Func $queueForFunctions
      * @param Realtime $queueForRealtime
      * @param Event $queueForEvents
-     * @param StatsUsage $queueForStatsUsage
+     * @param Context $usage
      * @param Database $dbForPlatform
      * @param Database $dbForProject
      * @param GitHub $github
@@ -200,7 +200,7 @@ class Builds extends Action
         Func $queueForFunctions,
         Realtime $queueForRealtime,
         Event $queueForEvents,
-        StatsUsage $queueForStatsUsage,
+        Context $usage,
         Database $dbForPlatform,
         Database $dbForProject,
         GitHub $github,
@@ -1182,7 +1182,7 @@ class Builds extends Action
                 resource:$resource,
                 deployment: $deployment,
                 project: $project,
-                queue: $queueForStatsUsage
+                queue: $usage
             );
         }
     }

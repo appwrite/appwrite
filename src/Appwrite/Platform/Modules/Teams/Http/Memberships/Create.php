@@ -6,8 +6,8 @@ use Appwrite\Auth\Validator\Phone;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
-use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
+use Appwrite\Usage\Context;
 use Appwrite\Network\Validator\Email as EmailValidator;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -37,6 +37,7 @@ use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
+use Appwrite\Usage\Context;
 
 class Create extends Action
 {
@@ -91,14 +92,14 @@ class Create extends Action
             ->inject('queueForMessaging')
             ->inject('queueForEvents')
             ->inject('timelimit')
-            ->inject('queueForStatsUsage')
+            ->inject('usage')
             ->inject('plan')
             ->inject('proofForPassword')
             ->inject('proofForToken')
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Authorization $authorization, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, Password $proofForPassword, Token $proofForToken)
+    public function action(string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Authorization $authorization, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents, callable $timelimit, Context $usage, array $plan, Password $proofForPassword, Token $proofForToken)
     {
         $isAppUser = User::isApp($authorization->getRoles());
         $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
@@ -402,13 +403,13 @@ class Create extends Action
                     $countryCode = $helper->parse($phone)->getCountryCode();
 
                     if (!empty($countryCode)) {
-                        $queueForStatsUsage
+                        $usage
                             ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                     }
                 } catch (NumberParseException $e) {
                     // Ignore invalid phone number for country code stats
                 }
-                $queueForStatsUsage
+                $usage
                     ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
                     ->setProject($project)
                     ->trigger();

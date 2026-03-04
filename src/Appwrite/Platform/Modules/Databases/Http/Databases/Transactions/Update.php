@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\SDK\AuthType;
@@ -28,6 +27,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
+use Appwrite\Usage\Context;
 
 class Update extends Action
 {
@@ -73,7 +73,7 @@ class Update extends Action
             ->inject('transactionState')
             ->inject('queueForDeletes')
             ->inject('queueForEvents')
-            ->inject('queueForStatsUsage')
+            ->inject('usage')
             ->inject('queueForRealtime')
             ->inject('queueForFunctions')
             ->inject('queueForWebhooks')
@@ -92,7 +92,7 @@ class Update extends Action
      * @param TransactionState $transactionState
      * @param Delete $queueForDeletes
      * @param Event $queueForEvents
-     * @param StatsUsage $queueForStatsUsage
+     * @param Context $usage
      * @param Event $queueForRealtime
      * @param Event $queueForFunctions
      * @param Event $queueForWebhooks
@@ -106,7 +106,7 @@ class Update extends Action
      * @throws Structure
      * @throws \Utopia\Http\Exception
      */
-    public function action(string $transactionId, bool $commit, bool $rollback, UtopiaResponse $response, Database $dbForProject, Document $user, TransactionState $transactionState, Delete $queueForDeletes, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, Authorization $authorization, EventProcessor $eventProcessor): void
+    public function action(string $transactionId, bool $commit, bool $rollback, UtopiaResponse $response, Database $dbForProject, Document $user, TransactionState $transactionState, Delete $queueForDeletes, Event $queueForEvents, Context $usage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, Authorization $authorization, EventProcessor $eventProcessor): void
     {
         if (!$commit && !$rollback) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Either commit or rollback must be true');
@@ -142,7 +142,7 @@ class Update extends Action
             $currentDocumentId = null;
 
             try {
-                $dbForProject->withTransaction(function () use ($dbForProject, $transactionState, $queueForDeletes, $transactionId, &$transaction, &$operations, &$totalOperations, &$databaseOperations, &$currentDocumentId, $queueForEvents, $queueForStatsUsage, $queueForRealtime, $queueForFunctions, $queueForWebhooks, $authorization) {
+                $dbForProject->withTransaction(function () use ($dbForProject, $transactionState, $queueForDeletes, $transactionId, &$transaction, &$operations, &$totalOperations, &$databaseOperations, &$currentDocumentId, $queueForEvents, $usage, $queueForRealtime, $queueForFunctions, $queueForWebhooks, $authorization) {
                     $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                         'status' => 'committing',
                     ])));
@@ -279,11 +279,11 @@ class Update extends Action
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
             }
 
-            $queueForStatsUsage
+            $usage
                 ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, $totalOperations);
 
             foreach ($databaseOperations as $sequence => $count) {
-                $queueForStatsUsage->addMetric(
+                $usage->addMetric(
                     str_replace('{databaseInternalId}', $sequence, METRIC_DATABASE_ID_OPERATIONS_WRITES),
                     $count
                 );
