@@ -2,12 +2,12 @@
 
 namespace Appwrite\Event;
 
-use Utopia\Config\Config;
 use Utopia\Queue\Publisher;
 
 class Mail extends Event
 {
     protected string $recipient = '';
+    protected array $recipients = [];
     protected string $name = '';
     protected string $subject = '';
     protected string $body = '';
@@ -17,7 +17,8 @@ class Mail extends Event
     protected string $bodyTemplate = '';
     protected array $attachment = [];
 
-    protected array $customMailOptions = [];
+    protected string $senderEmail = '';
+    protected string $senderName = '';
 
     public function __construct(protected Publisher $publisher)
     {
@@ -72,6 +73,54 @@ class Mail extends Event
     public function getRecipient(): string
     {
         return $this->recipient;
+    }
+
+    /**
+     * Sets multiple recipients for batch sending.
+     * Accepts array of email => name pairs or simple email array.
+     * Example: ['user@example.com' => 'John', 'admin@example.com' => 'Admin']
+     * Or: ['user@example.com', 'admin@example.com']
+     *
+     * @param array $recipients
+     * @return self
+     */
+    public function setRecipients(array $recipients): self
+    {
+        $this->recipients = $recipients;
+        return $this;
+    }
+
+    /**
+     * Adds a single recipient to the batch.
+     *
+     * @param string $email
+     * @param string $name
+     * @return self
+     */
+    public function addRecipient(string $email, string $name = ''): self
+    {
+        $this->recipients[$email] = $name;
+        return $this;
+    }
+
+    /**
+     * Returns all recipients for batch sending.
+     *
+     * @return array
+     */
+    public function getRecipients(): array
+    {
+        return $this->recipients;
+    }
+
+    /**
+     * Checks if mail is in batch mode (multiple recipients).
+     *
+     * @return bool
+     */
+    public function isBatch(): bool
+    {
+        return !empty($this->recipients);
     }
 
     /**
@@ -411,7 +460,7 @@ class Mail extends Event
      */
     public function setSenderEmail(string $email): self
     {
-        $this->customMailOptions['senderEmail'] = $email;
+        $this->senderEmail = $email;
         return $this;
     }
 
@@ -422,7 +471,7 @@ class Mail extends Event
      */
     public function getSenderEmail(): string
     {
-        return $this->customMailOptions['senderEmail'] ?? '';
+        return $this->senderEmail;
     }
 
     /**
@@ -433,7 +482,7 @@ class Mail extends Event
      */
     public function setSenderName(string $name): self
     {
-        $this->customMailOptions['senderName'] = $name;
+        $this->senderName = $name;
         return $this;
     }
 
@@ -444,51 +493,7 @@ class Mail extends Event
      */
     public function getSenderName(): string
     {
-        return $this->customMailOptions['senderName'] ?? '';
-    }
-
-    /**
-     * Set reply-to email
-     *
-     * @param string $email
-     * @return self
-     */
-    public function setReplyToEmail(string $email): self
-    {
-        $this->customMailOptions['replyToEmail'] = $email;
-        return $this;
-    }
-
-    /**
-     * Get reply-to email
-     *
-     * @return string
-     */
-    public function getReplyToEmail(): string
-    {
-        return $this->customMailOptions['replyToEmail'] ?? '';
-    }
-
-    /**
-     * Set reply-to name
-     *
-     * @param string $name
-     * @return self
-     */
-    public function setReplyToName(string $name): self
-    {
-        $this->customMailOptions['replyToName'] = $name;
-        return $this;
-    }
-
-    /**
-     * Get reply-to name
-     *
-     * @return string
-     */
-    public function getReplyToName(): string
-    {
-        return $this->customMailOptions['replyToName'] ?? '';
+        return $this->senderName;
     }
 
     /**
@@ -500,13 +505,15 @@ class Mail extends Event
     {
         $this->project = null;
         $this->recipient = '';
+        $this->recipients = [];
         $this->name = '';
         $this->subject = '';
         $this->body = '';
         $this->variables = [];
         $this->bodyTemplate = '';
         $this->attachment = [];
-        $this->customMailOptions = [];
+        $this->senderEmail = '';
+        $this->senderName = '';
         return $this;
     }
 
@@ -517,14 +524,10 @@ class Mail extends Event
      */
     protected function preparePayload(): array
     {
-        $platform = $this->platform;
-        if (empty($platform)) {
-            $platform = Config::getParam('platform', []);
-        }
-
         return [
             'project' => $this->project,
             'recipient' => $this->recipient,
+            'recipients' => $this->recipients,
             'name' => $this->name,
             'subject' => $this->subject,
             'bodyTemplate' => $this->bodyTemplate,
@@ -533,9 +536,9 @@ class Mail extends Event
             'smtp' => $this->smtp,
             'variables' => $this->variables,
             'attachment' => $this->attachment,
-            'customMailOptions' => $this->customMailOptions,
-            'events' => Event::generateEvents($this->getEvent(), $this->getParams()),
-            'platform' => $platform,
+            'senderEmail' => $this->senderEmail,
+            'senderName' => $this->senderName,
+            'events' => Event::generateEvents($this->getEvent(), $this->getParams())
         ];
     }
 }
