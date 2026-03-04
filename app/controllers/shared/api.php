@@ -564,11 +564,6 @@ Http::init()
             $queueForAudits->setUser($userClone);
         }
 
-        if (!empty($apiKey) && !empty($apiKey->getDisabledMetrics())) {
-            foreach ($apiKey->getDisabledMetrics() as $key) {
-                $usage->disableMetric($key);
-            }
-        }
 
         /* Auto-set projects */
         $queueForDeletes->setProject($project);
@@ -600,10 +595,6 @@ Http::init()
             $data = $cache->load($key, $timestamp);
 
             if (!empty($data) && !$cacheLog->isEmpty()) {
-                $usageMetric = $route->getLabel('usage.metric', null);
-                if ($usageMetric === METRIC_AVATARS_SCREENSHOTS_GENERATED) {
-                    $usage->disableMetric(METRIC_AVATARS_SCREENSHOTS_GENERATED);
-                }
                 $parts = explode('/', $cacheLog->getAttribute('resourceType', ''));
                 $type = $parts[0] ?? null;
 
@@ -750,7 +741,8 @@ Http::shutdown()
     ->inject('timelimit')
     ->inject('eventProcessor')
     ->inject('bus')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Audit $queueForAudits, Context $usage, \Appwrite\Event\Publisher\Usage $publisherForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus) use ($parseLabel) {
+    ->inject('apiKey')
+    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Audit $queueForAudits, Context $usage, \Appwrite\Event\Publisher\Usage $publisherForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus, ?Key $apiKey) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -971,9 +963,24 @@ Http::shutdown()
 
             // Publish usage metrics if context has data
             if (!$usage->isEmpty()) {
+                $metrics = $usage->getMetrics();
+
+                // Filter out API key disabled metrics using suffix pattern matching
+                $disabledMetrics = $apiKey?->getDisabledMetrics() ?? [];
+                if (!empty($disabledMetrics)) {
+                    $metrics = array_values(array_filter($metrics, function ($metric) use ($disabledMetrics) {
+                        foreach ($disabledMetrics as $pattern) {
+                            if (str_ends_with($metric['key'], $pattern)) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    }));
+                }
+
                 $message = new \Appwrite\Event\Message\Usage(
                     project: $project,
-                    metrics: $usage->getMetrics(),
+                    metrics: $metrics,
                     reduce: $usage->getReduce()
                 );
 

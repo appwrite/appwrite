@@ -8,7 +8,6 @@ class Context
 {
     protected array $metrics = [];
     protected array $reduce = [];
-    protected array $disabled = [];
 
     /**
      * Add a metric
@@ -40,32 +39,13 @@ class Context
     }
 
     /**
-     * Disable a metric
-     *
-     * @param string $key
-     * @return self
-     */
-    public function disableMetric(string $key): self
-    {
-        $this->disabled[] = $key;
-        return $this;
-    }
-
-    /**
-     * Get all metrics (filtered by disabled)
+     * Get all metrics
      *
      * @return array<array{key: string, value: int}>
      */
     public function getMetrics(): array
     {
-        return array_filter($this->metrics, function ($metric) {
-            foreach ($this->disabled as $disabledMetric) {
-                if (str_ends_with($metric['key'], $disabledMetric)) {
-                    return false;
-                }
-            }
-            return true;
-        });
+        return $this->metrics;
     }
 
     /**
@@ -97,7 +77,6 @@ class Context
     {
         $this->metrics = [];
         $this->reduce = [];
-        $this->disabled = [];
         return $this;
     }
 }

@@ -4,15 +4,16 @@ namespace Appwrite\Event\Publisher;
 
 use Appwrite\Event\Message\Usage as UsageMessage;
 use Utopia\Queue\Queue;
+use Utopia\Queue\Publisher;
 
 readonly class Usage extends Base
 {
     /**
-     * @param \Utopia\Queue\Publisher $publisher
+     * @param Publisher $publisher
      * @param Queue $queue
      */
     public function __construct(
-        \Utopia\Queue\Publisher $publisher,
+        Publisher $publisher,
         protected Queue $queue
     ) {
         parent::__construct($publisher);

@@ -36,6 +36,7 @@ use Utopia\Storage\Device\Local;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Appwrite\Usage\Context;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
 
 class Builds extends Action
 {
@@ -61,6 +62,7 @@ class Builds extends Action
             ->inject('queueForFunctions')
             ->inject('queueForRealtime')
             ->inject('usage')
+            ->inject('publisherForUsage')
             ->inject('cache')
             ->inject('dbForProject')
             ->inject('deviceForFunctions')
@@ -104,6 +106,7 @@ class Builds extends Action
         Func $queueForFunctions,
         Realtime $queueForRealtime,
         Context $usage,
+        UsagePublisher $publisherForUsage,
         Cache $cache,
         Database $dbForProject,
         Device $deviceForFunctions,
@@ -146,6 +149,7 @@ class Builds extends Action
                     $queueForRealtime,
                     $queueForEvents,
                     $usage,
+                    $publisherForUsage,
                     $dbForPlatform,
                     $dbForProject,
                     $github,
@@ -201,6 +205,7 @@ class Builds extends Action
         Realtime $queueForRealtime,
         Event $queueForEvents,
         Context $usage,
+        UsagePublisher $publisherForUsage,
         Database $dbForPlatform,
         Database $dbForProject,
         GitHub $github,
@@ -1179,21 +1184,22 @@ class Builds extends Action
                 ->trigger();
 
             $this->sendUsage(
-                resource:$resource,
+                resource: $resource,
                 deployment: $deployment,
                 project: $project,
-                queue: $usage
+                usage: $usage,
+                publisherForUsage: $publisherForUsage
             );
         }
     }
 
-    protected function sendUsage(Document $resource, Document $deployment, Document $project, StatsUsage $queue): void
+    protected function sendUsage(Document $resource, Document $deployment, Document $project, Context $usage, UsagePublisher $publisherForUsage): void
     {
         $spec = Config::getParam('specifications')[$resource->getAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
 
         switch ($deployment->getAttribute('status')) {
             case 'ready':
-                $queue
+                $usage
                     ->addMetric(METRIC_BUILDS_SUCCESS, 1) // per project
                     ->addMetric(METRIC_BUILDS_COMPUTE_SUCCESS, (int)$deployment->getAttribute('buildDuration', 0) * 1000)
                     ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_SUCCESS), 1) // per function
@@ -1202,7 +1208,7 @@ class Builds extends Action
                     ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE_SUCCESS), (int)$deployment->getAttribute('buildDuration', 0) * 1000);
                 break;
             case 'failed':
-                $queue
+                $usage
                     ->addMetric(METRIC_BUILDS_FAILED, 1) // per project
                     ->addMetric(METRIC_BUILDS_COMPUTE_FAILED, (int)$deployment->getAttribute('buildDuration', 0) * 1000)
                     ->addMetric(str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_BUILDS_FAILED), 1) // per function
@@ -1212,7 +1218,7 @@ class Builds extends Action
                 break;
         }
 
-        $queue
+        $usage
             ->addMetric(METRIC_BUILDS, 1) // per project
             ->addMetric(METRIC_BUILDS_STORAGE, $deployment->getAttribute('buildSize', 0))
             ->addMetric(METRIC_BUILDS_COMPUTE, (int)$deployment->getAttribute('buildDuration', 0) * 1000)
@@ -1224,9 +1230,18 @@ class Builds extends Action
             ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS), 1) // per function
             ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE), $deployment->getAttribute('buildSize', 0))
             ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_COMPUTE), (int)$deployment->getAttribute('buildDuration', 0) * 1000)
-            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $deployment->getAttribute('buildDuration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
-            ->setProject($project)
-            ->trigger();
+            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $deployment->getAttribute('buildDuration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)));
+
+        // Publish usage metrics
+        if (!$usage->isEmpty()) {
+            $message = new \Appwrite\Event\Message\Usage(
+                project: $project,
+                metrics: $usage->getMetrics(),
+                reduce: $usage->getReduce()
+            );
+            $publisherForUsage->enqueue($message);
+            $usage->reset();
+        }
     }
 
     /**

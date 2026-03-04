@@ -3,16 +3,16 @@
 namespace Appwrite\Event\Publisher;
 
 use Appwrite\Event\Message\Base as BaseMessage;
-use Utopia\Queue\Publisher as QueuePublisher;
+use Utopia\Queue\Publisher;
 use Utopia\Queue\Queue;
 
 readonly class Base
 {
     /**
-     * @param QueuePublisher $publisher
+     * @param Publisher $publisher
      */
     public function __construct(
-        protected QueuePublisher $publisher
+        protected Publisher $publisher
     ) {
     }
 

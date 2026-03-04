@@ -37,7 +37,6 @@ use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
-use Appwrite\Usage\Context;
 
 class Create extends Action
 {

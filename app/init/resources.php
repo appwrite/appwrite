@@ -71,7 +71,7 @@ use Utopia\Telemetry\Adapter\None as NoTelemetry;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
-use Appwrite\Usage\Context;
+use Appwrite\Usage\Context as UsageContext;
 
 // Runtime Execution
 Http::setResource('log', fn () => new Log());
@@ -106,9 +106,6 @@ Http::setResource('publisherFunctions', function (Publisher $publisher) {
     return $publisher;
 }, ['publisher']);
 Http::setResource('publisherMigrations', function (Publisher $publisher) {
-    return $publisher;
-}, ['publisher']);
-Http::setResource('publisherStatsUsage', function (Publisher $publisher) {
     return $publisher;
 }, ['publisher']);
 Http::setResource('publisherMails', function (Publisher $publisher) {
@@ -151,11 +148,11 @@ Http::setResource('queueForRealtime', function () {
     return new Realtime();
 }, []);
 Http::setResource('usage', function () {
-    return new Context();
+    return new UsageContext();
 }, []);
 Http::setResource('publisherForUsage', function (Publisher $publisher) {
     $queueName = System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME);
-    $queue = new \Utopia\Queue\Queue($queueName, 'utopia-queue');
+    $queue = new \Utopia\Queue\Queue($queueName);
     return new \Appwrite\Event\Publisher\Usage($publisher, $queue);
 }, ['publisher']);
 Http::setResource('queueForAudits', function (Publisher $publisher) {
@@ -555,7 +552,7 @@ Http::setResource('authorization', function () {
     return new Authorization();
 }, []);
 
-Http::setResource('dbForProject', function (Group $pools, Database $dbForPlatform, Cache $cache, Document $project, Response $response, Publisher $publisher, Publisher $publisherFunctions, Publisher $publisherWebhooks, Event $queueForEvents, Func $queueForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime, Context $usage, Authorization $authorization) {
+Http::setResource('dbForProject', function (Group $pools, Database $dbForPlatform, Cache $cache, Document $project, Response $response, Publisher $publisher, Publisher $publisherFunctions, Publisher $publisherWebhooks, Event $queueForEvents, Func $queueForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime, UsageContext $usage, Authorization $authorization) {
     if ($project->isEmpty() || $project->getId() === 'console') {
         return $dbForPlatform;
     }
@@ -663,7 +660,7 @@ Http::setResource('dbForProject', function (Group $pools, Database $dbForPlatfor
         $dbForProject->getCache()->purge($cacheKey);
     };
 
-    $usageDatabaseListener = function (string $event, Document $document, Context $usage) {
+    $usageDatabaseListener = function (string $event, Document $document, UsageContext $usage) {
         $value = 1;
 
         switch ($event) {

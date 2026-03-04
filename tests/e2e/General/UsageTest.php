@@ -527,14 +527,12 @@ class UsageTest extends Scope
 
         $this->assertEquals('name', $response['body']['key']);
 
+        // Use console headers for polling to avoid counting these requests in usage metrics
         $this->assertEventually(function () use ($databaseId, $collectionId) {
             $attr = $this->client->call(
                 Client::METHOD_GET,
                 '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/name',
-                array_merge([
-                    'content-type' => 'application/json',
-                    'x-appwrite-project' => $this->getProject()['$id']
-                ], $this->getHeaders())
+                $this->getConsoleHeaders()
             );
             $this->assertEquals(200, $attr['headers']['status-code']);
             $this->assertEquals('available', $attr['body']['status']);
@@ -780,14 +778,12 @@ class UsageTest extends Scope
 
         $this->assertEquals('name', $response['body']['key']);
 
+        // Use console headers for polling to avoid counting these requests in usage metrics
         $this->assertEventually(function () use ($databaseId, $tableId) {
             $attr = $this->client->call(
                 Client::METHOD_GET,
                 '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/name',
-                array_merge([
-                    'content-type' => 'application/json',
-                    'x-appwrite-project' => $this->getProject()['$id']
-                ], $this->getHeaders())
+                $this->getConsoleHeaders()
             );
             $this->assertEquals(200, $attr['headers']['status-code']);
             $this->assertEquals('available', $attr['body']['status']);
@@ -1057,13 +1053,12 @@ class UsageTest extends Scope
 
         $executionId = $response['body']['$id'];
 
+        // Use console headers for polling to avoid counting these requests in usage metrics
         $this->assertEventually(function () use ($functionId, $executionId) {
             $response = $this->client->call(
                 Client::METHOD_GET,
                 '/functions/' . $functionId . '/executions/' . $executionId,
-                array_merge([
-                    'x-appwrite-project' => $this->getProject()['$id']
-                ], $this->getHeaders()),
+                $this->getConsoleHeaders()
             );
             $this->assertContains($response['body']['status'], ['completed', 'failed']);
         }, 30_000, 500);
@@ -1184,9 +1179,13 @@ class UsageTest extends Scope
 
         $deploymentIdActive = $deployment['body']['$id'] ?? '';
 
+        // Use console headers for polling to avoid counting these requests in usage metrics
         $this->assertEventually(function () use ($siteId, $deploymentIdActive) {
-            $deployment = $this->getDeploymentSite($siteId, $deploymentIdActive);
-
+            $deployment = $this->client->call(
+                Client::METHOD_GET,
+                '/sites/' . $siteId . '/deployments/' . $deploymentIdActive,
+                $this->getConsoleHeaders()
+            );
             $this->assertEquals('ready', $deployment['body']['status']);
         }, 50000, 500);
 
@@ -1200,9 +1199,13 @@ class UsageTest extends Scope
 
         $deploymentIdInactive = $deployment['body']['$id'] ?? '';
 
+        // Use console headers for polling to avoid counting these requests in usage metrics
         $this->assertEventually(function () use ($siteId, $deploymentIdInactive) {
-            $deployment = $this->getDeploymentSite($siteId, $deploymentIdInactive);
-
+            $deployment = $this->client->call(
+                Client::METHOD_GET,
+                '/sites/' . $siteId . '/deployments/' . $deploymentIdInactive,
+                $this->getConsoleHeaders()
+            );
             $this->assertEquals('ready', $deployment['body']['status']);
         }, 50000, 500);
 

@@ -6,7 +6,6 @@ use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Func;
 use Appwrite\Event\StatsResources;
-use Appwrite\Event\StatsUsage;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Runtimes\Runtimes;
 use Appwrite\Utopia\Database\Documents\User;
@@ -243,14 +242,16 @@ $setResource('publisherFunctions', function (BrokerPool $publisher) {
 $setResource('publisherMigrations', function (BrokerPool $publisher) {
     return $publisher;
 }, ['publisher']);
-$setResource('publisherStatsUsage', function (BrokerPool $publisher) {
-    return $publisher;
-}, ['publisher']);
 $setResource('publisherMessaging', function (BrokerPool $publisher) {
     return $publisher;
 }, ['publisher']);
-$setResource('usage', function (Publisher $publisher) {
-    return new StatsUsage($publisher);
+$setResource('usage', function () {
+    return new \Appwrite\Usage\Context();
+}, []);
+$setResource('publisherForUsage', function (Publisher $publisher) {
+    $queueName = \Utopia\System\System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', \Appwrite\Event\Event::STATS_USAGE_QUEUE_NAME);
+    $queue = new \Utopia\Queue\Queue($queueName, 'utopia-queue');
+    return new \Appwrite\Event\Publisher\Usage($publisher, $queue);
 }, ['publisher']);
 $setResource('queueForStatsResources', function (Publisher $publisher) {
     return new StatsResources($publisher);

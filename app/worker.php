@@ -15,7 +15,6 @@ use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Screenshot;
-use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Utopia\Database\Documents\User;
@@ -284,10 +283,6 @@ Server::setResource('publisherFunctions', function (BrokerPool $publisher) {
 }, ['publisher']);
 
 Server::setResource('publisherMigrations', function (BrokerPool $publisher) {
-    return $publisher;
-}, ['publisher']);
-
-Server::setResource('publisherStatsUsage', function (BrokerPool $publisher) {
     return $publisher;
 }, ['publisher']);
 
