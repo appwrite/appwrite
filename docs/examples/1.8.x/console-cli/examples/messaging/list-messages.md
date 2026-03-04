@@ -1,1 +1,0 @@
-appwrite messaging list-messages

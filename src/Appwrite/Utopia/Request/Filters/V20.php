@@ -7,7 +7,6 @@ use Appwrite\Utopia\Request\Filter;
 use Utopia\Database\Database;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 
 class V20 extends Filter
 {
@@ -138,7 +137,7 @@ class V20 extends Filter
         }
 
         try {
-            $database = Authorization::skip(fn () => $dbForProject->getDocument(
+            $database = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument(
                 'databases',
                 $databaseId
             ));
@@ -150,7 +149,7 @@ class V20 extends Filter
         }
 
         try {
-            $collection = Authorization::skip(fn () => $dbForProject->getDocument(
+            $collection = $database = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument(
                 'database_' . $database->getSequence(),
                 $collectionId
             ));

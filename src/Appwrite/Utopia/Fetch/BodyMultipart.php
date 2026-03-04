@@ -10,7 +10,7 @@ class BodyMultipart
     private array $parts = [];
     private string $boundary = "";
 
-    public function __construct(string $boundary = null)
+    public function __construct(?string $boundary = null)
     {
         if (is_null($boundary)) {
             $this->boundary = self::generateBoundary();

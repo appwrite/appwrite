@@ -1,6 +1,8 @@
 ## 0.3.2
 
 - Fixed package namespaces
+- Breaking change: `Output` enum has been removed; use `ImageFormat` instead.
+- Add `Channel` helpers for Realtime.
 
 ## 0.3.1
 

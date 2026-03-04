@@ -365,6 +365,18 @@ class Mail extends Event
     }
 
     /**
+     * Append variables to the email event.
+     *
+     * @param array $variables
+     * @return self
+     */
+    public function appendVariables(array $variables): self
+    {
+        $this->variables = \array_merge($this->variables, $variables);
+        return $this;
+    }
+
+    /**
      * Set attachment
      * @param string $content
      * @param string $filename

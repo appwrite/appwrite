@@ -11,19 +11,20 @@ jobs:
       pull-requests: write
     steps:
     - name: Check out code 
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         ref: ${{ github.event.pull_request.head.sha }}
         fetch-depth: 0
         submodules: 'recursive'
 
     - name: Build the Docker image
-      uses: docker/build-push-action@v5
-      with: 
+      uses: docker/build-push-action@v6
+      with:
         context: .
         push: false
         load: true
         tags: pr_image:${{ github.sha }}
+        target: production
 
     - name: Run Trivy vulnerability scanner on image
       uses: aquasecurity/trivy-action@0.20.0
@@ -44,7 +45,7 @@ jobs:
 
     - name: Process Trivy scan results
       id: process-results
-      uses: actions/github-script@v7
+      uses: actions/github-script@v8
       with:
         script: |
           const fs = require('fs');

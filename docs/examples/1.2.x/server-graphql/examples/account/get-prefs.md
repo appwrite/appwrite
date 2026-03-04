@@ -1,5 +1,0 @@
-query {
-    accountGetPrefs {
-        data
-    }
-}

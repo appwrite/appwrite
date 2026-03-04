@@ -3,7 +3,7 @@
 namespace Tests\E2E\Services\GraphQL;
 
 use CURLFile;
-use Utopia\CLI\Console;
+use Utopia\Console;
 
 trait Base
 {
@@ -2334,7 +2334,8 @@ trait Base
                         buckets {
                             _id
                             name
-                            enabled
+                            enabled,
+                            totalSize
                         }
                     }
                 }';
@@ -2344,6 +2345,7 @@ trait Base
                         _id
                         name
                         enabled
+                        totalSize
                     }
                 }';
             case self::UPDATE_BUCKET:
@@ -2426,15 +2428,21 @@ trait Base
             case self::GET_DB_HEALTH:
                 return 'query getDbHealth {
                     healthGetDB {
-                        ping
-                        status
+                        statuses {
+                            ping
+                            status
+                        }
+                        total
                     }
                 }';
             case self::GET_CACHE_HEALTH:
                 return 'query getCacheHealth {
                     healthGetCache {
-                        ping
-                        status
+                        statuses {
+                            ping
+                            status
+                        }
+                        total
                     }
                 }';
             case self::GET_TIME_HEALTH:

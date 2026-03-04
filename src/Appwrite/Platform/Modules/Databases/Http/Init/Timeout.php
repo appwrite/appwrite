@@ -3,8 +3,8 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Init;
 
 use Appwrite\Utopia\Request;
-use Utopia\App;
 use Utopia\Database\Database;
+use Utopia\Http\Http;
 use Utopia\Platform\Action;
 
 /**
@@ -27,7 +27,7 @@ class Timeout extends Action
             ->callback(function (Request $request, Database $dbForProject) {
                 $timeout = \intval($request->getHeader('x-appwrite-timeout'));
 
-                if (!empty($timeout) && App::isDevelopment()) {
+                if (!empty($timeout) && Http::isDevelopment()) {
                     $dbForProject->setTimeout($timeout);
                 }
             });

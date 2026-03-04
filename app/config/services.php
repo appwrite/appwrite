@@ -48,7 +48,7 @@ return [
         'name' => 'Avatars',
         'subtitle' => 'The Avatars service aims to help you complete everyday tasks related to your app image, icons, and avatars.',
         'description' => '/docs/services/avatars.md',
-        'controller' => 'api/avatars.php',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/client/avatars',
@@ -104,7 +104,7 @@ return [
         'name' => 'Health',
         'subtitle' => 'The Health service allows you to both validate and monitor your Appwrite server\'s health.',
         'description' => '/docs/services/health.md',
-        'controller' => 'api/health.php',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/server/health',
@@ -146,7 +146,7 @@ return [
         'name' => 'Storage',
         'subtitle' => 'The Storage service allows you to manage your project files.',
         'description' => '/docs/services/storage.md',
-        'controller' => '',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/client/storage',
@@ -160,7 +160,7 @@ return [
         'name' => 'Teams',
         'subtitle' => 'The Teams service allows you to group users of your project and to enable them to share read and write access to your project resources',
         'description' => '/docs/services/teams.md',
-        'controller' => 'api/teams.php',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/client/teams',
@@ -188,7 +188,7 @@ return [
         'name' => 'VCS',
         'subtitle' => 'The VCS service allows you to interact with providers like GitHub, GitLab etc.',
         'description' => '',
-        'controller' => 'api/vcs.php',
+        'controller' => '', // Uses modules
         'sdk' => false,
         'docs' => false,
         'docsUrl' => '',

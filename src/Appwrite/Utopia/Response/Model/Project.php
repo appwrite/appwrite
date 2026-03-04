@@ -276,6 +276,19 @@ class Project extends Model
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
+            ->addRule('labels', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Labels for the project.',
+                'default' => [],
+                'example' => ['vip'],
+                'array' => true,
+            ])
+            ->addRule('status', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Project status.',
+                'default' => 'active',
+                'example' => 'active',
+            ])
         ;
 
         $services = Config::getParam('services', []);

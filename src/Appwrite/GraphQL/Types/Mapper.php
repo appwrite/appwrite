@@ -9,8 +9,8 @@ use Exception;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Definition\UnionType;
-use Utopia\App;
-use Utopia\Route;
+use Utopia\Http\Http;
+use Utopia\Http\Route;
 use Utopia\Validator;
 use Utopia\Validator\Nullable;
 
@@ -59,7 +59,8 @@ class Mapper
             'none' => Types::json(),
             'any' => Types::json(),
             'array' => Types::json(),
-            'enum' => Type::string()
+            'enum' => Type::string(),
+            'id' => Type::string()
         ];
 
         foreach ($defaults as $type => $default) {
@@ -79,7 +80,7 @@ class Mapper
     }
 
     public static function route(
-        App $utopia,
+        Http $utopia,
         Route $route,
         Method $method,
         callable $complexity
@@ -245,7 +246,7 @@ class Mapper
     /**
      * Map a {@see Route} parameter to a GraphQL Type
      *
-     * @param App $utopia
+     * @param Http $utopia
      * @param Validator|callable $validator
      * @param bool $required
      * @param array $injections
@@ -253,7 +254,7 @@ class Mapper
      * @throws Exception
      */
     public static function param(
-        App $utopia,
+        Http $utopia,
         Validator|callable $validator,
         bool $required,
         array $injections
@@ -269,59 +270,59 @@ class Mapper
         }
 
         switch ((!empty($validator)) ? $validator::class : '') {
-            case 'Appwrite\Auth\Validator\Password':
-            case 'Appwrite\Event\Validator\Event':
-            case 'Appwrite\Event\Validator\FunctionEvent':
-            case 'Appwrite\Network\Validator\CNAME':
-            case 'Appwrite\Network\Validator\Email':
-            case 'Appwrite\Network\Validator\Redirect':
-            case 'Appwrite\Network\Validator\DNS':
-            case 'Appwrite\Network\Validator\Origin':
-            case 'Appwrite\Task\Validator\Cron':
-            case 'Appwrite\Utopia\Database\Validator\CustomId':
-            case 'Utopia\Database\Validator\Key':
-            case 'Utopia\Database\Validator\UID':
-            case 'Utopia\Validator\Domain':
-            case 'Utopia\Validator\HexColor':
-            case 'Utopia\Validator\Host':
-            case 'Utopia\Validator\IP':
-            case 'Utopia\Validator\Origin':
-            case 'Utopia\Validator\Text':
-            case 'Utopia\Validator\URL':
-            case 'Utopia\Validator\WhiteList':
+            case \Appwrite\Auth\Validator\Password::class:
+            case \Appwrite\Event\Validator\Event::class:
+            case \Appwrite\Event\Validator\FunctionEvent::class:
+            case \Appwrite\Network\Validator\CNAME::class:
+            case \Appwrite\Network\Validator\Email::class:
+            case \Appwrite\Network\Validator\Redirect::class:
+            case \Appwrite\Network\Validator\DNS::class:
+            case \Appwrite\Network\Validator\Origin::class:
+            case \Appwrite\Task\Validator\Cron::class:
+            case \Appwrite\Utopia\Database\Validator\CustomId::class:
+            case \Utopia\Database\Validator\Key::class:
+            case \Utopia\Database\Validator\UID::class:
+            case \Utopia\Validator\Domain::class:
+            case \Utopia\Validator\HexColor::class:
+            case \Utopia\Validator\Host::class:
+            case \Utopia\Validator\IP::class:
+            case \Utopia\Validator\Origin::class:
+            case \Utopia\Validator\Text::class:
+            case \Utopia\Validator\URL::class:
+            case \Utopia\Validator\WhiteList::class:
             default:
                 $type = Type::string();
                 break;
-            case 'Appwrite\Utopia\Database\Validator\Queries\Attributes':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Base':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Buckets':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Tables':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Collections':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Columns':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Databases':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Deployments':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Executions':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Files':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Functions':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Indexes':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Installations':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Memberships':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Projects':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Rules':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Teams':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Users':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Variables':
-            case 'Utopia\Database\Validator\Authorization':
-            case 'Utopia\Database\Validator\Permissions':
-            case 'Utopia\Database\Validator\Queries':
-            case 'Utopia\Database\Validator\Queries\Documents':
-            case 'Utopia\Database\Validator\Roles':
+            case \Appwrite\Utopia\Database\Validator\Queries\Attributes::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Base::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Buckets::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Tables::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Collections::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Columns::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Databases::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Deployments::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Executions::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Files::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Functions::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Indexes::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Installations::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Memberships::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Projects::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Rules::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Teams::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Users::class:
+            case \Appwrite\Utopia\Database\Validator\Queries\Variables::class:
+            case \Utopia\Database\Validator\Authorization::class:
+            case \Utopia\Database\Validator\Permissions::class:
+            case \Utopia\Database\Validator\Queries::class:
+            case \Utopia\Database\Validator\Queries\Documents::class:
+            case \Utopia\Database\Validator\Roles::class:
                 $type = Type::listOf(Type::string());
                 break;
-            case 'Utopia\Validator\Boolean':
+            case \Utopia\Validator\Boolean::class:
                 $type = Type::boolean();
                 break;
-            case 'Utopia\Validator\ArrayList':
+            case \Utopia\Validator\ArrayList::class:
                 $type = Type::listOf(self::param(
                     $utopia,
                     $validator->getValidator(),
@@ -329,11 +330,11 @@ class Mapper
                     $injections
                 ));
                 break;
-            case 'Utopia\Validator\Integer':
-            case 'Utopia\Validator\Numeric':
+            case \Utopia\Validator\Integer::class:
+            case \Utopia\Validator\Numeric::class:
                 $type = Type::int();
                 break;
-            case 'Utopia\Validator\Range':
+            case \Utopia\Validator\Range::class:
                 // Check if the Range validator is for float or integer
                 if ($validator instanceof \Utopia\Validator\Range && $validator->getType() === \Utopia\Validator\Range::TYPE_FLOAT) {
                     $type = Type::float();
@@ -341,16 +342,16 @@ class Mapper
                     $type = Type::int();
                 }
                 break;
-            case 'Utopia\Validator\FloatValidator':
+            case \Utopia\Validator\FloatValidator::class:
                 $type = Type::float();
                 break;
-            case 'Utopia\Validator\Assoc':
+            case \Utopia\Validator\Assoc::class:
                 $type = Types::assoc();
                 break;
-            case 'Utopia\Validator\JSON':
+            case \Utopia\Validator\JSON::class:
                 $type = Types::json();
                 break;
-            case 'Utopia\Storage\Validator\File':
+            case \Utopia\Storage\Validator\File::class:
                 $type = Types::inputFile();
                 break;
         }

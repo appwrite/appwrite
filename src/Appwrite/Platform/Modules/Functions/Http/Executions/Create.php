@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Functions\Http\Executions;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Event\Delete as DeleteEvent;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\StatsUsage;
@@ -20,8 +21,8 @@ use Executor\Executor;
 use MaxMind\Db\Reader;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -29,11 +30,12 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
+use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Swoole\Request;
 use Utopia\System\System;
 use Utopia\Validator\AnyOf;
 use Utopia\Validator\Assoc;
@@ -61,7 +63,6 @@ class Create extends Base
             ->label('scope', 'execution.write')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('event', 'functions.[functionId].executions.[executionId].create')
-            ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
                 namespace: 'functions',
                 group: 'executions',
@@ -78,7 +79,7 @@ class Create extends Base
                 ],
                 contentType: ContentType::MULTIPART,
             ))
-            ->param('functionId', '', new UID(), 'Function ID.')
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
             ->param('body', '', new Text(10485760, 0), 'HTTP body of execution. Default value is empty string.', true)
             ->param('async', false, new Boolean(true), 'Execute code in the background. Default value is false.', true)
             ->param('path', '/', new Text(2048), 'HTTP path of execution. Path can include query params. Default value is /', true)
@@ -99,6 +100,9 @@ class Create extends Base
             ->inject('proofForToken')
             ->inject('executor')
             ->inject('platform')
+            ->inject('authorization')
+            ->inject('queueForDeletes')
+            ->inject('executionsRetentionCount')
             ->callback($this->action(...));
     }
 
@@ -123,7 +127,10 @@ class Create extends Base
         Store $store,
         Token $proofForToken,
         Executor $executor,
-        array $platform
+        array $platform,
+        Authorization $authorization,
+        DeleteEvent $queueForDeletes,
+        int $executionsRetentionCount,
     ) {
         $async = \strval($async) === 'true' || \strval($async) === '1';
 
@@ -161,10 +168,11 @@ class Create extends Base
             throw new Exception($validator->getDescription(), 400);
         }
 
-        $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
+        /* @var Document $function */
+        $function = $authorization->skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
-        $isAPIKey = User::isApp(Authorization::getRoles());
-        $isPrivilegedUser = User::isPrivileged(Authorization::getRoles());
+        $isAPIKey = User::isApp($authorization->getRoles());
+        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
 
         if ($function->isEmpty() || (!$function->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
@@ -181,7 +189,7 @@ class Create extends Base
             throw new Exception(Exception::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
         }
 
-        $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $function->getAttribute('deploymentId', '')));
+        $deployment = $authorization->skip(fn () => $dbForProject->getDocument('deployments', $function->getAttribute('deploymentId', '')));
 
         if ($deployment->getAttribute('resourceId') !== $function->getId()) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND, 'Deployment not found. Create a deployment before trying to execute a function');
@@ -195,10 +203,8 @@ class Create extends Base
             throw new Exception(Exception::BUILD_NOT_READY);
         }
 
-        $validator = new Authorization('execute');
-
-        if (!$validator->isValid($function->getAttribute('execute'))) { // Check if user has write access to execute function
-            throw new Exception(Exception::USER_UNAUTHORIZED, $validator->getDescription());
+        if (!$authorization->isValid(new Input('execute', $function->getAttribute('execute')))) { // Check if user has write access to execute function
+            throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
 
         $jwt = ''; // initialize
@@ -296,7 +302,9 @@ class Create extends Base
 
         if ($async) {
             if (is_null($scheduledAt)) {
-                $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
+                if ($project->getId() != '6862e6a6000cce69f9da') {
+                    $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
+                }
                 $queueForFunctions
                     ->setType('http')
                     ->setExecution($execution)
@@ -337,8 +345,17 @@ class Create extends Base
                     ->setAttribute('scheduleInternalId', $schedule->getSequence())
                     ->setAttribute('scheduledAt', $scheduledAt);
 
-                $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
+                if ($project->getId() != '6862e6a6000cce69f9da') {
+                    $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
+                }
             }
+
+            $this->enqueueDeletes(
+                $project,
+                $function->getSequence(),
+                $executionsRetentionCount,
+                $queueForDeletes
+            );
 
             return $response
                 ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
@@ -494,7 +511,9 @@ class Create extends Base
                 ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
             ;
 
-            $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
+            if ($project->getId() != '6862e6a6000cce69f9da') {
+                $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
+            }
         }
 
         $executionResponse['headers']['x-appwrite-execution-id'] = $execution->getId();
@@ -518,8 +537,32 @@ class Create extends Base
             }
         }
 
+        $this->enqueueDeletes(
+            $project,
+            $function->getSequence(),
+            $executionsRetentionCount,
+            $queueForDeletes
+        );
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($execution, Response::MODEL_EXECUTION);
+    }
+
+    private function enqueueDeletes(
+        Document $project,
+        string $resourceId,
+        int $executionsRetentionCount,
+        DeleteEvent $queueForDeletes
+    ): void {
+        /* cleanup */
+        if ($executionsRetentionCount > 0 && ENABLE_EXECUTIONS_LIMIT_ON_ROUTE) {
+            $queueForDeletes
+                ->setProject($project)
+                ->setResource($resourceId)
+                ->setResourceType(RESOURCE_TYPE_FUNCTIONS)
+                ->setType(DELETE_TYPE_EXECUTIONS_LIMIT)
+                ->trigger();
+        }
     }
 }

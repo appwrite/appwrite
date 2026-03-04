@@ -3,8 +3,8 @@
 namespace Appwrite\Migration;
 
 use Exception;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict;
@@ -100,8 +100,6 @@ abstract class Migration
 
     public function __construct()
     {
-        Authorization::disable();
-        Authorization::setDefaultStatus(false);
 
         $this->collections = Config::getParam('collections', []);
 
@@ -129,12 +127,16 @@ abstract class Migration
         Document $project,
         Database $dbForProject,
         Database $dbForPlatform,
+        Authorization $authorization,
         ?callable $getProjectDB = null
     ): self {
         $this->project = $project;
         $this->dbForProject = $dbForProject;
         $this->dbForPlatform = $dbForPlatform;
         $this->getProjectDB = $getProjectDB;
+
+        $authorization->disable();
+        $authorization->setDefaultStatus(false);
 
         return $this;
     }
@@ -209,7 +211,7 @@ abstract class Migration
      * @return void
      * @throws \Throwable
      */
-    protected function createCollection(string $id, string $name = null): void
+    protected function createCollection(string $id, ?string $name = null): void
     {
         $name ??= $id;
 
@@ -260,7 +262,7 @@ abstract class Migration
         Database $database,
         string $collectionId,
         array $attributeIds,
-        string $from = null
+        ?string $from = null
     ): void {
         $from ??= $collectionId;
 
@@ -325,7 +327,7 @@ abstract class Migration
         Database $database,
         string $collectionId,
         string $attributeId,
-        string $from = null
+        ?string $from = null
     ): void {
         $from ??= $collectionId;
 
@@ -383,7 +385,7 @@ abstract class Migration
      * @throws Duplicate
      * @throws Limit
      */
-    public function createIndexFromCollection(Database $database, string $collectionId, string $indexId, string $from = null): void
+    public function createIndexFromCollection(Database $database, string $collectionId, string $indexId, ?string $from = null): void
     {
         $from ??= $collectionId;
 

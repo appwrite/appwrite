@@ -7,6 +7,7 @@ use Appwrite\Utopia\Database\Documents\User;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Authorization;
 
 class MessagingChannelsTest extends TestCase
 {
@@ -32,6 +33,19 @@ class MessagingChannelsTest extends TestCase
         'executions.1',
         'functions.1',
     ];
+
+
+    private $authorization;
+
+    public function getAuthorization(): Authorization
+    {
+        if (isset($this->authorization)) {
+            return $this->authorization;
+        }
+
+        $this->authorization = new Authorization();
+        return $this->authorization;
+    }
 
     public function setUp(): void
     {
@@ -65,13 +79,15 @@ class MessagingChannelsTest extends TestCase
                     ]
                 ]);
 
-                $roles = $user->getRoles();
+                $roles = $user->getRoles($this->getAuthorization());
 
-                $parsedChannels = Realtime::convertChannels([0 => $channel], $user->getId());
+                // Normalize channels to the format Realtime::subscribe expects (plain channel names)
+                $parsedChannels = array_keys(Realtime::convertChannels([0 => $channel], $user->getId()));
 
                 $this->realtime->subscribe(
                     '1',
                     $this->connectionsCount,
+                    ID::unique(),
                     $roles,
                     $parsedChannels
                 );
@@ -89,13 +105,15 @@ class MessagingChannelsTest extends TestCase
                     '$id' => ''
                 ]);
 
-                $roles = $user->getRoles();
+                $roles = $user->getRoles($this->getAuthorization());
 
-                $parsedChannels = Realtime::convertChannels([0 => $channel], $user->getId());
+                // Normalize channels to the format Realtime::subscribe expects (plain channel names)
+                $parsedChannels = array_keys(Realtime::convertChannels([0 => $channel], $user->getId()));
 
                 $this->realtime->subscribe(
                     '1',
                     $this->connectionsCount,
+                    ID::unique(),
                     $roles,
                     $parsedChannels
                 );
@@ -180,11 +198,12 @@ class MessagingChannelsTest extends TestCase
              */
             $this->assertCount($this->connectionsTotal / count($this->allChannels), $receivers, $channel);
 
-            foreach ($receivers as $receiver) {
+            foreach ($receivers as $receiverId => $queryKeys) {
                 /**
                  * Making sure the right clients receive the event.
                  */
-                $this->assertStringEndsWith($index, $receiver);
+                $this->assertStringEndsWith($index, $receiverId);
+                $this->assertIsArray($queryKeys);
             }
         }
     }
@@ -216,11 +235,12 @@ class MessagingChannelsTest extends TestCase
                  */
                 $this->assertCount($this->connectionsPerChannel, $receivers, $channel);
 
-                foreach ($receivers as $receiver) {
+                foreach ($receivers as $receiverId => $queryKeys) {
                     /**
                      * Making sure the right clients receive the event.
                      */
-                    $this->assertStringEndsWith($index, $receiver);
+                    $this->assertStringEndsWith($index, $receiverId);
+                    $this->assertIsArray($queryKeys);
                 }
             }
         }
@@ -243,7 +263,7 @@ class MessagingChannelsTest extends TestCase
                 ]
             ];
 
-            $receivers = $this->realtime->getSubscribers($event);
+            $receivers = array_keys($this->realtime->getSubscribers($event));
 
             /**
              * Every Client subscribed to a Channel should receive this event.
@@ -278,7 +298,7 @@ class MessagingChannelsTest extends TestCase
                 ]
             ];
 
-            $receivers = $this->realtime->getSubscribers($event);
+            $receivers = array_keys($this->realtime->getSubscribers($event));
 
             /**
              * Every Team Member should receive this event.
@@ -311,7 +331,7 @@ class MessagingChannelsTest extends TestCase
                 ]
             ];
 
-            $receivers = $this->realtime->getSubscribers($event);
+            $receivers = array_keys($this->realtime->getSubscribers($event));
 
             /**
              * Only 1 Team Member of a role should have access to a specific channel.

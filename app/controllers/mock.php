@@ -5,7 +5,6 @@ global $utopia, $request, $response;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -14,13 +13,14 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
+use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub;
 
-App::get('/v1/mock/tests/general/oauth2')
+Http::get('/v1/mock/tests/general/oauth2')
     ->desc('OAuth Login')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -32,11 +32,10 @@ App::get('/v1/mock/tests/general/oauth2')
     ->param('state', '', new Text(1024), 'OAuth2 state.')
     ->inject('response')
     ->action(function (string $client_id, string $redirectURI, string $scope, string $state, Response $response) {
-
         $response->redirect($redirectURI . '?' . \http_build_query(['code' => 'abcdef', 'state' => $state]));
     });
 
-App::get('/v1/mock/tests/locale')
+Http::get('/v1/mock/tests/locale')
     ->desc('Mock locale translation key')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -55,7 +54,7 @@ App::get('/v1/mock/tests/locale')
         $response->send($locale->getText('mock'));
     });
 
-App::get('/v1/mock/tests/general/oauth2/token')
+Http::get('/v1/mock/tests/general/oauth2/token')
     ->desc('OAuth2 Token')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -101,7 +100,7 @@ App::get('/v1/mock/tests/general/oauth2/token')
         }
     });
 
-App::get('/v1/mock/tests/general/oauth2/user')
+Http::get('/v1/mock/tests/general/oauth2/user')
     ->desc('OAuth2 User')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -122,7 +121,7 @@ App::get('/v1/mock/tests/general/oauth2/user')
         ]);
     });
 
-App::get('/v1/mock/tests/general/oauth2/user-unverified')
+Http::get('/v1/mock/tests/general/oauth2/user-unverified')
     ->desc('OAuth2 User Unverified')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -143,7 +142,7 @@ App::get('/v1/mock/tests/general/oauth2/user-unverified')
         ]);
     });
 
-App::get('/v1/mock/tests/general/oauth2/success')
+Http::get('/v1/mock/tests/general/oauth2/success')
     ->desc('OAuth2 Success')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -156,7 +155,7 @@ App::get('/v1/mock/tests/general/oauth2/success')
         ]);
     });
 
-App::get('/v1/mock/tests/general/oauth2/failure')
+Http::get('/v1/mock/tests/general/oauth2/failure')
     ->desc('OAuth2 Failure')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -171,7 +170,7 @@ App::get('/v1/mock/tests/general/oauth2/failure')
             ]);
     });
 
-App::post('/v1/mock/api-key-unprefixed')
+Http::post('/v1/mock/api-key-unprefixed')
     ->desc('Create API Key (without standard prefix)')
     ->groups(['mock', 'api', 'projects'])
     ->label('scope', 'public')
@@ -192,7 +191,7 @@ App::post('/v1/mock/api-key-unprefixed')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $scopes = array_keys(Config::getParam('scopes'));
+        $scopes = array_keys(Config::getParam('projectScopes'));
 
         $key = new Document([
             '$id' => ID::unique(),
@@ -201,8 +200,9 @@ App::post('/v1/mock/api-key-unprefixed')
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            'projectInternalId' => $project->getSequence(),
-            'projectId' => $project->getId(),
+            'resourceInternalId' => $project->getSequence(),
+            'resourceId' => $project->getId(),
+            'resourceType' => 'projects',
             'name' => 'Outdated key',
             'scopes' => $scopes,
             'expire' => null,
@@ -220,7 +220,7 @@ App::post('/v1/mock/api-key-unprefixed')
             ->dynamic($key, Response::MODEL_KEY);
     });
 
-App::post('/v1/mock/time-travels')
+Http::post('/v1/mock/time-travels')
     ->desc('Create a time-travel to change $createdAt')
     ->groups(['mock', 'api'])
     ->label('scope', 'public')
@@ -267,7 +267,7 @@ App::post('/v1/mock/time-travels')
         $response->noContent();
     });
 
-App::get('/v1/mock/github/callback')
+Http::get('/v1/mock/github/callback')
     ->desc('Create installation document using GitHub installation id')
     ->groups(['mock', 'api', 'vcs'])
     ->label('scope', 'public')
@@ -327,12 +327,12 @@ App::get('/v1/mock/github/callback')
         ]);
     });
 
-App::shutdown()
+Http::shutdown()
     ->groups(['mock'])
     ->inject('utopia')
     ->inject('response')
     ->inject('request')
-    ->action(function (App $utopia, Response $response, Request $request) {
+    ->action(function (Http $utopia, Response $response, Request $request) {
 
         $result = [];
         $route  = $utopia->getRoute();
