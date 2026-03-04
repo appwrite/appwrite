@@ -324,7 +324,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     }
 
                     // Check if release already exists
-                    $checkReleaseCommand = 'gh release view "' . $releaseVersion . '" --repo "' . $repoName . '" --json url --jq ".url" 2>/dev/null';
+                    $checkReleaseCommand = 'gh release view ' . \escapeshellarg($releaseVersion) . ' --repo ' . \escapeshellarg($repoName) . ' --json url --jq ".url" 2>/dev/null';
                     $existingReleaseUrl = trim(\shell_exec($checkReleaseCommand) ?? '');
 
                     if (! empty($existingReleaseUrl)) {
@@ -355,7 +355,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     }
 
                     $previousVersion = '';
-                    $tagListCommand = 'gh release list --repo "' . $repoName . '" --limit 1 --json tagName --jq ".[0].tagName" 2>&1';
+                    $tagListCommand = 'gh release list --repo ' . \escapeshellarg($repoName) . ' --limit 1 --json tagName --jq ".[0].tagName" 2>&1';
                     $previousVersion = trim(\shell_exec($tagListCommand) ?? '');
 
                     $formattedNotes = "## What's Changed\n\n";
@@ -383,11 +383,11 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $tempNotesFile = \tempnam(\sys_get_temp_dir(), 'release_notes_');
                         \file_put_contents($tempNotesFile, $formattedNotes);
 
-                        $releaseCommand = 'gh release create "' . $releaseVersion . '" \
-                            --repo "' . $repoName . '" \
-                            --title "' . $releaseTitle . '" \
-                            --notes-file "' . $tempNotesFile . '" \
-                            --target "' . $releaseTarget . '" \
+                        $releaseCommand = 'gh release create ' . \escapeshellarg($releaseVersion) . ' \
+                            --repo ' . \escapeshellarg($repoName) . ' \
+                            --title ' . \escapeshellarg($releaseTitle) . ' \
+                            --notes-file ' . \escapeshellarg($tempNotesFile) . ' \
+                            --target ' . \escapeshellarg($releaseTarget) . ' \
                             2>&1';
 
                         $releaseOutput = [];
@@ -523,8 +523,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     } else {
                         $commitMessage = "chore: update {$language['name']} SDK to {$language['version']}";
                     }
-                    $escapedCommitMessage = \addcslashes($commitMessage, '"\\`$');
-
                     Console::info("Preparing {$language['name']} SDK repository...");
 
                     \exec('rm -rf ' . $target . ' && \
@@ -547,7 +545,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         cp -r ' . $result . '/. ' . $target . '/ && \
                         (if [ -d /tmp/.github-backup-$$/.github ]; then cp -rn /tmp/.github-backup-$$/.github . 2>/dev/null && rm -rf /tmp/.github-backup-$$; fi) && \
                         git add -A && \
-                        git commit -m "' . $escapedCommitMessage . '" --quiet && \
+                        git commit -m ' . \escapeshellarg($commitMessage) . ' --quiet && \
                         git push -u origin ' . $gitBranch . ' --quiet 2>&1 | grep -E "^(To |   |[0-9a-f]+\\.\\.[0-9a-f]+)" || true
                     ', $gitOutput, $gitReturnCode);
 
@@ -570,11 +568,11 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
                         $prCommand = 'cd ' . $target . ' && \
                             gh pr create \
-                            --repo "' . $repoName . '" \
-                            --title "' . $prTitle . '" \
-                            --body "' . $prBody . '" \
-                            --base "' . $repoBranch . '" \
-                            --head "' . $gitBranch . '" \
+                            --repo ' . \escapeshellarg($repoName) . ' \
+                            --title ' . \escapeshellarg($prTitle) . ' \
+                            --body ' . \escapeshellarg($prBody) . ' \
+                            --base ' . \escapeshellarg($repoBranch) . ' \
+                            --head ' . \escapeshellarg($gitBranch) . ' \
                             2>&1';
 
                         $prOutput = [];
@@ -592,8 +590,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                                 Console::warning("Pull request already exists for {$language['name']} SDK, updating title and body...");
                                 $prNumberCommand = 'cd ' . $target . ' && \
                                     gh pr list \
-                                    --repo "' . $repoName . '" \
-                                    --head "' . $gitBranch . '" \
+                                    --repo ' . \escapeshellarg($repoName) . ' \
+                                    --head ' . \escapeshellarg($gitBranch) . ' \
                                     --json number \
                                     --jq ".[0].number" \
                                     2>&1';
@@ -606,14 +604,15 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                                     $prNumber = trim($prNumberOutput[0]);
 
                                     // Use API directly to update PR to avoid deprecated projectCards field
+                                    $apiPath = "/repos/{$repoName}/pulls/{$prNumber}";
                                     $updateCommand = 'cd ' . $target . ' && \
                                         gh api \
                                         --method PATCH \
                                         -H "Accept: application/vnd.github+json" \
                                         -H "X-GitHub-Api-Version: 2022-11-28" \
-                                        /repos/' . $repoName . '/pulls/' . $prNumber . ' \
-                                        -f title="' . $prTitle . '" \
-                                        -f body="' . $prBody . '" \
+                                        ' . \escapeshellarg($apiPath) . ' \
+                                        -f title=' . \escapeshellarg($prTitle) . ' \
+                                        -f body=' . \escapeshellarg($prBody) . ' \
                                         2>&1';
 
                                     $updateOutput = [];
@@ -625,8 +624,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
                                         $prUrlCommand = 'cd ' . $target . ' && \
                                             gh pr list \
-                                            --repo "' . $repoName . '" \
-                                            --head "' . $gitBranch . '" \
+                                            --repo ' . \escapeshellarg($repoName) . ' \
+                                            --head ' . \escapeshellarg($gitBranch) . ' \
                                             --json url \
                                             --jq ".[0].url" \
                                             2>&1';
