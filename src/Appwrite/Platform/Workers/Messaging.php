@@ -251,9 +251,15 @@ class Messaging extends Action
                     default => throw new \Exception('Provider with the requested ID is of the incorrect type')
                 };
 
+                if ($provider->getAttribute('type') === MESSAGE_TYPE_EMAIL) {
+                    $maxMessagesPerRequest = 1;
+                } else {
+                    $maxMessagesPerRequest = $adapter->getMaxMessagesPerRequest();
+                }
+
                 $batches = \array_chunk(
                     \array_keys($identifiersForProvider),
-                    $adapter->getMaxMessagesPerRequest()
+                    $maxMessagesPerRequest
                 );
 
                 return batch(\array_map(function ($batch) use ($message, $provider, $adapter, $dbForProject, $deviceForFiles, $project, $queueForStatsUsage) {
