@@ -616,6 +616,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     $repo->execute('push', '-u', 'origin', $gitBranch, '--quiet');
                 } catch (\Throwable $e) {
                     Console::warning("Git operations failed for {$language['name']} SDK: " . $e->getMessage());
+                    goto cleanupTarget;
                 }
 
                 Console::success("Pushed {$language['name']} SDK to {$gitUrl}");
@@ -660,6 +661,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     }
                 }
 
+                cleanupTarget:
                 \exec('chmod -R u+w ' . $target . ' && rm -rf ' . $target);
                 Console::success("Remove temp directory '{$target}' for {$language['name']} SDK");
 
