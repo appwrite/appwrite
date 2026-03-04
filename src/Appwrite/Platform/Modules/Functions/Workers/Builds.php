@@ -1079,17 +1079,24 @@ class Builds extends Action
                         ->setPayload($deployment->getArrayCopy())
                         ->trigger();
                 } catch (\Throwable $th) {
-                    Console::warning("Screenshot failed to generate:");
-                    Console::warning($th->getMessage());
-                    Console::warning($th->getTraceAsString());
-
+                    Console::error("Screenshot generation failed:");
+                    Console::error("Error: " . $th->getMessage());
+                    Console::error("File: " . $th->getFile() . ":" . $th->getLine());
+                     // Enhanced error tracking
+                    $deployment->setAttribute('screenshotStatus', 'failed');
+                    $deployment->setAttribute('screenshotError', $th->getMessage());
+                    $deployment->setAttribute('screenshotErrorTime', DateTime::now());
+    
                     $logs = $deployment->getAttribute('buildLogs', '');
                     $date = \date('H:i:s');
-                    $logs .= "[90m[$date] [90m[[0mappwrite[90m][33m Screenshot capturing failed. Deployment will continue. [0m\n";
-
+                    $logs .= "[90m[$date] [90m[[0mappwrite[90m][33m Screenshot capturing failed: " . $th->getMessage() . ". Deployment will continue. [0m\n";
+    
                     $deployment->setAttribute('buildLogs', $logs);
                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
-                }
+    
+                     // Log to platform logs for better debugging
+                     $log->addTag('screenshotError', $th->getMessage());
+            }
 
                 Console::log('Site screenshot finished');
             }
