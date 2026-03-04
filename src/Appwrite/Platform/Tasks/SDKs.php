@@ -41,28 +41,17 @@ use Utopia\Validator\WhiteList;
 
 class SDKs extends Action
 {
-    protected array $supportedSDKS = [
-        'web',
-        'cli',
-        'php',
-        'nodejs',
-        'deno',
-        'python',
-        'ruby',
-        'flutter',
-        'react-native',
-        'dart',
-        'go',
-        'swift',
-        'apple',
-        'dotnet',
-        'android',
-        'graphql',
-        'rest',
-        'markdown',
-        'agent-skills',
-        'cursor-plugin'
-    ];
+    protected function getSupportedSDKs(): array
+    {
+        $keys = [];
+        $platforms = Config::getParam('sdks');
+        foreach ($platforms as $platform) {
+            foreach ($platform['sdks'] as $sdk) {
+                $keys[] = $sdk['key'];
+            }
+        }
+        return \array_unique($keys);
+    }
 
     public static function getName(): string
     {
@@ -100,8 +89,9 @@ class SDKs extends Action
         if (! $sdks) {
             $selectedPlatform ??= Console::confirm('Choose Platform ("' . implode('", "', static::getPlatforms()) . '" or "*" for all):');
             $selectedSDK ??= \strtolower(Console::confirm('Choose SDK ("*" for all):'));
-            if ($selectedSDK !== '*' && ! \in_array($selectedSDK, $this->supportedSDKS)) {
-                throw new \Exception('Unknown SDK "' . $selectedSDK . '" given. Options are: ' . implode(', ', $this->supportedSDKS));
+            $supportedSDKs = $this->getSupportedSDKs();
+            if ($selectedSDK !== '*' && ! \in_array($selectedSDK, $supportedSDKs)) {
+                throw new \Exception('Unknown SDK "' . $selectedSDK . '" given. Options are: ' . implode(', ', $supportedSDKs));
             }
         } else {
             $sdks = explode(',', $sdks);
