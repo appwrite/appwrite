@@ -59,10 +59,10 @@ class SDKs extends Action
 
     protected function getSupportedSDKs(): array
     {
-        return \array_unique(\array_merge(...\array_map(
+        return \array_unique(\array_merge(...\array_values(\array_map(
             fn ($platform) => \array_column($platform['sdks'], 'key'),
             Config::getParam('sdks')
-        )));
+        ))));
     }
 
     public function __construct()
@@ -480,7 +480,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     Console::info("Analyzing SDK changes with AI...");
                     $aiResult = $this->generateVersionAndChangelog($language, $result);
 
-                    if ($aiResult !== null) {
+                    if (!empty($aiResult['skip'])) {
+                        Console::warning("Skipping {$language['name']} SDK generation");
+                        continue;
+                    } elseif ($aiResult !== null) {
                         $newVersion = $aiResult['version'];
                         $newChangelog = $aiResult['changelog'];
                         $aiChangelog = $newChangelog; // Store for PR description
@@ -885,7 +888,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
             // Guard: beta SDKs must not be bumped to >= 1.0.0
             if ($isBeta && ($parsed['versionBump'] === 'major' || \version_compare($parsed['version'], '1.0.0', '>='))) {
                 Console::warning("Beta SDK {$language['name']} cannot have a major bump or version >= 1.0.0 (AI suggested {$parsed['version']}), skipping");
-                return null;
+                return ['skip' => true];
             }
 
             Console::success("✓ Analysis complete");
