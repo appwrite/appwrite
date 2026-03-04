@@ -7,6 +7,7 @@ use Appwrite\Platform\Installer\Server;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Http\Adapter\Swoole\Response;
 use Utopia\Platform\Action;
+use Utopia\Validator\Text;
 
 class Complete extends Action
 {
@@ -21,13 +22,17 @@ class Complete extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/install/complete')
             ->desc('Complete installation')
+            ->param('installId', '', new Text(64, 0), 'Installation ID', true)
+            ->param('sessionId', '', new Text(256, 0), 'Session ID', true)
+            ->param('sessionSecret', '', new Text(256, 0), 'Session secret', true)
+            ->param('sessionExpire', '', new Text(64, 0), 'Session expiry timestamp', true)
             ->inject('request')
             ->inject('response')
             ->inject('installerState')
             ->callback($this->action(...));
     }
 
-    public function action(Request $request, Response $response, State $state): void
+    public function action(string $installId, string $sessionId, string $sessionSecret, string $sessionExpire, Request $request, Response $response, State $state): void
     {
         if (!Validate::validateCsrf($request)) {
             $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
@@ -35,14 +40,7 @@ class Complete extends Action
             return;
         }
 
-        $input = json_decode($request->getRawPayload(), true);
-        if (!is_array($input)) {
-            $input = [];
-        }
-        $installId = $state->sanitizeInstallId($input['installId'] ?? '');
-        $sessionId = is_string($input['sessionId'] ?? null) ? $input['sessionId'] : null;
-        $sessionSecret = is_string($input['sessionSecret'] ?? null) ? $input['sessionSecret'] : null;
-        $sessionExpire = is_string($input['sessionExpire'] ?? null) ? $input['sessionExpire'] : null;
+        $installId = $state->sanitizeInstallId($installId);
 
         if ($installId !== '') {
             $state->updateGlobalLock($installId, Server::STATUS_COMPLETED);

@@ -2,13 +2,20 @@
 
 namespace Appwrite\Platform\Installer\Http\Installer;
 
+use Appwrite\Auth\Validator\Password;
 use Appwrite\Platform\Installer\Runtime\Config;
 use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server;
+use Appwrite\Platform\Installer\Validator\AppDomain;
 use Swoole\Http\Response as SwooleResponse;
+use Utopia\Emails\Validator\Email;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Http\Adapter\Swoole\Response;
 use Utopia\Platform\Action;
+use Utopia\Validator\Nullable;
+use Utopia\Validator\Range;
+use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 class Install extends Action
 {
@@ -25,6 +32,17 @@ class Install extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/install')
             ->desc('Run installation')
+            ->param('appDomain', '', new AppDomain(), 'Application domain (hostname, IP, or bracket IPv6 with optional port)')
+            ->param('httpPort', 80, new Range(1, 65535), 'HTTP port')
+            ->param('httpsPort', 443, new Range(1, 65535), 'HTTPS port')
+            ->param('emailCertificates', '', new Email(), 'Email for SSL certificates')
+            ->param('opensslKey', '', new Text(64, 1), 'Secret API key')
+            ->param('assistantOpenAIKey', '', new Text(256, 0), 'OpenAI API key for assistant', true)
+            ->param('accountEmail', '', new Email(allowEmpty: true), 'Account email address', true)
+            ->param('accountPassword', '', new Password(allowEmpty: true), 'Account password', true)
+            ->param('database', '', new WhiteList(['mongodb', 'mariadb', 'postgresql']), 'Database adapter', true)
+            ->param('installId', '', new Text(64, 0), 'Installation ID', true)
+            ->param('retryStep', null, new Nullable(new WhiteList([Server::STEP_DOCKER_COMPOSE, Server::STEP_ENV_VARS, Server::STEP_DOCKER_CONTAINERS], true)), 'Retry from step', true)
             ->inject('request')
             ->inject('response')
             ->inject('swooleResponse')
@@ -34,8 +52,25 @@ class Install extends Action
             ->callback($this->action(...));
     }
 
-    public function action(Request $request, Response $response, SwooleResponse $swooleResponse, State $state, Config $config, array $paths): void
-    {
+    public function action(
+        string $appDomain,
+        int $httpPort,
+        int $httpsPort,
+        string $emailCertificates,
+        string $opensslKey,
+        string $assistantOpenAIKey,
+        string $accountEmail,
+        string $accountPassword,
+        string $database,
+        string $installId,
+        ?string $retryStep,
+        Request $request,
+        Response $response,
+        SwooleResponse $swooleResponse,
+        State $state,
+        Config $config,
+        array $paths
+    ): void {
         $acceptHeader = $request->getHeader('accept');
         $wantsStream = stripos($acceptHeader, 'text/event-stream') !== false;
 
@@ -53,68 +88,25 @@ class Install extends Action
             return;
         }
 
-        $rawBody = $request->getRawPayload();
-        $input = json_decode($rawBody, true);
-
-        if (!is_array($input)) {
-            $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Invalid request');
-            return;
-        }
-
-        $appDomain = trim((string) ($input['appDomain'] ?? ''));
-        if ($appDomain === '' || !$state->isValidAppDomainInput($appDomain)) {
-            $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Please enter a valid hostname');
-            return;
-        }
-        $input['appDomain'] = $appDomain;
-
-        $httpPort = $input['httpPort'] ?? '';
-        if (!$state->isValidPort($httpPort)) {
-            $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Please enter a valid HTTP port (1-65535)');
-            return;
-        }
-
-        $httpsPort = $input['httpsPort'] ?? '';
-        if (!$state->isValidPort($httpsPort)) {
-            $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Please enter a valid HTTPS port (1-65535)');
-            return;
-        }
-
-        $emailCertificates = trim((string) ($input['emailCertificates'] ?? ''));
-        if ($emailCertificates === '' || !$state->isValidEmailAddress($emailCertificates)) {
-            $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Please enter a valid email address');
-            return;
-        }
-        $input['emailCertificates'] = $emailCertificates;
-
-        $opensslKey = trim((string) ($input['opensslKey'] ?? ''));
-        if (!$state->isValidSecretKey($opensslKey)) {
-            $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Secret API key must be 1-64 characters');
-            return;
-        }
-        $input['opensslKey'] = $opensslKey;
-
-        $assistantOpenAIKey = trim((string) ($input['assistantOpenAIKey'] ?? ''));
-        $input['assistantOpenAIKey'] = $assistantOpenAIKey;
+        $appDomain = trim($appDomain);
+        $emailCertificates = trim($emailCertificates);
+        $opensslKey = trim($opensslKey);
+        $assistantOpenAIKey = trim($assistantOpenAIKey);
 
         $account = [];
         if (!$config->isUpgrade()) {
-            $accountEmail = trim((string) ($input['accountEmail'] ?? ''));
+            $accountEmail = trim($accountEmail);
             if ($accountEmail === '' || !$state->isValidEmailAddress($accountEmail)) {
                 $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Please enter a valid email address', Server::STEP_ACCOUNT_SETUP);
                 return;
             }
 
-            $accountPassword = (string) ($input['accountPassword'] ?? '');
             if (!$state->isValidPassword($accountPassword)) {
                 $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Password must be at least 8 characters', Server::STEP_ACCOUNT_SETUP);
                 return;
             }
 
             $accountName = $this->deriveNameFromEmail($accountEmail);
-
-            $input['accountEmail'] = $accountEmail;
-            $input['accountPassword'] = $accountPassword;
 
             $account = [
                 'name' => $accountName,
@@ -125,15 +117,14 @@ class Install extends Action
 
         $lockedDatabase = $config->getLockedDatabase();
         if (!$lockedDatabase) {
-            $database = strtolower(trim((string) ($input['database'] ?? '')));
+            $database = strtolower(trim($database));
             if (!$state->isValidDatabaseAdapter($database)) {
                 $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Please select a supported database');
                 return;
             }
-            $input['database'] = $database;
         }
 
-        $installId = $state->sanitizeInstallId($input['installId'] ?? '');
+        $installId = $state->sanitizeInstallId($installId);
         if ($installId === '') {
             $installId = bin2hex(random_bytes(8));
         }
@@ -170,12 +161,6 @@ class Install extends Action
             return;
         }
 
-        $retryStep = $input['retryStep'] ?? null;
-        $allowedRetrySteps = [Server::STEP_DOCKER_COMPOSE, Server::STEP_ENV_VARS, Server::STEP_DOCKER_CONTAINERS];
-        if (!is_string($retryStep) || !in_array($retryStep, $allowedRetrySteps, true)) {
-            $retryStep = null;
-        }
-
         $existingPath = $state->progressFilePath($installId);
         $existing = null;
         if (file_exists($existingPath)) {
@@ -195,7 +180,6 @@ class Install extends Action
 
         try {
             $state->ensureBootstrapped();
-            require_once $paths['installPhp'];
             $installer = new \Appwrite\Platform\Tasks\Install();
 
             if ($wantsStream) {
@@ -206,27 +190,26 @@ class Install extends Action
 
             $payloadInput = [
                 '_APP_ENV' => 'production',
-                '_APP_OPENSSL_KEY_V1' => $input['opensslKey'] ?? '',
-                '_APP_DOMAIN' => $input['appDomain'] ?? 'localhost',
-                '_APP_DOMAIN_TARGET' => $input['appDomain'] ?? 'localhost',
-                '_APP_EMAIL_CERTIFICATES' => $input['emailCertificates'] ?? '',
-                '_APP_DB_ADAPTER' => $lockedDatabase ?? ($input['database'] ?? 'mongodb'),
-                '_APP_ASSISTANT_OPENAI_API_KEY' => $input['assistantOpenAIKey'] ?? '',
+                '_APP_OPENSSL_KEY_V1' => $opensslKey,
+                '_APP_DOMAIN' => $appDomain ?: 'localhost',
+                '_APP_DOMAIN_TARGET' => $appDomain ?: 'localhost',
+                '_APP_EMAIL_CERTIFICATES' => $emailCertificates,
+                '_APP_DB_ADAPTER' => $lockedDatabase ?? ($database ?: 'mongodb'),
+                '_APP_ASSISTANT_OPENAI_API_KEY' => $assistantOpenAIKey,
             ];
 
             if ($this->hasPayload($existing)) {
                 $stored = $existing['payload'];
-                $fieldsToCompare = [
-                    'httpPort',
-                    'httpsPort',
-                    'database',
-                    'appDomain',
-                    'emailCertificates',
+                $inputValues = [
+                    'httpPort' => (string) $httpPort,
+                    'httpsPort' => (string) $httpsPort,
+                    'database' => $database,
+                    'appDomain' => $appDomain,
+                    'emailCertificates' => $emailCertificates,
                 ];
-                foreach ($fieldsToCompare as $field) {
-                    if (isset($stored[$field]) && isset($input[$field])) {
+                foreach ($inputValues as $field => $inputValue) {
+                    if (isset($stored[$field]) && $inputValue !== '') {
                         $storedValue = (string) $stored[$field];
-                        $inputValue = (string) $input[$field];
                         if (in_array($field, ['httpPort', 'httpsPort'], true)) {
                             $storedValue = trim($storedValue);
                             $inputValue = trim($inputValue);
@@ -242,14 +225,16 @@ class Install extends Action
                 }
 
                 $sensitiveFields = [
-                    'opensslKey' => 'opensslKeyHash',
-                    'assistantOpenAIKey' => 'assistantOpenAIKeyHash',
+                    'opensslKey' => ['hash' => 'opensslKeyHash', 'value' => $opensslKey],
+                    'assistantOpenAIKey' => ['hash' => 'assistantOpenAIKeyHash', 'value' => $assistantOpenAIKey],
                 ];
-                foreach ($sensitiveFields as $field => $hashField) {
+                foreach ($sensitiveFields as $field => $info) {
+                    $hashField = $info['hash'];
+                    $incomingValue = $info['value'];
                     if (!isset($stored[$hashField]) && !isset($stored[$field])) {
                         continue;
                     }
-                    $incomingHash = $state->hashSensitiveValue((string) ($input[$field] ?? ''));
+                    $incomingHash = $state->hashSensitiveValue($incomingValue);
                     if (isset($stored[$hashField])) {
                         if (!hash_equals((string) $stored[$hashField], $incomingHash)) {
                             if ($installId !== '') {
@@ -258,7 +243,7 @@ class Install extends Action
                             $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Installation payload mismatch');
                             return;
                         }
-                    } elseif (isset($stored[$field]) && isset($input[$field]) && (string) $stored[$field] !== (string) $input[$field]) {
+                    } elseif (isset($stored[$field]) && $incomingValue !== '' && (string) $stored[$field] !== $incomingValue) {
                         if ($installId !== '') {
                             $state->updateGlobalLock($installId, Server::STATUS_ERROR);
                         }
@@ -271,8 +256,8 @@ class Install extends Action
                 $payloadInput['_APP_DOMAIN_TARGET'] = $stored['appDomain'] ?? $payloadInput['_APP_DOMAIN_TARGET'];
                 $payloadInput['_APP_EMAIL_CERTIFICATES'] = $stored['emailCertificates'] ?? $payloadInput['_APP_EMAIL_CERTIFICATES'];
                 $payloadInput['_APP_DB_ADAPTER'] = $lockedDatabase ?? ($stored['database'] ?? $payloadInput['_APP_DB_ADAPTER']);
-                $input['httpPort'] = $stored['httpPort'] ?? $input['httpPort'] ?? $config->getDefaultHttpPort();
-                $input['httpsPort'] = $stored['httpsPort'] ?? $input['httpsPort'] ?? $config->getDefaultHttpsPort();
+                $httpPort = (int) ($stored['httpPort'] ?? $httpPort ?: $config->getDefaultHttpPort());
+                $httpsPort = (int) ($stored['httpsPort'] ?? $httpsPort ?: $config->getDefaultHttpsPort());
             }
 
             $vars = $config->getVars();
@@ -281,13 +266,13 @@ class Install extends Action
 
             $state->writeProgressFile($installId, [
                 'payload' => [
-                    'httpPort' => $input['httpPort'] ?? $config->getDefaultHttpPort(),
-                    'httpsPort' => $input['httpsPort'] ?? $config->getDefaultHttpsPort(),
-                    'database' => $lockedDatabase ?? ($input['database'] ?? 'mongodb'),
-                    'appDomain' => $input['appDomain'] ?? 'localhost',
-                    'emailCertificates' => $input['emailCertificates'] ?? '',
-                    'opensslKeyHash' => $state->hashSensitiveValue($input['opensslKey'] ?? ''),
-                    'assistantOpenAIKeyHash' => $state->hashSensitiveValue($input['assistantOpenAIKey'] ?? ''),
+                    'httpPort' => $httpPort ?: $config->getDefaultHttpPort(),
+                    'httpsPort' => $httpsPort ?: $config->getDefaultHttpsPort(),
+                    'database' => $lockedDatabase ?? ($database ?: 'mongodb'),
+                    'appDomain' => $appDomain ?: 'localhost',
+                    'emailCertificates' => $emailCertificates,
+                    'opensslKeyHash' => $state->hashSensitiveValue($opensslKey),
+                    'assistantOpenAIKeyHash' => $state->hashSensitiveValue($assistantOpenAIKey),
                 ],
                 'step' => 'start',
                 'status' => Server::STATUS_IN_PROGRESS,
@@ -314,8 +299,8 @@ class Install extends Action
             };
 
             $installer->performInstallation(
-                $input['httpPort'] ?? $config->getDefaultHttpPort(),
-                $input['httpsPort'] ?? $config->getDefaultHttpsPort(),
+                $httpPort ?: $config->getDefaultHttpPort(),
+                $httpsPort ?: $config->getDefaultHttpsPort(),
                 $config->getOrganization(),
                 $config->getImage(),
                 $envVars,

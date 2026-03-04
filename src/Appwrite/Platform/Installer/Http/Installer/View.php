@@ -7,6 +7,9 @@ use Appwrite\Platform\Installer\Server;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Http\Adapter\Swoole\Response;
 use Utopia\Platform\Action;
+use Utopia\Validator\Integer;
+use Utopia\Validator\Nullable;
+use Utopia\Validator\Text;
 
 class View extends Action
 {
@@ -21,6 +24,8 @@ class View extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/')
             ->desc('Serve installer UI')
+            ->param('step', 1, new Integer(true), 'Step number (1-5)', true)
+            ->param('partial', null, new Nullable(new Text(1, 0)), 'Render partial step only', true)
             ->inject('request')
             ->inject('response')
             ->inject('installerConfig')
@@ -28,13 +33,12 @@ class View extends Action
             ->callback($this->action(...));
     }
 
-    public function action(Request $request, Response $response, Config $config, array $paths): void
+    public function action(int $step, ?string $partial, Request $request, Response $response, Config $config, array $paths): void
     {
         $csrfToken = $this->makeCsrf($request, $response);
 
         $response->addHeader('Content-Security-Policy', implode('; ', Server::INSTALLER_CSP));
 
-        $params = $request->getParams();
         $vars = $config->getVars();
         $defaultHttpPort = $config->getDefaultHttpPort();
         $defaultHttpsPort = $config->getDefaultHttpsPort();
@@ -47,7 +51,6 @@ class View extends Action
             $defaultEmailCertificates = 'walterobrien@example.com';
         }
 
-        $step = isset($params['step']) ? (int) $params['step'] : 1;
         $step = max(1, min(5, $step));
         if ($isUpgrade && ($step === 2 || $step === 3)) {
             $step = 4;
@@ -58,7 +61,7 @@ class View extends Action
             $partialFile = $paths['views'] . '/installer/templates/steps/step-1.phtml';
         }
 
-        if (isset($params['partial'])) {
+        if ($partial !== null) {
             ob_start();
             include $partialFile;
             $html = ob_get_clean();

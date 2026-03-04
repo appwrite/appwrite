@@ -12,6 +12,7 @@ use Appwrite\Platform\Installer\Http\Installer\View;
 use Appwrite\Platform\Installer\Module;
 use PHPUnit\Framework\TestCase;
 use Utopia\Platform\Action;
+use Utopia\Platform\Platform;
 use Utopia\Platform\Service;
 
 class ModuleTest extends TestCase
@@ -40,14 +41,13 @@ class ModuleTest extends TestCase
         $service = reset($services);
         $actions = $service->getActions();
 
-        $this->assertCount(7, $actions);
+        $this->assertCount(6, $actions);
         $this->assertArrayHasKey('installerView', $actions);
         $this->assertArrayHasKey('installerStatus', $actions);
         $this->assertArrayHasKey('installerValidate', $actions);
         $this->assertArrayHasKey('installerComplete', $actions);
         $this->assertArrayHasKey('installerShutdown', $actions);
         $this->assertArrayHasKey('installerInstall', $actions);
-        $this->assertArrayHasKey('installerError', $actions);
     }
 
     public function testViewAction(): void
@@ -58,6 +58,7 @@ class ModuleTest extends TestCase
         $this->assertEquals(Action::HTTP_REQUEST_METHOD_GET, $action->getHttpMethod());
         $this->assertEquals('/', $action->getHttpPath());
         $this->assertEquals(Action::TYPE_DEFAULT, $action->getType());
+        $this->assertActionParams($action, ['step', 'partial']);
         $this->assertActionInjects($action, ['request', 'response', 'installerConfig', 'installerPaths']);
     }
 
@@ -69,7 +70,8 @@ class ModuleTest extends TestCase
         $this->assertEquals(Action::HTTP_REQUEST_METHOD_GET, $action->getHttpMethod());
         $this->assertEquals('/install/status', $action->getHttpPath());
         $this->assertEquals(Action::TYPE_DEFAULT, $action->getType());
-        $this->assertActionInjects($action, ['request', 'response', 'installerState']);
+        $this->assertActionParams($action, ['installId']);
+        $this->assertActionInjects($action, ['response', 'installerState']);
     }
 
     public function testValidateAction(): void
@@ -91,6 +93,7 @@ class ModuleTest extends TestCase
         $this->assertEquals(Action::HTTP_REQUEST_METHOD_POST, $action->getHttpMethod());
         $this->assertEquals('/install/complete', $action->getHttpPath());
         $this->assertEquals(Action::TYPE_DEFAULT, $action->getType());
+        $this->assertActionParams($action, ['installId', 'sessionId', 'sessionSecret', 'sessionExpire']);
         $this->assertActionInjects($action, ['request', 'response', 'installerState']);
     }
 
@@ -113,16 +116,21 @@ class ModuleTest extends TestCase
         $this->assertEquals(Action::HTTP_REQUEST_METHOD_POST, $action->getHttpMethod());
         $this->assertEquals('/install', $action->getHttpPath());
         $this->assertEquals(Action::TYPE_DEFAULT, $action->getType());
+        $this->assertActionParams($action, [
+            'appDomain', 'httpPort', 'httpsPort', 'emailCertificates', 'opensslKey',
+            'assistantOpenAIKey', 'accountEmail', 'accountPassword', 'database',
+            'installId', 'retryStep',
+        ]);
         $this->assertActionInjects($action, ['request', 'response', 'swooleResponse', 'installerState', 'installerConfig', 'installerPaths']);
     }
 
-    public function testErrorAction(): void
+    public function testErrorActionClass(): void
     {
-        $action = $this->getAction('installerError');
+        $error = new Error();
 
         $this->assertEquals('installerError', Error::getName());
-        $this->assertEquals(Action::TYPE_ERROR, $action->getType());
-        $this->assertActionInjects($action, ['error', 'response']);
+        $this->assertEquals(Action::TYPE_ERROR, $error->getType());
+        $this->assertIsCallable($error->getCallback());
     }
 
     /**
@@ -130,33 +138,8 @@ class ModuleTest extends TestCase
      */
     public function testRouteRegistration(): void
     {
-        $services = $this->module->getServicesByType(Service::TYPE_HTTP);
-
-        foreach ($services as $service) {
-            foreach ($service->getActions() as $action) {
-                $type = $action->getType();
-
-                if ($type === Action::TYPE_ERROR) {
-                    $hook = \Utopia\Http\Http::error();
-                } else {
-                    $httpMethod = $action->getHttpMethod();
-                    $httpPath = $action->getHttpPath();
-                    $this->assertNotNull($httpMethod, 'HTTP method must be set for default actions');
-                    $this->assertNotNull($httpPath, 'HTTP path must be set for default actions');
-                    $hook = \Utopia\Http\Http::addRoute($httpMethod, $httpPath);
-                }
-
-                $hook->desc($action->getDesc() ?? '');
-
-                foreach ($action->getOptions() as $option) {
-                    if ($option['type'] === 'injection') {
-                        $hook->inject($option['name']);
-                    }
-                }
-
-                $hook->action($action->getCallback());
-            }
-        }
+        $platform = new class(new Module()) extends Platform {};
+        $platform->init(Service::TYPE_HTTP);
 
         // If we get here without exceptions, route registration succeeded
         $this->assertTrue(true);
@@ -184,10 +167,8 @@ class ModuleTest extends TestCase
         $service = reset($services);
         foreach ($service->getActions() as $name => $action) {
             $desc = $action->getDesc();
-            if ($action->getType() !== Action::TYPE_ERROR) {
-                $this->assertNotNull($desc, "Action '$name' should have a description");
-                $this->assertNotEmpty($desc, "Action '$name' description should not be empty");
-            }
+            $this->assertNotNull($desc, "Action '$name' should have a description");
+            $this->assertNotEmpty($desc, "Action '$name' description should not be empty");
         }
     }
 
@@ -201,20 +182,6 @@ class ModuleTest extends TestCase
             $callback = $action->getCallback();
             $this->assertIsCallable($callback, "Action '$name' callback should be callable");
         }
-    }
-
-    // --- Error action specifics ---
-
-    public function testErrorActionHasNoHttpMethod(): void
-    {
-        $action = $this->getAction('installerError');
-        $this->assertNull($action->getHttpMethod());
-    }
-
-    public function testErrorActionHasNoHttpPath(): void
-    {
-        $action = $this->getAction('installerError');
-        $this->assertNull($action->getHttpPath());
     }
 
     // --- Action names are unique ---
@@ -236,9 +203,6 @@ class ModuleTest extends TestCase
         $service = reset($services);
         $routes = [];
         foreach ($service->getActions() as $action) {
-            if ($action->getType() === Action::TYPE_ERROR) {
-                continue;
-            }
             $key = $action->getHttpMethod() . ' ' . $action->getHttpPath();
             $this->assertArrayNotHasKey($key, $routes, "Duplicate route: $key");
             $routes[$key] = true;
@@ -272,7 +236,6 @@ class ModuleTest extends TestCase
         $this->assertInstanceOf(Complete::class, $actions['installerComplete']);
         $this->assertInstanceOf(Shutdown::class, $actions['installerShutdown']);
         $this->assertInstanceOf(Install::class, $actions['installerInstall']);
-        $this->assertInstanceOf(Error::class, $actions['installerError']);
     }
 
     // --- GET routes use GET method, POST routes use POST ---
@@ -331,5 +294,16 @@ class ModuleTest extends TestCase
             }
         }
         $this->assertEquals($expectedInjections, $injections);
+    }
+
+    private function assertActionParams(Action $action, array $expectedParams): void
+    {
+        $params = [];
+        foreach ($action->getOptions() as $key => $option) {
+            if ($option['type'] === 'param') {
+                $params[] = substr($key, 6); // strip 'param:' prefix
+            }
+        }
+        $this->assertEquals($expectedParams, $params);
     }
 }

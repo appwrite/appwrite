@@ -2,10 +2,17 @@
 
 namespace Appwrite\Platform\Installer;
 
-require_once __DIR__ . '/Runtime/State.php';
-require_once __DIR__ . '/Runtime/Config.php';
+require_once __DIR__ . '/../../../../vendor/autoload.php';
 
+use Appwrite\Platform\Installer\Http\Installer\Error;
 use Appwrite\Platform\Installer\Runtime\State;
+use Swoole\Http\Server as SwooleServer;
+use Utopia\Http\Adapter\Swoole\Request;
+use Utopia\Http\Adapter\Swoole\Response;
+use Utopia\Http\Adapter\Swoole\Server as SwooleAdapter;
+use Utopia\Http\Files;
+use Utopia\Http\Http;
+use Utopia\Platform\Service;
 
 class Server
 {
@@ -51,20 +58,6 @@ class Server
     {
         $this->initPaths();
 
-        // Load autoloader for Swoole/Utopia classes
-        require_once $this->paths['vendor'];
-
-        // Load module classes after autoloader is available
-        require_once __DIR__ . '/Module.php';
-        require_once __DIR__ . '/Services/Http.php';
-        require_once __DIR__ . '/Http/Installer/View.php';
-        require_once __DIR__ . '/Http/Installer/Status.php';
-        require_once __DIR__ . '/Http/Installer/Validate.php';
-        require_once __DIR__ . '/Http/Installer/Complete.php';
-        require_once __DIR__ . '/Http/Installer/Shutdown.php';
-        require_once __DIR__ . '/Http/Installer/Install.php';
-        require_once __DIR__ . '/Http/Installer/Error.php';
-
         $this->state = new State($this->paths);
 
         if (PHP_SAPI === 'cli') {
@@ -82,16 +75,13 @@ class Server
         $root = dirname(__DIR__, 4);
         $this->paths = [
             'public' => $root . '/public',
-            'init' => $root . '/app/init.php',
             'views' => $root . '/app/views/install',
-            'vendor' => $root . '/vendor/autoload.php',
-            'installPhp' => $root . '/src/Appwrite/Platform/Tasks/Install.php',
         ];
     }
 
     private function runCli(): void
     {
-        $opts = getopt('', ['upgrade', 'locked-database::', 'docker', 'clean']);
+        $opts = getopt('', ['upgrade', 'locked-database::', 'docker', 'clean', 'port::', 'ready-file::']);
         $cfg = $this->state->buildConfig([], true);
         $isDocker = isset($opts['docker']);
         if ($isDocker) {
@@ -112,7 +102,8 @@ class Server
         $this->state->applyEnvConfig($cfg);
 
         $host = self::INSTALLER_WEB_HOST;
-        $port = (string) self::INSTALLER_WEB_PORT;
+        $port = !empty($opts['port']) ? (string) $opts['port'] : (string) self::INSTALLER_WEB_PORT;
+        $readyFile = !empty($opts['ready-file']) ? (string) $opts['ready-file'] : null;
 
         if (isset($opts['clean'])) {
             $this->removeDockerInstallerContainer(self::DEFAULT_CONTAINER);
@@ -126,7 +117,7 @@ class Server
         }
 
         $this->printInstallerUrl($host, $port);
-        $this->startSwooleServer($host, (int) $port);
+        $this->startSwooleServer($host, (int) $port, $readyFile);
     }
 
     private function printInstallerUrl(string $host, string $port): void
@@ -136,15 +127,10 @@ class Server
         fwrite(STDOUT, "Open $url" . PHP_EOL);
     }
 
-    private function startSwooleServer(string $host, int $port): void
+    private function startSwooleServer(string $host, int $port, ?string $readyFile = null): void
     {
-        $server = new \Swoole\Http\Server($host, $port);
-        $server->set([
-            'worker_num' => 1,
-        ]);
-
         // Preload static files into memory
-        $files = new \Utopia\Http\Files();
+        $files = new Files();
         $files->load($this->paths['views']);
 
         // Register resources for dependency injection into actions
@@ -152,55 +138,42 @@ class Server
         $paths = $this->paths;
         $state = $this->state;
 
-        \Utopia\Http\Http::setResource('installerState', fn () => $state);
-        \Utopia\Http\Http::setResource('installerConfig', fn () => $config);
-        \Utopia\Http\Http::setResource('installerPaths', fn () => $paths);
-        \Utopia\Http\Http::setResource('swooleServer', fn () => $server);
+        Http::setResource('installerState', fn () => $state);
+        Http::setResource('installerConfig', fn () => $config);
+        Http::setResource('installerPaths', fn () => $paths);
 
-        // Register routes via module structure
-        $module = new Module();
-        $services = $module->getServicesByType(\Utopia\Platform\Service::TYPE_HTTP);
+        // Register routes via Utopia Platform
+        $platform = new Installer();
+        $platform->init(Service::TYPE_HTTP);
 
-        foreach ($services as $service) {
-            foreach ($service->getActions() as $action) {
-                $type = $action->getType();
+        // Register error handler directly so Http::error() preserves the '*' group
+        $errorHandler = new Error();
+        Http::error()
+            ->inject('error')
+            ->inject('response')
+            ->action($errorHandler->action(...));
 
-                switch ($type) {
-                    case \Utopia\Platform\Action::TYPE_ERROR:
-                        $hook = \Utopia\Http\Http::error();
-                        break;
-                    default:
-                        $httpMethod = $action->getHttpMethod();
-                        $httpPath = $action->getHttpPath();
-                        $hook = \Utopia\Http\Http::addRoute($httpMethod, $httpPath);
-                        break;
-                }
-
-                $hook->desc($action->getDesc() ?? '');
-
-                foreach ($action->getOptions() as $key => $option) {
-                    if ($option['type'] === 'injection') {
-                        $hook->inject($option['name']);
-                    }
-                }
-
-                $hook->action($action->getCallback());
+        $adapter = new class($host, $port, ['worker_num' => 1]) extends SwooleAdapter {
+            public function getNativeServer(): SwooleServer
+            {
+                return $this->server;
             }
-        }
+        };
 
-        $server->on('start', function (\Swoole\Http\Server $srv) {
-            \Swoole\Process::signal(SIGINT, function () use ($srv) {
-                $srv->shutdown();
-            });
+        $nativeServer = $adapter->getNativeServer();
+
+        Http::setResource('swooleServer', fn () => $nativeServer);
+
+        $nativeServer->on('start', function () use ($nativeServer, $port, $readyFile) {
+            \Swoole\Process::signal(SIGTERM, fn () => $nativeServer->shutdown());
+            \Swoole\Process::signal(SIGINT, fn () => $nativeServer->shutdown());
+
+            if ($readyFile !== null) {
+                file_put_contents($readyFile, json_encode(['port' => $port, 'pid' => getmypid()]));
+            }
         });
 
-        $server->on('request', function (\Swoole\Http\Request $swooleRequest, \Swoole\Http\Response $swooleResponse) use ($files) {
-            \Utopia\Http\Http::setResource('swooleRequest', fn () => $swooleRequest);
-            \Utopia\Http\Http::setResource('swooleResponse', fn () => $swooleResponse);
-
-            $request = new \Utopia\Http\Adapter\Swoole\Request($swooleRequest);
-            $response = new \Utopia\Http\Adapter\Swoole\Response($swooleResponse);
-
+        $adapter->onRequest(function (Request $request, Response $response) use ($files) {
             // Serve static files from memory
             $uri = $request->getURI();
             if ($files->isFileLoaded($uri)) {
@@ -210,11 +183,11 @@ class Server
                 return;
             }
 
-            $app = new \Utopia\Http\Http('UTC');
+            $app = new Http('UTC');
             $app->run($request, $response);
         });
 
-        $server->start();
+        $adapter->start();
     }
 
     private function removeDockerInstallerContainer(string $container): void

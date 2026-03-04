@@ -3,9 +3,9 @@
 namespace Appwrite\Platform\Installer\Http\Installer;
 
 use Appwrite\Platform\Installer\Runtime\State;
-use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Http\Adapter\Swoole\Response;
 use Utopia\Platform\Action;
+use Utopia\Validator\Text;
 
 class Status extends Action
 {
@@ -20,15 +20,15 @@ class Status extends Action
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/install/status')
             ->desc('Poll installation progress')
-            ->inject('request')
+            ->param('installId', '', new Text(64, 0), 'Installation ID', true)
             ->inject('response')
             ->inject('installerState')
             ->callback($this->action(...));
     }
 
-    public function action(Request $request, Response $response, State $state): void
+    public function action(string $installId, Response $response, State $state): void
     {
-        $installId = $state->sanitizeInstallId($request->getParam('installId', ''));
+        $installId = $state->sanitizeInstallId($installId);
         if ($installId === '') {
             $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
             $response->json(['success' => false, 'message' => 'Missing installId']);
@@ -44,7 +44,12 @@ class Status extends Action
 
         $data = $state->readProgressFile($installId);
         if (is_array($data) && isset($data['payload']) && is_array($data['payload'])) {
-            unset($data['payload']['opensslKey'], $data['payload']['assistantOpenAIKey']);
+            unset(
+                $data['payload']['opensslKey'],
+                $data['payload']['assistantOpenAIKey'],
+                $data['payload']['opensslKeyHash'],
+                $data['payload']['assistantOpenAIKeyHash'],
+            );
         }
         $response->json(['success' => true, 'progress' => $data]);
     }

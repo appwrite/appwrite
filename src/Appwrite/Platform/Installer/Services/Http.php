@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Installer\Services;
 
 use Appwrite\Platform\Installer\Http\Installer\Complete;
-use Appwrite\Platform\Installer\Http\Installer\Error;
 use Appwrite\Platform\Installer\Http\Installer\Install;
 use Appwrite\Platform\Installer\Http\Installer\Shutdown;
 use Appwrite\Platform\Installer\Http\Installer\Status;
@@ -23,6 +22,5 @@ class Http extends Service
         $this->addAction(Complete::getName(), new Complete());
         $this->addAction(Shutdown::getName(), new Shutdown());
         $this->addAction(Install::getName(), new Install());
-        $this->addAction(Error::getName(), new Error());
     }
 }
