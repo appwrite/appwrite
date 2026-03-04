@@ -675,4 +675,66 @@ class Event
         $queue = new Queue($this->getQueue());
         return $this->publisher->getQueueSize($queue, $failed);
     }
+
+    /**
+     * Create a regex pattern that can be used to match against an event.
+     *
+     * @param string $triggerPattern
+     * @return string
+     */
+    public static function createRegexPattern(string $triggerPattern): string
+    {
+        // Replace . with literal
+        $regexpPattern = \str_replace('.', '\.', $triggerPattern);
+
+        // Replace * with regex that matches everything except .
+        $regexpPattern = \str_replace('\.*', '\.[^.]*', $regexpPattern);
+
+        // If pattern ended with .*, replace with \..* to match everything
+        if (\str_ends_with($regexpPattern, '\.[^.]*')) {
+            $regexpPattern = \substr($regexpPattern, 0, \strlen($regexpPattern) - 7) . '\..*';
+        }
+
+        return $regexpPattern;
+    }
+
+    /**
+     * Check if event pattern matches event
+     *
+     * @param string $eventPattern
+     * @param string $event
+     * @return bool
+     * @throws \InvalidArgumentException
+     */
+    public static function matchEvent(string $eventPattern, string $event): bool
+    {
+        $regexpPattern = self::createRegexPattern($eventPattern);
+
+        $result = \preg_match("/$regexpPattern/", $event);
+
+        if ($result === false) {
+            throw new InvalidArgumentException("$eventPattern is invalid");
+        }
+
+        return $result === 1;
+    }
+
+    /**
+     * Checks if at least 1 event pattern matches the event
+     *
+     * @param array $eventPatterns
+     * @param string $event
+     * @return bool
+     * @throws \InvalidArgumentException
+     */
+    public static function matchEvents(array $eventPatterns, string $event): bool
+    {
+        foreach ($eventPatterns as $eventPattern) {
+            if (self::matchEvent($eventPattern, $event)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
