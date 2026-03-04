@@ -20,11 +20,14 @@ class Yahoo extends OAuth2
     private string $resourceEndpoint = 'https://api.login.yahoo.com/openid/v1/userinfo';
 
     /**
+     * Default scopes — use standard public OpenID scopes to avoid `invalid_scope`.
+     *
      * @var array
      */
     protected array $scopes = [
-        'sdct-r',
-        'sdpp-w',
+        'openid',
+        'profile',
+        'email',
     ];
 
     /**
@@ -45,6 +48,19 @@ class Yahoo extends OAuth2
         return 'yahoo';
     }
 
+    /**
+     * Merge default scopes with any caller-provided scopes and return unique values.
+     *
+     * NOTE: This method accepts an optional array so existing callers that use
+     *       $this->getScopes() without params will keep working.
+     *
+     * @param array $scopes
+     * @return array
+     */
+    public function getScopes(array $scopes = []): array
+    {
+        return array_values(array_unique(array_merge($this->scopes, $scopes)));
+    }
 
     /**
      * @param $state
@@ -61,6 +77,7 @@ class Yahoo extends OAuth2
      */
     public function getLoginURL(): string
     {
+        // Use getScopes() without args so defaults are applied.
         return $this->endpoint . 'request_auth?' .
             \http_build_query([
                 'response_type' => 'code',
@@ -188,10 +205,11 @@ class Yahoo extends OAuth2
     protected function getUser(string $accessToken)
     {
         if (empty($this->user)) {
+            // Do not urlencode the token in Authorization header.
             $this->user = \json_decode($this->request(
                 'GET',
                 $this->resourceEndpoint,
-                ['Authorization: Bearer ' . \urlencode($accessToken)]
+                ['Authorization: Bearer ' . $accessToken]
             ), true);
         }
 
