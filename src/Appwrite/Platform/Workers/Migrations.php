@@ -7,6 +7,7 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Template\Template;
+use Appwrite\Usage\Context;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
 use Utopia\Console;
@@ -41,7 +42,6 @@ use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device;
 use Utopia\System\System;
-use Appwrite\Usage\Context;
 
 class Migrations extends Action
 {

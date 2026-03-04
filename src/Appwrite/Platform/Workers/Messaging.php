@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Workers;
 
 use Appwrite\Messaging\Status as MessageStatus;
+use Appwrite\Usage\Context;
 use libphonenumber\NumberParseException;
 use libphonenumber\PhoneNumberUtil;
 use Swoole\Runtime;
@@ -46,7 +47,6 @@ use Utopia\Storage\Storage;
 use Utopia\System\System;
 
 use function Swoole\Coroutine\batch;
-use Appwrite\Usage\Context;
 
 class Messaging extends Action
 {

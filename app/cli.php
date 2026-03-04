@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/init.php';
+require_once __DIR__.'/init.php';
 
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
@@ -38,7 +38,7 @@ use function Swoole\Coroutine\run;
 Config::setParam('runtimes', (new Runtimes('v5'))->getAll(supported: false));
 
 // require controllers after overwriting runtimes
-require_once __DIR__ . '/controllers/general.php';
+require_once __DIR__.'/controllers/general.php';
 
 global $register;
 
@@ -46,7 +46,7 @@ $platform = new Appwrite();
 $args = $platform->getEnv('argv');
 
 \array_shift($args);
-if (!isset($args[0])) {
+if (! isset($args[0])) {
     Console::error('Missing task name');
     Console::exit(1);
 }
@@ -84,6 +84,7 @@ $setResource('pools', function (Registry $register) {
 $setResource('authorization', function () {
     $authorization = new Authorization();
     $authorization->disable();
+
     return $authorization;
 }, []);
 
@@ -112,7 +113,7 @@ $setResource('dbForPlatform', function ($pools, $cache, $authorization) {
             $collections = Config::getParam('collections', [])['console'];
             $last = \array_key_last($collections);
 
-            if (!($dbForPlatform->exists($dbForPlatform->getDatabase(), $last))) { /** TODO cache ready variable using registry */
+            if (! ($dbForPlatform->exists($dbForPlatform->getDatabase(), $last))) { /** TODO cache ready variable using registry */
                 throw new Exception('Tables not ready yet.');
             }
 
@@ -121,10 +122,10 @@ $setResource('dbForPlatform', function ($pools, $cache, $authorization) {
             Console::warning($err->getMessage());
             sleep($sleep);
         }
-    } while ($attempts < $maxAttempts && !$ready);
+    } while ($attempts < $maxAttempts && ! $ready);
 
-    if (!$ready) {
-        throw new Exception("Console is not ready yet. Please try again later.");
+    if (! $ready) {
+        throw new Exception('Console is not ready yet. Please try again later.');
     }
 
     return $dbForPlatform;
@@ -152,7 +153,7 @@ $setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $c
             $dsn = new DSN($project->getAttribute('database'));
         } catch (\InvalidArgumentException) {
             // TODO: Temporary until all projects are using shared tables
-            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+            $dsn = new DSN('mysql://'.$project->getAttribute('database'));
         }
 
         if (isset($databases[$dsn->getHost()])) {
@@ -162,13 +163,13 @@ $setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $c
             if (\in_array($dsn->getHost(), $sharedTables)) {
                 $database
                     ->setSharedTables(true)
-                    ->setTenant((int)$project->getSequence())
+                    ->setTenant((int) $project->getSequence())
                     ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $database
                     ->setSharedTables(false)
                     ->setTenant(null)
-                    ->setNamespace('_' . $project->getSequence());
+                    ->setNamespace('_'.$project->getSequence());
             }
 
             return $database;
@@ -183,13 +184,13 @@ $setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $c
         if (\in_array($dsn->getHost(), $sharedTables)) {
             $database
                 ->setSharedTables(true)
-                ->setTenant((int)$project->getSequence())
+                ->setTenant((int) $project->getSequence())
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
             $database
                 ->setSharedTables(false)
                 ->setTenant(null)
-                ->setNamespace('_' . $project->getSequence());
+                ->setNamespace('_'.$project->getSequence());
         }
 
         $database
@@ -206,8 +207,9 @@ $setResource('getLogsDB', function (Group $pools, Cache $cache, Authorization $a
     $database = null;
 
     return function (?Document $project = null) use ($pools, $cache, $database, $authorization) {
-        if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant((int)$project->getSequence());
+        if ($database !== null && $project !== null && ! $project->isEmpty() && $project->getId() !== 'console') {
+            $database->setTenant((int) $project->getSequence());
+
             return $database;
         }
 
@@ -223,8 +225,8 @@ $setResource('getLogsDB', function (Group $pools, Cache $cache, Authorization $a
             ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
 
         // set tenant
-        if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant((int)$project->getSequence());
+        if ($project !== null && ! $project->isEmpty() && $project->getId() !== 'console') {
+            $database->setTenant((int) $project->getSequence());
         }
 
         return $database;
@@ -251,6 +253,7 @@ $setResource('usage', function () {
 $setResource('publisherForUsage', function (Publisher $publisher) {
     $queueName = \Utopia\System\System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', \Appwrite\Event\Event::STATS_USAGE_QUEUE_NAME);
     $queue = new \Utopia\Queue\Queue($queueName, 'utopia-queue');
+
     return new \Appwrite\Event\Publisher\Usage($publisher, $queue);
 }, ['publisher']);
 $setResource('queueForStatsResources', function (Publisher $publisher) {
@@ -267,12 +270,12 @@ $setResource('queueForCertificates', function (Publisher $publisher) {
 }, ['publisher']);
 $setResource('logError', function (Registry $register) {
     return function (Throwable $error, string $namespace, string $action) use ($register) {
-        Console::error('[Error] Timestamp: ' . date('c', time()));
-        Console::error('[Error] Type: ' . get_class($error));
-        Console::error('[Error] Message: ' . $error->getMessage());
-        Console::error('[Error] File: ' . $error->getFile());
-        Console::error('[Error] Line: ' . $error->getLine());
-        Console::error('[Error] Trace: ' . $error->getTraceAsString());
+        Console::error('[Error] Timestamp: '.date('c', time()));
+        Console::error('[Error] Type: '.get_class($error));
+        Console::error('[Error] Message: '.$error->getMessage());
+        Console::error('[Error] File: '.$error->getFile());
+        Console::error('[Error] Line: '.$error->getLine());
+        Console::error('[Error] Trace: '.$error->getTraceAsString());
 
         $logger = $register->get('logger');
 
@@ -309,9 +312,9 @@ $setResource('logError', function (Registry $register) {
 
             try {
                 $responseCode = $logger->addLog($log);
-                Console::info('Error log pushed with status code: ' . $responseCode);
+                Console::info('Error log pushed with status code: '.$responseCode);
             } catch (Throwable $th) {
-                Console::error('Error pushing log: ' . $th->getMessage());
+                Console::error('Error pushing log: '.$th->getMessage());
             }
         }
     };
@@ -342,5 +345,5 @@ $cli
 $cli->shutdown()->action(fn () => Timer::clearAll());
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
-require_once __DIR__ . '/init/span.php';
+require_once __DIR__.'/init/span.php';
 run($cli->run(...));

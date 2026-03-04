@@ -2,11 +2,11 @@
 
 namespace Appwrite\Platform\Modules\Health\Http\Health\Queue\StatsUsage;
 
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
-use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Document;

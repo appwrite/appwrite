@@ -8,9 +8,6 @@ use Utopia\Queue\Queue;
 
 readonly class Base
 {
-    /**
-     * @param Publisher $publisher
-     */
     public function __construct(
         protected Publisher $publisher
     ) {
@@ -18,23 +15,16 @@ readonly class Base
 
     /**
      * Publish a message to the queue
-     *
-     * @param Queue $queue
-     * @param BaseMessage $message
-     * @return string|bool
      */
     public function publish(Queue $queue, BaseMessage $message): string|bool
     {
         $payload = $message->toArray();
+
         return $this->publisher->enqueue($queue, $payload);
     }
 
     /**
      * Get the size of a queue
-     *
-     * @param Queue $queue
-     * @param bool $failed
-     * @return int
      */
     public function getQueueSize(Queue $queue, bool $failed = false): int
     {

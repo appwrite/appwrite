@@ -26,7 +26,7 @@ class Usage extends Base
         return [
             'project' => $this->project->getArrayCopy(),
             'metrics' => $this->metrics,
-            'reduce' => array_map(fn(Document $doc) => $doc->getArrayCopy(), $this->reduce),
+            'reduce' => array_map(fn (Document $doc) => $doc->getArrayCopy(), $this->reduce),
         ];
     }
 
@@ -39,7 +39,7 @@ class Usage extends Base
         return new self(
             project: new Document($data['project'] ?? []),
             metrics: $data['metrics'] ?? [],
-            reduce: array_map(fn(array $doc) => new Document($doc), $data['reduce'] ?? []),
+            reduce: array_map(fn (array $doc) => new Document($doc), $data['reduce'] ?? []),
         );
     }
 }

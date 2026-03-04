@@ -9,6 +9,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
@@ -24,7 +25,6 @@ use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
-use Appwrite\Usage\Context;
 
 class Get extends Action
 {

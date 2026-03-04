@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\Mail;
 use Appwrite\Template\Template;
+use Appwrite\Usage\Context;
 use Exception;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -12,7 +13,6 @@ use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\System\System;
-use Appwrite\Usage\Context;
 
 class Webhooks extends Action
 {

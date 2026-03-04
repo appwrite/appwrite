@@ -7,14 +7,11 @@ use Utopia\Database\Document;
 class Context
 {
     protected array $metrics = [];
+
     protected array $reduce = [];
 
     /**
      * Add a metric
-     *
-     * @param string $key
-     * @param int $value
-     * @return self
      */
     public function addMetric(string $key, int $value): self
     {
@@ -28,13 +25,11 @@ class Context
 
     /**
      * Add a document to reduce
-     *
-     * @param Document $document
-     * @return self
      */
     public function addReduce(Document $document): self
     {
         $this->reduce[] = $document;
+
         return $this;
     }
 
@@ -60,8 +55,6 @@ class Context
 
     /**
      * Check if context is empty
-     *
-     * @return bool
      */
     public function isEmpty(): bool
     {
@@ -70,13 +63,12 @@ class Context
 
     /**
      * Reset the context
-     *
-     * @return self
      */
     public function reset(): self
     {
         $this->metrics = [];
         $this->reduce = [];
+
         return $this;
     }
 }
