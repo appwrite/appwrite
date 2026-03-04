@@ -491,19 +491,17 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         // Update the version in the config
                         $this->updateSdkVersion($key, $language['key'], $newVersion);
 
-                        // Update the changelog file
+                        // Update the source changelog file
                         $this->updateChangelogFile($language['changelog'], $newVersion, $newChangelog);
 
-                        // Also update CHANGELOG.md in the generated SDK directory
-                        $sdkChangelogPath = $result . '/CHANGELOG.md';
-                        if (file_exists($sdkChangelogPath)) {
-                            $this->updateChangelogFile($sdkChangelogPath, $newVersion, $newChangelog);
-                        }
+                        // Re-read updated changelog so regeneration includes the new entry
+                        $updatedChangelog = \file_get_contents($language['changelog']);
+                        $sdk->setChangelog($updatedChangelog);
 
                         // Reload the language config with updated values
                         $language['version'] = $newVersion;
 
-                        // Regenerate SDK with new version
+                        // Regenerate SDK with new version and updated changelog
                         $sdk->setVersion($newVersion);
                         try {
                             $sdk->generate($result);
@@ -647,8 +645,11 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
                 if ($prReturnCode === 0) {
                     Console::success("Successfully created pull request for {$language['name']} SDK");
-                    if (! empty($prOutput)) {
-                        $prUrls[$language['name']] = end($prOutput);
+                    foreach ($prOutput as $line) {
+                        if (\str_starts_with(trim($line), 'https://')) {
+                            $prUrls[$language['name']] = trim($line);
+                            break;
+                        }
                     }
                 } else {
                     $errorMessage = implode("\n", $prOutput);
