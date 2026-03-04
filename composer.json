@@ -100,6 +100,7 @@
         "swoole/ide-helper": "6.*",
         "phpstan/phpstan": "1.12.*",
         "textalk/websocket": "1.5.*",
+        "czproject/git-php": "4.*",
         "laravel/pint": "1.*",
         "phpbench/phpbench": "1.*"
     },
