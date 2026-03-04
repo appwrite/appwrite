@@ -10,7 +10,6 @@ use Appwrite\Event\Certificate;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Event\Execution;
 use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
@@ -159,9 +158,6 @@ Http::setResource('queueForAudits', function (Publisher $publisher) {
 }, ['publisher']);
 Http::setResource('queueForFunctions', function (Publisher $publisher) {
     return new Func($publisher);
-}, ['publisher']);
-Http::setResource('queueForExecutions', function (Publisher $publisher) {
-    return new Execution($publisher);
 }, ['publisher']);
 Http::setResource('eventProcessor', function () {
     return new EventProcessor();

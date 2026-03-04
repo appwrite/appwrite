@@ -2225,10 +2225,14 @@ class RealtimeCustomClientTest extends Scope
         $session = $user['session'] ?? '';
         $projectId = $this->getProject()['$id'];
 
-        $client = $this->getWebsocket(['executions'], [
-            'origin' => 'http://localhost',
-            'cookie' => 'a_session_' . $projectId . '=' . $session
-        ]);
+        $client = $this->getWebsocket(
+            channels: ['executions'],
+            headers: [
+                'origin' => 'http://localhost',
+                'cookie' => 'a_session_' . $projectId . '=' . $session
+            ],
+            timeout: 10
+        );
 
         $response = json_decode($client->receive(), true);
 

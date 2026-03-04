@@ -11,7 +11,8 @@ trait RealtimeBase
         array $channels = [],
         array $headers = [],
         ?string $projectId = null,
-        ?array $queries = null
+        ?array $queries = null,
+        int $timeout = 2
     ): WebSocketClient {
         if (is_null($projectId)) {
             $projectId = $this->getProject()['$id'];
@@ -63,7 +64,7 @@ trait RealtimeBase
             "ws://appwrite.test/v1/realtime?" . $queryString,
             [
                 "headers" => $headers,
-                "timeout" => 45,
+                "timeout" => $timeout,
             ]
         );
     }
@@ -74,9 +75,10 @@ trait RealtimeBase
      *
      * @param array $queryParams Custom query parameters (e.g., ['channels' => ['project'], 'project' => [...]])
      * @param array $headers HTTP headers
+     * @param int $timeout Timeout in seconds (default: 2)
      * @return WebSocketClient
      */
-    private function getWebsocketWithCustomQuery(array $queryParams, array $headers = []): WebSocketClient
+    private function getWebsocketWithCustomQuery(array $queryParams, array $headers = [], int $timeout = 2): WebSocketClient
     {
         $queryString = http_build_query($queryParams);
 
@@ -84,7 +86,7 @@ trait RealtimeBase
             "ws://appwrite.test/v1/realtime?" . $queryString,
             [
                 "headers" => $headers,
-                "timeout" => 45,
+                "timeout" => $timeout,
             ]
         );
     }
