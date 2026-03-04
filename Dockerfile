@@ -12,7 +12,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:1.0.0 AS base
+FROM appwrite/base:1.0.1 AS base
 
 LABEL maintainer="team@appwrite.io"
 
