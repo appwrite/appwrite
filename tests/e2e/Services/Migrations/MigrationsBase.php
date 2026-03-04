@@ -1171,6 +1171,111 @@ trait MigrationsBase
     }
 
     /**
+     * Integrations
+     */
+    public function testGetAppwriteConsoleKey(): void
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/migrations/appwrite/console-key', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['key']);
+        $this->assertStringStartsWith('dynamic_', $response['body']['key']);
+        $this->assertNotEmpty($response['body']['expire']);
+        $this->assertGreaterThan(new \DateTime(), new \DateTime($response['body']['expire']));
+    }
+
+    public function testAppwriteMigrationPlatform(): void
+    {
+        $consoleSessionHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ];
+
+        // Create platform on source project
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $this->getProject()['$id'] . '/platforms', $consoleSessionHeaders, [
+            'type' => 'web',
+            'name' => 'Test Platform',
+            'hostname' => 'localhost',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        $platform = $response['body'];
+
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_PLATFORM,
+            ],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals('completed', $result['status']);
+        $this->assertEquals([Resource::TYPE_PLATFORM], $result['resources']);
+        $this->assertArrayHasKey(Resource::TYPE_PLATFORM, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PLATFORM]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PLATFORM]['pending']);
+        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_PLATFORM]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PLATFORM]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PLATFORM]['warning']);
+
+        // Get a console key for the destination project to access console-scoped endpoints
+        $consoleKeyResponse = $this->client->call(Client::METHOD_POST, '/migrations/appwrite/console-key', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $consoleKeyResponse['headers']['status-code']);
+        $destConsoleKey = $consoleKeyResponse['body']['key'];
+
+        // Verify platform on destination project using console key
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $this->getDestinationProject()['$id'] . '/platforms', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'x-appwrite-key' => $destConsoleKey,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertGreaterThan(0, $response['body']['total']);
+
+        $foundPlatform = null;
+
+        foreach ($response['body']['platforms'] as $p) {
+            if ($p['name'] === 'Test Platform' && $p['type'] === 'web') {
+                $foundPlatform = $p;
+
+                break;
+            }
+        }
+
+        $this->assertNotNull($foundPlatform);
+        $this->assertEquals('web', $foundPlatform['type']);
+        $this->assertEquals('Test Platform', $foundPlatform['name']);
+        $this->assertEquals('localhost', $foundPlatform['hostname']);
+
+        // Cleanup on destination using console key
+        $this->client->call(Client::METHOD_DELETE, '/projects/' . $this->getDestinationProject()['$id'] . '/platforms/' . $foundPlatform['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'x-appwrite-key' => $destConsoleKey,
+        ]);
+
+        // Cleanup on source using console project + session auth
+        $this->client->call(Client::METHOD_DELETE, '/projects/' . $this->getProject()['$id'] . '/platforms/' . $platform['$id'], $consoleSessionHeaders);
+    }
+
+    /**
      * Import documents from a CSV file.
      */
     public function testCreateCSVImport(): void
