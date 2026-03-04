@@ -32,6 +32,7 @@ class V21 extends Filter
     protected function parseSite(array $content): array
     {
         $content = $this->parseSpecs($content);
+        unset($content['startCommand']);
         return $content;
     }
 
@@ -46,6 +47,7 @@ class V21 extends Filter
         $content['specification'] = $content['buildSpecification'] ?? null;
         unset($content['buildSpecification']);
         unset($content['runtimeSpecification']);
+        unset($content['deploymentRetention']);
         return $content;
     }
 }
