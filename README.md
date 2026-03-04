@@ -38,8 +38,9 @@ Find out more at: [https://appwrite.io](https://appwrite.io).
 
 Table of Contents:
 
-- [Installation \& Setup](#installation--setup)
+- [Installation & Setup](#installation--setup)
 - [Self-Hosting](#self-hosting)
+- [Ubuntu Prerequisites](#ubuntu-prerequisites)
   - [Unix](#unix)
   - [Windows](#windows)
     - [CMD](#cmd)
@@ -67,6 +68,40 @@ The easiest way to get started with Appwrite is by [signing up for Appwrite Clou
 Appwrite is designed to run in a containerized environment. Running your server is as easy as running one command from your terminal. You can either run Appwrite on your localhost using docker-compose or on any other container orchestration tool, such as [Kubernetes](https://kubernetes.io/docs/home/), [Docker Swarm](https://docs.docker.com/engine/swarm/), or [Rancher](https://rancher.com/docs/).
 
 Before running the installation command, make sure you have [Docker](https://www.docker.com/products/docker-desktop) installed on your machine:
+
+### Ubuntu Prerequisites
+
+For Ubuntu users, follow these steps to install Docker before running Appwrite:
+```bash
+# Update package index
+sudo apt update
+
+# Install required dependencies
+sudo apt install apt-transport-https ca-certificates curl software-properties-common -y
+
+# Add Docker's official GPG key
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+# Add Docker repository
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Install Docker
+sudo apt update
+sudo apt install docker-ce docker-ce-cli containerd.io -y
+
+# Start and enable Docker
+sudo systemctl start docker
+sudo systemctl enable docker
+
+# Add your user to docker group (optional, to run docker without sudo)
+sudo usermod -aG docker $USER
+newgrp docker
+
+# Verify Docker installation
+docker --version
+```
+
+**Note for Ubuntu users:** After adding your user to the docker group, you may need to log out and log back in for the changes to take effect.
 
 ### Unix
 
