@@ -421,23 +421,21 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'queries' => [
                 '{"method":"select","values":["name", "$createdAt"]}',
-                '{"method":"limit","values":[2]}',
             ]
         ]);
 
         $this->assertEquals(200, $list['headers']['status-code']);
-        $this->assertEquals(2, $list['body']['total']);
+        $this->assertEquals(6, $list['body']['total']);
 
         $project = $list['body']['projects'][0];
 
         $this->assertEquals('Project Test', $project['name']);
         $this->assertArrayHasKey('$id', $project);
-        $this->assertArrayHasKey('$sequence', $project);
-        $this->assertArrayHasKey('$permissions', $project);
         $this->assertArrayHasKey('$createdAt', $project);
         $this->assertArrayHasKey('$updatedAt', $project);
         $this->assertArrayHasKey('name', $project);
         $this->assertArrayNotHasKey('platforms', $project);
+        $this->assertArrayNotHasKey('$sequence', $project);
     }
 
     #[Group('projectsCRUD')]

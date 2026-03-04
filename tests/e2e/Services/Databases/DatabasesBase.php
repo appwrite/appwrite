@@ -3547,6 +3547,7 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'queries' => [
                 '{"method":"select","values":["title"]}',
+                '{"method":"limit","values":[1]}',
             ],
         ]);
 
