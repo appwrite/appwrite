@@ -172,7 +172,10 @@ class Database extends Event
                 // TODO: Temporary until all projects are using shared tables
                 $dsn = new DSN("mysql://$database");
             }
-            $this->queue = $dsn->getHost();
+
+            $numWorkers = (int) System::getEnv('_APP_DATABASE_WORKERS', 1);
+            $workerIndex = \abs(\crc32($project->getId())) % $numWorkers;
+            $this->queue = $dsn->getHost() . '-' . $workerIndex;
         }
 
         return parent::setProject($project);
