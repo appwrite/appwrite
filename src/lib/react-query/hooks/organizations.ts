@@ -1241,15 +1241,23 @@ export function useOrganizationById(orgId: string | null | undefined) {
  * Hook to fetch organization plan details
  *
  * @param orgId - The organization ID to fetch plan for
+ * @param initialData - Optional data from route loader to avoid layout shift on first paint
  * @returns Organization plan details with loading state
  */
-export function useOrganizationPlan(orgId: string | null | undefined) {
+export function useOrganizationPlan(
+  orgId: string | null | undefined,
+  initialData?: Awaited<ReturnType<typeof fetchOrganizationPlan>>,
+) {
   const {
     data: planData,
     isLoading,
     error,
     refetch,
-  } = useQuery(organizationPlanQueryOptions(orgId))
+  } = useQuery({
+    ...organizationPlanQueryOptions(orgId),
+    initialData,
+    initialDataUpdatedAt: initialData ? 1 : 0,
+  })
 
   return {
     plan: planData,
@@ -1263,9 +1271,12 @@ export function useOrganizationPlan(orgId: string | null | undefined) {
  * Hook to get current user's roles, scopes, and derived access for an organization.
  * Use in organization context (orgId) or project context (project's teamId).
  * When profile does not support roles (orgRoles: false), returns full access without fetching.
+ *
+ * @param initialData - Optional data from route loader to avoid layout shift on first paint
  */
 export function useOrganizationScopes(
   organizationId: string | null | undefined,
+  initialData?: Awaited<ReturnType<typeof fetchOrganizationScopes>>,
 ): {
   roles: string[]
   scopes: string[]
@@ -1280,6 +1291,8 @@ export function useOrganizationScopes(
   const { data, isLoading, error, refetch } = useQuery({
     ...organizationScopesQueryOptions(organizationId),
     enabled: shouldFetch,
+    initialData,
+    initialDataUpdatedAt: initialData ? 1 : 0,
   })
 
   const roles = data?.roles ?? [...DEFAULT_ROLES]

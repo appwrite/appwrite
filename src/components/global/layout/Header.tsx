@@ -202,7 +202,6 @@ export function ConsoleHeader({
           {/* Project Selector - only show when in project context */}
           {!isOrgOverview && (
             <>
-              <div className="hidden w-2 shrink-0 lg:block" />
               {/* Project Selector */}
               <div className="hidden min-w-0 @[700px]:block">
                 <ProjectSelector projectId={projectId} />

@@ -236,12 +236,26 @@ function ProjectCardFooter({
 
 import { ProjectSelector } from '@/components/global/shared/ProjectSelector'
 
+/** Data from org layout loader to avoid layout shift on first paint */
+export type OrgOverviewInitialData = {
+  organizationsData?: { teams?: unknown[] }
+  organizationPlan?: unknown
+  membershipsData?: { memberships: unknown[]; total: number }
+  scopesData?: { roles: string[]; scopes: string[] }
+}
+
 interface OrgOverviewProps {
   tab?: 'projects' | 'domains' | 'settings'
   children?: React.ReactNode
+  /** Prefetched data from route loader so org selector, tabs, and avatars render without layout shift */
+  initialData?: OrgOverviewInitialData
 }
 
-export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
+export function OrgOverview({
+  tab: tabProp,
+  children,
+  initialData,
+}: OrgOverviewProps) {
   const { account } = useAuth()
   const queryClient = useQueryClient()
   const { orgId } = useParams({ from: '/_public/organizations/$orgId' })
@@ -251,7 +265,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const matches = useMatches()
   const [searchQuery, setSearchQuery] = useState('')
   const { features } = useConsoleProfile()
-  const { access } = useOrganizationScopes(orgId)
+  const { access } = useOrganizationScopes(orgId, initialData?.scopesData)
 
   // Check if we're on a domain detail route using route matches and pathname (for navigation transitions)
   const isDomainDetailRoute = useMemo(() => {
@@ -454,9 +468,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const [settingsNavSearch, setSettingsNavSearch] = useState('')
 
   // Fetch organizations from Console SDK (prefetched by route loader)
-  const { data: organizationsData, isLoading: organizationsLoading } = useQuery(
-    organizationsQueryOptions(),
-  )
+  const { data: organizationsData, isLoading: organizationsLoading } = useQuery({
+    ...organizationsQueryOptions(),
+    initialData: initialData?.organizationsData,
+    initialDataUpdatedAt: initialData?.organizationsData ? 1 : 0,
+  })
 
   // Get organizations list and map to our Organization type
   // Note: The API returns "teams" but they are actually organizations
@@ -844,7 +860,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const totalProjectsCount = totalProjectsData?.total || 0
 
   // Fetch organization plan to check if additional members are supported
-  const { plan: organizationPlan } = useOrganizationPlan(orgId)
+  const { plan: organizationPlan } = useOrganizationPlan(
+    orgId,
+    initialData?.organizationPlan,
+  )
 
   // Check if the plan supports additional members
   // Only disable if seats addon is explicitly disabled with supported = false
@@ -902,6 +921,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     activeMembershipsPage,
     MEMBERSHIPS_PER_PAGE,
     membershipsSearchQuery,
+    activeMembershipsPage === 0 && !membershipsSearchQuery
+      ? initialData?.membershipsData
+      : undefined,
   )
 
   // Resend invitation mutation

@@ -163,6 +163,7 @@ export function useTeams() {
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
  * @param search - Optional search query
+ * @param initialData - Optional data from route loader to avoid layout shift on first paint
  * @returns Paginated memberships with loading state
  */
 export function useOrganizationMemberships(
@@ -170,6 +171,9 @@ export function useOrganizationMemberships(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  initialData?: Awaited<
+    ReturnType<typeof fetchOrganizationMemberships>
+  >,
 ) {
   const {
     data: membershipsData,
@@ -177,9 +181,16 @@ export function useOrganizationMemberships(
     isFetching,
     error,
     refetch,
-  } = useQuery(
-    organizationMembershipsQueryOptions(organizationId, page, limit, search),
-  )
+  } = useQuery({
+    ...organizationMembershipsQueryOptions(
+      organizationId,
+      page,
+      limit,
+      search,
+    ),
+    initialData,
+    initialDataUpdatedAt: initialData ? 1 : 0,
+  })
 
   // Map memberships to our TeamMember type
   const memberships = useMemo(() => {
