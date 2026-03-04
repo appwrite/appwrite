@@ -2,6 +2,8 @@
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Validator\MockNumber;
+use Appwrite\Auth\Authorization;
+use Appwrite\Auth\User;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Validator\Event;
@@ -50,6 +52,9 @@ use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
+use Utopia\Logger\Logger;  
+use Psr\Log\LoggerInterface;
+
 
 App::init()
     ->groups(['projects'])
@@ -59,7 +64,7 @@ App::init()
             throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN);
         }
     });
-
+ 
 App::post('/v1/projects')
     ->desc('Create project')
     ->groups(['api', 'projects'])
@@ -98,9 +103,43 @@ App::post('/v1/projects')
     ->inject('cache')
     ->inject('pools')
     ->inject('hooks')
-    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Request $request, Response $response, Database $dbForPlatform, Cache $cache, Group $pools, Hooks $hooks) {
+    ->inject('logger')
+    ->inject('authorization')
+
+    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description,
+     string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, 
+     string $legalAddress, string $legalTaxId, Request $request, Response $response, Database $dbForPlatform, Cache $cache, 
+     Group $pools, Hooks $hooks, Authorization $authorization,   LoggerInterface $logger) {
 
         $team = $dbForPlatform->getDocument('teams', $teamId);
+
+        // Force default region if called from migration
+        // $migrationHeader = $request->getHeader('X-Migration');
+
+        // if ($migrationHeader === 'true') {
+        //     $logger->info('Migration request detected. Forcing project region to default.', [
+        //         'originalRegion' => $region,
+        //     ]);
+
+        //     $region = 'default';
+        // }
+        $migrationHeader = $request->getHeader('X-Migration');
+        $isPrivilegedUser = User::isPrivileged($authorization->getRoles()) 
+            || User::isApp($authorization->getRoles());
+
+        if ($migrationHeader === 'true' && $isPrivilegedUser) {
+            $logger->info('Migration override detected. Forcing project region to default.', [
+                'originalRegion' => $region,
+                'route' => 'POST /v1/projects',
+            ]);
+
+            $region = 'default';
+        }
+
+
+        
+
+
 
         if ($team->isEmpty()) {
             throw new Exception(Exception::TEAM_NOT_FOUND);
