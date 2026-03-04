@@ -878,6 +878,12 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 return null;
             }
 
+            // Guard: beta SDKs must not be bumped to >= 1.0.0
+            if ($isBeta && ($parsed['versionBump'] === 'major' || \version_compare($parsed['version'], '1.0.0', '>='))) {
+                Console::warning("Beta SDK {$language['name']} cannot have a major bump or version >= 1.0.0 (AI suggested {$parsed['version']}), skipping");
+                return null;
+            }
+
             Console::success("✓ Analysis complete");
             Console::log("  Version: {$language['version']} → {$parsed['version']} ({$parsed['versionBump']} bump)");
             Console::log("  Changelog:");
