@@ -87,19 +87,12 @@ class Update extends Base
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
-            ->param('buildSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+            ->param('specification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
-            ), 'Build specification for the function deployments.', true, ['plan'])
-            ->param('runtimeSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
-                $plan,
-                Config::getParam('specifications', []),
-                System::getEnv('_APP_COMPUTE_CPUS', 0),
-                System::getEnv('_APP_COMPUTE_MEMORY', 0)
-            ), 'Runtime specification for the function executions.', true, ['plan'])
-            ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 means all deployments will be kept.', true)
+            ), 'Runtime specification for the function and builds.', true, ['plan'])
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
@@ -131,9 +124,7 @@ class Update extends Base
         string $providerBranch,
         bool $providerSilentMode,
         string $providerRootDirectory,
-        string $buildSpecification,
-        string $runtimeSpecification,
-        int $deploymentRetention,
+        string $specification,
         Request $request,
         Response $response,
         Database $dbForProject,
@@ -218,7 +209,7 @@ class Update extends Base
                 'resourceId' => $function->getId(),
                 'resourceInternalId' => $function->getSequence(),
                 'resourceType' => 'function',
-                'providerPullRequestIds' => [],
+                'providerPullRequestIds' => []
             ]));
 
             $repositoryId = $repository->getId();
@@ -238,24 +229,13 @@ class Update extends Base
         }
 
         // Enforce Cold Start if spec limits change.
-        if (!empty($function->getAttribute('deploymentId'))) {
-            $specsChanged = false;
-            // TODO: backwards-compatibility dual-read, remove eventually.
-            if ($function->getAttribute('runtimeSpecification', $function->getAttribute('specification')) !== $runtimeSpecification) {
-                $specsChanged = true;
-                // TODO: backwards-compatibility dual-read, remove eventually.
-            } elseif ($function->getAttribute('buildSpecification', $function->getAttribute('specification')) !== $buildSpecification) {
-                $specsChanged = true;
-            }
-
-            if ($specsChanged) {
-                try {
-                    $executor->deleteRuntime($project->getId(), $function->getAttribute('deploymentId'));
-                } catch (\Throwable $th) {
-                    // Don't throw if the deployment doesn't exist
-                    if ($th->getCode() !== 404) {
-                        throw $th;
-                    }
+        if ($function->getAttribute('specification') !== $specification && !empty($function->getAttribute('deploymentId'))) {
+            try {
+                $executor->deleteRuntime($project->getId(), $function->getAttribute('deploymentId'));
+            } catch (\Throwable $th) {
+                // Don't throw if the deployment doesn't exist
+                if ($th->getCode() !== 404) {
+                    throw $th;
                 }
             }
         }
@@ -273,7 +253,8 @@ class Update extends Base
             'entrypoint' => $entrypoint,
             'commands' => $commands,
             'scopes' => $scopes,
-            'deploymentRetention' => $deploymentRetention,
+            'deploymentRetention' => 0,
+            'startCommand' => '',
             'installationId' => $installation->getId(),
             'installationInternalId' => $installation->getSequence(),
             'providerRepositoryId' => $providerRepositoryId,
@@ -282,8 +263,9 @@ class Update extends Base
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $providerRootDirectory,
             'providerSilentMode' => $providerSilentMode,
-            'buildSpecification' => $buildSpecification,
-            'runtimeSpecification' => $runtimeSpecification,
+            'specification' => $specification,
+            'buildSpecification' => $specification,
+            'runtimeSpecification' => $specification,
             'search' => implode(' ', [$functionId, $name, $runtime]),
         ])));
 
