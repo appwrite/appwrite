@@ -780,20 +780,25 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 required: $object->getNames()
             );
 
+            $isBeta = !empty($language['beta']);
+            $betaNote = $isBeta
+                ? "\n            Note: This SDK is in beta (version < 1.0.0). Do NOT bump to 1.0.0. Use `minor` for both breaking changes and new features, `patch` for bug fixes only."
+                : '';
+
             $prompt = <<<PROMPT
             You are a technical writer generating a changelog for the {$language['name']} SDK release.
-            
+
             Analyze the git diff below and return a JSON response with the version bump type, new version number, and changelog.
-            
+
             ## Versioning
-            
+
             Current version: {$language['version']}
-            
+
             Determine the semantic version bump:
             - `major`: Breaking changes (removed/renamed public APIs, changed method signatures, dropped support)
             - `minor`: New features that are backward-compatible (new methods, new optional parameters, new classes)
             - `patch`: Bug fixes, documentation updates, refactors with no API surface change
-            
+            {$betaNote}
             When multiple change types are present, use the highest severity bump.
             
             ## Changelog guidelines
@@ -810,6 +815,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
             - Only include changes visible to SDK users (public API, behavior, docs, examples, CLI)
             - Ignore: CI/CD pipelines (.github/), internal tooling, code formatting, test infrastructure
             - Consolidate related changes into one entry (e.g., "Added `timeout`, `retries`, and `baseUrl` options" not three separate lines)
+            - Wrap all method names, parameter names, class names, and code identifiers in backticks (e.g., `listDocuments`, `ttl`)
             - If the diff contains zero user-facing changes, return a single entry: "No user-facing SDK changes"
             - Do not speculate — only document what the diff explicitly shows
             
