@@ -107,9 +107,6 @@ class SDKs extends Action
 
             $prUrls = [];
 
-            if ($git) {
-                $message ??= Console::confirm('Please enter your commit message:');
-            }
         } elseif ($examplesOnly) {
             $git = false;
             $prUrls = [];
@@ -518,6 +515,16 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
                 $repoBranch = $language['repoBranch'] ?? 'main';
                 if ($git && ! empty($gitUrl)) {
+                    // Generate commit message: use provided message, AI changelog, or fallback
+                    if (! empty($message)) {
+                        $commitMessage = $message;
+                    } elseif (! empty($aiChangelog) && $aiChangelog !== '* No user-facing SDK changes.') {
+                        $commitMessage = "feat: update {$language['name']} SDK to {$language['version']}\n\n{$aiChangelog}";
+                    } else {
+                        $commitMessage = "chore: update {$language['name']} SDK to {$language['version']}";
+                    }
+                    $escapedCommitMessage = \addcslashes($commitMessage, '"\\`$');
+
                     Console::info("Preparing {$language['name']} SDK repository...");
 
                     \exec('rm -rf ' . $target . ' && \
@@ -540,7 +547,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         cp -r ' . $result . '/. ' . $target . '/ && \
                         (if [ -d /tmp/.github-backup-$$/.github ]; then cp -rn /tmp/.github-backup-$$/.github . 2>/dev/null && rm -rf /tmp/.github-backup-$$; fi) && \
                         git add -A && \
-                        git commit -m "' . $message . '" --quiet && \
+                        git commit -m "' . $escapedCommitMessage . '" --quiet && \
                         git push -u origin ' . $gitBranch . ' --quiet 2>&1 | grep -E "^(To |   |[0-9a-f]+\\.\\.[0-9a-f]+)" || true
                     ', $gitOutput, $gitReturnCode);
 
