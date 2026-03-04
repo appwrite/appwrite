@@ -29,7 +29,7 @@ class Usage extends Listener
     {
         $this
             ->desc('Records usage metrics')
-            ->inject('publisher')
+            ->inject('publisherStatsUsage')
             ->callback($this->handle(...));
     }
 
