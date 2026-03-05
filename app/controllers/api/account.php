@@ -14,7 +14,6 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
-use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Network\Validator\Email as EmailValidator;
@@ -28,6 +27,7 @@ use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Template\Template;
 use Appwrite\URL\URL as URLParser;
+use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Identities;
@@ -2787,12 +2787,12 @@ Http::post('/v1/account/tokens/phone')
     ->inject('queueForMessaging')
     ->inject('locale')
     ->inject('timelimit')
-    ->inject('queueForStatsUsage')
+    ->inject('usage')
     ->inject('plan')
     ->inject('store')
     ->inject('proofForCode')
     ->inject('authorization')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, Store $store, ProofsCode $proofForCode, Authorization $authorization) {
+    ->action(function (string $userId, string $phone, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, callable $timelimit, Context $usage, array $plan, Store $store, ProofsCode $proofForCode, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -2941,16 +2941,13 @@ Http::post('/v1/account/tokens/phone')
                 $countryCode = $helper->parse($phone)->getCountryCode();
 
                 if (!empty($countryCode)) {
-                    $queueForStatsUsage
+                    $usage
                         ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                 }
             } catch (NumberParseException $e) {
                 // Ignore invalid phone number for country code stats
             }
-            $queueForStatsUsage
-                ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
-                ->setProject($project)
-                ->trigger();
+            $usage->addMetric(METRIC_AUTH_METHOD_PHONE, 1);
         }
 
         $token->setAttribute('secret', $secret);
@@ -4181,11 +4178,11 @@ Http::post('/v1/account/verifications/phone')
     ->inject('project')
     ->inject('locale')
     ->inject('timelimit')
-    ->inject('queueForStatsUsage')
+    ->inject('usage')
     ->inject('plan')
     ->inject('proofForCode')
                 ->inject('authorization')
-    ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, ProofsCode $proofForCode, Authorization $authorization) {
+    ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale, callable $timelimit, Context $usage, array $plan, ProofsCode $proofForCode, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -4270,16 +4267,13 @@ Http::post('/v1/account/verifications/phone')
                 $countryCode = $helper->parse($phone)->getCountryCode();
 
                 if (!empty($countryCode)) {
-                    $queueForStatsUsage
+                    $usage
                         ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                 }
             } catch (NumberParseException $e) {
                 // Ignore invalid phone number for country code stats
             }
-            $queueForStatsUsage
-                ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
-                ->setProject($project)
-                ->trigger();
+            $usage->addMetric(METRIC_AUTH_METHOD_PHONE, 1);
         }
 
         $verification->setAttribute('secret', $secret);

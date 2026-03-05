@@ -66,7 +66,7 @@ class Update extends DocumentUpdate
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
-            ->inject('queueForStatsUsage')
+            ->inject('usage')
             ->inject('transactionState')
             ->inject('plan')
             ->inject('authorization')

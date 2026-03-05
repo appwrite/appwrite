@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Workers;
 
-use Appwrite\Event\StatsUsage;
 use Appwrite\Messaging\Status as MessageStatus;
+use Appwrite\Usage\Context;
 use libphonenumber\NumberParseException;
 use libphonenumber\PhoneNumberUtil;
 use Swoole\Runtime;
@@ -71,7 +71,7 @@ class Messaging extends Action
             ->inject('log')
             ->inject('dbForProject')
             ->inject('deviceForFiles')
-            ->inject('queueForStatsUsage')
+            ->inject('usage')
             ->callback($this->action(...));
     }
 
@@ -81,7 +81,7 @@ class Messaging extends Action
      * @param Log $log
      * @param Database $dbForProject
      * @param Device $deviceForFiles
-     * @param StatsUsage $queueForStatsUsage
+     * @param Context $usage
      * @return void
      * @throws \Exception
      */
@@ -91,7 +91,7 @@ class Messaging extends Action
         Log $log,
         Database $dbForProject,
         Device $deviceForFiles,
-        StatsUsage $queueForStatsUsage
+        Context $usage
     ): void {
         Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
         $payload = $message->getPayload() ?? [];
@@ -115,7 +115,7 @@ class Messaging extends Action
                 case MESSAGE_SEND_TYPE_EXTERNAL:
                     $message = $dbForProject->getDocument('messages', $payload['messageId']);
 
-                    $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $project, $queueForStatsUsage);
+                    $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $project, $usage);
                     break;
                 default:
                     throw new \Exception('Unknown message type: ' . $type);
@@ -133,7 +133,7 @@ class Messaging extends Action
         Document $message,
         Device $deviceForFiles,
         Document $project,
-        StatsUsage $queueForStatsUsage
+        Context $usage
     ): void {
         $topicIds = $message->getAttribute('topics', []);
         $targetIds = $message->getAttribute('targets', []);
@@ -239,8 +239,8 @@ class Messaging extends Action
         /**
          * @var array<array> $results
          */
-        $results = batch(\array_map(function ($providerId) use ($identifiers, &$providers, $default, $message, $dbForProject, $deviceForFiles, $project, $queueForStatsUsage) {
-            return function () use ($providerId, $identifiers, &$providers, $default, $message, $dbForProject, $deviceForFiles, $project, $queueForStatsUsage) {
+        $results = batch(\array_map(function ($providerId) use ($identifiers, &$providers, $default, $message, $dbForProject, $deviceForFiles, $project, $usage) {
+            return function () use ($providerId, $identifiers, &$providers, $default, $message, $dbForProject, $deviceForFiles, $project, $usage) {
                 if (\array_key_exists($providerId, $providers)) {
                     $provider = $providers[$providerId];
                 } else {
@@ -267,8 +267,8 @@ class Messaging extends Action
                     $adapter->getMaxMessagesPerRequest()
                 );
 
-                return batch(\array_map(function ($batch) use ($message, $provider, $adapter, $dbForProject, $deviceForFiles, $project, $queueForStatsUsage) {
-                    return function () use ($batch, $message, $provider, $adapter, $dbForProject, $deviceForFiles, $project, $queueForStatsUsage) {
+                return batch(\array_map(function ($batch) use ($message, $provider, $adapter, $dbForProject, $deviceForFiles, $project, $usage) {
+                    return function () use ($batch, $message, $provider, $adapter, $dbForProject, $deviceForFiles, $project, $usage) {
                         $deliveredTotal = 0;
                         $deliveryErrors = [];
                         $messageData = clone $message;
@@ -308,7 +308,7 @@ class Messaging extends Action
                             $deliveryErrors[] = 'Failed sending to targets with error: ' . $e->getMessage();
                         } finally {
                             $errorTotal = \count($deliveryErrors);
-                            $queueForStatsUsage
+                            $usage
                                 ->setProject($project)
                                 ->addMetric(METRIC_MESSAGES, ($deliveredTotal + $errorTotal))
                                 ->addMetric(METRIC_MESSAGES_SENT, $deliveredTotal)
