@@ -272,7 +272,7 @@ class Server
         if (!$this->dockerImageExists($image)) {
             $this->buildDockerInstallerImage($image);
         }
-        $this->ensureCorrectTag($image, 'appwrite/appwrite:latest');
+        $this->ensureCorrectTag($image, 'appwrite/appwrite:local');
         $port = (string)self::INSTALLER_WEB_PORT;
         $entrypoint = isset($opts['upgrade']) ? 'upgrade' : 'install';
 
