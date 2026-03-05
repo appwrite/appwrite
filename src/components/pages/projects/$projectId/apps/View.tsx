@@ -3,6 +3,7 @@ import { Plug2 } from 'lucide-react'
 import { useParams } from '@tanstack/react-router'
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { ConnectProject } from '../shared/ConnectProject'
+import { PlatformDrawer } from './_components/PlatformDrawer'
 import { PlatformIcon } from '@/components/global/shared/Icon'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import {
@@ -51,6 +52,10 @@ export function View({ initialData }: ViewProps = {}) {
   const [searchValue, setSearchValue] = useState('')
   const [connectDialogOpen, setConnectDialogOpen] = useState(false)
   const [connectInitialSdk, setConnectInitialSdk] = useState('web')
+  const [platformDrawerOpen, setPlatformDrawerOpen] = useState(false)
+  const [selectedPlatform, setSelectedPlatform] = useState<Models.Platform | null>(
+    null,
+  )
 
   // Use initialData on first paint so no loading skeleton flash
   const { platforms: platformsFromHook, isLoading } = usePlatforms(projectId)
@@ -82,6 +87,11 @@ export function View({ initialData }: ViewProps = {}) {
   const handleAddApp = (platformId?: string) => {
     setConnectInitialSdk(platformToSdkId[platformId ?? 'web'] ?? 'web')
     setConnectDialogOpen(true)
+  }
+
+  const handlePlatformClick = (platform: Models.Platform) => {
+    setSelectedPlatform(platform)
+    setPlatformDrawerOpen(true)
   }
 
   return (
@@ -186,7 +196,8 @@ export function View({ initialData }: ViewProps = {}) {
                 <button
                   key={platform.$id}
                   type="button"
-                  className="group flex items-center gap-4 rounded-xl border border-border bg-card/50 p-4 text-left transition-colors hover:border-border hover:bg-card"
+                  onClick={() => handlePlatformClick(platform)}
+                  className="group flex cursor-pointer items-center gap-4 rounded-xl border border-border bg-card/50 p-4 text-left transition-colors hover:border-border hover:bg-card"
                 >
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground transition-colors group-hover:bg-accent group-hover:text-foreground">
                     <PlatformIcon
@@ -217,6 +228,16 @@ export function View({ initialData }: ViewProps = {}) {
         onOpenChange={setConnectDialogOpen}
         projectId={projectId ?? ''}
         initialSdk={connectInitialSdk}
+      />
+
+      <PlatformDrawer
+        open={platformDrawerOpen}
+        onOpenChange={(open) => {
+          setPlatformDrawerOpen(open)
+          if (!open) setSelectedPlatform(null)
+        }}
+        projectId={projectId ?? ''}
+        platform={selectedPlatform}
       />
     </div>
   )

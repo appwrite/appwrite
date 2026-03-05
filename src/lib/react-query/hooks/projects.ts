@@ -676,6 +676,113 @@ export function usePlatforms(projectId: string | null | undefined) {
 }
 
 /**
+ * Query options for fetching a single platform
+ */
+export function platformQueryOptions(
+  projectId: string | null | undefined,
+  platformId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['platform', 'project', projectId, platformId],
+    queryFn: async () => {
+      if (!projectId || !platformId) {
+        throw new Error('Project ID and Platform ID are required')
+      }
+      return await sdk.forConsole.projects.getPlatform({ projectId, platformId })
+    },
+    enabled: !!projectId && !!platformId,
+    staleTime: LONG_STALE_TIME,
+  })
+}
+
+/**
+ * Hook to get a single platform
+ *
+ * @param projectId - The project ID
+ * @param platformId - The platform ID
+ */
+export function useProjectPlatform(
+  projectId: string | null | undefined,
+  platformId: string | null | undefined,
+) {
+  const { data, isLoading, error, refetch } = useQuery(
+    platformQueryOptions(projectId, platformId),
+  )
+
+  return {
+    platform: data ?? null,
+    isLoading,
+    error,
+    refetch,
+  }
+}
+
+/**
+ * Hook to update a platform
+ *
+ * @param projectId - The project ID
+ */
+export function useUpdatePlatform(projectId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (data: {
+      platformId: string
+      name: string
+      key?: string
+      store?: string
+      hostname?: string
+    }) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      return await sdk.forConsole.projects.updatePlatform({
+        projectId,
+        platformId: data.platformId,
+        name: data.name,
+        key: data.key,
+        store: data.store,
+        hostname: data.hostname,
+      })
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['platforms', projectId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['platform', 'project', projectId, variables.platformId],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to delete a platform
+ *
+ * @param projectId - The project ID
+ */
+export function useDeletePlatform(projectId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (platformId: string) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      return await sdk.forConsole.projects.deletePlatform({
+        projectId,
+        platformId,
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['platforms', projectId],
+      })
+    },
+  })
+}
+
+/**
  * Hook to fetch project variables
  *
  * @param projectId - The project ID

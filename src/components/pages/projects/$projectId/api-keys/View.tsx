@@ -66,6 +66,7 @@ export function View({ initialData }: ViewProps = {}) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedKeyId, setSelectedKeyId] = useState<string | null>(null)
   const [copiedField, setCopiedField] = useState<string | null>(null)
+  const [createdKeySecret, setCreatedKeySecret] = useState<string | null>(null)
 
   // Fetch API keys (use initialData on first paint so no loading flash)
   const { apiKeys: apiKeysFromHook, isLoading } = useApiKeys(projectId)
@@ -109,9 +110,14 @@ export function View({ initialData }: ViewProps = {}) {
     expire?: string
   }) => {
     createMutation.mutate(data, {
-      onSuccess: () => {
+      onSuccess: (createdKey) => {
         toast.success('API key created successfully')
-        setCreateDrawerOpen(false)
+        if (createdKey?.secret) {
+          setCreatedKeySecret(createdKey.secret)
+          // Keep drawer open so user can copy the key
+        } else {
+          setCreateDrawerOpen(false)
+        }
       },
       onError: (error: Error) => {
         toast.error(getErrorMessage(error) || 'Failed to create API key')
@@ -316,9 +322,15 @@ export function View({ initialData }: ViewProps = {}) {
       {/* Create Drawer */}
       <ApiKeyDrawer
         open={createDrawerOpen}
-        onOpenChange={setCreateDrawerOpen}
+        onOpenChange={(open) => {
+          setCreateDrawerOpen(open)
+          if (!open) setCreatedKeySecret(null)
+        }}
         onSubmit={handleCreate}
         isLoading={createMutation.isPending}
+        createdKeySecret={createdKeySecret}
+        onCopy={handleCopy}
+        copiedField={copiedField}
       />
 
       {/* Update Drawer */}
@@ -334,6 +346,8 @@ export function View({ initialData }: ViewProps = {}) {
         onSubmit={handleUpdateSubmit}
         isLoading={updateMutation.isPending}
         apiKey={updateKeyData}
+        onCopy={handleCopy}
+        copiedField={copiedField}
       />
 
       {/* Delete Confirmation Dialog */}

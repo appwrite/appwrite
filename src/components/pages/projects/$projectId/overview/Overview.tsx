@@ -35,6 +35,7 @@ import { getPlatformDisplayName } from '@/lib/utils/platform'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ApiKeysList, type ApiKey } from '../shared/ApiKeysList'
 import { ApiKeyDrawer } from '../api-keys/ApiKeyDrawer'
+import { PlatformDrawer } from '../apps/_components/PlatformDrawer'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
@@ -96,6 +97,7 @@ interface Integration {
   identifier: string // hostname for web, app ID for apps
   icon: React.ReactNode
   docsUrl: string
+  platform: Models.Platform
 }
 
 const supportedPlatforms = [
@@ -144,6 +146,9 @@ export function View({ projectId, initialData }: ViewProps) {
   const [selectedKeyId, setSelectedKeyId] = useState<string | null>(null)
   const [connectDialogOpen, setConnectDialogOpen] = useState(false)
   const [connectInitialSdk, setConnectInitialSdk] = useState<string>('web')
+  const [platformDrawerOpen, setPlatformDrawerOpen] = useState(false)
+  const [selectedPlatform, setSelectedPlatform] =
+    useState<Models.Platform | null>(null)
   const { features } = useConsoleProfile()
   const handleConnectPlatform = (platform?: string) => {
     const sdkMap: Record<string, string> = {
@@ -239,7 +244,8 @@ export function View({ projectId, initialData }: ViewProps) {
             initialIcon={initialIcon}
           />
         ),
-        docsUrl: '#', // Could be constructed from platform data if available
+        docsUrl: '#',
+        platform: platform as Models.Platform,
       } as Integration
     })
   }, [platformsForIntegrations])
@@ -665,7 +671,12 @@ export function View({ projectId, initialData }: ViewProps) {
               {integrations.map((integration) => (
                 <button
                   key={integration.id}
-                  className="group flex items-center gap-4 rounded-xl border border-border bg-card/50 p-4 text-left transition-colors hover:border-border hover:bg-card"
+                  type="button"
+                  onClick={() => {
+                    setSelectedPlatform(integration.platform)
+                    setPlatformDrawerOpen(true)
+                  }}
+                  className="group flex cursor-pointer items-center gap-4 rounded-xl border border-border bg-card/50 p-4 text-left transition-colors hover:border-border hover:bg-card"
                 >
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground transition-colors group-hover:bg-accent group-hover:text-foreground">
                     {integration.icon}
@@ -838,6 +849,16 @@ export function View({ projectId, initialData }: ViewProps) {
         onOpenChange={setConnectDialogOpen}
         projectId={projectId}
         initialSdk={connectInitialSdk}
+      />
+
+      <PlatformDrawer
+        open={platformDrawerOpen}
+        onOpenChange={(open) => {
+          setPlatformDrawerOpen(open)
+          if (!open) setSelectedPlatform(null)
+        }}
+        projectId={projectId}
+        platform={selectedPlatform}
       />
     </div>
   )

@@ -270,9 +270,13 @@ export function PlatformIcon({
   }
 
   if (isFlutter) {
+    const mainIcon =
+      baseIcon ?? (
+        <Globe className={sizeClasses[size as keyof typeof sizeClasses]} />
+      )
     return (
       <div className={cn('relative', className)}>
-        {baseIcon}
+        {mainIcon}
         {/* Flutter badge in corner - bigger and no color */}
         <div
           className={cn(
