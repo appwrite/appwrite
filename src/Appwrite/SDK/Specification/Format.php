@@ -380,7 +380,7 @@ abstract class Format
                     case 'createIndex':
                         switch ($param) {
                             case 'type':
-                                return 'VectorIndexType';
+                                return 'VectorDBIndexType';
                             case 'orders':
                                 return 'OrderBy';
                         }
