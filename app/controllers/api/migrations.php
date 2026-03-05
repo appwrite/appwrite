@@ -43,6 +43,15 @@ use Utopia\Validator\WhiteList;
 
 include_once __DIR__ . '/../shared/api.php';
 
+function getDatabaseTransferResourceServices(string $databaseType)
+{
+    return match($databaseType) {
+        DATABASE_TYPE_LEGACY,
+        DATABASE_TYPE_TABLESDB => Transfer::GROUP_DATABASES_TABLES_DB,
+        DATABASE_TYPE_VECTORDB => Transfer::GROUP_DATABASES_VECTOR_DB
+    };
+}
+
 Http::post('/v1/migrations/appwrite')
     ->groups(['api', 'migrations'])
     ->desc('Create Appwrite migration')
@@ -427,8 +436,16 @@ Http::post('/v1/migrations/csv/imports')
             throw new \Exception('Unable to copy file');
         }
 
+        // getting databasetype
+        $resources = explode(':', $resourceId);
+        $databaseId = $resources[0];
+        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $databaseType = $database->getAttribute('type');
+        if (!in_array($databaseType, CSV_ALLOWED_DATABASE_TYPES)) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Database type not supported for csv');
+        }
         $fileSize = $deviceForMigrations->getFileSize($newPath);
-        $resources = Transfer::extractServices([Transfer::GROUP_DATABASES]);
+        $resources = Transfer::extractServices([getDatabaseTransferResourceServices($databaseType)]);
 
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => $migrationId,
@@ -557,13 +574,23 @@ Http::post('/v1/migrations/csv/exports')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
         }
 
+        // getting databasetype
+        $resources = explode(':', $resourceId);
+        $databaseId = $resources[0];
+        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $databaseType = $database->getAttribute('type');
+        if (!in_array($databaseType, CSV_ALLOWED_DATABASE_TYPES)) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Database type not supported for csv');
+        }
+        $resources = Transfer::extractServices([getDatabaseTransferResourceServices($databaseType)]);
+
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
             'stage' => 'init',
             'source' => Appwrite::getName(),
             'destination' => CSV::getName(),
-            'resources' => Transfer::extractServices([Transfer::GROUP_DATABASES]),
+            'resources' => $resources,
             'resourceId' => $resourceId,
             'resourceType' => Resource::TYPE_DATABASE,
             'statusCounters' => '{}',
@@ -713,12 +740,10 @@ Http::get('/v1/migrations/appwrite/report')
     ->param('projectID', '', new Text(512), "Source's Project ID")
     ->param('key', '', new Text(512), "Source's API Key")
     ->inject('response')
-    ->inject('dbForProject')
-    ->inject('project')
-    ->inject('user')
-    ->action(function (array $resources, string $endpoint, string $projectID, string $key, Response $response) {
+    ->inject('getDatabasesDB')
+    ->action(function (array $resources, string $endpoint, string $projectID, string $key, Response $response, callable $getDatabasesDB) {
 
-        $appwrite = new Appwrite($projectID, $endpoint, $key);
+        $appwrite = new Appwrite($projectID, $endpoint, $key, $getDatabasesDB);
 
         try {
             $report = $appwrite->report($resources);

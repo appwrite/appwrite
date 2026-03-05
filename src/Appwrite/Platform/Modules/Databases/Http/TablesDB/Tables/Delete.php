@@ -54,6 +54,7 @@ class Delete extends CollectionDelete
             ->param('tableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Table ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
             ->inject('authorization')

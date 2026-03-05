@@ -287,6 +287,45 @@ const METRIC_DATABASES_OPERATIONS_READS  = 'databases.operations.reads';
 const METRIC_DATABASE_ID_OPERATIONS_READS = '{databaseInternalId}.databases.operations.reads';
 const METRIC_DATABASES_OPERATIONS_WRITES  = 'databases.operations.writes';
 const METRIC_DATABASE_ID_OPERATIONS_WRITES = '{databaseInternalId}.databases.operations.writes';
+
+// documentsdb
+const METRIC_DATABASES_DOCUMENTSDB = 'documentsdb.databases';
+const METRIC_COLLECTIONS_DOCUMENTSDB = 'documentsdb.collections';
+const METRIC_DATABASES_STORAGE_DOCUMENTSDB = 'documentsdb.databases.storage';
+const METRIC_DATABASE_ID_COLLECTIONS_DOCUMENTSDB = 'documentsdb.{databaseInternalId}.collections';
+const METRIC_DATABASE_ID_STORAGE_DOCUMENTSDB = 'documentsdb.{databaseInternalId}.databases.storage';
+const METRIC_DOCUMENTS_DOCUMENTSDB = 'documentsdb.documents';
+const METRIC_DATABASE_ID_DOCUMENTS_DOCUMENTSDB = 'documentsdb.{databaseInternalId}.documents';
+const METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS_DOCUMENTSDB = 'documentsdb.{databaseInternalId}.{collectionInternalId}.documents';
+const METRIC_DATABASE_ID_COLLECTION_ID_STORAGE_DOCUMENTSDB = 'documentsdb.{databaseInternalId}.{collectionInternalId}.databases.storage';
+const METRIC_DATABASES_OPERATIONS_READS_DOCUMENTSDB  = 'documentsdb.databases.operations.reads';
+const METRIC_DATABASE_ID_OPERATIONS_READS_DOCUMENTSDB = 'documentsdb.{databaseInternalId}.databases.operations.reads';
+const METRIC_DATABASES_OPERATIONS_WRITES_DOCUMENTSDB  = 'documentsdb.databases.operations.writes';
+const METRIC_DATABASE_ID_OPERATIONS_WRITES_DOCUMENTSDB = 'documentsdb.{databaseInternalId}.databases.operations.writes';
+
+// vectordb
+const METRIC_DATABASES_VECTORDB = 'vectordb.databases';
+const METRIC_COLLECTIONS_VECTORDB = 'vectordb.collections';
+const METRIC_DATABASES_STORAGE_VECTORDB = 'vectordb.databases.storage';
+const METRIC_DATABASE_ID_COLLECTIONS_VECTORDB = 'vectordb.{databaseInternalId}.collections';
+const METRIC_DATABASE_ID_STORAGE_VECTORDB = 'vectordb.{databaseInternalId}.databases.storage';
+const METRIC_DOCUMENTS_VECTORDB = 'vectordb.documents';
+const METRIC_DATABASE_ID_DOCUMENTS_VECTORDB = 'vectordb.{databaseInternalId}.documents';
+const METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS_VECTORDB = 'vectordb.{databaseInternalId}.{collectionInternalId}.documents';
+const METRIC_DATABASE_ID_COLLECTION_ID_STORAGE_VECTORDB = 'vectordb.{databaseInternalId}.{collectionInternalId}.databases.storage';
+const METRIC_DATABASES_OPERATIONS_READS_VECTORDB  = 'vectordb.databases.operations.reads';
+const METRIC_DATABASE_ID_OPERATIONS_READS_VECTORDB = 'vectordb.{databaseInternalId}.databases.operations.reads';
+const METRIC_DATABASES_OPERATIONS_WRITES_VECTORDB  = 'vectordb.databases.operations.writes';
+const METRIC_DATABASE_ID_OPERATIONS_WRITES_VECTORDB = 'vectordb.{databaseInternalId}.databases.operations.writes';
+const METRIC_EMBEDDINGS_TEXT = 'embeddings.text';
+const METRIC_EMBEDDINGS_MODEL_TEXT = 'embeddings.text.{embeddingModel}';
+const METRIC_EMBEDDINGS_TEXT_TOTAL_ERROR = 'embeddings.text.totalErrors';
+const METRIC_EMBEDDINGS_MODEL_TEXT_TOTAL_ERROR = 'embeddings.text.{embeddingModel}.totalErrors';
+const METRIC_EMBEDDINGS_TEXT_TOTAL_DURATION = 'embeddings.text.totalDuration';
+const METRIC_EMBEDDINGS_MODEL_TEXT_TOTAL_DURATION = 'embeddings.text.{embeddingModel}.totalDuration';
+const METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS = 'embeddings.text.totalTokens';
+const METRIC_EMBEDDINGS_MODEL_TEXT_TOTAL_TOKENS = 'embeddings.text.{embeddingModel}.totalTokens';
+
 const METRIC_BUCKETS = 'buckets';
 const METRIC_FILES  = 'files';
 const METRIC_FILES_STORAGE  = 'files.storage';
@@ -373,6 +412,7 @@ const RESOURCE_TYPE_SUBSCRIBERS = 'subscribers';
 const RESOURCE_TYPE_MESSAGES = 'messages';
 const RESOURCE_TYPE_EXECUTIONS = 'executions';
 const RESOURCE_TYPE_VCS = 'vcs';
+const RESOURCE_TYPE_EMBEDDINGS_TEXT = 'embeddingsText';
 
 // Resource types for Tokens
 const TOKENS_RESOURCE_TYPE_FILES = 'files';
@@ -394,3 +434,16 @@ const CACHE_RECONNECT_RETRY_DELAY = 1000;
 
 // Project status
 const PROJECT_STATUS_ACTIVE = 'active';
+
+// Database types
+const DATABASE_TYPE_LEGACY = 'legacy';
+const DATABASE_TYPE_TABLESDB = 'tablesdb';
+const DATABASE_TYPE_DOCUMENTSDB = 'documentsdb';
+const DATABASE_TYPE_VECTORDB = 'vectordb';
+
+// CSV import/export allowed database types
+const CSV_ALLOWED_DATABASE_TYPES = [
+    DATABASE_TYPE_LEGACY,
+    DATABASE_TYPE_TABLESDB,
+    DATABASE_TYPE_VECTORDB
+];

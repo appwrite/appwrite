@@ -32,6 +32,10 @@ class Response extends SwooleResponse
     public const MODEL_BASE_LIST = 'baseList';
     public const MODEL_USAGE_DATABASES = 'usageDatabases';
     public const MODEL_USAGE_DATABASE = 'usageDatabase';
+    public const MODEL_USAGE_DOCUMENTSDBS = 'usageDocumentsDBs';
+    public const MODEL_USAGE_DOCUMENTSDB = 'usageDocumentsDB';
+    public const MODEL_USAGE_VECTORDBS = 'usageVectorDBs';
+    public const MODEL_USAGE_VECTORDB = 'usageVectorDB';
     public const MODEL_USAGE_TABLE = 'usageTable';
     public const MODEL_USAGE_COLLECTION = 'usageCollection';
     public const MODEL_USAGE_USERS = 'usageUsers';
@@ -48,6 +52,10 @@ class Response extends SwooleResponse
     public const MODEL_DATABASE_LIST = 'databaseList';
     public const MODEL_COLLECTION = 'collection';
     public const MODEL_COLLECTION_LIST = 'collectionList';
+    public const MODEL_VECTORDB_COLLECTION = 'vectordbCollection';
+    public const MODEL_VECTORDB_COLLECTION_LIST = 'vectordbCollectionList';
+    public const MODEL_EMBEDDING = 'embedding';
+    public const MODEL_EMBEDDING_LIST = 'embeddingList';
     public const MODEL_TABLE = 'table';
     public const MODEL_TABLE_LIST = 'tableList';
     public const MODEL_INDEX = 'index';
@@ -79,6 +87,8 @@ class Response extends SwooleResponse
     public const MODEL_ATTRIBUTE_TEXT = 'attributeText';
     public const MODEL_ATTRIBUTE_MEDIUMTEXT = 'attributeMediumtext';
     public const MODEL_ATTRIBUTE_LONGTEXT = 'attributeLongtext';
+    public const MODEL_ATTRIBUTE_OBJECT = 'attributeObject';
+    public const MODEL_ATTRIBUTE_VECTOR = 'attributeVector';
 
     // Database Columns
     public const MODEL_COLUMN = 'column';

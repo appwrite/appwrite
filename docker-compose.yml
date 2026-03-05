@@ -104,6 +104,7 @@ services:
       - ${_APP_DB_HOST:-mongodb}
       - redis
       - coredns
+      - ollama
       # - clamav
     entrypoint:
       - php
@@ -152,7 +153,12 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_DB_ADAPTER
+      - _APP_DB_ADAPTER_VECTORDB
+      - _APP_DB_HOST_VECTORDB
+      - _APP_DB_PORT_VECTORDB
+      - _APP_DB_SCHEMA_VECTORDB
+      - _APP_DB_USER_VECTORDB
+      - _APP_DB_PASS_VECTORDB
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
       - _APP_SMTP_SECURE
@@ -289,6 +295,7 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
       - redis
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -305,7 +312,12 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_DB_ADAPTER
+      - _APP_DB_ADAPTER_VECTORDB
+      - _APP_DB_HOST_VECTORDB
+      - _APP_DB_PORT_VECTORDB
+      - _APP_DB_SCHEMA_VECTORDB
+      - _APP_DB_USER_VECTORDB
+      - _APP_DB_PASS_VECTORDB
       - _APP_USAGE_STATS
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_CONFIG_REALTIME
@@ -325,6 +337,7 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -359,6 +372,7 @@ services:
       - ${_APP_DB_HOST:-mongodb}
       - request-catcher-sms
       - request-catcher-webhook
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -390,6 +404,7 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
+      - ollama
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -399,6 +414,7 @@ services:
       - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -456,9 +472,11 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -474,7 +492,12 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_DB_ADAPTER
+      - _APP_DB_ADAPTER_VECTORDB
+      - _APP_DB_HOST_VECTORDB
+      - _APP_DB_PORT_VECTORDB
+      - _APP_DB_SCHEMA_VECTORDB
+      - _APP_DB_USER_VECTORDB
+      - _APP_DB_PASS_VECTORDB
       - _APP_LOGGING_CONFIG
       - _APP_WORKERS_NUM
       - _APP_QUEUE_NAME
@@ -496,6 +519,7 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -629,6 +653,7 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
+      - ollama
     volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -851,6 +876,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
+      
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
     environment:
@@ -1051,6 +1077,7 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -1085,6 +1112,7 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
       - redis
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -1116,6 +1144,7 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
       - redis
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -1146,6 +1175,7 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
       - redis
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -1238,7 +1268,6 @@ services:
       start_period: 5s
 
   mariadb:
-    profiles: ["mariadb"]
     image: mariadb:10.11 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
     <<: *x-logging
@@ -1257,7 +1286,6 @@ services:
     command: "mysqld --innodb-flush-method=fsync"
 
   mongodb:
-    profiles: ["mongodb"]
     image: mongo:8.2.5
     container_name: appwrite-mongodb
     <<: *x-logging
@@ -1294,7 +1322,6 @@ services:
       start_period: 30s
 
   appwrite-mongo-express:
-    profiles: ["mongodb"]
     image: mongo-express
     container_name: appwrite-mongo-express
     networks:
@@ -1309,7 +1336,6 @@ services:
       - mongodb
 
   postgresql:
-    profiles: ["postgresql"]
     build:
       context: ./tests/resources/postgresql
       args:
@@ -1327,6 +1353,23 @@ services:
       - POSTGRES_USER=${_APP_DB_USER}
       - POSTGRES_PASSWORD=${_APP_DB_PASS}
     command: "postgres"
+
+  ollama:
+    build: 
+      context: https://github.com/appwrite/docker-ollama.git#feat-dockerfile
+      args:
+        MODELS: ${_APP_EMBEDDING_MODELS:-embeddinggemma}
+        # duration to keep model in memory
+        OLLAMA_KEEP_ALIVE: 24h
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    restart: unless-stopped
+    # persistent for caching models across restarts and preloading
+    volumes:
+      - appwrite-models:/root/.ollama
+    networks:
+      - appwrite
 
   redis:
     image: redis:7.4.7-alpine
@@ -1567,3 +1610,4 @@ volumes:
   appwrite-sites:
   appwrite-builds:
   appwrite-config:
+  appwrite-models:

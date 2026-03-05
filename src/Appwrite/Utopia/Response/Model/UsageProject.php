@@ -18,7 +18,13 @@ class UsageProject extends Model
             ])
             ->addRule('documentsTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Total aggregated  number of documents.',
+                'description' => 'Total aggregated  number of documents in legacy/tablesdb.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('documentsdbDocumentsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated  number of documents in documentsdb.',
                 'default' => 0,
                 'example' => 0,
             ])
@@ -34,9 +40,21 @@ class UsageProject extends Model
                 'default' => 0,
                 'example' => 0,
             ])
+            ->addRule('documentsdbTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of documentsdb.',
+                'default' => 0,
+                'example' => 0,
+            ])
             ->addRule('databasesStorageTotal', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total aggregated sum of databases storage size (in bytes).',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('documentsdbDatabasesStorageTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated sum of documentsdb databases storage size (in bytes).',
                 'default' => 0,
                 'example' => 0,
             ])
@@ -97,6 +115,18 @@ class UsageProject extends Model
             ->addRule('databasesWritesTotal', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total number of databases writes.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('documentsdbDatabasesReadsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total number of documentsdb databases reads.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('documentsdbDatabasesWritesTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total number of documentsdb databases writes.',
                 'default' => 0,
                 'example' => 0,
             ])
@@ -203,6 +233,27 @@ class UsageProject extends Model
                 'example' => [],
                 'array' => true
             ])
+            ->addRule('documentsdbDatabasesReads', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'An array of aggregated number of documentsdb database reads.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('documentsdbDatabasesWrites', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'An array of aggregated number of documentsdb database writes.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('documentsdbDatabasesStorage', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'An array of aggregated sum of documentsdb databases storage size (in bytes) per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
             ->addRule('imageTransformations', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'An array of aggregated number of image transformations.',
@@ -215,6 +266,133 @@ class UsageProject extends Model
                 'description' => 'Total aggregated number of image transformations.',
                 'default' => 0,
                 'example' => 0,
+            ])
+            // VectorDB aggregates
+            ->addRule('vectordbDatabasesTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of VectorDB databases.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('vectordbCollectionsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of VectorDB collections.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('vectordbDocumentsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of VectorDB documents.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('vectordbDatabasesStorageTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated VectorDB storage (bytes).',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('vectordbDatabasesReadsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of VectorDB reads.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('vectordbDatabasesWritesTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of VectorDB writes.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('vectordbDatabases', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated VectorDB databases per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('vectordbCollections', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated VectorDB collections per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('vectordbDocuments', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated VectorDB documents per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('vectordbDatabasesStorage', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated VectorDB storage per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('vectordbDatabasesReads', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated VectorDB reads per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('vectordbDatabasesWrites', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated VectorDB writes per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('embeddingsText', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated number of text embedding calls per period.',
+                'default' => [],
+                'example' => []
+            ])
+            ->addRule('embeddingsTextTokens', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated number of tokens processed by text embeddings per period.',
+                'default' => [],
+                'example' => []
+            ])
+            ->addRule('embeddingsTextDuration', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated duration spent generating text embeddings per period.',
+                'default' => [],
+                'example' => []
+            ])
+            ->addRule('embeddingsTextErrors', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated number of errors while generating text embeddings per period.',
+                'default' => [],
+                'example' => []
+            ])
+            ->addRule('embeddingsTextTotal', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Total aggregated number of text embedding calls.',
+                'default' => 0,
+                'example' => 0
+            ])
+            ->addRule('embeddingsTextTokensTotal', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Total aggregated number of tokens processed by text.',
+                'default' => 0,
+                'example' => 0
+            ])
+            ->addRule('embeddingsTextDurationTotal', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Total aggregated duration spent generating text embeddings.',
+                'default' => 0,
+                'example' => 0
+            ])
+            ->addRule('embeddingsTextErrorsTotal', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Total aggregated number of errors while generating text embeddings.',
+                'default' => 0,
+                'example' => 0
             ])
         ;
     }

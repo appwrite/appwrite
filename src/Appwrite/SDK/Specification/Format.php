@@ -348,6 +348,44 @@ abstract class Format
                         }
                 }
                 break;
+            case 'documentsDB':
+                switch ($method) {
+                    case 'getUsage':
+                    case 'listUsage':
+                    case 'getCollectionUsage':
+                        switch ($param) {
+                            case 'range':
+                                return 'UsageRange';
+                        }
+                        break;
+                    case 'createIndex':
+                        switch ($param) {
+                            case 'type':
+                                return 'IndexType';
+                            case 'orders':
+                                return 'OrderBy';
+                        }
+                }
+                break;
+            case 'vectorDB':
+                switch ($method) {
+                    case 'getUsage':
+                    case 'listUsage':
+                    case 'getCollectionUsage':
+                        switch ($param) {
+                            case 'range':
+                                return 'UsageRange';
+                        }
+                        break;
+                    case 'createIndex':
+                        switch ($param) {
+                            case 'type':
+                                return 'VectorDBIndexType';
+                            case 'orders':
+                                return 'OrderBy';
+                        }
+                }
+                break;
             case 'functions':
                 switch ($method) {
                     case 'getUsage':
@@ -630,6 +668,8 @@ abstract class Format
                 }
                 break;
             case 'databases':
+            case 'documentsDB':
+            case 'vectorDB':
                 switch ($method) {
                     case 'getUsage':
                     case 'listUsage':
