@@ -517,178 +517,26 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 $gitBranch = $language['gitBranch'];
 
                 $repoBranch = $language['repoBranch'] ?? 'main';
-                if (! $git || empty($gitUrl)) {
-                    goto copyExamples;
-                }
-
-                // Generate commit message: use provided message, AI changelog, or fallback
-                if (! empty($message)) {
-                    $commitMessage = $message;
-                } elseif (! empty($aiChangelog) && $aiChangelog !== '* No user-facing SDK changes.') {
-                    $commitMessage = "feat: update {$language['name']} SDK to {$language['version']}\n\n{$aiChangelog}";
-                } else {
-                    $commitMessage = "chore: update {$language['name']} SDK to {$language['version']}";
-                }
-                Console::info("Preparing {$language['name']} SDK repository...");
-
-                try {
-                    // Init fresh repo
-                    \exec('rm -rf ' . \escapeshellarg($target));
-                    \mkdir($target, 0755, true);
-
-                    $gitClient = new Git();
-                    $repo = $gitClient->init($target);
-
-                    $repo->execute('config', 'core.ignorecase', 'false');
-                    $repo->execute('config', 'pull.rebase', 'false');
-                    $repo->execute('config', 'advice.defaultBranchName', 'false');
-                    $repo->addRemote('origin', $gitUrl);
-
-                    // Fetch and checkout base branch (or create if new repo)
-                    try {
-                        $repo->execute('fetch', 'origin', '--quiet', '--no-tags', '--depth', '1', $repoBranch);
-                        try {
-                            $repo->execute('checkout', '-f', $repoBranch);
-                        } catch (\Throwable) {
-                            $repo->execute('checkout', '-b', $repoBranch);
-                        }
-                    } catch (\Throwable) {
-                        $repo->execute('checkout', '-b', $repoBranch);
-                    }
-
-                    try {
-                        $repo->execute('pull', 'origin', $repoBranch, '--quiet', '--no-tags');
-                    } catch (\Throwable) {
-                    }
-
-                    // Checkout dev branch (or create if it doesn't exist)
-                    try {
-                        $repo->execute('checkout', '-f', $gitBranch);
-                    } catch (\Throwable) {
-                        $repo->execute('checkout', '-b', $gitBranch);
-                    }
-
-                    // Fetch dev branch, or push to create it on remote
-                    try {
-                        $repo->execute('fetch', 'origin', $gitBranch, '--quiet', '--no-tags', '--depth', '1');
-                    } catch (\Throwable) {
-                        try {
-                            $repo->execute('push', '-u', 'origin', $gitBranch, '--quiet');
-                        } catch (\Throwable) {
-                        }
-                    }
-
-                    // Sync with remote dev branch
-                    try {
-                        $repo->execute('reset', '--hard', "origin/{$gitBranch}");
-                    } catch (\Throwable) {
-                    }
-
-                    // Backup .github before cleaning working tree
-                    $githubDir = $target . '/.github';
-                    $githubBackup = \sys_get_temp_dir() . '/.github-backup-' . \getmypid();
-                    $hasGithubDir = \is_dir($githubDir);
-                    if ($hasGithubDir) {
-                        \exec('cp -r ' . \escapeshellarg($githubDir) . ' ' . \escapeshellarg($githubBackup));
-                    }
-
-                    // Clean working tree
-                    try {
-                        $repo->execute('rm', '-rf', '--cached', '.');
-                    } catch (\Throwable) {
-                    }
-                    try {
-                        $repo->execute('clean', '-fdx', '-e', '.git', '-e', '.github');
-                    } catch (\Throwable) {
-                    }
-
-                    // Copy generated SDK and restore .github
-                    \exec('cp -r ' . \escapeshellarg($result . '/.') . ' ' . \escapeshellarg($target . '/'));
-
-                    if ($hasGithubDir && \is_dir($githubBackup)) {
-                        \exec('cp -rn ' . \escapeshellarg($githubBackup . '/.github') . ' ' . \escapeshellarg($target . '/') . ' 2>/dev/null');
-                        \exec('rm -rf ' . \escapeshellarg($githubBackup));
-                    }
-
-                    // Stage, commit, push
-                    $repo->addAllChanges();
-                    $repo->commit($commitMessage);
-                    $repo->execute('push', '-u', 'origin', $gitBranch, '--quiet');
-                } catch (\Throwable $e) {
-                    Console::warning("Git operations failed for {$language['name']} SDK: " . $e->getMessage());
-                    goto cleanupTarget;
-                }
-
-                Console::success("Pushed {$language['name']} SDK to {$gitUrl}");
-
-                // Create or update pull request
-                $prTitle = "feat: {$language['name']} SDK update for version {$language['version']}";
-                $prBody = "This PR contains updates to the {$language['name']} SDK for version {$language['version']}.";
-                if (!empty($aiChangelog) && $aiChangelog !== '* No user-facing SDK changes.') {
-                    $prBody .= "\n\n## Changes\n\n{$aiChangelog}";
-                }
-                $repoName = $language['gitUserName'] . '/' . $language['gitRepoName'];
-
-                Console::info("Creating pull request for {$language['name']} SDK...");
-
-                $prCommand = 'cd ' . $target . ' && \
-                    gh pr create \
-                    --repo ' . \escapeshellarg($repoName) . ' \
-                    --title ' . \escapeshellarg($prTitle) . ' \
-                    --body ' . \escapeshellarg($prBody) . ' \
-                    --base ' . \escapeshellarg($repoBranch) . ' \
-                    --head ' . \escapeshellarg($gitBranch) . ' \
-                    2>&1';
-
-                $prOutput = [];
-                $prReturnCode = 0;
-                \exec($prCommand, $prOutput, $prReturnCode);
-
-                if ($prReturnCode === 0) {
-                    Console::success("Successfully created pull request for {$language['name']} SDK");
-                    foreach ($prOutput as $line) {
-                        if (\str_starts_with(trim($line), 'https://')) {
-                            $prUrls[$language['name']] = trim($line);
-                            break;
-                        }
-                    }
-                } else {
-                    $errorMessage = implode("\n", $prOutput);
-                    if (strpos($errorMessage, 'already exists') === false) {
-                        Console::error("Failed to create pull request for {$language['name']} SDK: " . $errorMessage);
+                if ($git && !empty($gitUrl)) {
+                    // Generate commit message: use provided message, AI changelog, or fallback
+                    if (! empty($message)) {
+                        $commitMessage = $message;
+                    } elseif (! empty($aiChangelog) && $aiChangelog !== '* No user-facing SDK changes.') {
+                        $commitMessage = "feat: update {$language['name']} SDK to {$language['version']}\n\n{$aiChangelog}";
                     } else {
-                        $this->updateExistingPr($target, $repoName, $gitBranch, $prTitle, $prBody, $language['name'], $prUrls);
-                    }
-                }
-
-                cleanupTarget:
-                \exec('chmod -R u+w ' . $target . ' && rm -rf ' . $target);
-                Console::success("Remove temp directory '{$target}' for {$language['name']} SDK");
-
-                copyExamples:
-
-                $docDirectories = $language['docDirectories'] ?? [''];
-
-                if ($version === 'latest') {
-                    continue;
-                }
-
-                foreach ($docDirectories as $languageTitle => $path) {
-                    $languagePath = strtolower($languageTitle !== 0 ? '/' . $languageTitle : '');
-                    $examplesSource = $result . '/docs/examples' . $languagePath;
-
-                    if (! \is_dir($examplesSource)) {
-                        Console::warning("No code examples found for {$language['name']} SDK at: {$examplesSource}. Skipping copy.");
-
-                        continue;
+                        $commitMessage = "chore: update {$language['name']} SDK to {$language['version']}";
                     }
 
-                    \exec(
-                        'mkdir -p ' . $resultExamples . $languagePath . ' && \
-                        cp -r ' . $examplesSource . ' ' . $resultExamples
-                    );
-                    Console::success("Copied code examples for {$language['name']} SDK to: {$resultExamples}");
+                    $pushSuccess = $this->pushToGit($language, $target, $result, $gitUrl, $gitBranch, $repoBranch, $commitMessage);
+
+                    if ($pushSuccess) {
+                        $this->createPullRequest($language, $target, $gitBranch, $repoBranch, $aiChangelog, $prUrls);
+                    }
+
+                    $this->cleanupTarget($target, $language['name']);
                 }
+
+                $this->copyExamples($language, $version, $result, $resultExamples);
             }
         }
 
@@ -699,6 +547,176 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 Console::log("{$sdkName}: {$url}");
             }
             Console::log('');
+        }
+    }
+
+    private function pushToGit(array $language, string $target, string $result, string $gitUrl, string $gitBranch, string $repoBranch, string $commitMessage): bool
+    {
+        Console::info("Preparing {$language['name']} SDK repository...");
+
+        try {
+            // Init fresh repo
+            \exec('rm -rf ' . \escapeshellarg($target));
+            \mkdir($target, 0755, true);
+
+            $gitClient = new Git();
+            $repo = $gitClient->init($target);
+
+            $repo->execute('config', 'core.ignorecase', 'false');
+            $repo->execute('config', 'pull.rebase', 'false');
+            $repo->execute('config', 'advice.defaultBranchName', 'false');
+            $repo->addRemote('origin', $gitUrl);
+
+            // Fetch and checkout base branch (or create if new repo)
+            try {
+                $repo->execute('fetch', 'origin', '--quiet', '--no-tags', '--depth', '1', $repoBranch);
+                try {
+                    $repo->execute('checkout', '-f', $repoBranch);
+                } catch (\Throwable) {
+                    $repo->execute('checkout', '-b', $repoBranch);
+                }
+            } catch (\Throwable) {
+                $repo->execute('checkout', '-b', $repoBranch);
+            }
+
+            try {
+                $repo->execute('pull', 'origin', $repoBranch, '--quiet', '--no-tags');
+            } catch (\Throwable) {
+            }
+
+            // Checkout dev branch (or create if it doesn't exist)
+            try {
+                $repo->execute('checkout', '-f', $gitBranch);
+            } catch (\Throwable) {
+                $repo->execute('checkout', '-b', $gitBranch);
+            }
+
+            // Fetch dev branch, or push to create it on remote
+            try {
+                $repo->execute('fetch', 'origin', $gitBranch, '--quiet', '--no-tags', '--depth', '1');
+            } catch (\Throwable) {
+                try {
+                    $repo->execute('push', '-u', 'origin', $gitBranch, '--quiet');
+                } catch (\Throwable) {
+                }
+            }
+
+            // Sync with remote dev branch
+            try {
+                $repo->execute('reset', '--hard', "origin/{$gitBranch}");
+            } catch (\Throwable) {
+            }
+
+            // Backup .github before cleaning working tree
+            $githubDir = $target . '/.github';
+            $githubBackup = \sys_get_temp_dir() . '/.github-backup-' . \getmypid();
+            $hasGithubDir = \is_dir($githubDir);
+            if ($hasGithubDir) {
+                \exec('cp -r ' . \escapeshellarg($githubDir) . ' ' . \escapeshellarg($githubBackup));
+            }
+
+            // Clean working tree
+            try {
+                $repo->execute('rm', '-rf', '--cached', '.');
+            } catch (\Throwable) {
+            }
+            try {
+                $repo->execute('clean', '-fdx', '-e', '.git', '-e', '.github');
+            } catch (\Throwable) {
+            }
+
+            // Copy generated SDK and restore .github
+            \exec('cp -r ' . \escapeshellarg($result . '/.') . ' ' . \escapeshellarg($target . '/'));
+
+            if ($hasGithubDir && \is_dir($githubBackup)) {
+                \exec('cp -rn ' . \escapeshellarg($githubBackup . '/.github') . ' ' . \escapeshellarg($target . '/') . ' 2>/dev/null');
+                \exec('rm -rf ' . \escapeshellarg($githubBackup));
+            }
+
+            // Stage, commit, push
+            $repo->addAllChanges();
+            $repo->commit($commitMessage);
+            $repo->execute('push', '-u', 'origin', $gitBranch, '--quiet');
+        } catch (\Throwable $e) {
+            Console::warning("Git operations failed for {$language['name']} SDK: " . $e->getMessage());
+            return false;
+        }
+
+        Console::success("Pushed {$language['name']} SDK to {$gitUrl}");
+        return true;
+    }
+
+    private function createPullRequest(array $language, string $target, string $gitBranch, string $repoBranch, string $aiChangelog, array &$prUrls): void
+    {
+        $prTitle = "feat: {$language['name']} SDK update for version {$language['version']}";
+        $prBody = "This PR contains updates to the {$language['name']} SDK for version {$language['version']}.";
+        if (!empty($aiChangelog) && $aiChangelog !== '* No user-facing SDK changes.') {
+            $prBody .= "\n\n## Changes\n\n{$aiChangelog}";
+        }
+        $repoName = $language['gitUserName'] . '/' . $language['gitRepoName'];
+
+        Console::info("Creating pull request for {$language['name']} SDK...");
+
+        $prCommand = 'cd ' . $target . ' && \
+            gh pr create \
+            --repo ' . \escapeshellarg($repoName) . ' \
+            --title ' . \escapeshellarg($prTitle) . ' \
+            --body ' . \escapeshellarg($prBody) . ' \
+            --base ' . \escapeshellarg($repoBranch) . ' \
+            --head ' . \escapeshellarg($gitBranch) . ' \
+            2>&1';
+
+        $prOutput = [];
+        $prReturnCode = 0;
+        \exec($prCommand, $prOutput, $prReturnCode);
+
+        if ($prReturnCode === 0) {
+            Console::success("Successfully created pull request for {$language['name']} SDK");
+            foreach ($prOutput as $line) {
+                if (\str_starts_with(trim($line), 'https://')) {
+                    $prUrls[$language['name']] = trim($line);
+                    break;
+                }
+            }
+        } else {
+            $errorMessage = implode("\n", $prOutput);
+            if (strpos($errorMessage, 'already exists') === false) {
+                Console::error("Failed to create pull request for {$language['name']} SDK: " . $errorMessage);
+            } else {
+                $this->updateExistingPr($target, $repoName, $gitBranch, $prTitle, $prBody, $language['name'], $prUrls);
+            }
+        }
+    }
+
+    private function cleanupTarget(string $target, string $languageName): void
+    {
+        \exec('chmod -R u+w ' . $target . ' && rm -rf ' . $target);
+        Console::success("Remove temp directory '{$target}' for {$languageName} SDK");
+    }
+
+    private function copyExamples(array $language, string $version, string $result, string $resultExamples): void
+    {
+        $docDirectories = $language['docDirectories'] ?? [''];
+
+        if ($version === 'latest') {
+            return;
+        }
+
+        foreach ($docDirectories as $languageTitle => $path) {
+            $languagePath = strtolower($languageTitle !== 0 ? '/' . $languageTitle : '');
+            $examplesSource = $result . '/docs/examples' . $languagePath;
+
+            if (! \is_dir($examplesSource)) {
+                Console::warning("No code examples found for {$language['name']} SDK at: {$examplesSource}. Skipping copy.");
+
+                continue;
+            }
+
+            \exec(
+                'mkdir -p ' . $resultExamples . $languagePath . ' && \
+                cp -r ' . $examplesSource . ' ' . $resultExamples
+            );
+            Console::success("Copied code examples for {$language['name']} SDK to: {$resultExamples}");
         }
     }
 
