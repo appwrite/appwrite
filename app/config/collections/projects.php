@@ -2191,13 +2191,6 @@ return [
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => ID::custom('_key_function_internal_id'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['resourceInternalId'],
-                'lengths' => [],
-                'orders' => [],
-            ],
-            [
                 '$id' => ID::custom('_key_resourceType'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['resourceType'],
