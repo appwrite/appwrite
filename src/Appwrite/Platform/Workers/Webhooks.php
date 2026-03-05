@@ -12,11 +12,13 @@ use Utopia\Database\Query;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Span\Span;
 use Utopia\System\System;
 
 class Webhooks extends Action
 {
     private array $errors = [];
+    private int $delivered = 0;
     private const MAX_FILE_SIZE = 5242880; // 5 MB
 
     public static function getName(): string
@@ -55,28 +57,45 @@ class Webhooks extends Action
     public function action(Message $message, Document $project, Database $dbForPlatform, Mail $queueForMails, StatsUsage $queueForStatsUsage, Log $log, array $plan): void
     {
         $this->errors = [];
+        $this->delivered = 0;
         $payload = $message->getPayload() ?? [];
 
-
+        Span::init('queue.webhooks');
 
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }
 
         $events = $payload['events'];
-        $webhookPayload = json_encode($payload['payload']);
-        $user = new Document($payload['user'] ?? []);
+        Span::add('webhook.events_count', \count($events));
 
-        $log->addTag('projectId', $project->getId());
+        try {
+            $webhookPayload = json_encode($payload['payload']);
+            $user = new Document($payload['user'] ?? []);
 
-        foreach ($project->getAttribute('webhooks', []) as $webhook) {
-            if (array_intersect($webhook->getAttribute('events', []), $events)) {
-                $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $queueForMails, $queueForStatsUsage, $plan);
+            $log->addTag('projectId', $project->getId());
+
+            $webhooks = $project->getAttribute('webhooks', []);
+            $matched = 0;
+
+            foreach ($webhooks as $webhook) {
+                if (array_intersect($webhook->getAttribute('events', []), $events)) {
+                    $matched++;
+                    $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $queueForMails, $queueForStatsUsage, $plan);
+                }
             }
-        }
 
-        if (!empty($this->errors)) {
-            throw new Exception(\implode(" / \n\n", $this->errors));
+            Span::add('webhook.matched_count', $matched);
+            Span::add('webhook.delivered_count', $this->delivered);
+            Span::add('webhook.failed_count', \count($this->errors));
+        } catch (\Throwable $e) {
+            Span::error($e);
+            throw $e;
+        } finally {
+            // Webhook delivery failures are operational (endpoint down, 502, timeout), not Appwrite bugs.
+            // They are already handled: logged in webhook, attempts incremented, disabled after max, email sent.
+            // We do not throw to avoid noisy Sentry reports that cannot be merged (each URL creates unique group).
+            Span::current()?->finish();
         }
     }
 
@@ -184,6 +203,7 @@ class Webhooks extends Action
 
 
         } else {
+            $this->delivered++;
             $webhook->setAttribute('attempts', 0); // Reset attempts on success
             $dbForPlatform->updateDocument('webhooks', $webhook->getId(), $webhook);
             $dbForPlatform->purgeCachedDocument('projects', $project->getId());
