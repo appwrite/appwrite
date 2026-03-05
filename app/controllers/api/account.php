@@ -120,6 +120,7 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, arr
         }
 
         $queueForMails
+
             ->setSmtpHost($smtp['host'] ?? '')
             ->setSmtpPort($smtp['port'] ?? '')
             ->setSmtpUsername($smtp['username'] ?? '')
@@ -188,8 +189,11 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, arr
     }
 
     $email = $user->getAttribute('email');
+    $subject = $locale->getText($subject, $subject);
+    $preview = $locale->getText($preview, $preview);
 
     $queueForMails
+
         ->setSubject($subject)
         ->setPreview($preview)
         ->setBody($body)
@@ -209,7 +213,7 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, arr
 $createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, Authorization $authorization) {
 
     /** @var Appwrite\Utopia\Database\Documents\User $userFromRequest */
-    $userFromRequest = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
+    $userFromRequest = $authorization->skip(fn() => $dbForProject->getDocument('users', $userId));
 
     if ($userFromRequest->isEmpty()) {
         throw new Exception(Exception::USER_INVALID_TOKEN);
@@ -274,7 +278,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             Permission::delete(Role::user($user->getId())),
         ]));
 
-    $authorization->skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()));
+    $authorization->skip(fn() => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()));
     $dbForProject->purgeCachedDocument('users', $user->getId());
 
     // Magic URL + Email OTP
@@ -368,7 +372,7 @@ App::post('/v1/account')
     ->label('abuse-limit', 10)
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new EmailValidator(), 'User email.')
-    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
+    ->param('password', '', fn($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('request')
     ->inject('response')
@@ -469,9 +473,9 @@ App::post('/v1/account')
             ]);
 
             $user->removeAttribute('$sequence');
-            $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            $user = $authorization->skip(fn() => $dbForProject->createDocument('users', $user));
             try {
-                $target = $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([
+                $target = $authorization->skip(fn() => $dbForProject->createDocument('targets', new Document([
                     '$permissions' => [
                         Permission::read(Role::user($user->getId())),
                         Permission::update(Role::user($user->getId())),
@@ -1166,7 +1170,7 @@ App::post('/v1/account/sessions/anonymous')
             'accessedAt' => DateTime::now(),
         ]);
         $user->removeAttribute('$sequence');
-        $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+        $user = $authorization->skip(fn() => $dbForProject->createDocument('users', $user));
 
         // Create session token
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
@@ -1274,7 +1278,7 @@ App::post('/v1/account/sessions/token')
     ->inject('store')
     ->inject('proofForToken')
     ->inject('proofForCode')
-->inject('authorization')
+    ->inject('authorization')
     ->action($createSession);
 
 App::get('/v1/account/sessions/oauth2/:provider')
@@ -1300,9 +1304,9 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ))
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (!$node['mock'])))) . '.')
-    ->param('success', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
-    ->param('failure', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn($node) => (!$node['mock'])))) . '.')
+    ->param('success', '', fn($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
+    ->param('failure', '', fn($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
     ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->inject('request')
     ->inject('response')
@@ -1728,7 +1732,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     ]);
 
                     $user->removeAttribute('$sequence');
-                    $userDoc = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+                    $userDoc = $authorization->skip(fn() => $dbForProject->createDocument('users', $user));
                     $dbForProject->createDocument('targets', new Document([
                         '$permissions' => [
                             Permission::read(Role::user($user->getId())),
@@ -1874,7 +1878,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'providerUid' => $oauth2ID,
                 'providerAccessToken' => $accessToken,
                 'providerRefreshToken' => $refreshToken,
-                'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry),
+                'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
                 'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
@@ -1967,9 +1971,9 @@ App::get('/v1/account/tokens/oauth2/:provider')
     ))
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (!$node['mock'])))) . '.')
-    ->param('success', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
-    ->param('failure', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn($node) => (!$node['mock'])))) . '.')
+    ->param('success', '', fn($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
+    ->param('failure', '', fn($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
     ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->inject('request')
     ->inject('response')
@@ -2067,7 +2071,7 @@ App::post('/v1/account/tokens/magic-url')
     ->label('abuse-key', ['url:{url},email:{param-email}', 'url:{url},ip:{ip}'])
     ->param('userId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars. If the email address has never been used, a new account is created using the provided userId. Otherwise, if the email address is already attached to an account, the user ID is ignored.')
     ->param('email', '', new EmailValidator(), 'User email.')
-    ->param('url', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
+    ->param('url', '', fn($redirectValidator) => $redirectValidator, 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
     ->param('phrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be send with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of your authentication flow.', true)
     ->inject('request')
     ->inject('response')
@@ -2153,7 +2157,7 @@ App::post('/v1/account/tokens/magic-url')
             ]);
 
             $user->removeAttribute('$sequence');
-            $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            $user = $authorization->skip(fn() => $dbForProject->createDocument('users', $user));
         }
 
         $proofForToken = new ProofsToken(TOKEN_LENGTH_MAGIC_URL);
@@ -2429,9 +2433,9 @@ App::post('/v1/account/tokens/email')
             ]);
 
             $user->removeAttribute('$sequence');
-            $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            $user = $authorization->skip(fn() => $dbForProject->createDocument('users', $user));
             try {
-                $target = $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([
+                $target = $authorization->skip(fn() => $dbForProject->createDocument('targets', new Document([
                     '$permissions' => [
                         Permission::read(Role::user($user->getId())),
                         Permission::update(Role::user($user->getId())),
@@ -2810,9 +2814,9 @@ App::post('/v1/account/tokens/phone')
             ]);
 
             $user->removeAttribute('$sequence');
-            $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
+            $user = $authorization->skip(fn() => $dbForProject->createDocument('users', $user));
             try {
-                $target = $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([
+                $target = $authorization->skip(fn() => $dbForProject->createDocument('targets', new Document([
                     '$permissions' => [
                         Permission::read(Role::user($user->getId())),
                         Permission::update(Role::user($user->getId())),
@@ -3144,7 +3148,7 @@ App::patch('/v1/account/password')
         contentType: ContentType::JSON
     ))
     ->label('abuse-limit', 10)
-    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
+    ->param('password', '', fn($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
     ->param('oldPassword', '', new Password(), 'Current user password. Must be at least 8 chars.', true)
     ->inject('response')
     ->inject('user')
@@ -3245,7 +3249,7 @@ App::patch('/v1/account/email')
     ->inject('project')
     ->inject('hooks')
     ->inject('proofForPassword')
- ->inject('authorization')
+    ->inject('authorization')
     ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, User $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, ProofsPassword $proofForPassword, Authorization $authorization) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
@@ -3298,7 +3302,7 @@ App::patch('/v1/account/email')
                 ->setAttribute('passwordUpdate', DateTime::now());
         }
 
-        $target = $authorization->skip(fn () => $dbForProject->findOne('targets', [
+        $target = $authorization->skip(fn() => $dbForProject->findOne('targets', [
             Query::equal('identifier', [$email]),
         ]));
 
@@ -3314,7 +3318,7 @@ App::patch('/v1/account/email')
             $oldTarget = $user->find('identifier', $oldEmail, 'targets');
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
-                $authorization->skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email)));
+                $authorization->skip(fn() => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email)));
             }
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate) {
@@ -3355,8 +3359,8 @@ App::patch('/v1/account/phone')
     ->inject('queueForEvents')
     ->inject('project')
     ->inject('hooks')
-                ->inject('proofForPassword')
-->inject('authorization')
+    ->inject('proofForPassword')
+    ->inject('authorization')
     ->action(function (string $phone, string $password, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, ProofsPassword $proofForPassword, Authorization $authorization) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
@@ -3372,7 +3376,7 @@ App::patch('/v1/account/phone')
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
 
-        $target = $authorization->skip(fn () => $dbForProject->findOne('targets', [
+        $target = $authorization->skip(fn() => $dbForProject->findOne('targets', [
             Query::equal('identifier', [$phone]),
         ]));
 
@@ -3403,7 +3407,7 @@ App::patch('/v1/account/phone')
             $oldTarget = $user->find('identifier', $oldPhone, 'targets');
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
-                $authorization->skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone)));
+                $authorization->skip(fn() => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone)));
             }
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {
@@ -3528,7 +3532,7 @@ App::post('/v1/account/recovery')
     ->label('abuse-limit', 10)
     ->label('abuse-key', ['url:{url},email:{param-email}', 'url:{url},ip:{ip}'])
     ->param('email', '', new EmailValidator(), 'User email.')
-    ->param('url', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['redirectValidator'])
+    ->param('url', '', fn($redirectValidator) => $redirectValidator, 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['redirectValidator'])
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -3691,7 +3695,7 @@ App::post('/v1/account/recovery')
             ->setParam('userId', $profile->getId())
             ->setParam('tokenId', $recovery->getId())
             ->setUser($profile)
-            ->setPayload(Response::showSensitive(fn () => $response->output($recovery, Response::MODEL_TOKEN)), sensitive: ['secret']);
+            ->setPayload(Response::showSensitive(fn() => $response->output($recovery, Response::MODEL_TOKEN)), sensitive: ['secret']);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -3724,7 +3728,7 @@ App::put('/v1/account/recovery')
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
     ->param('userId', '', new UID(), 'User ID.')
     ->param('secret', '', new Text(256), 'Valid reset token.')
-    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
+    ->param('password', '', fn($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
@@ -3733,7 +3737,7 @@ App::put('/v1/account/recovery')
     ->inject('hooks')
     ->inject('proofForPassword')
     ->inject('proofForToken')
-->inject('authorization')
+    ->inject('authorization')
     ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsToken $proofForToken, Authorization $authorization) {
         /** @var Appwrite\Utopia\Database\Documents\User $profile */
         $profile = $dbForProject->getDocument('users', $userId);
@@ -3769,12 +3773,12 @@ App::put('/v1/account/recovery')
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
 
         $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile
-                ->setAttribute('password', $newPassword)
-                ->setAttribute('passwordHistory', $history)
-                ->setAttribute('passwordUpdate', DateTime::now())
-                ->setAttribute('hash', $proofForPassword->getHash()->getName())
-                ->setAttribute('hashOptions', $proofForPassword->getHash()->getOptions())
-                ->setAttribute('emailVerification', true));
+            ->setAttribute('password', $newPassword)
+            ->setAttribute('passwordHistory', $history)
+            ->setAttribute('passwordUpdate', DateTime::now())
+            ->setAttribute('hash', $proofForPassword->getHash()->getName())
+            ->setAttribute('hashOptions', $proofForPassword->getHash()->getOptions())
+            ->setAttribute('emailVerification', true));
 
         $user->setAttributes($profile->getArrayCopy());
 
@@ -3790,7 +3794,7 @@ App::put('/v1/account/recovery')
         $queueForEvents
             ->setParam('userId', $profile->getId())
             ->setParam('tokenId', $recoveryDocument->getId())
-            ->setPayload(Response::showSensitive(fn () => $response->output($recoveryDocument, Response::MODEL_TOKEN)), sensitive: ['secret']);
+            ->setPayload(Response::showSensitive(fn() => $response->output($recoveryDocument, Response::MODEL_TOKEN)), sensitive: ['secret']);
 
         $response->dynamic($recoveryDocument, Response::MODEL_TOKEN);
     });
@@ -3840,7 +3844,7 @@ App::post('/v1/account/verifications/email')
     ])
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{userId}')
-    ->param('url', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['redirectValidator']) // TODO add built-in confirm page
+    ->param('url', '', fn($redirectValidator) => $redirectValidator, 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['redirectValidator']) // TODO add built-in confirm page
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -4021,7 +4025,7 @@ App::post('/v1/account/verifications/email')
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('tokenId', $verification->getId())
-            ->setPayload(Response::showSensitive(fn () => $response->output($verification, Response::MODEL_TOKEN)), sensitive: ['secret']);
+            ->setPayload(Response::showSensitive(fn() => $response->output($verification, Response::MODEL_TOKEN)), sensitive: ['secret']);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -4083,7 +4087,7 @@ App::put('/v1/account/verifications/email')
     ->inject('authorization')
     ->action(function (string $userId, string $secret, Response $response, User $user, Database $dbForProject, Event $queueForEvents, ProofsToken $proofForToken, Authorization $authorization) {
         /** @var Appwrite\Utopia\Database\Documents\User $profile */
-        $profile = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
+        $profile = $authorization->skip(fn() => $dbForProject->getDocument('users', $userId));
 
         if ($profile->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -4113,7 +4117,7 @@ App::put('/v1/account/verifications/email')
         $queueForEvents
             ->setParam('userId', $userId)
             ->setParam('tokenId', $verification->getId())
-            ->setPayload(Response::showSensitive(fn () => $response->output($verification, Response::MODEL_TOKEN)), sensitive: ['secret']);
+            ->setPayload(Response::showSensitive(fn() => $response->output($verification, Response::MODEL_TOKEN)), sensitive: ['secret']);
 
         $response->dynamic($verification, Response::MODEL_TOKEN);
     });
@@ -4155,7 +4159,7 @@ App::post('/v1/account/verifications/phone')
     ->inject('queueForStatsUsage')
     ->inject('plan')
     ->inject('proofForCode')
-                ->inject('authorization')
+    ->inject('authorization')
     ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, ProofsCode $proofForCode, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
@@ -4304,7 +4308,7 @@ App::put('/v1/account/verifications/phone')
     ->inject('authorization')
     ->action(function (string $userId, string $secret, Response $response, User $user, Database $dbForProject, Event $queueForEvents, ProofsCode $proofForCode, Authorization $authorization) {
         /** @var Appwrite\Utopia\Database\Documents\User  $profile */
-        $profile = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
+        $profile = $authorization->skip(fn() => $dbForProject->getDocument('users', $userId));
 
         if ($profile->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -4373,9 +4377,9 @@ App::post('/v1/account/targets/push')
     ->action(function (string $targetId, string $identifier, string $providerId, Event $queueForEvents, User $user, Request $request, Response $response, Database $dbForProject, Store $store, ProofsToken $proofForToken, Authorization $authorization) {
         $targetId = $targetId == 'unique()' ? ID::unique() : $targetId;
 
-        $provider = $authorization->skip(fn () => $dbForProject->getDocument('providers', $providerId));
+        $provider = $authorization->skip(fn() => $dbForProject->getDocument('providers', $providerId));
 
-        $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $targetId));
+        $target = $authorization->skip(fn() => $dbForProject->getDocument('targets', $targetId));
 
         if (!$target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
@@ -4383,7 +4387,7 @@ App::post('/v1/account/targets/push')
 
         $detector = new Detector($request->getUserAgent());
         $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
-
+    
         $device = $detector->getDevice();
 
         $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
@@ -4453,7 +4457,7 @@ App::put('/v1/account/targets/:targetId/push')
     ->inject('authorization')
     ->action(function (string $targetId, string $identifier, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject, Authorization $authorization) {
 
-        $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $targetId));
+        $target = $authorization->skip(fn() => $dbForProject->getDocument('targets', $targetId));
 
         if ($target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
@@ -4471,7 +4475,7 @@ App::put('/v1/account/targets/:targetId/push')
 
         $detector = new Detector($request->getUserAgent());
         $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
-
+    
         $device = $detector->getDevice();
 
         $target->setAttribute('name', "{$device['deviceBrand']} {$device['deviceModel']}");
@@ -4518,7 +4522,7 @@ App::delete('/v1/account/targets/:targetId/push')
     ->inject('dbForProject')
     ->inject('authorization')
     ->action(function (string $targetId, Event $queueForEvents, Delete $queueForDeletes, Document $user, Request $request, Response $response, Database $dbForProject, Authorization $authorization) {
-        $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $targetId));
+        $target = $authorization->skip(fn() => $dbForProject->getDocument('targets', $targetId));
 
         if ($target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
