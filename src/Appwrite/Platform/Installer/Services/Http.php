@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Installer\Services;
 
+use Appwrite\Platform\Installer\Http\Installer\Cleanup;
 use Appwrite\Platform\Installer\Http\Installer\Complete;
 use Appwrite\Platform\Installer\Http\Installer\Install;
 use Appwrite\Platform\Installer\Http\Installer\Shutdown;
@@ -19,6 +20,7 @@ class Http extends Service
         $this->addAction(View::getName(), new View());
         $this->addAction(Status::getName(), new Status());
         $this->addAction(Validate::getName(), new Validate());
+        $this->addAction(Cleanup::getName(), new Cleanup());
         $this->addAction(Complete::getName(), new Complete());
         $this->addAction(Shutdown::getName(), new Shutdown());
         $this->addAction(Install::getName(), new Install());

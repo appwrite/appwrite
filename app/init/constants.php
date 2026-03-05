@@ -392,5 +392,8 @@ const COOKIE_NAME_PREVIEW = 'a_jwt_console';
 const CACHE_RECONNECT_MAX_RETRIES = 2;
 const CACHE_RECONNECT_RETRY_DELAY = 1000;
 
+/* Web installer */
+const LOCAL_API_TIMEOUT = 30 * 1000; // 30 seconds
+
 // Project status
 const PROJECT_STATUS_ACTIVE = 'active';
