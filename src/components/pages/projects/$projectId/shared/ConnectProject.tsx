@@ -9,7 +9,6 @@ import { useNavigate } from '@tanstack/react-router'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -1393,10 +1392,6 @@ export function ConnectProject({
       <DialogContent className="sm:max-w-6xl h-[70vh] max-h-[70vh] p-0 gap-0 flex flex-col overflow-hidden">
         <DialogHeader className="shrink-0 px-6 pt-6 pb-4 text-left">
           <DialogTitle>Connect to your project</DialogTitle>
-          <DialogDescription className="text-[13px] mt-2">
-            Get your project credentials and code snippets to integrate Appwrite
-            into your app.
-          </DialogDescription>
         </DialogHeader>
         <Tabs
           value={connectTab}
