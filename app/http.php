@@ -188,6 +188,10 @@ $http->on(Constant::EVENT_AFTER_RELOAD, function ($server) {
     Console::success('Reload completed...');
 });
 
+Http::setResource('bus', function ($register, $utopia) {
+    return $register->get('bus')->setResolver(fn (string $name) => $utopia->getResource($name));
+}, ['register', 'utopia']);
+
 include __DIR__ . '/controllers/general.php';
 
 function createDatabase(Http $app, string $resourceKey, string $dbName, array $collections, mixed $pools, ?callable $extraSetup = null): void
