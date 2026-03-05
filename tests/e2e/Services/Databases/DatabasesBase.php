@@ -3551,13 +3551,13 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertArrayHasKey('$sequence', $response['body']['documents'][0]);
-        $this->assertArrayHasKey('$id', $response['body']['documents'][0]);
-        $this->assertArrayHasKey('$createdAt', $response['body']['documents'][0]);
-        $this->assertArrayHasKey('$updatedAt', $response['body']['documents'][0]);
-        $this->assertArrayHasKey('$permissions', $response['body']['documents'][0]);
-        $this->assertArrayHasKey('title', $response['body']['documents'][0]);
-        $this->assertArrayNotHasKey('birthDay', $response['body']['documents'][0]);
+        $this->assertArrayHasKey('$sequence', $response['body'][$this->getRecordResource()][0]);
+        $this->assertArrayHasKey('$id', $response['body'][$this->getRecordResource()][0]);
+        $this->assertArrayHasKey('$createdAt', $response['body'][$this->getRecordResource()][0]);
+        $this->assertArrayHasKey('$updatedAt', $response['body'][$this->getRecordResource()][0]);
+        $this->assertArrayHasKey('$permissions', $response['body'][$this->getRecordResource()][0]);
+        $this->assertArrayHasKey('title', $response['body'][$this->getRecordResource()][0]);
+        $this->assertArrayNotHasKey('birthDay', $response['body'][$this->getRecordResource()][0]);
     }
 
     public function testListDocumentsAfterPagination(): void
