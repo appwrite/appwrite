@@ -546,7 +546,7 @@ class ProxyCustomServerTest extends Scope
 
         $rules = $this->listRules([
             'search' => $rule1Domain,
-            'queries' => [ Query::orderDesc('$createdAt') ]
+            'queries' => [ Query::orderDesc('$createdAt')->toString() ]
         ]);
 
         $this->assertEquals(200, $rules['headers']['status-code']);
@@ -555,7 +555,7 @@ class ProxyCustomServerTest extends Scope
 
         $rules = $this->listRules([
             'search' => $rule2Domain,
-            'queries' => [ Query::orderDesc('$createdAt') ]
+            'queries' => [ Query::orderDesc('$createdAt')->toString() ]
         ]);
         $this->assertEquals(200, $rules['headers']['status-code']);
         $ruleIds = \array_column($rules['body']['rules'], '$id');
@@ -563,7 +563,7 @@ class ProxyCustomServerTest extends Scope
 
         $rules = $this->listRules([
             'search' => $rule1Id,
-            'queries' => [ Query::orderDesc('$createdAt') ]
+            'queries' => [ Query::orderDesc('$createdAt')->toString() ]
         ]);
         $this->assertEquals(200, $rules['headers']['status-code']);
         $ruleDomains = \array_column($rules['body']['rules'], 'domain');
@@ -571,7 +571,7 @@ class ProxyCustomServerTest extends Scope
 
         $rules = $this->listRules([
             'search' => $rule2Id,
-            'queries' => [ Query::orderDesc('$createdAt') ]
+            'queries' => [ Query::orderDesc('$createdAt')->toString() ]
         ]);
         $this->assertEquals(200, $rules['headers']['status-code']);
         $ruleDomains = \array_column($rules['body']['rules'], 'domain');

@@ -16,7 +16,7 @@ class Redis implements Adapter
 
     public function ping($message = null): bool
     {
-        return $this->client->ping($message);
+        return (bool) $this->client->ping($message);
     }
 
     public function subscribe($channels, $callback)

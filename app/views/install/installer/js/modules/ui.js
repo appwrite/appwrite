@@ -82,7 +82,10 @@
 
     const toDatabaseLabel = (value) => {
         if (!value) return '';
-        return value.toLowerCase() === 'mariadb' ? 'MariaDB' : 'MongoDB';
+        const lower = value.toLowerCase();
+        if (lower === 'mariadb') return 'MariaDB';
+        if (lower === 'postgresql') return 'PostgreSQL';
+        return 'MongoDB';
     };
 
     const updateDatabaseSelection = (radio, root) => {

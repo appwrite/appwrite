@@ -14,14 +14,24 @@ trait TransactionPermissionsBase
     use DatabasesUrlHelpers;
     use SchemaPolling;
 
-    protected string $permissionsDatabase;
+    protected static string $permissionsDatabase = '';
 
     /**
-     * Set up database for permission tests
+     * Set up database once for all permission tests in this class
      */
-    public function setUp(): void
+    public static function setUpBeforeClass(): void
     {
-        parent::setUp();
+        parent::setUpBeforeClass();
+    }
+
+    /**
+     * Initialize the permissions database if not already done
+     */
+    protected function ensurePermissionsDatabase(): void
+    {
+        if (!empty(self::$permissionsDatabase)) {
+            return;
+        }
 
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), array_merge([
             'content-type' => 'application/json',
@@ -33,21 +43,26 @@ trait TransactionPermissionsBase
         ]);
 
         $this->assertEquals(201, $database['headers']['status-code']);
-        $this->permissionsDatabase = $database['body']['$id'];
+        self::$permissionsDatabase = $database['body']['$id'];
     }
 
     /**
-     * Clean up database after tests
+     * Get the permissions database ID, creating it if needed
      */
-    public function tearDown(): void
+    protected function getPermissionsDatabase(): string
     {
-        $this->client->call(Client::METHOD_DELETE, $this->getApiBasePath() . '/' . $this->permissionsDatabase, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        $this->ensurePermissionsDatabase();
+        return self::$permissionsDatabase;
+    }
 
-        parent::tearDown();
+    /**
+     * Clean up database after all tests in this class
+     */
+    public static function tearDownAfterClass(): void
+    {
+        // Database cleanup is handled by the test framework
+        self::$permissionsDatabase = '';
+        parent::tearDownAfterClass();
     }
 
     /**
@@ -56,7 +71,7 @@ trait TransactionPermissionsBase
     public function testCollectionCreatePermissionDenied(): void
     {
         // Create a collection with no create permission for current user
-        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->permissionsDatabase), array_merge([
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -73,7 +88,7 @@ trait TransactionPermissionsBase
 
         $this->assertEquals(201, $collection['headers']['status-code']);
 
-        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->permissionsDatabase, $collection['body']['$id'], 'string'), array_merge([
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -84,7 +99,7 @@ trait TransactionPermissionsBase
         ]);
 
         $this->assertEquals(202, $attribute['headers']['status-code']);
-        $this->waitForAllAttributes($this->permissionsDatabase, $collection['body']['$id']);
+        $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
 
         // Create transaction
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
@@ -101,7 +116,7 @@ trait TransactionPermissionsBase
         ], $this->getHeaders()), [
             'operations' => [[
                 'action' => 'create',
-                'databaseId' => $this->permissionsDatabase,
+                'databaseId' => $this->getPermissionsDatabase(),
                 $this->getContainerIdParam() => $collection['body']['$id'],
                 $this->getRecordIdParam() => 'testDoc1',
                 'data' => ['title' => 'Test Document'],
@@ -118,7 +133,7 @@ trait TransactionPermissionsBase
     public function testCollectionUpdatePermissionDenied(): void
     {
         // Create a collection with create but no update permission
-        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->permissionsDatabase), array_merge([
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -135,7 +150,7 @@ trait TransactionPermissionsBase
 
         $this->assertEquals(201, $collection['headers']['status-code']);
 
-        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->permissionsDatabase, $collection['body']['$id'], 'string'), array_merge([
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -146,10 +161,10 @@ trait TransactionPermissionsBase
         ]);
 
         $this->assertEquals(202, $attribute['headers']['status-code']);
-        $this->waitForAllAttributes($this->permissionsDatabase, $collection['body']['$id']);
+        $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
 
         // Create a document first with API key
-        $doc = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->permissionsDatabase, $collection['body']['$id']), array_merge([
+        $doc = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $collection['body']['$id']), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -175,7 +190,7 @@ trait TransactionPermissionsBase
         ], $this->getHeaders()), [
             'operations' => [[
                 'action' => 'update',
-                'databaseId' => $this->permissionsDatabase,
+                'databaseId' => $this->getPermissionsDatabase(),
                 $this->getContainerIdParam() => $collection['body']['$id'],
                 $this->getRecordIdParam() => 'testDoc2',
                 'data' => ['title' => 'Updated Title'],
@@ -192,7 +207,7 @@ trait TransactionPermissionsBase
     public function testCollectionDeletePermissionDenied(): void
     {
         // Create a collection with create, read but no delete permission
-        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->permissionsDatabase), array_merge([
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -209,7 +224,7 @@ trait TransactionPermissionsBase
 
         $this->assertEquals(201, $collection['headers']['status-code']);
 
-        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->permissionsDatabase, $collection['body']['$id'], 'string'), array_merge([
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -220,9 +235,9 @@ trait TransactionPermissionsBase
         ]);
 
         $this->assertEquals(202, $attribute['headers']['status-code']);
-        $this->waitForAllAttributes($this->permissionsDatabase, $collection['body']['$id']);
+        $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
 
-        $doc = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->permissionsDatabase, $collection['body']['$id']), array_merge([
+        $doc = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $collection['body']['$id']), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -248,7 +263,7 @@ trait TransactionPermissionsBase
         ], $this->getHeaders()), [
             'operations' => [[
                 'action' => 'delete',
-                'databaseId' => $this->permissionsDatabase,
+                'databaseId' => $this->getPermissionsDatabase(),
                 $this->getContainerIdParam() => $collection['body']['$id'],
                 $this->getRecordIdParam() => 'testDoc3',
                 'data' => [],
@@ -266,7 +281,7 @@ trait TransactionPermissionsBase
     public function testDocumentLevelUpdatePermissionGranted(): void
     {
         // Create collection with rowSecurity enabled but no update permission at collection level
-        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->permissionsDatabase), array_merge([
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -282,7 +297,7 @@ trait TransactionPermissionsBase
 
         $this->assertEquals(201, $collection['headers']['status-code']);
 
-        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->permissionsDatabase, $collection['body']['$id'], 'string'), array_merge([
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -293,10 +308,10 @@ trait TransactionPermissionsBase
         ]);
 
         $this->assertEquals(202, $attribute['headers']['status-code']);
-        $this->waitForAllAttributes($this->permissionsDatabase, $collection['body']['$id']);
+        $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
 
         // Create a document with update permission at document level
-        $doc = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->permissionsDatabase, $collection['body']['$id']), array_merge([
+        $doc = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $collection['body']['$id']), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -326,7 +341,7 @@ trait TransactionPermissionsBase
         ], $this->getHeaders()), [
             'operations' => [[
                 'action' => 'update',
-                'databaseId' => $this->permissionsDatabase,
+                'databaseId' => $this->getPermissionsDatabase(),
                 $this->getContainerIdParam() => $collection['body']['$id'],
                 $this->getRecordIdParam() => 'testDoc4',
                 'data' => ['title' => 'Trying to Update'],
@@ -344,7 +359,7 @@ trait TransactionPermissionsBase
     public function testDocumentLevelDeletePermissionGranted(): void
     {
         // Create collection with rowSecurity enabled but no delete permission at collection level
-        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->permissionsDatabase), array_merge([
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -361,7 +376,7 @@ trait TransactionPermissionsBase
 
         $this->assertEquals(201, $collection['headers']['status-code']);
 
-        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->permissionsDatabase, $collection['body']['$id'], 'string'), array_merge([
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -372,10 +387,10 @@ trait TransactionPermissionsBase
         ]);
 
         $this->assertEquals(202, $attribute['headers']['status-code']);
-        $this->waitForAllAttributes($this->permissionsDatabase, $collection['body']['$id']);
+        $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
 
         // Create a document with delete permission at document level
-        $doc = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->permissionsDatabase, $collection['body']['$id']), array_merge([
+        $doc = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $collection['body']['$id']), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -406,7 +421,7 @@ trait TransactionPermissionsBase
         ], $this->getHeaders()), [
             'operations' => [[
                 'action' => 'delete',
-                'databaseId' => $this->permissionsDatabase,
+                'databaseId' => $this->getPermissionsDatabase(),
                 $this->getContainerIdParam() => $collection['body']['$id'],
                 $this->getRecordIdParam() => 'testDoc5',
                 'data' => [],
@@ -423,7 +438,7 @@ trait TransactionPermissionsBase
     public function testCannotSetUnauthorizedRolePermissions(): void
     {
         // Create a collection
-        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->permissionsDatabase), array_merge([
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -442,7 +457,7 @@ trait TransactionPermissionsBase
         $this->assertEquals(201, $collection['headers']['status-code']);
 
         // Add attribute
-        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->permissionsDatabase, $collection['body']['$id'], 'string'), array_merge([
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -453,7 +468,7 @@ trait TransactionPermissionsBase
         ]);
 
         $this->assertEquals(202, $attribute['headers']['status-code']);
-        $this->waitForAllAttributes($this->permissionsDatabase, $collection['body']['$id']);
+        $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
 
         // Create transaction
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
@@ -470,7 +485,7 @@ trait TransactionPermissionsBase
         ], $this->getHeaders()), [
             'operations' => [[
                 'action' => 'create',
-                'databaseId' => $this->permissionsDatabase,
+                'databaseId' => $this->getPermissionsDatabase(),
                 $this->getContainerIdParam() => $collection['body']['$id'],
                 $this->getRecordIdParam() => 'testDoc6',
                 'data' => [
@@ -494,7 +509,7 @@ trait TransactionPermissionsBase
      */
     public function testSuccessfulStagingWithProperPermissions(): void
     {
-        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->permissionsDatabase), array_merge([
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -512,7 +527,7 @@ trait TransactionPermissionsBase
 
         $this->assertEquals(201, $collection['headers']['status-code']);
 
-        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->permissionsDatabase, $collection['body']['$id'], 'string'), array_merge([
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -523,7 +538,7 @@ trait TransactionPermissionsBase
         ]);
 
         $this->assertEquals(202, $attribute['headers']['status-code']);
-        $this->waitForAllAttributes($this->permissionsDatabase, $collection['body']['$id']);
+        $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
 
         // Create transaction
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
@@ -540,7 +555,7 @@ trait TransactionPermissionsBase
         ], $this->getHeaders()), [
             'operations' => [[
                 'action' => 'create',
-                'databaseId' => $this->permissionsDatabase,
+                'databaseId' => $this->getPermissionsDatabase(),
                 $this->getContainerIdParam() => $collection['body']['$id'],
                 $this->getRecordIdParam() => 'testDoc7',
                 'data' => [
@@ -564,7 +579,7 @@ trait TransactionPermissionsBase
     public function testCannotUpdateNonExistentDocument(): void
     {
         // Create a collection
-        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->permissionsDatabase), array_merge([
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -582,7 +597,7 @@ trait TransactionPermissionsBase
 
         $this->assertEquals(201, $collection['headers']['status-code']);
 
-        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->permissionsDatabase, $collection['body']['$id'], 'string'), array_merge([
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -593,7 +608,7 @@ trait TransactionPermissionsBase
         ]);
 
         $this->assertEquals(202, $attribute['headers']['status-code']);
-        $this->waitForAllAttributes($this->permissionsDatabase, $collection['body']['$id']);
+        $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
 
         // Create transaction
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
@@ -610,7 +625,7 @@ trait TransactionPermissionsBase
         ], $this->getHeaders()), [
             'operations' => [[
                 'action' => 'update',
-                'databaseId' => $this->permissionsDatabase,
+                'databaseId' => $this->getPermissionsDatabase(),
                 $this->getContainerIdParam() => $collection['body']['$id'],
                 $this->getRecordIdParam() => 'nonExistentDoc',
                 'data' => ['title' => 'Trying to Update'],
@@ -627,7 +642,7 @@ trait TransactionPermissionsBase
     public function testCannotDeleteNonExistentDocument(): void
     {
         // Create a collection
-        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->permissionsDatabase), array_merge([
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -645,7 +660,7 @@ trait TransactionPermissionsBase
 
         $this->assertEquals(201, $collection['headers']['status-code']);
 
-        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->permissionsDatabase, $collection['body']['$id'], 'string'), array_merge([
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -656,7 +671,7 @@ trait TransactionPermissionsBase
         ]);
 
         $this->assertEquals(202, $attribute['headers']['status-code']);
-        $this->waitForAllAttributes($this->permissionsDatabase, $collection['body']['$id']);
+        $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
 
         // Create transaction
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
@@ -673,7 +688,7 @@ trait TransactionPermissionsBase
         ], $this->getHeaders()), [
             'operations' => [[
                 'action' => 'delete',
-                'databaseId' => $this->permissionsDatabase,
+                'databaseId' => $this->getPermissionsDatabase(),
                 $this->getContainerIdParam() => $collection['body']['$id'],
                 $this->getRecordIdParam() => 'nonExistentDoc',
                 'data' => [],
@@ -690,7 +705,7 @@ trait TransactionPermissionsBase
      */
     public function testCanUpdateDocumentCreatedInPreviousBatch(): void
     {
-        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->permissionsDatabase), array_merge([
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -708,7 +723,7 @@ trait TransactionPermissionsBase
 
         $this->assertEquals(201, $collection['headers']['status-code']);
 
-        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->permissionsDatabase, $collection['body']['$id'], 'string'), array_merge([
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -719,7 +734,7 @@ trait TransactionPermissionsBase
         ]);
 
         $this->assertEquals(202, $attribute['headers']['status-code']);
-        $this->waitForAllAttributes($this->permissionsDatabase, $collection['body']['$id']);
+        $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
 
         // Create transaction
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
@@ -736,7 +751,7 @@ trait TransactionPermissionsBase
         ], $this->getHeaders()), [
             'operations' => [[
                 'action' => 'create',
-                'databaseId' => $this->permissionsDatabase,
+                'databaseId' => $this->getPermissionsDatabase(),
                 $this->getContainerIdParam() => $collection['body']['$id'],
                 $this->getRecordIdParam() => 'crossBatchDoc',
                 'data' => [
@@ -755,7 +770,7 @@ trait TransactionPermissionsBase
         ], $this->getHeaders()), [
             'operations' => [[
                 'action' => 'update',
-                'databaseId' => $this->permissionsDatabase,
+                'databaseId' => $this->getPermissionsDatabase(),
                 $this->getContainerIdParam() => $collection['body']['$id'],
                 $this->getRecordIdParam() => 'crossBatchDoc',
                 'data' => [
@@ -775,7 +790,7 @@ trait TransactionPermissionsBase
         ], $this->getHeaders()), [
             'operations' => [[
                 'action' => 'delete',
-                'databaseId' => $this->permissionsDatabase,
+                'databaseId' => $this->getPermissionsDatabase(),
                 $this->getContainerIdParam() => $collection['body']['$id'],
                 $this->getRecordIdParam() => 'crossBatchDoc',
                 'data' => [],
@@ -1027,7 +1042,7 @@ trait TransactionPermissionsBase
     public function testUserCannotAddOperationsToAnotherUsersTransaction(): void
     {
         // Create a collection for testing
-        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->permissionsDatabase), array_merge([
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -1045,7 +1060,7 @@ trait TransactionPermissionsBase
 
         $this->assertEquals(201, $collection['headers']['status-code']);
 
-        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->permissionsDatabase, $collection['body']['$id'], 'string'), array_merge([
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -1056,7 +1071,7 @@ trait TransactionPermissionsBase
         ]);
 
         $this->assertEquals(202, $attribute['headers']['status-code']);
-        $this->waitForAllAttributes($this->permissionsDatabase, $collection['body']['$id']);
+        $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
 
         // Create user 1 (fresh) and their transaction
         $user1 = $this->getUser(true);
@@ -1087,7 +1102,7 @@ trait TransactionPermissionsBase
         ], $user2Headers), [
             'operations' => [[
                 'action' => 'create',
-                'databaseId' => $this->permissionsDatabase,
+                'databaseId' => $this->getPermissionsDatabase(),
                 $this->getContainerIdParam() => $collection['body']['$id'],
                 $this->getRecordIdParam() => 'maliciousDoc',
                 'data' => ['title' => 'Malicious Document'],
@@ -1104,7 +1119,7 @@ trait TransactionPermissionsBase
         ], $user1Headers), [
             'operations' => [[
                 'action' => 'create',
-                'databaseId' => $this->permissionsDatabase,
+                'databaseId' => $this->getPermissionsDatabase(),
                 $this->getContainerIdParam() => $collection['body']['$id'],
                 $this->getRecordIdParam() => 'legitimateDoc',
                 'data' => ['title' => 'Legitimate Document'],

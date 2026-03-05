@@ -4,8 +4,8 @@ namespace Appwrite\SDK\Specification;
 
 use Appwrite\Utopia\Response\Model;
 use Utopia\Config\Config;
-use Utopia\Http;
-use Utopia\Route;
+use Utopia\Http\Http;
+use Utopia\Http\Route;
 
 abstract class Format
 {
@@ -449,6 +449,38 @@ abstract class Format
                         switch ($param) {
                             case 'encryption':
                                 return 'SmtpEncryption';
+                        }
+                        break;
+                }
+                break;
+            case 'migrations':
+                switch ($method) {
+                    case 'createAppwriteMigration':
+                    case 'getAppwriteReport':
+                        switch ($param) {
+                            case 'resources':
+                                return 'AppwriteMigrationResource';
+                        }
+                        break;
+                    case 'createFirebaseMigration':
+                    case 'getFirebaseReport':
+                        switch ($param) {
+                            case 'resources':
+                                return 'FirebaseMigrationResource';
+                        }
+                        break;
+                    case 'createSupabaseMigration':
+                    case 'getSupabaseReport':
+                        switch ($param) {
+                            case 'resources':
+                                return 'SupabaseMigrationResource';
+                        }
+                        break;
+                    case 'createNHostMigration':
+                    case 'getNHostReport':
+                        switch ($param) {
+                            case 'resources':
+                                return 'NHostMigrationResource';
                         }
                         break;
                 }

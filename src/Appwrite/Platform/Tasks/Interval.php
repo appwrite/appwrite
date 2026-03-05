@@ -7,7 +7,7 @@ use DateTime;
 use Swoole\Coroutine\Channel;
 use Swoole\Process;
 use Swoole\Timer;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;

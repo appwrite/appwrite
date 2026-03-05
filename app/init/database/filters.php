@@ -72,7 +72,7 @@ Database::addFilter(
         $attributes = $database->getAuthorization()->skip(fn () => $database->find('attributes', [
             Query::equal('collectionInternalId', [$document->getSequence()]),
             Query::equal('databaseInternalId', [$document->getAttribute('databaseInternalId')]),
-            Query::limit($database->getLimitForAttributes()),
+            Query::limit($database->getLimitForAttributes() ?: APP_LIMIT_SUBQUERY),
         ]));
 
         foreach ($attributes as $attribute) {
@@ -88,6 +88,10 @@ Database::addFilter(
                     break;
 
                 case Database::VAR_STRING:
+                case Database::VAR_VARCHAR:
+                case Database::VAR_TEXT:
+                case Database::VAR_MEDIUMTEXT:
+                case Database::VAR_LONGTEXT:
                     $filters = $attribute->getAttribute('filters', []);
                     $attribute->setAttribute('encrypt', in_array('encrypt', $filters));
                     break;

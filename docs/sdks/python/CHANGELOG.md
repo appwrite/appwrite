@@ -1,5 +1,10 @@
 # Change Log
 
+## 15.1.0
+
+* Add `dart-3.10` and `flutter-3.38` to `BuildRuntime` and `Runtime` enums
+* Fix `Roles` enum removed from Teams service; `roles` parameter now accepts `list[str]`
+
 ## 15.0.0
 
 * Add array-based enum parameters (e.g., `permissions: list[BrowserPermission]`).

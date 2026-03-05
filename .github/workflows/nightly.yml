@@ -10,11 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Build the Docker image
-        run: docker build . -t appwrite_image:latest
+        run: DOCKER_BUILDKIT=1 docker build . --target production -t appwrite_image:latest
       - name: Run Trivy vulnerability scanner on image
         uses: aquasecurity/trivy-action@0.20.0
         with:
@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Run Trivy vulnerability scanner on filesystem
         uses: aquasecurity/trivy-action@0.20.0
         with:

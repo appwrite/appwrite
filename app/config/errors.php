@@ -139,6 +139,11 @@ return [
         'description' => 'There was an error processing your request. Please check the inputs and try again.',
         'code' => 400,
     ],
+    Exception::GENERAL_FEATURE_UNSUPPORTED => [
+        'name' => Exception::GENERAL_FEATURE_UNSUPPORTED,
+        'description' => 'This feature is not supported with your current configuration.',
+        'code' => 400,
+    ],
 
     /** User Errors */
     Exception::USER_COUNT_EXCEEDED => [
@@ -624,6 +629,11 @@ return [
         'name' => Exception::SITE_NOT_FOUND,
         'description' => 'Site with the requested ID could not be found.',
         'code' => 404,
+    ],
+    Exception::SITE_ALREADY_EXISTS => [
+        'name' => Exception::SITE_ALREADY_EXISTS,
+        'description' => 'Site with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
     ],
     Exception::SITE_TEMPLATE_NOT_FOUND => [
         'name' => Exception::SITE_TEMPLATE_NOT_FOUND,
@@ -1139,6 +1149,11 @@ return [
         'description' => 'Key with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::KEY_ALREADY_EXISTS => [
+        'name' => Exception::KEY_ALREADY_EXISTS,
+        'description' => 'Key with the same ID already exists. Try again with a different ID.',
+        'code' => 409,
+    ],
     Exception::PLATFORM_NOT_FOUND => [
         'name' => Exception::PLATFORM_NOT_FOUND,
         'description' => 'Platform with the requested ID could not be found.',
@@ -1280,6 +1295,11 @@ return [
         'name' => Exception::MESSAGE_NOT_FOUND,
         'description' => 'Message with the requested ID could not be found.',
         'code' => 404,
+    ],
+    Exception::MESSAGE_ALREADY_EXISTS => [
+        'name' => Exception::MESSAGE_ALREADY_EXISTS,
+        'description' => 'Message with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
     ],
     Exception::MESSAGE_MISSING_TARGET => [
         'name' => Exception::MESSAGE_MISSING_TARGET,

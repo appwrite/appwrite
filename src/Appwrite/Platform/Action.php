@@ -3,7 +3,7 @@
 namespace Appwrite\Platform;
 
 use Swoole\Coroutine as Co;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;

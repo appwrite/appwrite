@@ -3,7 +3,6 @@
 namespace Tests\E2E\Services\GraphQL;
 
 use CURLFile;
-use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -18,14 +17,22 @@ class StorageServerTest extends Scope
     use SideServer;
     use Base;
 
-    public function testCreateBucket(): array
+    private static array $cachedBucket = [];
+    private static array $cachedFile = [];
+
+    protected function setupBucket(): array
     {
+        $key = $this->getProject()['$id'];
+        if (!empty(static::$cachedBucket[$key])) {
+            return static::$cachedBucket[$key];
+        }
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_BUCKET);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'bucketId' => 'actors',
+                'bucketId' => ID::unique(),
                 'name' => 'Actors',
                 'fileSecurity' => false,
                 'permissions' => [
@@ -47,12 +54,19 @@ class StorageServerTest extends Scope
         $bucket = $bucket['body']['data']['storageCreateBucket'];
         $this->assertEquals('Actors', $bucket['name']);
 
+        static::$cachedBucket[$key] = $bucket;
         return $bucket;
     }
 
-    #[Depends('testCreateBucket')]
-    public function testCreateFile($bucket): array
+    protected function setupFile(): array
     {
+        $key = $this->getProject()['$id'];
+        if (!empty(static::$cachedFile[$key])) {
+            return static::$cachedFile[$key];
+        }
+
+        $bucket = $this->setupBucket();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_FILE);
         $gqlPayload = [
@@ -83,7 +97,21 @@ class StorageServerTest extends Scope
 
         $this->assertIsArray($file['body']['data']);
         $this->assertArrayNotHasKey('errors', $file['body']);
-        return $file['body']['data']['storageCreateFile'];
+
+        static::$cachedFile[$key] = $file['body']['data']['storageCreateFile'];
+        return static::$cachedFile[$key];
+    }
+
+    public function testCreateBucket(): void
+    {
+        $bucket = $this->setupBucket();
+        $this->assertEquals('Actors', $bucket['name']);
+    }
+
+    public function testCreateFile(): void
+    {
+        $file = $this->setupFile();
+        $this->assertIsArray($file);
     }
 
     public function testGetBuckets(): array
@@ -117,16 +145,15 @@ class StorageServerTest extends Scope
         return $buckets;
     }
 
-    #[Depends('testCreateBucket')]
-    #[Depends('testCreateFile')]
     /**
-     * @param $bucket
-     * @param $file
      * @return array
      * @throws \Exception
      */
-    public function testGetBucket($bucket): array
+    public function testGetBucket(): array
     {
+        $bucket = $this->setupBucket();
+        $this->setupFile(); // Ensure file exists
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_BUCKET);
         $gqlPayload = [
@@ -150,14 +177,14 @@ class StorageServerTest extends Scope
         return $bucket;
     }
 
-    #[Depends('testCreateBucket')]
     /**
-     * @param $bucket
      * @return array
      * @throws \Exception
      */
-    public function testGetFiles($bucket): array
+    public function testGetFiles(): array
     {
+        $bucket = $this->setupBucket();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_FILES);
         $gqlPayload = [
@@ -180,16 +207,15 @@ class StorageServerTest extends Scope
         return $files;
     }
 
-    #[Depends('testCreateBucket')]
-    #[Depends('testCreateFile')]
     /**
-     * @param $bucket
-     * @param $file
      * @return array
      * @throws \Exception
      */
-    public function testGetFile($bucket, $file)
+    public function testGetFile()
     {
+        $bucket = $this->setupBucket();
+        $file = $this->setupFile();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_FILE);
         $gqlPayload = [
@@ -211,14 +237,14 @@ class StorageServerTest extends Scope
         return $file['body']['data']['storageGetFile'];
     }
 
-    #[Depends('testCreateFile')]
     /**
-     * @param $file
      * @return array
      * @throws \Exception
      */
-    public function testGetFilePreview($file)
+    public function testGetFilePreview()
     {
+        $file = $this->setupFile();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_FILE_PREVIEW);
         $gqlPayload = [
@@ -241,14 +267,14 @@ class StorageServerTest extends Scope
         return $file;
     }
 
-    #[Depends('testCreateFile')]
     /**
-     * @param $file
      * @return array
      * @throws \Exception
      */
-    public function testGetFileDownload($file)
+    public function testGetFileDownload()
     {
+        $file = $this->setupFile();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_FILE_DOWNLOAD);
         $gqlPayload = [
@@ -267,14 +293,13 @@ class StorageServerTest extends Scope
         $this->assertEquals(47218, \strlen($file['body']));
     }
 
-    #[Depends('testCreateFile')]
     /**
-     * @param $file
-     * @return array
      * @throws \Exception
      */
-    public function testGetFileView($file): void
+    public function testGetFileView(): void
     {
+        $file = $this->setupFile();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_FILE_VIEW);
         $gqlPayload = [
@@ -293,14 +318,14 @@ class StorageServerTest extends Scope
         $this->assertEquals(47218, \strlen($file['body']));
     }
 
-    #[Depends('testCreateBucket')]
     /**
-     * @param $bucket
      * @return array
      * @throws \Exception
      */
-    public function testUpdateBucket($bucket): array
+    public function testUpdateBucket(): array
     {
+        $bucket = $this->setupBucket();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::UPDATE_BUCKET);
         $gqlPayload = [
@@ -325,14 +350,14 @@ class StorageServerTest extends Scope
         return $bucket;
     }
 
-    #[Depends('testCreateFile')]
     /**
-     * @param $file
      * @return array
      * @throws \Exception
      */
-    public function testUpdateFile($file): array
+    public function testUpdateFile(): array
     {
+        $file = $this->setupFile();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::UPDATE_FILE);
         $gqlPayload = [
@@ -361,13 +386,13 @@ class StorageServerTest extends Scope
         return $file;
     }
 
-    #[Depends('testCreateFile')]
     /**
-     * @param $file
      * @throws \Exception
      */
-    public function testDeleteFile($file): void
+    public function testDeleteFile(): void
     {
+        $file = $this->setupFile();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::DELETE_FILE);
         $gqlPayload = [
@@ -385,16 +410,20 @@ class StorageServerTest extends Scope
 
         $this->assertIsNotArray($file['body']);
         $this->assertEquals(204, $file['headers']['status-code']);
+
+        // Clear cache after deletion
+        $key = $this->getProject()['$id'];
+        static::$cachedFile[$key] = [];
     }
 
-    #[Depends('testCreateBucket')]
     /**
-     * @param $bucket
-     * @return array
+     * @return void
      * @throws \Exception
      */
-    public function testDeleteBucket($bucket): void
+    public function testDeleteBucket(): void
     {
+        $bucket = $this->setupBucket();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::DELETE_BUCKET);
         $gqlPayload = [
@@ -411,5 +440,10 @@ class StorageServerTest extends Scope
 
         $this->assertIsNotArray($bucket['body']);
         $this->assertEquals(204, $bucket['headers']['status-code']);
+
+        // Clear cache after deletion
+        $key = $this->getProject()['$id'];
+        static::$cachedBucket[$key] = [];
+        static::$cachedFile[$key] = [];
     }
 }

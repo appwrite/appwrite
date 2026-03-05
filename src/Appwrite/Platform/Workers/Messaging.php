@@ -4,6 +4,8 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\StatsUsage;
 use Appwrite\Messaging\Status as MessageStatus;
+use libphonenumber\NumberParseException;
+use libphonenumber\PhoneNumberUtil;
 use Swoole\Runtime;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -100,9 +102,7 @@ class Messaging extends Action
 
         $type = $payload['type'] ?? '';
 
-        Span::init('messaging');
-        Span::add('project', $project->getId());
-        Span::add('type', $type);
+        Span::add('message.type', $type);
 
         try {
             switch ($type) {
@@ -139,12 +139,6 @@ class Messaging extends Action
         $targetIds = $message->getAttribute('targets', []);
         $userIds = $message->getAttribute('users', []);
         $providerType = $message->getAttribute('providerType');
-
-        Span::add('messageId', $message->getId());
-        Span::add('providerType', $providerType);
-        Span::add('topicsCount', \count($topicIds));
-        Span::add('usersCount', \count($userIds));
-        Span::add('targetsCount', \count($targetIds));
 
         /**
          * @var array<Document> $allTargets
@@ -189,31 +183,13 @@ class Messaging extends Action
             \array_push($allTargets, ...$targets);
         }
 
-        Span::add('recipientsTotal', \count($allTargets));
-
-        // Extract country codes for SMS targets
-        if ($providerType === MESSAGE_TYPE_SMS && !empty($allTargets)) {
-            $countryCodes = [];
-            foreach ($allTargets as $target) {
-                $identifier = $target->getAttribute('identifier', '');
-                $countryCode = $this->extractCountryCode($identifier);
-                if ($countryCode !== null) {
-                    $countryCodes[$countryCode] = ($countryCodes[$countryCode] ?? 0) + 1;
-                }
-            }
-            foreach ($countryCodes as $code => $count) {
-                Span::add('countryCode_' . $code, $count);
-            }
-        }
-
         if (empty($allTargets)) {
             $dbForProject->updateDocument('messages', $message->getId(), $message->setAttributes([
                 'status' => MessageStatus::FAILED,
                 'deliveryErrors' => ['No valid recipients found.']
             ]));
 
-            Span::add('status', 'failed');
-            Span::add('error', 'No valid recipients found.');
+            Span::add('message.skipped', 'no_valid_recipients');
             return;
         }
 
@@ -228,13 +204,9 @@ class Messaging extends Action
                 'deliveryErrors' => ['No enabled provider found.']
             ]));
 
-            Span::add('status', 'failed');
-            Span::add('error', 'No enabled provider found.');
+            Span::add('message.skipped', 'no_enabled_provider');
             return;
         }
-
-        Span::add('provider', $default->getAttribute('provider'));
-        Span::add('providerName', $default->getAttribute('name'));
 
         /**
          * @var array<string, array<string, null>> $identifiers
@@ -377,14 +349,12 @@ class Messaging extends Action
 
         if (\count($message->getAttribute('deliveryErrors')) > 0) {
             $message->setAttribute('status', MessageStatus::FAILED);
-            Span::add('status', 'failed');
         } else {
             $message->setAttribute('status', MessageStatus::SENT);
-            Span::add('status', 'sent');
         }
 
-        Span::add('deliveredTotal', $deliveredTotal);
-        Span::add('errorsTotal', \count($deliveryErrors));
+        Span::add('message.delivered_total', $deliveredTotal);
+        Span::add('message.errors_total', \count($deliveryErrors));
 
         $message->removeAttribute('to');
 
@@ -431,22 +401,12 @@ class Messaging extends Action
 
     private function sendInternalSMSMessage(Document $message, Document $project, array $recipients, Log $log): void
     {
-        Span::add('providerType', 'sms');
-
-        // Extract country code from the single recipient phone number
-        $countryCode = $this->extractCountryCode($recipients[0] ?? '');
-        if ($countryCode !== null) {
-            Span::add('countryCode', $countryCode);
-        }
-
         if ($this->adapter === null) {
             $this->adapter = $this->createInternalSMSAdapter();
         }
 
         if ($this->adapter === null) {
-            Span::add('status', 'skipped');
-            Span::add('warning', 'SMS adapter is not set.');
-            return;
+            throw new \Exception('SMS adapter is not set.');
         }
 
         if ($project->isEmpty()) {
@@ -456,13 +416,19 @@ class Messaging extends Action
         $denyList = System::getEnv('_APP_SMS_PROJECTS_DENY_LIST', '');
         $denyList = explode(',', $denyList);
         if (\in_array($project->getId(), $denyList)) {
-            Span::add('status', 'denied');
-            Span::add('error', 'Project is in the deny list.');
+            Span::add('message.skipped', 'project_denied');
             return;
         }
 
         $from = System::getEnv('_APP_SMS_FROM', '');
-        Span::add('from', $from);
+        Span::add('message.from', $from);
+
+        try {
+            $phoneNumber = PhoneNumberUtil::getInstance()->parse($recipients[0] ?? '');
+            Span::add('message.country_code', $phoneNumber->getCountryCode());
+        } catch (NumberParseException $e) {
+            Span::add('message.country_code', 'unknown');
+        }
 
         $sms = new SMS(
             $recipients,
@@ -470,14 +436,7 @@ class Messaging extends Action
             $from
         );
 
-        try {
-            $result = $this->adapter->send($sms);
-            Span::add('status', 'sent');
-            Span::add('deliveredTo', $result['deliveredTo'] ?? 0);
-        } catch (\Throwable $th) {
-            Span::add('status', 'failed');
-            throw new \Exception('Failed sending to targets with error: ' . $th->getMessage());
-        }
+        $this->adapter->send($sms);
     }
 
 
@@ -749,7 +708,6 @@ class Messaging extends Action
     private function createInternalSMSAdapter(): ?SMSAdapter
     {
         if (empty(System::getEnv('_APP_SMS_PROVIDER')) || empty(System::getEnv('_APP_SMS_FROM'))) {
-            Span::add('warning', 'Skipped SMS processing. Missing "_APP_SMS_PROVIDER" or "_APP_SMS_FROM" environment variables.');
             return null;
         }
 
@@ -795,13 +753,11 @@ class Messaging extends Action
                 $provider = $this->createProviderFromDSN($localDSN);
                 $adapter = $this->getSmsAdapter($provider);
             } catch (\Exception) {
-                Span::add('warning', 'Unable to create adapter: ' . $localDSN->getHost());
                 continue;
             }
 
             $callingCode = $localDSN->getParam('local', '');
             if (empty($callingCode)) {
-                Span::add('warning', 'Unable to register adapter: ' . $localDSN->getHost() . '. Missing `local` parameter.');
                 continue;
             }
 
@@ -871,35 +827,5 @@ class Messaging extends Action
         ]);
 
         return $provider;
-    }
-
-    /**
-     * Extract country calling code from a phone number using known country codes.
-     */
-    private function extractCountryCode(string $phoneNumber): ?string
-    {
-        if (!\str_starts_with($phoneNumber, '+')) {
-            return null;
-        }
-
-        $number = \substr($phoneNumber, 1);
-
-        if (empty($number)) {
-            return null;
-        }
-
-        $phoneCodes = Config::getParam('locale-phones', []);
-        $codes = \array_unique(\array_values($phoneCodes));
-
-        // Sort by length descending to match longest codes first (e.g., 1868 before 1)
-        \usort($codes, fn ($a, $b) => \strlen($b) - \strlen($a));
-
-        foreach ($codes as $code) {
-            if (\str_starts_with($number, $code)) {
-                return $code;
-            }
-        }
-
-        return null;
     }
 }

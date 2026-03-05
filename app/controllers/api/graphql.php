@@ -20,7 +20,7 @@ use GraphQL\Validator\Rules\QueryDepth;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Http;
+use Utopia\Http\Http;
 use Utopia\System\System;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Text;

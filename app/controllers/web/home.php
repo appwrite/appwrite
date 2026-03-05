@@ -2,7 +2,7 @@
 
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
-use Utopia\Http;
+use Utopia\Http\Http;
 
 Http::get('/versions')
     ->desc('Get Version')

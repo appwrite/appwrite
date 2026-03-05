@@ -3,10 +3,10 @@
 namespace Tests\E2E\Services\Databases\Permissions;
 
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ApiTablesDB;
 use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\SchemaPolling;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Helpers\ID;
@@ -19,6 +19,7 @@ class TablesDBPermissionsTeamTest extends Scope
     use ProjectCustom;
     use SideClient;
     use ApiTablesDB;
+    use SchemaPolling;
 
     public array $collections = [];
     public string $databaseId = 'testpermissiondb';
@@ -115,7 +116,8 @@ class TablesDBPermissionsTeamTest extends Scope
         );
         $this->assertEquals(202, $schema2['headers']['status-code']);
 
-        sleep(2);
+        $this->waitForAttribute($this->databaseId, $this->collections['collection1'], 'title');
+        $this->waitForAttribute($this->databaseId, $this->collections['collection2'], 'title');
 
         return $this->collections;
     }
@@ -153,14 +155,16 @@ class TablesDBPermissionsTeamTest extends Scope
     }
 
     /**
-     * Setup database
-     *
-     * Data providers lose object state
-     * so explicitly pass $users to each iteration
-     * @return array $users
+     * Setup database helper with caching
      */
-    public function testSetupDatabase(): array
+    protected function setupDatabase(): array
     {
+        $cacheKey = $this->getProject()['$id'] . '_' . static::class;
+
+        if (!empty(self::$setupDatabaseCache[$cacheKey])) {
+            return self::$setupDatabaseCache[$cacheKey];
+        }
+
         $this->createUsers();
         $this->createTeams();
 
@@ -199,13 +203,25 @@ class TablesDBPermissionsTeamTest extends Scope
         );
         $this->assertEquals(201, $response['headers']['status-code']);
 
-        return $this->users;
+        self::$setupDatabaseCache[$cacheKey] = $this->users;
+
+        return self::$setupDatabaseCache[$cacheKey];
     }
 
-    #[Depends('testSetupDatabase')]
-    #[DataProvider('readDocumentsProvider')]
-    public function testReadDocuments($user, $collection, $success, $users)
+    /**
+     * Setup database test
+     */
+    public function testSetupDatabase(): void
     {
+        $users = $this->setupDatabase();
+        $this->assertNotEmpty($users);
+    }
+
+    #[DataProvider('readDocumentsProvider')]
+    public function testReadDocuments($user, $collection, $success)
+    {
+        $users = $this->setupDatabase();
+
         $documents = $this->client->call(
             Client::METHOD_GET,
             $this->getRecordUrl($this->databaseId, $collection),
@@ -224,10 +240,11 @@ class TablesDBPermissionsTeamTest extends Scope
         }
     }
 
-    #[Depends('testSetupDatabase')]
     #[DataProvider('writeDocumentsProvider')]
-    public function testWriteDocuments($user, $collection, $success, $users)
+    public function testWriteDocuments($user, $collection, $success)
     {
+        $users = $this->setupDatabase();
+
         $documents = $this->client->call(
             Client::METHOD_POST,
             $this->getRecordUrl($this->databaseId, $collection),

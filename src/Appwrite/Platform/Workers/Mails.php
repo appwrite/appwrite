@@ -6,6 +6,7 @@ use Appwrite\Template\Template;
 use Exception;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Runtime;
+use Utopia\Database\Document;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -32,6 +33,7 @@ class Mails extends Action
         $this
             ->desc('Mails worker')
             ->inject('message')
+            ->inject('project')
             ->inject('register')
             ->inject('log')
             ->callback($this->action(...));
@@ -53,7 +55,7 @@ class Mails extends Action
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Registry $register, Log $log): void
+    public function action(Message $message, Document $project, Registry $register, Log $log): void
     {
         Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
         $payload = $message->getPayload() ?? [];

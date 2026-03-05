@@ -146,13 +146,16 @@ trait AccountBase
     {
         $isConsoleProject = $this->getProject()['$id'] === 'console';
 
+        // Use unique email to avoid parallel test collisions
+        $otpEmail = 'otpuser-' . uniqid() . '@appwrite.io';
+
         $response = $this->client->call(Client::METHOD_POST, '/account/tokens/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'userId' => ID::unique(),
-            'email' => 'otpuser@appwrite.io'
+            'email' => $otpEmail
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -165,9 +168,9 @@ trait AccountBase
 
         $userId = $response['body']['userId'];
 
-        $lastEmail = $this->getLastEmailByAddress('otpuser@appwrite.io');
+        $lastEmail = $this->getLastEmailByAddress($otpEmail);
 
-        $this->assertNotEmpty($lastEmail, 'Email not found for address: otpuser@appwrite.io');
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $otpEmail);
         $this->assertEquals('OTP for ' . $this->getProject()['name'] . ' Login', $lastEmail['subject']);
 
         // FInd 6 concurrent digits in email text - OTP
@@ -213,7 +216,7 @@ trait AccountBase
         $this->assertEquals($userId, $response['body']['$id']);
         $this->assertTrue($response['body']['emailVerification']);
         $this->assertArrayHasKey('targets', $response['body']);
-        $this->assertEquals('otpuser@appwrite.io', $response['body']['targets'][0]['identifier']);
+        $this->assertEquals($otpEmail, $response['body']['targets'][0]['identifier']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/token', array_merge([
             'origin' => 'http://localhost',
@@ -233,7 +236,7 @@ trait AccountBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'userId' => ID::unique(),
-            'email' => 'otpuser@appwrite.io',
+            'email' => $otpEmail,
             'phrase' => true
         ]);
 
@@ -244,8 +247,11 @@ trait AccountBase
 
         $phrase = $response['body']['phrase'];
 
-        $lastEmail = $this->getLastEmailByAddress('otpuser@appwrite.io');
-        $this->assertNotEmpty($lastEmail, 'Email not found for address: otpuser@appwrite.io');
+        $lastEmail = $this->getLastEmailByAddress($otpEmail, function ($email) use ($phrase) {
+            $this->assertStringContainsStringIgnoringCase('security phrase', $email['text']);
+            $this->assertStringContainsStringIgnoringCase($phrase, $email['text']);
+        });
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $otpEmail);
         $this->assertEquals('OTP for ' . $this->getProject()['name'] . ' Login', $lastEmail['subject']);
         $this->assertStringContainsStringIgnoringCase('security phrase', $lastEmail['text']);
         $this->assertStringContainsStringIgnoringCase($phrase, $lastEmail['text']);

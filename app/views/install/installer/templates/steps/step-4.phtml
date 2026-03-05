@@ -8,7 +8,11 @@ $defaultEmailCertificates = $defaultEmailCertificates ?? '';
 $defaultSecretKey = $defaultSecretKey ?? '';
 $defaultDatabase = $defaultDatabase ?? 'mongodb';
 $selectedDatabase = $lockedDatabase ?: $defaultDatabase;
-$defaultDatabaseLabel = $selectedDatabase === 'mariadb' ? 'MariaDB' : 'MongoDB';
+$defaultDatabaseLabel = match ($selectedDatabase) {
+    'mariadb' => 'MariaDB',
+    'postgresql' => 'PostgreSQL',
+    default => 'MongoDB',
+};
 $badgeLabel = $defaultSecretKey !== '' ? 'Generated' : 'Missing';
 $badgeClass = $defaultSecretKey !== '' ? 'badge-success' : 'badge-warning';
 ?>

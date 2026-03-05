@@ -8,12 +8,13 @@ use Appwrite\Platform\Installer\Server as InstallerServer;
 use Appwrite\Utopia\View;
 use Utopia\Auth\Proofs\Password;
 use Utopia\Auth\Proofs\Token;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Fetch\Client;
 use Utopia\Platform\Action;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 class Install extends Action
 {
@@ -21,7 +22,7 @@ class Install extends Action
     private const int WEB_SERVER_CHECK_ATTEMPTS = 10;
     private const int WEB_SERVER_CHECK_DELAY_SECONDS = 1;
 
-    private const int HEALTH_CHECK_ATTEMPTS = 10;
+    private const int HEALTH_CHECK_ATTEMPTS = 30;
     private const int HEALTH_CHECK_DELAY_SECONDS = 3;
 
     private const string PATTERN_ENV_VAR_NAME = '/^[A-Z0-9_]+$/';
@@ -51,14 +52,24 @@ class Install extends Action
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
+            ->param('database', 'mongodb', new WhiteList(['mongodb', 'mariadb', 'postgresql']), 'Database to use (mongodb|mariadb|postgresql)', true)
             ->callback($this->action(...));
     }
 
-    public function action(string $httpPort, string $httpsPort, string $organization, string $image, string $interactive, bool $noStart, bool $isUpgrade = false): void
-    {
+    public function action(
+        string $httpPort,
+        string $httpsPort,
+        string $organization,
+        string $image,
+        string $interactive,
+        bool $noStart,
+        string $database
+    ): void {
+        $isUpgrade = false;
         $defaultHttpPort = '80';
         $defaultHttpsPort = '443';
         $config = Config::getParam('variables');
+
         /** @var array<string, array<string, string>> $vars array where key is variable name and value is variable */
         $vars = [];
 
@@ -155,6 +166,14 @@ class Install extends Action
                     }
                 }
             }
+
+            // Block database type changes on existing installations
+            $existingDatabase = $vars['_APP_DB_ADAPTER']['default'] ?? null;
+            if ($existingDatabase !== null && $existingDatabase !== $database) {
+                Console::error("Cannot change database type from '{$existingDatabase}' to '{$database}'.");
+                Console::error('Changing database types on an existing installation is not supported.');
+                Console::exit(1);
+            }
         }
 
         // If interactive and web mode enabled, start web server
@@ -233,6 +252,11 @@ class Install extends Action
                 continue;
             }
 
+            if ($var['name'] === '_APP_DB_ADAPTER' && $data !== false) {
+                $input[$var['name']] = $database;
+                continue;
+            }
+
             $value = Console::confirm($var['question'] . ' (default: \'' . $var['default'] . '\')');
 
             if (!empty($value)) {
@@ -247,6 +271,17 @@ class Install extends Action
                 Console::warning("\nUse 'AAAA' if you're using an IPv6 address and 'A' if you're using an IPv4 address.\n");
             }
         }
+        $database = $input['_APP_DB_ADAPTER'];
+        if ($database === 'postgresql') {
+            $input['_APP_DB_HOST'] = 'postgresql';
+            $input['_APP_DB_PORT'] = 5432;
+        } elseif ($database === 'mongodb') {
+            $input['_APP_DB_HOST'] = 'mongodb';
+            $input['_APP_DB_PORT'] = 27017;
+        } elseif ($database === 'mariadb') {
+            $input['_APP_DB_HOST'] = 'mariadb';
+            $input['_APP_DB_PORT'] = 3306;
+        }
 
         $shouldGenerateSecrets = !$existingInstallation && !$isUpgrade;
         $input = $this->prepareEnvironmentVariables($userInput, $vars, $shouldGenerateSecrets);
@@ -256,7 +291,6 @@ class Install extends Action
 
     protected function startWebServer(string $defaultHttpPort, string $defaultHttpsPort, string $organization, string $image, bool $noStart, array $vars, bool $isUpgrade = false, ?string $lockedDatabase = null): void
     {
-        $host = InstallerServer::INSTALLER_WEB_HOST;
         $port = InstallerServer::INSTALLER_WEB_PORT;
 
         @unlink(InstallerServer::INSTALLER_COMPLETE_FILE);
@@ -273,19 +307,14 @@ class Install extends Action
             'isLocal' => $this->isLocalInstall(),
             'hostPath' => $this->hostPath ?: null,
         ]);
-        $routerScript = dirname(__DIR__) . '/Installer/Server.php';
-        $docroot = $this->buildFromProjectPath('/app/views/install');
 
-        // Start PHP built-in server in background
-        $command = \sprintf(
-            'php -S %s:%d -t %s %s 2>&1 & echo $!',
-            $host,
-            $port,
-            \escapeshellarg($docroot),
-            \escapeshellarg($routerScript)
-        );
+        // Start Swoole-based installer server in background
+        // Redirect stdout/stderr to a log file so exec() returns immediately
+        // (otherwise the backgrounded process holds the pipe open and exec() hangs)
+        $serverScript = \escapeshellarg(dirname(__DIR__) . '/Installer/Server.php');
+        $logFile = \sys_get_temp_dir() . '/appwrite-installer-server.log';
         $output = [];
-        \exec($command, $output);
+        \exec("php {$serverScript} > " . \escapeshellarg($logFile) . " 2>&1 & echo \$!", $output);
         $pid = isset($output[0]) ? (int) $output[0] : 0;
 
         \register_shutdown_function(function () use ($pid) {
@@ -293,9 +322,14 @@ class Install extends Action
                 @\posix_kill($pid, SIGTERM);
             }
         });
-        \sleep(3);
+        \sleep(1);
 
         if (!$this->waitForWebServer($port)) {
+            $log = @\file_get_contents($logFile);
+            if ($log !== false && $log !== '') {
+                Console::error('Installer server log:');
+                Console::error($log);
+            }
             Console::warning('Web installer did not respond in time. Please refresh the browser.');
             return;
         }
@@ -363,6 +397,9 @@ class Install extends Action
         } elseif ($database === 'mariadb') {
             $input['_APP_DB_HOST'] = 'mariadb';
             $input['_APP_DB_PORT'] = 3306;
+        } elseif ($database === 'postgresql') {
+            $input['_APP_DB_HOST'] = 'postgresql';
+            $input['_APP_DB_PORT'] = 5432;
         }
 
         return $input;
@@ -530,16 +567,23 @@ class Install extends Action
                 $currentStep = InstallerServer::STEP_DOCKER_CONTAINERS;
                 $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_IN_PROGRESS, $messages);
                 $this->runDockerCompose($input, $isLocalInstall, $useExistingConfig, $isCLI);
-                $this->connectInstallerToAppwriteNetwork();
+
+                if (!$isLocalInstall) {
+                    $this->connectInstallerToAppwriteNetwork();
+                }
+
+                $domain = $input['_APP_DOMAIN'] ?? 'localhost';
+
+                // Wait for Appwrite API to be healthy before marking containers as ready
+                $apiUrl = $this->waitForApiReady($domain, $httpPort, $isLocalInstall, $progress, InstallerServer::STEP_DOCKER_CONTAINERS);
 
                 $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_COMPLETED, $messages);
 
                 if (!$isUpgrade) {
-                    // Create console account on fresh install only
-                    $this->createInitialAdminAccount($account, $progress);
+                    $this->createInitialAdminAccount($account, $progress, $apiUrl, $domain);
                 }
 
-                /* track installs for metrics */
+                // Track installs
                 $this->trackSelfHostedInstall($input, $isUpgrade, $version, $account);
 
                 if ($isCLI) {
@@ -570,7 +614,7 @@ class Install extends Action
         }
     }
 
-    private function createInitialAdminAccount(array $account, ?callable $progress): void
+    private function createInitialAdminAccount(array $account, ?callable $progress, string $apiUrl, string $domain): void
     {
         $name = $account['name'] ?? 'Admin';
         $email = $account['email'] ?? null;
@@ -588,20 +632,18 @@ class Install extends Action
                 messageOverride: 'Creating Appwrite account'
             );
 
-            $this->waitForApiReady();
-
-            // Create account and session
+            // API is already confirmed healthy — just create the account
             $userId = $this->makeApiCall('/v1/account', [
                 'userId' => 'unique()',
                 'email' => $email,
                 'password' => $password,
                 'name' => $name
-            ]);
+            ], false, $apiUrl, $domain);
 
             $session = $this->makeApiCall('/v1/account/sessions/email', [
                 'email' => $email,
                 'password' => $password
-            ], true);
+            ], true, $apiUrl, $domain);
 
             $this->updateProgress(
                 $progress,
@@ -620,6 +662,10 @@ class Install extends Action
                 $progress,
                 InstallerServer::STEP_ACCOUNT_SETUP,
                 InstallerServer::STATUS_ERROR,
+                details: [
+                    'output' => "apiUrl={$apiUrl}, domain={$domain}",
+                    'trace' => $e->getTraceAsString(),
+                ],
                 messageOverride: 'Account creation failed: ' . $e->getMessage()
             );
         }
@@ -677,20 +723,57 @@ class Install extends Action
         }
     }
 
-    private function waitForApiReady(): void
+    /**
+     * Wait for the Appwrite API to respond. Builds candidate URLs based on
+     * the runtime context and returns whichever responds first.
+     *
+     * Candidates (in order of preference):
+     *  - Docker internal DNS (http://appwrite) — only if on the appwrite network
+     *  - host.docker.internal:{port} — reaches host-published ports from inside a container
+     *  - localhost:{port} — works when running directly on the host (local dev)
+     */
+    private function waitForApiReady(string $domain, string $httpPort, bool $isLocalInstall, ?callable $progress, string $step = InstallerServer::STEP_DOCKER_CONTAINERS): string
     {
         $client = new Client();
-        $pingHealth = function () use ($client): bool {
-            try {
-                return $client->fetch(self::APPWRITE_API_URL . '/v1/health/version')->getStatusCode() === 200;
-            } catch (\Throwable) {
-                return false;
-            }
-        };
+        $client
+            ->setTimeout(5000)
+            ->setConnectTimeout(5000)
+            ->addHeader('Host', $domain);
+
+        $healthPath = '/v1/health/version';
+
+        // Local dev: reach Traefik via localhost on the host.
+        // Docker: reach Appwrite directly via Docker internal DNS (network connect is guaranteed).
+        $candidate = $isLocalInstall
+            ? 'http://localhost:' . $httpPort . $healthPath
+            : self::APPWRITE_API_URL . $healthPath;
+        $candidates = [$candidate];
+
+        $lastErrors = [];
 
         for ($i = 0; $i < self::HEALTH_CHECK_ATTEMPTS; $i++) {
-            if ($pingHealth()) {
-                return;
+            foreach ($candidates as $url) {
+                try {
+                    $response = $client->fetch($url);
+                    if ($response->getStatusCode() === 200) {
+                        return \rtrim(\substr($url, 0, -\strlen($healthPath)), '/');
+                    }
+                    $lastErrors[$url] = "HTTP {$response->getStatusCode()}";
+                } catch (\Throwable $e) {
+                    $lastErrors[$url] = $e->getMessage();
+                }
+            }
+
+            if ($progress) {
+                try {
+                    $progress(
+                        $step,
+                        InstallerServer::STATUS_IN_PROGRESS,
+                        'Waiting for Appwrite to be ready (' . ($i + 1) . '/' . self::HEALTH_CHECK_ATTEMPTS . ')',
+                        []
+                    );
+                } catch (\Throwable) {
+                }
             }
 
             if ($i < self::HEALTH_CHECK_ATTEMPTS - 1) {
@@ -698,32 +781,68 @@ class Install extends Action
             }
         }
 
-        throw new \Exception('Failed to connect with Appwrite in time');
+        $errorDetail = implode('; ', array_map(
+            fn ($url, $err) => "{$url} => {$err}",
+            array_keys($lastErrors),
+            array_values($lastErrors)
+        ));
+
+        throw new \Exception("Failed to connect with Appwrite in time. Tried: {$errorDetail}");
     }
 
-    /* easier to just connect and call appwrite endpoint */
+    /**
+     * Connect the installer container to the appwrite network, retrying
+     * until it succeeds or we run out of attempts.
+     */
     private function connectInstallerToAppwriteNetwork(): void
     {
         $network = escapeshellarg('appwrite');
-        $container = escapeshellarg(InstallerServer::DEFAULT_CONTAINER);
-        @exec("docker network connect $network $container 2>/dev/null");
+
+        // Resolve our own container ID — works regardless of how the
+        // container was started (--name, random name, etc.).
+        $containerId = trim((string) @file_get_contents('/etc/hostname'));
+        if ($containerId === '') {
+            $containerId = InstallerServer::DEFAULT_CONTAINER;
+        }
+        $container = escapeshellarg($containerId);
+
+        $outputStr = '';
+        for ($i = 0; $i < 10; $i++) {
+            $output = [];
+            @exec("docker network connect {$network} {$container} 2>&1", $output, $exitCode);
+
+            if ($exitCode === 0) {
+                return;
+            }
+
+            $outputStr = implode(' ', $output);
+            if (str_contains($outputStr, 'already exists')) {
+                return;
+            }
+
+            sleep(1);
+        }
+
+        throw new \Exception('Failed to connect installer to appwrite network: ' . $outputStr);
     }
 
-    private function makeApiCall(string $endpoint, array $body, bool $extractSession = false)
+    private function makeApiCall(string $endpoint, array $body, bool $extractSession = false, string $apiUrl = self::APPWRITE_API_URL, string $domain = 'localhost')
     {
         $client = new Client();
         $client
             ->setTimeout(LOCAL_API_TIMEOUT)
+            ->setConnectTimeout(10000)
             ->addHeader('Content-Type', 'application/json')
-            ->addHeader('X-Appwrite-Project', 'console');
+            ->addHeader('X-Appwrite-Project', 'console')
+            ->addHeader('Host', $domain);
 
-        $url = self::APPWRITE_API_URL . $endpoint;
+        $url = $apiUrl . $endpoint;
         $response = $client->fetch($url, Client::METHOD_POST, $body);
 
         if ($response->getStatusCode() !== 201) {
             $error = $response->json();
-            $message = $error['message'] ?? 'Unknown error';
-            throw new \Exception($message);
+            $message = $error['message'] ?? ('HTTP ' . $response->getStatusCode() . ': ' . $response->getBody());
+            throw new \Exception("API call failed ({$endpoint}): {$message}");
         }
 
         $data = $response->json();

@@ -48,8 +48,8 @@ class Get extends Base
                     )
                 ]
             ))
-            ->param('functionId', '', new UID(), 'Function ID.')
-            ->param('executionId', '', new UID(), 'Execution ID.')
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
+            ->param('executionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Execution ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('authorization')
@@ -80,6 +80,16 @@ class Get extends Base
 
         if ($execution->isEmpty()) {
             throw new Exception(Exception::EXECUTION_NOT_FOUND);
+        }
+
+        // Override status in response if the execution is stuck in waiting/processing beyond the function timeout.
+        $status = $execution->getAttribute('status', '');
+        if ($status === 'waiting' || $status === 'processing') {
+            $timeout = $function->getAttribute('timeout', 900);
+            $elapsed = \time() - \strtotime($execution->getCreatedAt());
+            if ($elapsed >= $timeout) {
+                $execution->setAttribute('status', 'failed');
+            }
         }
 
         $response->dynamic($execution, Response::MODEL_EXECUTION);

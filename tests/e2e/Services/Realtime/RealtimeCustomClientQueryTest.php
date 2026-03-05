@@ -136,7 +136,14 @@ class RealtimeCustomClientQueryTest extends Scope
             'required' => false,
         ]);
 
-        sleep(2);
+        $this->assertEventually(function () use ($databaseId, $collectionId, $projectId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/status', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $targetDocumentId = ID::unique();
 
@@ -228,7 +235,14 @@ class RealtimeCustomClientQueryTest extends Scope
             'required' => false,
         ]);
 
-        sleep(2);
+        $this->assertEventually(function () use ($databaseId, $collectionId, $projectId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/status', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $excludedDocumentId = ID::unique();
 
@@ -319,7 +333,14 @@ class RealtimeCustomClientQueryTest extends Scope
             'required' => false,
         ]);
 
-        sleep(2);
+        $this->assertEventually(function () use ($databaseId, $collectionId, $projectId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/score', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         // Subscribe with query for score > 50
         $client = $this->getWebsocket(['documents'], [
@@ -407,7 +428,14 @@ class RealtimeCustomClientQueryTest extends Scope
             'required' => false,
         ]);
 
-        sleep(2);
+        $this->assertEventually(function () use ($databaseId, $collectionId, $projectId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/age', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         // Subscribe with query for age < 18
         $client = $this->getWebsocket(['documents'], [
@@ -495,7 +523,14 @@ class RealtimeCustomClientQueryTest extends Scope
             'required' => false,
         ]);
 
-        sleep(2);
+        $this->assertEventually(function () use ($databaseId, $collectionId, $projectId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/priority', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         // Subscribe with query for priority >= 5
         $client = $this->getWebsocket(['documents'], [
@@ -601,7 +636,14 @@ class RealtimeCustomClientQueryTest extends Scope
             'required' => false,
         ]);
 
-        sleep(2);
+        $this->assertEventually(function () use ($databaseId, $collectionId, $projectId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/level', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         // Subscribe with query for level <= 10
         $client = $this->getWebsocket(['documents'], [
@@ -708,7 +750,14 @@ class RealtimeCustomClientQueryTest extends Scope
             'required' => false,
         ]);
 
-        sleep(2);
+        $this->assertEventually(function () use ($databaseId, $collectionId, $projectId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/description', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         // Subscribe with query for description IS NULL
         $client = $this->getWebsocket(['documents'], [
@@ -796,7 +845,14 @@ class RealtimeCustomClientQueryTest extends Scope
             'required' => false,
         ]);
 
-        sleep(2);
+        $this->assertEventually(function () use ($databaseId, $collectionId, $projectId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/email', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         // Subscribe with query for email IS NOT NULL
         $client = $this->getWebsocket(['documents'], [
@@ -892,7 +948,20 @@ class RealtimeCustomClientQueryTest extends Scope
             'required' => false,
         ]);
 
-        sleep(2);
+        $this->assertEventually(function () use ($databaseId, $collectionId, $projectId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/status', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/priority', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         // Subscribe with AND query: status = 'active' AND priority > 5
         $client = $this->getWebsocket(['documents'], [
@@ -1009,7 +1078,14 @@ class RealtimeCustomClientQueryTest extends Scope
             'required' => false,
         ]);
 
-        sleep(2);
+        $this->assertEventually(function () use ($databaseId, $collectionId, $projectId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/type', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         // Subscribe with OR query: type = 'urgent' OR type = 'critical'
         $client = $this->getWebsocket(['documents'], [
@@ -1128,7 +1204,20 @@ class RealtimeCustomClientQueryTest extends Scope
             'required' => false,
         ]);
 
-        sleep(2);
+        $this->assertEventually(function () use ($databaseId, $collectionId, $projectId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/category', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/score', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         // Subscribe with complex query: (category = 'premium' OR category = 'vip') AND score >= 80
         $client = $this->getWebsocket(['documents'], [
@@ -1227,6 +1316,197 @@ class RealtimeCustomClientQueryTest extends Scope
         try {
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered');
+        } catch (TimeoutException $e) {
+            $this->assertTrue(true);
+        }
+
+        $client->close();
+    }
+
+    public function testCollectionScopedDocumentsChannelReceivesEvents()
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        // Setup database and collection
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Scoped Channel DB',
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Scoped Channel Collection',
+            'permissions' => [
+                Permission::create(Role::user($user['$id'])),
+            ],
+            'documentSecurity' => true,
+        ]);
+        $collectionId = $collection['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'status',
+            'size' => 256,
+            'required' => false,
+        ]);
+
+        $this->assertEventually(function () use ($databaseId, $collectionId, $projectId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/status', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
+
+        // Subscribe only to the fully-qualified documents channel for this collection
+        $scopedChannel = 'databases.' . $databaseId . '.collections.' . $collectionId . '.documents';
+        $client = $this->getWebsocket([$scopedChannel], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]);
+
+        $response = json_decode($client->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertContains($scopedChannel, $response['data']['channels']);
+
+        // Create document in that collection - should receive event on the scoped channel
+        $documentId = ID::unique();
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => $documentId,
+            'data' => [
+                'status' => 'active'
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        $event = json_decode($client->receive(), true);
+        $this->assertEquals('event', $event['type']);
+        $this->assertEquals($documentId, $event['data']['payload']['$id']);
+
+        $client->close();
+    }
+
+    public function testCollectionScopedDocumentsChannelWithQuery()
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        // Setup database and collection
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Scoped Channel Query DB',
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Scoped Channel Query Collection',
+            'permissions' => [
+                Permission::create(Role::user($user['$id'])),
+            ],
+            'documentSecurity' => true,
+        ]);
+        $collectionId = $collection['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'status',
+            'size' => 256,
+            'required' => false,
+        ]);
+
+        $this->assertEventually(function () use ($databaseId, $collectionId, $projectId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/status', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
+
+        $targetDocumentId = ID::unique();
+
+        // Subscribe with query for specific document ID on the fully-qualified documents channel
+        $scopedChannel = 'databases.' . $databaseId . '.collections.' . $collectionId . '.documents';
+        $client = $this->getWebsocket([$scopedChannel], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ], null, [
+            Query::equal('$id', [$targetDocumentId])->toString(),
+        ]);
+
+        $response = json_decode($client->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertContains($scopedChannel, $response['data']['channels']);
+
+        // Create document with matching ID - should receive event
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => $targetDocumentId,
+            'data' => [
+                'status' => 'active'
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        $event = json_decode($client->receive(), true);
+        $this->assertEquals('event', $event['type']);
+        $this->assertEquals($targetDocumentId, $event['data']['payload']['$id']);
+
+        // Create document with different ID - should NOT receive event
+        $otherDocumentId = ID::unique();
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => $otherDocumentId,
+            'data' => [
+                'status' => 'inactive'
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        try {
+            $client->receive();
+            $this->fail('Expected TimeoutException - event should be filtered for scoped channel query');
         } catch (TimeoutException $e) {
             $this->assertTrue(true);
         }
@@ -1348,7 +1628,14 @@ class RealtimeCustomClientQueryTest extends Scope
             'required' => false,
         ]);
 
-        sleep(2);
+        $this->assertEventually(function () use ($databaseId, $collectionId, $projectId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/status', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $targetDocId = ID::unique();
 
@@ -1567,7 +1854,14 @@ class RealtimeCustomClientQueryTest extends Scope
             'required' => false,
         ]);
 
-        sleep(2);
+        $this->assertEventually(function () use ($databaseId, $collectionId, $projectId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/status', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
             'content-type' => 'application/json',
@@ -1579,7 +1873,14 @@ class RealtimeCustomClientQueryTest extends Scope
             'required' => false,
         ]);
 
-        sleep(2);
+        $this->assertEventually(function () use ($databaseId, $collectionId, $projectId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/category', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $queryStatusActive = Query::equal('status', ['active'])->toString();
         $queryStatusPending = Query::equal('status', ['pending'])->toString();
@@ -1778,7 +2079,14 @@ class RealtimeCustomClientQueryTest extends Scope
             'required' => false,
         ]);
 
-        sleep(2);
+        $this->assertEventually(function () use ($databaseId, $collectionId, $projectId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/status', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $queryStatusActive = Query::equal('status', ['active'])->toString();
         $queryStatusPending = Query::equal('status', ['pending'])->toString();
@@ -1911,7 +2219,14 @@ class RealtimeCustomClientQueryTest extends Scope
             'required' => false,
         ]);
 
-        sleep(2);
+        $this->assertEventually(function () use ($databaseId, $collectionId, $projectId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/status', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
 
         $targetDocumentId = ID::unique();
 
@@ -2006,7 +2321,7 @@ class RealtimeCustomClientQueryTest extends Scope
             'url' => 'http://localhost',
         ]);
 
-        sleep(3);
+        sleep(1);
 
         // Verify subscription is still working after permission change
         $nonMatchingDocumentId = ID::unique();
@@ -2048,7 +2363,7 @@ class RealtimeCustomClientQueryTest extends Scope
             ],
         ]);
 
-        sleep(2);
+        sleep(1);
 
         // This should NOT receive event because the query is for $targetDocumentId, not $targetDocumentId2
         // This verifies the query is preserved after permission change
@@ -2070,7 +2385,7 @@ class RealtimeCustomClientQueryTest extends Scope
         ]);
 
         // Wait a bit for the event to be processed
-        sleep(3);
+        sleep(1);
 
         // Verify the event is received with the preserved subscription
         $event2 = json_decode($client->receive(), true);
@@ -2084,5 +2399,193 @@ class RealtimeCustomClientQueryTest extends Scope
         $this->assertContains($originalSubscriptionId, $event2['data']['subscriptions']);
 
         $client->close();
+    }
+
+    public function testProjectChannelWithQuery()
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        // Test OLD SDK behavior: project=projectId (string) in query param
+        // For reserved \"project\" param, string is treated as routing-only (project ID),
+        // and is not used as queries for the project channel. We should fall back to select(*).
+        $clientOldSdk = $this->getWebsocket(['project'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ], $projectId, null);
+
+        $response = json_decode($clientOldSdk->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertContains('project', $response['data']['channels']);
+        // Should have default select(['*']) subscription since project param was treated as project ID, not queries
+        $this->assertArrayHasKey('subscriptions', $response['data']);
+        $this->assertIsArray($response['data']['subscriptions']);
+        $this->assertNotEmpty($response['data']['subscriptions']);
+
+        $clientOldSdk->close();
+
+        // Test NEW SDK behavior: project=Query array in query param, project ID in header
+        // The reserved param logic should use Query array as subscription queries for project channel
+        $queryArray = [Query::select(['*'])->toString()];
+        $clientNewSdk = $this->getWebsocketWithCustomQuery(
+            [
+                'channels' => ['project'],
+                'project' => [
+                    0 => [
+                        0 => $queryArray[0]
+                    ]
+                ]
+            ],
+            [
+                'origin' => 'http://localhost',
+                'cookie' => 'a_session_' . $projectId . '=' . $session,
+                'x-appwrite-project' => $projectId,
+            ]
+        );
+
+        $response = json_decode($clientNewSdk->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertContains('project', $response['data']['channels']);
+        // Should have subscription with the provided query
+        $this->assertArrayHasKey('subscriptions', $response['data']);
+        $this->assertIsArray($response['data']['subscriptions']);
+        $this->assertNotEmpty($response['data']['subscriptions']);
+
+        $clientNewSdk->close();
+
+        // Test edge case: project param is array but not a valid Query array
+        // This should now fail with an invalid query error rather than silently falling back.
+        $clientEdgeCase = $this->getWebsocketWithCustomQuery(
+            [
+                'channels' => ['project'],
+                'project' => ['invalid', 'array']
+            ],
+            [
+                'origin' => 'http://localhost',
+                'cookie' => 'a_session_' . $projectId . '=' . $session,
+                'x-appwrite-project' => $projectId,
+            ]
+        );
+
+        $response = json_decode($clientEdgeCase->receive(), true);
+        $this->assertEquals('error', $response['type']);
+        $this->assertStringContainsString('Invalid query', $response['data']['message']);
+    }
+
+    public function testProjectChannelWithHeaderOnly()
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        // Test: project ID only in header, no project query param
+        // This simulates a client that only uses x-appwrite-project header
+        $client = $this->getWebsocketWithCustomQuery(
+            [
+                'channels' => ['project']
+            ],
+            [
+                'origin' => 'http://localhost',
+                'cookie' => 'a_session_' . $projectId . '=' . $session,
+                'x-appwrite-project' => $projectId,
+            ]
+        );
+
+        $response = json_decode($client->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertContains('project', $response['data']['channels']);
+        // Should have default select(['*']) subscription since no project query param
+        $this->assertArrayHasKey('subscriptions', $response['data']);
+        $this->assertIsArray($response['data']['subscriptions']);
+        $this->assertNotEmpty($response['data']['subscriptions']);
+
+        $client->close();
+
+        // Test: project channel with queries, project ID only in header
+        $queryArray = [Query::select(['*'])->toString()];
+        $clientWithQuery = $this->getWebsocketWithCustomQuery(
+            [
+                'channels' => ['project'],
+                'project' => [
+                    0 => [
+                        0 => $queryArray[0]
+                    ]
+                ]
+            ],
+            [
+                'origin' => 'http://localhost',
+                'cookie' => 'a_session_' . $projectId . '=' . $session,
+                'x-appwrite-project' => $projectId,
+            ]
+        );
+
+        $response = json_decode($clientWithQuery->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertContains('project', $response['data']['channels']);
+        $this->assertArrayHasKey('subscriptions', $response['data']);
+        $this->assertIsArray($response['data']['subscriptions']);
+        $this->assertNotEmpty($response['data']['subscriptions']);
+
+        $clientWithQuery->close();
+    }
+
+    public function testTestsChannelWithQueries()
+    {
+        $projectId = 'console';
+
+        // Subscribe without queries - should receive all events
+        $clientNoQuery = $this->getWebsocket(['tests'], [
+            'origin' => 'http://localhost',
+        ], $projectId);
+
+        $response = json_decode($clientNoQuery->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+
+        // Subscribe with matching query - should receive events
+        $clientWithMatchingQuery = $this->getWebsocket(['tests'], [
+            'origin' => 'http://localhost',
+        ], $projectId, [
+            Query::equal('response', ['WS:/v1/realtime:passed'])->toString(),
+        ]);
+
+        $response = json_decode($clientWithMatchingQuery->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+
+        // Subscribe with non-matching query - should NOT receive events
+        $clientWithNonMatchingQuery = $this->getWebsocket(['tests'], [
+            'origin' => 'http://localhost',
+        ], $projectId, [
+            Query::equal('response', ['failed'])->toString(),
+        ]);
+
+        $response = json_decode($clientWithNonMatchingQuery->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+
+        sleep(2);
+
+        // Client without query should receive event
+        $eventNoQuery = json_decode($clientNoQuery->receive(), true);
+        $this->assertEquals('event', $eventNoQuery['type']);
+        $this->assertEquals('test.event', $eventNoQuery['data']['events'][0]);
+        $this->assertEquals('WS:/v1/realtime:passed', $eventNoQuery['data']['payload']['response']);
+
+        // Client with matching query should receive event
+        $eventMatching = json_decode($clientWithMatchingQuery->receive(), true);
+        $this->assertEquals('event', $eventMatching['type']);
+        $this->assertEquals('test.event', $eventMatching['data']['events'][0]);
+        $this->assertEquals('WS:/v1/realtime:passed', $eventMatching['data']['payload']['response']);
+
+        // Client with non-matching query should NOT receive event
+        try {
+            $clientWithNonMatchingQuery->receive();
+            $this->fail('Expected TimeoutException - client with non-matching query should not receive event');
+        } catch (TimeoutException $e) {
+            $this->assertTrue(true);
+        }
+
+        $clientNoQuery->close();
+        $clientWithMatchingQuery->close();
+        $clientWithNonMatchingQuery->close();
     }
 }
