@@ -1005,26 +1005,22 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(204, $response['headers']['status-code']);
 
-        $emails = $this->getLastEmail(2);
-        $this->assertCount(2, $emails);
-        $this->assertEquals('custommailer@appwrite.io', $emails[0]['from'][0]['address']);
-        $this->assertEquals('Custom Mailer', $emails[0]['from'][0]['name']);
-        $this->assertEquals('reply@appwrite.io', $emails[0]['replyTo'][0]['address']);
-        $this->assertEquals('Custom Mailer', $emails[0]['replyTo'][0]['name']);
-        $this->assertEquals('Custom SMTP email sample', $emails[0]['subject']);
-        $this->assertStringContainsStringIgnoringCase('working correctly', $emails[0]['text']);
-        $this->assertStringContainsStringIgnoringCase('working correctly', $emails[0]['html']);
-        $this->assertStringContainsStringIgnoringCase('251 Little Falls Drive', $emails[0]['text']);
-        $this->assertStringContainsStringIgnoringCase('251 Little Falls Drive', $emails[0]['html']);
+        $smtpProbe = function ($email) {
+            $this->assertEquals('Custom SMTP email sample', $email['subject']);
+        };
+        $email1 = $this->getLastEmailByAddress('testuser@appwrite.io', $smtpProbe);
+        $email2 = $this->getLastEmailByAddress('testusertwo@appwrite.io', $smtpProbe);
 
-        $to = [
-            $emails[0]['to'][0]['address'],
-            $emails[1]['to'][0]['address']
-        ];
-        \sort($to);
-
-        $this->assertEquals('testuser@appwrite.io', $to[0]);
-        $this->assertEquals('testusertwo@appwrite.io', $to[1]);
+        $this->assertEquals('custommailer@appwrite.io', $email1['from'][0]['address']);
+        $this->assertEquals('Custom Mailer', $email1['from'][0]['name']);
+        $this->assertEquals('reply@appwrite.io', $email1['replyTo'][0]['address']);
+        $this->assertEquals('Custom Mailer', $email1['replyTo'][0]['name']);
+        $this->assertEquals('Custom SMTP email sample', $email1['subject']);
+        $this->assertStringContainsStringIgnoringCase('working correctly', $email1['text']);
+        $this->assertStringContainsStringIgnoringCase('working correctly', $email1['html']);
+        $this->assertStringContainsStringIgnoringCase('251 Little Falls Drive', $email1['text']);
+        $this->assertStringContainsStringIgnoringCase('251 Little Falls Drive', $email1['html']);
+        $this->assertEquals('custommailer@appwrite.io', $email2['from'][0]['address']);
 
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/smtp/tests', array_merge([
             'content-type' => 'application/json',
