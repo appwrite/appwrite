@@ -432,41 +432,67 @@ abstract class Scope extends TestCase
             return self::$root;
         }
 
-        // Use more entropy to avoid collisions in parallel test execution
-        $email = uniqid('', true) . getmypid() . bin2hex(random_bytes(4)) . '@localhost.test';
-        $password = 'password';
-        $name = 'User Name';
+        $maxRetries = 5;
 
-        $root = $this->client->call(Client::METHOD_POST, '/account', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => 'console',
-        ], [
-            'userId' => ID::unique(),
-            'email' => $email,
-            'password' => $password,
-            'name' => $name,
-        ]);
+        for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
+            // Use more entropy to avoid collisions in parallel test execution
+            $email = uniqid('', true) . getmypid() . bin2hex(random_bytes(4)) . '@localhost.test';
+            $password = 'password';
+            $name = 'User Name';
 
-        $this->assertEquals(201, $root['headers']['status-code']);
+            $root = $this->client->call(Client::METHOD_POST, '/account', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => 'console',
+            ], [
+                'userId' => ID::unique(),
+                'email' => $email,
+                'password' => $password,
+                'name' => $name,
+            ]);
 
-        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => 'console',
-        ], [
-            'email' => $email,
-            'password' => $password,
-        ]);
+            if ($root['headers']['status-code'] !== 201) {
+                \usleep(500000);
+                continue;
+            }
 
-        self::$root = [
-            '$id' => ID::custom($root['body']['$id']),
-            'name' => $root['body']['name'],
-            'email' => $root['body']['email'],
-            'session' => $session['cookies']['a_session_console'],
-        ];
+            $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => 'console',
+            ], [
+                'email' => $email,
+                'password' => $password,
+            ]);
 
-        return self::$root;
+            if (empty($session['cookies']['a_session_console'])) {
+                \usleep(500000);
+                continue;
+            }
+
+            // Verify session is valid before returning
+            $verify = $this->client->call(Client::METHOD_GET, '/account', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'cookie' => 'a_session_console=' . $session['cookies']['a_session_console'],
+                'x-appwrite-project' => 'console',
+            ]);
+
+            if ($verify['headers']['status-code'] === 200) {
+                self::$root = [
+                    '$id' => ID::custom($root['body']['$id']),
+                    'name' => $root['body']['name'],
+                    'email' => $root['body']['email'],
+                    'session' => $session['cookies']['a_session_console'],
+                ];
+
+                return self::$root;
+            }
+
+            \usleep(500000);
+        }
+
+        $this->fail('Failed to create and verify root session after ' . $maxRetries . ' attempts');
     }
 
     /**
