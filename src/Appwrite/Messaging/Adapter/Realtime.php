@@ -513,15 +513,16 @@ class Realtime extends MessagingAdapter
                     $resourceId = $tableId ?: $collectionId;
                     $channels = [];
 
-                    switch($parts[0]){
+                    switch ($parts[0]) {
                         case 'databases':
-                            case 'tablesdb':
+                        case 'tablesdb':
                             // sending legacy + tablesdb events to both legacy and tablesdb
                             $channels = array_values(array_unique(array_merge(
                                 self::getDatabaseChannels('legacy', $database->getId(), $resourceId, $payload->getId(), 'databases'),
                                 self::getDatabaseChannels('tablesdb', $database->getId(), $resourceId, $payload->getId(), 'databases'),
                                 self::getDatabaseChannels('tablesdb', $database->getId(), $resourceId, $payload->getId())
                             )));
+                            break;
                         default:
                             // only prefixed events
                             $channels = array_values(self::getDatabaseChannels($parts[0], $database->getId(), $resourceId, $payload->getId()));
