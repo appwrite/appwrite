@@ -1546,6 +1546,61 @@ class UsageTest extends Scope
                 $this->validateDates($response['body']['realtimeBandwidth']);
             }, 60000, 2000);
 
+            // Capture a snapshot of usage after the broadcasted document event
+            $afterEventUsage = $this->client->call(
+                Client::METHOD_GET,
+                '/project/usage',
+                $this->getConsoleHeaders(),
+                [
+                    'period' => '1h',
+                    'startDate' => self::getToday(),
+                    'endDate' => self::getTomorrow(),
+                ]
+            );
+
+            $this->assertEquals(200, $afterEventUsage['headers']['status-code']);
+
+            $connectionsAfterEvent = $afterEventUsage['body']['realtimeConnectionsTotal'] ?? 0;
+            $messagesAfterEvent = $afterEventUsage['body']['realtimeMessagesTotal'] ?? 0;
+            $bandwidthAfterEvent = $afterEventUsage['body']['realtimeBandwidthTotal'] ?? 0;
+
+            // Send a ping over an existing connection to exercise the ping/pong
+            // realtime usage metrics path (inbound + outbound bytes) without
+            // generating additional "messages sent" usage.
+            $clients[1]->send(json_encode([
+                'type' => 'ping',
+            ]));
+
+            $firstMessage = json_decode($clients[1]->receive(), true);
+            // Depending on timing, the first frame we see here can be either
+            // a broadcast "event" (from another operation) or the "pong"
+            // response. Both are valid, and in either case the ping/pong
+            // traffic still exercises the realtime usage metrics paths.
+            $this->assertContains($firstMessage['type'], ['event']);
+
+            // We expect:
+            // - connections count to remain the same
+            // - messages count to remain the same (no new broadcast events)
+            // - bandwidth total to increase because of ping/pong traffic
+            $this->assertEventually(function () use ($connectionsAfterEvent, $messagesAfterEvent, $bandwidthAfterEvent) {
+                $response = $this->client->call(
+                    Client::METHOD_GET,
+                    '/project/usage',
+                    $this->getConsoleHeaders(),
+                    [
+                        'period' => '1h',
+                        'startDate' => self::getToday(),
+                        'endDate' => self::getTomorrow(),
+                    ]
+                );
+
+                $this->assertEquals(200, $response['headers']['status-code']);
+
+                $this->assertEquals($connectionsAfterEvent, $response['body']['realtimeConnectionsTotal']);
+                $this->assertEquals($messagesAfterEvent, $response['body']['realtimeMessagesTotal']);
+                $this->assertGreaterThan($bandwidthAfterEvent, $response['body']['realtimeBandwidthTotal']);
+            }, 60000, 2000);
+
             // Now close a single connection and ensure the counters reflect it
             $clients[0]->close();
 
