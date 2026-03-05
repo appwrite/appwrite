@@ -67,6 +67,9 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - traefik.http.routers.appwrite_api_https.service=appwrite_api
       - traefik.http.routers.appwrite_api_https.tls=true
     volumes:
+<?php if ($version === 'local' && !empty($hostPath)): ?>
+      - <?php echo $hostPath; ?>:/usr/src/code:rw
+<?php endif; ?>
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-imports:/storage/imports:rw
       - appwrite-cache:/storage/cache:rw
