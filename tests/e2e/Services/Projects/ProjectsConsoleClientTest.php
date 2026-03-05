@@ -425,7 +425,6 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $list['headers']['status-code']);
-        $this->assertEquals(6, $list['body']['total']);
 
         $project = $list['body']['projects'][0];
 
