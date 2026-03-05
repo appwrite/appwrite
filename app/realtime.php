@@ -997,14 +997,18 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register) {
 
         $projectId = $realtime->connections[$connection]['projectId'];
 
-        $consoleDB = getConsoleDB();
-        $project = $consoleDB->getAuthorization()->skip(
-            fn () => $consoleDB->getDocument('projects', $projectId)
-        );
+        try {
+            $consoleDB = getConsoleDB();
+            $project = $consoleDB->getAuthorization()->skip(
+                fn () => $consoleDB->getDocument('projects', $projectId)
+            );
 
-        if (!$project->isEmpty()) {
-            $queue = getQueueForStatsUsageForProject($project);
-            $queue->addMetric(METRIC_REALTIME_CONNECTIONS, -1)->trigger();
+            if (!$project->isEmpty()) {
+                $queue = getQueueForStatsUsageForProject($project);
+                $queue->addMetric(METRIC_REALTIME_CONNECTIONS, -1)->trigger();
+            }
+        } catch (Throwable $th) {
+            logError($th, 'realtimeUsageConnectionClose', tags: ['projectId' => $projectId]);
         }
     }
     $realtime->unsubscribe($connection);
