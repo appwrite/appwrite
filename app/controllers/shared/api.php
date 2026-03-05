@@ -360,8 +360,9 @@ Http::init()
         if (!$project->isEmpty() && $project->getId() !== 'console') {
             $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
-                $project->setAttribute('accessedAt', DateTime::now());
-                $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $project));
+                $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                    'accessedAt' => DateTime::now()
+                ])));
             }
         }
 
