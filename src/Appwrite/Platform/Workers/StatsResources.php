@@ -175,7 +175,7 @@ class StatsResources extends Action
             try {
                 $this->countImageTransformations($dbForProject, $dbForLogs, $region);
             } catch (Throwable $th) {
-                call_user_func_array($this->logError, [$th, "StatsResources", "count_for_buckets_{$project->getId()}"]);
+                call_user_func_array($this->logError, [$th, "StatsResources", "count_for_image_transformations_{$project->getId()}"]);
             }
 
             try {
@@ -227,9 +227,15 @@ class StatsResources extends Action
         $totalImageTransformations = 0;
         $last30Days = (new \DateTime())->sub(\DateInterval::createFromDateString('30 days'))->format('Y-m-d 00:00:00');
         $this->foreachDocument($dbForProject, 'buckets', [], function ($bucket) use ($dbForProject, $last30Days, $region, &$totalImageTransformations) {
-            $imageTransformations = $dbForProject->count('bucket_' . $bucket->getSequence(), [
-                Query::greaterThanEqual('transformedAt', $last30Days),
-            ]);
+            try {
+                $imageTransformations = $dbForProject->count('bucket_' . $bucket->getSequence(), [
+                    Query::greaterThanEqual('transformedAt', $last30Days),
+                ]);
+            } catch (Throwable $th) {
+                call_user_func_array($this->logError, [$th, "StatsResources", "count_for_image_transformations_bucket_{$bucket->getSequence()}"]);
+                return;
+            }
+
             $metric = str_replace('{bucketInternalId}', $bucket->getSequence(), METRIC_BUCKET_ID_FILES_IMAGES_TRANSFORMED);
             $this->createStatsDocuments($region, $metric, $imageTransformations);
             $totalImageTransformations += $imageTransformations;
