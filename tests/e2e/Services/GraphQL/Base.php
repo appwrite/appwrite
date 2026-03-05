@@ -3,7 +3,7 @@
 namespace Tests\E2E\Services\GraphQL;
 
 use CURLFile;
-use Utopia\CLI\Console;
+use Utopia\Console;
 
 trait Base
 {

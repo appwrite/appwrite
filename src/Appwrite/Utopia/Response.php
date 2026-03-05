@@ -11,7 +11,7 @@ use JsonException;
 use Swoole\Http\Response as SwooleHTTPResponse;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 
 /**
  * @method int getStatusCode()
@@ -223,6 +223,10 @@ class Response extends SwooleResponse
     public const MODEL_PROXY_RULE = 'proxyRule';
     public const MODEL_PROXY_RULE_LIST = 'proxyRuleList';
 
+    // Schedules
+    public const MODEL_SCHEDULE = 'schedule';
+    public const MODEL_SCHEDULE_LIST = 'scheduleList';
+
     // Migrations
     public const MODEL_MIGRATION = 'migration';
     public const MODEL_MIGRATION_LIST = 'migrationList';
@@ -292,8 +296,6 @@ class Response extends SwooleResponse
      */
     protected static array $models = [];
 
-    protected SwooleHTTPResponse $swoole;
-
     /**
      * Response constructor.
      *
@@ -301,7 +303,6 @@ class Response extends SwooleResponse
      */
     public function __construct(SwooleHTTPResponse $response)
     {
-        $this->swoole = $response;
         parent::__construct($response);
     }
 
@@ -459,6 +460,8 @@ class Response extends SwooleResponse
 
                 foreach ($data[$key] as $index => $item) {
                     if ($item instanceof Document) {
+                        $ruleType = null;
+
                         if (\is_array($rule['type'])) {
                             foreach ($rule['type'] as $type) {
                                 $condition = false;
@@ -477,8 +480,8 @@ class Response extends SwooleResponse
                             $ruleType = $rule['type'];
                         }
 
-                        if (!self::hasModel($ruleType)) {
-                            throw new Exception('Missing model for rule: ' . $ruleType);
+                        if ($ruleType === null || !self::hasModel($ruleType)) {
+                            throw new Exception('Missing model for rule: ' . ($ruleType ?? 'null') . ' (key: ' . $key . ')');
                         }
 
                         $data[$key][$index] = $this->output($item, $ruleType);

@@ -14,6 +14,9 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
+use Utopia\Compression\Algorithms\GZIP;
+use Utopia\Compression\Algorithms\Zstd;
+use Utopia\Compression\Compression;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -25,18 +28,15 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
+use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Storage\Compression\Algorithms\GZIP;
-use Utopia\Storage\Compression\Algorithms\Zstd;
-use Utopia\Storage\Compression\Compression;
 use Utopia\Storage\Device;
 use Utopia\Storage\Storage;
 use Utopia\Storage\Validator\File;
 use Utopia\Storage\Validator\FileExt;
 use Utopia\Storage\Validator\FileSize;
 use Utopia\Storage\Validator\Upload;
-use Utopia\Swoole\Request;
 use Utopia\System\System;
 use Utopia\Validator\Nullable;
 
@@ -255,6 +255,12 @@ class Create extends Action
 
             if ($uploaded === $chunks) {
                 throw new Exception(Exception::STORAGE_FILE_ALREADY_EXISTS);
+            }
+        } else {
+            // Guard against manually setting range header for single chunk upload
+            if ($chunks === -1) {
+                $chunks = 1;
+                $chunk = 1;
             }
         }
 

@@ -13,8 +13,8 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Platform\Action;
-use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\WhiteList;
 
 class XList extends Action

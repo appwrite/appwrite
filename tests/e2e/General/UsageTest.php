@@ -527,7 +527,18 @@ class UsageTest extends Scope
 
         $this->assertEquals('name', $response['body']['key']);
 
-        sleep(self::WAIT);
+        $this->assertEventually(function () use ($databaseId, $collectionId) {
+            $attr = $this->client->call(
+                Client::METHOD_GET,
+                '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/name',
+                array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id']
+                ], $this->getHeaders())
+            );
+            $this->assertEquals(200, $attr['headers']['status-code']);
+            $this->assertEquals('available', $attr['body']['status']);
+        }, 30_000, 500);
 
         $requestsTotal += 1;
 
@@ -769,7 +780,18 @@ class UsageTest extends Scope
 
         $this->assertEquals('name', $response['body']['key']);
 
-        sleep(self::WAIT);
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            $attr = $this->client->call(
+                Client::METHOD_GET,
+                '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/name',
+                array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id']
+                ], $this->getHeaders())
+            );
+            $this->assertEquals(200, $attr['headers']['status-code']);
+            $this->assertEquals('available', $attr['body']['status']);
+        }, 30_000, 500);
 
         $requestsTotal += 1;
 
@@ -842,66 +864,66 @@ class UsageTest extends Scope
         $tablesTotal = $data['tablesTotal'];
         $databasesTotal = $data['databasesTotal'];
 
-        sleep(self::WAIT);
+        $this->assertEventually(function () use ($requestsTotal, $databasesTotal, $absoluteRowsTotal, $absoluteTablesTotal, $tablesTotal, $rowsTotal, $databaseId, $tableId) {
+            $response = $this->client->call(
+                Client::METHOD_GET,
+                '/project/usage',
+                $this->getConsoleHeaders(),
+                [
+                    'period' => '1d',
+                    'startDate' => self::getToday(),
+                    'endDate' => self::getTomorrow(),
+                ]
+            );
 
-        $response = $this->client->call(
-            Client::METHOD_GET,
-            '/project/usage',
-            $this->getConsoleHeaders(),
-            [
-                'period' => '1d',
-                'startDate' => self::getToday(),
-                'endDate' => self::getTomorrow(),
-            ]
-        );
+            $this->assertGreaterThanOrEqual(31, count($response['body']));
+            $this->assertCount(1, $response['body']['requests']);
+            $this->assertCount(1, $response['body']['network']);
+            $this->assertEquals($requestsTotal, $response['body']['requests'][array_key_last($response['body']['requests'])]['value']);
+            $this->validateDates($response['body']['requests']);
+            $this->assertEquals($databasesTotal, $response['body']['databasesTotal']);
 
-        $this->assertGreaterThanOrEqual(31, count($response['body']));
-        $this->assertCount(1, $response['body']['requests']);
-        $this->assertCount(1, $response['body']['network']);
-        $this->assertEquals($requestsTotal, $response['body']['requests'][array_key_last($response['body']['requests'])]['value']);
-        $this->validateDates($response['body']['requests']);
-        $this->assertEquals($databasesTotal, $response['body']['databasesTotal']);
+            // project level includes all i.e. documents + rows total.
+            $this->assertEquals($absoluteRowsTotal, $response['body']['rowsTotal']);
 
-        // project level includes all i.e. documents + rows total.
-        $this->assertEquals($absoluteRowsTotal, $response['body']['rowsTotal']);
+            $response = $this->client->call(
+                Client::METHOD_GET,
+                '/databases/usage?range=30d',
+                $this->getConsoleHeaders()
+            );
 
-        $response = $this->client->call(
-            Client::METHOD_GET,
-            '/databases/usage?range=30d',
-            $this->getConsoleHeaders()
-        );
+            $this->assertEquals($databasesTotal, $response['body']['databases'][array_key_last($response['body']['databases'])]['value']);
+            $this->validateDates($response['body']['databases']);
 
-        $this->assertEquals($databasesTotal, $response['body']['databases'][array_key_last($response['body']['databases'])]['value']);
-        $this->validateDates($response['body']['databases']);
+            // database level includes all i.e. collections + tables total.
+            $this->assertEquals($absoluteTablesTotal, $response['body']['tables'][array_key_last($response['body']['tables'])]['value']); // database level
+            $this->validateDates($response['body']['tables']);
 
-        // database level includes all i.e. collections + tables total.
-        $this->assertEquals($absoluteTablesTotal, $response['body']['tables'][array_key_last($response['body']['tables'])]['value']); // database level
-        $this->validateDates($response['body']['tables']);
+            // database level includes all i.e. documents + rows total.
+            $this->assertEquals($absoluteRowsTotal, $response['body']['rows'][array_key_last($response['body']['rows'])]['value']);
+            $this->validateDates($response['body']['rows']);
 
-        // database level includes all i.e. documents + rows total.
-        $this->assertEquals($absoluteRowsTotal, $response['body']['rows'][array_key_last($response['body']['rows'])]['value']);
-        $this->validateDates($response['body']['rows']);
+            $response = $this->client->call(
+                Client::METHOD_GET,
+                '/databases/' . $databaseId . '/usage?range=30d',
+                $this->getConsoleHeaders()
+            );
 
-        $response = $this->client->call(
-            Client::METHOD_GET,
-            '/databases/' . $databaseId . '/usage?range=30d',
-            $this->getConsoleHeaders()
-        );
+            $this->assertEquals($tablesTotal, $response['body']['tables'][array_key_last($response['body']['tables'])]['value']);
+            $this->validateDates($response['body']['tables']);
 
-        $this->assertEquals($tablesTotal, $response['body']['tables'][array_key_last($response['body']['tables'])]['value']);
-        $this->validateDates($response['body']['tables']);
+            $this->assertEquals($rowsTotal, $response['body']['rows'][array_key_last($response['body']['rows'])]['value']);
+            $this->validateDates($response['body']['rows']);
 
-        $this->assertEquals($rowsTotal, $response['body']['rows'][array_key_last($response['body']['rows'])]['value']);
-        $this->validateDates($response['body']['rows']);
+            $response = $this->client->call(
+                Client::METHOD_GET,
+                '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/usage?range=30d',
+                $this->getConsoleHeaders()
+            );
 
-        $response = $this->client->call(
-            Client::METHOD_GET,
-            '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/usage?range=30d',
-            $this->getConsoleHeaders()
-        );
-
-        $this->assertEquals($rowsTotal, $response['body']['rows'][array_key_last($response['body']['rows'])]['value']);
-        $this->validateDates($response['body']['rows']);
+            $this->assertEquals($rowsTotal, $response['body']['rows'][array_key_last($response['body']['rows'])]['value']);
+            $this->validateDates($response['body']['rows']);
+        }, 30_000, 1000);
 
         return $data;
     }
@@ -1033,11 +1055,22 @@ class UsageTest extends Scope
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($functionId, $response['body']['functionId']);
 
-        sleep(self::WAIT);
+        $executionId = $response['body']['$id'];
+
+        $this->assertEventually(function () use ($functionId, $executionId) {
+            $response = $this->client->call(
+                Client::METHOD_GET,
+                '/functions/' . $functionId . '/executions/' . $executionId,
+                array_merge([
+                    'x-appwrite-project' => $this->getProject()['$id']
+                ], $this->getHeaders()),
+            );
+            $this->assertContains($response['body']['status'], ['completed', 'failed']);
+        }, 30_000, 500);
 
         $response = $this->client->call(
             Client::METHOD_GET,
-            '/functions/' . $functionId . '/executions/' . $response['body']['$id'],
+            '/functions/' . $functionId . '/executions/' . $executionId,
             array_merge([
                 'x-appwrite-project' => $this->getProject()['$id']
             ], $this->getHeaders()),

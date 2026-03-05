@@ -19,15 +19,13 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
 use Utopia\Database\Validator\UID;
+use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Swoole\Request;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
@@ -72,7 +70,7 @@ class Update extends Base
                     )
                 ]
             ))
-            ->param('functionId', '', new UID(), 'Function ID.')
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
             ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.', true)
             ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with execution permissions. By default no user is granted with any execute permissions. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
@@ -202,13 +200,7 @@ class Update extends Base
 
             $repository = $dbForPlatform->createDocument('repositories', new Document([
                 '$id' => ID::unique(),
-                '$permissions' => [
-                    Permission::read(Role::team(ID::custom($teamId))),
-                    Permission::update(Role::team(ID::custom($teamId), 'owner')),
-                    Permission::update(Role::team(ID::custom($teamId), 'developer')),
-                    Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-                    Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-                ],
+                '$permissions' => $this->getPermissions($teamId, $project->getId()),
                 'installationId' => $installation->getId(),
                 'installationInternalId' => $installation->getSequence(),
                 'projectId' => $project->getId(),

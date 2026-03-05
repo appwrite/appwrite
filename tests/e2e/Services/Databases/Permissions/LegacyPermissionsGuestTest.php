@@ -6,6 +6,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ApiLegacy;
 use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\SchemaPolling;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Helpers\ID;
@@ -18,6 +19,7 @@ class LegacyPermissionsGuestTest extends Scope
     use ProjectCustom;
     use SideClient;
     use ApiLegacy;
+    use SchemaPolling;
 
     public function createCollection(): array
     {
@@ -84,7 +86,8 @@ class LegacyPermissionsGuestTest extends Scope
             ]
         );
 
-        sleep(2);
+        $this->waitForAttribute($databaseId, $publicCollection['id'], 'title');
+        $this->waitForAttribute($databaseId, $privateCollection['id'], 'title');
 
         return [
             'databaseId' => $databaseId,
@@ -330,7 +333,7 @@ class LegacyPermissionsGuestTest extends Scope
             ]
         );
 
-        sleep(1);
+        $this->waitForAttribute($databaseId, $moviesId, 'title');
 
         $document = $this->client->call(
             Client::METHOD_POST,

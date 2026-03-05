@@ -3,7 +3,6 @@
 namespace Tests\E2E\Services\GraphQL;
 
 use Appwrite\Tests\Async;
-use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -18,8 +17,17 @@ class FunctionsClientTest extends Scope
     use Base;
     use Async;
 
-    public function testCreateFunction(): array
+    private static array $cachedFunction = [];
+    private static array $cachedDeployment = [];
+    private static array $cachedExecution = [];
+
+    protected function setupFunction(): array
     {
+        $key = $this->getProject()['$id'];
+        if (!empty(static::$cachedFunction[$key])) {
+            return static::$cachedFunction[$key];
+        }
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_FUNCTION);
         $gqlPayload = [
@@ -71,17 +79,19 @@ class FunctionsClientTest extends Scope
         $this->assertIsArray($variables['body']['data']);
         $this->assertArrayNotHasKey('errors', $variables['body']);
 
+        static::$cachedFunction[$key] = $function;
         return $function;
     }
 
-    /**
-     * @param $function
-     * @return array
-     * @throws \Exception
-     */
-    #[Depends('testCreateFunction')]
-    public function testCreateDeployment($function): array
+    protected function setupDeployment(): array
     {
+        $key = $this->getProject()['$id'];
+        if (!empty(static::$cachedDeployment[$key])) {
+            return static::$cachedDeployment[$key];
+        }
+
+        $function = $this->setupFunction();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_DEPLOYMENT);
 
@@ -136,19 +146,20 @@ class FunctionsClientTest extends Scope
             $this->assertEquals('ready', $deployment['status']);
         }, 60000);
 
+        static::$cachedDeployment[$key] = $deployment;
         return $deployment;
     }
 
-    /**
-     * @param $function
-     * @param $deployment
-     * @return array
-     * @throws \Exception
-     */
-    #[Depends('testCreateFunction')]
-    #[Depends('testCreateDeployment')]
-    public function testCreateExecution($function, $deployment): array
+    protected function setupExecution(): array
     {
+        $key = $this->getProject()['$id'];
+        if (!empty(static::$cachedExecution[$key])) {
+            return static::$cachedExecution[$key];
+        }
+
+        $function = $this->setupFunction();
+        $this->setupDeployment(); // Ensure deployment exists
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_EXECUTION);
         $gqlPayload = [
@@ -165,17 +176,45 @@ class FunctionsClientTest extends Scope
 
         $this->assertIsArray($execution['body']['data']);
         $this->assertArrayNotHasKey('errors', $execution['body']);
-        return $execution['body']['data']['functionsCreateExecution'];
+
+        static::$cachedExecution[$key] = $execution['body']['data']['functionsCreateExecution'];
+        return static::$cachedExecution[$key];
+    }
+
+    public function testCreateFunction(): void
+    {
+        $function = $this->setupFunction();
+        $this->assertIsArray($function);
     }
 
     /**
-     * @param $function
+     * @return void
+     * @throws \Exception
+     */
+    public function testCreateDeployment(): void
+    {
+        $deployment = $this->setupDeployment();
+        $this->assertIsArray($deployment);
+    }
+
+    /**
+     * @return void
+     * @throws \Exception
+     */
+    public function testCreateExecution(): void
+    {
+        $execution = $this->setupExecution();
+        $this->assertIsArray($execution);
+    }
+
+    /**
      * @return array
      * @throws \Exception
      */
-    #[Depends('testCreateFunction')]
-    public function testGetExecutions($function): array
+    public function testGetExecutions(): array
     {
+        $function = $this->setupFunction();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_EXECUTIONS);
         $gqlPayload = [
@@ -199,15 +238,14 @@ class FunctionsClientTest extends Scope
     }
 
     /**
-     * @param $function
-     * @param $execution
      * @return array
      * @throws \Exception
      */
-    #[Depends('testCreateFunction')]
-    #[Depends('testCreateExecution')]
-    public function testGetExecution($function, $execution): array
+    public function testGetExecution(): array
     {
+        $function = $this->setupFunction();
+        $execution = $this->setupExecution();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_EXECUTION);
         $gqlPayload = [

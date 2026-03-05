@@ -4,8 +4,8 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Compression\Compression;
 use Utopia\Database\Document;
-use Utopia\Storage\Compression\Compression;
 
 class File extends Model
 {

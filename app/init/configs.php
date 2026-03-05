@@ -46,3 +46,4 @@ Config::load('storage-outputs', __DIR__ . '/../config/storage/outputs.php', $con
 Config::load('specifications', __DIR__ . '/../config/specifications.php', $configAdapter);
 Config::load('templates-function', __DIR__ . '/../config/templates/function.php', $configAdapter);
 Config::load('templates-site', __DIR__ . '/../config/templates/site.php', $configAdapter);
+Config::load('cors', __DIR__ . '/../config/cors.php', $configAdapter);

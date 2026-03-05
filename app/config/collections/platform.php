@@ -342,6 +342,17 @@ $platformCollections = [
                 'array' => true,
                 'filters' => [],
             ],
+            [
+                '$id' => 'status',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 100,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [

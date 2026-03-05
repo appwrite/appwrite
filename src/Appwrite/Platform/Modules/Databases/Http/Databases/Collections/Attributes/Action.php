@@ -19,8 +19,8 @@ use Utopia\Database\Exception\Truncate as TruncateException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Structure;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Platform\Action as UtopiaAction;
-use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Range;
 
 abstract class Action extends UtopiaAction
@@ -382,14 +382,14 @@ abstract class Action extends UtopiaAction
                 'filters' => $filters,
                 'options' => $options,
             ]);
+
             if (
                 !$dbForProject->getAdapter()->getSupportForSpatialIndexNull() &&
                 \in_array($attribute->getAttribute('type'), Database::SPATIAL_TYPES) &&
                 $attribute->getAttribute('required')
             ) {
-                $hasData = !$authorization->skip(fn () => $dbForProject
-                    ->findOne('database_' . $db->getSequence() . '_collection_' . $collection->getSequence()))
-                    ->isEmpty();
+                $hasData = $authorization->skip(fn () => $dbForProject
+                    ->count('database_' . $db->getSequence() . '_collection_' . $collection->getSequence())) > 0;
 
                 if ($hasData) {
                     throw new StructureException('Failed to add required spatial column: existing rows present. Make the column optional.');

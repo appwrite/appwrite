@@ -14,9 +14,8 @@ use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
@@ -61,7 +60,7 @@ class Create extends Base
                     )
                 ],
             ))
-            ->param('siteId', '', new CustomId(), 'Site ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+            ->param('siteId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Site name. Max length: 128 chars.')
             ->param('framework', '', new WhiteList(\array_keys(Config::getParam('frameworks')), true), 'Sites framework.')
             ->param('enabled', true, new Boolean(), 'Is site enabled? When set to \'disabled\', users cannot access the site but Server SDKs with and API key can still access the site. No data is lost when this is toggled.', true)
@@ -138,7 +137,7 @@ class Create extends Base
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS (Version Control System), you need to provide "installationId" and "providerBranch".');
         }
 
-        $site = $dbForProject->createDocument('sites', new Document([
+        $site = new Document([
             '$id' => $siteId,
             'enabled' => $enabled,
             'live' => true,
@@ -168,21 +167,19 @@ class Create extends Base
             'runtimeSpecification' => $specification,
             'buildRuntime' => $buildRuntime,
             'adapter' => $adapter,
-        ]));
+        ]);
 
-        // Git connect logic
+        try {
+            $site = $dbForProject->createDocument('sites', $site);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::SITE_ALREADY_EXISTS);
+        }
+
         if (!empty($providerRepositoryId)) {
             $teamId = $project->getAttribute('teamId', '');
-
-            $repository = $dbForPlatform->createDocument('repositories', new Document([
+            $repository = new Document([
                 '$id' => ID::unique(),
-                '$permissions' => [
-                    Permission::read(Role::team(ID::custom($teamId))),
-                    Permission::update(Role::team(ID::custom($teamId), 'owner')),
-                    Permission::update(Role::team(ID::custom($teamId), 'developer')),
-                    Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-                    Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-                ],
+                '$permissions' => $this->getPermissions($teamId, $project->getId()),
                 'installationId' => $installation->getId(),
                 'installationInternalId' => $installation->getSequence(),
                 'projectId' => $project->getId(),
@@ -192,8 +189,8 @@ class Create extends Base
                 'resourceInternalId' => $site->getSequence(),
                 'resourceType' => 'site',
                 'providerPullRequestIds' => []
-            ]));
-
+            ]);
+            $repository = $dbForPlatform->createDocument('repositories', $repository);
             $site->setAttribute('repositoryId', $repository->getId());
             $site->setAttribute('repositoryInternalId', $repository->getSequence());
         }

@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Tasks;
 
 use Swoole\Timer;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;

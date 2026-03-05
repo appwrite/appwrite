@@ -145,6 +145,12 @@ return [ // List of publicly visible scopes
     'rules.write' => [
         'description' => 'Access to create, update, and delete your project\'s proxy rules',
     ],
+    'schedules.read' => [
+        'description' => 'Access to read your project\'s schedules',
+    ],
+    'schedules.write' => [
+        'description' => 'Access to create, update, and delete your project\'s schedules',
+    ],
     'migrations.read' => [
         'description' => 'Access to read your project\'s migrations',
     ],

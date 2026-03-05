@@ -1,5 +1,0 @@
-mutation {
-    accountCreateMfaRecoveryCodes {
-        recoveryCodes
-    }
-}

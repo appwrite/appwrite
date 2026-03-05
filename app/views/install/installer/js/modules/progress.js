@@ -271,7 +271,7 @@
             port = httpsPort;
         }
         if (!hasPort && port && ((protocol === 'http' && port !== '80') || (protocol === 'https' && port !== '443'))) {
-            host = `${rawDomain}:${port}`;
+            host = `${host}:${port}`;
         }
         return `${protocol}://${host}`;
     };
@@ -279,6 +279,8 @@
     const redirectToApp = () => {
         const url = buildRedirectUrl();
         if (!url) return;
+        // Fire-and-forget: tell the installer server it can shut down
+        fetch('/install/shutdown', { method: 'POST', headers: withCsrfHeader() }).catch(() => {});
         window.location.href = url;
     };
 
@@ -422,9 +424,6 @@
         list.innerHTML = '';
         const rowsById = new Map();
         const progressState = new Map();
-        let pendingProgressTimer = null;
-        let pendingProgressStep = null;
-        let pendingCompletionTimer = null;
         syncInstallLockFlag?.();
         applyLockPayload?.();
         applyBodyDefaults?.();
@@ -554,15 +553,6 @@
                 return;
             }
 
-            if (pendingProgressTimer && pendingProgressStep === payload.step && payload.status !== STATUS.IN_PROGRESS) {
-                clearTimeout(pendingProgressTimer);
-                pendingProgressTimer = null;
-                pendingProgressStep = null;
-            }
-            if (pendingCompletionTimer) {
-                clearTimeout(pendingCompletionTimer);
-                pendingCompletionTimer = null;
-            }
             const step = getStepDefinition(payload.step) || {
                 id: payload.step,
                 inProgress: payload.message || payload.step,
@@ -570,39 +560,18 @@
             };
             if (payload.status === STATUS.IN_PROGRESS) {
                 const currentIndex = INSTALLATION_STEPS.findIndex((candidate) => candidate.id === step.id);
-                const completionTargets = [];
                 if (currentIndex > 0) {
                     for (let i = 0; i < currentIndex; i += 1) {
                         const previousStep = INSTALLATION_STEPS[i];
                         const previousState = progressState.get(previousStep.id);
                         if (previousState && previousState.status !== STATUS.COMPLETED) {
-                            completionTargets.push({
-                                step: previousStep,
+                            progressState.set(previousStep.id, {
+                                status: STATUS.COMPLETED,
+                                message: previousStep.done,
                                 details: previousState.details
                             });
                         }
                     }
-                }
-                if (completionTargets.length && currentIndex > 0) {
-                    pendingProgressStep = payload.step;
-                        pendingCompletionTimer = setTimeout(() => {
-                            pendingCompletionTimer = null;
-                            completionTargets.forEach(({ step: previousStep, details }) => {
-                                progressState.set(previousStep.id, {
-                                    status: STATUS.COMPLETED,
-                                    message: previousStep.done,
-                                    details
-                                });
-                            });
-                            renderProgress();
-                        }, TIMINGS?.progressCompleteDelay ?? 0);
-                    pendingProgressTimer = setTimeout(() => {
-                        pendingProgressTimer = null;
-                        pendingProgressStep = null;
-                        applyProgress(payload);
-                    }, TIMINGS?.progressTransitionDelay ?? 0);
-                    scheduleFallback();
-                    return;
                 }
             }
             applyProgress(payload);
@@ -622,6 +591,19 @@
             renderProgress();
         };
 
+        const checkAllCompleted = () => {
+            const allDone = INSTALLATION_STEPS.every((step) => {
+                const state = progressState.get(step.id);
+                return state && state.status === STATUS.COMPLETED;
+            });
+            if (!allDone) return;
+            const accountState = progressState.get(STEP_IDS.ACCOUNT_SETUP);
+            finalizeInstall();
+            notifyInstallComplete(activeInstall?.installId, accountState?.details).finally(() => {
+                setTimeout(() => redirectToApp(), TIMINGS?.redirectDelay ?? 0);
+            });
+        };
+
         const startPolling = () => {
             if (!activeInstall || activeInstall.pollTimer) return;
             activeInstall.pollTimer = setInterval(async () => {
@@ -629,6 +611,7 @@
                 const snapshot = await fetchInstallStatus(activeInstall.installId);
                 if (snapshot) {
                     applySnapshot(snapshot);
+                    checkAllCompleted();
                 }
             }, TIMINGS?.installPollInterval ?? 0);
         };
@@ -726,18 +709,20 @@
                         return;
                     }
                     if (event === SSE_EVENTS.DONE) {
-                        const lastStep = INSTALLATION_STEPS[INSTALLATION_STEPS.length - 1];
-                        if (lastStep) {
-                        const lastState = progressState.get(lastStep.id);
-                        if (!lastState || (lastState.status !== STATUS.COMPLETED && lastState.status !== STATUS.ERROR)) {
-                            progressState.set(lastStep.id, {
-                                status: STATUS.COMPLETED,
-                                message: lastStep.done,
-                                details: lastState?.details
-                            });
-                            renderProgress();
-                        }
-                        }
+                        // Mark every step as completed (preserving details
+                        // from earlier progress events, e.g. session info).
+                        INSTALLATION_STEPS.forEach((step) => {
+                            const existing = progressState.get(step.id);
+                            if (!existing || (existing.status !== STATUS.COMPLETED && existing.status !== STATUS.ERROR)) {
+                                progressState.set(step.id, {
+                                    status: STATUS.COMPLETED,
+                                    message: step.done,
+                                    details: existing?.details
+                                });
+                            }
+                        });
+                        renderProgress();
+
                         const accountState = progressState.get(STEP_IDS.ACCOUNT_SETUP);
                         const accountRequired = INSTALLATION_STEPS.some((step) => step.id === STEP_IDS.ACCOUNT_SETUP);
                         if (accountRequired && accountState?.status === STATUS.ERROR) {
@@ -786,7 +771,12 @@
                     }
                 });
                 if (activeInstall && !activeInstall.completed) {
-                    startPolling();
+                    // Stream ended without a "done" event (e.g. browser
+                    // throttled the background tab). Check if we're done.
+                    checkAllCompleted();
+                    if (!activeInstall?.completed) {
+                        startPolling();
+                    }
                 }
             } catch (error) {
                 if (!activeInstall || activeInstall.controller.signal.aborted) {
@@ -877,6 +867,14 @@
                 const row = retryButton.closest('.install-row');
                 const stepId = row?.dataset.step;
                 retryInstallStep(stepId);
+            }
+        });
+
+        // When the user switches back to this tab, check if installation
+        // finished while the tab was in the background.
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && activeInstall && !activeInstall.completed) {
+                checkAllCompleted();
             }
         });
 

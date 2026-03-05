@@ -8,7 +8,7 @@ use Utopia\Config\Config;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Http;
+use Utopia\Http\Http;
 use Utopia\System\System;
 
 Http::init()

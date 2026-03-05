@@ -49,7 +49,7 @@ class State
         }
 
         if ($cfg->isLocal() && empty($cfg->getVars())) {
-            $envPath = dirname($this->paths['init'], 2) . '/.env';
+            $envPath = dirname(__DIR__, 5) . '/.env';
             if (file_exists($envPath)) {
                 $envContent = file_get_contents($envPath);
                 if ($envContent !== false) {
@@ -107,8 +107,7 @@ class State
             return;
         }
 
-        require_once $this->paths['vendor'];
-        require_once $this->paths['init'];
+        require_once __DIR__ . '/../../../../../app/init.php';
         $this->bootstrapped = true;
     }
 
@@ -200,7 +199,7 @@ class State
 
     public function isValidDatabaseAdapter(string $value): bool
     {
-        return in_array($value, ['mongodb', 'mariadb'], true);
+        return in_array($value, ['mongodb', 'mariadb', 'postgresql'], true);
     }
 
     public function progressFilePath(string $installId): string

@@ -3,7 +3,6 @@
 namespace Tests\E2E\Services\Storage;
 
 use CURLFile;
-use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -19,6 +18,55 @@ class StorageCustomClientTest extends Scope
     use ProjectCustom;
     use SideClient;
     use StoragePermissionsScope;
+
+    /**
+     * @var array Cached default permissions file data for tests
+     */
+    private static array $cachedDefaultPermissionsFile = [];
+
+    /**
+     * Helper method to set up a file with default permissions for tests.
+     * Uses static caching to avoid recreating resources.
+     */
+    protected function setupDefaultPermissionsFile(): array
+    {
+        $cacheKey = $this->getProject()['$id'];
+
+        if (!empty(self::$cachedDefaultPermissionsFile[$cacheKey])) {
+            return self::$cachedDefaultPermissionsFile[$cacheKey];
+        }
+
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket',
+            'fileSecurity' => true,
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket['body']['$id'] . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
+        ]);
+
+        self::$cachedDefaultPermissionsFile[$cacheKey] = [
+            'fileId' => $file['body']['$id'],
+            'bucketId' => $bucket['body']['$id']
+        ];
+
+        return self::$cachedDefaultPermissionsFile[$cacheKey];
+    }
 
     public function testCachedFilePreview(): void
     {
@@ -425,7 +473,7 @@ class StorageCustomClientTest extends Scope
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
         ]);
 
-        $this->client->call(CLient::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
+        $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
@@ -1221,7 +1269,7 @@ class StorageCustomClientTest extends Scope
         $this->assertEquals(400, $file2['headers']['status-code']);
     }
 
-    public function testCreateFileDefaultPermissions(): array
+    public function testCreateFileDefaultPermissions(): void
     {
         /**
          * Test for SUCCESS
@@ -1262,12 +1310,11 @@ class StorageCustomClientTest extends Scope
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);
 
-        return ['fileId' => $file['body']['$id'], 'bucketId' => $bucket['body']['$id']];
     }
 
-    #[Depends('testCreateFileDefaultPermissions')]
-    public function testCreateFileAbusePermissions(array $data): void
+    public function testCreateFileAbusePermissions(): void
     {
+        $data = $this->setupDefaultPermissionsFile();
         /**
          * Test for FAILURE
          */
@@ -1329,9 +1376,9 @@ class StorageCustomClientTest extends Scope
         $this->assertStringContainsString('user:' . $this->getUser()['$id'], $file['body']['message']);
     }
 
-    #[Depends('testCreateFileDefaultPermissions')]
-    public function testUpdateFileAbusePermissions(array $data): void
+    public function testUpdateFileAbusePermissions(): void
     {
+        $data = $this->setupDefaultPermissionsFile();
         /**
          * Test for FAILURE
          */

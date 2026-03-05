@@ -105,7 +105,107 @@ class ConsoleVariables extends Model
                     'default' => '',
                     'example' => 'ns1.example.com,ns2.example.com',
                 ]
-            );
+            )
+            ->addRule(
+                '_APP_DB_ADAPTER',
+                [
+                    'type' => self::TYPE_STRING,
+                    'description' => 'Database adapter in use.',
+                    'default' => 'mariadb',
+                    'example' => 'mysql',
+                ]
+            )
+            ->addRule(
+                'supportForRelationships',
+                [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Whether the database adapter supports relationships.',
+                    'default' => true,
+                    'example' => true,
+                ]
+            )
+            ->addRule(
+                'supportForOperators',
+                [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Whether the database adapter supports operators.',
+                    'default' => true,
+                    'example' => true,
+                ]
+            )
+            ->addRule(
+                'supportForSpatials',
+                [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Whether the database adapter supports spatial attributes.',
+                    'default' => true,
+                    'example' => true,
+                ]
+            )
+            ->addRule(
+                'supportForSpatialIndexNull',
+                [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Whether the database adapter supports spatial indexes on nullable columns.',
+                    'default' => false,
+                    'example' => false,
+                ]
+            )
+            ->addRule(
+                'supportForFulltextWildcard',
+                [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Whether the database adapter supports fulltext wildcard search.',
+                    'default' => true,
+                    'example' => true,
+                ]
+            )
+            ->addRule(
+                'supportForMultipleFulltextIndexes',
+                [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Whether the database adapter supports multiple fulltext indexes per collection.',
+                    'default' => true,
+                    'example' => true,
+                ]
+            )
+            ->addRule(
+                'supportForAttributeResizing',
+                [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Whether the database adapter supports resizing attributes.',
+                    'default' => true,
+                    'example' => true,
+                ]
+            )
+            ->addRule(
+                'supportForSchemas',
+                [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Whether the database adapter supports fixed schemas with row width limits.',
+                    'default' => true,
+                    'example' => true,
+                ]
+            )
+            ->addRule(
+                'maxIndexLength',
+                [
+                    'type' => self::TYPE_INTEGER,
+                    'description' => 'Maximum index length supported by the database adapter.',
+                    'default' => 768,
+                    'example' => 768,
+                ]
+            )
+            ->addRule(
+                'supportForIntegerIds',
+                [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Whether the database adapter uses integer sequence IDs.',
+                    'default' => true,
+                    'example' => true,
+                ]
+            )
+        ;
     }
 
     /**

@@ -3,7 +3,6 @@
 namespace Tests\E2E\Services\Webhooks;
 
 use Appwrite\Tests\Retry;
-use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -17,7 +16,55 @@ class WebhooksCustomClientTest extends Scope
     use ProjectCustom;
     use SideClient;
 
-    public function testCreateAccount(): array
+    /**
+     * Creates a user account and returns account details with active session.
+     *
+     * @return array Array containing 'id', 'email', 'password', 'name', 'sessionId', 'session'
+     */
+    protected function setupAccountWithSession(): array
+    {
+        $email = uniqid() . 'user@localhost.test';
+        $password = 'password';
+        $name = 'User Name';
+
+        // Create account
+        $account = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+
+        $id = $account['body']['$id'];
+
+        // Create session
+        $accountSession = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $sessionId = $accountSession['body']['$id'];
+        $session = $accountSession['cookies']['a_session_' . $this->getProject()['$id']];
+
+        return [
+            'id' => $id,
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+            'sessionId' => $sessionId,
+            'session' => $session,
+        ];
+    }
+
+    public function testCreateAccount(): void
     {
         $email = uniqid() . 'user@localhost.test';
         $password = 'password';
@@ -42,7 +89,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($account['headers']['status-code'], 201);
         $this->assertNotEmpty($account['body']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.create"));
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
         $url = $webhook['url'];
@@ -66,16 +113,9 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($webhook['data']['email'], $email);
         $this->assertEquals($webhook['data']['emailVerification'], false);
         $this->assertEquals($webhook['data']['prefs'], []);
-
-        return [
-            'id' => $id,
-            'email' => $email,
-            'password' => $password,
-            'name' => $name,
-        ];
     }
 
-    public function testDeleteAccount(): array
+    public function testDeleteAccount(): void
     {
         $email = uniqid() . 'user1@localhost.test';
         $password = 'password';
@@ -118,7 +158,7 @@ class WebhooksCustomClientTest extends Scope
 
         $this->assertEquals($account['headers']['status-code'], 200);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.update.status"));
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
         $url = $webhook['url'];
@@ -142,16 +182,29 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($webhook['data']['email'], $email);
         $this->assertEquals($webhook['data']['emailVerification'], false);
         $this->assertEquals($webhook['data']['prefs'], []);
-
-        return [];
     }
 
-    #[Depends('testCreateAccount')]
-    public function testCreateAccountSession($data): array
+    public function testCreateAccountSession(): void
     {
-        $id = $data['id'] ?? '';
-        $email = $data['email'] ?? '';
-        $password = $data['password'] ?? '';
+        // Create a fresh account with unique email
+        $email = 'webhook-session-' . uniqid() . '@localhost.test';
+        $password = 'password';
+        $name = 'User Name';
+
+        $account = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+
+        // Verify account was created successfully
+        $this->assertEquals(201, $account['headers']['status-code'], 'Account creation failed: ' . ($account['body']['message'] ?? 'unknown error'));
+        $id = $account['body']['$id'];
 
         /**
          * Test for SUCCESS
@@ -165,12 +218,12 @@ class WebhooksCustomClientTest extends Scope
             'password' => $password,
         ]);
 
-        $this->assertEquals($accountSession['headers']['status-code'], 201);
+        $this->assertEquals(201, $accountSession['headers']['status-code'], 'Session creation failed: ' . ($accountSession['body']['message'] ?? 'unknown error'));
 
         $sessionId = $accountSession['body']['$id'];
         $session = $accountSession['cookies']['a_session_' . $this->getProject()['$id']];
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.sessions.{$sessionId}.create"));
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
         $url = $webhook['url'];
@@ -216,19 +269,15 @@ class WebhooksCustomClientTest extends Scope
         $this->assertIsString($webhook['data']['countryCode']);
         $this->assertIsString($webhook['data']['countryName']);
         $this->assertEquals($webhook['data']['current'], true);
-
-        return array_merge($data, [
-            'sessionId' => $sessionId,
-            'session' => $session,
-        ]);
     }
 
-    #[Depends('testCreateAccount')]
-    public function testDeleteAccountSession($data): array
+    public function testDeleteAccountSession(): void
     {
-        $id = $data['id'] ?? '';
-        $email = $data['email'] ?? '';
-        $password = $data['password'] ?? '';
+        // Set up account with session
+        $data = $this->setupAccountWithSession();
+        $id = $data['id'];
+        $email = $data['email'];
+        $password = $data['password'];
 
         /**
          * Test for SUCCESS
@@ -256,7 +305,7 @@ class WebhooksCustomClientTest extends Scope
 
         $this->assertEquals($accountSession['headers']['status-code'], 204);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.sessions.{$sessionId}.delete"));
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
         $url = $webhook['url'];
@@ -302,16 +351,15 @@ class WebhooksCustomClientTest extends Scope
         $this->assertIsString($webhook['data']['countryCode']);
         $this->assertIsString($webhook['data']['countryName']);
         $this->assertEquals($webhook['data']['current'], true);
-
-        return $data;
     }
 
-    #[Depends('testCreateAccount')]
-    public function testDeleteAccountSessions($data): array
+    public function testDeleteAccountSessions(): void
     {
-        $id = $data['id'] ?? '';
-        $email = $data['email'] ?? '';
-        $password = $data['password'] ?? '';
+        // Set up account with session
+        $data = $this->setupAccountWithSession();
+        $id = $data['id'];
+        $email = $data['email'];
+        $password = $data['password'];
 
         /**
          * Test for SUCCESS
@@ -339,7 +387,7 @@ class WebhooksCustomClientTest extends Scope
 
         $this->assertEquals($accountSession['headers']['status-code'], 204);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.sessions.{$sessionId}.delete"));
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
         $url = $webhook['url'];
@@ -385,34 +433,16 @@ class WebhooksCustomClientTest extends Scope
         $this->assertIsString($webhook['data']['countryCode']);
         $this->assertIsString($webhook['data']['countryName']);
         $this->assertEquals($webhook['data']['current'], true);
-
-        $accountSession = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]), [
-            'email' => $email,
-            'password' => $password,
-        ]);
-
-        $this->assertEquals($accountSession['headers']['status-code'], 201);
-
-        $sessionId = $accountSession['body']['$id'];
-        $session = $accountSession['cookies']['a_session_' . $this->getProject()['$id']];
-
-        return array_merge($data, [
-            'sessionId' => $sessionId,
-            'session' => $session,
-        ]);
     }
 
     #[Retry(count: 1)]
-    #[Depends('testDeleteAccountSessions')]
-    public function testUpdateAccountName($data): array
+    public function testUpdateAccountName(): void
     {
-        $id = $data['id'] ?? '';
-        $email = $data['email'] ?? '';
-        $session = $data['session'] ?? '';
+        // Set up account with session
+        $data = $this->setupAccountWithSession();
+        $id = $data['id'];
+        $email = $data['email'];
+        $session = $data['session'];
         $newName = 'New Name';
 
         $account = $this->client->call(Client::METHOD_PATCH, '/account/name', array_merge([
@@ -427,7 +457,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($account['headers']['status-code'], 200);
         $this->assertIsArray($account['body']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.update.name"));
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
         $url = $webhook['url'];
@@ -454,17 +484,27 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($webhook['data']['email'], $email);
         $this->assertEquals($webhook['data']['emailVerification'], false);
         $this->assertEquals($webhook['data']['prefs'], []);
-
-        return $data;
     }
 
-    #[Depends('testUpdateAccountName')]
-    public function testUpdateAccountPassword($data): array
+    public function testUpdateAccountPassword(): void
     {
-        $id = $data['id'] ?? '';
-        $email = $data['email'] ?? '';
-        $password = $data['password'] ?? '';
-        $session = $data['session'] ?? '';
+        // Set up account with session
+        $data = $this->setupAccountWithSession();
+        $id = $data['id'];
+        $email = $data['email'];
+        $password = $data['password'];
+        $session = $data['session'];
+
+        // Update name first to make test self-sufficient
+        // (In parallel execution, testUpdateAccountName may not have run)
+        $this->client->call(Client::METHOD_PATCH, '/account/name', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'name' => 'New Name'
+        ]);
 
         $account = $this->client->call(Client::METHOD_PATCH, '/account/password', array_merge([
             'origin' => 'http://localhost',
@@ -479,7 +519,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($account['headers']['status-code'], 200);
         $this->assertIsArray($account['body']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.update.password"));
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
         $url = $webhook['url'];
@@ -505,19 +545,28 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($webhook['data']['email'], $email);
         $this->assertEquals($webhook['data']['emailVerification'], false);
         $this->assertEquals($webhook['data']['prefs'], []);
-
-        $data['password'] = 'new-password';
-
-        return $data;
     }
 
-    #[Depends('testUpdateAccountPassword')]
-    public function testUpdateAccountEmail($data): array
+    public function testUpdateAccountEmail(): void
     {
-        $id = $data['id'] ?? '';
-        $email = $data['email'] ?? '';
+        // Set up account with session
+        $data = $this->setupAccountWithSession();
+        $id = $data['id'];
+        $email = $data['email'];
+        $password = $data['password'];
         $newEmail = uniqid() . 'new@localhost.test';
-        $session = $data['session'] ?? '';
+        $session = $data['session'];
+
+        // Update name first to make test self-sufficient
+        // (In parallel execution, testUpdateAccountName may not have run)
+        $this->client->call(Client::METHOD_PATCH, '/account/name', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'name' => 'New Name'
+        ]);
 
         $account = $this->client->call(Client::METHOD_PATCH, '/account/email', array_merge([
             'origin' => 'http://localhost',
@@ -526,13 +575,13 @@ class WebhooksCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), [
             'email' => $newEmail,
-            'password' => 'new-password',
+            'password' => $password,
         ]);
 
         $this->assertEquals($account['headers']['status-code'], 200);
         $this->assertIsArray($account['body']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.update.email"));
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
         $url = $webhook['url'];
@@ -558,18 +607,26 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($webhook['data']['email'], $newEmail);
         $this->assertEquals($webhook['data']['emailVerification'], false);
         $this->assertEquals($webhook['data']['prefs'], []);
-
-        $data['email'] = $newEmail;
-
-        return $data;
     }
 
-    #[Depends('testUpdateAccountEmail')]
-    public function testUpdateAccountPrefs($data): array
+    public function testUpdateAccountPrefs(): void
     {
-        $id = $data['id'] ?? '';
-        $email = $data['email'] ?? '';
-        $session = $data['session'] ?? '';
+        // Set up account with session
+        $data = $this->setupAccountWithSession();
+        $id = $data['id'];
+        $email = $data['email'];
+        $session = $data['session'];
+
+        // Update name first to make test self-sufficient
+        // (In parallel execution, testUpdateAccountName may not have run)
+        $this->client->call(Client::METHOD_PATCH, '/account/name', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'name' => 'New Name'
+        ]);
 
         $account = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
             'origin' => 'http://localhost',
@@ -586,7 +643,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($account['headers']['status-code'], 200);
         $this->assertIsArray($account['body']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.update.prefs"));
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
         $url = $webhook['url'];
@@ -615,16 +672,15 @@ class WebhooksCustomClientTest extends Scope
             'prefKey1' => 'prefValue1',
             'prefKey2' => 'prefValue2',
         ]);
-
-        return $data;
     }
 
-    #[Depends('testUpdateAccountPrefs')]
-    public function testCreateAccountVerification($data): array
+    public function testCreateAccountVerification(): void
     {
-        $id = $data['id'] ?? '';
-        $email = $data['email'] ?? '';
-        $session = $data['session'] ?? '';
+        // Set up account with session
+        $data = $this->setupAccountWithSession();
+        $id = $data['id'];
+        $email = $data['email'];
+        $session = $data['session'];
 
         $verification = $this->client->call(Client::METHOD_POST, '/account/verification', array_merge([
             'origin' => 'http://localhost',
@@ -640,7 +696,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals(201, $verification['headers']['status-code']);
         $this->assertIsArray($verification['body']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.verification.{$verificationId}.create"));
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
         $url = $webhook['url'];
@@ -667,19 +723,29 @@ class WebhooksCustomClientTest extends Scope
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertNotEmpty($webhook['data']['secret']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['expire']));
-
-        $data['secret'] = $webhook['data']['secret'];
-
-        return $data;
     }
 
-    #[Depends('testCreateAccountVerification')]
-    public function testUpdateAccountVerification($data): array
+    public function testUpdateAccountVerification(): void
     {
-        $id = $data['id'] ?? '';
-        $email = $data['email'] ?? '';
-        $session = $data['session'] ?? '';
-        $secret = $data['secret'] ?? '';
+        // Set up account with session
+        $data = $this->setupAccountWithSession();
+        $id = $data['id'];
+        $email = $data['email'];
+        $session = $data['session'];
+
+        // Create verification to get a secret
+        $verification = $this->client->call(Client::METHOD_POST, '/account/verification', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'url' => 'http://localhost/verification',
+        ]);
+
+        // Get secret from webhook
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.verification.*.create"));
+        $secret = $webhook['data']['secret'];
 
         $verification = $this->client->call(Client::METHOD_PUT, '/account/verification', array_merge([
             'origin' => 'http://localhost',
@@ -696,7 +762,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals(200, $verification['headers']['status-code']);
         $this->assertIsArray($verification['body']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.verification.{$verificationId}.update"));
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
         $url = $webhook['url'];
@@ -723,17 +789,14 @@ class WebhooksCustomClientTest extends Scope
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertNotEmpty($webhook['data']['secret']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['expire']));
-
-        $data['secret'] = $webhook['data']['secret'];
-
-        return $data;
     }
 
-    #[Depends('testUpdateAccountPrefs')]
-    public function testCreateAccountRecovery($data): array
+    public function testCreateAccountRecovery(): void
     {
-        $id = $data['id'] ?? '';
-        $email = $data['email'] ?? '';
+        // Set up account with session
+        $data = $this->setupAccountWithSession();
+        $id = $data['id'];
+        $email = $data['email'];
 
         $recovery = $this->client->call(Client::METHOD_POST, '/account/recovery', array_merge([
             'origin' => 'http://localhost',
@@ -749,7 +812,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals(201, $recovery['headers']['status-code']);
         $this->assertIsArray($recovery['body']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.recovery.{$recoveryId}.create"));
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
         $url = $webhook['url'];
@@ -776,20 +839,30 @@ class WebhooksCustomClientTest extends Scope
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertNotEmpty($webhook['data']['secret']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['expire']));
-
-        $data['secret'] = $webhook['data']['secret'];
-
-        return $data;
     }
 
-    #[Depends('testCreateAccountRecovery')]
-    public function testUpdateAccountRecovery($data): array
+    public function testUpdateAccountRecovery(): void
     {
-        $id = $data['id'] ?? '';
-        $email = $data['email'] ?? '';
-        $session = $data['session'] ?? '';
-        $secret = $data['secret'] ?? '';
-        $password = 'newPassowrd2';
+        // Set up account with session
+        $data = $this->setupAccountWithSession();
+        $id = $data['id'];
+        $email = $data['email'];
+        $session = $data['session'];
+        $password = 'newPassword2';
+
+        // Create recovery to get a secret
+        $recovery = $this->client->call(Client::METHOD_POST, '/account/recovery', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            'url' => 'http://localhost/recovery',
+        ]);
+
+        // Get secret from webhook
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.recovery.*.create"));
+        $secret = $webhook['data']['secret'];
 
         $recovery = $this->client->call(Client::METHOD_PUT, '/account/recovery', array_merge([
             'origin' => 'http://localhost',
@@ -806,7 +879,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals(200, $recovery['headers']['status-code']);
         $this->assertIsArray($recovery['body']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.recovery.{$recoveryId}.update"));
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
         $url = $webhook['url'];
@@ -833,19 +906,17 @@ class WebhooksCustomClientTest extends Scope
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertNotEmpty($webhook['data']['secret']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['expire']));
-
-        $data['secret'] = $webhook['data']['secret'];
-
-        return $data;
     }
 
-    #[Depends('testCreateTeamMembership')]
-    public function testUpdateTeamMembership($data): array
+    public function testUpdateTeamMembership(): void
     {
-        $teamUid = $data['teamId'] ?? '';
-        $secret = $data['secret'] ?? '';
-        $membershipUid = $data['membershipId'] ?? '';
-        $userUid = $data['userId'] ?? '';
+        // Set up a team and create a membership
+        $teamData = $this->setupTeam();
+        $teamUid = $teamData['teamId'];
+        $membershipData = $this->setupTeamMembership($teamUid);
+        $secret = $membershipData['secret'];
+        $membershipUid = $membershipData['membershipId'];
+        $userUid = $membershipData['userId'];
 
         /**
          * Test for SUCCESS
@@ -862,7 +933,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals(200, $team['headers']['status-code']);
         $this->assertNotEmpty($team['body']['$id']);
 
-        $webhook = $this->getLastRequest();
+        $webhook = $this->getLastRequest($this->webhookEventProbe("teams.{$teamUid}.memberships.{$membershipUid}.update.status"));
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
         $url = $webhook['url'];
@@ -895,10 +966,5 @@ class WebhooksCustomClientTest extends Scope
         $this->assertCount(2, $webhook['data']['roles']);
         $this->assertTrue((new DatetimeValidator())->isValid($webhook['data']['joined']));
         $this->assertTrue($webhook['data']['confirm']);
-
-        /**
-         * Test for FAILURE
-         */
-        return [];
     }
 }

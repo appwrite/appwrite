@@ -10,6 +10,7 @@ use Appwrite\Event\Certificate;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
+use Appwrite\Event\Execution;
 use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
@@ -42,8 +43,8 @@ use Utopia\Auth\Store;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
@@ -51,7 +52,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
-use Utopia\Http;
+use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
@@ -159,6 +160,9 @@ Http::setResource('queueForAudits', function (Publisher $publisher) {
 Http::setResource('queueForFunctions', function (Publisher $publisher) {
     return new Func($publisher);
 }, ['publisher']);
+Http::setResource('queueForExecutions', function (Publisher $publisher) {
+    return new Execution($publisher);
+}, ['publisher']);
 Http::setResource('eventProcessor', function () {
     return new EventProcessor();
 }, []);
@@ -198,15 +202,26 @@ Http::setResource('allowedHostnames', function (array $platform, Document $proje
     }
 
     $originHostname = parse_url($request->getOrigin(), PHP_URL_HOST);
+    $refererHostname = parse_url($request->getReferer(), PHP_URL_HOST);
+
+    $hostname = $originHostname;
+    if (empty($hostname)) {
+        $hostname = $refererHostname;
+    }
 
     /* Add request hostname for preflight requests */
     if ($request->getMethod() === 'OPTIONS') {
-        $allowed[] = $originHostname;
+        $allowed[] = $hostname;
     }
 
-    /* Allow the request origin if a dev key or rule is found */
-    if ((!$rule->isEmpty() || !$devKey->isEmpty()) && !empty($originHostname)) {
-        $allowed[] = $originHostname;
+    /* Allow the request origin of rule */
+    if (!$rule->isEmpty() && !empty($rule->getAttribute('domain', ''))) {
+        $allowed[] = $rule->getAttribute('domain', '');
+    }
+
+    /* Allow the request origin if a dev key is found */
+    if (!$devKey->isEmpty() && !empty($hostname)) {
+        $allowed[] = $hostname;
     }
 
     return array_unique($allowed);
@@ -215,8 +230,8 @@ Http::setResource('allowedHostnames', function (array $platform, Document $proje
 /**
  * List of allowed request schemes for the request.
  */
-Http::setResource('allowedSchemes', function (Document $project) {
-    $allowed = [];
+Http::setResource('allowedSchemes', function (array $platform, Document $project) {
+    $allowed = [...($platform['schemas'] ?? [])];
 
     if (!$project->isEmpty() && $project->getId() !== 'console') {
         /* Add hardcoded schemes */
@@ -230,13 +245,18 @@ Http::setResource('allowedSchemes', function (Document $project) {
     }
 
     return array_unique($allowed);
-}, ['project']);
+}, ['platform', 'project']);
 
 /**
  * Rule associated with a request origin.
  */
 Http::setResource('rule', function (Request $request, Database $dbForPlatform, Document $project, Authorization $authorization) {
     $domain = \parse_url($request->getOrigin(), PHP_URL_HOST);
+
+    if (empty($domain)) {
+        $domain = \parse_url($request->getReferer(), PHP_URL_HOST);
+    }
+
     if (empty($domain)) {
         return new Document();
     }
@@ -253,7 +273,24 @@ Http::setResource('rule', function (Request $request, Database $dbForPlatform, D
         ]) ?? new Document();
     });
 
-    if ($rule->getAttribute('projectInternalId') !== $project->getSequence()) {
+    $permitsCurrentProject = $rule->getAttribute('projectInternalId', '') === $project->getSequence();
+
+    // Temporary implementation until custom wildcard domains are an official feature
+    // Allow trusted projects; Used for Console (website) previews
+    if (!$permitsCurrentProject && !$rule->isEmpty() && !empty($rule->getAttribute('projectId', ''))) {
+        $trustedProjects = [];
+        foreach (\explode(',', System::getEnv('_APP_CONSOLE_TRUSTED_PROJECTS', '')) as $trustedProject) {
+            if (empty($trustedProject)) {
+                continue;
+            }
+            $trustedProjects[] = $trustedProject;
+        }
+        if (\in_array($rule->getAttribute('projectId', ''), $trustedProjects)) {
+            $permitsCurrentProject = true;
+        }
+    }
+
+    if (!$permitsCurrentProject) {
         return new Document();
     }
 
@@ -263,54 +300,17 @@ Http::setResource('rule', function (Request $request, Database $dbForPlatform, D
 /**
  * CORS service
  */
-Http::setResource('cors', fn (array $allowedHostnames) => new Cors(
-    $allowedHostnames,
-    allowedMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-    allowedHeaders: [
-        'Accept',
-        'Origin',
-        'Cookie',
-        'Set-Cookie',
-        // Content
-        'Content-Type',
-        'Content-Range',
-        // Appwrite
-        'X-Appwrite-Project',
-        'X-Appwrite-Key',
-        'X-Appwrite-Dev-Key',
-        'X-Appwrite-Locale',
-        'X-Appwrite-Mode',
-        'X-Appwrite-JWT',
-        'X-Appwrite-Response-Format',
-        'X-Appwrite-Timeout',
-        'X-Appwrite-ID',
-        'X-Appwrite-Timestamp',
-        'X-Appwrite-Session',
-        'X-Appwrite-Platform', // for `$platform` injection and SDK generator
-        // SDK generator
-        'X-SDK-Version',
-        'X-SDK-Name',
-        'X-SDK-Language',
-        'X-SDK-Platform',
-        'X-SDK-GraphQL',
-        'X-SDK-Profile',
-        // Caching
-        'Range',
-        'Cache-Control',
-        'Expires',
-        'Pragma',
-        // Server to server
-        'X-Fallback-Cookies',
-        'X-Requested-With',
-        'X-Forwarded-For',
-        'X-Forwarded-User-Agent',
-    ],
-    allowCredentials: true,
-    exposedHeaders: [
-        'X-Appwrite-Session',
-        'X-Fallback-Cookies',
-    ],
-), ['allowedHostnames']);
+Http::setResource('cors', function (array $allowedHostnames) {
+    $corsConfig = Config::getParam('cors');
+
+    return new Cors(
+        $allowedHostnames,
+        allowedMethods: $corsConfig['allowedMethods'],
+        allowedHeaders: $corsConfig['allowedHeaders'],
+        allowCredentials: true,
+        exposedHeaders: $corsConfig['exposedHeaders'],
+    );
+}, ['allowedHostnames']);
 
 Http::setResource('originValidator', function (Document $devKey, array $allowedHostnames, array $allowedSchemes) {
     if (!$devKey->isEmpty()) {
@@ -412,13 +412,7 @@ Http::setResource('user', function (string $mode, Document $project, Document $c
     ) { // Validate user has valid login token
         $user = new User([]);
     }
-    // if (APP_MODE_ADMIN === $mode) {
-    //     if ($user->find('teamInternalId', $project->getAttribute('teamInternalId'), 'memberships')) {
-    //         $authorization->setDefaultStatus(false);  // Cancel security segmentation for admin users.
-    //     } else {
-    //         $user = new Document([]);
-    //     }
-    // }
+
     $authJWT = $request->getHeader('x-appwrite-jwt', '');
     if (!empty($authJWT) && !$project->isEmpty()) { // JWT authentication
         if (!$user->isEmpty()) {
@@ -487,6 +481,10 @@ Http::setResource('project', function ($dbForPlatform, $request, $console, $auth
     /** @var Utopia\Database\Document $console */
 
     $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', ''));
+    // Realtime channel "project" can send project=Query array
+    if (!\is_string($projectId)) {
+        $projectId = $request->getHeader('x-appwrite-project', '');
+    }
 
     if (empty($projectId) || $projectId === 'console') {
         return $console;
@@ -561,11 +559,16 @@ Http::setResource('dbForProject', function (Group $pools, Database $dbForPlatfor
         return $dbForPlatform;
     }
 
+    $database = $project->getAttribute('database', '');
+    if (empty($database)) {
+        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Project database is not configured');
+    }
+
     try {
-        $dsn = new DSN($project->getAttribute('database'));
+        $dsn = new DSN($database);
     } catch (\InvalidArgumentException) {
         // TODO: Temporary until all projects are using shared tables
-        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+        $dsn = new DSN('mysql://' . $database);
     }
 
     $adapter = new DatabasePool($pools->get($dsn->getHost()));
@@ -825,11 +828,16 @@ Http::setResource('getProjectDB', function (Group $pools, Database $dbForPlatfor
             return $dbForPlatform;
         }
 
+        $database = $project->getAttribute('database', '');
+        if (empty($database)) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Project database is not configured');
+        }
+
         try {
-            $dsn = new DSN($project->getAttribute('database'));
+            $dsn = new DSN($database);
         } catch (\InvalidArgumentException) {
             // TODO: Temporary until all projects are using shared tables
-            $dsn = new DSN('mysql://' . $project->getAttribute('database'));
+            $dsn = new DSN('mysql://' . $database);
         }
 
         $configure = (function (Database $database) use ($project, $dsn, $authorization) {
@@ -1263,6 +1271,7 @@ Http::setResource('team', function (Document $project, Database $dbForPlatform, 
     } else {
         $route = $utopia->match($request);
         $path = !empty($route) ? $route->getPath() : $request->getURI();
+        $orgHeader = $request->getHeader('x-appwrite-organization', '');
         if (str_starts_with($path, '/v1/projects/:projectId')) {
             $uri = $request->getURI();
             $pid = explode('/', $uri)[3];
@@ -1277,8 +1286,12 @@ Http::setResource('team', function (Document $project, Database $dbForPlatform, 
 
             $team = $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $teamId));
             return $team;
+        } elseif (!empty($orgHeader)) {
+            return $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $orgHeader));
         }
     }
+
+    // if teamInternalId is empty, return an empty document
 
     if (empty($teamInternalId)) {
         return new Document([]);

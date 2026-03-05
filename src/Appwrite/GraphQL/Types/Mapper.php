@@ -9,8 +9,8 @@ use Exception;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Definition\UnionType;
-use Utopia\Http;
-use Utopia\Route;
+use Utopia\Http\Http;
+use Utopia\Http\Route;
 use Utopia\Validator;
 use Utopia\Validator\Nullable;
 
@@ -59,7 +59,8 @@ class Mapper
             'none' => Types::json(),
             'any' => Types::json(),
             'array' => Types::json(),
-            'enum' => Type::string()
+            'enum' => Type::string(),
+            'id' => Type::string()
         ];
 
         foreach ($defaults as $type => $default) {

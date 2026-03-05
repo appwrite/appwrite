@@ -4,9 +4,9 @@ namespace Appwrite\Certificates;
 
 use Appwrite\Certificates\Exception\CertificateStatus as CertificateStatusException;
 use Exception;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\DateTime;
-use Utopia\Http;
+use Utopia\Http\Http;
 use Utopia\Logger\Log;
 
 class LetsEncrypt implements Adapter

@@ -9,6 +9,8 @@ trait DatabasesPermissionsBase
     public array $users = [];
     public array $teams = [];
 
+    private static array $setupDatabaseCache = [];
+
     // URL Helper Methods - uses methods from ApiLegacy/ApiTablesDB traits
     protected function getDatabaseUrl(string $databaseId = ''): string
     {
