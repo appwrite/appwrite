@@ -59,8 +59,9 @@ abstract class ScheduleBase extends Action
         if (!$project->isEmpty() && $project->getId() !== 'console') {
             $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
-                $project->setAttribute('accessedAt', DateTime::now());
-                $dbForPlatform->updateDocument('projects', $project->getId(), $project);
+                $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                    'accessedAt' => DateTime::now()
+                ]));
             }
         }
     }
