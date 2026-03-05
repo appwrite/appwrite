@@ -106,15 +106,29 @@ export function mapApiKeysFromResponse(
   apiKeysData: { keys?: unknown[] } | null,
 ) {
   if (!apiKeysData?.keys) return []
-  return (apiKeysData.keys || []).map((key: unknown) => ({
-    id: key.$id || key.id || '',
-    name: key.name || 'Unnamed Key',
-    key: key.secret || '',
-    scopes: key.scopes || [],
-    createdAt: key.$createdAt || new Date().toISOString(),
-    lastUsed: key.accessedAt || null,
-    expire: key.expire || null,
-  }))
+  return (apiKeysData.keys || []).map((key: unknown) => {
+    const k = key as Record<string, unknown>
+    return {
+      id: (k.$id ?? k.id ?? '') as string,
+      name: (k.name ?? 'Unnamed Key') as string,
+      key: (k.secret ?? '') as string,
+      scopes: (k.scopes ?? []) as string[],
+      createdAt: (k.$createdAt ?? new Date().toISOString()) as string,
+      lastUsed: (k.accessedAt ?? null) as string | null,
+      expire: (k.expire ?? null) as string | null,
+    }
+  })
+}
+
+/** Query options for project API keys (for route loader prefetch). */
+export function apiKeysQueryOptions(projectId: string | null | undefined) {
+  return queryOptions({
+    queryKey: ['apiKeys', projectId],
+    queryFn: () => fetchApiKeys(projectId!),
+    enabled: !!projectId,
+    staleTime: LONG_STALE_TIME,
+    refetchOnMount: false,
+  })
 }
 
 /**
@@ -462,12 +476,7 @@ export function useApiKeys(projectId: string | undefined) {
     isLoading,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ['apiKeys', projectId],
-    queryFn: () => fetchApiKeys(projectId!),
-    enabled: !!projectId,
-    staleTime: LONG_STALE_TIME,
-  })
+  } = useQuery(apiKeysQueryOptions(projectId))
 
   // Map the API response to our ApiKey type
   const apiKeys = useMemo(() => {

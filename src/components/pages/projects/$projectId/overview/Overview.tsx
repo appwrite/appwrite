@@ -33,7 +33,7 @@ import { PlatformIcon } from '@/components/global/shared/Icon'
 import { LanguageIcon } from '@/components/global/shared/LanguageIcon'
 import { getPlatformDisplayName } from '@/lib/utils/platform'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ApiKeysList } from '../shared/ApiKeysList'
+import { ApiKeysList, type ApiKey } from '../shared/ApiKeysList'
 import { ApiKeyDrawer } from '../api-keys/ApiKeyDrawer'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -123,11 +123,19 @@ const supportedLanguages = [
   { id: 'dotnet', name: '.NET' },
 ] as const
 
-interface ViewProps {
-  projectId: string
+export interface OverviewInitialData {
+  apiKeys: ApiKey[]
+  /** Prefetched platforms from project; avoids empty-state flash in Apps section */
+  platforms?: unknown[]
 }
 
-export function View({ projectId }: ViewProps) {
+interface ViewProps {
+  projectId: string
+  /** Prefetched data from route loader; avoids loading spinner for API keys on first paint */
+  initialData?: OverviewInitialData
+}
+
+export function View({ projectId, initialData }: ViewProps) {
   const [activeTab, setActiveTab] = useState('bandwidth')
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false)
@@ -178,8 +186,11 @@ export function View({ projectId }: ViewProps) {
   // Fetch real project data from console SDK
   const { project: currentProject } = useProject(projectId)
 
-  // Fetch API keys using the hook
+  // Fetch API keys using the hook; use initialData for first paint to avoid spinner
   const { apiKeys, isLoading: isLoadingKeys } = useApiKeys(projectId)
+  const effectiveApiKeys =
+    apiKeys.length > 0 ? apiKeys : (initialData?.apiKeys ?? [])
+  const showLoadingKeys = isLoadingKeys && !initialData
 
   // Create mutation
   const createMutation = useCreateApiKey(projectId)
@@ -190,13 +201,13 @@ export function View({ projectId }: ViewProps) {
   // Delete mutation
   const deleteMutation = useDeleteApiKey(projectId)
 
-  // Build integrations list from project platforms/clients data
+  // Build integrations list from project platforms; use initialData for first paint to avoid empty-state flash
+  const platformsForIntegrations =
+    currentProject?.platforms ?? initialData?.platforms ?? []
   const integrations = useMemo(() => {
-    if (!currentProject?.platforms) return []
+    if (platformsForIntegrations.length === 0) return []
 
-    const platforms = currentProject.platforms || []
-
-    return platforms.map((platform: Record<string, unknown>) => {
+    return platformsForIntegrations.map((platform: Record<string, unknown>) => {
       const platformType = (platform.type ??
         platform.platform ??
         'web') as string
@@ -231,7 +242,7 @@ export function View({ projectId }: ViewProps) {
         docsUrl: '#', // Could be constructed from platform data if available
       } as Integration
     })
-  }, [currentProject?.platforms])
+  }, [platformsForIntegrations])
 
   // Get endpoint from project region (centralized in SDK)
   const projectEndpoint = useMemo(
@@ -320,7 +331,7 @@ export function View({ projectId }: ViewProps) {
   }
 
   const selectedKey = selectedKeyId
-    ? apiKeys.find((key) => key.id === selectedKeyId)
+    ? effectiveApiKeys.find((key) => key.id === selectedKeyId)
     : null
 
   // Get the full key data for update (we need to fetch it from the API)
@@ -691,7 +702,7 @@ export function View({ projectId }: ViewProps) {
               Add API key
             </Button>
           </div>
-          {isLoadingKeys ? (
+          {showLoadingKeys ? (
             <div className="rounded-xl border border-border bg-card/50">
               <div className="divide-y divide-border">
                 {Array.from({ length: 2 }).map((_, i) => (
@@ -717,7 +728,7 @@ export function View({ projectId }: ViewProps) {
                 ))}
               </div>
             </div>
-          ) : apiKeys.length === 0 ? (
+          ) : effectiveApiKeys.length === 0 ? (
             <EmptyState icon={Key} variant="card" isEmpty={true}>
               <div className="flex flex-col items-center text-center">
                 <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
@@ -757,7 +768,7 @@ export function View({ projectId }: ViewProps) {
             </EmptyState>
           ) : (
             <ApiKeysList
-              apiKeys={apiKeys}
+              apiKeys={effectiveApiKeys}
               isLoading={false}
               onUpdate={handleUpdate}
               onDelete={handleDelete}

@@ -5,7 +5,7 @@
 /**
  * Reusable code block with syntax highlighting for all Appwrite SDK and runtime languages.
  * Supports: JavaScript, TypeScript, Node/Deno/Bun, Python, PHP, Ruby, Dart, Swift, Kotlin, Java,
- * Go, C#/.NET, JSON, Bash, PowerShell, markup, and plaintext.
+ * Go, C#/.NET, JSON, Bash, PowerShell, markup, plaintext, and .env (dotenv).
  * Uses prism-react-renderer; extra languages are loaded on demand. Built-in Prism themes;
  * background matches page (--background).
  */
@@ -21,6 +21,19 @@ import { toast } from 'sonner'
 // Expose Prism so prismjs language components can register themselves
 if (typeof globalThis !== 'undefined') {
   ;(globalThis as unknown as { Prism: typeof Prism }).Prism = Prism
+}
+
+// Register .env / dotenv syntax (KEY=value, # comments, quoted values)
+if (typeof Prism !== 'undefined' && !Prism.languages.env) {
+  Prism.languages.env = {
+    comment: /#.*/,
+    'attr-name': /^[A-Za-z_][A-Za-z0-9_]*/m,
+    operator: /=/,
+    string: [
+      { pattern: /"(?:[^"\\]|\\.)*"/, greedy: true },
+      { pattern: /'(?:[^'\\]|\\.)*'/, greedy: true },
+    ],
+  }
 }
 
 /**
@@ -44,6 +57,7 @@ export type CodeBlockLanguage =
   | 'csharp'
   | 'markup'
   | 'plaintext'
+  | 'env'
   // Appwrite runtime keys (map to Prism languages below)
   | 'node'
   | 'deno'

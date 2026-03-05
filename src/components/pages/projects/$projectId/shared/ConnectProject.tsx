@@ -43,6 +43,21 @@ const APPWRITE_CLI_INSTALL_URL =
   'https://appwrite.io/docs/tooling/command-line/installation'
 const APPWRITE_CLI_DOCS_URL =
   'https://appwrite.io/docs/tooling/command-line/commands'
+const APPWRITE_SKILLS_DOCS_URL = 'https://appwrite.io/docs/tooling/skills'
+const APPWRITE_AGENT_SKILLS_REPO = 'https://github.com/appwrite/agent-skills'
+
+function GitHubIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+    </svg>
+  )
+}
 
 interface CodeFile {
   label: string
@@ -204,7 +219,7 @@ function getCodeFiles(
     case 'web': {
       if (frameworkId === 'react') {
         return [
-          { label: envLabel, code: envCode, language: 'plaintext' },
+          { label: envLabel, code: envCode, language: 'env' },
           {
             label: 'lib/appwrite.ts',
             code: `import { Client } from 'appwrite'
@@ -242,7 +257,7 @@ export default function App() {
       }
       if (frameworkId === 'vue') {
         return [
-          { label: envLabel, code: envCode, language: 'plaintext' },
+          { label: envLabel, code: envCode, language: 'env' },
           {
             label: 'src/lib/appwrite.ts',
             code: `import { Client } from 'appwrite'
@@ -286,7 +301,7 @@ onMounted(async () => {
       }
       if (frameworkId === 'svelte') {
         return [
-          { label: envLabel, code: envCode, language: 'plaintext' },
+          { label: envLabel, code: envCode, language: 'env' },
           {
             label: 'src/lib/appwrite.ts',
             code: `import { Client } from 'appwrite'
@@ -332,7 +347,7 @@ export { client }
       if (frameworkId === 'next') {
         const isAppRouter = usingId === 'app'
         return [
-          { label: envLabel, code: envCode, language: 'plaintext' },
+          { label: envLabel, code: envCode, language: 'env' },
           {
             label: 'lib/appwrite.ts',
             code: `import { Client } from 'appwrite'
@@ -394,7 +409,7 @@ export default function Home() {
       }
       if (frameworkId === 'sveltekit') {
         return [
-          { label: envLabel, code: envCode, language: 'plaintext' },
+          { label: envLabel, code: envCode, language: 'env' },
           {
             label: 'src/lib/appwrite.ts',
             code: `import { Client } from 'appwrite'
@@ -442,7 +457,7 @@ export async function load() {
       }
       if (frameworkId === 'angular') {
         return [
-          { label: envLabel, code: envCode, language: 'plaintext' },
+          { label: envLabel, code: envCode, language: 'env' },
           {
             label: 'src/lib/appwrite.ts',
             code: `import { Client } from 'appwrite'
@@ -498,7 +513,7 @@ export class AppComponent {
       }
       if (frameworkId === 'nuxt') {
         return [
-          { label: envLabel, code: envCode, language: 'plaintext' },
+          { label: envLabel, code: envCode, language: 'env' },
           {
             label: 'utils/appwrite.ts',
             code: `import { Client } from 'appwrite'
@@ -538,7 +553,7 @@ const { data: user } = await useAsyncData('user', async () => {
       }
       if (frameworkId === 'tanstack') {
         return [
-          { label: envLabel, code: envCode, language: 'plaintext' },
+          { label: envLabel, code: envCode, language: 'env' },
           {
             label: 'src/lib/appwrite.ts',
             code: `import { Client } from 'appwrite'
@@ -580,7 +595,7 @@ function Home() {
       }
       if (frameworkId === 'solid') {
         return [
-          { label: envLabel, code: envCode, language: 'plaintext' },
+          { label: envLabel, code: envCode, language: 'env' },
           {
             label: 'src/lib/appwrite.ts',
             code: `import { Client } from 'appwrite'
@@ -622,7 +637,7 @@ export default function Home() {
       }
       if (frameworkId === 'refine') {
         return [
-          { label: envLabel, code: envCode, language: 'plaintext' },
+          { label: envLabel, code: envCode, language: 'env' },
           {
             label: 'src/lib/appwrite.ts',
             code: `import { Client } from 'appwrite'\n\n${clientInitWeb}\n\nexport { client }\n`,
@@ -637,7 +652,7 @@ export default function Home() {
       }
       // Vanilla / Web
       return [
-        { label: envLabel, code: envCode, language: 'plaintext' },
+        { label: envLabel, code: envCode, language: 'env' },
         {
           label: 'main.js',
           code: `import { Client, Account } from 'appwrite'
@@ -654,7 +669,7 @@ account.get().then((u) => console.log('Hello,', u.name)).catch(console.error)
     case 'node': {
       if (frameworkId === 'express') {
         return [
-          { label: '.env', code: envCode, language: 'plaintext' },
+          { label: '.env', code: envCode, language: 'env' },
           {
             label: 'lib/appwrite.ts',
             code: `import { Client } from 'node-appwrite'
@@ -690,7 +705,7 @@ app.listen(3000, () => console.log('Listening on http://localhost:3000'))
         ]
       }
       return [
-        { label: '.env', code: envCode, language: 'plaintext' },
+        { label: '.env', code: envCode, language: 'env' },
         {
           label: 'src/index.ts',
           code: `import { Client, Databases } from 'node-appwrite'
@@ -706,7 +721,7 @@ const databases = new Databases(client)
     }
     case 'flutter':
       return [
-        { label: '.env', code: envCode, language: 'plaintext' },
+        { label: '.env', code: envCode, language: 'env' },
         {
           label: 'lib/appwrite_client.dart',
           code: `import 'dart:io' show Platform;
@@ -754,7 +769,7 @@ class MyApp extends StatelessWidget {
       ]
     case 'react-native':
       return [
-        { label: '.env', code: envCode, language: 'plaintext' },
+        { label: '.env', code: envCode, language: 'env' },
         {
           label: 'lib/appwrite.ts',
           code: `import { Client } from 'react-native-appwrite'
@@ -796,7 +811,7 @@ export default function App() {
         {
           label: 'Config (env or xcconfig)',
           code: envCode,
-          language: 'plaintext',
+          language: 'env',
         },
         {
           label: 'AppwriteClient.swift',
@@ -823,7 +838,7 @@ struct ContentView: View {
       ]
     case 'android':
       return [
-        { label: 'Build config / env', code: envCode, language: 'plaintext' },
+        { label: 'Build config / env', code: envCode, language: 'env' },
         {
           label: 'AppwriteClient.kt',
           code: `import io.appwrite.Client
@@ -846,7 +861,7 @@ object AppwriteClient {
       ]
     case 'python':
       return [
-        { label: '.env', code: envCode, language: 'plaintext' },
+        { label: '.env', code: envCode, language: 'env' },
         {
           label: 'main.py',
           code: `import os
@@ -868,7 +883,7 @@ print(f"Hello, {user['name']}")
       ]
     case 'dart':
       return [
-        { label: '.env', code: envCode, language: 'plaintext' },
+        { label: '.env', code: envCode, language: 'env' },
         {
           label: 'bin/main.dart',
           code: `import 'dart:io' show Platform;
@@ -890,7 +905,7 @@ void main() async {
       ]
     case 'php':
       return [
-        { label: '.env', code: envCode, language: 'plaintext' },
+        { label: '.env', code: envCode, language: 'env' },
         {
           label: 'index.php',
           code: `<?php
@@ -910,7 +925,7 @@ echo "Hello, " . $user['name'];
       ]
     case 'ruby':
       return [
-        { label: '.env', code: envCode, language: 'plaintext' },
+        { label: '.env', code: envCode, language: 'env' },
         {
           label: 'main.rb',
           code: `require 'appwrite'
@@ -932,7 +947,7 @@ puts "Hello, #{user['name']}"
         {
           label: '.env or launchSettings',
           code: envCode,
-          language: 'plaintext',
+          language: 'env',
         },
         {
           label: 'Program.cs',
@@ -953,7 +968,7 @@ Console.WriteLine($"Hello, {user.Name}");
       ]
     case 'go':
       return [
-        { label: '.env', code: envCode, language: 'plaintext' },
+        { label: '.env', code: envCode, language: 'env' },
         {
           label: 'main.go',
           code: `package main
@@ -979,7 +994,7 @@ func main() {
       ]
     case 'swift':
       return [
-        { label: '.env or xcconfig', code: envCode, language: 'plaintext' },
+        { label: '.env or xcconfig', code: envCode, language: 'env' },
         {
           label: 'main.swift',
           code: `import Appwrite
@@ -998,7 +1013,7 @@ print("Hello, \\(user.name)")
       ]
     case 'kotlin':
       return [
-        { label: '.env or env vars', code: envCode, language: 'plaintext' },
+        { label: '.env or env vars', code: envCode, language: 'env' },
         {
           label: 'Main.kt',
           code: `import io.appwrite.Client
@@ -1020,7 +1035,7 @@ fun main() {
       ]
     case 'deno':
       return [
-        { label: '.env', code: envCode, language: 'plaintext' },
+        { label: '.env', code: envCode, language: 'env' },
         {
           label: 'main.ts',
           code: `import { Client, Account } from "jsr:/@appwrite/sdk"
@@ -1319,7 +1334,9 @@ export function ConnectProject({
       ),
     [sdkId, frameworkId, usingId, runtime, endpoint, projectId],
   )
-  const [connectTab, setConnectTab] = useState<'app' | 'cli' | 'mcp'>('app')
+  const [connectTab, setConnectTab] = useState<
+    'app' | 'cli' | 'mcp' | 'skills'
+  >('app')
   const [cliInstallOs, setCliInstallOs] = useState<
     'macos' | 'windows' | 'linux'
   >(() => {
@@ -1383,15 +1400,25 @@ export function ConnectProject({
         </DialogHeader>
         <Tabs
           value={connectTab}
-          onValueChange={(v) => setConnectTab(v as 'app' | 'cli' | 'mcp')}
+          onValueChange={(v) =>
+            setConnectTab(v as 'app' | 'cli' | 'mcp' | 'skills')
+          }
           className="min-h-0 flex-1 flex flex-col overflow-hidden"
         >
           <div
             className="shrink-0 flex gap-0 overflow-x-auto border-b border-border px-6"
             role="tablist"
           >
-            {(['app', 'cli', 'mcp'] as const).map((tabId) => {
+            {(['app', 'cli', 'mcp', 'skills'] as const).map((tabId) => {
               const isActive = connectTab === tabId
+              const label =
+                tabId === 'app'
+                  ? 'SDK'
+                  : tabId === 'cli'
+                    ? 'CLI'
+                    : tabId === 'mcp'
+                      ? 'MCP'
+                      : 'Skills'
               return (
                 <button
                   key={tabId}
@@ -1407,7 +1434,7 @@ export function ConnectProject({
                       : 'text-muted-foreground hover:text-foreground/80',
                   )}
                 >
-                  {tabId === 'app' ? 'App' : tabId === 'cli' ? 'CLI' : 'MCP'}
+                  {label}
                   {isActive && (
                     <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground" />
                   )}
@@ -1856,6 +1883,107 @@ export function ConnectProject({
             className="min-h-0 flex-1 overflow-y-auto px-6 pb-4 pt-0 data-[state=inactive]:hidden"
           >
             <MCPSection compact />
+          </TabsContent>
+          <TabsContent
+            value="skills"
+            className="min-h-0 flex-1 overflow-y-auto px-6 pb-4 pt-0 data-[state=inactive]:hidden flex flex-col"
+          >
+            <div className="grid grid-cols-[0.9fr_1.4fr] gap-6 pt-4 min-h-0 flex-1">
+              {/* Left: description + supported SDKs as flowing text */}
+              <div className="min-w-0 min-h-0 overflow-y-auto">
+                <p className="text-[13px] text-muted-foreground">
+                  Give your AI agent accurate Appwrite SDK context-method
+                  signatures, patterns, and best practices for your language.
+                  Install once per project or globally; works in Cursor, Claude
+                  Code, and other compatible tools.
+                </p>
+                <p className="text-[13px] text-muted-foreground mt-3">
+                  Skills are available for{' '}
+                  {[
+                    'CLI',
+                    'TypeScript',
+                    'Dart',
+                    '.NET',
+                    'Go',
+                    'Kotlin',
+                    'PHP',
+                    'Python',
+                    'Ruby',
+                    'Swift',
+                  ].map((sdk, i) => (
+                    <span key={sdk}>
+                      <span className="rounded bg-muted/80 px-1.5 py-0.5 text-[12px] font-medium text-muted-foreground">
+                        {sdk}
+                      </span>
+                      {i < 9 ? ', ' : ''}
+                    </span>
+                  ))}{' '}
+                  - pick what you use during setup.
+                </p>
+                <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+                  <a
+                    href={APPWRITE_SKILLS_DOCS_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-[13px] text-primary hover:underline"
+                  >
+                    Docs
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
+                </div>
+              </div>
+              {/* Right (main): install command */}
+              <div className="min-w-0 space-y-0">
+                <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                  <div className="px-4 py-3 border-b border-border">
+                    <h4 className="text-[13px] font-semibold text-foreground">
+                      Install command
+                    </h4>
+                    <p className="text-[12px] text-muted-foreground mt-1">
+                      Run in project root. You’ll pick SDKs, tools, and scope.
+                    </p>
+                  </div>
+                  <div className="px-4 py-3">
+                    <CodeBlock
+                      code="npx skills add appwrite/agent-skills"
+                      language="bash"
+                      label="Terminal"
+                      showCopy={true}
+                    />
+                  </div>
+                  <div className="px-4 py-2.5 border-t border-border">
+                    <p className="text-[12px] font-medium text-foreground mb-1.5">
+                      Then the CLI will ask:
+                    </p>
+                    <ul className="text-[12px] text-muted-foreground space-y-1">
+                      <li>
+                        <span className="text-foreground font-medium">Skills</span> — which SDKs to install (e.g. TypeScript, Go).
+                      </li>
+                      <li>
+                        <span className="text-foreground font-medium">Tools</span> — which AI tools use them (Cursor, Claude, etc.).
+                      </li>
+                      <li>
+                        <span className="text-foreground font-medium">Scope</span> — project (this repo) or global.
+                      </li>
+                      <li>
+                        <span className="text-foreground font-medium">Method</span> — prefer symlink so skills stay up to date.
+                      </li>
+                    </ul>
+                  </div>
+                  <div className="px-4 py-3 border-t border-border bg-muted/30 flex flex-wrap items-center gap-x-4 gap-y-2">
+                    <a
+                      href={APPWRITE_AGENT_SKILLS_REPO}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-[13px] text-primary hover:underline"
+                    >
+                      <GitHubIcon className="h-4 w-4" />
+                      appwrite/agent-skills
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
         <div className="shrink-0 px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
