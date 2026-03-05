@@ -249,7 +249,7 @@ export function View() {
           tabs={tabs}
           activeTab={activeTab}
           searchPlaceholder={
-            activeTab === 'functions' ? 'Search by name or ID' : undefined
+            activeTab === 'functions' ? 'Search functions...' : undefined
           }
           searchValue={activeTab === 'functions' ? searchValue : undefined}
           onSearchChange={
@@ -312,7 +312,7 @@ export function View() {
         tabs={tabs}
         activeTab={activeTab}
         searchPlaceholder={
-          activeTab === 'functions' ? 'Search by name or ID' : undefined
+          activeTab === 'functions' ? 'Search functions...' : undefined
         }
         searchValue={activeTab === 'functions' ? searchValue : undefined}
         onSearchChange={

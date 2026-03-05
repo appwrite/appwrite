@@ -11,10 +11,24 @@ import {
   useQueryClient,
   queryOptions,
 } from '@tanstack/react-query'
-import { Query } from '@appwrite.io/console'
+import { Query, Resources } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { DEFAULT_STALE_TIME } from './constants'
+
+/** Query options for project migrations list (for route loader prefetch). */
+export function projectMigrationsQueryOptions(
+  projectId: string | null | undefined,
+  region?: string,
+) {
+  return queryOptions({
+    queryKey: ['migrations', 'project', projectId, region],
+    queryFn: () => fetchProjectMigrations(projectId!, region),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    refetchOnMount: false,
+  })
+}
 
 // ============================================================================
 // QUERY FUNCTIONS
@@ -42,6 +56,7 @@ export async function fetchProjectMigrations(
       Query.equal('destination', ['Appwrite', 'Firebase', 'NHost', 'Supabase']),
       Query.isNull('destination'),
     ]),
+    Query.orderDesc('$createdAt'),
   ]
 
   const response = await projectSdk.migrations.list({ queries })
@@ -145,12 +160,9 @@ export function useProjectMigrations(
   projectId: string | null | undefined,
   region?: string,
 ) {
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['migrations', 'project', projectId, region],
-    queryFn: () => fetchProjectMigrations(projectId!, region),
-    enabled: !!projectId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  const { data, isLoading, error, refetch } = useQuery(
+    projectMigrationsQueryOptions(projectId, region),
+  )
 
   return {
     migrations: data?.migrations || [],
@@ -180,10 +192,7 @@ export function useProjectMigration(
         throw new Error('Project ID and Migration ID are required')
       }
       const projectSdk = sdk.forProject(projectId, region)
-      const response = await projectSdk.migrations.list({
-        queries: [Query.equal('$id', migrationId)],
-      })
-      return response.migrations?.[0] || null
+      return await projectSdk.migrations.get({ migrationId })
     },
     enabled: !!projectId && !!migrationId,
     staleTime: DEFAULT_STALE_TIME,
@@ -426,6 +435,272 @@ export function useCreateCSVImport(projectId: string | null | undefined) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
+        queryKey: ['migrations', 'project', projectId],
+      })
+    },
+  })
+}
+
+// ============================================================================
+// PROVIDER MIGRATIONS (Appwrite, Supabase, Firebase, NHost)
+// ============================================================================
+
+/** All Appwrite resources for report and migration. */
+export const APPWRITE_RESOURCES: Resources[] = [
+  Resources.User,
+  Resources.Database,
+  Resources.Table,
+  Resources.Column,
+  Resources.Index,
+  Resources.Row,
+  Resources.Document,
+  Resources.Attribute,
+  Resources.Collection,
+  Resources.Bucket,
+  Resources.File,
+]
+
+/** Resources supported by Supabase/NHost (no Row/Column/Table - use Document/Attribute/Collection). */
+export const SUPABASE_NHOST_RESOURCES: Resources[] = [
+  Resources.User,
+  Resources.Database,
+  Resources.Collection,
+  Resources.Attribute,
+  Resources.Index,
+  Resources.Document,
+  Resources.Bucket,
+  Resources.File,
+]
+
+/** Resources supported by Firebase (same as Supabase but no Index per prompt). */
+export const FIREBASE_RESOURCES: Resources[] = [
+  Resources.User,
+  Resources.Database,
+  Resources.Collection,
+  Resources.Attribute,
+  Resources.Document,
+  Resources.Bucket,
+  Resources.File,
+]
+
+export interface AppwriteReportParams {
+  endpoint: string
+  projectID: string
+  key: string
+}
+
+export async function fetchAppwriteReport(
+  projectId: string,
+  params: AppwriteReportParams,
+  region?: string,
+) {
+  const projectSdk = sdk.forProject(projectId, region)
+  return await projectSdk.migrations.getAppwriteReport({
+    resources: APPWRITE_RESOURCES,
+    endpoint: params.endpoint,
+    projectID: params.projectID,
+    key: params.key,
+  })
+}
+
+export interface SupabaseReportParams {
+  endpoint: string
+  apiKey: string
+  databaseHost: string
+  username: string
+  password: string
+  port?: number
+}
+
+export async function fetchSupabaseReport(
+  projectId: string,
+  params: SupabaseReportParams,
+  region?: string,
+) {
+  const projectSdk = sdk.forProject(projectId, region)
+  return await projectSdk.migrations.getSupabaseReport({
+    resources: SUPABASE_NHOST_RESOURCES,
+    endpoint: params.endpoint,
+    apiKey: params.apiKey,
+    databaseHost: params.databaseHost,
+    username: params.username,
+    password: params.password,
+    port: params.port,
+  })
+}
+
+export interface FirebaseReportParams {
+  serviceAccount: string
+}
+
+export async function fetchFirebaseReport(
+  projectId: string,
+  params: FirebaseReportParams,
+  region?: string,
+) {
+  const projectSdk = sdk.forProject(projectId, region)
+  return await projectSdk.migrations.getFirebaseReport({
+    resources: FIREBASE_RESOURCES,
+    serviceAccount: params.serviceAccount,
+  })
+}
+
+export interface NHostReportParams {
+  subdomain: string
+  region: string
+  adminSecret: string
+  database?: string
+  username?: string
+  password: string
+  port?: number
+}
+
+export async function fetchNHostReport(
+  projectId: string,
+  params: NHostReportParams,
+  region?: string,
+) {
+  const projectSdk = sdk.forProject(projectId, region)
+  return await projectSdk.migrations.getNHostReport({
+    resources: SUPABASE_NHOST_RESOURCES,
+    subdomain: params.subdomain,
+    region: params.region,
+    adminSecret: params.adminSecret,
+    database: params.database ?? params.subdomain,
+    username: params.username ?? 'postgres',
+    password: params.password,
+    port: params.port,
+  })
+}
+
+export interface CreateAppwriteMigrationParams {
+  resources: Resources[]
+  endpoint: string
+  projectId: string
+  apiKey: string
+}
+
+export function useCreateAppwriteMigration(
+  projectId: string | null | undefined,
+  region?: string,
+) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (params: CreateAppwriteMigrationParams) => {
+      if (!projectId) throw new Error('Project ID is required')
+      const projectSdk = sdk.forProject(projectId, region)
+      return await projectSdk.migrations.createAppwriteMigration({
+        resources: params.resources,
+        endpoint: params.endpoint,
+        projectId: params.projectId,
+        apiKey: params.apiKey,
+      })
+    },
+    onSuccess: () => {
+      queryClient.refetchQueries({
+        queryKey: ['migrations', 'project', projectId],
+      })
+    },
+  })
+}
+
+export interface CreateSupabaseMigrationParams {
+  resources: Resources[]
+  endpoint: string
+  apiKey: string
+  databaseHost: string
+  username: string
+  password: string
+  port?: number
+}
+
+export function useCreateSupabaseMigration(
+  projectId: string | null | undefined,
+  region?: string,
+) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (params: CreateSupabaseMigrationParams) => {
+      if (!projectId) throw new Error('Project ID is required')
+      const projectSdk = sdk.forProject(projectId, region)
+      return await projectSdk.migrations.createSupabaseMigration({
+        resources: params.resources,
+        endpoint: params.endpoint,
+        apiKey: params.apiKey,
+        databaseHost: params.databaseHost,
+        username: params.username,
+        password: params.password,
+        port: params.port,
+      })
+    },
+    onSuccess: () => {
+      queryClient.refetchQueries({
+        queryKey: ['migrations', 'project', projectId],
+      })
+    },
+  })
+}
+
+export interface CreateFirebaseMigrationParams {
+  resources: Resources[]
+  serviceAccount: string
+}
+
+export function useCreateFirebaseMigration(
+  projectId: string | null | undefined,
+  region?: string,
+) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (params: CreateFirebaseMigrationParams) => {
+      if (!projectId) throw new Error('Project ID is required')
+      const projectSdk = sdk.forProject(projectId, region)
+      return await projectSdk.migrations.createFirebaseMigration({
+        resources: params.resources,
+        serviceAccount: params.serviceAccount,
+      })
+    },
+    onSuccess: () => {
+      queryClient.refetchQueries({
+        queryKey: ['migrations', 'project', projectId],
+      })
+    },
+  })
+}
+
+export interface CreateNHostMigrationParams {
+  resources: Resources[]
+  subdomain: string
+  region: string
+  adminSecret: string
+  database?: string
+  username?: string
+  password: string
+  port?: number
+}
+
+export function useCreateNHostMigration(
+  projectId: string | null | undefined,
+  region?: string,
+) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (params: CreateNHostMigrationParams) => {
+      if (!projectId) throw new Error('Project ID is required')
+      const projectSdk = sdk.forProject(projectId, region)
+      return await projectSdk.migrations.createNHostMigration({
+        resources: params.resources,
+        subdomain: params.subdomain,
+        region: params.region,
+        adminSecret: params.adminSecret,
+        database: params.database ?? params.subdomain,
+        username: params.username ?? 'postgres',
+        password: params.password,
+        port: params.port,
+      })
+    },
+    onSuccess: () => {
+      queryClient.refetchQueries({
         queryKey: ['migrations', 'project', projectId],
       })
     },

@@ -2,22 +2,17 @@ import { useState, useEffect, useMemo } from 'react'
 import {
   Bug,
   ChevronRight,
-  LogIn,
-  UserPlus,
-  LogOut,
   Megaphone,
   Trash2,
   RotateCcw,
-  CreditCard,
-  AlertTriangle,
   Image,
   Palette,
-  Settings,
-  Navigation,
   Sparkles,
   ChevronLeft,
   Cloud,
   Server,
+  Settings,
+  Globe,
 } from 'lucide-react'
 import {
   Popover,
@@ -25,32 +20,32 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { useNavigate, useLocation } from '@tanstack/react-router'
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { usePromoBanner } from './PromoBanner'
 import { useDebugMode } from './DebugMode'
 import { Switch } from '@/components/ui/switch'
 import { useTheme } from 'next-themes'
 import {
   loadDebugOverrides,
-  resetDebugOverrides,
   setDebugOverride,
   subscribeToDebugOverrides,
   type DebugOverrides,
 } from '@/lib/debug-overrides'
-import { useOrganizationPlan } from '@/lib/react-query/hooks'
-import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useFavicon } from '@/hooks/use-favicon'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   setDebugProfileOverride,
   CONSOLE_PROFILES,
 } from '@/lib/console-profiles'
+import {
+  setDebugEndpointOverride,
+  ENDPOINT_PRESETS,
+  type EndpointPresetId,
+} from '@/lib/debug-endpoint'
+import { useDebugEndpoint } from '@/hooks/use-debug-endpoint'
 interface DebugAction {
   label: string
   onClick: () => void
@@ -59,11 +54,6 @@ interface DebugAction {
 
 interface DebugMenuProps {
   actions?: DebugAction[]
-}
-
-// Component that throws an error during render to trigger error boundary
-function ErrorTrigger() {
-  throw new Error('Debug: Error page triggered from debug menu')
 }
 
 interface MenuItem {
@@ -88,33 +78,15 @@ interface MenuSection {
 export function DebugMenu({ actions = [] }: DebugMenuProps) {
   const { isDebugModeOpen: isVisible } = useDebugMode()
   const [isOpen, setIsOpen] = useState(false)
-  const [planModalOpen, setPlanModalOpen] = useState(false)
-  const [showError, setShowError] = useState(false)
   const [overrides, setOverrides] = useState<DebugOverrides>(loadDebugOverrides)
-  const navigate = useNavigate()
-  const location = useLocation()
-  const { account } = useAuth()
   const { addMockBanner, clearAllBanners, banners } = usePromoBanner()
   const { setFavicon, getCurrentFavicon } = useFavicon()
   const [currentFavicon, setCurrentFavicon] = useState<string | null>(null)
   const { theme, setTheme } = useTheme()
   const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null)
   const { profileId } = useConsoleProfile()
-
-  // Get current orgId from URL params or account prefs
-  const currentOrgId = useMemo(() => {
-    const pathParts = location.pathname.split('/').filter(Boolean)
-    const orgIndex = pathParts.findIndex((part) => part === 'organizations')
-    if (orgIndex >= 0 && pathParts[orgIndex + 1]) {
-      return pathParts[orgIndex + 1]
-    }
-    return account?.prefs?.organization as string | undefined
-  }, [location.pathname, account?.prefs?.organization])
-
-  // Fetch organization plan when modal is open
-  const { plan, isLoading: planLoading } = useOrganizationPlan(
-    planModalOpen ? currentOrgId : null,
-  )
+  const { preset: endpointPreset, customUrl: endpointCustomUrl } =
+    useDebugEndpoint()
 
   useEffect(() => {
     const unsubscribe = subscribeToDebugOverrides(setOverrides)
@@ -227,41 +199,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             icon: <Image className="h-3 w-3" />,
             submenu: faviconOptions,
           },
-        ],
-      },
-      {
-        title: 'Console profile',
-        icon: <Server className="h-3.5 w-3.5" />,
-        items: [
-          {
-            label: `${CONSOLE_PROFILES[profileId].label} (active)`,
-            description: CONSOLE_PROFILES[profileId].description,
-            icon: profileId === 'cloud' ? <Cloud className="h-3 w-3" /> : <Server className="h-3 w-3" />,
-            submenu: profileOptions,
-          },
-        ],
-      },
-      {
-        title: 'Development',
-        icon: <Settings className="h-3.5 w-3.5" />,
-        items: [
-          {
-            label: 'Disable initial loader',
-            description: 'Skip fullscreen loader on first paint',
-            variant: 'switch' as const,
-            switchValue: overrides.disableInitialLoader,
-            switchOnChange: (checked: boolean) => {
-              setOverrides((prev) => ({
-                ...prev,
-                disableInitialLoader: checked,
-              }))
-              setDebugOverride('disableInitialLoader', checked)
-            },
-          },
           {
             label: 'Show native app bar',
-            description:
-              'App bar above header with back/forward and centered search (for future native OS app)',
+            description: 'App bar above header (native OS).',
             variant: 'switch' as const,
             switchValue: overrides.showNativeAppBar,
             switchOnChange: (checked: boolean) => {
@@ -272,73 +212,78 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               setDebugOverride('showNativeAppBar', checked)
             },
           },
-          {
-            label: 'Reset overrides',
-            onClick: () => {
-              resetDebugOverrides()
-              setOverrides(loadDebugOverrides())
-            },
-            icon: <RotateCcw className="h-3 w-3" />,
-          },
-          {
-            label: 'View error page',
-            onClick: () => {
-              setShowError(true)
-              setIsOpen(false)
-            },
-            icon: <AlertTriangle className="h-3 w-3" />,
-          },
-          {
-            label: 'Log current state',
-            onClick: () => {
-              console.log('Debug: Current state logged')
-              setIsOpen(false)
-            },
-          },
-          {
-            label: 'Clear local storage',
-            onClick: () => {
-              localStorage.clear()
-              console.log('Debug: Local storage cleared')
-              setIsOpen(false)
-            },
-          },
-          {
-            label: 'Reload page',
-            onClick: () => {
-              window.location.reload()
-            },
-          },
         ],
       },
       {
-        title: 'Navigation',
-        icon: <Navigation className="h-3.5 w-3.5" />,
+        title: 'Settings',
+        icon: <Settings className="h-3.5 w-3.5" />,
         items: [
           {
-            label: 'Sign In',
-            onClick: () => {
-              navigate({ to: '/sign-in' })
-              setIsOpen(false)
-            },
-            icon: <LogIn className="h-3 w-3" />,
+            label: 'Console profile',
+            description: CONSOLE_PROFILES[profileId].description,
+            icon: profileId === 'cloud' ? <Cloud className="h-3 w-3" /> : <Server className="h-3 w-3" />,
+            submenu: profileOptions,
           },
-          {
-            label: 'Sign Up',
-            onClick: () => {
-              navigate({ to: '/sign-up' })
-              setIsOpen(false)
-            },
-            icon: <UserPlus className="h-3 w-3" />,
-          },
-          {
-            label: 'Sign Out',
-            onClick: () => {
-              navigate({ to: '/sign-out' })
-              setIsOpen(false)
-            },
-            icon: <LogOut className="h-3 w-3" />,
-          },
+          (() => {
+            const activeEndpointLabel = !endpointPreset
+              ? 'Use env var'
+              : endpointPreset === 'custom' && endpointCustomUrl
+                ? `Custom: ${endpointCustomUrl.replace(/\/v1\/?$/, '')}`
+                : endpointPreset !== 'custom' && ENDPOINT_PRESETS[endpointPreset as keyof typeof ENDPOINT_PRESETS]
+                  ? ENDPOINT_PRESETS[endpointPreset as keyof typeof ENDPOINT_PRESETS].label
+                  : endpointPreset
+            const endpointOptions: MenuItem[] = [
+              ...(Object.entries(ENDPOINT_PRESETS) as [keyof typeof ENDPOINT_PRESETS, (typeof ENDPOINT_PRESETS)[keyof typeof ENDPOINT_PRESETS]][]).map(
+                ([id, { label, description }]) => ({
+                  label,
+                  description,
+                  onClick: () => {
+                    setIsOpen(false)
+                    setTimeout(() => setDebugEndpointOverride(id), 0)
+                  },
+                  active: endpointPreset === id,
+                  icon: <Globe className="h-3 w-3" />,
+                }),
+              ),
+              {
+                label: 'Custom...',
+                description: 'Enter a custom API URL',
+                onClick: () => {
+                  const url = window.prompt(
+                    'Enter API endpoint URL (e.g. https://my-appwrite.example/v1)',
+                    endpointPreset === 'custom' && endpointCustomUrl
+                      ? endpointCustomUrl
+                      : 'https://cloud.appwrite.io/v1',
+                  )
+                  if (url?.trim()) {
+                    setIsOpen(false)
+                    setTimeout(
+                      () => setDebugEndpointOverride('custom', url.trim()),
+                      0,
+                    )
+                  }
+                },
+                active: endpointPreset === 'custom',
+                icon: <Globe className="h-3 w-3" />,
+              },
+              {
+                label: 'Use env var',
+                description: 'Reset to VITE_APPWRITE_ENDPOINT',
+                onClick: () => {
+                  setIsOpen(false)
+                  setTimeout(() => setDebugEndpointOverride(null), 0)
+                },
+                active: !endpointPreset,
+                icon: <RotateCcw className="h-3 w-3" />,
+              },
+            ]
+            return {
+              label: 'Server endpoint',
+              description: `${activeEndpointLabel} (active)`,
+              icon: <Globe className="h-3 w-3" />,
+              submenu: endpointOptions,
+            }
+          })(),
         ],
       },
       {
@@ -368,24 +313,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             : []),
         ],
       },
-      ...(currentOrgId
-        ? [
-            {
-              title: 'Organization',
-              icon: <CreditCard className="h-3.5 w-3.5" />,
-              items: [
-                {
-                  label: 'Show org plan',
-                  onClick: () => {
-                    setPlanModalOpen(true)
-                    setIsOpen(false)
-                  },
-                  icon: <CreditCard className="h-3 w-3" />,
-                },
-              ],
-            } as MenuSection,
-          ]
-        : []),
       ...(actions.length > 0
         ? [
             {
@@ -406,14 +333,13 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     theme,
     currentFavicon,
     profileId,
-    overrides.disableInitialLoader,
+    endpointPreset,
+    endpointCustomUrl,
     overrides.showNativeAppBar,
     banners.length,
-    currentOrgId,
     actions,
     setTheme,
     setFavicon,
-    navigate,
     addMockBanner,
     clearAllBanners,
   ])
@@ -439,268 +365,160 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
 
   if (!isVisible) return null
 
-  if (showError) {
-    ErrorTrigger()
-    return null
-  }
-
   return (
     <div className="fixed bottom-4 right-4 z-[9999]">
       <Popover open={isOpen} onOpenChange={setIsOpen}>
-        <PopoverTrigger asChild>
-          <button
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-[#6B46C1] text-white transition-all hover:bg-[#5B21B6] hover:scale-105 active:scale-95"
-            aria-label="Debug menu"
-          >
-            <Bug className="h-5 w-5" />
-          </button>
-        </PopoverTrigger>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <PopoverTrigger asChild>
+              <button
+                className="flex h-11 w-11 items-center justify-center rounded-xl border border-violet-500/30 bg-violet-600 text-white shadow-md transition-colors hover:bg-violet-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                aria-label="Debug menu"
+              >
+                <Bug className="h-5 w-5" />
+              </button>
+            </PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="left" sideOffset={8}>
+            Debug menu
+          </TooltipContent>
+        </Tooltip>
         <PopoverContent
           side="top"
           align="end"
-          className="w-72 max-h-[85vh] overflow-y-auto border-[#9B87F5]/30 bg-[#1A1F2C] p-0"
+          sideOffset={8}
+          className="w-80 max-h-[85vh] overflow-hidden rounded-xl border border-[#9B87F5]/25 bg-[#1A1F2C] p-0 shadow-xl"
         >
-          <div className="sticky top-0 z-10 border-b border-[#9B87F5]/20 bg-[#1A1F2C] px-3 py-2.5">
+          <div className="sticky top-0 z-10 border-b border-[#9B87F5]/20 bg-[#1A1F2C]/95 px-4 py-3 backdrop-blur-sm">
             <div className="flex items-center gap-2">
               {currentSubmenu && (
                 <button
                   onClick={() => setActiveSubmenu(null)}
-                  className="flex-shrink-0 rounded p-0.5 transition-colors hover:bg-[#9B87F5]/20"
+                  className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-[#9B87F5]/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9B87F5]/50"
                   aria-label="Back"
                 >
-                  <ChevronLeft className="h-3.5 w-3.5 text-[#9B87F5]" />
+                  <ChevronLeft className="h-4 w-4 text-[#9B87F5]" />
                 </button>
               )}
-              <span className="text-xs font-semibold text-[#9B87F5]">
-                {currentSubmenu ? currentSubmenu.title : 'Debug Menu'}
+              <span className="text-[13px] font-semibold text-[#E5DEFF]">
+                {currentSubmenu ? currentSubmenu.title : 'Debug'}
               </span>
             </div>
           </div>
 
-          <div className="p-2">
+          <div className="overflow-y-auto p-3" style={{ maxHeight: 'calc(85vh - 52px)' }}>
             {currentSubmenu ? (
-              // Render submenu
-              <div className="space-y-0.5">
+              <nav className="space-y-0.5" aria-label={currentSubmenu.title}>
                 {currentSubmenu.items.map((item, itemIndex) => (
                   <button
                     key={`submenu-${itemIndex}`}
                     onClick={item.onClick}
-                    className={`flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-[12px] transition-colors ${
+                    className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9B87F5]/50 ${
                       item.active
-                        ? 'bg-[#9B87F5]/20 text-white'
-                        : 'text-[#E5DEFF]/80 hover:bg-[#9B87F5]/15 hover:text-white'
+                        ? 'bg-[#9B87F5]/25 text-white'
+                        : 'text-[#E5DEFF]/90 hover:bg-[#9B87F5]/15 hover:text-white'
                     }`}
                   >
                     {item.icon && (
-                      <span className="flex-shrink-0">{item.icon}</span>
+                      <span className="flex-shrink-0 text-[#9B87F5]">{item.icon}</span>
                     )}
-                    <span className="flex-1">{item.label}</span>
-                    {item.badge && (
-                      <span className="flex-shrink-0 rounded-full bg-[#9B87F5]/30 px-1.5 py-0.5 text-[10px] font-medium text-[#9B87F5]">
+                    <span className="flex-1">
+                      <span className="block font-medium">{item.label}</span>
+                      {item.description && (
+                        <span className="mt-0.5 block text-[11px] font-normal opacity-80">
+                          {item.description}
+                        </span>
+                      )}
+                    </span>
+                    {item.badge !== undefined && (
+                      <span className="flex-shrink-0 rounded-full bg-[#9B87F5]/30 px-2 py-0.5 text-[11px] font-medium text-[#9B87F5]">
                         {item.badge}
                       </span>
                     )}
                   </button>
                 ))}
-              </div>
+              </nav>
             ) : (
-              // Render main menu
-              sections.map((section, sectionIndex) => (
-                <div
-                  key={section.title}
-                  className={sectionIndex > 0 ? 'mt-4' : ''}
-                >
-                  <div className="mb-1.5 flex items-center gap-1.5 px-2">
-                    {section.icon}
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-[#9B87F5]/70">
-                      {section.title}
-                    </span>
-                  </div>
-                  <div className="space-y-0.5">
-                    {section.items.map((item, itemIndex) => {
-                      if (item.variant === 'switch') {
-                        return (
-                          <div
-                            key={`${section.title}-${itemIndex}`}
-                            className="flex items-center justify-between gap-3 rounded-md px-2.5 py-2 transition-colors hover:bg-[#9B87F5]/10"
-                          >
-                            <div className="flex-1">
-                              <div className="text-[12px] font-medium text-white">
-                                {item.label}
-                              </div>
-                              {item.description && (
-                                <div className="mt-0.5 text-[11px] text-[#9B87F5]/70">
-                                  {item.description}
+              <nav className="space-y-5" aria-label="Debug options">
+                {sections.map((section) => (
+                  <div key={section.title}>
+                    <div className="mb-2 flex items-center gap-2 px-1">
+                      <span className="text-[#9B87F5]">{section.icon}</span>
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-[#9B87F5]/80">
+                        {section.title}
+                      </span>
+                    </div>
+                    <div className="space-y-0.5">
+                      {section.items.map((item, itemIndex) => {
+                        if (item.variant === 'switch') {
+                          return (
+                            <div
+                              key={`${section.title}-${itemIndex}`}
+                              className="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-[#9B87F5]/10"
+                            >
+                              <div className="flex-1 min-w-0">
+                                <div className="text-[13px] font-medium text-[#E5DEFF]">
+                                  {item.label}
                                 </div>
-                              )}
+                                {item.description && (
+                                  <div className="mt-0.5 text-[11px] text-[#9B87F5]/80">
+                                    {item.description}
+                                  </div>
+                                )}
+                              </div>
+                              <Switch
+                                checked={item.switchValue}
+                                onCheckedChange={item.switchOnChange}
+                                className="flex-shrink-0"
+                              />
                             </div>
-                            <Switch
-                              checked={item.switchValue}
-                              onCheckedChange={item.switchOnChange}
-                            />
-                          </div>
+                          )
+                        }
+
+                        const hasSubmenu = !!item.submenu
+                        const itemKey = `${section.title}-${item.label}`
+
+                        return (
+                          <button
+                            key={`${section.title}-${itemIndex}`}
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              if (hasSubmenu) {
+                                setActiveSubmenu(itemKey)
+                              } else if (item.onClick) {
+                                item.onClick()
+                              }
+                            }}
+                            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9B87F5]/50 ${
+                              item.active
+                                ? 'bg-[#9B87F5]/25 text-white'
+                                : 'text-[#E5DEFF]/90 hover:bg-[#9B87F5]/15 hover:text-white'
+                            }`}
+                          >
+                            {item.icon && (
+                              <span className="flex-shrink-0 text-[#9B87F5]">{item.icon}</span>
+                            )}
+                            <span className="flex-1 font-medium">{item.label}</span>
+                            {item.badge !== undefined && (
+                              <span className="flex-shrink-0 rounded-full bg-[#9B87F5]/30 px-2 py-0.5 text-[11px] font-medium text-[#9B87F5]">
+                                {item.badge}
+                              </span>
+                            )}
+                            {hasSubmenu && (
+                              <ChevronRight className="h-4 w-4 flex-shrink-0 text-[#9B87F5]/60" />
+                            )}
+                          </button>
                         )
-                      }
-
-                      const hasSubmenu = !!item.submenu
-                      const itemKey = `${section.title}-${item.label}`
-
-                      return (
-                        <button
-                          key={`${section.title}-${itemIndex}`}
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            if (hasSubmenu) {
-                              setActiveSubmenu(itemKey)
-                            } else if (item.onClick) {
-                              item.onClick()
-                            }
-                          }}
-                          className={`flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-[12px] transition-colors ${
-                            item.active
-                              ? 'bg-[#9B87F5]/20 text-white'
-                              : 'text-[#E5DEFF]/80 hover:bg-[#9B87F5]/15 hover:text-white'
-                          }`}
-                        >
-                          {item.icon && (
-                            <span className="flex-shrink-0">{item.icon}</span>
-                          )}
-                          <span className="flex-1">{item.label}</span>
-                          {item.badge && (
-                            <span className="flex-shrink-0 rounded-full bg-[#9B87F5]/30 px-1.5 py-0.5 text-[10px] font-medium text-[#9B87F5]">
-                              {item.badge}
-                            </span>
-                          )}
-                          {hasSubmenu && !item.badge && (
-                            <ChevronRight className="h-3 w-3 flex-shrink-0 opacity-40" />
-                          )}
-                        </button>
-                      )
-                    })}
+                      })}
+                    </div>
                   </div>
-                </div>
-              ))
+                ))}
+              </nav>
             )}
           </div>
         </PopoverContent>
       </Popover>
-
-      {/* Organization Plan Modal */}
-      <Dialog open={planModalOpen} onOpenChange={setPlanModalOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Organization Plan Details</DialogTitle>
-            <DialogDescription>
-              Current plan information for the organization
-            </DialogDescription>
-          </DialogHeader>
-          <div className="mt-4">
-            {planLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="text-muted-foreground">
-                  Loading plan details...
-                </div>
-              </div>
-            ) : plan ? (
-              <div className="space-y-4">
-                <div className="rounded-lg border bg-card p-4">
-                  <div className="space-y-3">
-                    {plan.name && (
-                      <div>
-                        <label className="text-xs font-medium text-muted-foreground">
-                          Plan Name
-                        </label>
-                        <p className="text-sm font-medium">{plan.name}</p>
-                      </div>
-                    )}
-                    {'type' in plan && plan.type && (
-                      <div>
-                        <label className="text-xs font-medium text-muted-foreground">
-                          Plan Type
-                        </label>
-                        <p className="text-sm font-medium capitalize">
-                          {String(plan.type)}
-                        </p>
-                      </div>
-                    )}
-                    {'tier' in plan && plan.tier !== undefined && (
-                      <div>
-                        <label className="text-xs font-medium text-muted-foreground">
-                          Tier
-                        </label>
-                        <p className="text-sm font-mono text-muted-foreground">
-                          {String(plan.tier)}
-                        </p>
-                      </div>
-                    )}
-                    {'billingPlan' in plan && plan.billingPlan && (
-                      <div>
-                        <label className="text-xs font-medium text-muted-foreground">
-                          Billing Plan
-                        </label>
-                        <p className="text-sm font-mono text-muted-foreground">
-                          {String(plan.billingPlan)}
-                        </p>
-                      </div>
-                    )}
-                    {'currency' in plan && plan.currency && (
-                      <div>
-                        <label className="text-xs font-medium text-muted-foreground">
-                          Currency
-                        </label>
-                        <p className="text-sm font-medium">
-                          {String(plan.currency)}
-                        </p>
-                      </div>
-                    )}
-                    {plan.price !== undefined && (
-                      <div>
-                        <label className="text-xs font-medium text-muted-foreground">
-                          Price
-                        </label>
-                        <p className="text-sm font-medium">
-                          {'currency' in plan &&
-                          plan.currency &&
-                          plan.price !== undefined
-                            ? `${plan.currency} ${plan.price}`
-                            : plan.price}
-                        </p>
-                      </div>
-                    )}
-                    {'interval' in plan && plan.interval && (
-                      <div>
-                        <label className="text-xs font-medium text-muted-foreground">
-                          Billing Interval
-                        </label>
-                        <p className="text-sm font-medium capitalize">
-                          {String(plan.interval)}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="rounded-lg border bg-muted/50 p-4">
-                  <label className="text-xs font-medium text-muted-foreground mb-2 block">
-                    Full Plan Data
-                  </label>
-                  <pre className="text-xs overflow-auto max-h-96">
-                    {JSON.stringify(plan, null, 2)}
-                  </pre>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center py-8">
-                <div className="text-muted-foreground">
-                  {currentOrgId
-                    ? 'Failed to load plan details'
-                    : 'No organization selected'}
-                </div>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

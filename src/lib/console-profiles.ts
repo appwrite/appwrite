@@ -105,32 +105,52 @@ function getProfileFromEnv(): ConsoleProfileId {
   return 'cloud'
 }
 
+/** Store the full profile object (actual value), not just the id. */
 const DEBUG_PROFILE_KEY = 'debug:consoleProfile'
 
-function getDebugProfileOverride(): ConsoleProfileId | null {
+function getStoredProfile(): ConsoleProfile | null {
   if (typeof window === 'undefined') return null
   const stored = localStorage.getItem(DEBUG_PROFILE_KEY)
-  if (stored && VALID_PROFILE_IDS.includes(stored as ConsoleProfileId)) {
-    return stored as ConsoleProfileId
+  if (!stored?.trim()) return null
+  try {
+    const parsed = JSON.parse(stored) as unknown
+    if (
+      parsed &&
+      typeof parsed === 'object' &&
+      'id' in parsed &&
+      VALID_PROFILE_IDS.includes((parsed as ConsoleProfile).id) &&
+      'features' in parsed &&
+      typeof (parsed as ConsoleProfile).features === 'object'
+    ) {
+      return parsed as ConsoleProfile
+    }
+  } catch {
+    // ignore
+  }
+  // Legacy: stored value was just the id string
+  if (VALID_PROFILE_IDS.includes(stored as ConsoleProfileId)) {
+    return CONSOLE_PROFILES[stored as ConsoleProfileId]
   }
   return null
 }
 
 /**
  * Returns the currently active console profile ID.
- * In debug mode, localStorage override takes precedence over env var.
+ * In debug mode, localStorage override (stored profile value) takes precedence over env var.
  */
 export function getActiveProfileId(): ConsoleProfileId {
-  const override = getDebugProfileOverride()
-  if (override) return override
+  const stored = getStoredProfile()
+  if (stored) return stored.id
   return getProfileFromEnv()
 }
 
 /**
- * Returns the currently active console profile.
+ * Returns the currently active console profile (stored value when set, else from env).
  */
 export function getActiveProfile(): ConsoleProfile {
-  return CONSOLE_PROFILES[getActiveProfileId()]
+  const stored = getStoredProfile()
+  if (stored) return stored
+  return CONSOLE_PROFILES[getProfileFromEnv()]
 }
 
 /**
@@ -154,12 +174,14 @@ export const CONSOLE_PROFILE_CHANGE_EVENT = 'consoleProfileChange'
 
 /**
  * Set the profile override (debug mode only).
+ * Stores the full profile object (actual value) in localStorage.
  * Dispatches CONSOLE_PROFILE_CHANGE_EVENT so UI can re-render.
  */
 export function setDebugProfileOverride(profileId: ConsoleProfileId | null) {
   if (typeof window === 'undefined') return
   if (profileId) {
-    localStorage.setItem(DEBUG_PROFILE_KEY, profileId)
+    const profile = CONSOLE_PROFILES[profileId]
+    localStorage.setItem(DEBUG_PROFILE_KEY, JSON.stringify(profile))
   } else {
     localStorage.removeItem(DEBUG_PROFILE_KEY)
   }

@@ -1,11 +1,6 @@
 import { useEffect, useState, useRef, useMemo } from 'react'
 import { useIsFetching, useIsMutating } from '@tanstack/react-query'
 import { useRouter, useLocation } from '@tanstack/react-router'
-import {
-  loadDebugOverrides,
-  subscribeToDebugOverrides,
-} from '@/lib/debug-overrides'
-
 export function useInitialLoader() {
   // Router + location need to be resolved before computing initial loader state
   const router = useRouter()
@@ -43,28 +38,15 @@ export function useInitialLoader() {
     [location.pathname, isAuthRoute],
   )
 
-  const [debugOverrides, setDebugOverrides] = useState(loadDebugOverrides)
-  const effectiveShouldShowLoader = useMemo(
-    () => shouldShowLoader && !debugOverrides.disableInitialLoader,
-    [shouldShowLoader, debugOverrides.disableInitialLoader],
-  )
-
   // Initialize loading state synchronously so the loader is visible on first paint
-  const [isLoading, setIsLoading] = useState(() => effectiveShouldShowLoader)
+  const [isLoading, setIsLoading] = useState(() => shouldShowLoader)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   const maxTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const startTimeRef = useRef<number | null>(
-    effectiveShouldShowLoader ? Date.now() : null,
+    shouldShowLoader ? Date.now() : null,
   )
-  const wasLoadingRef = useRef(effectiveShouldShowLoader)
+  const wasLoadingRef = useRef(shouldShowLoader)
   const hasCompletedInitialLoadRef = useRef(false)
-
-  useEffect(() => {
-    const unsubscribe = subscribeToDebugOverrides(setDebugOverrides)
-    return () => {
-      unsubscribe?.()
-    }
-  }, [])
 
   // Use refs to track previous values and prevent unnecessary re-renders
   const prevIsFetchingRef = useRef(isFetching)
@@ -80,7 +62,7 @@ export function useInitialLoader() {
 
     // Early return if we're on a route that shouldn't show loader
     // This prevents unnecessary processing on root/auth routes
-    if (!effectiveShouldShowLoader) {
+    if (!shouldShowLoader) {
       // Don't show loader on public/auth routes
       // Auth pages mark complete immediately; "/" is handled by shouldShowLoader so we don't land here for "/"
       if (isAuthRoute) {
@@ -106,7 +88,7 @@ export function useInitialLoader() {
       return
     }
 
-    // From here on, we only process if effectiveShouldShowLoader is true
+    // From here on, we only process if shouldShowLoader is true
     // This means we're on a route that should show the loader
 
     // Only process if something actually changed
@@ -202,7 +184,7 @@ export function useInitialLoader() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    effectiveShouldShowLoader,
+    shouldShowLoader,
     router.state.status,
     location.pathname,
     isFetching,

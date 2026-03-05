@@ -81,6 +81,10 @@ export function canWriteWebhooks(access: ConsoleAccess, features: AccessCheckFea
   return whenOrgRoles(access, features, access.canWriteWebhooks)
 }
 
+export function canCreateMigration(access: ConsoleAccess, features: AccessCheckFeatures): boolean {
+  return whenOrgRoles(access, features, access.canWriteMigrations)
+}
+
 export function canWriteRules(access: ConsoleAccess, features: AccessCheckFeatures): boolean {
   return whenOrgRoles(access, features, access.canWriteRules)
 }

@@ -1,12 +1,10 @@
 const DEBUG_OVERRIDE_EVENT = 'debugOverridesChange'
 
 export const DEBUG_OVERRIDE_KEYS = {
-  disableInitialLoader: 'debug:disableInitialLoader',
   showNativeAppBar: 'debug:showNativeAppBar',
 } as const
 
 export type DebugOverrides = {
-  disableInitialLoader: boolean
   showNativeAppBar: boolean
 }
 
@@ -19,9 +17,6 @@ function readBooleanFromStorage(key: string) {
 
 export function loadDebugOverrides(): DebugOverrides {
   return {
-    disableInitialLoader: readBooleanFromStorage(
-      DEBUG_OVERRIDE_KEYS.disableInitialLoader,
-    ),
     showNativeAppBar: readBooleanFromStorage(
       DEBUG_OVERRIDE_KEYS.showNativeAppBar,
     ),

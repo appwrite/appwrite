@@ -1483,7 +1483,7 @@ export function OrgOverview({
                           <div className="relative w-64">
                             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
-                              placeholder="Search by name or ID..."
+                              placeholder="Search projects..."
                               value={searchQuery}
                               onChange={(e) => setSearchQuery(e.target.value)}
                               className="h-9 border-border bg-accent/50 pl-10 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"

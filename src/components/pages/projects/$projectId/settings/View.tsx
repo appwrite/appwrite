@@ -4,7 +4,11 @@ import {
   useProject,
   useOrganizationScopes,
 } from '@/lib/react-query/hooks'
-import { canWriteDomains, canWriteWebhooks } from '@/lib/console-access-checks'
+import {
+  canWriteDomains,
+  canWriteWebhooks,
+  canCreateMigration,
+} from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { ProjectSettingsOverview } from './Overview'
@@ -12,8 +16,14 @@ import { Domains } from './Domains'
 import { Webhooks } from './Webhooks'
 import { Migrations } from './Migrations'
 import { SMTP } from './SMTP'
+import type { Models } from '@appwrite.io/console'
 
-export function View() {
+export interface SettingsViewProps {
+  /** Prefetched migrations from route loader; avoids loading spinner on first paint */
+  initialMigrationsData?: { migrations: Models.Migration[]; total: number }
+}
+
+export function View({ initialMigrationsData }: SettingsViewProps = {}) {
   const params = useParams({ strict: false })
   const location = useLocation()
   const projectId = params.projectId as string
@@ -84,15 +94,19 @@ export function View() {
   const { access } = useOrganizationScopes(project?.teamId)
   const noDomainsPermission = !canWriteDomains(access, features)
   const noWebhooksPermission = !canWriteWebhooks(access, features)
+  const noMigrationsPermission = !canCreateMigration(access, features)
   const createDisabled =
     (activeTab === 'domains' && noDomainsPermission) ||
-    (activeTab === 'webhooks' && noWebhooksPermission)
+    (activeTab === 'webhooks' && noWebhooksPermission) ||
+    (activeTab === 'migrations' && noMigrationsPermission)
   const createDisabledTooltip =
     activeTab === 'domains' && noDomainsPermission
       ? "You don't have permission to add domains."
       : activeTab === 'webhooks' && noWebhooksPermission
         ? "You don't have permission to create webhooks."
-        : undefined
+        : activeTab === 'migrations' && noMigrationsPermission
+          ? "You don't have permission to create migrations."
+          : undefined
 
   // Determine search and create props based on active tab
   const hasSearch = activeTab !== 'overview' && activeTab !== 'smtp'
@@ -102,11 +116,19 @@ export function View() {
       ? 'Add domain'
       : activeTab === 'webhooks'
         ? 'Create webhook'
-        : undefined
+        : activeTab === 'migrations'
+          ? 'Import data'
+          : undefined
   const createTo =
-    activeTab === 'domains' ? '/projects/$projectId/settings/domains/add' : undefined
+    activeTab === 'domains'
+      ? '/projects/$projectId/settings/domains/add'
+      : activeTab === 'migrations'
+        ? '/projects/$projectId/settings/migrations/import'
+        : undefined
   const createParams =
-    activeTab === 'domains' ? { projectId } : undefined
+    activeTab === 'domains' || activeTab === 'migrations'
+      ? { projectId }
+      : undefined
   const handleCreate = useMemo(() => {
     if (activeTab === 'webhooks') {
       return () => {
@@ -148,7 +170,12 @@ export function View() {
         {activeTab === 'webhooks' && (
           <Webhooks projectId={projectId} searchValue={searchValue} />
         )}
-        {activeTab === 'migrations' && <Migrations projectId={projectId} />}
+        {activeTab === 'migrations' && (
+          <Migrations
+            projectId={projectId}
+            initialData={initialMigrationsData}
+          />
+        )}
         {activeTab === 'smtp' && <SMTP projectId={projectId} />}
       </div>
     </div>
