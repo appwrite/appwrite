@@ -1,0 +1,53 @@
+<?php
+$isUpgrade = $isUpgrade ?? false;
+?>
+<div class="step-layout install-layout" data-step="5">
+    <div class="install-card">
+        <div class="install-panel">
+            <div class="install-header">
+                <div class="typography-text-m-400 text-neutral-primary">
+                    <?php echo $isUpgrade ? 'Updating your app…' : 'Installing your app…'; ?>
+                </div>
+            </div>
+            <div class="install-list" data-install-list></div>
+        </div>
+    </div>
+
+    <template id="install-row-template">
+        <div class="install-row" data-status="in-progress">
+            <div class="install-row-main">
+                <div class="install-row-label">
+                    <span class="install-icon" aria-hidden="true">
+                        <span class="install-icon-spinner">
+                            <?php include __DIR__ . '/../../icons/install-spinner.svg'; ?>
+                        </span>
+                        <span class="install-icon-check">
+                            <?php include __DIR__ . '/../../icons/install-check.svg'; ?>
+                        </span>
+                        <span class="install-icon-error">
+                            <?php include __DIR__ . '/../../icons/exclamation-circle.svg'; ?>
+                        </span>
+                    </span>
+                    <span class="install-text typography-text-m-400 text-neutral-primary" data-install-text></span>
+                </div>
+                <button type="button" class="install-row-toggle" aria-expanded="false" data-install-toggle>
+                    <?php include __DIR__ . '/../../icons/chevron-down.svg'; ?>
+                </button>
+            </div>
+            <div class="install-row-details">
+                <div class="install-row-details-inner">
+                    <pre class="install-error-code typography-text-xs-400" data-install-trace></pre>
+                    <div class="install-error-actions">
+                        <button type="button" class="button secondary" data-install-retry>
+                            <span class="button-text typography-text-m-500">Retry</span>
+                        </button>
+
+                        <button type="button" class="button primary is-hidden" data-install-console>
+                            <span class="button-text typography-text-m-500">Navigate to Console</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+</div>
