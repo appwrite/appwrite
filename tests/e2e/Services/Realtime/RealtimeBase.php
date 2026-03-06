@@ -26,7 +26,7 @@ trait RealtimeBase
         /**
          * Query param encoding rules:
          * - $queries === null  -> only send channels (no per-channel query params) for backward compatibility.
-         * - $queries === []    -> explicit "select all" subscription: send Query::select(['*']) as a single group.
+         * - $queries === []    -> explicit "select all" subscription: send Query::select('*') as a single group.
          * - non-empty $queries -> treat as a single subscription group for the first channel:
          *                        AND logic within the group; OR logic across multiple groups (if we ever add them).
          *
@@ -49,7 +49,7 @@ trait RealtimeBase
 
             if ($queries === []) {
                 // Explicit select("*") group - single query in slot 0
-                $queryValue = \Utopia\Database\Query::select(['*'])->toString();
+                $queryValue = \Utopia\Database\Query::select('*')->toString();
                 $queryString .= "&" . urlencode($channel) . "[" . $slot . "][]=" . urlencode($queryValue);
             } else {
                 // Single subscription group for this channel - multiple queries in slot 0

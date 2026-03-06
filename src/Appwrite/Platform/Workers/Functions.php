@@ -121,7 +121,8 @@ class Functions extends Action
             $offset = 0;
             while ($sum >= $limit) {
                 $functions = $dbForProject->find('functions', [
-                    Query::select(['$id', 'events']), // Skip variables subqueries
+                    Query::select('$id'), // Skip variables subqueries
+                    Query::select('events'),
                     Query::contains('events', $events),
                     Query::limit($limit),
                     Query::offset($offset),

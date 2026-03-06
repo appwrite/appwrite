@@ -11,7 +11,6 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\ListSelection;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Order;
@@ -112,7 +111,8 @@ class XList extends Action
             $selectQueries = Query::groupByType($queries)['selections'] ?? [];
             $filterQueries = Query::groupByType($queries)['filters'];
 
-            $projects = $this->find($dbForPlatform, $queries, $selectQueries);
+            $projects = $dbForPlatform->find('projects', $queries);
+
             $total = $includeTotal ? $dbForPlatform->count('projects', $filterQueries, APP_LIMIT_COUNT) : 0;
         } catch (Order $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
@@ -124,74 +124,5 @@ class XList extends Action
             'projects' => $projects,
             'total' => $total,
         ]), Response::MODEL_PROJECT_LIST);
-    }
-
-    // Build mapping of columns to their subQuery filters
-    private static function getAttributeToSubQueryFilters(): array
-    {
-        if (self::$attributeToSubQueryFilters !== null) {
-            return self::$attributeToSubQueryFilters;
-        }
-
-        self::$attributeToSubQueryFilters = [];
-
-        $collections = Config::getParam('collections', []);
-        $projectAttributes = $collections['platform']['projects']['attributes'] ?? [];
-
-        foreach ($projectAttributes as $attribute) {
-            $attributeId = $attribute['$id'] ?? null;
-            $filters = $attribute['filters'] ?? [];
-
-            if ($attributeId === null || empty($filters)) {
-                continue;
-            }
-
-            // extract only subQuery filters
-            $subQueryFilters = \array_filter($filters, function ($filter) {
-                return \str_starts_with($filter, 'subQuery');
-            });
-
-            if (!empty($subQueryFilters)) {
-                self::$attributeToSubQueryFilters[$attributeId] = \array_values($subQueryFilters);
-            }
-        }
-
-        return self::$attributeToSubQueryFilters;
-    }
-
-    private function find(Database $dbForPlatform, array $queries, array $selectQueries): array
-    {
-        if (empty($selectQueries)) {
-            return $dbForPlatform->find('projects', $queries);
-        }
-
-        $selectedAttributes = [];
-        foreach ($selectQueries as $query) {
-            foreach ($query->getValues() as $value) {
-                $selectedAttributes[] = $value;
-            }
-        }
-
-        if (\in_array('*', $selectedAttributes)) {
-            return $dbForPlatform->find('projects', $queries);
-        }
-
-        $filtersToSkipMap = [];
-        $selectedAttributesMap = \array_flip($selectedAttributes);
-        $attributeToSubQueryFilters = self::getAttributeToSubQueryFilters();
-
-        foreach ($attributeToSubQueryFilters as $attributeName => $subQueryFilters) {
-            if (!isset($selectedAttributesMap[$attributeName])) {
-                foreach ($subQueryFilters as $filter) {
-                    $filtersToSkipMap[$filter] = true;
-                }
-            }
-        }
-
-        $filtersToSkip = \array_keys($filtersToSkipMap);
-
-        return empty($filtersToSkip)
-            ? $dbForPlatform->find('projects', $queries)
-            : $dbForPlatform->skipFilters(fn () => $dbForPlatform->find('projects', $queries), $filtersToSkip);
     }
 }

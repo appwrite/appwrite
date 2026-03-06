@@ -44,8 +44,7 @@ class RuntimeQuery extends Query
             return false;
         }
 
-        $values = $query->getValues();
-        return count($values) === 1 && $values[0] === '*';
+        return $query->getAttribute() === '*';
     }
 
     /**
@@ -83,8 +82,7 @@ class RuntimeQuery extends Query
         // Check for select("*") upfront
         foreach ($queries as $query) {
             if ($query->getMethod() === Query::TYPE_SELECT) {
-                $values = $query->getValues();
-                if (count($values) === 1 && $values[0] === '*') {
+                if ($query->getAttribute() === '*') {
                     return ['type' => 'selectAll'];
                 }
             }
