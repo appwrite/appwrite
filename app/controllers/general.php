@@ -1650,7 +1650,10 @@ Http::get('/v1/ping')
             ->setAttribute('pingedAt', $pingedAt);
 
         $authorization->skip(function () use ($dbForPlatform, $project) {
-            $dbForPlatform->updateDocument('projects', $project->getId(), $project);
+            $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                'pingCount' => $project->getAttribute('pingCount'),
+                'pingedAt' => $project->getAttribute('pingedAt')
+            ]));
         });
 
         $queueForEvents

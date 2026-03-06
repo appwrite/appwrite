@@ -91,7 +91,7 @@ class Update extends Action
         $endTime = new \DateTime('now');
         $duration = $endTime->getTimestamp() - $startTime->getTimestamp();
 
-        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment->setAttributes([
+        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
             'buildEndedAt' => DateTime::now(),
             'buildDuration' => $duration,
             'status' => 'canceled'
@@ -99,7 +99,9 @@ class Update extends Action
 
         if ($deployment->getSequence() === $function->getAttribute('latestDeploymentInternalId', '')) {
             $function = $function->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-            $dbForProject->updateDocument('functions', $function->getId(), $function);
+            $dbForProject->updateDocument('functions', $function->getId(), new Document([
+                'latestDeploymentStatus' => $function->getAttribute('latestDeploymentStatus'),
+            ]));
         }
 
         try {
