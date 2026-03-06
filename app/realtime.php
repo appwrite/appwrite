@@ -720,18 +720,11 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception(Exception::REALTIME_TOO_MANY_MESSAGES, 'Too many requests');
         }
 
-        // Record realtime inbound bytes for this project (WS handshake + query params)
-        try {
-            $rawSize = $request->getSize();
-        } catch (Throwable) {
-            $rawSize = \strlen((string) $request->getURI());
-        }
+        $rawSize = $request->getSize();
 
-        if ($rawSize > 0) {
-            triggerStats([
-                METRIC_REALTIME_INBOUND => $rawSize,
-            ], $project->getId());
-        }
+        triggerStats([
+            METRIC_REALTIME_INBOUND => $rawSize,
+        ], $project->getId());
 
         /*
          * Validate Client Domain - Check to avoid CSRF attack.
