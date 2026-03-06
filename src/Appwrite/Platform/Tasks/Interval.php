@@ -159,9 +159,7 @@ class Interval extends Action
                     }
 
                     foreach ($staleExecutions as $execution) {
-                        $execution->setAttribute('status', 'failed');
-                        $execution->setAttribute('errors', 'Execution timed out');
-                        $dbForProject->updateDocument('executions', $execution->getId(), $execution);
+                        $dbForProject->updateDocument('executions', $execution->getId(), new Document(['status' => 'failed', 'errors' => 'Execution timed out']));
                     }
 
                     $processed++;
