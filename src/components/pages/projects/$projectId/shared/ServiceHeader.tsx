@@ -54,6 +54,8 @@ interface ServiceHeaderProps {
   createDisabledTooltip?: string
   showFilters?: boolean
   onFilterClick?: () => void
+  /** When provided, renders this instead of the default Filters button (e.g. a Popover trigger + content) */
+  filterTrigger?: React.ReactNode
   /** When true, the tabs border extends full-width while tabs content stays constrained */
   fullWidthBorder?: boolean
   /** When true, removes max-width constraints to allow full-width layout */
@@ -109,6 +111,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
       createDisabledTooltip,
       showFilters = false,
       onFilterClick,
+      filterTrigger,
       fullWidthBorder = false,
       fullWidth = false,
       rightContent,
@@ -351,14 +354,14 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
         {hasToolbar && (
           <div
             className={cn(
-              'flex items-center gap-3 px-4 py-4 sm:px-6',
+              'flex min-w-0 flex-nowrap items-center gap-3 px-4 py-4 sm:px-6',
               fullWidthBorder && !fullWidth && 'mx-auto w-full max-w-7xl',
               isCollapsed && 'border-b border-border',
             )}
           >
             {/* Search */}
             {onSearchChange && (
-              <div className="relative w-64">
+              <div className="relative w-64 shrink-0">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <input
                   ref={searchInputRef}
@@ -372,17 +375,18 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
             )}
 
             {/* Filters */}
-            {showFilters && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onFilterClick}
-                className="h-9 gap-2 border-border bg-transparent text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground"
-              >
-                <Filter className="h-3.5 w-3.5" />
-                Filters
-              </Button>
-            )}
+            {showFilters &&
+              (filterTrigger ?? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onFilterClick}
+                  className="h-9 gap-2 border-border bg-transparent text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground"
+                >
+                  <Filter className="h-3.5 w-3.5" />
+                  Filters
+                </Button>
+              ))}
 
             {/* Right Content (e.g., view toggle) */}
             {rightContent}

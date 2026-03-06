@@ -9,6 +9,7 @@ import {
   useMutation,
   useQueryClient,
   queryOptions,
+  keepPreviousData,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { Query, ID } from '@appwrite.io/console'
@@ -36,13 +37,16 @@ export async function fetchProjectUsers(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   if (!projectId) {
     return { users: [], total: 0 }
   }
 
   const projectSdk = sdk.forProject(projectId)
+  // Filter conditions first, then sort and pagination (order can matter for some backends)
   const queries = [
+    ...(filterQueries ?? []),
     Query.orderDesc('$createdAt'),
     Query.limit(limit),
     Query.offset(page * limit),
@@ -218,10 +222,12 @@ export function usersQueryOptions(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   return queryOptions({
-    queryKey: ['users', 'project', projectId, page, limit, search],
-    queryFn: () => fetchProjectUsers(projectId!, page, limit, search),
+    queryKey: ['users', 'project', projectId, page, limit, search, filterQueries],
+    queryFn: () =>
+      fetchProjectUsers(projectId!, page, limit, search, filterQueries),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false, // Don't retry on error
@@ -230,6 +236,8 @@ export function usersQueryOptions(
     refetchOnReconnect: false, // Prevent refetch on network reconnect
     // Don't keep disabled queries in cache
     gcTime: projectId ? 5 * 60 * 1000 : 0,
+    // Keep previous results visible until new data loads (avoids flash when search/filters/page change)
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -270,6 +278,7 @@ export function teamsQueryOptions(
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
  * @param search - Optional search query
+ * @param filterQueries - Optional list of Appwrite Query condition strings (from table filters)
  * @returns Paginated users with loading state
  */
 export function useProjectUsers(
@@ -277,6 +286,7 @@ export function useProjectUsers(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   const {
     data: usersData,
@@ -284,7 +294,9 @@ export function useProjectUsers(
     isFetching,
     error,
     refetch,
-  } = useQuery(usersQueryOptions(projectId, page, limit, search))
+  } = useQuery(
+    usersQueryOptions(projectId, page, limit, search, filterQueries),
+  )
 
   // Map users to our User type
   const users = useMemo(() => {

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import {
   useParams,
   useLocation,
@@ -6,16 +6,32 @@ import {
   useNavigate,
   useSearch,
 } from '@tanstack/react-router'
+import {
+  getSearch,
+  getPage,
+  getLimit,
+  getQueryParam,
+  queryParamToMap,
+  mapToQueryParam,
+  buildListSearchParams,
+  buildFilterQueryString,
+  buildFilterTagFromCompactKey,
+  getOperatorsForType,
+  usersFilterColumns,
+} from '@/lib/table-filters'
+import type { CompactFilterKey } from '@/lib/table-filters'
 import { cn } from '@/lib/utils'
 import {
   Users,
   LayoutGrid,
   List,
+  Filter,
   AlertCircle,
   CheckCircle2,
   XCircle,
   Mail,
   Phone,
+  X,
 } from 'lucide-react'
 import {
   useProjectUsers,
@@ -63,6 +79,19 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Input } from '@/components/ui/input'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { LightningCollectorGame } from './LightningCollectorGame'
 import { useDebugMode } from '@/components/global/providers/DebugMode'
 import { CreateUserDrawer } from './CreateUserDrawer'
@@ -72,14 +101,55 @@ import { AuthSettings } from './Settings'
 import { Templates } from './Templates'
 import { toast } from 'sonner'
 
-export function View() {
+export type UsersListSearch = {
+  search?: string
+  query?: string
+  page?: number
+  limit?: number
+}
+
+export function View({
+  usersListSearch,
+}: {
+  usersListSearch?: UsersListSearch
+} = {}) {
   const { projectId } = useParams({
     strict: false,
   })
   const location = useLocation()
   const navigate = useNavigate()
-  const search = useSearch({ strict: false }) as { create?: string }
+  const search = useSearch({ strict: false }) as {
+    create?: string
+    search?: string
+    page?: number
+    limit?: number
+    query?: string
+  }
   const { isDebugModeOpen } = useDebugMode()
+
+  const isAuthUsersIndex =
+    location.pathname.replace(/\/$/, '') === `/projects/${projectId}/auth`
+
+  // URL-backed list params for users tab. Prefer validated search from index route (usersListSearch) so tags and table update immediately after navigate; fallback to parsing location.
+  const usersListParams = useMemo(() => {
+    if (!isAuthUsersIndex) return null
+    if (typeof window === 'undefined') return null
+    if (usersListSearch) {
+      return {
+        search: usersListSearch.search,
+        page: usersListSearch.page ?? 1,
+        limit: usersListSearch.limit ?? 25,
+        filterMap: queryParamToMap(usersListSearch.query ?? null),
+      }
+    }
+    const url = new URL(location.pathname + location.search, window.location.origin)
+    return {
+      search: getSearch(url),
+      page: getPage(url, 1),
+      limit: getLimit(url, 25),
+      filterMap: queryParamToMap(getQueryParam(url)),
+    }
+  }, [isAuthUsersIndex, usersListSearch, location.pathname, location.search, projectId])
 
   // Check if we're on a user detail route - if so, don't render this component
   const isUserDetailRoute = useMemo(() => {
@@ -131,7 +201,16 @@ export function View() {
   const showAuthSecuritySettings =
     canShowAuthSecuritySettings(access, features)
 
-  const [usersSearchValue, setUsersSearchValue] = useState('')
+  const urlPage = usersListParams?.page ?? 1
+  const urlLimit = usersListParams?.limit ?? 25
+  const urlSearch = usersListParams?.search
+  const usersFilterMap = usersListParams?.filterMap ?? new Map()
+  const usersFilterQueries =
+    usersFilterMap.size > 0 ? Array.from(usersFilterMap.values()) : undefined
+
+  const [usersSearchInput, setUsersSearchInput] = useState('')
+  const usersSearchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const [teamsSearchValue, setTeamsSearchValue] = useState('')
   const [usersViewMode, setUsersViewMode] = useState<'list' | 'grid'>('list')
   const [teamsViewMode, setTeamsViewMode] = useState<'list' | 'grid'>('grid')
@@ -176,36 +255,87 @@ export function View() {
     }
   }, [search?.create, createTeamDialogOpen, navigate, location.pathname])
 
-  // Pagination state for users (1-indexed for UI)
-  const [usersRequestedPage, setUsersRequestedPage] = useState(1)
-  const [usersDisplayedPage, setUsersDisplayedPage] = useState(1)
-  const [usersPageSize, setUsersPageSize] = useState(25)
+  // Sync users search input from URL (e.g. back button)
+  useEffect(() => {
+    setUsersSearchInput(urlSearch ?? '')
+  }, [urlSearch])
+
+  const usersFilterQueryString =
+    usersFilterMap.size > 0 ? mapToQueryParam(usersFilterMap) : ''
+
+  // Debounced navigate when users search input changes
+  useEffect(() => {
+    if (usersSearchDebounceRef.current) clearTimeout(usersSearchDebounceRef.current)
+    usersSearchDebounceRef.current = setTimeout(() => {
+      const trimmed = usersSearchInput.trim()
+      if (trimmed === (urlSearch ?? '')) return
+      navigate({
+        to: '/projects/$projectId/auth/',
+        params: { projectId: projectId! },
+        search: (prev: Record<string, unknown>) => {
+          const next = {
+            ...prev,
+            ...buildListSearchParams({
+              search: trimmed || undefined,
+              query: usersFilterQueryString || undefined,
+              page: 1,
+              limit: urlLimit,
+            }),
+          }
+          // Remove search param when cleared so URL and results update
+          if (!trimmed) delete next.search
+          return next
+        },
+        replace: true,
+      })
+    }, 300)
+    return () => {
+      if (usersSearchDebounceRef.current) clearTimeout(usersSearchDebounceRef.current)
+    }
+  }, [
+    usersSearchInput,
+    projectId,
+    navigate,
+    urlLimit,
+    urlSearch,
+    usersFilterQueryString,
+  ])
+
+  const [usersDisplayedPage, setUsersDisplayedPage] = useState(urlPage)
+  const [usersFiltersOpen, setUsersFiltersOpen] = useState(false)
+  const [filterColumnId, setFilterColumnId] = useState<string>('')
+  const [filterOperatorKey, setFilterOperatorKey] = useState<string>('')
+  const [filterValue, setFilterValue] = useState<string>('')
+  const [filterValueEnd, setFilterValueEnd] = useState<string>('')
+
+  const usersFilterEntries = Array.from(usersFilterMap.entries())
 
   const queryClient = useQueryClient()
 
-  // Clear selection when navigating between pages/routes or when search changes
+  // Clear selection when navigating between pages/routes or when search/filters change
   useEffect(() => {
     setSelectedUsers(new Set())
     setDeleteDialogOpen(false)
     setSelectedTeams(new Set())
     setDeleteTeamDialogOpen(false)
-  }, [location.pathname, projectId, usersSearchValue, teamsSearchValue])
+  }, [location.pathname, projectId, urlSearch, teamsSearchValue, usersFilterMap.size])
 
   // Pagination state for teams
   const [teamsRequestedPage, setTeamsRequestedPage] = useState(1)
   const [teamsDisplayedPage, setTeamsDisplayedPage] = useState(1)
   const [teamsPageSize, setTeamsPageSize] = useState(25)
 
-  // Fetch users for the requested page (triggers load when user changes page)
+  // Fetch users for the requested page (URL page - triggers load when user changes page)
   const {
     total: usersTotal,
     isLoading: usersLoading,
     isFetching: usersFetching,
   } = useProjectUsers(
     projectId,
-    usersRequestedPage - 1,
-    usersPageSize,
-    usersSearchValue,
+    urlPage - 1,
+    urlLimit,
+    urlSearch ?? undefined,
+    usersFilterQueries,
   )
 
   // Fetch users for the displayed page (what we show - stays until new page is ready)
@@ -216,20 +346,21 @@ export function View() {
   } = useProjectUsers(
     projectId,
     usersDisplayedPage - 1,
-    usersPageSize,
-    usersSearchValue,
+    urlLimit,
+    urlSearch ?? undefined,
+    usersFilterQueries,
   )
 
   // Update displayed users page only when requested page data is ready (no flash)
   useEffect(() => {
     if (
       !usersFetching &&
-      usersRequestedPage !== usersDisplayedPage &&
+      urlPage !== usersDisplayedPage &&
       !usersLoading
     ) {
-      setUsersDisplayedPage(usersRequestedPage)
+      setUsersDisplayedPage(urlPage)
     }
-  }, [usersFetching, usersLoading, usersRequestedPage, usersDisplayedPage])
+  }, [usersFetching, usersLoading, urlPage, usersDisplayedPage])
 
   const showUsersLoading = usersDisplayedLoading && apiUsers.length === 0
 
@@ -306,12 +437,109 @@ export function View() {
     return { label: 'Unverified', tone: 'warning' as const }
   }
 
-  // Reset page when search changes
   const handleUsersSearchChange = (value: string) => {
-    setUsersSearchValue(value)
-    setUsersRequestedPage(1)
-    setUsersDisplayedPage(1)
-    setSelectedUsers(new Set()) // Clear selection on search change
+    setUsersSearchInput(value)
+  }
+
+  const applyUsersFilter = () => {
+    const col = usersFilterColumns.find((c) => c.id === filterColumnId)
+    if (!col || !filterOperatorKey) return
+    const op = getOperatorsForType(col.type).find((o) => o.key === filterOperatorKey)
+    if (!op) return
+    const isBetweenOp =
+      filterOperatorKey === 'between' || filterOperatorKey === 'notBetween'
+    let val: string | number | boolean | undefined = op.noValue
+      ? undefined
+      : isBetweenOp
+        ? `${filterValue.trim()},${filterValueEnd.trim()}`
+        : filterValue.trim() || undefined
+    if (val !== undefined && val !== '' && !isBetweenOp) {
+      if (col.type === 'integer') {
+        const n = Number(val)
+        val = Number.isNaN(n) ? String(val) : n
+      } else if (col.type === 'double') {
+        const n = Number(val)
+        val = Number.isNaN(n) ? String(val) : n
+      } else if (col.id === 'status' && (val === 'enabled' || val === 'disabled')) {
+        // Appwrite user status is boolean: true = enabled, false = disabled
+        val = val === 'enabled'
+      }
+      // datetime, enum, string etc. stay as string
+    }
+    const queryString = buildFilterQueryString(
+      filterOperatorKey,
+      filterColumnId,
+      val,
+    )
+    const compactKey: CompactFilterKey = {
+      c: filterColumnId,
+      o: filterOperatorKey,
+      ...(val !== undefined && val !== '' ? { v: val } : {}),
+    }
+    const newMap = new Map(usersFilterMap)
+    newMap.set(compactKey, queryString)
+    const queryEncoded = mapToQueryParam(newMap)
+    navigate({
+      to: '/projects/$projectId/auth/',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => ({
+        ...prev,
+        ...buildListSearchParams({
+          search: urlSearch,
+          query: queryEncoded,
+          page: 1,
+          limit: urlLimit,
+        }),
+      }),
+      replace: true,
+    })
+    setFilterValue('')
+    setFilterValueEnd('')
+    setUsersFiltersOpen(false)
+  }
+
+  const removeUsersFilter = (key: CompactFilterKey) => {
+    const newMap = new Map(usersFilterMap)
+    newMap.delete(key)
+    navigate({
+      to: '/projects/$projectId/auth/',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => {
+        const next = {
+          ...prev,
+          ...buildListSearchParams({
+            search: urlSearch,
+            query: newMap.size > 0 ? mapToQueryParam(newMap) : undefined,
+            page: 1,
+            limit: urlLimit,
+          }),
+        }
+        if (newMap.size === 0) delete next.query
+        return next
+      },
+      replace: true,
+    })
+  }
+
+  const clearAllUsersFilters = () => {
+    navigate({
+      to: '/projects/$projectId/auth/',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => {
+        const next = {
+          ...prev,
+          ...buildListSearchParams({
+            search: urlSearch,
+            page: 1,
+            limit: urlLimit,
+          }),
+        }
+        delete next.query
+        return next
+      },
+      replace: true,
+    })
+    setUsersFiltersOpen(false)
   }
 
   // Bulk delete mutation
@@ -369,16 +597,52 @@ export function View() {
     }
   }
 
-  const handlePageChange = (page: number) => {
-    setUsersRequestedPage(page)
-    setSelectedUsers(new Set()) // Clear selection on page change
+  const handleUsersPageChange = (page: number) => {
+    navigate({
+      to: '/projects/$projectId/auth/',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => {
+        const next = {
+          ...prev,
+          ...buildListSearchParams({
+            search: urlSearch,
+            query:
+              usersFilterMap.size > 0 ? mapToQueryParam(usersFilterMap) : undefined,
+            page,
+            limit: urlLimit,
+          }),
+        }
+        // When going to page 1, buildListSearchParams omits page so prev.page would persist; remove it explicitly
+        if (page === 1) delete next.page
+        return next
+      },
+      replace: true,
+    })
+    setSelectedUsers(new Set())
   }
 
-  const handlePageSizeChange = (newPageSize: number) => {
-    setUsersPageSize(newPageSize)
-    setUsersRequestedPage(1)
-    setUsersDisplayedPage(1)
-    setSelectedUsers(new Set()) // Clear selection on page size change
+  const handleUsersPageSizeChange = (newPageSize: number) => {
+    navigate({
+      to: '/projects/$projectId/auth/',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => {
+        const next = {
+          ...prev,
+          ...buildListSearchParams({
+            search: urlSearch,
+            query:
+              usersFilterMap.size > 0 ? mapToQueryParam(usersFilterMap) : undefined,
+            page: 1,
+            limit: newPageSize,
+          }),
+        }
+        // Reset to page 1 when changing size; buildListSearchParams omits page when 1 so remove it
+        delete next.page
+        return next
+      },
+      replace: true,
+    })
+    setSelectedUsers(new Set())
   }
 
   // Format last accessed date - shows relative time but only at day resolution or higher
@@ -704,7 +968,7 @@ export function View() {
         }
         searchValue={
           activeTab === 'users'
-            ? usersSearchValue
+            ? usersSearchInput
             : activeTab === 'teams'
               ? teamsSearchValue
               : undefined
@@ -721,9 +985,421 @@ export function View() {
         createDisabled={noCreatePermission}
         createDisabledTooltip={createPermissionTooltip}
         showFilters={activeTab === 'users'}
+        filterTrigger={
+          activeTab === 'users' ? (
+            <Popover open={usersFiltersOpen} onOpenChange={setUsersFiltersOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 shrink-0 gap-2 border-border bg-transparent text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground"
+                >
+                  <Filter className="h-3.5 w-3.5" />
+                  Filters
+                  {usersFilterMap.size > 0 && (
+                    <span className="ml-1 flex size-5 items-center justify-center rounded-full bg-primary/20 text-[11px] font-medium text-primary">
+                      {usersFilterMap.size}
+                    </span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+
+              <PopoverContent
+                className="w-72 p-0"
+                align="start"
+                sideOffset={6}
+              >
+                {/* Current filters list + Clear all (above Add condition) */}
+                {usersFilterMap.size > 0 && (
+                  <>
+                    <div className="border-b border-border px-3 py-1.5">
+                      <p className="text-[11px] font-medium text-foreground">
+                        Active filters
+                      </p>
+                    </div>
+                    <div className="max-h-40 overflow-y-auto space-y-1 p-2">
+                      {usersFilterEntries.map(([key, _queryStr]) => {
+                        const tag = buildFilterTagFromCompactKey(
+                          key,
+                          usersFilterColumns,
+                        )
+                        const tagLabel = tag.tag.replace(/\*\*(.*?)\*\*/g, '$1')
+                        return (
+                          <div
+                            key={`${key.c}-${key.o}-${JSON.stringify(key.v ?? '')}`}
+                            className="flex select-none items-center justify-between gap-2 rounded-md bg-muted/50 px-1.5 py-1"
+                          >
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="truncate text-[11px] text-foreground">
+                                  {tagLabel}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="text-xs">{tagLabel}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            <button
+                              type="button"
+                              onClick={() => removeUsersFilter(key)}
+                              className="shrink-0 cursor-pointer rounded p-0.5 hover:bg-muted"
+                              aria-label="Remove filter"
+                            >
+                              <X className="h-2.5 w-2.5" />
+                            </button>
+                          </div>
+                        )
+                      })}
+                    </div>
+                    <div className="border-t border-border p-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-full text-[12px]"
+                        onClick={() => {
+                          clearAllUsersFilters()
+                          setUsersFiltersOpen(false)
+                        }}
+                      >
+                        Clear all
+                      </Button>
+                    </div>
+                  </>
+                )}
+
+                <div
+                  className={
+                    usersFilterMap.size > 0
+                      ? 'border-t border-border px-4 pt-4 pb-2'
+                      : 'px-4 pt-4 pb-2'
+                  }
+                >
+                  <h3 className="text-[13px] font-semibold text-foreground">
+                    Add condition
+                  </h3>
+                  <p className="text-[12px] text-muted-foreground mt-1">
+                    Filter users by column, operator and value.
+                  </p>
+                </div>
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault()
+                      applyUsersFilter()
+                    }}
+                    className="contents"
+                  >
+                  <div className="border-t border-border px-4 py-3 space-y-3">
+                    <div>
+                      <label className="text-[12px] text-muted-foreground mb-1.5 block">
+                        Column
+                      </label>
+                      <Select
+                        value={filterColumnId}
+                        onValueChange={(v) => {
+                          setFilterColumnId(v)
+                          setFilterValue('')
+                          setFilterValueEnd('')
+                          const col = usersFilterColumns.find((c) => c.id === v)
+                          const firstOp = col
+                            ? getOperatorsForType(col.type)[0]
+                            : null
+                          setFilterOperatorKey(firstOp?.key ?? '')
+                        }}
+                      >
+                        <SelectTrigger className="h-9 text-[13px]">
+                          <SelectValue placeholder="Select column" />
+                        </SelectTrigger>
+                        <SelectContent className="z-[200]">
+                          {usersFilterColumns.map((col) => (
+                            <SelectItem
+                              key={col.id}
+                              value={col.id}
+                              className="text-[13px]"
+                            >
+                              {col.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-[12px] text-muted-foreground mb-1.5 block">
+                        Operator
+                      </label>
+                      <Select
+                        value={filterOperatorKey}
+                        onValueChange={(v) => {
+                          setFilterOperatorKey(v)
+                          setFilterValueEnd('')
+                        }}
+                        disabled={!filterColumnId}
+                      >
+                        <SelectTrigger className="h-9 text-[13px]">
+                          <SelectValue placeholder="Operator" />
+                        </SelectTrigger>
+                        <SelectContent className="z-[200]">
+                          {(filterColumnId
+                            ? getOperatorsForType(
+                                usersFilterColumns.find(
+                                  (c) => c.id === filterColumnId,
+                                )!.type,
+                              )
+                            : []
+                          ).map((op) => (
+                            <SelectItem
+                              key={op.key}
+                              value={op.key}
+                              className="text-[13px]"
+                            >
+                              {op.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {filterColumnId &&
+                      (() => {
+                        const col = usersFilterColumns.find(
+                          (c) => c.id === filterColumnId,
+                        )
+                        if (!col) return null
+                        const op = getOperatorsForType(col.type).find(
+                          (o) => o.key === filterOperatorKey,
+                        )
+                        if (op?.noValue) return null
+                        const label = (
+                          <label className="text-[12px] text-muted-foreground mb-1.5 block">
+                            Value
+                          </label>
+                        )
+                        const inputClass = 'h-9 text-[13px]'
+                        const toDatetimeLocal = (iso: string) => {
+                          if (!iso?.trim()) return ''
+                          const d = new Date(iso)
+                          if (Number.isNaN(d.getTime())) return ''
+                          const pad = (n: number) => String(n).padStart(2, '0')
+                          return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+                        }
+                        const isBetweenOp =
+                          filterOperatorKey === 'between' ||
+                          filterOperatorKey === 'notBetween'
+                        if (isBetweenOp) {
+                          const subLabel = 'text-[11px] text-muted-foreground mb-1 block'
+                          if (col.type === 'datetime') {
+                            return (
+                              <div key="value-between-datetime" className="space-y-3">
+                                <div>
+                                  <span className={subLabel}>Start</span>
+                                  <Input
+                                    type="datetime-local"
+                                    className={inputClass}
+                                    value={toDatetimeLocal(filterValue)}
+                                    onChange={(e) => {
+                                      const v = e.target.value
+                                      setFilterValue(v ? new Date(v).toISOString() : '')
+                                    }}
+                                  />
+                                </div>
+                                <div>
+                                  <span className={subLabel}>End</span>
+                                  <Input
+                                    type="datetime-local"
+                                    className={inputClass}
+                                    value={toDatetimeLocal(filterValueEnd)}
+                                    onChange={(e) => {
+                                      const v = e.target.value
+                                      setFilterValueEnd(v ? new Date(v).toISOString() : '')
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            )
+                          }
+                          if (col.type === 'integer' || col.type === 'double') {
+                            return (
+                              <div key="value-between-number" className="space-y-3">
+                                <div>
+                                  <span className={subLabel}>Start</span>
+                                  <Input
+                                    type="number"
+                                    step={col.type === 'integer' ? 1 : 'any'}
+                                    className={inputClass}
+                                    value={filterValue}
+                                    onChange={(e) => setFilterValue(e.target.value)}
+                                    placeholder="Min"
+                                  />
+                                </div>
+                                <div>
+                                  <span className={subLabel}>End</span>
+                                  <Input
+                                    type="number"
+                                    step={col.type === 'integer' ? 1 : 'any'}
+                                    className={inputClass}
+                                    value={filterValueEnd}
+                                    onChange={(e) => setFilterValueEnd(e.target.value)}
+                                    placeholder="Max"
+                                  />
+                                </div>
+                              </div>
+                            )
+                          }
+                          return null
+                        }
+                        if (col.type === 'enum' && col.elements?.length) {
+                          return (
+                            <div key="value-enum">
+                              {label}
+                              <Select
+                                value={filterValue}
+                                onValueChange={setFilterValue}
+                              >
+                                <SelectTrigger className={inputClass}>
+                                  <SelectValue placeholder="Select value" />
+                                </SelectTrigger>
+                                <SelectContent className="z-[200]">
+                                  {col.elements.map((el) => (
+                                    <SelectItem
+                                      key={String(el.value)}
+                                      value={String(el.value)}
+                                      className="text-[13px]"
+                                    >
+                                      {el.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )
+                        }
+                        if (col.type === 'boolean') {
+                          return (
+                            <div key="value-bool">
+                              {label}
+                              <Select
+                                value={filterValue}
+                                onValueChange={setFilterValue}
+                              >
+                                <SelectTrigger className={inputClass}>
+                                  <SelectValue placeholder="Select" />
+                                </SelectTrigger>
+                                <SelectContent className="z-[200]">
+                                  <SelectItem value="true" className="text-[13px]">
+                                    True
+                                  </SelectItem>
+                                  <SelectItem value="false" className="text-[13px]">
+                                    False
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )
+                        }
+                        if (col.type === 'datetime') {
+                          return (
+                            <div key="value-datetime">
+                              {label}
+                              <Input
+                                type="datetime-local"
+                                className={inputClass}
+                                value={toDatetimeLocal(filterValue)}
+                                onChange={(e) => {
+                                  const v = e.target.value
+                                  setFilterValue(v ? new Date(v).toISOString() : '')
+                                }}
+                              />
+                            </div>
+                          )
+                        }
+                        if (col.type === 'integer') {
+                          return (
+                            <div key="value-int">
+                              {label}
+                              <Input
+                                type="number"
+                                step={1}
+                                className={inputClass}
+                                value={filterValue}
+                                onChange={(e) => setFilterValue(e.target.value)}
+                                placeholder="Number"
+                              />
+                            </div>
+                          )
+                        }
+                        if (col.type === 'double') {
+                          return (
+                            <div key="value-double">
+                              {label}
+                              <Input
+                                type="number"
+                                step="any"
+                                className={inputClass}
+                                value={filterValue}
+                                onChange={(e) => setFilterValue(e.target.value)}
+                                placeholder="Number"
+                              />
+                            </div>
+                          )
+                        }
+                        const searchOrNotSearch =
+                          filterOperatorKey === 'search' ||
+                          filterOperatorKey === 'notSearch'
+                        const placeholder = searchOrNotSearch
+                          ? 'Min. 3 characters'
+                          : filterOperatorKey === 'regex'
+                            ? 'e.g. ^foo.*bar$'
+                            : 'Value'
+                        return (
+                          <div key="value-text">
+                            {label}
+                            <Input
+                              className={inputClass}
+                              value={filterValue}
+                              onChange={(e) => setFilterValue(e.target.value)}
+                              placeholder={placeholder}
+                            />
+                          </div>
+                        )
+                      })()}
+                  </div>
+                  <div className="border-t border-border px-4 py-3 flex flex-wrap items-center gap-2 bg-muted/30">
+                    <Button
+                      type="submit"
+                      size="sm"
+                      className="h-9 text-[13px]"
+                      disabled={
+                        !filterColumnId ||
+                        !filterOperatorKey ||
+                        (() => {
+                          const col = usersFilterColumns.find(
+                            (c) => c.id === filterColumnId,
+                          )
+                          if (!col) return true
+                          const op = getOperatorsForType(col.type).find(
+                            (o) => o.key === filterOperatorKey,
+                          )
+                          if (!op) return true
+                          if (op.noValue) return false
+                          if (
+                            filterOperatorKey === 'between' ||
+                            filterOperatorKey === 'notBetween'
+                          ) {
+                            return !filterValue.trim() || !filterValueEnd.trim()
+                          }
+                          return !filterValue.trim()
+                        })()
+                      }
+                    >
+                      Add condition
+                    </Button>
+                  </div>
+                  </form>
+                </PopoverContent>
+              </Popover>
+          ) : undefined
+        }
         fullWidthBorder
         contentAfterBorder={smtpAlert}
-        rightContent={
+        beforeCreateButtons={
           activeTab === 'users' ? (
             <ViewToggle
               viewMode={usersViewMode}
@@ -1067,24 +1743,30 @@ export function View() {
                   <Pagination
                     currentPage={usersDisplayedPage}
                     totalItems={displayedUsersTotal ?? usersTotal}
-                    pageSize={usersPageSize}
+                    pageSize={urlLimit}
                     pageSizeOptions={[10, 25, 50, 100]}
-                    onPageChange={handlePageChange}
-                    onPageSizeChange={handlePageSizeChange}
+                    onPageChange={handleUsersPageChange}
+                    onPageSizeChange={handleUsersPageSizeChange}
                     itemLabel="users"
                   />
                 </>
               ) : (
                 <EmptyState
                   icon={Users}
-                  title={usersSearchValue ? undefined : 'No users yet'}
-                  description={
-                    usersSearchValue
+                  title={
+                    urlSearch || usersFilterMap.size > 0
                       ? undefined
-                      : 'Create your first user to get started with authentication'
+                      : 'No users yet'
                   }
-                  isEmpty={!usersSearchValue}
-                  hasFilters={!!usersSearchValue}
+                  description={
+                    urlSearch
+                      ? `No results for "${urlSearch}". Try a different search.`
+                      : usersFilterMap.size > 0
+                        ? 'No users match your filters.'
+                        : 'Create your first user to get started with authentication'
+                  }
+                  isEmpty={!(urlSearch || usersFilterMap.size > 0)}
+                  hasFilters={!!(urlSearch || usersFilterMap.size > 0)}
                   variant="card"
                 />
               )
@@ -1133,14 +1815,20 @@ export function View() {
                     <div className="col-span-full">
                       <EmptyState
                         icon={Users}
-                        title={usersSearchValue ? undefined : 'No users yet'}
-                        description={
-                          usersSearchValue
+                        title={
+                          urlSearch || usersFilterMap.size > 0
                             ? undefined
-                            : 'Create your first user to get started with authentication'
+                            : 'No users yet'
                         }
-                        isEmpty={!usersSearchValue}
-                        hasFilters={!!usersSearchValue}
+                        description={
+                          urlSearch
+                            ? `No results for "${urlSearch}". Try a different search.`
+                            : usersFilterMap.size > 0
+                              ? 'No users match your filters.'
+                              : 'Create your first user to get started with authentication'
+                        }
+                        isEmpty={!(urlSearch || usersFilterMap.size > 0)}
+                        hasFilters={!!(urlSearch || usersFilterMap.size > 0)}
                         variant="card"
                       />
                     </div>
@@ -1150,10 +1838,10 @@ export function View() {
                   <Pagination
                     currentPage={usersDisplayedPage}
                     totalItems={displayedUsersTotal ?? usersTotal}
-                    pageSize={usersPageSize}
+                    pageSize={urlLimit}
                     pageSizeOptions={[10, 25, 50, 100]}
-                    onPageChange={handlePageChange}
-                    onPageSizeChange={handlePageSizeChange}
+                    onPageChange={handleUsersPageChange}
+                    onPageSizeChange={handleUsersPageSizeChange}
                     itemLabel="users"
                   />
                 )}

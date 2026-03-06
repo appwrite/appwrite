@@ -1,0 +1,157 @@
+/**
+ * Table filters – operator definitions and Query string builder (see TABLE_FILTERS_AND_SEARCH.md).
+ *
+ * Operators are tied to column types; only show operators valid for the selected column.
+ */
+
+import { Query } from '@appwrite.io/console'
+import type { CompactFilterKey, FilterColumn, FilterColumnType, FilterOperatorDef, FilterTagValue } from './types'
+
+export const FILTER_OPERATORS: FilterOperatorDef[] = [
+  { key: 'equal', label: 'equal', types: ['string', 'integer', 'double', 'boolean', 'datetime', 'enum', 'point', 'linestring', 'polygon', 'varchar', 'text'] },
+  { key: 'notEqual', label: 'not equal', types: ['string', 'integer', 'double', 'boolean', 'point', 'linestring', 'polygon', 'varchar', 'text'] },
+  { key: 'startsWith', label: 'starts with', types: ['string', 'varchar', 'text'] },
+  { key: 'notStartsWith', label: 'not starts with', types: ['string', 'varchar', 'text'] },
+  { key: 'endsWith', label: 'ends with', types: ['string', 'varchar', 'text'] },
+  { key: 'notEndsWith', label: 'not ends with', types: ['string', 'varchar', 'text'] },
+  { key: 'contains', label: 'contains', types: ['string', 'integer', 'double', 'boolean', 'datetime', 'enum', 'point', 'linestring', 'polygon', 'varchar', 'text'] },
+  { key: 'notContains', label: 'not contains', types: ['string', 'integer', 'double', 'boolean', 'datetime', 'enum', 'point', 'linestring', 'polygon', 'varchar', 'text'] },
+  { key: 'search', label: 'search', types: ['string', 'varchar', 'text'] },
+  { key: 'notSearch', label: 'does not match search', types: ['string', 'varchar', 'text'] },
+  { key: 'regex', label: 'matches regex', types: ['string', 'varchar', 'text'] },
+  { key: 'greaterThan', label: 'greater than', types: ['integer', 'double', 'datetime'] },
+  { key: 'greaterThanEqual', label: 'greater than or equal', types: ['integer', 'double', 'datetime'] },
+  { key: 'lessThan', label: 'less than', types: ['integer', 'double', 'datetime'] },
+  { key: 'lessThanEqual', label: 'less than or equal', types: ['integer', 'double', 'datetime'] },
+  { key: 'between', label: 'between', types: ['integer', 'double', 'datetime'] },
+  { key: 'notBetween', label: 'not between', types: ['integer', 'double', 'datetime'] },
+  { key: 'isNull', label: 'is null', types: ['string', 'integer', 'double', 'boolean', 'datetime', 'enum', 'varchar', 'text'], noValue: true },
+  { key: 'isNotNull', label: 'is not null', types: ['string', 'integer', 'double', 'boolean', 'datetime', 'enum', 'varchar', 'text'], noValue: true },
+  { key: 'exists', label: 'exists', types: ['string', 'integer', 'double', 'boolean', 'datetime', 'enum', 'varchar', 'text'], noValue: true },
+  { key: 'notExists', label: 'does not exist', types: ['string', 'integer', 'double', 'boolean', 'datetime', 'enum', 'varchar', 'text'], noValue: true },
+]
+
+/** Get operators allowed for a column type. */
+export function getOperatorsForType(columnType: FilterColumnType): FilterOperatorDef[] {
+  return FILTER_OPERATORS.filter((op) => op.types.includes(columnType))
+}
+
+/** Parse "start,end" for between/notBetween; returns [start, end] or null if invalid. */
+function parseBetweenValue(value: string | number | string[] | boolean | null | undefined): [string, string] | null {
+  const s = typeof value === 'string' ? value : Array.isArray(value) ? value.join(',') : String(value ?? '')
+  const parts = s.split(',').map((p) => p.trim()).filter(Boolean)
+  if (parts.length >= 2) return [parts[0], parts[1]]
+  return null
+}
+
+/**
+ * Build a single Query condition string from operator + column + value.
+ * Used when adding a filter to the map; the result is stored as the map value.
+ */
+export function buildFilterQueryString(
+  operatorKey: string,
+  columnId: string,
+  value: string | number | string[] | boolean | null | undefined,
+): string {
+  const safeVal = value ?? ''
+  switch (operatorKey) {
+    case 'equal':
+      return Array.isArray(safeVal) ? Query.equal(columnId, safeVal) : Query.equal(columnId, safeVal)
+    case 'notEqual':
+      return Query.notEqual(columnId, safeVal as string | number | boolean)
+    case 'startsWith':
+      return Query.startsWith(columnId, String(safeVal))
+    case 'notStartsWith':
+      return Query.notStartsWith(columnId, String(safeVal))
+    case 'endsWith':
+      return Query.endsWith(columnId, String(safeVal))
+    case 'notEndsWith':
+      return Query.notEndsWith(columnId, String(safeVal))
+    case 'contains':
+      return Array.isArray(safeVal) ? Query.contains(columnId, safeVal) : Query.contains(columnId, String(safeVal))
+    case 'notContains':
+      return Array.isArray(safeVal) ? Query.notContains(columnId, safeVal) : Query.notContains(columnId, String(safeVal))
+    case 'search':
+      return Query.search(columnId, String(safeVal))
+    case 'notSearch':
+      return Query.notSearch(columnId, String(safeVal))
+    case 'regex':
+      return Query.regex(columnId, String(safeVal))
+    case 'greaterThan':
+      return Query.greaterThan(columnId, safeVal as string | number)
+    case 'greaterThanEqual':
+      return Query.greaterThanEqual(columnId, safeVal as string | number)
+    case 'lessThan':
+      return Query.lessThan(columnId, safeVal as string | number)
+    case 'lessThanEqual':
+      return Query.lessThanEqual(columnId, safeVal as string | number)
+    case 'between': {
+      const pair = parseBetweenValue(value)
+      if (pair) return Query.between(columnId, pair[0], pair[1])
+      return Query.equal(columnId, safeVal as string)
+    }
+    case 'notBetween': {
+      const pair = parseBetweenValue(value)
+      if (pair) return Query.notBetween(columnId, pair[0], pair[1])
+      return Query.notEqual(columnId, safeVal as string)
+    }
+    case 'isNull':
+      return Query.isNull(columnId)
+    case 'isNotNull':
+      return Query.isNotNull(columnId)
+    case 'exists':
+      return Query.exists([columnId])
+    case 'notExists':
+      return Query.notExists([columnId])
+    default:
+      return Query.equal(columnId, safeVal as string | number | boolean)
+  }
+}
+
+/**
+ * Build display tag for a filter: "**columnTitle** operatorLabel **value**" or "**columnTitle** is null".
+ * For between/not between, value "start, end" is shown as "start and end".
+ */
+export function buildFilterTag(
+  columnTitle: string,
+  operatorLabel: string,
+  value: string | number | string[] | null | undefined,
+): FilterTagValue {
+  if (value == null || value === '' || (Array.isArray(value) && value.length === 0)) {
+    return { tag: `**${columnTitle}** ${operatorLabel}`, value: '' }
+  }
+  let display = Array.isArray(value) ? value.join(', ') : String(value)
+  const isBetween = operatorLabel === 'between' || operatorLabel === 'not between'
+  if (isBetween && display.includes(',')) {
+    display = display.split(',').map((p) => p.trim()).filter(Boolean).join(' and ')
+  }
+  return {
+    tag: `**${columnTitle}** ${operatorLabel} **${display}**`,
+    value: value as string | number | string[],
+  }
+}
+
+/**
+ * Build display tag from compact key (e.g. when reading filters from URL).
+ * Use for rendering filter tags when the map key is CompactFilterKey.
+ */
+export function buildFilterTagFromCompactKey(
+  key: CompactFilterKey,
+  columns: FilterColumn[],
+): FilterTagValue {
+  const col = columns.find((c) => c.id === key.c)
+  if (!col) return { tag: `**${key.c}** ${key.o}`, value: key.v ?? '' }
+  const ops = getOperatorsForType(col.type)
+  const op = ops.find((o) => o.key === key.o)
+  const opLabel = op?.label ?? key.o
+  if (op?.noValue) return buildFilterTag(col.title, opLabel, undefined)
+  const tagDisplayVal =
+    col.id === 'status' && (key.v === true || key.v === false)
+      ? key.v
+        ? 'Enabled'
+        : 'Disabled'
+      : key.v !== undefined && key.v !== ''
+        ? (Array.isArray(key.v) ? key.v.join(', ') : String(key.v))
+        : ''
+  return buildFilterTag(col.title, opLabel, tagDisplayVal || undefined)
+}

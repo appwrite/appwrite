@@ -361,6 +361,7 @@ Reference: `src/components/pages/projects/$projectId/storage/View.tsx`, `SiteLog
 - **Never change button text during actions** - Keep text consistent, use `disabled` state
 - **Use "Update" not "Edit"** - Align with API terminology
 - **Disable with tooltip, don't hide** - Always prefer disabling buttons with a tooltip explaining why they are disabled over hiding them completely. This helps users understand what actions exist and why they can't perform them (e.g., "Upgrade your plan to access this feature", "Complete the form to continue"). Only hide buttons if explicitly requested.
+- **No tooltip on text buttons** - Buttons that already have a text label (not just an icon) don't need a tooltip in addition to the label.
 
 ### Loading & Navigation
 
@@ -921,6 +922,7 @@ Follow the modal structure pattern above. For no-content modals, skip content se
 | Update resource        | Use "Update" terminology, not "Edit"                                                                                                                                  |
 | Button during action   | Keep text, use `disabled` state                                                                                                                                       |
 | Unavailable action     | Disable button with tooltip, don't hide                                                                                                                               |
+| Text buttons           | No tooltip when button has a text label (tooltips only for icon-only buttons)                                                                                        |
 | Service avatar         | `bg-muted text-muted-foreground` (never colored)                                                                                                                      |
 | Badge style            | Use status variants (`error`, `warning`, `success`, `info`) for same design; `text-[10px] shrink-0` when inline with text                                             |
 | Icon spacing           | `mr-1.5` or `gap-1.5`                                                                                                                                                 |
