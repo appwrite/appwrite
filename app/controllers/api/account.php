@@ -2291,7 +2291,7 @@ App::post('/v1/account/tokens/magic-url')
             'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',
             'phrase' => !empty($phrase) ? $phrase : '',
             // TODO: remove unnecessary team variable from this email
-            'team' => '',
+            // 'team' => '',
         ];
 
         $queueForMails
@@ -2578,7 +2578,7 @@ App::post('/v1/account/tokens/email')
             'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',
             'phrase' => !empty($phrase) ? $phrase : '',
             // TODO: remove unnecessary team variable from this email
-            'team' => '',
+            // 'team' => '',
         ];
 
         if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
