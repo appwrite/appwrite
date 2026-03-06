@@ -465,54 +465,68 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
 
               {/* Create Button */}
               {createLabel && (onCreate || (createTo && createParams)) && (
-                <TooltipProvider delayDuration={0}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div>
-                        {createTo && createParams && !createDisabled ? (
-                          <Link
-                            to={createTo as unknown}
-                            params={createParams}
-                            className="inline-flex h-9 items-center justify-center gap-2 rounded-md px-4 text-[13px] font-medium text-white transition-opacity hover:opacity-90"
-                            style={{ backgroundColor: '#f02e65' }}
-                          >
-                            <Plus className="h-4 w-4" />
-                            {createLabel}
-                          </Link>
-                        ) : createTo && createParams && createDisabled ? (
-                          <span
-                            className="inline-flex h-9 cursor-not-allowed items-center justify-center gap-2 rounded-md px-4 text-[13px] font-medium text-white opacity-50"
-                            style={{ backgroundColor: '#f02e65' }}
-                          >
-                            <Plus className="h-4 w-4" />
-                            {createLabel}
-                          </span>
-                        ) : (
-                          <Button
-                            size="sm"
-                            onClick={onCreate}
-                            disabled={createDisabled}
-                            className="h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                            style={{ backgroundColor: '#f02e65' }}
-                          >
-                            <Plus className="h-4 w-4" />
-                            {createLabel}
-                          </Button>
-                        )}
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      {createDisabled ? (
-                        <p>
-                          {createDisabledTooltip ??
-                            "You've reached the limit for this resource on your plan"}
-                        </p>
+                <>
+                  {createDisabled ? (
+                    <TooltipProvider delayDuration={0}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div>
+                            {createTo && createParams ? (
+                              <span
+                                className="inline-flex h-9 cursor-not-allowed items-center justify-center gap-2 rounded-md px-4 text-[13px] font-medium text-white opacity-50"
+                                style={{ backgroundColor: '#f02e65' }}
+                              >
+                                <Plus className="h-4 w-4" />
+                                {createLabel}
+                              </span>
+                            ) : (
+                              <Button
+                                size="sm"
+                                onClick={onCreate}
+                                disabled
+                                className="h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                                style={{ backgroundColor: '#f02e65' }}
+                              >
+                                <Plus className="h-4 w-4" />
+                                {createLabel}
+                              </Button>
+                            )}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                          <p>
+                            {createDisabledTooltip ??
+                              "You've reached the limit for this resource on your plan"}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ) : (
+                    <>
+                      {createTo && createParams ? (
+                        <Link
+                          to={createTo as unknown}
+                          params={createParams}
+                          className="inline-flex h-9 items-center justify-center gap-2 rounded-md px-4 text-[13px] font-medium text-white transition-opacity hover:opacity-90"
+                          style={{ backgroundColor: '#f02e65' }}
+                        >
+                          <Plus className="h-4 w-4" />
+                          {createLabel}
+                        </Link>
                       ) : (
-                        createLabel
+                        <Button
+                          size="sm"
+                          onClick={onCreate}
+                          className="h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                          style={{ backgroundColor: '#f02e65' }}
+                        >
+                          <Plus className="h-4 w-4" />
+                          {createLabel}
+                        </Button>
                       )}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                    </>
+                  )}
+                </>
               )}
 
               {/* Collapse Toggle Button */}

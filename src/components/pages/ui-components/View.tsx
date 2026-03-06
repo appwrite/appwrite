@@ -8,6 +8,7 @@ import {
   AlertCircle,
   Table,
   Sparkles,
+  Info,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -970,7 +971,9 @@ function ComponentPreview({ component }: { component: ComponentInfo }) {
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="outline">Hover for tooltip</Button>
+            <Button variant="outline" size="icon" aria-label="Show tooltip">
+              <Info className="h-4 w-4" />
+            </Button>
           </TooltipTrigger>
           <TooltipContent>
             <p>Tooltip content</p>

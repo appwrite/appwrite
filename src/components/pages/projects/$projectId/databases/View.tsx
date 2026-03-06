@@ -1048,18 +1048,13 @@ export function DatabaseDetailLayout({
               )}
 
               {/* Create Table Button */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => setCreateTableDialogOpen(true)}
-                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground cursor-pointer"
-                  >
-                    <Plus className="h-3.5 w-3.5 shrink-0" />
-                    <span className="text-[13px]">Create table</span>
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="right">Create table</TooltipContent>
-              </Tooltip>
+              <button
+                onClick={() => setCreateTableDialogOpen(true)}
+                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground cursor-pointer"
+              >
+                <Plus className="h-3.5 w-3.5 shrink-0" />
+                <span className="text-[13px]">Create table</span>
+              </button>
             </div>
           )}
 
@@ -1802,27 +1797,37 @@ export function TableView({
             </div>
           </div>
           <div className="shrink-0 border-t border-border px-2 py-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="block w-full">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-9 w-full gap-2 pl-6 pr-6 text-[13px] font-medium"
-                    onClick={() => setCreateTableDialogOpen(true)}
-                    disabled={noCreateTablePermission}
-                  >
-                    <Plus className="h-4 w-4" />
-                    Create table
-                  </Button>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent side="right">
-                {noCreateTablePermission
-                  ? createPermissionTooltip
-                  : 'Create table'}
-              </TooltipContent>
-            </Tooltip>
+            {noCreateTablePermission ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="block w-full">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9 w-full gap-2 pl-6 pr-6 text-[13px] font-medium"
+                      onClick={() => setCreateTableDialogOpen(true)}
+                      disabled
+                    >
+                      <Plus className="h-4 w-4" />
+                      Create table
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  {createPermissionTooltip}
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 w-full gap-2 pl-6 pr-6 text-[13px] font-medium"
+                onClick={() => setCreateTableDialogOpen(true)}
+              >
+                <Plus className="h-4 w-4" />
+                Create table
+              </Button>
+            )}
           </div>
         </div>
 
@@ -2440,18 +2445,13 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
           {tablesExpanded && (
             <div className="ml-3 mt-0.5 border-l border-border pl-2">
               {/* Create Table Button */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => setCreateTableDialogOpen(true)}
-                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground cursor-pointer"
-                  >
-                    <Plus className="h-3.5 w-3.5 shrink-0" />
-                    <span className="text-[13px]">Create table</span>
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="right">Create table</TooltipContent>
-              </Tooltip>
+              <button
+                onClick={() => setCreateTableDialogOpen(true)}
+                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground cursor-pointer"
+              >
+                <Plus className="h-3.5 w-3.5 shrink-0" />
+                <span className="text-[13px]">Create table</span>
+              </button>
             </div>
           )}
 
@@ -5841,83 +5841,99 @@ function RowsSpreadsheet({
             </div>
             <div className="grid grid-cols-2 gap-3 w-full max-w-2xl">
               {/* Row 1 */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Card
-                    onClick={canWriteTables ? handleSuggestColumns : undefined}
-                    className={cn(
-                      'p-0 gap-0 shadow-none',
-                      canWriteTables
-                        ? 'cursor-pointer transition-colors hover:bg-accent/50'
-                        : 'cursor-not-allowed opacity-60',
-                    )}
-                  >
-                    <div className="flex items-start gap-3 p-4">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-                        <Lightbulb className="h-5 w-5 text-muted-foreground" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <h3 className="text-sm font-medium text-foreground">
-                          Suggest columns
-                        </h3>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          Use AI to generate columns
-                        </p>
-                      </div>
-                    </div>
-                  </Card>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  {canWriteTables
-                    ? 'Use AI to generate columns'
-                    : "You don't have permission to perform this action."}
-                </TooltipContent>
-              </Tooltip>
-              {hasCustomColumns ? (
+              {!canWriteTables ? (
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Card
-                      onClick={canWriteRows ? handleCreateRow : undefined}
-                      className={cn(
-                        'p-0 gap-0 shadow-none',
-                        canWriteRows
-                          ? 'cursor-pointer transition-colors hover:bg-accent/50'
-                          : 'cursor-not-allowed opacity-60',
-                      )}
+                      className="cursor-not-allowed opacity-60 p-0 gap-0 shadow-none"
                     >
                       <div className="flex items-start gap-3 p-4">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-                          <Plus className="h-5 w-5 text-muted-foreground" />
+                          <Lightbulb className="h-5 w-5 text-muted-foreground" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <h3 className="text-sm font-medium text-foreground">
-                            Create row
+                            Suggest columns
                           </h3>
                           <p className="mt-1 text-xs text-muted-foreground">
-                            Add a new row to this table
+                            Use AI to generate columns
                           </p>
                         </div>
                       </div>
                     </Card>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
-                    {canWriteRows
-                      ? 'Add a new row to this table'
-                      : "You don't have permission to perform this action."}
+                    You don't have permission to perform this action.
                   </TooltipContent>
                 </Tooltip>
               ) : (
+                <Card
+                  onClick={handleSuggestColumns}
+                  className="cursor-pointer transition-colors hover:bg-accent/50 p-0 gap-0 shadow-none"
+                >
+                  <div className="flex items-start gap-3 p-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                      <Lightbulb className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-sm font-medium text-foreground">
+                        Suggest columns
+                      </h3>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Use AI to generate columns
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              )}
+              {hasCustomColumns ? (
+                !canWriteRows ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Card className="cursor-not-allowed opacity-60 p-0 gap-0 shadow-none">
+                        <div className="flex items-start gap-3 p-4">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                            <Plus className="h-5 w-5 text-muted-foreground" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h3 className="text-sm font-medium text-foreground">
+                              Create row
+                            </h3>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              Add a new row to this table
+                            </p>
+                          </div>
+                        </div>
+                      </Card>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      You don't have permission to perform this action.
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <Card
+                    onClick={handleCreateRow}
+                    className="cursor-pointer transition-colors hover:bg-accent/50 p-0 gap-0 shadow-none"
+                  >
+                    <div className="flex items-start gap-3 p-4">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                        <Plus className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-sm font-medium text-foreground">
+                          Create row
+                        </h3>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Add a new row to this table
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+                )
+              ) : !canWriteTables ? (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Card
-                      onClick={canWriteTables ? handleCreateColumn : undefined}
-                      className={cn(
-                        'p-0 gap-0 shadow-none',
-                        canWriteTables
-                          ? 'cursor-pointer transition-colors hover:bg-accent/50'
-                          : 'cursor-not-allowed opacity-60',
-                      )}
-                    >
+                    <Card className="cursor-not-allowed opacity-60 p-0 gap-0 shadow-none">
                       <div className="flex items-start gap-3 p-4">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
                           <Plus className="h-5 w-5 text-muted-foreground" />
@@ -5934,11 +5950,28 @@ function RowsSpreadsheet({
                     </Card>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
-                    {canWriteTables
-                      ? 'Create columns manually'
-                      : "You don't have permission to perform this action."}
+                    You don't have permission to perform this action.
                   </TooltipContent>
                 </Tooltip>
+              ) : (
+                <Card
+                  onClick={handleCreateColumn}
+                  className="cursor-pointer transition-colors hover:bg-accent/50 p-0 gap-0 shadow-none"
+                >
+                  <div className="flex items-start gap-3 p-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                      <Plus className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-sm font-medium text-foreground">
+                        Create column
+                      </h3>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Create columns manually
+                      </p>
+                    </div>
+                  </div>
+                </Card>
               )}
               {/* Row 2 */}
               <Card

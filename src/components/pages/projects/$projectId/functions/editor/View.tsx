@@ -920,59 +920,36 @@ export function View() {
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
           <TooltipProvider delayDuration={0}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-9 gap-1.5 text-[13px]"
-                  onClick={compressAndPrepare}
-                  disabled={isCompressing}
-                >
-                  <Download className="h-4 w-4" />
-                  Prepare for deployment
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                <p>
-                  Compress all files to gzip for deploying as a new function
-                </p>
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-9 gap-1.5 text-[13px]"
-                  onClick={downloadGzip}
-                  disabled={isCompressing}
-                >
-                  <Download className="h-4 w-4" />
-                  Download gzip
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                <p>Download all files as function.tar.gz</p>
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-9 gap-1.5 text-[13px]"
-                  onClick={copyGzipBase64}
-                  disabled={isCompressing}
-                >
-                  <Copy className="h-4 w-4" />
-                  Copy gzip (base64)
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                <p>Copy gzip as base64 for API deployment</p>
-              </TooltipContent>
-            </Tooltip>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 gap-1.5 text-[13px]"
+              onClick={compressAndPrepare}
+              disabled={isCompressing}
+            >
+              <Download className="h-4 w-4" />
+              Prepare for deployment
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 gap-1.5 text-[13px]"
+              onClick={downloadGzip}
+              disabled={isCompressing}
+            >
+              <Download className="h-4 w-4" />
+              Download gzip
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 gap-1.5 text-[13px]"
+              onClick={copyGzipBase64}
+              disabled={isCompressing}
+            >
+              <Copy className="h-4 w-4" />
+              Copy gzip (base64)
+            </Button>
           </TooltipProvider>
           <TooltipProvider delayDuration={0}>
             <Tooltip>
@@ -1015,26 +992,17 @@ export function View() {
             </Tooltip>
           </TooltipProvider>
           <DropdownMenu>
-            <TooltipProvider delayDuration={0}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-9 gap-1.5 text-[13px]"
-                    >
-                      <FileCode className="h-4 w-4" />
-                      Templates
-                      <ChevronDownIcon className="h-3.5 w-3.5 opacity-70" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  <p>Load a pre-defined template</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 gap-1.5 text-[13px]"
+              >
+                <FileCode className="h-4 w-4" />
+                Templates
+                <ChevronDownIcon className="h-3.5 w-3.5 opacity-70" />
+              </Button>
+            </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-[180px]">
               {EDITOR_TEMPLATES.map((template) => (
                 <DropdownMenuItem

@@ -1038,29 +1038,39 @@ function ChangeOrganizationSection({
           </Select>
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/30">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="inline-block">
-                  <Button
-                    size="sm"
-                    className="h-9 text-[13px]"
-                    disabled={isMoveDisabled}
-                    onClick={() => setTransferDialogOpen(true)}
-                  >
-                    Transfer project
-                  </Button>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>
-                {hasNoTargetOrgs
-                  ? 'You do not have any organizations you can transfer this project to.'
-                  : !selectedOrgId || selectedOrgId === project.teamId
-                    ? 'Select a different organization to transfer to.'
-                    : 'Transfer this project to the selected organization'}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          {isMoveDisabled ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-block">
+                    <Button
+                      size="sm"
+                      className="h-9 text-[13px]"
+                      disabled
+                      onClick={() => setTransferDialogOpen(true)}
+                    >
+                      Transfer project
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {hasNoTargetOrgs
+                    ? 'You do not have any organizations you can transfer this project to.'
+                    : !selectedOrgId || selectedOrgId === project.teamId
+                      ? 'Select a different organization to transfer to.'
+                      : 'Transfer this project to the selected organization'}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            <Button
+              size="sm"
+              className="h-9 text-[13px]"
+              onClick={() => setTransferDialogOpen(true)}
+            >
+              Transfer project
+            </Button>
+          )}
         </div>
       </div>
 

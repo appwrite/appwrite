@@ -18,6 +18,7 @@ import {
   buildFilterTagFromCompactKey,
   getOperatorsForType,
   usersFilterColumns,
+  teamsFilterColumns,
 } from '@/lib/table-filters'
 import type { CompactFilterKey } from '@/lib/table-filters'
 import { cn } from '@/lib/utils'
@@ -124,6 +125,10 @@ export function View({
     page?: number
     limit?: number
     query?: string
+    teamsSearch?: string
+    teamsQuery?: string
+    teamsPage?: number
+    teamsLimit?: number
   }
   const { isDebugModeOpen } = useDebugMode()
 
@@ -150,6 +155,21 @@ export function View({
       filterMap: queryParamToMap(getQueryParam(url)),
     }
   }, [isAuthUsersIndex, usersListSearch, location.pathname, location.search, projectId])
+
+  const isAuthTeamsList =
+    location.pathname.includes('/auth/teams') &&
+    !location.pathname.match(/\/auth\/teams\/[^/]+/)
+
+  // URL-backed list params for teams tab (from search when on auth/teams).
+  const teamsListParams = useMemo(() => {
+    if (!isAuthTeamsList || typeof search !== 'object') return null
+    return {
+      search: search.teamsSearch ?? undefined,
+      page: search.teamsPage ?? 1,
+      limit: search.teamsLimit ?? 25,
+      filterMap: queryParamToMap(search.teamsQuery ?? null),
+    }
+  }, [isAuthTeamsList, search?.teamsSearch, search?.teamsQuery, search?.teamsPage, search?.teamsLimit])
 
   // Check if we're on a user detail route - if so, don't render this component
   const isUserDetailRoute = useMemo(() => {
@@ -208,10 +228,18 @@ export function View({
   const usersFilterQueries =
     usersFilterMap.size > 0 ? Array.from(usersFilterMap.values()) : undefined
 
+  const teamsUrlPage = teamsListParams?.page ?? 1
+  const teamsUrlLimit = teamsListParams?.limit ?? 25
+  const teamsUrlSearch = teamsListParams?.search
+  const teamsFilterMap = teamsListParams?.filterMap ?? new Map()
+  const teamsFilterQueries =
+    teamsFilterMap.size > 0 ? Array.from(teamsFilterMap.values()) : undefined
+
   const [usersSearchInput, setUsersSearchInput] = useState('')
   const usersSearchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const [teamsSearchValue, setTeamsSearchValue] = useState('')
+  const [teamsSearchInput, setTeamsSearchInput] = useState('')
+  const teamsSearchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [usersViewMode, setUsersViewMode] = useState<'list' | 'grid'>('list')
   const [teamsViewMode, setTeamsViewMode] = useState<'list' | 'grid'>('grid')
   const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false)
@@ -310,7 +338,20 @@ export function View({
 
   const usersFilterEntries = Array.from(usersFilterMap.entries())
 
+  const [teamsFiltersOpen, setTeamsFiltersOpen] = useState(false)
+  const [teamsFilterColumnId, setTeamsFilterColumnId] = useState<string>('')
+  const [teamsFilterOperatorKey, setTeamsFilterOperatorKey] = useState<string>('')
+  const [teamsFilterValue, setTeamsFilterValue] = useState<string>('')
+  const [teamsFilterValueEnd, setTeamsFilterValueEnd] = useState<string>('')
+
+  const teamsFilterEntries = Array.from(teamsFilterMap.entries())
+
   const queryClient = useQueryClient()
+
+  // Sync teams search input from URL (e.g. back button)
+  useEffect(() => {
+    setTeamsSearchInput(teamsUrlSearch ?? '')
+  }, [teamsUrlSearch])
 
   // Clear selection when navigating between pages/routes or when search/filters change
   useEffect(() => {
@@ -318,12 +359,10 @@ export function View({
     setDeleteDialogOpen(false)
     setSelectedTeams(new Set())
     setDeleteTeamDialogOpen(false)
-  }, [location.pathname, projectId, urlSearch, teamsSearchValue, usersFilterMap.size])
+  }, [location.pathname, projectId, urlSearch, teamsUrlSearch, usersFilterMap.size, teamsFilterMap.size])
 
-  // Pagination state for teams
-  const [teamsRequestedPage, setTeamsRequestedPage] = useState(1)
+  // Displayed page for teams (stays until new page data is ready)
   const [teamsDisplayedPage, setTeamsDisplayedPage] = useState(1)
-  const [teamsPageSize, setTeamsPageSize] = useState(25)
 
   // Fetch users for the requested page (URL page - triggers load when user changes page)
   const {
@@ -364,16 +403,17 @@ export function View({
 
   const showUsersLoading = usersDisplayedLoading && apiUsers.length === 0
 
-  // Fetch teams for the requested page (triggers load when user changes page)
+  // Fetch teams for the requested page (URL page - triggers load when URL changes)
   const {
     total: teamsTotal,
     isLoading: teamsLoading,
     isFetching: teamsFetching,
   } = useProjectTeams(
     projectId,
-    teamsRequestedPage - 1,
-    teamsPageSize,
-    teamsSearchValue,
+    teamsUrlPage - 1,
+    teamsUrlLimit,
+    teamsUrlSearch ?? undefined,
+    teamsFilterQueries,
   )
 
   // Fetch teams for the displayed page (what we show - stays until new page is ready)
@@ -384,20 +424,27 @@ export function View({
   } = useProjectTeams(
     projectId,
     teamsDisplayedPage - 1,
-    teamsPageSize,
-    teamsSearchValue,
+    teamsUrlLimit,
+    teamsUrlSearch ?? undefined,
+    teamsFilterQueries,
   )
+
+  // Sync displayed page from URL when on teams tab
+  useEffect(() => {
+    if (!isAuthTeamsList) return
+    setTeamsDisplayedPage((prev) => (prev === teamsUrlPage ? prev : teamsUrlPage))
+  }, [isAuthTeamsList, teamsUrlPage])
 
   // Update displayed teams page only when requested page data is ready (no flash)
   useEffect(() => {
     if (
       !teamsFetching &&
-      teamsRequestedPage !== teamsDisplayedPage &&
+      teamsUrlPage !== teamsDisplayedPage &&
       !teamsLoading
     ) {
-      setTeamsDisplayedPage(teamsRequestedPage)
+      setTeamsDisplayedPage(teamsUrlPage)
     }
-  }, [teamsFetching, teamsLoading, teamsRequestedPage, teamsDisplayedPage])
+  }, [teamsFetching, teamsLoading, teamsUrlPage, teamsDisplayedPage])
 
   const showTeamsLoading = teamsDisplayedLoading && apiTeams.length === 0
 
@@ -540,6 +587,99 @@ export function View({
       replace: true,
     })
     setUsersFiltersOpen(false)
+  }
+
+  const applyTeamsFilter = () => {
+    const col = teamsFilterColumns.find((c) => c.id === teamsFilterColumnId)
+    if (!col || !teamsFilterOperatorKey) return
+    const op = getOperatorsForType(col.type).find((o) => o.key === teamsFilterOperatorKey)
+    if (!op) return
+    const isBetweenOp =
+      teamsFilterOperatorKey === 'between' || teamsFilterOperatorKey === 'notBetween'
+    let val: string | number | boolean | undefined = op.noValue
+      ? undefined
+      : isBetweenOp
+        ? `${teamsFilterValue.trim()},${teamsFilterValueEnd.trim()}`
+        : teamsFilterValue.trim() || undefined
+    if (val !== undefined && val !== '' && !isBetweenOp) {
+      if (col.type === 'integer') {
+        const n = Number(val)
+        val = Number.isNaN(n) ? String(val) : n
+      } else if (col.type === 'double') {
+        const n = Number(val)
+        val = Number.isNaN(n) ? String(val) : n
+      }
+    }
+    const queryString = buildFilterQueryString(
+      teamsFilterOperatorKey,
+      teamsFilterColumnId,
+      val,
+    )
+    const compactKey: CompactFilterKey = {
+      c: teamsFilterColumnId,
+      o: teamsFilterOperatorKey,
+      ...(val !== undefined && val !== '' ? { v: val } : {}),
+    }
+    const newMap = new Map(teamsFilterMap)
+    newMap.set(compactKey, queryString)
+    const queryEncoded = mapToQueryParam(newMap)
+    navigate({
+      to: '/projects/$projectId/auth/teams',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => {
+        const next = { ...prev } as Record<string, unknown>
+        next.teamsSearch = teamsUrlSearch ?? undefined
+        next.teamsQuery = queryEncoded
+        next.teamsPage = 1
+        next.teamsLimit = teamsUrlLimit
+        if (!next.teamsSearch) delete next.teamsSearch
+        delete next.teamsPage
+        return next
+      },
+      replace: true,
+    })
+    setTeamsFilterValue('')
+    setTeamsFilterValueEnd('')
+    setTeamsFiltersOpen(false)
+  }
+
+  const removeTeamsFilter = (key: CompactFilterKey) => {
+    const newMap = new Map(teamsFilterMap)
+    newMap.delete(key)
+    navigate({
+      to: '/projects/$projectId/auth/teams',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => {
+        const next = { ...prev } as Record<string, unknown>
+        next.teamsSearch = teamsUrlSearch ?? undefined
+        next.teamsQuery = newMap.size > 0 ? mapToQueryParam(newMap) : undefined
+        next.teamsPage = 1
+        next.teamsLimit = teamsUrlLimit
+        if (!next.teamsSearch) delete next.teamsSearch
+        if (newMap.size === 0) delete next.teamsQuery
+        delete next.teamsPage
+        return next
+      },
+      replace: true,
+    })
+  }
+
+  const clearAllTeamsFilters = () => {
+    navigate({
+      to: '/projects/$projectId/auth/teams',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => {
+        const next = { ...prev } as Record<string, unknown>
+        next.teamsSearch = teamsUrlSearch ?? undefined
+        next.teamsLimit = teamsUrlLimit
+        if (!next.teamsSearch) delete next.teamsSearch
+        delete next.teamsQuery
+        delete next.teamsPage
+        return next
+      },
+      replace: true,
+    })
+    setTeamsFiltersOpen(false)
   }
 
   // Bulk delete mutation
@@ -686,11 +826,48 @@ export function View({
   }
 
   const handleTeamsSearchChange = (value: string) => {
-    setTeamsSearchValue(value)
-    setTeamsRequestedPage(1)
-    setTeamsDisplayedPage(1)
-    setSelectedTeams(new Set()) // Clear selection on search change
+    setTeamsSearchInput(value)
+    setSelectedTeams(new Set())
   }
+
+  const teamsFilterQueryString =
+    teamsFilterMap.size > 0 ? mapToQueryParam(teamsFilterMap) : ''
+
+  // Debounced navigate when teams search input changes
+  useEffect(() => {
+    if (activeTab !== 'teams') return
+    if (teamsSearchDebounceRef.current) clearTimeout(teamsSearchDebounceRef.current)
+    teamsSearchDebounceRef.current = setTimeout(() => {
+      const trimmed = teamsSearchInput.trim()
+      if (trimmed === (teamsUrlSearch ?? '')) return
+      navigate({
+        to: '/projects/$projectId/auth/teams',
+        params: { projectId: projectId! },
+        search: (prev: Record<string, unknown>) => {
+          const next = { ...prev } as Record<string, unknown>
+          next.teamsSearch = trimmed || undefined
+          next.teamsQuery = teamsFilterQueryString || undefined
+          next.teamsPage = 1
+          next.teamsLimit = teamsUrlLimit
+          if (!trimmed) delete next.teamsSearch
+          if (next.teamsPage === 1) delete next.teamsPage
+          return next
+        },
+        replace: true,
+      })
+    }, 300)
+    return () => {
+      if (teamsSearchDebounceRef.current) clearTimeout(teamsSearchDebounceRef.current)
+    }
+  }, [
+    activeTab,
+    teamsSearchInput,
+    projectId,
+    navigate,
+    teamsUrlSearch,
+    teamsUrlLimit,
+    teamsFilterQueryString,
+  ])
 
   // Bulk delete mutation for teams
   const bulkDeleteTeamsMutation = useMutation({
@@ -748,15 +925,41 @@ export function View({
   }
 
   const handleTeamsPageChange = (page: number) => {
-    setTeamsRequestedPage(page)
-    setSelectedTeams(new Set()) // Clear selection on page change
+    setSelectedTeams(new Set())
+    navigate({
+      to: '/projects/$projectId/auth/teams',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => {
+        const next = { ...prev } as Record<string, unknown>
+        next.teamsSearch = teamsUrlSearch ?? undefined
+        next.teamsQuery = teamsFilterQueryString || undefined
+        next.teamsPage = page
+        next.teamsLimit = teamsUrlLimit
+        if (!next.teamsSearch) delete next.teamsSearch
+        if (page === 1) delete next.teamsPage
+        if (next.teamsLimit === 25) delete next.teamsLimit
+        return next
+      },
+      replace: true,
+    })
   }
 
   const handleTeamsPageSizeChange = (newPageSize: number) => {
-    setTeamsPageSize(newPageSize)
-    setTeamsRequestedPage(1)
-    setTeamsDisplayedPage(1)
-    setSelectedTeams(new Set()) // Clear selection on page size change
+    setSelectedTeams(new Set())
+    navigate({
+      to: '/projects/$projectId/auth/teams',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => {
+        const next = { ...prev } as Record<string, unknown>
+        next.teamsSearch = teamsUrlSearch ?? undefined
+        next.teamsQuery = teamsFilterQueryString || undefined
+        delete next.teamsPage
+        next.teamsLimit = newPageSize
+        if (!next.teamsSearch) delete next.teamsSearch
+        return next
+      },
+      replace: true,
+    })
   }
 
   // Update tabs with dynamic user and team counts and route paths
@@ -970,7 +1173,7 @@ export function View({
           activeTab === 'users'
             ? usersSearchInput
             : activeTab === 'teams'
-              ? teamsSearchValue
+              ? teamsSearchInput
               : undefined
         }
         onSearchChange={
@@ -984,7 +1187,7 @@ export function View({
         onCreate={activeTab === 'templates' ? undefined : handleCreateClick}
         createDisabled={noCreatePermission}
         createDisabledTooltip={createPermissionTooltip}
-        showFilters={activeTab === 'users'}
+        showFilters={activeTab === 'users' || activeTab === 'teams'}
         filterTrigger={
           activeTab === 'users' ? (
             <Popover open={usersFiltersOpen} onOpenChange={setUsersFiltersOpen}>
@@ -1005,8 +1208,9 @@ export function View({
               </PopoverTrigger>
 
               <PopoverContent
-                className="w-72 p-0"
+                className="z-[200] w-72 p-0"
                 align="start"
+                side="bottom"
                 sideOffset={6}
               >
                 {/* Current filters list + Clear all (above Add condition) */}
@@ -1089,73 +1293,75 @@ export function View({
                     className="contents"
                   >
                   <div className="border-t border-border px-4 py-3 space-y-3">
-                    <div>
-                      <label className="text-[12px] text-muted-foreground mb-1.5 block">
-                        Column
-                      </label>
-                      <Select
-                        value={filterColumnId}
-                        onValueChange={(v) => {
-                          setFilterColumnId(v)
-                          setFilterValue('')
-                          setFilterValueEnd('')
-                          const col = usersFilterColumns.find((c) => c.id === v)
-                          const firstOp = col
-                            ? getOperatorsForType(col.type)[0]
-                            : null
-                          setFilterOperatorKey(firstOp?.key ?? '')
-                        }}
-                      >
-                        <SelectTrigger className="h-9 text-[13px]">
-                          <SelectValue placeholder="Select column" />
-                        </SelectTrigger>
-                        <SelectContent className="z-[200]">
-                          {usersFilterColumns.map((col) => (
-                            <SelectItem
-                              key={col.id}
-                              value={col.id}
-                              className="text-[13px]"
-                            >
-                              {col.title}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <label className="text-[12px] text-muted-foreground mb-1.5 block">
-                        Operator
-                      </label>
-                      <Select
-                        value={filterOperatorKey}
-                        onValueChange={(v) => {
-                          setFilterOperatorKey(v)
-                          setFilterValueEnd('')
-                        }}
-                        disabled={!filterColumnId}
-                      >
-                        <SelectTrigger className="h-9 text-[13px]">
-                          <SelectValue placeholder="Operator" />
-                        </SelectTrigger>
-                        <SelectContent className="z-[200]">
-                          {(filterColumnId
-                            ? getOperatorsForType(
-                                usersFilterColumns.find(
-                                  (c) => c.id === filterColumnId,
-                                )!.type,
-                              )
-                            : []
-                          ).map((op) => (
-                            <SelectItem
-                              key={op.key}
-                              value={op.key}
-                              className="text-[13px]"
-                            >
-                              {op.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[12px] text-muted-foreground mb-1.5 block">
+                          Column
+                        </label>
+                        <Select
+                          value={filterColumnId}
+                          onValueChange={(v) => {
+                            setFilterColumnId(v)
+                            setFilterValue('')
+                            setFilterValueEnd('')
+                            const col = usersFilterColumns.find((c) => c.id === v)
+                            const firstOp = col
+                              ? getOperatorsForType(col.type)[0]
+                              : null
+                            setFilterOperatorKey(firstOp?.key ?? '')
+                          }}
+                        >
+                          <SelectTrigger className="h-9 w-full text-[13px]">
+                            <SelectValue placeholder="Column" />
+                          </SelectTrigger>
+                          <SelectContent className="z-[200]">
+                            {usersFilterColumns.map((col) => (
+                              <SelectItem
+                                key={col.id}
+                                value={col.id}
+                                className="text-[13px]"
+                              >
+                                {col.title}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-[12px] text-muted-foreground mb-1.5 block">
+                          Operator
+                        </label>
+                        <Select
+                          value={filterOperatorKey}
+                          onValueChange={(v) => {
+                            setFilterOperatorKey(v)
+                            setFilterValueEnd('')
+                          }}
+                          disabled={!filterColumnId}
+                        >
+                          <SelectTrigger className="h-9 w-full text-[13px]">
+                            <SelectValue placeholder="Operator" />
+                          </SelectTrigger>
+                          <SelectContent className="z-[200]">
+                            {(filterColumnId
+                              ? getOperatorsForType(
+                                  usersFilterColumns.find(
+                                    (c) => c.id === filterColumnId,
+                                  )!.type,
+                                )
+                              : []
+                            ).map((op) => (
+                              <SelectItem
+                                key={op.key}
+                                value={op.key}
+                                className="text-[13px]"
+                              >
+                                {op.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                     {filterColumnId &&
                       (() => {
@@ -1172,7 +1378,7 @@ export function View({
                             Value
                           </label>
                         )
-                        const inputClass = 'h-9 text-[13px]'
+                        const inputClass = 'h-9 w-full text-[13px]'
                         const toDatetimeLocal = (iso: string) => {
                           if (!iso?.trim()) return ''
                           const d = new Date(iso)
@@ -1395,6 +1601,336 @@ export function View({
                   </form>
                 </PopoverContent>
               </Popover>
+          ) : activeTab === 'teams' ? (
+            <Popover open={teamsFiltersOpen} onOpenChange={setTeamsFiltersOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 shrink-0 gap-2 border-border bg-transparent text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground"
+                >
+                  <Filter className="h-3.5 w-3.5" />
+                  Filters
+                  {teamsFilterMap.size > 0 && (
+                    <span className="ml-1 flex size-5 items-center justify-center rounded-full bg-primary/20 text-[11px] font-medium text-primary">
+                      {teamsFilterMap.size}
+                    </span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="z-[200] w-72 p-0"
+                align="start"
+                side="bottom"
+                sideOffset={6}
+              >
+                {teamsFilterMap.size > 0 && (
+                  <>
+                    <div className="border-b border-border px-3 py-1.5">
+                      <p className="text-[11px] font-medium text-foreground">
+                        Active filters
+                      </p>
+                    </div>
+                    <div className="max-h-40 overflow-y-auto space-y-1 p-2">
+                      {teamsFilterEntries.map(([key, _queryStr]) => {
+                        const tag = buildFilterTagFromCompactKey(
+                          key,
+                          teamsFilterColumns,
+                        )
+                        const tagLabel = tag.tag.replace(/\*\*(.*?)\*\*/g, '$1')
+                        return (
+                          <div
+                            key={`${key.c}-${key.o}-${JSON.stringify(key.v ?? '')}`}
+                            className="flex select-none items-center justify-between gap-2 rounded-md bg-muted/50 px-1.5 py-1"
+                          >
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="truncate text-[11px] text-foreground">
+                                  {tagLabel}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="text-xs">{tagLabel}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            <button
+                              type="button"
+                              onClick={() => removeTeamsFilter(key)}
+                              className="shrink-0 cursor-pointer rounded p-0.5 hover:bg-muted"
+                              aria-label="Remove filter"
+                            >
+                              <X className="h-2.5 w-2.5" />
+                            </button>
+                          </div>
+                        )
+                      })}
+                    </div>
+                    <div className="border-t border-border p-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-full text-[12px]"
+                        onClick={() => {
+                          clearAllTeamsFilters()
+                          setTeamsFiltersOpen(false)
+                        }}
+                      >
+                        Clear all
+                      </Button>
+                    </div>
+                  </>
+                )}
+                <div
+                  className={
+                    teamsFilterMap.size > 0
+                      ? 'border-t border-border px-4 pt-4 pb-2'
+                      : 'px-4 pt-4 pb-2'
+                  }
+                >
+                  <h3 className="text-[13px] font-semibold text-foreground">
+                    Add condition
+                  </h3>
+                  <p className="text-[12px] text-muted-foreground mt-1">
+                    Filter teams by column, operator and value.
+                  </p>
+                </div>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    applyTeamsFilter()
+                  }}
+                  className="contents"
+                >
+                  <div className="border-t border-border px-4 py-3 space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[12px] text-muted-foreground mb-1.5 block">
+                          Column
+                        </label>
+                        <Select
+                          value={teamsFilterColumnId}
+                          onValueChange={(v) => {
+                            setTeamsFilterColumnId(v)
+                            setTeamsFilterValue('')
+                            setTeamsFilterValueEnd('')
+                            const col = teamsFilterColumns.find((c) => c.id === v)
+                            const firstOp = col
+                              ? getOperatorsForType(col.type)[0]
+                              : null
+                            setTeamsFilterOperatorKey(firstOp?.key ?? '')
+                          }}
+                        >
+                          <SelectTrigger className="h-9 w-full text-[13px]">
+                            <SelectValue placeholder="Column" />
+                          </SelectTrigger>
+                          <SelectContent className="z-[200]">
+                            {teamsFilterColumns.map((col) => (
+                              <SelectItem
+                                key={col.id}
+                                value={col.id}
+                                className="text-[13px]"
+                              >
+                                {col.title}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-[12px] text-muted-foreground mb-1.5 block">
+                          Operator
+                        </label>
+                        <Select
+                          value={teamsFilterOperatorKey}
+                          onValueChange={(v) => {
+                            setTeamsFilterOperatorKey(v)
+                            setTeamsFilterValueEnd('')
+                          }}
+                          disabled={!teamsFilterColumnId}
+                        >
+                          <SelectTrigger className="h-9 w-full text-[13px]">
+                            <SelectValue placeholder="Operator" />
+                          </SelectTrigger>
+                          <SelectContent className="z-[200]">
+                            {(teamsFilterColumnId
+                              ? getOperatorsForType(
+                                  teamsFilterColumns.find(
+                                    (c) => c.id === teamsFilterColumnId,
+                                  )!.type,
+                                )
+                              : []
+                            ).map((op) => (
+                              <SelectItem
+                                key={op.key}
+                                value={op.key}
+                                className="text-[13px]"
+                              >
+                                {op.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    {teamsFilterColumnId &&
+                      (() => {
+                        const col = teamsFilterColumns.find(
+                          (c) => c.id === teamsFilterColumnId,
+                        )
+                        if (!col) return null
+                        const op = getOperatorsForType(col.type).find(
+                          (o) => o.key === teamsFilterOperatorKey,
+                        )
+                        if (op?.noValue) return null
+                        const label = (
+                          <label className="text-[12px] text-muted-foreground mb-1.5 block">
+                            Value
+                          </label>
+                        )
+                        const inputClass = 'h-9 w-full text-[13px]'
+                        const toDatetimeLocal = (iso: string) => {
+                          if (!iso?.trim()) return ''
+                          const d = new Date(iso)
+                          if (Number.isNaN(d.getTime())) return ''
+                          const pad = (n: number) => String(n).padStart(2, '0')
+                          return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+                        }
+                        const isBetweenOp =
+                          teamsFilterOperatorKey === 'between' ||
+                          teamsFilterOperatorKey === 'notBetween'
+                        if (isBetweenOp) {
+                          const subLabel = 'text-[11px] text-muted-foreground mb-1 block'
+                          if (col.type === 'datetime') {
+                            return (
+                              <div key="value-between-datetime" className="space-y-3">
+                                <div>
+                                  <span className={subLabel}>Start</span>
+                                  <Input
+                                    type="datetime-local"
+                                    className={inputClass}
+                                    value={toDatetimeLocal(teamsFilterValue)}
+                                    onChange={(e) => {
+                                      const v = e.target.value
+                                      setTeamsFilterValue(v ? new Date(v).toISOString() : '')
+                                    }}
+                                  />
+                                </div>
+                                <div>
+                                  <span className={subLabel}>End</span>
+                                  <Input
+                                    type="datetime-local"
+                                    className={inputClass}
+                                    value={toDatetimeLocal(teamsFilterValueEnd)}
+                                    onChange={(e) => {
+                                      const v = e.target.value
+                                      setTeamsFilterValueEnd(v ? new Date(v).toISOString() : '')
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            )
+                          }
+                          if (col.type === 'integer' || col.type === 'double') {
+                            return (
+                              <div key="value-between-number" className="space-y-3">
+                                <div>
+                                  <span className={subLabel}>Start</span>
+                                  <Input
+                                    type="number"
+                                    step={col.type === 'integer' ? 1 : 'any'}
+                                    className={inputClass}
+                                    value={teamsFilterValue}
+                                    onChange={(e) => setTeamsFilterValue(e.target.value)}
+                                    placeholder="Min"
+                                  />
+                                </div>
+                                <div>
+                                  <span className={subLabel}>End</span>
+                                  <Input
+                                    type="number"
+                                    step={col.type === 'integer' ? 1 : 'any'}
+                                    className={inputClass}
+                                    value={teamsFilterValueEnd}
+                                    onChange={(e) => setTeamsFilterValueEnd(e.target.value)}
+                                    placeholder="Max"
+                                  />
+                                </div>
+                              </div>
+                            )
+                          }
+                          return null
+                        }
+                        if (col.type === 'datetime') {
+                          return (
+                            <div key="value-datetime">
+                              {label}
+                              <Input
+                                type="datetime-local"
+                                className={inputClass}
+                                value={toDatetimeLocal(teamsFilterValue)}
+                                onChange={(e) => {
+                                  const v = e.target.value
+                                  setTeamsFilterValue(v ? new Date(v).toISOString() : '')
+                                }}
+                              />
+                            </div>
+                          )
+                        }
+                        const searchOrNotSearch =
+                          teamsFilterOperatorKey === 'search' ||
+                          teamsFilterOperatorKey === 'notSearch'
+                        const placeholder = searchOrNotSearch
+                          ? 'Min. 3 characters'
+                          : teamsFilterOperatorKey === 'regex'
+                            ? 'e.g. ^foo.*bar$'
+                            : 'Value'
+                        return (
+                          <div key="value-text">
+                            {label}
+                            <Input
+                              className={inputClass}
+                              value={teamsFilterValue}
+                              onChange={(e) => setTeamsFilterValue(e.target.value)}
+                              placeholder={placeholder}
+                            />
+                          </div>
+                        )
+                      })()}
+                  </div>
+                  <div className="border-t border-border px-4 py-3 flex flex-wrap items-center gap-2 bg-muted/30">
+                    <Button
+                      type="submit"
+                      size="sm"
+                      className="h-9 text-[13px]"
+                      disabled={
+                        !teamsFilterColumnId ||
+                        !teamsFilterOperatorKey ||
+                        (() => {
+                          const col = teamsFilterColumns.find(
+                            (c) => c.id === teamsFilterColumnId,
+                          )
+                          if (!col) return true
+                          const op = getOperatorsForType(col.type).find(
+                            (o) => o.key === teamsFilterOperatorKey,
+                          )
+                          if (!op) return true
+                          if (op.noValue) return false
+                          if (
+                            teamsFilterOperatorKey === 'between' ||
+                            teamsFilterOperatorKey === 'notBetween'
+                          ) {
+                            return !teamsFilterValue.trim() || !teamsFilterValueEnd.trim()
+                          }
+                          return !teamsFilterValue.trim()
+                        })()
+                      }
+                    >
+                      Add condition
+                    </Button>
+                  </div>
+                </form>
+              </PopoverContent>
+            </Popover>
           ) : undefined
         }
         fullWidthBorder
@@ -2029,7 +2565,7 @@ export function View({
                   <Pagination
                     currentPage={teamsDisplayedPage}
                     totalItems={displayedTeamsTotal ?? teamsTotal}
-                    pageSize={teamsPageSize}
+                    pageSize={teamsUrlLimit}
                     pageSizeOptions={[10, 25, 50, 100]}
                     onPageChange={handleTeamsPageChange}
                     onPageSizeChange={handleTeamsPageSizeChange}
@@ -2039,14 +2575,14 @@ export function View({
               ) : (
                 <EmptyState
                   icon={Users}
-                  title={teamsSearchValue ? undefined : 'No teams yet'}
+                  title={teamsUrlSearch || teamsFilterMap.size > 0 ? undefined : 'No teams yet'}
                   description={
-                    teamsSearchValue
+                    teamsUrlSearch || teamsFilterMap.size > 0
                       ? undefined
                       : 'Create your first team to organize users into groups'
                   }
-                  isEmpty={!teamsSearchValue}
-                  hasFilters={!!teamsSearchValue}
+                  isEmpty={!teamsUrlSearch && teamsFilterMap.size === 0}
+                  hasFilters={!!teamsUrlSearch || teamsFilterMap.size > 0}
                   variant="card"
                 />
               )
@@ -2082,14 +2618,14 @@ export function View({
                     <div className="col-span-full">
                       <EmptyState
                         icon={Users}
-                        title={teamsSearchValue ? undefined : 'No teams yet'}
+                        title={teamsUrlSearch || teamsFilterMap.size > 0 ? undefined : 'No teams yet'}
                         description={
-                          teamsSearchValue
+                          teamsUrlSearch || teamsFilterMap.size > 0
                             ? undefined
                             : 'Create your first team to organize users into groups'
                         }
-                        isEmpty={!teamsSearchValue}
-                        hasFilters={!!teamsSearchValue}
+                        isEmpty={!teamsUrlSearch && teamsFilterMap.size === 0}
+                        hasFilters={!!teamsUrlSearch || teamsFilterMap.size > 0}
                         variant="card"
                       />
                     </div>
@@ -2099,7 +2635,7 @@ export function View({
                   <Pagination
                     currentPage={teamsDisplayedPage}
                     totalItems={displayedTeamsTotal ?? teamsTotal}
-                    pageSize={teamsPageSize}
+                    pageSize={teamsUrlLimit}
                     pageSizeOptions={[10, 25, 50, 100]}
                     onPageChange={handleTeamsPageChange}
                     onPageSizeChange={handleTeamsPageSizeChange}

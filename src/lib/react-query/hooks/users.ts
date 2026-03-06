@@ -72,6 +72,7 @@ export async function fetchProjectUsers(
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
  * @param search - Optional search query
+ * @param filterQueries - Optional list of Appwrite Query condition strings (from table filters)
  * @returns Paginated teams with total count
  */
 export async function fetchProjectTeams(
@@ -79,6 +80,7 @@ export async function fetchProjectTeams(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   if (!projectId) {
     return { teams: [], total: 0 }
@@ -86,6 +88,7 @@ export async function fetchProjectTeams(
 
   const projectSdk = sdk.forProject(projectId)
   const queries = [
+    ...(filterQueries ?? []),
     Query.orderDesc('$createdAt'),
     Query.limit(limit),
     Query.offset(page * limit),
@@ -251,10 +254,12 @@ export function teamsQueryOptions(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   return queryOptions({
-    queryKey: ['teams', 'project', projectId, page, limit, search],
-    queryFn: () => fetchProjectTeams(projectId!, page, limit, search),
+    queryKey: ['teams', 'project', projectId, page, limit, search, filterQueries],
+    queryFn: () =>
+      fetchProjectTeams(projectId!, page, limit, search, filterQueries),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -378,6 +383,7 @@ export function useCreateProjectUser(projectId: string | null | undefined) {
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
  * @param search - Optional search query
+ * @param filterQueries - Optional list of Appwrite Query condition strings (from table filters)
  * @returns Paginated teams with loading state
  */
 export function useProjectTeams(
@@ -385,6 +391,7 @@ export function useProjectTeams(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   const {
     data: teamsData,
@@ -392,15 +399,7 @@ export function useProjectTeams(
     isFetching,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ['teams', 'project', projectId, page, limit, search],
-    queryFn: () => fetchProjectTeams(projectId!, page, limit, search),
-    enabled: !!projectId,
-    staleTime: DEFAULT_STALE_TIME,
-    retry: false, // Don't retry on error
-    // Don't keep disabled queries in cache
-    gcTime: projectId ? 5 * 60 * 1000 : 0,
-  })
+  } = useQuery(teamsQueryOptions(projectId, page, limit, search, filterQueries))
 
   // Map teams to our extended team type with additional metadata
   const teams = useMemo(() => {

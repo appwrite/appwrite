@@ -40,3 +40,4 @@ export { listSearchSchema } from './search-schema'
 export type { ListSearch } from './search-schema'
 
 export { usersFilterColumns } from './filter-configs/users'
+export { teamsFilterColumns } from './filter-configs/teams'

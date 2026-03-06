@@ -1,0 +1,12 @@
+/**
+ * Predefined filter columns for project teams list (Auth).
+ * Use when building the Filters UI for teams; same contract as schema-driven lists.
+ */
+
+import type { FilterColumn } from '../types'
+
+export const teamsFilterColumns: FilterColumn[] = [
+  { id: 'name', title: 'Name', type: 'string' },
+  { id: '$createdAt', title: 'Created', type: 'datetime' },
+  { id: '$updatedAt', title: 'Updated', type: 'datetime' },
+]

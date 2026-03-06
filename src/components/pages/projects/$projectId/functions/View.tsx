@@ -268,29 +268,20 @@ export function View() {
           fullWidthBorder
           beforeCreateButtons={
             activeTab === 'functions' ? (
-              <TooltipProvider delayDuration={0}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-9 gap-1.5 text-[13px]"
-                      asChild
-                    >
-                      <Link
-                        to="/projects/$projectId/functions/editor"
-                        params={{ projectId: projectId as string }}
-                      >
-                        <FileCode className="h-4 w-4" />
-                        Local editor
-                      </Link>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    <p>Edit code locally and prepare gzip for deployment</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 gap-1.5 text-[13px]"
+                asChild
+              >
+                <Link
+                  to="/projects/$projectId/functions/editor"
+                  params={{ projectId: projectId as string }}
+                >
+                  <FileCode className="h-4 w-4" />
+                  Local editor
+                </Link>
+              </Button>
             ) : undefined
           }
         />

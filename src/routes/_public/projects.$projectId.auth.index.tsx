@@ -17,6 +17,11 @@ const DEFAULT_PAGE = 1
 
 const authSearchSchema = listSearchSchema.extend({
   create: z.string().optional().catch(undefined),
+  // Teams list params (when on auth/teams tab)
+  teamsSearch: z.string().optional().catch(undefined),
+  teamsQuery: z.string().optional().catch(undefined),
+  teamsPage: z.coerce.number().int().min(1).optional().catch(undefined),
+  teamsLimit: z.coerce.number().int().min(1).max(100).optional().catch(undefined),
 })
 
 export const Route = createFileRoute('/_public/projects/$projectId/auth/')({
