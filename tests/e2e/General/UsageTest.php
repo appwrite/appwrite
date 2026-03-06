@@ -1571,12 +1571,23 @@ class UsageTest extends Scope
                 'type' => 'ping',
             ]));
 
-            $firstMessage = json_decode($clients[1]->receive(), true);
-            // Depending on timing, the first frame we see here can be either
-            // a broadcast "event" (from another operation) or the "pong"
-            // response. Both are valid, and in either case the ping/pong
-            // traffic still exercises the realtime usage metrics paths.
-            $this->assertContains($firstMessage['type'], ['event']);
+            // A broadcast document "event" can still be queued for this connection.
+            // Read until we see the pong response (and fail fast on unexpected frames).
+            $pong = null;
+            for ($i = 0; $i < 5; $i++) {
+                $frame = json_decode($clients[1]->receive(), true);
+                $this->assertIsArray($frame);
+                $this->assertArrayHasKey('type', $frame);
+
+                if ($frame['type'] === 'pong') {
+                    $pong = $frame;
+                    break;
+                }
+
+                $this->assertEquals('event', $frame['type']);
+            }
+
+            $this->assertNotNull($pong, 'Expected to receive a pong frame after ping.');
 
             // We expect:
             // - connections count to remain the same
