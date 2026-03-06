@@ -17,18 +17,15 @@ class Client
     public const METHOD_CONNECT = 'CONNECT';
     public const METHOD_TRACE = 'TRACE';
 
-    
     protected $selfSigned = false;
 
     protected $endpoint = 'https://appwrite.test/v1';
 
-    
     protected $headers = [
         'content-type' => '',
-        'x-sdk-version' => 'appwrite:php:v1.0.7',
+        'x-sdk-version' => 'appwrite:php:v21.5.0',
     ];
 
-    
     public function __construct()
     {
     }
