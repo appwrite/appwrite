@@ -129,7 +129,15 @@ class Executor
             'timeout' => $timeout
         ];
 
-        $this->call($this->endpoint, self::METHOD_GET, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout, $callback);
+        // Wrap callback to match two-arg signature (?string $data, ?array $headers)
+        // getLogs only cares about data chunks, not headers signal
+        $wrappedCallback = function (?string $data, ?array $headers) use ($callback): void {
+            if ($data !== null) {
+                $callback($data);
+            }
+        };
+
+        $this->call($this->endpoint, self::METHOD_GET, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout, $wrappedCallback);
     }
 
     /**
@@ -204,7 +212,8 @@ class Executor
         bool $logging,
         string $runtimeEntrypoint = '',
         ?int $requestTimeout = null,
-        string $responseFormat = self::RESPONSE_FORMAT_OBJECT_HEADERS
+        string $responseFormat = self::RESPONSE_FORMAT_OBJECT_HEADERS,
+        ?callable $streamCallback = null,
     ) {
         $runtimeId = "$projectId-$deploymentId";
         $route = '/runtimes/' . $runtimeId . '/executions';
@@ -240,6 +249,13 @@ class Executor
         // This one shouldn't really happen, but prevents from unexpected networking behaviours.
         if ($requestTimeout == null) {
             $requestTimeout = $timeout + 15;
+        }
+
+        // Streaming path: tell executor to stream and forward chunks via callback
+        if ($streamCallback !== null) {
+            $params['stream'] = 'true';
+            $this->call($this->endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId, 'content-type' => 'multipart/form-data', 'x-executor-response-format' => $responseFormat ], $params, false, $requestTimeout, $streamCallback);
+            return [];
         }
 
         $response = $this->call($this->endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId, 'content-type' => 'multipart/form-data', 'accept' => 'multipart/form-data', 'x-executor-response-format' => $responseFormat ], $params, true, $requestTimeout);
@@ -337,8 +353,14 @@ class Executor
         if (isset($callback)) {
             $headers[] = 'accept: text/event-stream';
 
-            $handleEvent = function ($ch, $data) use ($callback) {
-                $callback($data);
+            $callbackHeadersFired = false;
+            $handleEvent = function ($ch, $data) use ($callback, &$callbackHeadersFired, &$responseHeaders) {
+                if (!$callbackHeadersFired) {
+                    // Fire headers signal once before the first data chunk
+                    $callback(null, $responseHeaders);
+                    $callbackHeadersFired = true;
+                }
+                $callback($data, null);
                 return \strlen($data);
             };
 
