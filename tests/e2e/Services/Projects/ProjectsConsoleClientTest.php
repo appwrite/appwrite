@@ -6423,11 +6423,12 @@ class ProjectsConsoleClientTest extends Scope
 
         $userId = $response['body']['userId'];
 
-        $lastEmail = $this->getLastEmail(1, function ($email) use ($url) {
+        $userEmail = $this->getUser()['email'];
+
+        $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) use ($url) {
             $this->assertStringContainsString($url, $email['html'] ?? '');
         });
 
-        $this->assertEquals($this->getUser()['email'], $lastEmail['to'][0]['address']);
         $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
 
         $expectedUrl = $url . "&userId=" . $userId . "&secret=";
@@ -6446,7 +6447,7 @@ class ProjectsConsoleClientTest extends Scope
             ], $this->getHeaders()),
             [
                 'userId' => ID::unique(),
-                'email' => $this->getUser()['email'],
+                'email' => $userEmail,
                 'url' => $url,
             ]
         );
@@ -6456,11 +6457,10 @@ class ProjectsConsoleClientTest extends Scope
 
         $userId = $response['body']['userId'];
 
-        $lastEmail = $this->getLastEmail(1, function ($email) use ($url) {
+        $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) use ($url) {
             $this->assertStringContainsString($url, $email['html'] ?? '');
         });
 
-        $this->assertEquals($this->getUser()['email'], $lastEmail['to'][0]['address']);
         $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
 
         $expectedUrl = $url . "&userId=" . $userId . "&secret=";
@@ -6479,7 +6479,7 @@ class ProjectsConsoleClientTest extends Scope
             ], $this->getHeaders()),
             [
                 'userId' => ID::unique(),
-                'email' => $this->getUser()['email'],
+                'email' => $userEmail,
                 'url' => $url,
             ]
         );
@@ -6489,11 +6489,10 @@ class ProjectsConsoleClientTest extends Scope
 
         $userId = $response['body']['userId'];
 
-        $lastEmail = $this->getLastEmail(1, function ($email) use ($url, $userId) {
+        $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) use ($url, $userId) {
             $this->assertStringContainsString($url . '?userId=' . $userId, $email['html'] ?? '');
         });
 
-        $this->assertEquals($this->getUser()['email'], $lastEmail['to'][0]['address']);
         $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
 
         $expectedUrl = $url . "?userId=" . $userId . "&secret=";
@@ -6512,7 +6511,7 @@ class ProjectsConsoleClientTest extends Scope
             ], $this->getHeaders()),
             [
                 'userId' => ID::unique(),
-                'email' => $this->getUser()['email'],
+                'email' => $userEmail,
                 'url' => $url,
             ]
         );
@@ -6522,11 +6521,10 @@ class ProjectsConsoleClientTest extends Scope
 
         $userId = $response['body']['userId'];
 
-        $lastEmail = $this->getLastEmail(1, function ($email) use ($url, $userId) {
+        $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) use ($url, $userId) {
             $this->assertStringContainsString($url . '?userId=' . $userId, $email['html'] ?? '');
         });
 
-        $this->assertEquals($this->getUser()['email'], $lastEmail['to'][0]['address']);
         $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
 
         $expectedUrl = $url . "?userId=" . $userId . "&secret=";
@@ -6545,7 +6543,7 @@ class ProjectsConsoleClientTest extends Scope
             ], $this->getHeaders()),
             [
                 'userId' => ID::unique(),
-                'email' => $this->getUser()['email'],
+                'email' => $userEmail,
                 'url' => $url,
             ]
         );
@@ -6555,11 +6553,10 @@ class ProjectsConsoleClientTest extends Scope
 
         $userId = $response['body']['userId'];
 
-        $lastEmail = $this->getLastEmail(1, function ($email) {
+        $lastEmail = $this->getLastEmailByAddress($userEmail, function ($email) {
             $this->assertStringContainsString('INJECTED', $email['html'] ?? '');
         });
 
-        $this->assertEquals($this->getUser()['email'], $lastEmail['to'][0]['address']);
         $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
 
         $this->assertStringContainsString('INJECTED', $lastEmail['html']);
