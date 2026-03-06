@@ -14,9 +14,6 @@ import {
   queryParamToMap,
   mapToQueryParam,
   buildListSearchParams,
-  buildFilterQueryString,
-  buildFilterTagFromCompactKey,
-  getOperatorsForType,
   usersFilterColumns,
   teamsFilterColumns,
 } from '@/lib/table-filters'
@@ -26,13 +23,11 @@ import {
   Users,
   LayoutGrid,
   List,
-  Filter,
   AlertCircle,
   CheckCircle2,
   XCircle,
   Mail,
   Phone,
-  X,
 } from 'lucide-react'
 import {
   useProjectUsers,
@@ -80,19 +75,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Input } from '@/components/ui/input'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
+import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 import { LightningCollectorGame } from './LightningCollectorGame'
 import { useDebugMode } from '@/components/global/providers/DebugMode'
 import { CreateUserDrawer } from './CreateUserDrawer'
@@ -331,20 +314,8 @@ export function View({
 
   const [usersDisplayedPage, setUsersDisplayedPage] = useState(urlPage)
   const [usersFiltersOpen, setUsersFiltersOpen] = useState(false)
-  const [filterColumnId, setFilterColumnId] = useState<string>('')
-  const [filterOperatorKey, setFilterOperatorKey] = useState<string>('')
-  const [filterValue, setFilterValue] = useState<string>('')
-  const [filterValueEnd, setFilterValueEnd] = useState<string>('')
-
-  const usersFilterEntries = Array.from(usersFilterMap.entries())
 
   const [teamsFiltersOpen, setTeamsFiltersOpen] = useState(false)
-  const [teamsFilterColumnId, setTeamsFilterColumnId] = useState<string>('')
-  const [teamsFilterOperatorKey, setTeamsFilterOperatorKey] = useState<string>('')
-  const [teamsFilterValue, setTeamsFilterValue] = useState<string>('')
-  const [teamsFilterValueEnd, setTeamsFilterValueEnd] = useState<string>('')
-
-  const teamsFilterEntries = Array.from(teamsFilterMap.entries())
 
   const queryClient = useQueryClient()
 
@@ -488,43 +459,9 @@ export function View({
     setUsersSearchInput(value)
   }
 
-  const applyUsersFilter = () => {
-    const col = usersFilterColumns.find((c) => c.id === filterColumnId)
-    if (!col || !filterOperatorKey) return
-    const op = getOperatorsForType(col.type).find((o) => o.key === filterOperatorKey)
-    if (!op) return
-    const isBetweenOp =
-      filterOperatorKey === 'between' || filterOperatorKey === 'notBetween'
-    let val: string | number | boolean | undefined = op.noValue
-      ? undefined
-      : isBetweenOp
-        ? `${filterValue.trim()},${filterValueEnd.trim()}`
-        : filterValue.trim() || undefined
-    if (val !== undefined && val !== '' && !isBetweenOp) {
-      if (col.type === 'integer') {
-        const n = Number(val)
-        val = Number.isNaN(n) ? String(val) : n
-      } else if (col.type === 'double') {
-        const n = Number(val)
-        val = Number.isNaN(n) ? String(val) : n
-      } else if (col.id === 'status' && (val === 'enabled' || val === 'disabled')) {
-        // Appwrite user status is boolean: true = enabled, false = disabled
-        val = val === 'enabled'
-      }
-      // datetime, enum, string etc. stay as string
-    }
-    const queryString = buildFilterQueryString(
-      filterOperatorKey,
-      filterColumnId,
-      val,
-    )
-    const compactKey: CompactFilterKey = {
-      c: filterColumnId,
-      o: filterOperatorKey,
-      ...(val !== undefined && val !== '' ? { v: val } : {}),
-    }
+  const applyUsersFilter = (compactKey: CompactFilterKey, queryStr: string) => {
     const newMap = new Map(usersFilterMap)
-    newMap.set(compactKey, queryString)
+    newMap.set(compactKey, queryStr)
     const queryEncoded = mapToQueryParam(newMap)
     navigate({
       to: '/projects/$projectId/auth/',
@@ -540,8 +477,6 @@ export function View({
       }),
       replace: true,
     })
-    setFilterValue('')
-    setFilterValueEnd('')
     setUsersFiltersOpen(false)
   }
 
@@ -589,39 +524,9 @@ export function View({
     setUsersFiltersOpen(false)
   }
 
-  const applyTeamsFilter = () => {
-    const col = teamsFilterColumns.find((c) => c.id === teamsFilterColumnId)
-    if (!col || !teamsFilterOperatorKey) return
-    const op = getOperatorsForType(col.type).find((o) => o.key === teamsFilterOperatorKey)
-    if (!op) return
-    const isBetweenOp =
-      teamsFilterOperatorKey === 'between' || teamsFilterOperatorKey === 'notBetween'
-    let val: string | number | boolean | undefined = op.noValue
-      ? undefined
-      : isBetweenOp
-        ? `${teamsFilterValue.trim()},${teamsFilterValueEnd.trim()}`
-        : teamsFilterValue.trim() || undefined
-    if (val !== undefined && val !== '' && !isBetweenOp) {
-      if (col.type === 'integer') {
-        const n = Number(val)
-        val = Number.isNaN(n) ? String(val) : n
-      } else if (col.type === 'double') {
-        const n = Number(val)
-        val = Number.isNaN(n) ? String(val) : n
-      }
-    }
-    const queryString = buildFilterQueryString(
-      teamsFilterOperatorKey,
-      teamsFilterColumnId,
-      val,
-    )
-    const compactKey: CompactFilterKey = {
-      c: teamsFilterColumnId,
-      o: teamsFilterOperatorKey,
-      ...(val !== undefined && val !== '' ? { v: val } : {}),
-    }
+  const applyTeamsFilter = (compactKey: CompactFilterKey, queryStr: string) => {
     const newMap = new Map(teamsFilterMap)
-    newMap.set(compactKey, queryString)
+    newMap.set(compactKey, queryStr)
     const queryEncoded = mapToQueryParam(newMap)
     navigate({
       to: '/projects/$projectId/auth/teams',
@@ -638,8 +543,6 @@ export function View({
       },
       replace: true,
     })
-    setTeamsFilterValue('')
-    setTeamsFilterValueEnd('')
     setTeamsFiltersOpen(false)
   }
 
@@ -1190,747 +1093,27 @@ export function View({
         showFilters={activeTab === 'users' || activeTab === 'teams'}
         filterTrigger={
           activeTab === 'users' ? (
-            <Popover open={usersFiltersOpen} onOpenChange={setUsersFiltersOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-9 shrink-0 gap-2 border-border bg-transparent text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground"
-                >
-                  <Filter className="h-3.5 w-3.5" />
-                  Filters
-                  {usersFilterMap.size > 0 && (
-                    <span className="ml-1 flex size-5 items-center justify-center rounded-full bg-primary/20 text-[11px] font-medium text-primary">
-                      {usersFilterMap.size}
-                    </span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-
-              <PopoverContent
-                className="z-[200] w-72 p-0"
-                align="start"
-                side="bottom"
-                sideOffset={6}
-              >
-                {/* Current filters list + Clear all (above Add condition) */}
-                {usersFilterMap.size > 0 && (
-                  <>
-                    <div className="border-b border-border px-3 py-1.5">
-                      <p className="text-[11px] font-medium text-foreground">
-                        Active filters
-                      </p>
-                    </div>
-                    <div className="max-h-40 overflow-y-auto space-y-1 p-2">
-                      {usersFilterEntries.map(([key, _queryStr]) => {
-                        const tag = buildFilterTagFromCompactKey(
-                          key,
-                          usersFilterColumns,
-                        )
-                        const tagLabel = tag.tag.replace(/\*\*(.*?)\*\*/g, '$1')
-                        return (
-                          <div
-                            key={`${key.c}-${key.o}-${JSON.stringify(key.v ?? '')}`}
-                            className="flex select-none items-center justify-between gap-2 rounded-md bg-muted/50 px-1.5 py-1"
-                          >
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="truncate text-[11px] text-foreground">
-                                  {tagLabel}
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p className="text-xs">{tagLabel}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                            <button
-                              type="button"
-                              onClick={() => removeUsersFilter(key)}
-                              className="shrink-0 cursor-pointer rounded p-0.5 hover:bg-muted"
-                              aria-label="Remove filter"
-                            >
-                              <X className="h-2.5 w-2.5" />
-                            </button>
-                          </div>
-                        )
-                      })}
-                    </div>
-                    <div className="border-t border-border p-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-full text-[12px]"
-                        onClick={() => {
-                          clearAllUsersFilters()
-                          setUsersFiltersOpen(false)
-                        }}
-                      >
-                        Clear all
-                      </Button>
-                    </div>
-                  </>
-                )}
-
-                <div
-                  className={
-                    usersFilterMap.size > 0
-                      ? 'border-t border-border px-4 pt-4 pb-2'
-                      : 'px-4 pt-4 pb-2'
-                  }
-                >
-                  <h3 className="text-[13px] font-semibold text-foreground">
-                    Add condition
-                  </h3>
-                  <p className="text-[12px] text-muted-foreground mt-1">
-                    Filter users by column, operator and value.
-                  </p>
-                </div>
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault()
-                      applyUsersFilter()
-                    }}
-                    className="contents"
-                  >
-                  <div className="border-t border-border px-4 py-3 space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-[12px] text-muted-foreground mb-1.5 block">
-                          Column
-                        </label>
-                        <Select
-                          value={filterColumnId}
-                          onValueChange={(v) => {
-                            setFilterColumnId(v)
-                            setFilterValue('')
-                            setFilterValueEnd('')
-                            const col = usersFilterColumns.find((c) => c.id === v)
-                            const firstOp = col
-                              ? getOperatorsForType(col.type)[0]
-                              : null
-                            setFilterOperatorKey(firstOp?.key ?? '')
-                          }}
-                        >
-                          <SelectTrigger className="h-9 w-full text-[13px]">
-                            <SelectValue placeholder="Column" />
-                          </SelectTrigger>
-                          <SelectContent className="z-[200]">
-                            {usersFilterColumns.map((col) => (
-                              <SelectItem
-                                key={col.id}
-                                value={col.id}
-                                className="text-[13px]"
-                              >
-                                {col.title}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <label className="text-[12px] text-muted-foreground mb-1.5 block">
-                          Operator
-                        </label>
-                        <Select
-                          value={filterOperatorKey}
-                          onValueChange={(v) => {
-                            setFilterOperatorKey(v)
-                            setFilterValueEnd('')
-                          }}
-                          disabled={!filterColumnId}
-                        >
-                          <SelectTrigger className="h-9 w-full text-[13px]">
-                            <SelectValue placeholder="Operator" />
-                          </SelectTrigger>
-                          <SelectContent className="z-[200]">
-                            {(filterColumnId
-                              ? getOperatorsForType(
-                                  usersFilterColumns.find(
-                                    (c) => c.id === filterColumnId,
-                                  )!.type,
-                                )
-                              : []
-                            ).map((op) => (
-                              <SelectItem
-                                key={op.key}
-                                value={op.key}
-                                className="text-[13px]"
-                              >
-                                {op.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    {filterColumnId &&
-                      (() => {
-                        const col = usersFilterColumns.find(
-                          (c) => c.id === filterColumnId,
-                        )
-                        if (!col) return null
-                        const op = getOperatorsForType(col.type).find(
-                          (o) => o.key === filterOperatorKey,
-                        )
-                        if (op?.noValue) return null
-                        const label = (
-                          <label className="text-[12px] text-muted-foreground mb-1.5 block">
-                            Value
-                          </label>
-                        )
-                        const inputClass = 'h-9 w-full text-[13px]'
-                        const toDatetimeLocal = (iso: string) => {
-                          if (!iso?.trim()) return ''
-                          const d = new Date(iso)
-                          if (Number.isNaN(d.getTime())) return ''
-                          const pad = (n: number) => String(n).padStart(2, '0')
-                          return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
-                        }
-                        const isBetweenOp =
-                          filterOperatorKey === 'between' ||
-                          filterOperatorKey === 'notBetween'
-                        if (isBetweenOp) {
-                          const subLabel = 'text-[11px] text-muted-foreground mb-1 block'
-                          if (col.type === 'datetime') {
-                            return (
-                              <div key="value-between-datetime" className="space-y-3">
-                                <div>
-                                  <span className={subLabel}>Start</span>
-                                  <Input
-                                    type="datetime-local"
-                                    className={inputClass}
-                                    value={toDatetimeLocal(filterValue)}
-                                    onChange={(e) => {
-                                      const v = e.target.value
-                                      setFilterValue(v ? new Date(v).toISOString() : '')
-                                    }}
-                                  />
-                                </div>
-                                <div>
-                                  <span className={subLabel}>End</span>
-                                  <Input
-                                    type="datetime-local"
-                                    className={inputClass}
-                                    value={toDatetimeLocal(filterValueEnd)}
-                                    onChange={(e) => {
-                                      const v = e.target.value
-                                      setFilterValueEnd(v ? new Date(v).toISOString() : '')
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                            )
-                          }
-                          if (col.type === 'integer' || col.type === 'double') {
-                            return (
-                              <div key="value-between-number" className="space-y-3">
-                                <div>
-                                  <span className={subLabel}>Start</span>
-                                  <Input
-                                    type="number"
-                                    step={col.type === 'integer' ? 1 : 'any'}
-                                    className={inputClass}
-                                    value={filterValue}
-                                    onChange={(e) => setFilterValue(e.target.value)}
-                                    placeholder="Min"
-                                  />
-                                </div>
-                                <div>
-                                  <span className={subLabel}>End</span>
-                                  <Input
-                                    type="number"
-                                    step={col.type === 'integer' ? 1 : 'any'}
-                                    className={inputClass}
-                                    value={filterValueEnd}
-                                    onChange={(e) => setFilterValueEnd(e.target.value)}
-                                    placeholder="Max"
-                                  />
-                                </div>
-                              </div>
-                            )
-                          }
-                          return null
-                        }
-                        if (col.type === 'enum' && col.elements?.length) {
-                          return (
-                            <div key="value-enum">
-                              {label}
-                              <Select
-                                value={filterValue}
-                                onValueChange={setFilterValue}
-                              >
-                                <SelectTrigger className={inputClass}>
-                                  <SelectValue placeholder="Select value" />
-                                </SelectTrigger>
-                                <SelectContent className="z-[200]">
-                                  {col.elements.map((el) => (
-                                    <SelectItem
-                                      key={String(el.value)}
-                                      value={String(el.value)}
-                                      className="text-[13px]"
-                                    >
-                                      {el.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          )
-                        }
-                        if (col.type === 'boolean') {
-                          return (
-                            <div key="value-bool">
-                              {label}
-                              <Select
-                                value={filterValue}
-                                onValueChange={setFilterValue}
-                              >
-                                <SelectTrigger className={inputClass}>
-                                  <SelectValue placeholder="Select" />
-                                </SelectTrigger>
-                                <SelectContent className="z-[200]">
-                                  <SelectItem value="true" className="text-[13px]">
-                                    True
-                                  </SelectItem>
-                                  <SelectItem value="false" className="text-[13px]">
-                                    False
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          )
-                        }
-                        if (col.type === 'datetime') {
-                          return (
-                            <div key="value-datetime">
-                              {label}
-                              <Input
-                                type="datetime-local"
-                                className={inputClass}
-                                value={toDatetimeLocal(filterValue)}
-                                onChange={(e) => {
-                                  const v = e.target.value
-                                  setFilterValue(v ? new Date(v).toISOString() : '')
-                                }}
-                              />
-                            </div>
-                          )
-                        }
-                        if (col.type === 'integer') {
-                          return (
-                            <div key="value-int">
-                              {label}
-                              <Input
-                                type="number"
-                                step={1}
-                                className={inputClass}
-                                value={filterValue}
-                                onChange={(e) => setFilterValue(e.target.value)}
-                                placeholder="Number"
-                              />
-                            </div>
-                          )
-                        }
-                        if (col.type === 'double') {
-                          return (
-                            <div key="value-double">
-                              {label}
-                              <Input
-                                type="number"
-                                step="any"
-                                className={inputClass}
-                                value={filterValue}
-                                onChange={(e) => setFilterValue(e.target.value)}
-                                placeholder="Number"
-                              />
-                            </div>
-                          )
-                        }
-                        const searchOrNotSearch =
-                          filterOperatorKey === 'search' ||
-                          filterOperatorKey === 'notSearch'
-                        const placeholder = searchOrNotSearch
-                          ? 'Min. 3 characters'
-                          : filterOperatorKey === 'regex'
-                            ? 'e.g. ^foo.*bar$'
-                            : 'Value'
-                        return (
-                          <div key="value-text">
-                            {label}
-                            <Input
-                              className={inputClass}
-                              value={filterValue}
-                              onChange={(e) => setFilterValue(e.target.value)}
-                              placeholder={placeholder}
-                            />
-                          </div>
-                        )
-                      })()}
-                  </div>
-                  <div className="border-t border-border px-4 py-3 flex flex-wrap items-center gap-2 bg-muted/30">
-                    <Button
-                      type="submit"
-                      size="sm"
-                      className="h-9 text-[13px]"
-                      disabled={
-                        !filterColumnId ||
-                        !filterOperatorKey ||
-                        (() => {
-                          const col = usersFilterColumns.find(
-                            (c) => c.id === filterColumnId,
-                          )
-                          if (!col) return true
-                          const op = getOperatorsForType(col.type).find(
-                            (o) => o.key === filterOperatorKey,
-                          )
-                          if (!op) return true
-                          if (op.noValue) return false
-                          if (
-                            filterOperatorKey === 'between' ||
-                            filterOperatorKey === 'notBetween'
-                          ) {
-                            return !filterValue.trim() || !filterValueEnd.trim()
-                          }
-                          return !filterValue.trim()
-                        })()
-                      }
-                    >
-                      Add condition
-                    </Button>
-                  </div>
-                  </form>
-                </PopoverContent>
-              </Popover>
+            <FiltersPopover
+              open={usersFiltersOpen}
+              onOpenChange={setUsersFiltersOpen}
+              columns={usersFilterColumns}
+              filterMap={usersFilterMap}
+              onRemoveFilter={removeUsersFilter}
+              onClearAll={clearAllUsersFilters}
+              onApplyFilter={applyUsersFilter}
+              resourceLabel="users"
+            />
           ) : activeTab === 'teams' ? (
-            <Popover open={teamsFiltersOpen} onOpenChange={setTeamsFiltersOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-9 shrink-0 gap-2 border-border bg-transparent text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground"
-                >
-                  <Filter className="h-3.5 w-3.5" />
-                  Filters
-                  {teamsFilterMap.size > 0 && (
-                    <span className="ml-1 flex size-5 items-center justify-center rounded-full bg-primary/20 text-[11px] font-medium text-primary">
-                      {teamsFilterMap.size}
-                    </span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent
-                className="z-[200] w-72 p-0"
-                align="start"
-                side="bottom"
-                sideOffset={6}
-              >
-                {teamsFilterMap.size > 0 && (
-                  <>
-                    <div className="border-b border-border px-3 py-1.5">
-                      <p className="text-[11px] font-medium text-foreground">
-                        Active filters
-                      </p>
-                    </div>
-                    <div className="max-h-40 overflow-y-auto space-y-1 p-2">
-                      {teamsFilterEntries.map(([key, _queryStr]) => {
-                        const tag = buildFilterTagFromCompactKey(
-                          key,
-                          teamsFilterColumns,
-                        )
-                        const tagLabel = tag.tag.replace(/\*\*(.*?)\*\*/g, '$1')
-                        return (
-                          <div
-                            key={`${key.c}-${key.o}-${JSON.stringify(key.v ?? '')}`}
-                            className="flex select-none items-center justify-between gap-2 rounded-md bg-muted/50 px-1.5 py-1"
-                          >
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="truncate text-[11px] text-foreground">
-                                  {tagLabel}
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p className="text-xs">{tagLabel}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                            <button
-                              type="button"
-                              onClick={() => removeTeamsFilter(key)}
-                              className="shrink-0 cursor-pointer rounded p-0.5 hover:bg-muted"
-                              aria-label="Remove filter"
-                            >
-                              <X className="h-2.5 w-2.5" />
-                            </button>
-                          </div>
-                        )
-                      })}
-                    </div>
-                    <div className="border-t border-border p-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-full text-[12px]"
-                        onClick={() => {
-                          clearAllTeamsFilters()
-                          setTeamsFiltersOpen(false)
-                        }}
-                      >
-                        Clear all
-                      </Button>
-                    </div>
-                  </>
-                )}
-                <div
-                  className={
-                    teamsFilterMap.size > 0
-                      ? 'border-t border-border px-4 pt-4 pb-2'
-                      : 'px-4 pt-4 pb-2'
-                  }
-                >
-                  <h3 className="text-[13px] font-semibold text-foreground">
-                    Add condition
-                  </h3>
-                  <p className="text-[12px] text-muted-foreground mt-1">
-                    Filter teams by column, operator and value.
-                  </p>
-                </div>
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault()
-                    applyTeamsFilter()
-                  }}
-                  className="contents"
-                >
-                  <div className="border-t border-border px-4 py-3 space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-[12px] text-muted-foreground mb-1.5 block">
-                          Column
-                        </label>
-                        <Select
-                          value={teamsFilterColumnId}
-                          onValueChange={(v) => {
-                            setTeamsFilterColumnId(v)
-                            setTeamsFilterValue('')
-                            setTeamsFilterValueEnd('')
-                            const col = teamsFilterColumns.find((c) => c.id === v)
-                            const firstOp = col
-                              ? getOperatorsForType(col.type)[0]
-                              : null
-                            setTeamsFilterOperatorKey(firstOp?.key ?? '')
-                          }}
-                        >
-                          <SelectTrigger className="h-9 w-full text-[13px]">
-                            <SelectValue placeholder="Column" />
-                          </SelectTrigger>
-                          <SelectContent className="z-[200]">
-                            {teamsFilterColumns.map((col) => (
-                              <SelectItem
-                                key={col.id}
-                                value={col.id}
-                                className="text-[13px]"
-                              >
-                                {col.title}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <label className="text-[12px] text-muted-foreground mb-1.5 block">
-                          Operator
-                        </label>
-                        <Select
-                          value={teamsFilterOperatorKey}
-                          onValueChange={(v) => {
-                            setTeamsFilterOperatorKey(v)
-                            setTeamsFilterValueEnd('')
-                          }}
-                          disabled={!teamsFilterColumnId}
-                        >
-                          <SelectTrigger className="h-9 w-full text-[13px]">
-                            <SelectValue placeholder="Operator" />
-                          </SelectTrigger>
-                          <SelectContent className="z-[200]">
-                            {(teamsFilterColumnId
-                              ? getOperatorsForType(
-                                  teamsFilterColumns.find(
-                                    (c) => c.id === teamsFilterColumnId,
-                                  )!.type,
-                                )
-                              : []
-                            ).map((op) => (
-                              <SelectItem
-                                key={op.key}
-                                value={op.key}
-                                className="text-[13px]"
-                              >
-                                {op.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    {teamsFilterColumnId &&
-                      (() => {
-                        const col = teamsFilterColumns.find(
-                          (c) => c.id === teamsFilterColumnId,
-                        )
-                        if (!col) return null
-                        const op = getOperatorsForType(col.type).find(
-                          (o) => o.key === teamsFilterOperatorKey,
-                        )
-                        if (op?.noValue) return null
-                        const label = (
-                          <label className="text-[12px] text-muted-foreground mb-1.5 block">
-                            Value
-                          </label>
-                        )
-                        const inputClass = 'h-9 w-full text-[13px]'
-                        const toDatetimeLocal = (iso: string) => {
-                          if (!iso?.trim()) return ''
-                          const d = new Date(iso)
-                          if (Number.isNaN(d.getTime())) return ''
-                          const pad = (n: number) => String(n).padStart(2, '0')
-                          return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
-                        }
-                        const isBetweenOp =
-                          teamsFilterOperatorKey === 'between' ||
-                          teamsFilterOperatorKey === 'notBetween'
-                        if (isBetweenOp) {
-                          const subLabel = 'text-[11px] text-muted-foreground mb-1 block'
-                          if (col.type === 'datetime') {
-                            return (
-                              <div key="value-between-datetime" className="space-y-3">
-                                <div>
-                                  <span className={subLabel}>Start</span>
-                                  <Input
-                                    type="datetime-local"
-                                    className={inputClass}
-                                    value={toDatetimeLocal(teamsFilterValue)}
-                                    onChange={(e) => {
-                                      const v = e.target.value
-                                      setTeamsFilterValue(v ? new Date(v).toISOString() : '')
-                                    }}
-                                  />
-                                </div>
-                                <div>
-                                  <span className={subLabel}>End</span>
-                                  <Input
-                                    type="datetime-local"
-                                    className={inputClass}
-                                    value={toDatetimeLocal(teamsFilterValueEnd)}
-                                    onChange={(e) => {
-                                      const v = e.target.value
-                                      setTeamsFilterValueEnd(v ? new Date(v).toISOString() : '')
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                            )
-                          }
-                          if (col.type === 'integer' || col.type === 'double') {
-                            return (
-                              <div key="value-between-number" className="space-y-3">
-                                <div>
-                                  <span className={subLabel}>Start</span>
-                                  <Input
-                                    type="number"
-                                    step={col.type === 'integer' ? 1 : 'any'}
-                                    className={inputClass}
-                                    value={teamsFilterValue}
-                                    onChange={(e) => setTeamsFilterValue(e.target.value)}
-                                    placeholder="Min"
-                                  />
-                                </div>
-                                <div>
-                                  <span className={subLabel}>End</span>
-                                  <Input
-                                    type="number"
-                                    step={col.type === 'integer' ? 1 : 'any'}
-                                    className={inputClass}
-                                    value={teamsFilterValueEnd}
-                                    onChange={(e) => setTeamsFilterValueEnd(e.target.value)}
-                                    placeholder="Max"
-                                  />
-                                </div>
-                              </div>
-                            )
-                          }
-                          return null
-                        }
-                        if (col.type === 'datetime') {
-                          return (
-                            <div key="value-datetime">
-                              {label}
-                              <Input
-                                type="datetime-local"
-                                className={inputClass}
-                                value={toDatetimeLocal(teamsFilterValue)}
-                                onChange={(e) => {
-                                  const v = e.target.value
-                                  setTeamsFilterValue(v ? new Date(v).toISOString() : '')
-                                }}
-                              />
-                            </div>
-                          )
-                        }
-                        const searchOrNotSearch =
-                          teamsFilterOperatorKey === 'search' ||
-                          teamsFilterOperatorKey === 'notSearch'
-                        const placeholder = searchOrNotSearch
-                          ? 'Min. 3 characters'
-                          : teamsFilterOperatorKey === 'regex'
-                            ? 'e.g. ^foo.*bar$'
-                            : 'Value'
-                        return (
-                          <div key="value-text">
-                            {label}
-                            <Input
-                              className={inputClass}
-                              value={teamsFilterValue}
-                              onChange={(e) => setTeamsFilterValue(e.target.value)}
-                              placeholder={placeholder}
-                            />
-                          </div>
-                        )
-                      })()}
-                  </div>
-                  <div className="border-t border-border px-4 py-3 flex flex-wrap items-center gap-2 bg-muted/30">
-                    <Button
-                      type="submit"
-                      size="sm"
-                      className="h-9 text-[13px]"
-                      disabled={
-                        !teamsFilterColumnId ||
-                        !teamsFilterOperatorKey ||
-                        (() => {
-                          const col = teamsFilterColumns.find(
-                            (c) => c.id === teamsFilterColumnId,
-                          )
-                          if (!col) return true
-                          const op = getOperatorsForType(col.type).find(
-                            (o) => o.key === teamsFilterOperatorKey,
-                          )
-                          if (!op) return true
-                          if (op.noValue) return false
-                          if (
-                            teamsFilterOperatorKey === 'between' ||
-                            teamsFilterOperatorKey === 'notBetween'
-                          ) {
-                            return !teamsFilterValue.trim() || !teamsFilterValueEnd.trim()
-                          }
-                          return !teamsFilterValue.trim()
-                        })()
-                      }
-                    >
-                      Add condition
-                    </Button>
-                  </div>
-                </form>
-              </PopoverContent>
-            </Popover>
+            <FiltersPopover
+              open={teamsFiltersOpen}
+              onOpenChange={setTeamsFiltersOpen}
+              columns={teamsFilterColumns}
+              filterMap={teamsFilterMap}
+              onRemoveFilter={removeTeamsFilter}
+              onClearAll={clearAllTeamsFilters}
+              onApplyFilter={applyTeamsFilter}
+              resourceLabel="teams"
+            />
           ) : undefined
         }
         fullWidthBorder

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import { FolderOpen, List, LayoutGrid, Lock, Folder } from 'lucide-react'
 import { formatBytes } from '@/lib/utils/mock-data'
@@ -51,6 +51,18 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { CreateBucket } from './_components/CreateBucket'
 import type { Models } from '@appwrite.io/console'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
+import {
+  getSearch,
+  getPage,
+  getLimit,
+  getQueryParam,
+  queryParamToMap,
+  mapToQueryParam,
+  buildListSearchParams,
+  bucketsFilterColumns,
+} from '@/lib/table-filters'
+import type { CompactFilterKey } from '@/lib/table-filters'
+import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 
 export function View() {
   const { projectId } = useParams({
@@ -58,16 +70,45 @@ export function View() {
   })
   const navigate = useNavigate()
   const location = useLocation()
-  const search = useSearch({ strict: false }) as { create?: string }
+  const search = useSearch({ strict: false }) as {
+    create?: string
+    search?: string
+    query?: string
+    page?: number
+    limit?: number
+  }
   const queryClient = useQueryClient()
-  const [searchValue, setSearchValue] = useState('')
+
+  const isStorageIndex =
+    location.pathname.replace(/\/$/, '') === `/projects/${projectId}/storage`
+  const bucketListParams = useMemo(() => {
+    if (!isStorageIndex || typeof search !== 'object') return null
+    const url = new URL(location.pathname + location.search, window.location.origin)
+    return {
+      search: getSearch(url) ?? search.search,
+      page: getPage(url, 1),
+      limit: getLimit(url, 25),
+      filterMap: queryParamToMap(getQueryParam(url) ?? search.query ?? null),
+    }
+  }, [isStorageIndex, search?.search, search?.query, search?.page, search?.limit, location.pathname, location.search])
+
+  const urlPage = bucketListParams?.page ?? 1
+  const urlLimit = bucketListParams?.limit ?? 25
+  const urlSearch = bucketListParams?.search
+  const filterMap = bucketListParams?.filterMap ?? new Map()
+  const filterQueries =
+    filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
+
+  const [searchInput, setSearchInput] = useState('')
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid')
-  const [requestedPage, setRequestedPage] = useState(1)
   const [displayedPage, setDisplayedPage] = useState(1)
-  const [pageSize, setPageSize] = useState(25)
   const [createBucketDialogOpen, setCreateBucketDialogOpen] = useState(false)
   const [selectedBuckets, setSelectedBuckets] = useState<Set<string>>(new Set())
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const filterQueryString = filterMap.size > 0 ? mapToQueryParam(filterMap) : ''
 
   // Open create bucket dialog when ?create=bucket (e.g. from header plus button)
   useEffect(() => {
@@ -86,39 +127,86 @@ export function View() {
     }
   }, [search?.create, createBucketDialogOpen, navigate, location.pathname])
 
-  // Fetch data for the requested page (triggers load when user changes page)
+  useEffect(() => {
+    setSearchInput(urlSearch ?? '')
+  }, [urlSearch])
+
+  useEffect(() => {
+    if (!isStorageIndex) return
+    setDisplayedPage((prev) => (prev === urlPage ? prev : urlPage))
+  }, [isStorageIndex, urlPage])
+
+  useEffect(() => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    searchDebounceRef.current = setTimeout(() => {
+      const trimmed = searchInput.trim()
+      if (trimmed === (urlSearch ?? '')) return
+      navigate({
+        to: '/projects/$projectId/storage/',
+        params: { projectId: projectId! },
+        search: (prev: Record<string, unknown>) => {
+          const next = {
+            ...prev,
+            ...buildListSearchParams({
+              search: trimmed || undefined,
+              query: filterQueryString || undefined,
+              page: 1,
+              limit: urlLimit,
+            }),
+          }
+          if (!trimmed) delete next.search
+          return next
+        },
+        replace: true,
+      })
+    }, 300)
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    }
+  }, [searchInput, projectId, navigate, urlSearch, urlLimit, filterQueryString, isStorageIndex])
+
+  // Fetch data for the requested page (URL page)
   const {
     total: bucketsTotal,
     isLoading: bucketsLoading,
     isFetching: bucketsFetching,
-  } = useProjectBuckets(projectId, requestedPage - 1, pageSize, searchValue)
+  } = useProjectBuckets(
+    projectId,
+    urlPage - 1,
+    urlLimit,
+    urlSearch ?? undefined,
+    filterQueries,
+  )
 
   // Fetch data for the displayed page (what we show - stays until new page is ready)
   const {
     buckets: apiBuckets,
     total: displayedTotal,
     isLoading: displayedLoading,
-  } = useProjectBuckets(projectId, displayedPage - 1, pageSize, searchValue)
+  } = useProjectBuckets(
+    projectId,
+    displayedPage - 1,
+    urlLimit,
+    urlSearch ?? undefined,
+    filterQueries,
+  )
 
-  // Only show full loading when we have no data to display (initial load)
   const showLoading = displayedLoading && apiBuckets.length === 0
 
-  // Update displayed page only when requested page data is ready (no flash)
   useEffect(() => {
     if (
       !bucketsFetching &&
-      requestedPage !== displayedPage &&
+      urlPage !== displayedPage &&
       !bucketsLoading
     ) {
-      setDisplayedPage(requestedPage)
+      setDisplayedPage(urlPage)
     }
-  }, [bucketsFetching, bucketsLoading, requestedPage, displayedPage])
+  }, [bucketsFetching, bucketsLoading, urlPage, displayedPage])
 
-  // Get total count from the first page query (no search) - already fetched in route loader
-  // This is used for limit checking and doesn't change when searching
+  // Get total count from the first page query (no search/filters) - for limit checking
   const { data: totalBucketsData } = useQuery({
-    queryKey: ['buckets', 'project', projectId, 0, pageSize, ''],
-    queryFn: () => fetchProjectBuckets(projectId!, 0, pageSize, ''),
+    queryKey: ['buckets', 'project', projectId, 0, 25, ''],
+    queryFn: () => fetchProjectBuckets(projectId!, 0, 25, ''),
     enabled: !!projectId,
     staleTime: 30 * 1000, // 30 seconds
     refetchOnMount: false, // Data is fresh from route loader, no need to refetch
@@ -148,17 +236,78 @@ export function View() {
     noCreatePermission ||
     (bucketsLimit > 0 && totalBucketsCount >= bucketsLimit)
 
-  // Clear selection when navigating or when search changes
   useEffect(() => {
     setSelectedBuckets(new Set())
     setDeleteDialogOpen(false)
-  }, [location.pathname, projectId, searchValue])
+  }, [location.pathname, projectId, urlSearch, filterMap.size])
 
   const handleSearchChange = (value: string) => {
-    setSearchValue(value)
-    setRequestedPage(1)
-    setDisplayedPage(1)
-    setSelectedBuckets(new Set()) // Clear selection on search change
+    setSearchInput(value)
+    setSelectedBuckets(new Set())
+  }
+
+  const applyFilter = (compactKey: CompactFilterKey, queryStr: string) => {
+    const newMap = new Map(filterMap)
+    newMap.set(compactKey, queryStr)
+    navigate({
+      to: '/projects/$projectId/storage/',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => ({
+        ...prev,
+        ...buildListSearchParams({
+          search: urlSearch,
+          query: mapToQueryParam(newMap),
+          page: 1,
+          limit: urlLimit,
+        }),
+      }),
+      replace: true,
+    })
+    setFiltersOpen(false)
+  }
+
+  const removeFilter = (key: CompactFilterKey) => {
+    const newMap = new Map(filterMap)
+    newMap.delete(key)
+    navigate({
+      to: '/projects/$projectId/storage/',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => {
+        const next = {
+          ...prev,
+          ...buildListSearchParams({
+            search: urlSearch,
+            query: newMap.size > 0 ? mapToQueryParam(newMap) : undefined,
+            page: 1,
+            limit: urlLimit,
+          }),
+        }
+        if (newMap.size === 0) delete next.query
+        return next
+      },
+      replace: true,
+    })
+  }
+
+  const clearAllFilters = () => {
+    navigate({
+      to: '/projects/$projectId/storage/',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => {
+        const next = {
+          ...prev,
+          ...buildListSearchParams({
+            search: urlSearch,
+            page: 1,
+            limit: urlLimit,
+          }),
+        }
+        delete next.query
+        return next
+      },
+      replace: true,
+    })
+    setFiltersOpen(false)
   }
 
   // Bulk delete mutation
@@ -222,15 +371,43 @@ export function View() {
   }
 
   const handlePageChange = (page: number) => {
-    setRequestedPage(page)
-    setSelectedBuckets(new Set()) // Clear selection on page change
+    setSelectedBuckets(new Set())
+    navigate({
+      to: '/projects/$projectId/storage/',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => ({
+        ...prev,
+        ...buildListSearchParams({
+          search: urlSearch,
+          query: filterQueryString || undefined,
+          page,
+          limit: urlLimit,
+        }),
+      }),
+      replace: true,
+    })
   }
 
   const handlePageSizeChange = (newPageSize: number) => {
-    setPageSize(newPageSize)
-    setRequestedPage(1)
-    setDisplayedPage(1)
-    setSelectedBuckets(new Set()) // Clear selection on page size change
+    setSelectedBuckets(new Set())
+    navigate({
+      to: '/projects/$projectId/storage/',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => {
+        const next = {
+          ...prev,
+          ...buildListSearchParams({
+            search: urlSearch,
+            query: filterQueryString || undefined,
+            page: 1,
+            limit: newPageSize,
+          }),
+        }
+        delete next.page
+        return next
+      },
+      replace: true,
+    })
   }
 
   // Create bucket mutation
@@ -290,7 +467,7 @@ export function View() {
       <ServiceHeader
         title="Storage"
         searchPlaceholder="Search buckets..."
-        searchValue={searchValue}
+        searchValue={searchInput}
         onSearchChange={handleSearchChange}
         createLabel="Create bucket"
         onCreate={() => setCreateBucketDialogOpen(true)}
@@ -300,7 +477,19 @@ export function View() {
             ? "You don't have permission to create buckets."
             : undefined
         }
-        showFilters={false}
+        showFilters={true}
+        filterTrigger={
+          <FiltersPopover
+            open={filtersOpen}
+            onOpenChange={setFiltersOpen}
+            columns={bucketsFilterColumns}
+            filterMap={filterMap}
+            onRemoveFilter={removeFilter}
+            onClearAll={clearAllFilters}
+            onApplyFilter={applyFilter}
+            resourceLabel="buckets"
+          />
+        }
         fullWidthBorder
         rightContent={<ViewToggle />}
         contentAfterBorder={
@@ -490,7 +679,7 @@ export function View() {
               <Pagination
                 currentPage={displayedPage}
                 totalItems={displayedTotal ?? bucketsTotal}
-                pageSize={pageSize}
+                pageSize={urlLimit}
                 pageSizeOptions={[10, 25, 50, 100]}
                 onPageChange={handlePageChange}
                 onPageSizeChange={handlePageSizeChange}
@@ -500,10 +689,14 @@ export function View() {
           ) : (
             <EmptyState
               icon={FolderOpen}
-              title="No buckets yet"
-              description="Create your first bucket to start storing files"
-              isEmpty={!searchValue}
-              hasFilters={!!searchValue}
+              title={urlSearch || filterMap.size > 0 ? undefined : 'No buckets yet'}
+              description={
+                urlSearch || filterMap.size > 0
+                  ? undefined
+                  : 'Create your first bucket to start storing files'
+              }
+              isEmpty={!urlSearch && filterMap.size === 0}
+              hasFilters={!!urlSearch || filterMap.size > 0}
               variant="card"
             />
           )
@@ -586,10 +779,14 @@ export function View() {
             ) : (
               <EmptyState
                 icon={Folder}
-                title="No buckets yet"
-                description="Create your first bucket to start storing files"
-                isEmpty={!searchValue}
-                hasFilters={!!searchValue}
+                title={urlSearch || filterMap.size > 0 ? undefined : 'No buckets yet'}
+                description={
+                  urlSearch || filterMap.size > 0
+                    ? undefined
+                    : 'Create your first bucket to start storing files'
+                }
+                isEmpty={!urlSearch && filterMap.size === 0}
+                hasFilters={!!urlSearch || filterMap.size > 0}
                 variant="card"
               />
             )}
@@ -597,7 +794,7 @@ export function View() {
               <Pagination
                 currentPage={displayedPage}
                 totalItems={displayedTotal ?? bucketsTotal}
-                pageSize={pageSize}
+                pageSize={urlLimit}
                 pageSizeOptions={[10, 25, 50, 100]}
                 onPageChange={handlePageChange}
                 onPageSizeChange={handlePageSizeChange}

@@ -145,13 +145,29 @@ export function buildFilterTagFromCompactKey(
   const op = ops.find((o) => o.key === key.o)
   const opLabel = op?.label ?? key.o
   if (op?.noValue) return buildFilterTag(col.title, opLabel, undefined)
-  const tagDisplayVal =
-    col.id === 'status' && (key.v === true || key.v === false)
-      ? key.v
-        ? 'Enabled'
-        : 'Disabled'
-      : key.v !== undefined && key.v !== ''
-        ? (Array.isArray(key.v) ? key.v.join(', ') : String(key.v))
-        : ''
+  let tagDisplayVal: string
+  if (col.id === 'status' && (key.v === true || key.v === false)) {
+    tagDisplayVal = key.v ? 'Enabled' : 'Disabled'
+  } else if (col.format === 'size' && typeof key.v === 'number') {
+    tagDisplayVal = formatBytesForFilter(key.v)
+  } else if (key.v !== undefined && key.v !== '') {
+    tagDisplayVal = Array.isArray(key.v) ? key.v.join(', ') : String(key.v)
+  } else {
+    tagDisplayVal = ''
+  }
   return buildFilterTag(col.title, opLabel, tagDisplayVal || undefined)
+}
+
+/** Format byte count for filter tag display (e.g. 1048576 → "1 MB"). */
+function formatBytesForFilter(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes < 0) return String(bytes)
+  if (bytes === 0) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+  const i = Math.min(
+    Math.floor(Math.log(bytes) / Math.log(k)),
+    sizes.length - 1,
+  )
+  const val = bytes / Math.pow(k, i)
+  return (val % 1 === 0 ? val : parseFloat(val.toFixed(2))) + ' ' + sizes[i]
 }

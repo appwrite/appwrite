@@ -1,0 +1,16 @@
+/**
+ * Predefined filter columns for project buckets list (Storage).
+ */
+
+import type { FilterColumn } from '../types'
+
+export const bucketsFilterColumns: FilterColumn[] = [
+  { id: 'name', title: 'Name', type: 'string' },
+  {
+    id: 'enabled',
+    title: 'Status',
+    type: 'boolean',
+  },
+  { id: '$createdAt', title: 'Created', type: 'datetime' },
+  { id: '$updatedAt', title: 'Updated', type: 'datetime' },
+]

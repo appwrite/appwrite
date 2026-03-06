@@ -24,6 +24,7 @@ import { DEFAULT_STALE_TIME, DEFAULT_PAGE_SIZE } from './constants'
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
  * @param search - Optional search query
+ * @param filterQueries - Optional list of Appwrite Query condition strings (from table filters)
  * @returns Paginated buckets with total count
  */
 export async function fetchProjectBuckets(
@@ -31,6 +32,7 @@ export async function fetchProjectBuckets(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ): Promise<Models.BucketList> {
   if (!projectId) {
     return { buckets: [], total: 0 }
@@ -38,6 +40,7 @@ export async function fetchProjectBuckets(
 
   const projectSdk = sdk.forProject(projectId)
   const queries = [
+    ...(filterQueries ?? []),
     Query.orderDesc('$createdAt'),
     Query.limit(limit),
     Query.offset(page * limit),
@@ -90,6 +93,7 @@ const CSV_FILE_QUERIES = [
  *
  * This is extracted so it can be reused in both hooks and route loaders.
  * @param csvOnly - When true, only return CSV-compatible files (mimeType text/csv, text/plain, text/*, or name ending in .csv)
+ * @param filterQueries - Optional list of Appwrite Query condition strings (from table filters)
  */
 export async function fetchBucketFiles(
   projectId: string,
@@ -98,6 +102,7 @@ export async function fetchBucketFiles(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
   csvOnly?: boolean,
+  filterQueries?: string[],
 ): Promise<Models.FileList> {
   if (!projectId || !bucketId) {
     return { files: [], total: 0 }
@@ -105,6 +110,7 @@ export async function fetchBucketFiles(
 
   const projectSdk = sdk.forProject(projectId)
   const queries = [
+    ...(filterQueries ?? []),
     ...(csvOnly ? CSV_FILE_QUERIES : []),
     Query.orderDesc('$createdAt'),
     Query.limit(limit),
@@ -186,6 +192,7 @@ export function bucketFilesQueryOptions(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
   csvOnly?: boolean,
+  filterQueries?: string[],
 ) {
   return queryOptions({
     queryKey: [
@@ -198,9 +205,18 @@ export function bucketFilesQueryOptions(
       limit,
       search,
       csvOnly,
+      filterQueries,
     ],
     queryFn: () =>
-      fetchBucketFiles(projectId!, bucketId!, page, limit, search, csvOnly),
+      fetchBucketFiles(
+        projectId!,
+        bucketId!,
+        page,
+        limit,
+        search,
+        csvOnly,
+        filterQueries,
+      ),
     enabled: !!projectId && !!bucketId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -221,17 +237,18 @@ export function bucketsQueryOptions(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   return queryOptions({
-    queryKey: ['buckets', 'project', projectId, page, limit, search],
-    queryFn: () => fetchProjectBuckets(projectId!, page, limit, search),
+    queryKey: ['buckets', 'project', projectId, page, limit, search, filterQueries],
+    queryFn: () =>
+      fetchProjectBuckets(projectId!, page, limit, search, filterQueries),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
-    retry: false, // Don't retry on error
-    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
-    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
-    refetchOnReconnect: false, // Prevent refetch on network reconnect
-    // Don't keep disabled queries in cache
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -256,6 +273,7 @@ export function useProjectBuckets(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   const {
     data: bucketsData,
@@ -263,7 +281,9 @@ export function useProjectBuckets(
     isFetching,
     error,
     refetch,
-  } = useQuery(bucketsQueryOptions(projectId, page, limit, search))
+  } = useQuery(
+    bucketsQueryOptions(projectId, page, limit, search, filterQueries),
+  )
 
   const buckets = useMemo(() => {
     if (!bucketsData?.buckets) return []
@@ -312,6 +332,7 @@ export function useBucketFiles(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
   csvOnly?: boolean,
+  filterQueries?: string[],
 ) {
   return useQuery(
     bucketFilesQueryOptions(
@@ -321,6 +342,7 @@ export function useBucketFiles(
       limit,
       search,
       csvOnly,
+      filterQueries,
     ),
   )
 }
