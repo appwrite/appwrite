@@ -17,9 +17,19 @@ export const DEFAULT_STALE_TIME = 30 * 1000 // 30 seconds
 export const LONG_STALE_TIME = 5 * 60 * 1000 // 5 minutes
 
 /**
- * Default page size for paginated queries
+ * Default page size for paginated list queries (sites, functions, storage, etc.)
  */
-export const DEFAULT_PAGE_SIZE = 25
+export const DEFAULT_PAGE_SIZE = 10
+
+/**
+ * Default page size for database rows, indexes, and columns (larger for table-style data)
+ */
+export const ROWS_DEFAULT_PAGE_SIZE = 25
+
+/**
+ * Default page size for activity logs (larger for log-style lists)
+ */
+export const ACTIVITY_DEFAULT_PAGE_SIZE = 25
 
 /**
  * Default page size for smaller lists (e.g., variables, API keys)

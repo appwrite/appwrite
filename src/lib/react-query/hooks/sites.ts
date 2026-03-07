@@ -41,6 +41,7 @@ export async function fetchProjectSites(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   if (!projectId) {
     return { sites: [], total: 0 }
@@ -48,6 +49,7 @@ export async function fetchProjectSites(
 
   const projectSdk = sdk.forProject(projectId)
   const queries = [
+    ...(filterQueries ?? []),
     Query.orderDesc('$createdAt'),
     Query.limit(limit),
     Query.offset(page * limit),
@@ -388,10 +390,11 @@ export function sitesQueryOptions(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   return queryOptions({
-    queryKey: ['sites', 'project', projectId, page, limit, search],
-    queryFn: () => fetchProjectSites(projectId!, page, limit, search),
+    queryKey: ['sites', 'project', projectId, page, limit, search, filterQueries],
+    queryFn: () => fetchProjectSites(projectId!, page, limit, search, filterQueries),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -674,14 +677,16 @@ export function useProjectSites(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   const {
     data: sitesData,
     isLoading,
     isFetching,
+    isFetched,
     error,
     refetch,
-  } = useQuery(sitesQueryOptions(projectId, page, limit, search))
+  } = useQuery(sitesQueryOptions(projectId, page, limit, search, filterQueries))
 
   const sites = useMemo(() => {
     if (!sitesData?.sites) return []
@@ -699,6 +704,7 @@ export function useProjectSites(
     totalPages,
     isLoading,
     isFetching,
+    isFetched,
     error,
     refetch,
   }

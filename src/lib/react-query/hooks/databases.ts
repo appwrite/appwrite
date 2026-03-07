@@ -37,6 +37,7 @@ export async function fetchProjectDatabases(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   if (!projectId) {
     return { databases: [], total: 0 }
@@ -44,6 +45,7 @@ export async function fetchProjectDatabases(
 
   const projectSdk = sdk.forProject(projectId)
   const queries = [
+    ...(filterQueries ?? []),
     Query.orderDesc('$createdAt'),
     Query.limit(limit),
     Query.offset(page * limit),
@@ -460,6 +462,7 @@ export async function fetchProjectTableRows(
   search?: string,
   order: 'asc' | 'desc' = 'desc',
   sortBy: RowsSortBy = '$createdAt',
+  filterQueries?: string[],
 ) {
   if (!projectId || !databaseId || !tableId) {
     return { rows: [], total: 0 }
@@ -467,6 +470,7 @@ export async function fetchProjectTableRows(
 
   const projectSdk = sdk.forProject(projectId)
   const queries = [
+    ...(filterQueries ?? []),
     order === 'asc' ? Query.orderAsc(sortBy) : Query.orderDesc(sortBy),
     Query.limit(limit),
     Query.offset(page * limit),
@@ -1466,10 +1470,11 @@ export function databasesQueryOptions(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   return queryOptions({
-    queryKey: ['databases', 'project', projectId, page, limit, search],
-    queryFn: () => fetchProjectDatabases(projectId!, page, limit, search),
+    queryKey: ['databases', 'project', projectId, page, limit, search, filterQueries],
+    queryFn: () => fetchProjectDatabases(projectId!, page, limit, search, filterQueries),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false, // Don't retry on error
@@ -1545,8 +1550,8 @@ export function tableRowsQueryOptions(
   search?: string,
   order: 'asc' | 'desc' = 'desc',
   sortBy: RowsSortBy = '$createdAt',
+  filterQueries?: string[],
 ) {
-  // Normalize search to undefined if empty string for consistent query keys
   const normalizedSearch = search?.trim() || undefined
 
   return queryOptions({
@@ -1561,6 +1566,7 @@ export function tableRowsQueryOptions(
       normalizedSearch,
       order,
       sortBy,
+      filterQueries,
     ],
     queryFn: () =>
       fetchProjectTableRows(
@@ -1572,6 +1578,7 @@ export function tableRowsQueryOptions(
         normalizedSearch,
         order,
         sortBy,
+        filterQueries,
       ),
     enabled: !!projectId && !!databaseId && !!tableId,
     staleTime: DEFAULT_STALE_TIME,
@@ -1720,14 +1727,16 @@ export function useProjectDatabases(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   const {
     data: databasesData,
     isLoading,
     isFetching,
+    isFetched,
     error,
     refetch,
-  } = useQuery(databasesQueryOptions(projectId, page, limit, search))
+  } = useQuery(databasesQueryOptions(projectId, page, limit, search, filterQueries))
 
   // Map databases to our Database type
   const databases = useMemo(() => {
@@ -1787,6 +1796,7 @@ export function useProjectDatabases(
     totalPages,
     isLoading,
     isFetching,
+    isFetched,
     error,
     refetch,
   }
@@ -1943,8 +1953,8 @@ export function useProjectTableRows(
   search?: string,
   order: 'asc' | 'desc' = 'desc',
   sortBy: RowsSortBy = '$createdAt',
+  filterQueries?: string[],
 ) {
-  // Normalize search to undefined if empty string for consistent query keys
   const normalizedSearch = search?.trim() || undefined
 
   const {
@@ -1963,6 +1973,7 @@ export function useProjectTableRows(
       normalizedSearch,
       order,
       sortBy,
+      filterQueries,
     ),
   )
 

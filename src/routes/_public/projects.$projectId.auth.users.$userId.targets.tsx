@@ -41,7 +41,7 @@ export const Route = createFileRoute(
         }),
         queryClient.fetchQuery({
           queryKey: ['user', 'targets', 'project', projectId, userId, 0, 25],
-          queryFn: () => fetchUserTargets(projectId, userId, 0, 25),
+          queryFn: () => fetchUserTargets(projectId, userId, 0, 10),
           staleTime: 30 * 1000,
         }),
         queryClient.fetchQuery({

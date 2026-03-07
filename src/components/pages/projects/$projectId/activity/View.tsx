@@ -36,6 +36,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { ACTIVITY_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 
 import {
   Select,
@@ -336,7 +337,7 @@ export function View({ plan = 'pro' }: ViewProps) {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(25)
+  const [pageSize, setPageSize] = useState(ACTIVITY_DEFAULT_PAGE_SIZE)
 
   // Calculate cutoff date based on plan
   const planLimit = PLAN_TIME_LIMITS[plan]

@@ -10,10 +10,19 @@ import {
   projectQueryOptions,
   organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
+import {
+  listSearchSchema,
+  getSearch,
+  getPage,
+  getLimit,
+  getQueryParam,
+  queryParamToMap,
+} from '@/lib/table-filters'
 import { pageTitle } from '@/lib/utils/page-title'
 
 const TABLES_PER_PAGE = 100
 const ROWS_PER_PAGE = 25
+const DEFAULT_PAGE = 1
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
@@ -30,18 +39,14 @@ export const Route = createFileRoute(
       <div className="text-muted-foreground">Loading rows...</div>
     </div>
   ),
-  loader: async ({ params, context }) => {
-    // Only run on client side (SDK requires browser environment)
-    if (typeof window === 'undefined') {
-      return
-    }
+  validateSearch: listSearchSchema,
+  loader: async ({ params, context, location }) => {
+    if (typeof window === 'undefined') return
 
     const { projectId, databaseId, tableId } = params
     const { queryClient } = context
 
-    if (!projectId || !databaseId) {
-      return
-    }
+    if (!projectId || !databaseId) return
 
     // Fetch project first so setProjectRegion runs and project-scoped calls use the correct regional endpoint
     const projectData = await queryClient.ensureQueryData(
@@ -104,22 +109,29 @@ export const Route = createFileRoute(
           replace: true,
         })
       }
-      // Fetch critical data before rendering to prevent layout shifts
-      // All of these must complete before navigation proceeds to prevent loading states
-      // This ensures both tables list and rows are loaded before navigation, just like buckets/users/functions
+      const url = new URL(location.pathname + location.search, 'http://localhost')
+      const search = getSearch(url)
+      const page = getPage(url, DEFAULT_PAGE)
+      const limit = getLimit(url, ROWS_PER_PAGE)
+      const queryParam = getQueryParam(url)
+      const filterMap = queryParamToMap(queryParam)
+      const filterQueries =
+        filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
+
       await Promise.all([
-        // Tables list - CRITICAL: blocks navigation until ready (prevents loader when switching tables)
         tablesPromise,
 
-        // Rows - CRITICAL: blocks navigation until ready (prevents loader when switching tables)
         queryClient.ensureQueryData(
           tableRowsQueryOptions(
             projectId,
             databaseId,
             tableId,
-            0,
-            ROWS_PER_PAGE,
-            '',
+            page - 1,
+            limit,
+            search ?? undefined,
+            'desc',
+            '$createdAt',
+            filterQueries,
           ),
         ),
 

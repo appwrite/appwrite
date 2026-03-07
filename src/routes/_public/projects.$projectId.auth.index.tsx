@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
 import { View } from '@/components/pages/projects/$projectId/auth/View'
 import { projectQueryOptions, usersQueryOptions } from '@/lib/react-query/hooks'
+import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { pageTitle } from '@/lib/utils/page-title'
 import {
   listSearchSchema,
@@ -12,7 +13,6 @@ import {
   queryParamToMap,
 } from '@/lib/table-filters'
 
-const USERS_PER_PAGE = 25
 const DEFAULT_PAGE = 1
 
 const authSearchSchema = listSearchSchema.extend({
@@ -40,7 +40,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/auth/')({
     const url = new URL(location.pathname + location.search, 'http://localhost')
     const search = getSearch(url)
     const page = getPage(url, DEFAULT_PAGE)
-    const limit = getLimit(url, USERS_PER_PAGE)
+    const limit = getLimit(url, DEFAULT_PAGE_SIZE)
     const queryParam = getQueryParam(url)
     const filterMap = queryParamToMap(queryParam)
     const filterQueries = filterMap.size > 0 ? Array.from(filterMap.values()) : undefined

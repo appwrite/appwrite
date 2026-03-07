@@ -192,7 +192,7 @@ export async function fetchOrganizationInvoices(
 export async function fetchOrganizationBillingAggregation(
   organizationId: string,
   aggregationId?: string | null,
-  limit: number = 10,
+  limit: number = DEFAULT_PAGE_SIZE,
   offset: number = 0,
 ) {
   if (!organizationId || !aggregationId) {
@@ -1356,7 +1356,7 @@ export function organizationInvoicesQueryOptions(
 export function organizationBillingAggregationQueryOptions(
   organizationId: string | null | undefined,
   aggregationId?: string | null | undefined,
-  limit: number = 10,
+  limit: number = DEFAULT_PAGE_SIZE,
   offset: number = 0,
 ) {
   return queryOptions({
@@ -1531,7 +1531,7 @@ export function useOrganizationInvoices(
 export function useOrganizationBillingAggregation(
   organizationId: string | null | undefined,
   aggregationId?: string | null | undefined,
-  limit: number = 10,
+  limit: number = DEFAULT_PAGE_SIZE,
   offset: number = 0,
 ) {
   const { data, isLoading, error, refetch } = useQuery(

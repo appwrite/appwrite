@@ -79,6 +79,10 @@ import {
   tableRowsQueryOptions,
   type TablesSortBy,
 } from '@/lib/react-query/hooks'
+import {
+  DEFAULT_PAGE_SIZE,
+  ROWS_DEFAULT_PAGE_SIZE,
+} from '@/lib/react-query/hooks/constants'
 import { ColumnDrawer, ColumnFormData, type ColumnType } from './tables/Column'
 import { IndexDrawer, IndexFormData } from './tables/Index'
 import {
@@ -217,6 +221,21 @@ import {
   useLocation,
   useSearch,
 } from '@tanstack/react-router'
+import {
+  getSearch,
+  getPage,
+  getLimit,
+  getQueryParam,
+  queryParamToMap,
+  mapToQueryParam,
+  buildListSearchParams,
+  MIN_SEARCH_LENGTH,
+  databasesFilterColumns,
+  rowsFilterColumnsFromAttributes,
+  type TableIndexForFilters,
+} from '@/lib/table-filters'
+import type { CompactFilterKey } from '@/lib/table-filters'
+import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
 import {
@@ -262,19 +281,59 @@ export function View() {
   })
   const navigate = useNavigate()
   const location = useLocation()
-  const search = useSearch({ strict: false }) as { create?: string }
+  const search = useSearch({ strict: false }) as {
+    create?: string
+    search?: string
+    query?: string
+    page?: number
+    limit?: number
+  }
   const queryClient = useQueryClient()
-  const [searchValue, setSearchValue] = useState('')
+  const isDatabasesIndex =
+    location.pathname.replace(/\/$/, '') === `/projects/${projectId}/databases`
+  const databaseListParams = useMemo(() => {
+    if (!isDatabasesIndex || typeof search !== 'object') return null
+    const url = new URL(location.pathname + location.search, window.location.origin)
+    return {
+      search: getSearch(url) ?? search.search,
+      page: getPage(url, 1),
+      limit: getLimit(url, DEFAULT_PAGE_SIZE),
+      filterMap: queryParamToMap(getQueryParam(url) ?? search.query ?? null),
+    }
+  }, [isDatabasesIndex, search?.search, search?.query, search?.page, search?.limit, location.pathname, location.search])
+
+  const urlPage = databaseListParams?.page ?? 1
+  const urlLimit = databaseListParams?.limit ?? DEFAULT_PAGE_SIZE
+  const urlSearch = databaseListParams?.search
+  const filterMap = databaseListParams?.filterMap ?? new Map()
+  const filterQueries =
+    filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
+  const filterQueryString = filterMap.size > 0 ? mapToQueryParam(filterMap) : ''
+
+  const [searchInput, setSearchInput] = useState('')
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid')
   const [requestedPage, setRequestedPage] = useState(1)
   const [displayedPage, setDisplayedPage] = useState(1)
-  const [pageSize, setPageSize] = useState(25)
+  const [displayedSearch, setDisplayedSearch] = useState<string | undefined>(
+    undefined,
+  )
+  const [displayedFilterQueryString, setDisplayedFilterQueryString] =
+    useState('')
+  const displayedFilterQueries = useMemo(() => {
+    if (!displayedFilterQueryString) return undefined
+    const map = queryParamToMap(displayedFilterQueryString)
+    return map.size > 0 ? Array.from(map.values()) : undefined
+  }, [displayedFilterQueryString])
+  const hasInitedDisplayedRef = useRef(false)
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
   const [selectedDatabases, setSelectedDatabases] = useState<Set<string>>(
     new Set(),
   )
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [createDatabaseDialogOpen, setCreateDatabaseDialogOpen] =
     useState(false)
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
   // Open create database dialog when ?create=database (e.g. from header plus button)
   useEffect(() => {
@@ -293,30 +352,105 @@ export function View() {
     }
   }, [search?.create, createDatabaseDialogOpen, navigate, location.pathname])
 
-  // Fetch data for the requested page (triggers load when user changes page)
+  useEffect(() => {
+    setSearchInput(urlSearch ?? '')
+  }, [urlSearch])
+
+  useEffect(() => {
+    if (!isDatabasesIndex) return
+    setRequestedPage((prev) => (prev === urlPage ? prev : urlPage))
+    setPageSize((prev) => (prev === urlLimit ? prev : urlLimit))
+  }, [isDatabasesIndex, urlPage, urlLimit])
+
+  useEffect(() => {
+    if (!isDatabasesIndex || !databaseListParams) return
+    if (!hasInitedDisplayedRef.current) {
+      setDisplayedPage(urlPage)
+      setDisplayedSearch(urlSearch ?? undefined)
+      setDisplayedFilterQueryString(filterQueryString)
+      hasInitedDisplayedRef.current = true
+    }
+  }, [isDatabasesIndex, databaseListParams, urlPage, urlSearch, filterQueryString])
+
+  useEffect(() => {
+    if (!isDatabasesIndex) return
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    searchDebounceRef.current = setTimeout(() => {
+      const trimmed = searchInput.trim()
+      if (trimmed === (urlSearch ?? '')) return
+      if (trimmed.length > 0 && trimmed.length < MIN_SEARCH_LENGTH) return
+      navigate({
+        to: '/projects/$projectId/databases/',
+        params: { projectId: projectId! },
+        search: (prev: Record<string, unknown>) => {
+          const next = {
+            ...prev,
+            ...buildListSearchParams({
+              search: trimmed || undefined,
+              query: filterQueryString || undefined,
+              page: 1,
+              limit: urlLimit,
+            }),
+          }
+          if (!trimmed) delete next.search
+          return next
+        },
+        replace: true,
+      })
+    }, 300)
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    }
+  }, [searchInput, projectId, navigate, urlSearch, urlLimit, filterQueryString, isDatabasesIndex])
+
   const {
     total: databasesTotal,
     isLoading: databasesLoading,
     isFetching: databasesFetching,
-  } = useProjectDatabases(projectId, requestedPage - 1, pageSize, searchValue)
+    isFetched: databasesFetched,
+  } = useProjectDatabases(
+    projectId,
+    requestedPage - 1,
+    urlLimit,
+    urlSearch ?? undefined,
+    filterQueries,
+  )
 
-  // Fetch data for the displayed page (what we show - stays until new page is ready)
   const {
     databases: apiDatabases,
     total: displayedDatabasesTotal,
     isLoading: displayedLoading,
-  } = useProjectDatabases(projectId, displayedPage - 1, pageSize, searchValue)
+  } = useProjectDatabases(
+    projectId,
+    displayedPage - 1,
+    urlLimit,
+    displayedSearch ?? undefined,
+    displayedFilterQueries,
+  )
 
-  // Update displayed page only when requested page data is ready (no flash)
   useEffect(() => {
-    if (
-      !databasesFetching &&
-      requestedPage !== displayedPage &&
-      !databasesLoading
-    ) {
-      setDisplayedPage(requestedPage)
+    if (!isDatabasesIndex || databasesFetching || databasesLoading || !databasesFetched) return
+    const match =
+      urlPage === displayedPage &&
+      (urlSearch ?? '') === (displayedSearch ?? '') &&
+      filterQueryString === displayedFilterQueryString
+    if (!match) {
+      setDisplayedPage(urlPage)
+      setDisplayedSearch(urlSearch ?? undefined)
+      setDisplayedFilterQueryString(filterQueryString)
     }
-  }, [databasesFetching, databasesLoading, requestedPage, displayedPage])
+  }, [
+    isDatabasesIndex,
+    databasesFetching,
+    databasesLoading,
+    databasesFetched,
+    urlPage,
+    urlSearch,
+    filterQueryString,
+    displayedPage,
+    displayedSearch,
+    displayedFilterQueryString,
+  ])
 
   // Only show full loading when we have no data to display (initial load)
   const showLoading = displayedLoading && apiDatabases.length === 0
@@ -352,17 +486,81 @@ export function View() {
     noCreateDbPermission ||
     (databasesLimit > 0 && totalDatabasesCount >= databasesLimit)
 
-  // Clear selection when navigating or when search changes
+  // Clear selection when navigating or when search/filters change
   useEffect(() => {
     setSelectedDatabases(new Set())
     setDeleteDialogOpen(false)
-  }, [location.pathname, projectId, searchValue])
+  }, [location.pathname, projectId, urlSearch, filterMap.size])
 
   const handleSearchChange = (value: string) => {
-    setSearchValue(value)
+    setSearchInput(value)
     setRequestedPage(1)
     setDisplayedPage(1)
-    setSelectedDatabases(new Set()) // Clear selection on search change
+    setSelectedDatabases(new Set())
+  }
+
+  const applyFilter = (compactKey: CompactFilterKey, queryStr: string) => {
+    const newMap = new Map(filterMap)
+    newMap.set(compactKey, queryStr)
+    navigate({
+      to: '/projects/$projectId/databases/',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => ({
+        ...prev,
+        ...buildListSearchParams({
+          search: urlSearch,
+          query: mapToQueryParam(newMap),
+          page: 1,
+          limit: urlLimit,
+        }),
+      }),
+      replace: true,
+    })
+    setFiltersOpen(false)
+  }
+
+  const removeFilter = (key: CompactFilterKey) => {
+    const newMap = new Map(filterMap)
+    newMap.delete(key)
+    navigate({
+      to: '/projects/$projectId/databases/',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => {
+        const next = {
+          ...prev,
+          ...buildListSearchParams({
+            search: urlSearch,
+            query: newMap.size > 0 ? mapToQueryParam(newMap) : undefined,
+            page: 1,
+            limit: urlLimit,
+          }),
+        }
+        if (newMap.size === 0) delete next.query
+        return next
+      },
+      replace: true,
+    })
+  }
+
+  const clearAllFilters = () => {
+    navigate({
+      to: '/projects/$projectId/databases/',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => {
+        const next = {
+          ...prev,
+          ...buildListSearchParams({
+            search: urlSearch,
+            page: 1,
+            limit: urlLimit,
+          }),
+        }
+        delete next.query
+        return next
+      },
+      replace: true,
+    })
+    setFiltersOpen(false)
   }
 
   // Bulk delete mutation
@@ -451,14 +649,42 @@ export function View() {
 
   const handlePageChange = (page: number) => {
     setRequestedPage(page)
-    setSelectedDatabases(new Set()) // Clear selection on page change
+    setSelectedDatabases(new Set())
+    navigate({
+      to: '/projects/$projectId/databases/',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => ({
+        ...prev,
+        ...buildListSearchParams({
+          search: urlSearch,
+          query: filterQueryString || undefined,
+          page,
+          limit: urlLimit,
+        }),
+      }),
+      replace: true,
+    })
   }
 
   const handlePageSizeChange = (newPageSize: number) => {
     setPageSize(newPageSize)
     setRequestedPage(1)
     setDisplayedPage(1)
-    setSelectedDatabases(new Set()) // Clear selection on page size change
+    setSelectedDatabases(new Set())
+    navigate({
+      to: '/projects/$projectId/databases/',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => ({
+        ...prev,
+        ...buildListSearchParams({
+          search: urlSearch,
+          query: filterQueryString || undefined,
+          page: 1,
+          limit: newPageSize,
+        }),
+      }),
+      replace: true,
+    })
   }
 
   const ViewToggle = () => (
@@ -493,7 +719,7 @@ export function View() {
       <ServiceHeader
         title="Databases"
         searchPlaceholder="Search databases..."
-        searchValue={searchValue}
+        searchValue={searchInput}
         onSearchChange={handleSearchChange}
         createLabel="Create database"
         onCreate={() => setCreateDatabaseDialogOpen(true)}
@@ -503,7 +729,19 @@ export function View() {
             ? "You don't have permission to create databases."
             : undefined
         }
-        showFilters={false}
+        showFilters={true}
+        filterTrigger={
+          <FiltersPopover
+            open={filtersOpen}
+            onOpenChange={setFiltersOpen}
+            columns={databasesFilterColumns}
+            filterMap={filterMap}
+            onRemoveFilter={removeFilter}
+            onClearAll={clearAllFilters}
+            onApplyFilter={applyFilter}
+            resourceLabel="databases"
+          />
+        }
         fullWidthBorder
         rightContent={<ViewToggle />}
         contentAfterBorder={
@@ -742,10 +980,14 @@ export function View() {
           ) : (
             <EmptyState
               icon={Database}
-              title="No databases yet"
-              description="Create your first database to get started"
-              isEmpty={!searchValue}
-              hasFilters={!!searchValue}
+              title={urlSearch || filterMap.size > 0 ? undefined : 'No databases yet'}
+              description={
+                urlSearch || filterMap.size > 0
+                  ? undefined
+                  : 'Create your first database to get started'
+              }
+              isEmpty={!urlSearch && filterMap.size === 0}
+              hasFilters={!!urlSearch || filterMap.size > 0}
               variant="card"
             />
           )
@@ -816,10 +1058,14 @@ export function View() {
                 <div className="col-span-full">
                   <EmptyState
                     icon={Database}
-                    title="No databases yet"
-                    description="Create your first database to get started"
-                    isEmpty={!searchValue}
-                    hasFilters={!!searchValue}
+                    title={urlSearch || filterMap.size > 0 ? undefined : 'No databases yet'}
+                    description={
+                      urlSearch || filterMap.size > 0
+                        ? undefined
+                        : 'Create your first database to get started'
+                    }
+                    isEmpty={!urlSearch && filterMap.size === 0}
+                    hasFilters={!!urlSearch || filterMap.size > 0}
                     variant="card"
                   />
                 </div>
@@ -1177,11 +1423,11 @@ export function TableView({
   activeTab,
   databaseTab,
 }: TableViewProps) {
-  const params = useParams({
-    strict: false,
-  })
+  const params = useParams({ strict: false })
   const projectId = params.projectId as string
   const navigate = useNavigate()
+  const location = useLocation()
+  const search = useSearch({ strict: false }) as Record<string, unknown> | undefined
   const isDatabaseLevelView = tableId === '-' || databaseTab != null
   const { isDebugModeOpen } = useDebugMode()
   const { features } = useConsoleProfile()
@@ -1208,7 +1454,7 @@ export function TableView({
   // Sidebar tables list: search, pagination, order (API-backed)
   const [sidebarTablesSearch, setSidebarTablesSearch] = useState('')
   const [sidebarTablesPage, setSidebarTablesPage] = useState(1)
-  const sidebarTablesPageSize = 25
+  const sidebarTablesPageSize = DEFAULT_PAGE_SIZE
   const [sidebarTablesOrder, setSidebarTablesOrder] = useState<'asc' | 'desc'>(
     'asc',
   )
@@ -1421,9 +1667,17 @@ export function TableView({
     },
   })
 
-  // Fetch columns and table only when a table is selected (skip when tableId is '-')
   const effectiveTableId = tableId === '-' ? undefined : tableId
-  useProjectTableColumns(projectId, databaseId, effectiveTableId)
+  const { columns: tableColumns } = useProjectTableColumns(
+    projectId,
+    databaseId,
+    effectiveTableId,
+  )
+  const { indexes: tableIndexes } = useProjectTableIndexes(
+    projectId,
+    databaseId,
+    effectiveTableId,
+  )
   const { table: tableDataForStatus } = useProjectTable(
     projectId,
     databaseId,
@@ -1474,6 +1728,98 @@ export function TableView({
     tableId,
     showTableSecuritySettings,
   ])
+
+  const isRowsTab = activeTab === 'rows' && tableId !== '-'
+  const rowsListParams = useMemo(() => {
+    if (!isRowsTab || typeof search !== 'object') return null
+    const url = new URL(location.pathname + location.search, window.location.origin)
+    return {
+      search: getSearch(url) ?? (search?.search as string | undefined),
+      page: getPage(url, 1),
+      limit: getLimit(url, ROWS_DEFAULT_PAGE_SIZE),
+      filterMap: queryParamToMap(getQueryParam(url) ?? (search?.query as string | undefined) ?? null),
+    }
+  }, [isRowsTab, search, location.pathname, location.search])
+
+  const rowsUrlPage = rowsListParams?.page ?? 1
+  const rowsUrlLimit = rowsListParams?.limit ?? ROWS_DEFAULT_PAGE_SIZE
+  const rowsUrlSearch = rowsListParams?.search
+  const rowsFilterMap = rowsListParams?.filterMap ?? new Map()
+  const rowsFilterQueries =
+    rowsFilterMap.size > 0 ? Array.from(rowsFilterMap.values()) : undefined
+  const rowsFilterQueryString =
+    rowsFilterMap.size > 0 ? mapToQueryParam(rowsFilterMap) : ''
+
+  const rowsFilterColumns = useMemo(
+    () =>
+      rowsFilterColumnsFromAttributes(
+        tableColumns,
+        tableIndexes as TableIndexForFilters[],
+      ),
+    [tableColumns, tableIndexes],
+  )
+
+  const [rowsFiltersOpen, setRowsFiltersOpen] = useState(false)
+
+  const navigateToRowsList = (params: {
+    search?: string
+    query?: string
+    page?: number
+    limit?: number
+  }) => {
+    const hasQueryKey = 'query' in params
+    navigate({
+      to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+      params: { projectId, databaseId, tableId },
+      search: (prev: Record<string, unknown>) => {
+        const built = buildListSearchParams({
+          search: params.search ?? rowsUrlSearch ?? undefined,
+          query: hasQueryKey
+            ? params.query
+            : (rowsFilterQueryString || undefined),
+          page: params.page ?? rowsUrlPage,
+          limit: params.limit ?? rowsUrlLimit,
+        })
+        const next = { ...prev, ...built }
+        if (hasQueryKey && params.query === undefined) delete next.query
+        return next
+      },
+      replace: true,
+    })
+  }
+
+  const rowsApplyFilter = (compactKey: CompactFilterKey, queryStr: string) => {
+    const next = new Map(rowsFilterMap)
+    next.set(compactKey, queryStr)
+    navigateToRowsList({
+      search: rowsUrlSearch ?? undefined,
+      query: mapToQueryParam(next) || undefined,
+      page: 1,
+      limit: rowsUrlLimit,
+    })
+    setRowsFiltersOpen(false)
+  }
+
+  const rowsRemoveFilter = (compactKey: CompactFilterKey) => {
+    const next = new Map(rowsFilterMap)
+    next.delete(compactKey)
+    navigateToRowsList({
+      search: rowsUrlSearch ?? undefined,
+      query: next.size > 0 ? mapToQueryParam(next) : undefined,
+      page: 1,
+      limit: rowsUrlLimit,
+    })
+  }
+
+  const rowsClearAllFilters = () => {
+    navigateToRowsList({
+      search: rowsUrlSearch ?? undefined,
+      query: undefined,
+      page: 1,
+      limit: rowsUrlLimit,
+    })
+    setRowsFiltersOpen(false)
+  }
 
   const getCreateLabel = () => {
     switch (activeTab) {
@@ -1721,7 +2067,7 @@ export function TableView({
                               databaseId,
                               newTableId,
                               0,
-                              25,
+                              ROWS_DEFAULT_PAGE_SIZE,
                               undefined,
                             ),
                           ),
@@ -1948,27 +2294,27 @@ export function TableView({
           searchPlaceholder={
             isDatabaseLevelView
               ? undefined
-              : activeTab === 'settings' ||
-                  activeTab === 'security' ||
-                  activeTab === 'rows'
+              : activeTab === 'rows' ||
+                  activeTab === 'settings' ||
+                  activeTab === 'security'
                 ? undefined
                 : `Search ${activeTab}...`
           }
           searchValue={
             isDatabaseLevelView
               ? undefined
-              : activeTab === 'settings' ||
-                  activeTab === 'security' ||
-                  activeTab === 'rows'
+              : activeTab === 'rows' ||
+                  activeTab === 'settings' ||
+                  activeTab === 'security'
                 ? undefined
                 : searchValue
           }
           onSearchChange={
             isDatabaseLevelView
               ? undefined
-              : activeTab === 'settings' ||
-                  activeTab === 'security' ||
-                  activeTab === 'rows'
+              : activeTab === 'rows' ||
+                  activeTab === 'settings' ||
+                  activeTab === 'security'
                 ? undefined
                 : setSearchValue
           }
@@ -2003,7 +2349,21 @@ export function TableView({
                   }
                 }
           }
-          showFilters={!isDatabaseLevelView && activeTab === 'rows' && hasRows}
+          showFilters={!isDatabaseLevelView && activeTab === 'rows'}
+          filterTrigger={
+            !isDatabaseLevelView && activeTab === 'rows' ? (
+              <FiltersPopover
+                open={rowsFiltersOpen}
+                onOpenChange={setRowsFiltersOpen}
+                columns={rowsFilterColumns}
+                filterMap={rowsFilterMap}
+                onRemoveFilter={rowsRemoveFilter}
+                onClearAll={rowsClearAllFilters}
+                onApplyFilter={rowsApplyFilter}
+                resourceLabel="rows"
+              />
+            ) : undefined
+          }
           showRefresh={!isDatabaseLevelView && activeTab === 'rows'}
           onRefresh={
             !isDatabaseLevelView && activeTab === 'rows'
@@ -2263,6 +2623,12 @@ export function TableView({
                   }}
                   onCreateColumnReady={openCreateColumnDialogRef.current}
                   onRowsCountChange={handleRowsCountChange}
+                  rowsUrlSearch={rowsUrlSearch}
+                  rowsUrlPage={rowsUrlPage}
+                  rowsUrlLimit={rowsUrlLimit}
+                  rowsFilterQueries={rowsFilterQueries}
+                  rowsFilterQueryString={rowsFilterQueryString}
+                  onNavigateToRowsList={navigateToRowsList}
                 />
               )}
               {activeTab === 'columns' && (
@@ -2571,7 +2937,7 @@ export function DatabaseOverview({
   const [searchValue, setSearchValue] = useState('')
   const [requestedPage, setRequestedPage] = useState(1)
   const [displayedPage, setDisplayedPage] = useState(1)
-  const [pageSize, setPageSize] = useState(25)
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
   const [databaseName, setDatabaseName] = useState('')
   const [enabled, setEnabled] = useState(false)
   const [deleteConfirmation, setDeleteConfirmation] = useState('')
@@ -5161,6 +5527,18 @@ interface SpreadsheetProps {
   /** When false, create row/column and suggest actions are disabled (e.g. read-only roles) */
   canWriteRows?: boolean
   canWriteTables?: boolean
+  /** URL-driven rows list (when set, search/page/limit/filters come from URL) */
+  rowsUrlSearch?: string
+  rowsUrlPage?: number
+  rowsUrlLimit?: number
+  rowsFilterQueries?: string[]
+  rowsFilterQueryString?: string
+  onNavigateToRowsList?: (params: {
+    search?: string
+    query?: string
+    page?: number
+    limit?: number
+  }) => void
 }
 
 function RowsSpreadsheet({
@@ -5171,6 +5549,12 @@ function RowsSpreadsheet({
   onRowsCountChange,
   canWriteRows = true,
   canWriteTables = true,
+  rowsUrlSearch,
+  rowsUrlPage = 1,
+  rowsUrlLimit = ROWS_DEFAULT_PAGE_SIZE,
+  rowsFilterQueries,
+  rowsFilterQueryString,
+  onNavigateToRowsList,
 }: SpreadsheetProps) {
   const params = useParams({
     strict: false,
@@ -5179,14 +5563,27 @@ function RowsSpreadsheet({
   const databaseId = params.databaseId as string
   const tableId = table.$id
 
+  const urlDriven = onNavigateToRowsList != null
+
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
-  const [requestedPage, setRequestedPage] = useState(1)
-  const [displayedPage, setDisplayedPage] = useState(1)
+  const [requestedPage, setRequestedPage] = useState(urlDriven ? rowsUrlPage : 1)
+  const [displayedPage, setDisplayedPage] = useState(urlDriven ? rowsUrlPage : 1)
+  const [displayedSearch, setDisplayedSearch] = useState<string>(
+    urlDriven ? (rowsUrlSearch ?? '') : '',
+  )
+  const [displayedFilterQueryString, setDisplayedFilterQueryString] =
+    useState<string>(urlDriven ? (rowsFilterQueryString ?? '') : '')
+  const displayedFilterQueries = useMemo(() => {
+    if (!displayedFilterQueryString) return undefined
+    const map = queryParamToMap(displayedFilterQueryString)
+    return map.size > 0 ? Array.from(map.values()) : undefined
+  }, [displayedFilterQueryString])
+  const hasInitedDisplayedRef = useRef(false)
   const [displayedSortBy, setDisplayedSortBy] = useState<string>('$createdAt')
   const [displayedSortOrder, setDisplayedSortOrder] = useState<'asc' | 'desc'>(
     'desc',
   )
-  const [pageSize, setPageSize] = useState(25)
+  const [pageSize, setPageSize] = useState(urlDriven ? rowsUrlLimit : ROWS_DEFAULT_PAGE_SIZE)
   const [sortBy, setSortBy] = useState<string>('$createdAt')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [editDrawerOpen, setEditDrawerOpen] = useState(false)
@@ -5211,19 +5608,46 @@ function RowsSpreadsheet({
   const navigate = useNavigate()
   const location = useLocation()
 
-  // Clear selection and reset page when navigating between pages/routes or switching tables
+  useEffect(() => {
+    if (urlDriven && rowsUrlPage != null && rowsUrlLimit != null) {
+      setRequestedPage((p) => (p === rowsUrlPage ? p : rowsUrlPage))
+      setPageSize((s) => (s === rowsUrlLimit ? s : rowsUrlLimit))
+    }
+  }, [urlDriven, rowsUrlPage, rowsUrlLimit])
+
+  useEffect(() => {
+    if (!urlDriven || rowsUrlPage == null || rowsUrlLimit == null) return
+    if (!hasInitedDisplayedRef.current) {
+      setDisplayedPage(rowsUrlPage)
+      setDisplayedSearch(rowsUrlSearch ?? '')
+      setDisplayedFilterQueryString(rowsFilterQueryString ?? '')
+      hasInitedDisplayedRef.current = true
+    }
+  }, [urlDriven, rowsUrlPage, rowsUrlLimit, rowsUrlSearch, rowsFilterQueryString])
+
   useEffect(() => {
     setSelectedRows(new Set())
     setDeleteDialogOpen(false)
-    setRequestedPage(1)
-    setDisplayedPage(1)
+    if (!urlDriven) {
+      setRequestedPage(1)
+      setDisplayedPage(1)
+    }
     setDisplayedSortBy('$createdAt')
     setDisplayedSortOrder('desc')
     setSortBy('$createdAt')
     setSortOrder('desc')
-  }, [location.pathname, projectId, databaseId, tableId])
+  }, [location.pathname, projectId, databaseId, tableId, urlDriven])
 
-  // Fetch data for the requested page (triggers load when user changes page)
+  const effectiveSearch = urlDriven ? (rowsUrlSearch ?? '') : ''
+  const effectivePageSize = urlDriven ? rowsUrlLimit : pageSize
+  const effectiveRequestedPage = urlDriven ? requestedPage : requestedPage
+  const effectiveDisplayedPage = urlDriven ? displayedPage : displayedPage
+  const effectiveDisplayedSearch = urlDriven ? (displayedSearch ?? '') : ''
+  const effectiveFilterQueries = urlDriven ? rowsFilterQueries : undefined
+  const effectiveDisplayedFilterQueries = urlDriven
+    ? displayedFilterQueries
+    : undefined
+
   const {
     total: rowsTotal,
     isLoading: rowsLoading,
@@ -5233,14 +5657,14 @@ function RowsSpreadsheet({
     projectId,
     databaseId,
     tableId,
-    requestedPage - 1,
-    pageSize,
-    '',
+    effectiveRequestedPage - 1,
+    effectivePageSize,
+    effectiveSearch,
     sortOrder,
     sortBy,
+    effectiveFilterQueries,
   )
 
-  // Fetch data for the displayed view (what we show - stays until new data is ready)
   const {
     rows: apiRows,
     total: displayedRowsTotal,
@@ -5249,27 +5673,34 @@ function RowsSpreadsheet({
     projectId,
     databaseId,
     tableId,
-    displayedPage - 1,
-    pageSize,
-    '',
+    effectiveDisplayedPage - 1,
+    effectivePageSize,
+    effectiveDisplayedSearch,
     displayedSortOrder,
     displayedSortBy,
+    effectiveDisplayedFilterQueries,
   )
 
-  // Update displayed page/sort only when requested data is ready (no loading flash)
   useEffect(() => {
-    if (
-      !rowsFetching &&
-      !rowsLoading &&
-      (requestedPage !== displayedPage ||
-        sortBy !== displayedSortBy ||
-        sortOrder !== displayedSortOrder)
-    ) {
+    if (!urlDriven || rowsFetching || rowsLoading) return
+    const urlSearchMatch = (rowsUrlSearch ?? '') === (displayedSearch ?? '')
+    const filterMatch =
+      (rowsFilterQueryString ?? '') === (displayedFilterQueryString ?? '')
+    const match =
+      requestedPage === displayedPage &&
+      sortBy === displayedSortBy &&
+      sortOrder === displayedSortOrder &&
+      urlSearchMatch &&
+      filterMatch
+    if (!match) {
       setDisplayedPage(requestedPage)
       setDisplayedSortBy(sortBy)
       setDisplayedSortOrder(sortOrder)
+      setDisplayedSearch(rowsUrlSearch ?? '')
+      setDisplayedFilterQueryString(rowsFilterQueryString ?? '')
     }
   }, [
+    urlDriven,
     rowsFetching,
     rowsLoading,
     requestedPage,
@@ -5278,6 +5709,10 @@ function RowsSpreadsheet({
     sortOrder,
     displayedSortBy,
     displayedSortOrder,
+    rowsUrlSearch,
+    displayedSearch,
+    rowsFilterQueryString,
+    displayedFilterQueryString,
   ])
 
   // Only show full loading when we have no data to display (initial load)
@@ -5392,7 +5827,7 @@ function RowsSpreadsheet({
       $sequence: row.$sequence,
       rowNumber:
         (displayedRowsTotal ?? rowsTotal) -
-        (currentPageIndexed * pageSize + index),
+        (currentPageIndexed * effectivePageSize + index),
       data,
       $createdAt: row.$createdAt,
       $updatedAt: row.$updatedAt,
@@ -5430,14 +5865,20 @@ function RowsSpreadsheet({
 
   const handlePageChange = (page: number) => {
     setRequestedPage(page)
-    setSelectedRows(new Set()) // Clear selection on page change
+    setSelectedRows(new Set())
+    if (urlDriven && onNavigateToRowsList) {
+      onNavigateToRowsList({ page })
+    }
   }
 
   const handlePageSizeChange = (newPageSize: number) => {
     setPageSize(newPageSize)
     setRequestedPage(1)
     setDisplayedPage(1)
-    setSelectedRows(new Set()) // Clear selection on page size change
+    setSelectedRows(new Set())
+    if (urlDriven && onNavigateToRowsList) {
+      onNavigateToRowsList({ page: 1, limit: newPageSize })
+    }
   }
 
   const handleSortColumn = (columnKey: string) => {
@@ -6483,7 +6924,7 @@ function RowsSpreadsheet({
             <Pagination
               currentPage={displayedPage}
               totalItems={displayedRowsTotal ?? rowsTotal}
-              pageSize={pageSize}
+              pageSize={effectivePageSize}
               pageSizeOptions={[10, 25, 50, 100]}
               onPageChange={handlePageChange}
               onPageSizeChange={handlePageSizeChange}

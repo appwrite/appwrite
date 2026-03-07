@@ -8,7 +8,7 @@ import {
 
 import { pageTitle } from '@/lib/utils/page-title'
 
-const PROVIDERS_PER_PAGE = 25
+const PROVIDERS_PER_PAGE = 10
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/messaging/providers/',

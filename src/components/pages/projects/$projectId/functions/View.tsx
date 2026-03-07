@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import {
   useParams,
   useNavigate,
@@ -21,6 +21,20 @@ import {
   useOrganizationScopes,
   fetchProjectFunctions,
 } from '@/lib/react-query/hooks'
+import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import {
+  getSearch,
+  getPage,
+  getLimit,
+  getQueryParam,
+  queryParamToMap,
+  mapToQueryParam,
+  buildListSearchParams,
+  MIN_SEARCH_LENGTH,
+  functionsFilterColumns,
+} from '@/lib/table-filters'
+import type { CompactFilterKey } from '@/lib/table-filters'
+import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 import { canCreateFunction } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import type { Models } from '@appwrite.io/console'
@@ -35,7 +49,12 @@ import { TemplatesView } from './Templates'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
 import { formatCronExpression } from './CronScheduleEditor'
 
-const FUNCTIONS_PER_PAGE = 25
+type FunctionsListSearch = {
+  search?: string
+  query?: string
+  page?: number
+  limit?: number
+}
 
 /**
  * Get next scheduled execution time from cron expression
@@ -77,70 +96,198 @@ export function View() {
     return 'functions'
   }, [location.pathname])
 
-  const [searchValue, setSearchValue] = useState<string>('')
-  const [requestedPage, setRequestedPage] = useState(0)
-  const [displayedPage, setDisplayedPage] = useState(0)
-  const [pageSize, setPageSize] = useState(FUNCTIONS_PER_PAGE)
-
-  // Get search from URL params
-  const urlSearch =
-    typeof search === 'object' && 'search' in search
-      ? (search.search as string)
-      : undefined
-
-  // Initialize search from URL
-  useEffect(() => {
-    if (urlSearch !== undefined) {
-      setSearchValue(urlSearch)
+  const isFunctionsIndex =
+    activeTab === 'functions' &&
+    location.pathname.replace(/\/$/, '') === `/projects/${projectId}/functions`
+  const functionsListParams = useMemo(() => {
+    if (!isFunctionsIndex || typeof search !== 'object') return null
+    const url = new URL(location.pathname + location.search, window.location.origin)
+    return {
+      search: getSearch(url) ?? (search.search as string | undefined),
+      page: getPage(url, 1),
+      limit: getLimit(url, DEFAULT_PAGE_SIZE),
+      filterMap: queryParamToMap(getQueryParam(url) ?? (search.query as string | undefined) ?? null),
     }
+  }, [isFunctionsIndex, search, location.pathname, location.search, projectId])
+
+  const urlPage = functionsListParams?.page ?? 1
+  const urlLimit = functionsListParams?.limit ?? DEFAULT_PAGE_SIZE
+  const urlSearch = functionsListParams?.search
+  const filterMap = functionsListParams?.filterMap ?? new Map()
+  const filterQueries =
+    filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
+  const filterQueryString = filterMap.size > 0 ? mapToQueryParam(filterMap) : ''
+
+  const [searchInput, setSearchInput] = useState<string>('')
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [requestedPage, setRequestedPage] = useState(1)
+  const [displayedPage, setDisplayedPage] = useState(1)
+  const [displayedSearch, setDisplayedSearch] = useState<string | undefined>(
+    undefined,
+  )
+  const [displayedFilterQueryString, setDisplayedFilterQueryString] =
+    useState('')
+  const displayedFilterQueries = useMemo(() => {
+    if (!displayedFilterQueryString) return undefined
+    const map = queryParamToMap(displayedFilterQueryString)
+    return map.size > 0 ? Array.from(map.values()) : undefined
+  }, [displayedFilterQueryString])
+  const hasInitedDisplayedRef = useRef(false)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+
+  useEffect(() => {
+    setSearchInput(urlSearch ?? '')
   }, [urlSearch])
+
+  useEffect(() => {
+    if (!isFunctionsIndex) return
+    setRequestedPage((prev) => (prev === urlPage ? prev : urlPage))
+  }, [isFunctionsIndex, urlPage, urlLimit])
+
+  useEffect(() => {
+    if (!isFunctionsIndex || !functionsListParams) return
+    if (!hasInitedDisplayedRef.current) {
+      setDisplayedPage(urlPage)
+      setDisplayedSearch(urlSearch ?? undefined)
+      setDisplayedFilterQueryString(filterQueryString)
+      hasInitedDisplayedRef.current = true
+    }
+  }, [isFunctionsIndex, functionsListParams, urlPage, urlSearch, filterQueryString])
+
+  useEffect(() => {
+    if (!isFunctionsIndex) return
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    searchDebounceRef.current = setTimeout(() => {
+      const trimmed = searchInput.trim()
+      if (trimmed === (urlSearch ?? '')) return
+      if (trimmed.length > 0 && trimmed.length < MIN_SEARCH_LENGTH) return
+      navigateToFunctionsList({
+        search: trimmed || undefined,
+        query: filterQueryString || undefined,
+        page: 1,
+        limit: urlLimit,
+      })
+    }, 300)
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    }
+  }, [searchInput, projectId, navigate, urlSearch, urlLimit, filterQueryString, isFunctionsIndex])
 
   // Fetch data for the requested page (triggers load when user changes page)
   const {
     total,
     isLoading: functionsLoading,
     isFetching: functionsFetching,
+    isFetched: functionsFetched,
     error,
   } = useProjectFunctions(
     projectId,
-    requestedPage,
-    pageSize,
-    searchValue || undefined,
+    requestedPage - 1,
+    urlLimit,
+    urlSearch ?? undefined,
+    filterQueries,
   )
 
-  // Fetch data for the displayed page (what we show - stays until new page is ready)
   const {
     functions,
     total: displayedTotal,
     isLoading: displayedLoading,
   } = useProjectFunctions(
     projectId,
-    displayedPage,
-    pageSize,
-    searchValue || undefined,
+    displayedPage - 1,
+    urlLimit,
+    displayedSearch ?? undefined,
+    displayedFilterQueries,
   )
 
-  // Update displayed page only when requested page data is ready (no flash)
   useEffect(() => {
-    if (
-      !functionsFetching &&
-      requestedPage !== displayedPage &&
-      !functionsLoading
-    ) {
-      setDisplayedPage(requestedPage)
+    if (!isFunctionsIndex || functionsFetching || functionsLoading || !functionsFetched) return
+    const match =
+      urlPage === displayedPage &&
+      (urlSearch ?? '') === (displayedSearch ?? '') &&
+      filterQueryString === displayedFilterQueryString
+    if (!match) {
+      setDisplayedPage(urlPage)
+      setDisplayedSearch(urlSearch ?? undefined)
+      setDisplayedFilterQueryString(filterQueryString)
     }
-  }, [functionsFetching, functionsLoading, requestedPage, displayedPage])
+  }, [
+    isFunctionsIndex,
+    functionsFetching,
+    functionsLoading,
+    functionsFetched,
+    urlPage,
+    urlSearch,
+    filterQueryString,
+    displayedPage,
+    displayedSearch,
+    displayedFilterQueryString,
+  ])
+
+  const applyFilter = (compactKey: CompactFilterKey, queryStr: string) => {
+    const next = new Map(filterMap)
+    next.set(compactKey, queryStr)
+    navigateToFunctionsList({
+      search: urlSearch ?? undefined,
+      query: mapToQueryParam(next) || undefined,
+      page: 1,
+      limit: urlLimit,
+    })
+    setFiltersOpen(false)
+  }
+
+  const removeFilter = (compactKey: CompactFilterKey) => {
+    const next = new Map(filterMap)
+    next.delete(compactKey)
+    navigateToFunctionsList({
+      search: urlSearch ?? undefined,
+      query: next.size > 0 ? mapToQueryParam(next) : undefined,
+      page: 1,
+      limit: urlLimit,
+    })
+  }
+
+  const clearAllFilters = () => {
+    navigateToFunctionsList({
+      search: urlSearch ?? undefined,
+      query: undefined,
+      page: 1,
+      limit: urlLimit,
+    })
+    setFiltersOpen(false)
+  }
+
+  const navigateToFunctionsList = (params: FunctionsListSearch) => {
+    const hasQueryKey = 'query' in params
+    const hasSearchKey = 'search' in params
+    navigate({
+      to: '/projects/$projectId/functions',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => {
+        const built = buildListSearchParams({
+          search: hasSearchKey ? params.search : (urlSearch ?? undefined),
+          query: hasQueryKey ? params.query : (filterQueryString || undefined),
+          page: params.page ?? 1,
+          limit: params.limit ?? urlLimit,
+        })
+        const next = { ...prev, ...built }
+        if (hasQueryKey && params.query === undefined) delete next.query
+        if (hasSearchKey && (params.search === undefined || params.search === ''))
+          delete next.search
+        return next
+      },
+      replace: true,
+    })
+  }
 
   const showLoading = displayedLoading && functions.length === 0
 
-  // Get total count from the first page query (no search) - already fetched in route loader
-  // This is used for limit checking and doesn't change when searching
   const { data: totalFunctionsData } = useQuery({
-    queryKey: ['functions', 'project', projectId, 0, pageSize, undefined],
-    queryFn: () => fetchProjectFunctions(projectId!, 0, pageSize, undefined),
+    queryKey: ['functions', 'project', projectId, 0, urlLimit, undefined, undefined],
+    queryFn: () => fetchProjectFunctions(projectId!, 0, urlLimit, undefined, undefined),
     enabled: !!projectId,
-    staleTime: 30 * 1000, // 30 seconds
-    refetchOnMount: false, // Data is fresh from route loader, no need to refetch
+    staleTime: 30 * 1000,
+    refetchOnMount: false,
   })
 
   // Get project to get teamId for organization plan
@@ -189,18 +336,10 @@ export function View() {
   }, [location.search, navigate, projectId])
 
   const handleSearchChange = (value: string) => {
-    setSearchValue(value)
-    setRequestedPage(0)
-    setDisplayedPage(0)
-    // Update URL
-    navigate({
-      to: location.pathname,
-      search: (prev) => ({
-        ...prev,
-        search: value || undefined,
-      }),
-      replace: true,
-    })
+    setSearchInput(value)
+    setRequestedPage(1)
+    setDisplayedPage(1)
+    // URL is updated by the debounced effect so we don't fetch on every keystroke
   }
 
   const handleCreateFunction = () => {
@@ -210,8 +349,17 @@ export function View() {
     })
   }
 
-  const hasFunctions = total > 0
-  const noSearchResults = searchValue && total === 0 && !functionsLoading
+  // Use displayed data for empty states so we don't flash "No results" before syncing
+  const filtersMatch =
+    (displayedSearch ?? '') === (urlSearch ?? '') &&
+    displayedFilterQueryString === filterQueryString
+  const hasFunctions = (displayedTotal ?? 0) > 0
+  const hasFilters = (urlSearch && urlSearch.length > 0) || filterMap.size > 0
+  const noSearchResults =
+    hasFilters &&
+    filtersMatch &&
+    (displayedTotal ?? 0) === 0 &&
+    !displayedLoading
 
   // Update tabs with dynamic function count
   const tabs: Tab[] = useMemo(
@@ -251,7 +399,7 @@ export function View() {
           searchPlaceholder={
             activeTab === 'functions' ? 'Search functions...' : undefined
           }
-          searchValue={activeTab === 'functions' ? searchValue : undefined}
+          searchValue={activeTab === 'functions' ? searchInput : undefined}
           onSearchChange={
             activeTab === 'functions' ? handleSearchChange : undefined
           }
@@ -266,6 +414,21 @@ export function View() {
               : undefined
           }
           fullWidthBorder
+          showFilters={activeTab === 'functions'}
+          filterTrigger={
+            activeTab === 'functions' ? (
+              <FiltersPopover
+                open={filtersOpen}
+                onOpenChange={setFiltersOpen}
+                columns={functionsFilterColumns}
+                filterMap={filterMap}
+                onRemoveFilter={removeFilter}
+                onClearAll={clearAllFilters}
+                onApplyFilter={applyFilter}
+                resourceLabel="functions"
+              />
+            ) : undefined
+          }
           beforeCreateButtons={
             activeTab === 'functions' ? (
               <Button
@@ -305,7 +468,7 @@ export function View() {
         searchPlaceholder={
           activeTab === 'functions' ? 'Search functions...' : undefined
         }
-        searchValue={activeTab === 'functions' ? searchValue : undefined}
+        searchValue={activeTab === 'functions' ? searchInput : undefined}
         onSearchChange={
           activeTab === 'functions' ? handleSearchChange : undefined
         }
@@ -345,9 +508,22 @@ export function View() {
             </TooltipProvider>
           ) : undefined
         }
+        showFilters={activeTab === 'functions'}
+        filterTrigger={
+          activeTab === 'functions' ? (
+            <FiltersPopover
+              open={filtersOpen}
+              onOpenChange={setFiltersOpen}
+              columns={functionsFilterColumns}
+              filterMap={filterMap}
+              onRemoveFilter={removeFilter}
+              onClearAll={clearAllFilters}
+              onApplyFilter={applyFilter}
+              resourceLabel="functions"
+            />
+          ) : undefined
+        }
         contentAfterBorder={
-          // Data is prefetched in route loader, only render if data exists
-          // PlanLimitWarning handles its own visibility logic
           activeTab === 'functions' &&
           project &&
           organizationPlan !== undefined &&
@@ -378,7 +554,7 @@ export function View() {
               <EmptyState
                 icon={Play}
                 isEmpty={false}
-                hasFilters={true}
+                hasFilters={hasFilters}
                 variant="card"
                 iconSize="md"
               >
@@ -395,17 +571,10 @@ export function View() {
                   <Button
                     variant="outline"
                     onClick={() => {
-                      setSearchValue('')
-                      setRequestedPage(0)
-                      setDisplayedPage(0)
-                      navigate({
-                        to: location.pathname,
-                        search: (prev) => ({
-                          ...prev,
-                          search: undefined,
-                        }),
-                        replace: true,
-                      })
+                      setSearchInput('')
+                      setRequestedPage(1)
+                      setDisplayedPage(1)
+                      navigateToFunctionsList({ page: 1, limit: urlLimit })
                     }}
                   >
                     Clear search
@@ -523,15 +692,28 @@ export function View() {
                 </div>
 
                 <Pagination
-                  currentPage={displayedPage + 1}
+                  currentPage={displayedPage}
                   totalItems={displayedTotal ?? total}
-                  pageSize={pageSize}
+                  pageSize={urlLimit}
                   pageSizeOptions={[10, 25, 50, 100]}
-                  onPageChange={(page) => setRequestedPage(page - 1)}
+                  onPageChange={(page) => {
+                    setRequestedPage(page)
+                    navigateToFunctionsList({
+                      search: urlSearch ?? undefined,
+                      query: filterQueryString || undefined,
+                      page,
+                      limit: urlLimit,
+                    })
+                  }}
                   onPageSizeChange={(size) => {
-                    setPageSize(size)
-                    setRequestedPage(0)
-                    setDisplayedPage(0)
+                    setRequestedPage(1)
+                    setDisplayedPage(1)
+                    navigateToFunctionsList({
+                      search: urlSearch ?? undefined,
+                      query: filterQueryString || undefined,
+                      page: 1,
+                      limit: size,
+                    })
                   }}
                   itemLabel="functions"
                 />

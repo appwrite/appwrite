@@ -98,10 +98,9 @@ import {
   useDeleteProjectUser,
 } from '@/lib/react-query/hooks/users'
 import { useProject } from '@/lib/react-query/hooks'
+import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { Browser } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-
-const DEFAULT_PAGE_SIZE = 25
 
 // Browser Icon Component with Device Badge
 function BrowserIcon({

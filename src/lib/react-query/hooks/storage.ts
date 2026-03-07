@@ -279,6 +279,7 @@ export function useProjectBuckets(
     data: bucketsData,
     isLoading,
     isFetching,
+    isFetched,
     error,
     refetch,
   } = useQuery(
@@ -301,6 +302,7 @@ export function useProjectBuckets(
     totalPages,
     isLoading,
     isFetching,
+    isFetched,
     error,
     refetch,
   }

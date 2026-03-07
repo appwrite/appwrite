@@ -66,6 +66,7 @@ import { Route as PublicProjectsProjectIdSitesUsageRouteImport } from './routes/
 import { Route as PublicProjectsProjectIdSitesCreateRouteImport } from './routes/_public/projects.$projectId.sites.create'
 import { Route as PublicProjectsProjectIdSitesSiteIdRouteImport } from './routes/_public/projects.$projectId.sites.$siteId'
 import { Route as PublicProjectsProjectIdSettingsWebhooksRouteImport } from './routes/_public/projects.$projectId.settings.webhooks'
+import { Route as PublicProjectsProjectIdSettingsVariablesRouteImport } from './routes/_public/projects.$projectId.settings.variables'
 import { Route as PublicProjectsProjectIdSettingsSmtpRouteImport } from './routes/_public/projects.$projectId.settings.smtp'
 import { Route as PublicProjectsProjectIdSettingsMigrationsRouteImport } from './routes/_public/projects.$projectId.settings.migrations'
 import { Route as PublicProjectsProjectIdSettingsDomainsRouteImport } from './routes/_public/projects.$projectId.settings.domains'
@@ -108,6 +109,7 @@ import { Route as PublicProjectsProjectIdSitesCreateManualRouteImport } from './
 import { Route as PublicProjectsProjectIdSitesCreateFinishRouteImport } from './routes/_public/projects.$projectId.sites.create.finish'
 import { Route as PublicProjectsProjectIdSitesCreateDeployingRouteImport } from './routes/_public/projects.$projectId.sites.create.deploying'
 import { Route as PublicProjectsProjectIdSitesCreateDeployRouteImport } from './routes/_public/projects.$projectId.sites.create.deploy'
+import { Route as PublicProjectsProjectIdSitesSiteIdVariablesRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.variables'
 import { Route as PublicProjectsProjectIdSitesSiteIdUsageRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.usage'
 import { Route as PublicProjectsProjectIdSitesSiteIdSettingsRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.settings'
 import { Route as PublicProjectsProjectIdSitesSiteIdLogsRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.logs'
@@ -499,6 +501,12 @@ const PublicProjectsProjectIdSettingsWebhooksRoute =
     path: '/webhooks',
     getParentRoute: () => PublicProjectsProjectIdSettingsRoute,
   } as any)
+const PublicProjectsProjectIdSettingsVariablesRoute =
+  PublicProjectsProjectIdSettingsVariablesRouteImport.update({
+    id: '/variables',
+    path: '/variables',
+    getParentRoute: () => PublicProjectsProjectIdSettingsRoute,
+  } as any)
 const PublicProjectsProjectIdSettingsSmtpRoute =
   PublicProjectsProjectIdSettingsSmtpRouteImport.update({
     id: '/smtp',
@@ -750,6 +758,12 @@ const PublicProjectsProjectIdSitesCreateDeployRoute =
     id: '/deploy',
     path: '/deploy',
     getParentRoute: () => PublicProjectsProjectIdSitesCreateRoute,
+  } as any)
+const PublicProjectsProjectIdSitesSiteIdVariablesRoute =
+  PublicProjectsProjectIdSitesSiteIdVariablesRouteImport.update({
+    id: '/variables',
+    path: '/variables',
+    getParentRoute: () => PublicProjectsProjectIdSitesSiteIdRoute,
   } as any)
 const PublicProjectsProjectIdSitesSiteIdUsageRoute =
   PublicProjectsProjectIdSitesSiteIdUsageRouteImport.update({
@@ -1273,6 +1287,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/settings/domains': typeof PublicProjectsProjectIdSettingsDomainsRouteWithChildren
   '/projects/$projectId/settings/migrations': typeof PublicProjectsProjectIdSettingsMigrationsRouteWithChildren
   '/projects/$projectId/settings/smtp': typeof PublicProjectsProjectIdSettingsSmtpRoute
+  '/projects/$projectId/settings/variables': typeof PublicProjectsProjectIdSettingsVariablesRoute
   '/projects/$projectId/settings/webhooks': typeof PublicProjectsProjectIdSettingsWebhooksRoute
   '/projects/$projectId/sites/$siteId': typeof PublicProjectsProjectIdSitesSiteIdRouteWithChildren
   '/projects/$projectId/sites/create': typeof PublicProjectsProjectIdSitesCreateRouteWithChildren
@@ -1316,6 +1331,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/sites/$siteId/logs': typeof PublicProjectsProjectIdSitesSiteIdLogsRoute
   '/projects/$projectId/sites/$siteId/settings': typeof PublicProjectsProjectIdSitesSiteIdSettingsRoute
   '/projects/$projectId/sites/$siteId/usage': typeof PublicProjectsProjectIdSitesSiteIdUsageRoute
+  '/projects/$projectId/sites/$siteId/variables': typeof PublicProjectsProjectIdSitesSiteIdVariablesRoute
   '/projects/$projectId/sites/create/deploy': typeof PublicProjectsProjectIdSitesCreateDeployRoute
   '/projects/$projectId/sites/create/deploying': typeof PublicProjectsProjectIdSitesCreateDeployingRoute
   '/projects/$projectId/sites/create/finish': typeof PublicProjectsProjectIdSitesCreateFinishRoute
@@ -1422,6 +1438,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/realtime/channels': typeof PublicProjectsProjectIdRealtimeChannelsRoute
   '/projects/$projectId/realtime/messages': typeof PublicProjectsProjectIdRealtimeMessagesRoute
   '/projects/$projectId/settings/smtp': typeof PublicProjectsProjectIdSettingsSmtpRoute
+  '/projects/$projectId/settings/variables': typeof PublicProjectsProjectIdSettingsVariablesRoute
   '/projects/$projectId/settings/webhooks': typeof PublicProjectsProjectIdSettingsWebhooksRoute
   '/projects/$projectId/sites/usage': typeof PublicProjectsProjectIdSitesUsageRoute
   '/organizations/$orgId/domains': typeof PublicOrganizationsOrgIdDomainsIndexRoute
@@ -1457,6 +1474,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/sites/$siteId/logs': typeof PublicProjectsProjectIdSitesSiteIdLogsRoute
   '/projects/$projectId/sites/$siteId/settings': typeof PublicProjectsProjectIdSitesSiteIdSettingsRoute
   '/projects/$projectId/sites/$siteId/usage': typeof PublicProjectsProjectIdSitesSiteIdUsageRoute
+  '/projects/$projectId/sites/$siteId/variables': typeof PublicProjectsProjectIdSitesSiteIdVariablesRoute
   '/projects/$projectId/sites/create/deploy': typeof PublicProjectsProjectIdSitesCreateDeployRoute
   '/projects/$projectId/sites/create/deploying': typeof PublicProjectsProjectIdSitesCreateDeployingRoute
   '/projects/$projectId/sites/create/finish': typeof PublicProjectsProjectIdSitesCreateFinishRoute
@@ -1582,6 +1600,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/settings/domains': typeof PublicProjectsProjectIdSettingsDomainsRouteWithChildren
   '/_public/projects/$projectId/settings/migrations': typeof PublicProjectsProjectIdSettingsMigrationsRouteWithChildren
   '/_public/projects/$projectId/settings/smtp': typeof PublicProjectsProjectIdSettingsSmtpRoute
+  '/_public/projects/$projectId/settings/variables': typeof PublicProjectsProjectIdSettingsVariablesRoute
   '/_public/projects/$projectId/settings/webhooks': typeof PublicProjectsProjectIdSettingsWebhooksRoute
   '/_public/projects/$projectId/sites/$siteId': typeof PublicProjectsProjectIdSitesSiteIdRouteWithChildren
   '/_public/projects/$projectId/sites/create': typeof PublicProjectsProjectIdSitesCreateRouteWithChildren
@@ -1625,6 +1644,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/sites/$siteId/logs': typeof PublicProjectsProjectIdSitesSiteIdLogsRoute
   '/_public/projects/$projectId/sites/$siteId/settings': typeof PublicProjectsProjectIdSitesSiteIdSettingsRoute
   '/_public/projects/$projectId/sites/$siteId/usage': typeof PublicProjectsProjectIdSitesSiteIdUsageRoute
+  '/_public/projects/$projectId/sites/$siteId/variables': typeof PublicProjectsProjectIdSitesSiteIdVariablesRoute
   '/_public/projects/$projectId/sites/create/deploy': typeof PublicProjectsProjectIdSitesCreateDeployRoute
   '/_public/projects/$projectId/sites/create/deploying': typeof PublicProjectsProjectIdSitesCreateDeployingRoute
   '/_public/projects/$projectId/sites/create/finish': typeof PublicProjectsProjectIdSitesCreateFinishRoute
@@ -1750,6 +1770,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/settings/domains'
     | '/projects/$projectId/settings/migrations'
     | '/projects/$projectId/settings/smtp'
+    | '/projects/$projectId/settings/variables'
     | '/projects/$projectId/settings/webhooks'
     | '/projects/$projectId/sites/$siteId'
     | '/projects/$projectId/sites/create'
@@ -1793,6 +1814,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/$siteId/logs'
     | '/projects/$projectId/sites/$siteId/settings'
     | '/projects/$projectId/sites/$siteId/usage'
+    | '/projects/$projectId/sites/$siteId/variables'
     | '/projects/$projectId/sites/create/deploy'
     | '/projects/$projectId/sites/create/deploying'
     | '/projects/$projectId/sites/create/finish'
@@ -1899,6 +1921,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/realtime/channels'
     | '/projects/$projectId/realtime/messages'
     | '/projects/$projectId/settings/smtp'
+    | '/projects/$projectId/settings/variables'
     | '/projects/$projectId/settings/webhooks'
     | '/projects/$projectId/sites/usage'
     | '/organizations/$orgId/domains'
@@ -1934,6 +1957,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/$siteId/logs'
     | '/projects/$projectId/sites/$siteId/settings'
     | '/projects/$projectId/sites/$siteId/usage'
+    | '/projects/$projectId/sites/$siteId/variables'
     | '/projects/$projectId/sites/create/deploy'
     | '/projects/$projectId/sites/create/deploying'
     | '/projects/$projectId/sites/create/finish'
@@ -2058,6 +2082,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/settings/domains'
     | '/_public/projects/$projectId/settings/migrations'
     | '/_public/projects/$projectId/settings/smtp'
+    | '/_public/projects/$projectId/settings/variables'
     | '/_public/projects/$projectId/settings/webhooks'
     | '/_public/projects/$projectId/sites/$siteId'
     | '/_public/projects/$projectId/sites/create'
@@ -2101,6 +2126,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/sites/$siteId/logs'
     | '/_public/projects/$projectId/sites/$siteId/settings'
     | '/_public/projects/$projectId/sites/$siteId/usage'
+    | '/_public/projects/$projectId/sites/$siteId/variables'
     | '/_public/projects/$projectId/sites/create/deploy'
     | '/_public/projects/$projectId/sites/create/deploying'
     | '/_public/projects/$projectId/sites/create/finish'
@@ -2568,6 +2594,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdSettingsWebhooksRouteImport
       parentRoute: typeof PublicProjectsProjectIdSettingsRoute
     }
+    '/_public/projects/$projectId/settings/variables': {
+      id: '/_public/projects/$projectId/settings/variables'
+      path: '/variables'
+      fullPath: '/projects/$projectId/settings/variables'
+      preLoaderRoute: typeof PublicProjectsProjectIdSettingsVariablesRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSettingsRoute
+    }
     '/_public/projects/$projectId/settings/smtp': {
       id: '/_public/projects/$projectId/settings/smtp'
       path: '/smtp'
@@ -2861,6 +2894,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/projects/$projectId/sites/create/deploy'
       preLoaderRoute: typeof PublicProjectsProjectIdSitesCreateDeployRouteImport
       parentRoute: typeof PublicProjectsProjectIdSitesCreateRoute
+    }
+    '/_public/projects/$projectId/sites/$siteId/variables': {
+      id: '/_public/projects/$projectId/sites/$siteId/variables'
+      path: '/variables'
+      fullPath: '/projects/$projectId/sites/$siteId/variables'
+      preLoaderRoute: typeof PublicProjectsProjectIdSitesSiteIdVariablesRouteImport
+      parentRoute: typeof PublicProjectsProjectIdSitesSiteIdRoute
     }
     '/_public/projects/$projectId/sites/$siteId/usage': {
       id: '/_public/projects/$projectId/sites/$siteId/usage'
@@ -3961,6 +4001,7 @@ interface PublicProjectsProjectIdSettingsRouteChildren {
   PublicProjectsProjectIdSettingsDomainsRoute: typeof PublicProjectsProjectIdSettingsDomainsRouteWithChildren
   PublicProjectsProjectIdSettingsMigrationsRoute: typeof PublicProjectsProjectIdSettingsMigrationsRouteWithChildren
   PublicProjectsProjectIdSettingsSmtpRoute: typeof PublicProjectsProjectIdSettingsSmtpRoute
+  PublicProjectsProjectIdSettingsVariablesRoute: typeof PublicProjectsProjectIdSettingsVariablesRoute
   PublicProjectsProjectIdSettingsWebhooksRoute: typeof PublicProjectsProjectIdSettingsWebhooksRoute
   PublicProjectsProjectIdSettingsIndexRoute: typeof PublicProjectsProjectIdSettingsIndexRoute
 }
@@ -3973,6 +4014,8 @@ const PublicProjectsProjectIdSettingsRouteChildren: PublicProjectsProjectIdSetti
       PublicProjectsProjectIdSettingsMigrationsRouteWithChildren,
     PublicProjectsProjectIdSettingsSmtpRoute:
       PublicProjectsProjectIdSettingsSmtpRoute,
+    PublicProjectsProjectIdSettingsVariablesRoute:
+      PublicProjectsProjectIdSettingsVariablesRoute,
     PublicProjectsProjectIdSettingsWebhooksRoute:
       PublicProjectsProjectIdSettingsWebhooksRoute,
     PublicProjectsProjectIdSettingsIndexRoute:
@@ -4101,6 +4144,7 @@ interface PublicProjectsProjectIdSitesSiteIdRouteChildren {
   PublicProjectsProjectIdSitesSiteIdLogsRoute: typeof PublicProjectsProjectIdSitesSiteIdLogsRoute
   PublicProjectsProjectIdSitesSiteIdSettingsRoute: typeof PublicProjectsProjectIdSitesSiteIdSettingsRoute
   PublicProjectsProjectIdSitesSiteIdUsageRoute: typeof PublicProjectsProjectIdSitesSiteIdUsageRoute
+  PublicProjectsProjectIdSitesSiteIdVariablesRoute: typeof PublicProjectsProjectIdSitesSiteIdVariablesRoute
   PublicProjectsProjectIdSitesSiteIdIndexRoute: typeof PublicProjectsProjectIdSitesSiteIdIndexRoute
 }
 
@@ -4116,6 +4160,8 @@ const PublicProjectsProjectIdSitesSiteIdRouteChildren: PublicProjectsProjectIdSi
       PublicProjectsProjectIdSitesSiteIdSettingsRoute,
     PublicProjectsProjectIdSitesSiteIdUsageRoute:
       PublicProjectsProjectIdSitesSiteIdUsageRoute,
+    PublicProjectsProjectIdSitesSiteIdVariablesRoute:
+      PublicProjectsProjectIdSitesSiteIdVariablesRoute,
     PublicProjectsProjectIdSitesSiteIdIndexRoute:
       PublicProjectsProjectIdSitesSiteIdIndexRoute,
   }

@@ -16,6 +16,7 @@ import { Domains } from './Domains'
 import { Webhooks } from './Webhooks'
 import { Migrations } from './Migrations'
 import { SMTP } from './SMTP'
+import { Variables } from './Variables'
 import type { Models } from '@appwrite.io/console'
 
 export interface SettingsViewProps {
@@ -41,7 +42,9 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
       if (pathParts[settingsIndex + 1]) {
         const tabFromPath = pathParts[settingsIndex + 1]
         if (
-          ['domains', 'webhooks', 'migrations', 'smtp'].includes(tabFromPath)
+          ['domains', 'webhooks', 'migrations', 'smtp', 'variables'].includes(
+            tabFromPath,
+          )
         ) {
           return tabFromPath
         }
@@ -65,6 +68,12 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
         id: 'domains',
         label: 'Custom domains',
         to: '/projects/$projectId/settings/domains',
+        params: { projectId: projectId as string },
+      },
+      {
+        id: 'variables',
+        label: 'Variables',
+        to: '/projects/$projectId/settings/variables',
         params: { projectId: projectId as string },
       },
       {
@@ -109,7 +118,8 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
           : undefined
 
   // Determine search and create props based on active tab
-  const hasSearch = activeTab !== 'overview' && activeTab !== 'smtp'
+  const hasSearch =
+    activeTab !== 'overview' && activeTab !== 'smtp' && activeTab !== 'variables'
   const searchPlaceholder = hasSearch ? `Search ${activeTab}...` : undefined
   const createLabel =
     activeTab === 'domains'
@@ -177,6 +187,7 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
           />
         )}
         {activeTab === 'smtp' && <SMTP projectId={projectId} />}
+        {activeTab === 'variables' && <Variables />}
       </div>
     </div>
   )

@@ -56,6 +56,7 @@ import { BucketSettings } from '../_components/BucketSettings'
 import { BucketSecurity } from '../_components/BucketSecurity'
 import { useUploadQueue } from '@/lib/upload-queue/use-upload-queue'
 import type { Models } from '@appwrite.io/console'
+import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
   getSearch,
   getPage,
@@ -63,6 +64,7 @@ import {
   getQueryParam,
   queryParamToMap,
   mapToQueryParam,
+  MIN_SEARCH_LENGTH,
   filesFilterColumns,
 } from '@/lib/table-filters'
 import type { CompactFilterKey } from '@/lib/table-filters'
@@ -131,13 +133,13 @@ export function View() {
     return {
       search: getSearch(url) ?? search.search,
       page: getPage(url, 1),
-      limit: getLimit(url, 25),
+      limit: getLimit(url, DEFAULT_PAGE_SIZE),
       filterMap: queryParamToMap(getQueryParam(url) ?? search.query ?? null),
     }
   }, [isFilesIndex, search?.search, search?.query, search?.page, search?.limit, location.pathname, location.search, projectId, bucketId])
 
   const urlPage = filesListParams?.page ?? 1
-  const urlLimit = filesListParams?.limit ?? 25
+  const urlLimit = filesListParams?.limit ?? DEFAULT_PAGE_SIZE
   const urlSearch = filesListParams?.search
   const filterMap = filesListParams?.filterMap ?? new Map()
   const filterQueries =
@@ -148,6 +150,17 @@ export function View() {
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
   const [displayedPage, setDisplayedPage] = useState(1)
+  const [displayedSearch, setDisplayedSearch] = useState<string | undefined>(
+    undefined,
+  )
+  const [displayedFilterQueryString, setDisplayedFilterQueryString] =
+    useState('')
+  const displayedFilterQueries = useMemo(() => {
+    if (!displayedFilterQueryString) return undefined
+    const map = queryParamToMap(displayedFilterQueryString)
+    return map.size > 0 ? Array.from(map.values()) : undefined
+  }, [displayedFilterQueryString])
+  const hasInitedDisplayedRef = useRef(false)
   const [uploadFileDialogOpen, setUploadFileDialogOpen] = useState(false)
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -177,9 +190,14 @@ export function View() {
   }, [urlSearch])
 
   useEffect(() => {
-    if (!isFilesIndex) return
-    setDisplayedPage((prev) => (prev === urlPage ? prev : urlPage))
-  }, [isFilesIndex, urlPage])
+    if (!isFilesIndex || !filesListParams) return
+    if (!hasInitedDisplayedRef.current) {
+      setDisplayedPage(urlPage)
+      setDisplayedSearch(urlSearch ?? undefined)
+      setDisplayedFilterQueryString(filterQueryString)
+      hasInitedDisplayedRef.current = true
+    }
+  }, [isFilesIndex, filesListParams, urlPage, urlSearch, filterQueryString])
 
   useEffect(() => {
     if (activeTab !== 'files') return
@@ -187,6 +205,7 @@ export function View() {
     searchDebounceRef.current = setTimeout(() => {
       const trimmed = searchInput.trim()
       if (trimmed === (urlSearch ?? '')) return
+      if (trimmed.length > 0 && trimmed.length < MIN_SEARCH_LENGTH) return
       navigate({
         to: '/projects/$projectId/storage/$bucketId/',
         params: { projectId: projectId!, bucketId: bucketId! },
@@ -221,6 +240,7 @@ export function View() {
     data: requestedFilesData,
     isLoading: filesLoading,
     isFetching: filesFetching,
+    isFetched: filesFetched,
   } = useBucketFiles(
     projectId,
     bucketId,
@@ -237,16 +257,34 @@ export function View() {
       bucketId,
       displayedPage - 1,
       urlLimit,
-      urlSearch ?? undefined,
+      displayedSearch ?? undefined,
       undefined,
-      filterQueries,
+      displayedFilterQueries,
     )
 
   useEffect(() => {
-    if (!filesFetching && urlPage !== displayedPage && !filesLoading) {
+    if (!isFilesIndex || filesFetching || filesLoading || !filesFetched) return
+    const match =
+      urlPage === displayedPage &&
+      (urlSearch ?? '') === (displayedSearch ?? '') &&
+      filterQueryString === displayedFilterQueryString
+    if (!match) {
       setDisplayedPage(urlPage)
+      setDisplayedSearch(urlSearch ?? undefined)
+      setDisplayedFilterQueryString(filterQueryString)
     }
-  }, [filesFetching, filesLoading, urlPage, displayedPage])
+  }, [
+    isFilesIndex,
+    filesFetching,
+    filesLoading,
+    filesFetched,
+    urlPage,
+    urlSearch,
+    filterQueryString,
+    displayedPage,
+    displayedSearch,
+    displayedFilterQueryString,
+  ])
 
   const files = (displayedFilesData?.files || []) as Models.File[]
   const filesTotal = displayedFilesData?.total ?? requestedFilesData?.total ?? 0
@@ -472,7 +510,7 @@ export function View() {
         next.limit = urlLimit
         if (!next.search) delete next.search
         if (page === 1) delete next.page
-        if (next.limit === 25) delete next.limit
+        if (next.limit === DEFAULT_PAGE_SIZE) delete next.limit
         return next
       },
       replace: true,

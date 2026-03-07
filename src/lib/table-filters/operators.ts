@@ -31,9 +31,14 @@ export const FILTER_OPERATORS: FilterOperatorDef[] = [
   { key: 'notExists', label: 'does not exist', types: ['string', 'integer', 'double', 'boolean', 'datetime', 'enum', 'varchar', 'text'], noValue: true },
 ]
 
-/** Get operators allowed for a column type. */
-export function getOperatorsForType(columnType: FilterColumnType): FilterOperatorDef[] {
-  return FILTER_OPERATORS.filter((op) => op.types.includes(columnType))
+/** Get operators allowed for a column type. Excludes search/notSearch unless fulltextSearchable. */
+export function getOperatorsForType(
+  columnType: FilterColumnType,
+  options?: { fulltextSearchable?: boolean },
+): FilterOperatorDef[] {
+  const base = FILTER_OPERATORS.filter((op) => op.types.includes(columnType))
+  if (options?.fulltextSearchable === true) return base
+  return base.filter((op) => op.key !== 'search' && op.key !== 'notSearch')
 }
 
 /** Parse "start,end" for between/notBetween; returns [start, end] or null if invalid. */

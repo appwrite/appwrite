@@ -55,7 +55,7 @@ export const Route = createFileRoute(
       queryClient.ensureQueryData(siteFrameworksQueryOptions(projectId)),
       // Fetch VCS installations
       queryClient.ensureQueryData(
-        vcsInstallationsQueryOptions(projectId, 0, 25),
+        vcsInstallationsQueryOptions(projectId, 0, 10),
       ),
       // Fetch specifications (cloud only)
       queryClient

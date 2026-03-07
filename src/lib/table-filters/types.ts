@@ -49,6 +49,11 @@ export interface FilterColumn {
   array?: boolean
   /** If false, hide this column from the filter list. */
   filter?: boolean
+  /**
+   * If true, this column is part of a fulltext index and "search" / "does not match search"
+   * operators are allowed. Only set when index data is available (e.g. database table rows).
+   */
+  fulltextSearchable?: boolean
 }
 
 export type FilterColumnType =

@@ -53,6 +53,7 @@ import {
   useUpdateMembershipRole,
   useRemoveTeamMember,
 } from '@/lib/react-query/hooks'
+import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
   canSeeProjects,
   canShowOrgDomainsTab,
@@ -144,10 +145,6 @@ const CONTACT_SALES_URL =
   import.meta.env.VITE_CONTACT_SALES_URL ||
   'https://appwrite.io/contact-us/enterprise'
 const LEGAL_EMAIL = import.meta.env.VITE_LEGAL_EMAIL || 'legal@appwrite.io'
-
-// Pagination constants
-const PROJECTS_PER_PAGE = 25
-const MEMBERSHIPS_PER_PAGE = 25
 
 // Role options with descriptions (matching InviteMembersDialog)
 const ROLE_OPTIONS = [
@@ -692,7 +689,7 @@ export function OrgOverview({
     activeProjectsQueryOptions(
       orgTeamId,
       requestedPage - 1,
-      PROJECTS_PER_PAGE,
+      DEFAULT_PAGE_SIZE,
       searchQuery,
     ),
   )
@@ -703,7 +700,7 @@ export function OrgOverview({
       activeProjectsQueryOptions(
         orgTeamId,
         displayedPage - 1,
-        PROJECTS_PER_PAGE,
+        DEFAULT_PAGE_SIZE,
         searchQuery,
       ),
     )
@@ -732,7 +729,7 @@ export function OrgOverview({
   // Get total count from the first page query (no search) - already fetched in route loader
   // This is used for limit checking and doesn't change when searching
   const { data: totalProjectsData } = useQuery(
-    activeProjectsQueryOptions(orgTeamId, 0, PROJECTS_PER_PAGE, ''),
+    activeProjectsQueryOptions(orgTeamId, 0, DEFAULT_PAGE_SIZE, ''),
   )
 
   // Reset pagination when search query changes
@@ -919,7 +916,7 @@ export function OrgOverview({
   } = useOrganizationMemberships(
     orgId,
     activeMembershipsPage,
-    MEMBERSHIPS_PER_PAGE,
+    DEFAULT_PAGE_SIZE,
     membershipsSearchQuery,
     activeMembershipsPage === 0 && !membershipsSearchQuery
       ? initialData?.membershipsData
@@ -1652,11 +1649,11 @@ export function OrgOverview({
                             )}
 
                             {/* Pagination for Active Projects */}
-                            {activeProjectsTotal > PROJECTS_PER_PAGE && (
+                            {activeProjectsTotal > DEFAULT_PAGE_SIZE && (
                               <Pagination
                                 currentPage={activeProjectsPage}
                                 totalItems={activeProjectsTotal}
-                                pageSize={PROJECTS_PER_PAGE}
+                                pageSize={DEFAULT_PAGE_SIZE}
                                 onPageChange={(page: number) =>
                                   setRequestedPage(page)
                                 }
@@ -2375,13 +2372,13 @@ export function OrgOverview({
                                     </Table>
                                   </div>
 
-                                  {membershipsTotal > MEMBERSHIPS_PER_PAGE && (
+                                  {membershipsTotal > DEFAULT_PAGE_SIZE && (
                                     <Pagination
                                       currentPage={
                                         activeMembershipsPage + 1
                                       }
                                       totalItems={membershipsTotal}
-                                      pageSize={MEMBERSHIPS_PER_PAGE}
+                                      pageSize={DEFAULT_PAGE_SIZE}
                                       onPageChange={(page: number) =>
                                         setActiveMembershipsPage(page - 1)
                                       }

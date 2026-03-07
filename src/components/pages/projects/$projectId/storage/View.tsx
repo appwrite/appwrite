@@ -10,6 +10,7 @@ import {
   useOrganizationScopes,
   fetchProjectBuckets,
 } from '@/lib/react-query/hooks'
+import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { canCreateBucket } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { ServiceHeader } from '../shared/ServiceHeader'
@@ -59,6 +60,7 @@ import {
   queryParamToMap,
   mapToQueryParam,
   buildListSearchParams,
+  MIN_SEARCH_LENGTH,
   bucketsFilterColumns,
 } from '@/lib/table-filters'
 import type { CompactFilterKey } from '@/lib/table-filters'
@@ -87,13 +89,13 @@ export function View() {
     return {
       search: getSearch(url) ?? search.search,
       page: getPage(url, 1),
-      limit: getLimit(url, 25),
+      limit: getLimit(url, DEFAULT_PAGE_SIZE),
       filterMap: queryParamToMap(getQueryParam(url) ?? search.query ?? null),
     }
   }, [isStorageIndex, search?.search, search?.query, search?.page, search?.limit, location.pathname, location.search])
 
   const urlPage = bucketListParams?.page ?? 1
-  const urlLimit = bucketListParams?.limit ?? 25
+  const urlLimit = bucketListParams?.limit ?? DEFAULT_PAGE_SIZE
   const urlSearch = bucketListParams?.search
   const filterMap = bucketListParams?.filterMap ?? new Map()
   const filterQueries =
@@ -103,6 +105,17 @@ export function View() {
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid')
   const [displayedPage, setDisplayedPage] = useState(1)
+  const [displayedSearch, setDisplayedSearch] = useState<string | undefined>(
+    undefined,
+  )
+  const [displayedFilterQueryString, setDisplayedFilterQueryString] =
+    useState('')
+  const displayedFilterQueries = useMemo(() => {
+    if (!displayedFilterQueryString) return undefined
+    const map = queryParamToMap(displayedFilterQueryString)
+    return map.size > 0 ? Array.from(map.values()) : undefined
+  }, [displayedFilterQueryString])
+  const hasInitedDisplayedRef = useRef(false)
   const [createBucketDialogOpen, setCreateBucketDialogOpen] = useState(false)
   const [selectedBuckets, setSelectedBuckets] = useState<Set<string>>(new Set())
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -132,15 +145,22 @@ export function View() {
   }, [urlSearch])
 
   useEffect(() => {
-    if (!isStorageIndex) return
-    setDisplayedPage((prev) => (prev === urlPage ? prev : urlPage))
-  }, [isStorageIndex, urlPage])
+    if (!isStorageIndex || !bucketListParams) return
+    if (!hasInitedDisplayedRef.current) {
+      setDisplayedPage(urlPage)
+      setDisplayedSearch(urlSearch ?? undefined)
+      setDisplayedFilterQueryString(filterQueryString)
+      hasInitedDisplayedRef.current = true
+    }
+  }, [isStorageIndex, bucketListParams, urlPage, urlSearch, filterQueryString])
 
   useEffect(() => {
+    if (!isStorageIndex) return
     if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
     searchDebounceRef.current = setTimeout(() => {
       const trimmed = searchInput.trim()
       if (trimmed === (urlSearch ?? '')) return
+      if (trimmed.length > 0 && trimmed.length < MIN_SEARCH_LENGTH) return
       navigate({
         to: '/projects/$projectId/storage/',
         params: { projectId: projectId! },
@@ -170,6 +190,7 @@ export function View() {
     total: bucketsTotal,
     isLoading: bucketsLoading,
     isFetching: bucketsFetching,
+    isFetched: bucketsFetched,
   } = useProjectBuckets(
     projectId,
     urlPage - 1,
@@ -178,7 +199,6 @@ export function View() {
     filterQueries,
   )
 
-  // Fetch data for the displayed page (what we show - stays until new page is ready)
   const {
     buckets: apiBuckets,
     total: displayedTotal,
@@ -187,26 +207,40 @@ export function View() {
     projectId,
     displayedPage - 1,
     urlLimit,
-    urlSearch ?? undefined,
-    filterQueries,
+    displayedSearch ?? undefined,
+    displayedFilterQueries,
   )
 
   const showLoading = displayedLoading && apiBuckets.length === 0
 
   useEffect(() => {
-    if (
-      !bucketsFetching &&
-      urlPage !== displayedPage &&
-      !bucketsLoading
-    ) {
+    if (!isStorageIndex || bucketsFetching || bucketsLoading || !bucketsFetched) return
+    const match =
+      urlPage === displayedPage &&
+      (urlSearch ?? '') === (displayedSearch ?? '') &&
+      filterQueryString === displayedFilterQueryString
+    if (!match) {
       setDisplayedPage(urlPage)
+      setDisplayedSearch(urlSearch ?? undefined)
+      setDisplayedFilterQueryString(filterQueryString)
     }
-  }, [bucketsFetching, bucketsLoading, urlPage, displayedPage])
+  }, [
+    isStorageIndex,
+    bucketsFetching,
+    bucketsLoading,
+    bucketsFetched,
+    urlPage,
+    urlSearch,
+    filterQueryString,
+    displayedPage,
+    displayedSearch,
+    displayedFilterQueryString,
+  ])
 
   // Get total count from the first page query (no search/filters) - for limit checking
   const { data: totalBucketsData } = useQuery({
-    queryKey: ['buckets', 'project', projectId, 0, 25, ''],
-    queryFn: () => fetchProjectBuckets(projectId!, 0, 25, ''),
+    queryKey: ['buckets', 'project', projectId, 0, DEFAULT_PAGE_SIZE, ''],
+    queryFn: () => fetchProjectBuckets(projectId!, 0, DEFAULT_PAGE_SIZE, ''),
     enabled: !!projectId,
     staleTime: 30 * 1000, // 30 seconds
     refetchOnMount: false, // Data is fresh from route loader, no need to refetch

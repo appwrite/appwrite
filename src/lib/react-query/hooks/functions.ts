@@ -42,6 +42,7 @@ export async function fetchProjectFunctions(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   if (!projectId) {
     return { functions: [], total: 0 }
@@ -49,6 +50,7 @@ export async function fetchProjectFunctions(
 
   const projectSdk = sdk.forProject(projectId)
   const queries = [
+    ...(filterQueries ?? []),
     Query.orderDesc('$createdAt'),
     Query.limit(limit),
     Query.offset(page * limit),
@@ -395,10 +397,11 @@ export function functionsQueryOptions(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   return queryOptions({
-    queryKey: ['functions', 'project', projectId, page, limit, search],
-    queryFn: () => fetchProjectFunctions(projectId!, page, limit, search),
+    queryKey: ['functions', 'project', projectId, page, limit, search, filterQueries],
+    queryFn: () => fetchProjectFunctions(projectId!, page, limit, search, filterQueries),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false, // Don't retry on error
@@ -673,14 +676,16 @@ export function useProjectFunctions(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   const {
     data: functionsData,
     isLoading,
     isFetching,
+    isFetched,
     error,
     refetch,
-  } = useQuery(functionsQueryOptions(projectId, page, limit, search))
+  } = useQuery(functionsQueryOptions(projectId, page, limit, search, filterQueries))
 
   const functions = useMemo(() => {
     if (!functionsData || !('functions' in functionsData)) return []
@@ -699,6 +704,7 @@ export function useProjectFunctions(
     totalPages,
     isLoading,
     isFetching,
+    isFetched,
     error,
     refetch,
   }

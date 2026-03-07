@@ -76,6 +76,9 @@ export interface ListSearchParams {
   limit?: number
 }
 
+/** Minimum number of characters before search is applied (avoids API calls for 1–2 chars). */
+export const MIN_SEARCH_LENGTH = 3
+
 /** Returns a minimal object for router navigate(); omit defaults so URLs stay clean. */
 export function buildListSearchParams(params: ListSearchParams): Record<string, string | number> {
   const out: Record<string, string | number> = {}

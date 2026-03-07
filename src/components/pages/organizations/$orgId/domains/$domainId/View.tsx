@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useMutation } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
 import {
   Globe,
@@ -68,6 +69,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { useNavigate, useParams, useLocation } from '@tanstack/react-router'
@@ -84,6 +86,7 @@ import {
   useCreateDnsRecord,
   useUpdateDnsRecord,
   useDeleteDnsRecord,
+  deleteDnsRecord,
   useUpdateDomainZone,
   useRetryDomainVerification,
   usePresetRecords,
@@ -133,6 +136,9 @@ export function View({ initialData }: ViewProps = {}) {
   const [transferDialogOpen, setTransferDialogOpen] = useState(false)
   const [deleteConfirmation, setDeleteConfirmation] = useState('')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [selectedRecords, setSelectedRecords] = useState<Set<string>>(new Set())
+  const [bulkDeleteRecordsDialogOpen, setBulkDeleteRecordsDialogOpen] =
+    useState(false)
 
   // Convert 1-indexed page to 0-indexed for API
   const pageIndexed = currentPage - 1
@@ -316,6 +322,65 @@ export function View({ initialData }: ViewProps = {}) {
     })
   }
 
+  // Deletable records (non-locked) on current page for bulk actions
+  const deletableRecords = useMemo(
+    () => dnsRecords.filter((r) => !r.lock),
+    [dnsRecords],
+  )
+
+  const bulkDeleteRecordsMutation = useMutation({
+    mutationFn: async (recordIds: string[]) => {
+      if (!domainId) throw new Error('Domain ID is required')
+      await Promise.all(
+        recordIds.map((recordId) => deleteDnsRecord(domainId, recordId)),
+      )
+    },
+    onSuccess: async (_, recordIds) => {
+      await queryClient.refetchQueries({
+        queryKey: ['dns-records', 'domain', domainId],
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['domain', domainId],
+      })
+      toast.success(
+        `Deleted ${recordIds.length} DNS record${recordIds.length > 1 ? 's' : ''}`,
+      )
+      setSelectedRecords(new Set())
+      setBulkDeleteRecordsDialogOpen(false)
+    },
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error))
+    },
+  })
+
+  const handleBulkDeleteRecords = () => {
+    if (selectedRecords.size === 0) return
+    setBulkDeleteRecordsDialogOpen(true)
+  }
+
+  const confirmBulkDeleteRecords = () => {
+    if (selectedRecords.size === 0) return
+    bulkDeleteRecordsMutation.mutate(Array.from(selectedRecords))
+  }
+
+  const toggleRecord = (recordId: string, locked: boolean) => {
+    if (locked) return
+    setSelectedRecords((prev) => {
+      const next = new Set(prev)
+      if (next.has(recordId)) next.delete(recordId)
+      else next.add(recordId)
+      return next
+    })
+  }
+
+  const toggleAllRecords = () => {
+    if (selectedRecords.size === deletableRecords.length) {
+      setSelectedRecords(new Set())
+    } else {
+      setSelectedRecords(new Set(deletableRecords.map((r) => r.$id)))
+    }
+  }
+
   // Import zone mutation
   const importZoneMutation = useUpdateDomainZone(domainId)
 
@@ -470,11 +535,13 @@ export function View({ initialData }: ViewProps = {}) {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
+    setSelectedRecords(new Set())
   }
 
   const handlePageSizeChange = (newPageSize: number) => {
     setPageSize(newPageSize)
     setCurrentPage(1)
+    setSelectedRecords(new Set())
   }
 
   const handleBack = () => {
@@ -941,6 +1008,17 @@ export function View({ initialData }: ViewProps = {}) {
                     <Table>
                       <TableHeader>
                         <TableRow className="hover:bg-transparent border-b border-border">
+                          <TableHead className="w-[40px] px-4 py-3">
+                            {deletableRecords.length > 0 ? (
+                              <Checkbox
+                                checked={
+                                  deletableRecords.length > 0 &&
+                                  selectedRecords.size === deletableRecords.length
+                                }
+                                onCheckedChange={toggleAllRecords}
+                              />
+                            ) : null}
+                          </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
                             Name
                           </TableHead>
@@ -986,6 +1064,16 @@ export function View({ initialData }: ViewProps = {}) {
 
                           return (
                             <TableRow key={record.$id}>
+                              <TableCell className="w-[40px] px-4 py-3">
+                                {record.lock ? null : (
+                                  <Checkbox
+                                    checked={selectedRecords.has(record.$id)}
+                                    onCheckedChange={() =>
+                                      toggleRecord(record.$id, !!record.lock)
+                                    }
+                                  />
+                                )}
+                              </TableCell>
                               <TableCell className="px-4 py-3">
                                 <div className="flex items-center gap-2 group/name">
                                   <code className="text-[12px] font-mono text-foreground bg-muted/50 px-1.5 py-0.5 rounded">
@@ -1204,6 +1292,74 @@ export function View({ initialData }: ViewProps = {}) {
                     onPageSizeChange={handlePageSizeChange}
                     itemLabel="records"
                   />
+
+                  {/* Bulk Delete DNS Records Action Bar */}
+                  {selectedRecords.size > 0 && (
+                    <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
+                      <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
+                        <Badge variant="secondary" className="h-6 px-2.5">
+                          {selectedRecords.size} record
+                          {selectedRecords.size > 1 ? 's' : ''} selected
+                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedRecords(new Set())}
+                            className="h-8 text-xs"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={handleBulkDeleteRecords}
+                            disabled={bulkDeleteRecordsMutation.isPending}
+                            className="h-8 gap-2"
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Bulk Delete DNS Records Confirmation Dialog */}
+                  <Dialog
+                    open={bulkDeleteRecordsDialogOpen}
+                    onOpenChange={setBulkDeleteRecordsDialogOpen}
+                  >
+                    <DialogContent className="sm:max-w-md p-0">
+                      <DialogHeader className="px-6 pt-6 text-left">
+                        <DialogTitle>Delete DNS records</DialogTitle>
+                        <DialogDescription className="text-[13px] mt-2">
+                          Are you sure you want to delete{' '}
+                          {selectedRecords.size} DNS record
+                          {selectedRecords.size > 1 ? 's' : ''}? This action
+                          cannot be undone.
+                        </DialogDescription>
+                      </DialogHeader>
+
+                      <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                        <Button
+                          variant="outline"
+                          onClick={() =>
+                            setBulkDeleteRecordsDialogOpen(false)
+                          }
+                          disabled={bulkDeleteRecordsMutation.isPending}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          onClick={confirmBulkDeleteRecords}
+                          disabled={bulkDeleteRecordsMutation.isPending}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </>
               ) : (
                 <EmptyState

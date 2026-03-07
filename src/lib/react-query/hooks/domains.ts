@@ -38,6 +38,7 @@ export async function fetchOrganizationDomains(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   if (!organizationId) {
     return { domains: [], total: 0 }
@@ -45,6 +46,7 @@ export async function fetchOrganizationDomains(
 
   const queries = [
     Query.equal('teamId', organizationId),
+    ...(filterQueries ?? []),
     Query.orderDesc('$createdAt'),
     Query.limit(limit),
     Query.offset(page * limit),
@@ -442,17 +444,18 @@ export function organizationDomainsQueryOptions(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   return queryOptions({
-    queryKey: ['domains', 'organization', organizationId, page, limit, search],
+    queryKey: ['domains', 'organization', organizationId, page, limit, search, filterQueries],
     queryFn: () =>
-      fetchOrganizationDomains(organizationId!, page, limit, search),
+      fetchOrganizationDomains(organizationId!, page, limit, search, filterQueries),
     enabled: !!organizationId,
     staleTime: DEFAULT_STALE_TIME,
-    retry: false, // Don't retry on error
-    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
-    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
-    refetchOnReconnect: false, // Prevent refetch on network reconnect
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     // Don't keep disabled queries in cache
     gcTime: organizationId ? 5 * 60 * 1000 : 0,
   })
@@ -524,15 +527,17 @@ export function useOrganizationDomains(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   const {
     data: domainsData,
     isLoading,
     isFetching,
+    isFetched,
     error,
     refetch,
   } = useQuery(
-    organizationDomainsQueryOptions(organizationId, page, limit, search),
+    organizationDomainsQueryOptions(organizationId, page, limit, search, filterQueries),
   )
 
   const domains = useMemo(() => {
@@ -551,6 +556,7 @@ export function useOrganizationDomains(
     totalPages,
     isLoading,
     isFetching,
+    isFetched,
     error,
     refetch,
   }

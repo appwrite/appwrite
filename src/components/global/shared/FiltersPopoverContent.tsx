@@ -3,7 +3,7 @@
  * Used inside FiltersPopover; can also be used with a custom Popover wrapper.
  */
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 import {
   buildFilterQueryString,
@@ -14,6 +14,12 @@ import {
 } from '@/lib/table-filters'
 import type { CompactFilterKey, FilterColumn, FilterMap } from '@/lib/table-filters'
 import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -22,12 +28,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
-
 function toDatetimeLocal(iso: string): string {
   if (!iso?.trim()) return ''
   const d = new Date(iso)
@@ -57,18 +57,39 @@ export function FiltersPopoverContent({
   onClose,
   resourceLabel = 'items',
 }: FiltersPopoverContentProps) {
-  const [filterColumnId, setFilterColumnId] = useState<string>('')
-  const [filterOperatorKey, setFilterOperatorKey] = useState<string>('')
+  const firstColumnId = columns[0]?.id ?? ''
+  const firstOperatorKey = firstColumnId
+    ? (getOperatorsForType(columns[0]!.type, {
+        fulltextSearchable: !!columns[0]!.fulltextSearchable,
+      })[0]?.key ?? '')
+    : ''
+  const [filterColumnId, setFilterColumnId] = useState<string>(() => firstColumnId)
+  const [filterOperatorKey, setFilterOperatorKey] = useState<string>(
+    () => firstOperatorKey,
+  )
   const [filterValue, setFilterValue] = useState<string>('')
   const [filterValueEnd, setFilterValueEnd] = useState<string>('')
   const [filterSizeUnit, setFilterSizeUnit] = useState<string>('mb')
+
+  useEffect(() => {
+    if (columns.length > 0 && !filterColumnId) {
+      const first = columns[0]
+      const ops = getOperatorsForType(first.type, {
+        fulltextSearchable: !!first.fulltextSearchable,
+      })
+      setFilterColumnId(first.id)
+      setFilterOperatorKey(ops[0]?.key ?? '')
+    }
+  }, [columns, filterColumnId])
 
   const filterEntries = Array.from(filterMap.entries())
 
   const applyFilter = () => {
     const col = columns.find((c) => c.id === filterColumnId)
     if (!col || !filterOperatorKey) return
-    const op = getOperatorsForType(col.type).find((o) => o.key === filterOperatorKey)
+    const op = getOperatorsForType(col.type, {
+      fulltextSearchable: !!col.fulltextSearchable,
+    }).find((o) => o.key === filterOperatorKey)
     if (!op) return
     const isBetweenOp =
       filterOperatorKey === 'between' || filterOperatorKey === 'notBetween'
@@ -126,7 +147,9 @@ export function FiltersPopoverContent({
 
   const col = columns.find((c) => c.id === filterColumnId)
   const op = col
-    ? getOperatorsForType(col.type).find((o) => o.key === filterOperatorKey)
+    ? getOperatorsForType(col.type, {
+        fulltextSearchable: !!col.fulltextSearchable,
+      }).find((o) => o.key === filterOperatorKey)
     : null
   const needsValue = col && op && !op.noValue
   const isBetweenOp =
@@ -140,8 +163,8 @@ export function FiltersPopoverContent({
         : !filterValue.trim()
       : false)
 
-  const inputClass = 'h-9 w-full text-[13px]'
-  const labelClass = 'text-[12px] text-muted-foreground mb-1.5 block'
+  const inputClass = 'h-8 w-full text-[13px]'
+  const labelClass = 'text-[12px] text-muted-foreground mb-1 block'
   const subLabelClass = 'text-[11px] text-muted-foreground mb-1 block'
 
   const renderValueInput = () => {
@@ -180,7 +203,7 @@ export function FiltersPopoverContent({
             <div>
               <span className={subLabelClass}>Unit</span>
               <Select value={filterSizeUnit} onValueChange={setFilterSizeUnit}>
-                <SelectTrigger className="h-9 w-full text-[13px]">
+                <SelectTrigger className="h-8 w-full text-[13px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="z-[200]">
@@ -306,7 +329,7 @@ export function FiltersPopoverContent({
               placeholder="Amount"
             />
             <Select value={filterSizeUnit} onValueChange={setFilterSizeUnit}>
-              <SelectTrigger className="h-9 w-full min-w-[100px] text-[13px]">
+              <SelectTrigger className="h-8 w-full min-w-[100px] text-[13px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="z-[200]">
@@ -383,30 +406,36 @@ export function FiltersPopoverContent({
     <>
       {filterMap.size > 0 && (
         <>
-          <div className="border-b border-border px-3 py-1.5">
+          <div className="border-b border-border px-3 py-1">
             <p className="text-[11px] font-medium text-foreground">
               Active filters
             </p>
           </div>
-          <div className="max-h-40 overflow-y-auto space-y-1 p-2">
+          <div className="max-h-40 overflow-y-auto space-y-1 px-3 pt-1.5 pb-2">
             {filterEntries.map(([key, _queryStr]) => {
               const tag = buildFilterTagFromCompactKey(key, columns)
-              const tagLabel = tag.tag.replace(/\*\*(.*?)\*\*/g, '$1')
+              const parts = tag.tag.split(/\*\*/)
+              const column = parts[1] ?? ''
+              const operator = (parts[2] ?? '').trim()
+              const value = parts[3] ?? null
               return (
                 <div
                   key={`${key.c}-${key.o}-${JSON.stringify(key.v ?? '')}`}
                   className="flex select-none items-center justify-between gap-2 rounded-md bg-muted/50 px-1.5 py-1"
                 >
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="truncate text-[11px] text-foreground">
-                        {tagLabel}
+                  <span className="flex min-w-0 shrink items-center gap-1 truncate text-[11px]">
+                    <span className="shrink-0 font-semibold text-foreground">
+                      {column}
+                    </span>
+                    <span className="shrink-0 text-muted-foreground">
+                      {operator}
+                    </span>
+                    {value != null && value !== '' && (
+                      <span className="truncate text-foreground">
+                        {value}
                       </span>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="text-xs">{tagLabel}</p>
-                    </TooltipContent>
-                  </Tooltip>
+                    )}
+                  </span>
                   <button
                     type="button"
                     onClick={() => onRemoveFilter(key)}
@@ -419,41 +448,29 @@ export function FiltersPopoverContent({
               )
             })}
           </div>
-          <div className="border-t border-border flex justify-start p-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 text-[11px]"
-              onClick={handleClearAll}
-            >
-              Clear all
-            </Button>
-          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mx-2 mt-1 mb-2 h-7 text-[11px] bg-muted/50 hover:bg-muted"
+            onClick={handleClearAll}
+          >
+            Clear all
+          </Button>
         </>
       )}
-      <div
-        className={
-          filterMap.size > 0
-            ? 'border-t border-border px-4 pt-4 pb-2'
-            : 'px-4 pt-4 pb-2'
-        }
-      >
-        <h3 className="text-[13px] font-semibold text-foreground">
-          Add condition
-        </h3>
-        <p className="text-[12px] text-muted-foreground mt-1">
-          Filter {resourceLabel} by column, operator and value.
-        </p>
-      </div>
       <form
         onSubmit={(e) => {
           e.preventDefault()
           applyFilter()
         }}
-        className="contents"
+        className="mx-3 mb-3 mt-4"
       >
-        <div className="border-t border-border px-4 py-3 space-y-3">
-          <div className="grid grid-cols-2 gap-3">
+        <Card className="gap-1.5 p-3">
+          <CardHeader className="p-0">
+            <CardTitle className="text-[13px]">Add condition</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 p-0">
+          <div className="grid grid-cols-2 gap-2">
             <div>
               <label className={labelClass}>Column</label>
               <Select
@@ -465,12 +482,14 @@ export function FiltersPopoverContent({
                   const column = columns.find((c) => c.id === v)
                   if (column?.format === 'size') setFilterSizeUnit('mb')
                   const firstOp = column
-                    ? getOperatorsForType(column.type)[0]
+                    ? getOperatorsForType(column.type, {
+                        fulltextSearchable: !!column.fulltextSearchable,
+                      })[0]
                     : null
                   setFilterOperatorKey(firstOp?.key ?? '')
                 }}
               >
-                <SelectTrigger className="h-9 w-full text-[13px]">
+                <SelectTrigger className="h-8 w-full text-[13px]">
                   <SelectValue placeholder="Column" />
                 </SelectTrigger>
                 <SelectContent className="z-[200]">
@@ -492,14 +511,21 @@ export function FiltersPopoverContent({
                 }}
                 disabled={!filterColumnId}
               >
-                <SelectTrigger className="h-9 w-full text-[13px]">
+                <SelectTrigger className="h-8 w-full text-[13px]">
                   <SelectValue placeholder="Operator" />
                 </SelectTrigger>
                 <SelectContent className="z-[200]">
                   {(filterColumnId
-                    ? getOperatorsForType(
-                        columns.find((c) => c.id === filterColumnId)!.type,
-                      )
+                    ? (() => {
+                        const column = columns.find(
+                          (c) => c.id === filterColumnId,
+                        )
+                        return column
+                          ? getOperatorsForType(column.type, {
+                              fulltextSearchable: !!column.fulltextSearchable,
+                            })
+                          : []
+                      })()
                     : []
                   ).map((op) => (
                     <SelectItem
@@ -515,17 +541,16 @@ export function FiltersPopoverContent({
             </div>
           </div>
           {filterColumnId && renderValueInput()}
-        </div>
-        <div className="border-t border-border px-4 py-3 flex flex-wrap items-center gap-2 bg-muted/30">
           <Button
             type="submit"
             size="sm"
-            className="h-9 text-[13px]"
+            className="h-8 text-[13px]"
             disabled={isApplyDisabled}
           >
             Add condition
           </Button>
-        </div>
+          </CardContent>
+        </Card>
       </form>
     </>
   )

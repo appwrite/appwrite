@@ -91,8 +91,8 @@ export const Route = createFileRoute(
         : Promise.resolve(),
       // Fetch VCS installations (for deployment actions)
       queryClient.ensureQueryData({
-        queryKey: ['vcs', 'installations', projectId, 0, 25],
-        queryFn: () => fetchVcsInstallations(projectId, 0, 25),
+        queryKey: ['vcs', 'installations', projectId, 0, 10],
+        queryFn: () => fetchVcsInstallations(projectId, 0, 10),
         staleTime: 5 * 60 * 1000,
       }),
     ])

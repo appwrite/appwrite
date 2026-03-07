@@ -17,6 +17,7 @@ import {
   useOrganizationPlan,
   useOrganizationScopes,
 } from '@/lib/react-query/hooks'
+import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { canWriteMessages, canWriteTopics, canWriteProviders } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -81,7 +82,7 @@ export function View() {
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
   const [requestedPage, setRequestedPage] = useState(1)
   const [displayedPage, setDisplayedPage] = useState(1)
-  const [pageSize, setPageSize] = useState(25)
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 

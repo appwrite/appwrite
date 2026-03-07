@@ -53,7 +53,7 @@ export function FiltersPopover({
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="z-[200] w-72 p-0"
+        className="z-[200] w-96 p-0"
         align="start"
         side="bottom"
         sideOffset={6}

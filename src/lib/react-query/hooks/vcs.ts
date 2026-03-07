@@ -14,7 +14,7 @@ import { Query } from '@appwrite.io/console'
 import { VCSDetectionType } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { DEFAULT_STALE_TIME, LONG_STALE_TIME } from './constants'
+import { DEFAULT_STALE_TIME, LONG_STALE_TIME, DEFAULT_PAGE_SIZE } from './constants'
 
 // ============================================================================
 // QUERY FUNCTIONS
@@ -26,7 +26,7 @@ import { DEFAULT_STALE_TIME, LONG_STALE_TIME } from './constants'
 export async function fetchVcsInstallations(
   projectId: string,
   page: number = 0,
-  limit: number = 25,
+  limit: number = DEFAULT_PAGE_SIZE,
 ): Promise<Models.InstallationList> {
   if (!projectId) {
     return { installations: [], total: 0 }
@@ -142,7 +142,7 @@ export async function fetchRepositoryContents(
 export function vcsInstallationsQueryOptions(
   projectId: string | null | undefined,
   page: number = 0,
-  limit: number = 25,
+  limit: number = DEFAULT_PAGE_SIZE,
 ) {
   return queryOptions({
     queryKey: ['vcs', 'installations', projectId, page, limit],
@@ -167,7 +167,7 @@ export function vcsInstallationsQueryOptions(
 export function useVcsInstallations(
   projectId: string | null | undefined,
   page: number = 0,
-  limit: number = 25,
+  limit: number = DEFAULT_PAGE_SIZE,
 ) {
   return useQuery(vcsInstallationsQueryOptions(projectId, page, limit))
 }

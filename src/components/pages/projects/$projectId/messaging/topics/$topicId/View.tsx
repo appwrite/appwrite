@@ -8,6 +8,7 @@ import {
   useProject,
   useOrganizationScopes,
 } from '@/lib/react-query/hooks'
+import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { canShowTopicSettingsTab } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -48,7 +49,7 @@ export function View() {
 
   const [searchValue, setSearchValue] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(25)
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
 
   // Convert 1-indexed page to 0-indexed for API
   const pageIndexed = currentPage - 1

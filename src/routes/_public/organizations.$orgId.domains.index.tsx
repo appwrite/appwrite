@@ -5,24 +5,41 @@ import {
   organizationsQueryOptions,
   organizationDomainsQueryOptions,
 } from '@/lib/react-query/hooks'
+import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import {
+  listSearchSchema,
+  getSearch,
+  getPage,
+  getLimit,
+  getQueryParam,
+  queryParamToMap,
+} from '@/lib/table-filters'
 
-const DOMAINS_PER_PAGE = 25
+const DEFAULT_PAGE = 1
 
 export const Route = createFileRoute('/_public/organizations/$orgId/domains/')({
   head: () => ({ meta: [{ title: pageTitle('Domains', 'Organization') }] }),
-  loader: async ({ params, context }) => {
+  validateSearch: listSearchSchema,
+  loader: async ({ params, context, location }) => {
     if (typeof window === 'undefined') return
 
     const { orgId } = params
     const { queryClient } = context
+    if (!orgId) return
 
-    // Same pattern as storage index: ensure all data before rendering. Blocks navigation.
+    const url = new URL(location.pathname + location.search, 'http://localhost')
+    const search = getSearch(url)
+    const page = getPage(url, DEFAULT_PAGE)
+    const limit = getLimit(url, DEFAULT_PAGE_SIZE)
+    const queryParam = getQueryParam(url)
+    const filterMap = queryParamToMap(queryParam)
+    const filterQueries =
+      filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
+
     await queryClient.ensureQueryData(organizationsQueryOptions())
-    if (orgId) {
-      await queryClient.ensureQueryData(
-        organizationDomainsQueryOptions(orgId, 0, DOMAINS_PER_PAGE, ''),
-      )
-    }
+    await queryClient.ensureQueryData(
+      organizationDomainsQueryOptions(orgId, page - 1, limit, search ?? undefined, filterQueries),
+    )
   },
   component: DomainsIndexPage,
 })

@@ -4,9 +4,8 @@ import {
   databaseQueryOptions,
   tablesQueryOptions,
 } from '@/lib/react-query/hooks'
+import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { pageTitle } from '@/lib/utils/page-title'
-
-const TABLES_PER_PAGE = 25
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/$databaseId/tables',
@@ -32,7 +31,7 @@ export const Route = createFileRoute(
       queryClient.ensureQueryData(databaseQueryOptions(projectId, databaseId)),
       // Fetch first page of tables - blocks navigation until ready
       queryClient.ensureQueryData(
-        tablesQueryOptions(projectId, databaseId, 0, TABLES_PER_PAGE),
+        tablesQueryOptions(projectId, databaseId, 0, DEFAULT_PAGE_SIZE),
       ),
     ])
   },

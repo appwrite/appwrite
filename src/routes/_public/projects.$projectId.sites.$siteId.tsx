@@ -71,7 +71,7 @@ export const Route = createFileRoute(
           : Promise.resolve(),
         // Fetch first page of domains
         queryClient.ensureQueryData(
-          siteDomainsQueryOptions(projectId, siteId, 0, 25, ''),
+          siteDomainsQueryOptions(projectId, siteId, 0, 10, ''),
         ),
       ])
       return { site }

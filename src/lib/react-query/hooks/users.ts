@@ -297,6 +297,7 @@ export function useProjectUsers(
     data: usersData,
     isLoading,
     isFetching,
+    isFetched,
     error,
     refetch,
   } = useQuery(
@@ -338,6 +339,7 @@ export function useProjectUsers(
     totalPages,
     isLoading,
     isFetching,
+    isFetched,
     error,
     refetch,
   }

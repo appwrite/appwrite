@@ -82,7 +82,11 @@ function SiteLayoutContent() {
 
     if (sitesIndex >= 0 && pathParts[sitesIndex + 2]) {
       const tab = pathParts[sitesIndex + 2]
-      if (['deployments', 'logs', 'domains', 'settings'].includes(tab)) {
+      if (
+        ['deployments', 'logs', 'domains', 'variables', 'settings'].includes(
+          tab,
+        )
+      ) {
         return tab
       }
     }
@@ -114,6 +118,12 @@ function SiteLayoutContent() {
       ...(showSettingsTab
         ? [
             {
+              id: 'variables' as const,
+              label: 'Variables',
+              to: '/projects/$projectId/sites/$siteId/variables',
+              params: { projectId: projectId!, siteId: siteId! },
+            },
+            {
               id: 'settings' as const,
               label: 'Settings',
               to: '/projects/$projectId/sites/$siteId/settings',
@@ -125,10 +135,10 @@ function SiteLayoutContent() {
     [projectId, siteId, showSettingsTab],
   )
 
-  // Redirect from settings when user lacks permission
+  // Redirect from settings or variables when user lacks permission
   useEffect(() => {
     if (showSettingsTab || !projectId || !siteId) return
-    if (activeTab === 'settings') {
+    if (activeTab === 'settings' || activeTab === 'variables') {
       navigate({
         to: '/projects/$projectId/sites/$siteId',
         params: { projectId, siteId },

@@ -1656,7 +1656,7 @@ export function ConnectProject({
                           type="button"
                           onClick={() => setSelectedFileIndex(i)}
                           className={cn(
-                            'rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors',
+                            'cursor-pointer rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors',
                             i === selectedFileIndex
                               ? 'bg-muted text-foreground'
                               : 'text-muted-foreground hover:text-foreground hover:bg-muted/70',
@@ -1719,7 +1719,7 @@ export function ConnectProject({
                       type="button"
                       onClick={() => setCliInstallOs(os)}
                       className={cn(
-                        'rounded-md px-3 py-1.5 text-[12px] font-medium transition-colors',
+                        'cursor-pointer rounded-md px-3 py-1.5 text-[12px] font-medium transition-colors',
                         cliInstallOs === os
                           ? 'bg-background text-foreground shadow-sm'
                           : 'text-muted-foreground hover:text-foreground',

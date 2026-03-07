@@ -55,7 +55,11 @@ function SiteLayoutContent() {
 
     if (sitesIndex >= 0 && pathParts[sitesIndex + 2]) {
       const tab = pathParts[sitesIndex + 2]
-      if (['deployments', 'logs', 'domains', 'settings'].includes(tab)) {
+      if (
+        ['deployments', 'logs', 'domains', 'variables', 'settings'].includes(
+          tab,
+        )
+      ) {
         return tab
       }
     }
@@ -86,6 +90,12 @@ function SiteLayoutContent() {
       },
       ...(showSettingsTab
         ? [
+            {
+              id: 'variables' as const,
+              label: 'Variables',
+              to: '/projects/$projectId/sites/$siteId/variables',
+              params: { projectId: projectId!, siteId: siteId! },
+            },
             {
               id: 'settings' as const,
               label: 'Settings',
