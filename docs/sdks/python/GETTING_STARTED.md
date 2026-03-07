@@ -55,6 +55,56 @@ print(user.name)       # Access fields as attributes
 print(user.to_dict())  # Convert to dictionary if needed
 ```
 
+### Type Safety with Models
+
+The Appwrite Python SDK provides type safety when working with database rows through generic methods. Methods like `get_row`, `list_rows`, and others accept a `model_type` parameter that allows you to specify your custom Pydantic model for full type safety.
+
+```python
+from pydantic import BaseModel
+from datetime import datetime
+from typing import Optional
+from appwrite.client import Client
+from appwrite.services.tables_db import TablesDB
+
+# Define your custom model matching your table schema
+class Post(BaseModel):
+    postId: int
+    authorId: int
+    title: str
+    content: str
+    createdAt: datetime
+    updatedAt: datetime
+    isPublished: bool
+    excerpt: Optional[str] = None
+
+client = Client()
+# ... configure your client ...
+
+tables_db = TablesDB(client)
+
+# Fetch a single row with type safety
+row = tables_db.get_row(
+    database_id="your-database-id",
+    table_id="your-table-id",
+    row_id="your-row-id",
+    model_type=Post  # Pass your custom model type
+)
+
+print(row.data.title)     # Fully typed - IDE autocomplete works
+print(row.data.postId)    # int type, not Any
+print(row.data.createdAt) # datetime type
+
+# Fetch multiple rows with type safety
+result = tables_db.list_rows(
+    database_id="your-database-id",
+    table_id="your-table-id",
+    model_type=Post
+)
+
+for row in result.rows:
+    print(f"{row.data.title} by {row.data.authorId}")
+```
+
 ### Error Handling
 The Appwrite Python SDK raises `AppwriteException` object with `message`, `code` and `response` properties. You can handle any errors by catching `AppwriteException` and present the `message` to the user or handle it yourself based on the provided error information. Below is an example.
 
