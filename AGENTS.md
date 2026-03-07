@@ -368,6 +368,7 @@ Reference: `src/components/pages/projects/$projectId/storage/View.tsx`, `SiteLog
 - **No individual loaders** - Rely on fullscreen loader for initial load
 - **Stay on current page** - Until next page is ready to prevent layout shifts
 - **Prefetch crucial data** - All critical API calls at route level
+- **List pages: same default limit in loader and View** - Route and View must use the same default limit (same constant) so prefetched query key matches and no loading flash occurs. See "Route Prefetching" → "List pages: loader and View must use the same default limit".
 
 ### Form Behavior
 
@@ -599,6 +600,16 @@ export const Route = createFileRoute('/_public/projects/$projectId/storage/')({
 2. **Cache Matching**: React Query recognizes prefetched data because query keys match exactly
 3. **No Duplicates**: `ensureQueryData` uses cached data if fresh, and hook reads from same cache
 4. **Type Safety**: TypeScript ensures query keys and functions match between loader and hook
+
+**List pages: loader and View must use the same default limit (CRITICAL – prevents layout shift)**
+
+- The route loader prefetches list data using **URL-derived params** (page, limit, search, filters). The View reads the same params from the URL (or from route-passed search) and calls the same hook with the same arguments.
+- **If the default limit differs** (e.g. loader uses `25`, View uses `DEFAULT_PAGE_SIZE` = `10`), the **query keys will not match**. The View will get a cache miss, show a loading state, and cause a layout shift even though the loader already fetched data.
+- **Rule:** Use the **same constant** for the default limit in both the route and the View. Import from `@/lib/react-query/hooks/constants` (e.g. `DEFAULT_PAGE_SIZE`, `ROWS_DEFAULT_PAGE_SIZE`) and use it in:
+  - **Route:** `getLimit(url, DEFAULT_PAGE_SIZE)` (or the chosen constant) and in `queryOptions(projectId, page - 1, limit, ...)`.
+  - **View:** `getLimit(url, DEFAULT_PAGE_SIZE)` (or same constant) and `urlLimit = listParams?.limit ?? DEFAULT_PAGE_SIZE`, and pass that `urlLimit` into the hook.
+- **Do not** define a local constant in the route (e.g. `const SITES_PER_PAGE = 25`) unless the View uses the exact same value for its default limit; otherwise prefer a shared constant from `constants.ts` so route and View cannot drift.
+- **Optional:** Omit `pendingComponent` on list index routes so the previous page stays visible until the loader completes; then the list renders with data and no intermediate loading UI.
 
 **When to Use QueryOptions:**
 

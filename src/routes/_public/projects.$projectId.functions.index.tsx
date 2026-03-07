@@ -22,11 +22,6 @@ export const Route = createFileRoute('/_public/projects/$projectId/functions/')(
   {
     head: () => ({ meta: [{ title: pageTitle('Functions') }] }),
     validateSearch: listSearchSchema,
-    pendingComponent: () => (
-      <div className="flex h-full items-center justify-center">
-        <div className="text-muted-foreground">Loading functions...</div>
-      </div>
-    ),
     loader: async ({ params, context, location }) => {
       if (typeof window === 'undefined') return
 

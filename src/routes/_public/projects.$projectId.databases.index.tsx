@@ -6,6 +6,7 @@ import {
   projectQueryOptions,
   organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
+import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
   listSearchSchema,
   getSearch,
@@ -16,7 +17,6 @@ import {
 } from '@/lib/table-filters'
 import { pageTitle } from '@/lib/utils/page-title'
 
-const DATABASES_PER_PAGE = 25
 const DEFAULT_PAGE = 1
 
 const databasesSearchSchema = listSearchSchema.extend({
@@ -27,11 +27,6 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
   {
     head: () => ({ meta: [{ title: pageTitle('Databases') }] }),
     validateSearch: databasesSearchSchema,
-    pendingComponent: () => (
-      <div className="flex h-full items-center justify-center">
-        <div className="text-muted-foreground">Loading databases...</div>
-      </div>
-    ),
     loader: async ({ params, context, location }) => {
       if (typeof window === 'undefined') return
 
@@ -42,7 +37,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
       const url = new URL(location.pathname + location.search, 'http://localhost')
       const search = getSearch(url)
       const page = getPage(url, DEFAULT_PAGE)
-      const limit = getLimit(url, DATABASES_PER_PAGE)
+      const limit = getLimit(url, ROWS_DEFAULT_PAGE_SIZE)
       const queryParam = getQueryParam(url)
       const filterMap = queryParamToMap(queryParam)
       const filterQueries =

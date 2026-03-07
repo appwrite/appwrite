@@ -5,18 +5,12 @@ import {
   fetchProject,
   organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
+import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { pageTitle } from '@/lib/utils/page-title'
-
-const MESSAGES_PER_PAGE = 25
 
 export const Route = createFileRoute('/_public/projects/$projectId/messaging/')(
   {
     head: () => ({ meta: [{ title: pageTitle('Messaging') }] }),
-    pendingComponent: () => (
-      <div className="flex h-full items-center justify-center">
-        <div className="text-muted-foreground">Loading messaging...</div>
-      </div>
-    ),
     loader: async ({ params, context }) => {
       // Only run on client side (SDK requires browser environment)
       if (typeof window === 'undefined') {
@@ -39,7 +33,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/messaging/')(
         await Promise.all([
           // Fetch first page of messages - blocks navigation until ready
           queryClient.ensureQueryData(
-            messagesQueryOptions(projectId, 0, MESSAGES_PER_PAGE, ''),
+            messagesQueryOptions(projectId, 0, DEFAULT_PAGE_SIZE, ''),
           ),
           // Fetch organization plan if we have a teamId - CRITICAL for limit checking
           projectData?.teamId

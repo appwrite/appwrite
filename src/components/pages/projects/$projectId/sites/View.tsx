@@ -40,7 +40,7 @@ import {
   useOrganizationScopes,
   fetchProjectSites,
 } from '@/lib/react-query/hooks'
-import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { canCreateSite } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -88,13 +88,13 @@ export function View() {
     return {
       search: getSearch(url) ?? (search.search as string | undefined),
       page: getPage(url, 1),
-      limit: getLimit(url, DEFAULT_PAGE_SIZE),
+      limit: getLimit(url, ROWS_DEFAULT_PAGE_SIZE),
       filterMap: queryParamToMap(getQueryParam(url) ?? (search.query as string | undefined) ?? null),
     }
   }, [isSitesIndex, search, location.pathname, location.search, projectId])
 
   const urlPage = sitesListParams?.page ?? 1
-  const urlLimit = sitesListParams?.limit ?? DEFAULT_PAGE_SIZE
+  const urlLimit = sitesListParams?.limit ?? ROWS_DEFAULT_PAGE_SIZE
   const urlSearch = sitesListParams?.search
   const filterMap = sitesListParams?.filterMap ?? new Map()
   const filterQueries =

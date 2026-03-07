@@ -26,11 +26,6 @@ const storageSearchSchema = listSearchSchema.extend({
 export const Route = createFileRoute('/_public/projects/$projectId/storage/')({
   head: () => ({ meta: [{ title: pageTitle('Storage') }] }),
   validateSearch: storageSearchSchema,
-  pendingComponent: () => (
-    <div className="flex h-full items-center justify-center">
-      <div className="text-muted-foreground">Loading storage...</div>
-    </div>
-  ),
   loader: async ({ params, context, location }) => {
     if (typeof window === 'undefined') return
 

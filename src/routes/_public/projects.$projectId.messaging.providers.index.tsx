@@ -8,17 +8,12 @@ import {
 
 import { pageTitle } from '@/lib/utils/page-title'
 
-const PROVIDERS_PER_PAGE = 10
+import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/messaging/providers/',
 )({
   head: () => ({ meta: [{ title: pageTitle('Providers', 'Messaging') }] }),
-  pendingComponent: () => (
-    <div className="flex h-full items-center justify-center">
-      <div className="text-muted-foreground">Loading providers...</div>
-    </div>
-  ),
   loader: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
@@ -41,7 +36,7 @@ export const Route = createFileRoute(
       await Promise.all([
         // Fetch first page of providers - blocks navigation until ready
         queryClient.ensureQueryData(
-          providersQueryOptions(projectId, 0, PROVIDERS_PER_PAGE, ''),
+          providersQueryOptions(projectId, 0, DEFAULT_PAGE_SIZE, ''),
         ),
         // Fetch organization plan if we have a teamId - CRITICAL for limit checking
         projectData?.teamId

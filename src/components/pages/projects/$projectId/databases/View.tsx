@@ -297,13 +297,13 @@ export function View() {
     return {
       search: getSearch(url) ?? search.search,
       page: getPage(url, 1),
-      limit: getLimit(url, DEFAULT_PAGE_SIZE),
+      limit: getLimit(url, ROWS_DEFAULT_PAGE_SIZE),
       filterMap: queryParamToMap(getQueryParam(url) ?? search.query ?? null),
     }
   }, [isDatabasesIndex, search?.search, search?.query, search?.page, search?.limit, location.pathname, location.search])
 
   const urlPage = databaseListParams?.page ?? 1
-  const urlLimit = databaseListParams?.limit ?? DEFAULT_PAGE_SIZE
+  const urlLimit = databaseListParams?.limit ?? ROWS_DEFAULT_PAGE_SIZE
   const urlSearch = databaseListParams?.search
   const filterMap = databaseListParams?.filterMap ?? new Map()
   const filterQueries =
@@ -326,7 +326,7 @@ export function View() {
     return map.size > 0 ? Array.from(map.values()) : undefined
   }, [displayedFilterQueryString])
   const hasInitedDisplayedRef = useRef(false)
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
+  const [pageSize, setPageSize] = useState(ROWS_DEFAULT_PAGE_SIZE)
   const [selectedDatabases, setSelectedDatabases] = useState<Set<string>>(
     new Set(),
   )

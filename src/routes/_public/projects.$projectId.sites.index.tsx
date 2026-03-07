@@ -5,7 +5,7 @@ import {
   fetchProject,
   organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
-import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
   listSearchSchema,
   getSearch,
@@ -17,16 +17,10 @@ import {
 import { pageTitle } from '@/lib/utils/page-title'
 
 const DEFAULT_PAGE = 1
-const SITES_PER_PAGE = 25
 
 export const Route = createFileRoute('/_public/projects/$projectId/sites/')({
   head: () => ({ meta: [{ title: pageTitle('Sites') }] }),
   validateSearch: listSearchSchema,
-  pendingComponent: () => (
-    <div className="flex h-full items-center justify-center">
-      <div className="text-muted-foreground">Loading sites...</div>
-    </div>
-  ),
   loader: async ({ params, context, location }) => {
     if (typeof window === 'undefined') return
 
@@ -37,7 +31,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/sites/')({
     const url = new URL(location.pathname + location.search, 'http://localhost')
     const search = getSearch(url)
     const page = getPage(url, DEFAULT_PAGE)
-    const limit = getLimit(url, SITES_PER_PAGE)
+    const limit = getLimit(url, ROWS_DEFAULT_PAGE_SIZE)
     const queryParam = getQueryParam(url)
     const filterMap = queryParamToMap(queryParam)
     const filterQueries =
