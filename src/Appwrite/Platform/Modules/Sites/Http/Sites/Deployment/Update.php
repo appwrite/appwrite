@@ -111,7 +111,10 @@ class Update extends Base
                 ->setAttribute('deploymentId', $deployment->getId())
                 ->setAttribute('deploymentInternalId', $deployment->getSequence());
 
-            $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), $rule));
+            $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                'deploymentId' => $rule->getAttribute('deploymentId'),
+                'deploymentInternalId' => $rule->getAttribute('deploymentInternalId'),
+            ])));
         }, $queries));
 
         $queueForEvents

@@ -9,6 +9,7 @@ use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Scope\HTTP;
@@ -235,7 +236,7 @@ class Create extends Action
                     if (\in_array($providerPullRequestId, $providerPullRequestIds)) {
                         $providerPullRequestIds = \array_diff($providerPullRequestIds, [$providerPullRequestId]);
                         $repository = $repository->setAttribute('providerPullRequestIds', $providerPullRequestIds);
-                        $repository = $authorization->skip(fn () => $dbForPlatform->updateDocument('repositories', $repository->getId(), $repository));
+                        $repository = $authorization->skip(fn () => $dbForPlatform->updateDocument('repositories', $repository->getId(), new Document(['providerPullRequestIds' => $providerPullRequestIds])));
                     }
                 }
             }
