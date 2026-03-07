@@ -41,7 +41,7 @@ export function FiltersPopover({
         <Button
           variant="outline"
           size="sm"
-          className="h-9 shrink-0 gap-2 border-border bg-transparent text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground"
+          className="h-9 shrink-0 gap-2 text-[13px]"
         >
           <Filter className="h-3.5 w-3.5" />
           Filters

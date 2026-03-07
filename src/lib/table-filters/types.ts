@@ -45,6 +45,11 @@ export interface FilterColumn {
   format?: string
   /** For enum/select: allowed values and display labels. */
   elements?: Array<{ value: string | number; label: string }>
+  /**
+   * For enum columns: when false or unset, the attribute is required (no "is null" / "is not null").
+   * When true, the attribute can be null (show nullability operators).
+   */
+  optional?: boolean
   /** If true, value can be an array (multi-select, contains, etc.). */
   array?: boolean
   /** If false, hide this column from the filter list. */

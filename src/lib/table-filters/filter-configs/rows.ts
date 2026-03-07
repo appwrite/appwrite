@@ -11,6 +11,8 @@ type TableAttribute = {
   name?: string
   type?: string
   elements?: Array<{ value: string | number; label?: string }>
+  /** When false, attribute can be null (enum/optional); when true or unset, required. */
+  required?: boolean
 }
 
 /** Index shape from API (key, type, columns). */
@@ -89,6 +91,9 @@ export function rowsFilterColumnsFromAttributes(
           value: e.value,
           label: e.label ?? String(e.value),
         }))
+      }
+      if (type === 'enum') {
+        col.optional = attr.required === false
       }
       return col
     })

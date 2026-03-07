@@ -58,9 +58,11 @@ export function FiltersPopoverContent({
   resourceLabel = 'items',
 }: FiltersPopoverContentProps) {
   const firstColumnId = columns[0]?.id ?? ''
+  const firstCol = columns[0]
   const firstOperatorKey = firstColumnId
-    ? (getOperatorsForType(columns[0]!.type, {
-        fulltextSearchable: !!columns[0]!.fulltextSearchable,
+    ? (getOperatorsForType(firstCol!.type, {
+        fulltextSearchable: !!firstCol!.fulltextSearchable,
+        enumOptional: firstCol!.type === 'enum' ? firstCol!.optional : undefined,
       })[0]?.key ?? '')
     : ''
   const [filterColumnId, setFilterColumnId] = useState<string>(() => firstColumnId)
@@ -76,6 +78,7 @@ export function FiltersPopoverContent({
       const first = columns[0]
       const ops = getOperatorsForType(first.type, {
         fulltextSearchable: !!first.fulltextSearchable,
+        enumOptional: first.type === 'enum' ? first.optional : undefined,
       })
       setFilterColumnId(first.id)
       setFilterOperatorKey(ops[0]?.key ?? '')
@@ -89,6 +92,7 @@ export function FiltersPopoverContent({
     if (!col || !filterOperatorKey) return
     const op = getOperatorsForType(col.type, {
       fulltextSearchable: !!col.fulltextSearchable,
+      enumOptional: col.type === 'enum' ? col.optional : undefined,
     }).find((o) => o.key === filterOperatorKey)
     if (!op) return
     const isBetweenOp =
@@ -149,6 +153,7 @@ export function FiltersPopoverContent({
   const op = col
     ? getOperatorsForType(col.type, {
         fulltextSearchable: !!col.fulltextSearchable,
+        enumOptional: col.type === 'enum' ? col.optional : undefined,
       }).find((o) => o.key === filterOperatorKey)
     : null
   const needsValue = col && op && !op.noValue
@@ -484,6 +489,8 @@ export function FiltersPopoverContent({
                   const firstOp = column
                     ? getOperatorsForType(column.type, {
                         fulltextSearchable: !!column.fulltextSearchable,
+                        enumOptional:
+                          column.type === 'enum' ? column.optional : undefined,
                       })[0]
                     : null
                   setFilterOperatorKey(firstOp?.key ?? '')
@@ -523,6 +530,10 @@ export function FiltersPopoverContent({
                         return column
                           ? getOperatorsForType(column.type, {
                               fulltextSearchable: !!column.fulltextSearchable,
+                              enumOptional:
+                                column.type === 'enum'
+                                  ? column.optional
+                                  : undefined,
                             })
                           : []
                       })()

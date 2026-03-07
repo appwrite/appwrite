@@ -17,6 +17,7 @@ export const usersFilterColumns: FilterColumn[] = [
       { value: 'enabled', label: 'Enabled' },
       { value: 'disabled', label: 'Disabled' },
     ],
+    optional: false, // User status is always set
   },
   { id: '$createdAt', title: 'Created', type: 'datetime' },
   { id: '$updatedAt', title: 'Updated', type: 'datetime' },

@@ -9,13 +9,13 @@ import type { CompactFilterKey, FilterColumn, FilterColumnType, FilterOperatorDe
 
 export const FILTER_OPERATORS: FilterOperatorDef[] = [
   { key: 'equal', label: 'equal', types: ['string', 'integer', 'double', 'boolean', 'datetime', 'enum', 'point', 'linestring', 'polygon', 'varchar', 'text'] },
-  { key: 'notEqual', label: 'not equal', types: ['string', 'integer', 'double', 'boolean', 'point', 'linestring', 'polygon', 'varchar', 'text'] },
+  { key: 'notEqual', label: 'not equal', types: ['string', 'integer', 'double', 'boolean', 'datetime', 'enum', 'point', 'linestring', 'polygon', 'varchar', 'text'] },
   { key: 'startsWith', label: 'starts with', types: ['string', 'varchar', 'text'] },
   { key: 'notStartsWith', label: 'not starts with', types: ['string', 'varchar', 'text'] },
   { key: 'endsWith', label: 'ends with', types: ['string', 'varchar', 'text'] },
   { key: 'notEndsWith', label: 'not ends with', types: ['string', 'varchar', 'text'] },
-  { key: 'contains', label: 'contains', types: ['string', 'integer', 'double', 'boolean', 'datetime', 'enum', 'point', 'linestring', 'polygon', 'varchar', 'text'] },
-  { key: 'notContains', label: 'not contains', types: ['string', 'integer', 'double', 'boolean', 'datetime', 'enum', 'point', 'linestring', 'polygon', 'varchar', 'text'] },
+  { key: 'contains', label: 'contains', types: ['string', 'integer', 'double', 'boolean', 'datetime', 'point', 'linestring', 'polygon', 'varchar', 'text'] },
+  { key: 'notContains', label: 'not contains', types: ['string', 'integer', 'double', 'boolean', 'datetime', 'point', 'linestring', 'polygon', 'varchar', 'text'] },
   { key: 'search', label: 'search', types: ['string', 'varchar', 'text'] },
   { key: 'notSearch', label: 'does not match search', types: ['string', 'varchar', 'text'] },
   { key: 'regex', label: 'matches regex', types: ['string', 'varchar', 'text'] },
@@ -27,18 +27,25 @@ export const FILTER_OPERATORS: FilterOperatorDef[] = [
   { key: 'notBetween', label: 'not between', types: ['integer', 'double', 'datetime'] },
   { key: 'isNull', label: 'is null', types: ['string', 'integer', 'double', 'boolean', 'datetime', 'enum', 'varchar', 'text'], noValue: true },
   { key: 'isNotNull', label: 'is not null', types: ['string', 'integer', 'double', 'boolean', 'datetime', 'enum', 'varchar', 'text'], noValue: true },
-  { key: 'exists', label: 'exists', types: ['string', 'integer', 'double', 'boolean', 'datetime', 'enum', 'varchar', 'text'], noValue: true },
-  { key: 'notExists', label: 'does not exist', types: ['string', 'integer', 'double', 'boolean', 'datetime', 'enum', 'varchar', 'text'], noValue: true },
+  { key: 'exists', label: 'exists', types: ['string', 'integer', 'double', 'boolean', 'datetime', 'varchar', 'text'], noValue: true },
+  { key: 'notExists', label: 'does not exist', types: ['string', 'integer', 'double', 'boolean', 'datetime', 'varchar', 'text'], noValue: true },
 ]
 
-/** Get operators allowed for a column type. Excludes search/notSearch unless fulltextSearchable. */
+/** Get operators allowed for a column type. Excludes search/notSearch unless fulltextSearchable. For enum, excludes is null / is not null unless optional. */
 export function getOperatorsForType(
   columnType: FilterColumnType,
-  options?: { fulltextSearchable?: boolean },
+  options?: { fulltextSearchable?: boolean; enumOptional?: boolean },
 ): FilterOperatorDef[] {
-  const base = FILTER_OPERATORS.filter((op) => op.types.includes(columnType))
-  if (options?.fulltextSearchable === true) return base
-  return base.filter((op) => op.key !== 'search' && op.key !== 'notSearch')
+  let base = FILTER_OPERATORS.filter((op) => op.types.includes(columnType))
+  if (options?.fulltextSearchable !== true) {
+    base = base.filter((op) => op.key !== 'search' && op.key !== 'notSearch')
+  }
+  if (columnType === 'enum' && options?.enumOptional !== true) {
+    base = base.filter(
+      (op) => op.key !== 'isNull' && op.key !== 'isNotNull',
+    )
+  }
+  return base
 }
 
 /** Parse "start,end" for between/notBetween; returns [start, end] or null if invalid. */
@@ -145,7 +152,12 @@ export function buildFilterTagFromCompactKey(
   columns: FilterColumn[],
 ): FilterTagValue {
   const col = columns.find((c) => c.id === key.c)
-  if (!col) return { tag: `**${key.c}** ${key.o}`, value: key.v ?? '' }
+  if (!col) {
+    const val = key.v
+    const value: string | number | string[] =
+      typeof val === 'boolean' ? String(val) : val ?? ''
+    return { tag: `**${key.c}** ${key.o}`, value }
+  }
   const ops = getOperatorsForType(col.type)
   const op = ops.find((o) => o.key === key.o)
   const opLabel = op?.label ?? key.o

@@ -72,7 +72,12 @@ import {
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import { useNavigate, useParams, useLocation } from '@tanstack/react-router'
+import {
+  useNavigate,
+  useParams,
+  useLocation,
+  useSearch,
+} from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -95,6 +100,14 @@ import {
   useOrganizations,
 } from '@/lib/react-query/hooks'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
+import {
+  getQueryParam,
+  queryParamToMap,
+  mapToQueryParam,
+  dnsRecordsFilterColumns,
+} from '@/lib/table-filters'
+import type { CompactFilterKey } from '@/lib/table-filters'
+import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 
 export type DomainDetailInitialData = {
   domain: Models.Domain
@@ -139,6 +152,28 @@ export function View({ initialData }: ViewProps = {}) {
   const [selectedRecords, setSelectedRecords] = useState<Set<string>>(new Set())
   const [bulkDeleteRecordsDialogOpen, setBulkDeleteRecordsDialogOpen] =
     useState(false)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+
+  const search = useSearch({ strict: false }) as Record<string, unknown> | undefined
+  const isRecordsIndex = useMemo(
+    () =>
+      location.pathname.replace(/\/$/, '') ===
+      `/organizations/${orgId}/domains/${domainId}`,
+    [location.pathname, orgId, domainId],
+  )
+  const recordsFilterMap = useMemo(() => {
+    if (!isRecordsIndex || typeof search !== 'object' || !search)
+      return new Map()
+    const url = new URL(
+      location.pathname + location.search,
+      window.location.origin,
+    )
+    return queryParamToMap(
+      getQueryParam(url) ?? (search.query as string | undefined) ?? null,
+    )
+  }, [isRecordsIndex, location.pathname, location.search, search?.query])
+  const filterQueries =
+    recordsFilterMap.size > 0 ? Array.from(recordsFilterMap.values()) : undefined
 
   // Convert 1-indexed page to 0-indexed for API
   const pageIndexed = currentPage - 1
@@ -147,18 +182,21 @@ export function View({ initialData }: ViewProps = {}) {
   const { data: domainFromHook, isLoading: domainLoading } = useDomain(domainId)
   const domain = domainFromHook ?? initialData?.domain
 
-  // Fetch DNS records (use initialData for first page so no loading placeholder on first paint)
+  // Fetch DNS records (use initialData only when no filters so we don't show unfiltered data when filtered)
+  const hasRecordFilters = (filterQueries?.length ?? 0) > 0
   const {
     dnsRecords: recordsFromHook,
     total: recordsTotalFromHook,
-    isLoading: recordsLoading,
-  } = useDomainRecords(domainId, pageIndexed, pageSize)
+  } = useDomainRecords(domainId, pageIndexed, pageSize, filterQueries)
   const isFirstPage = currentPage === 1
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const rawRecords =
-    isFirstPage && initialData?.records && !recordsFromHook?.length
-      ? initialData.records.dnsRecords
-      : (recordsFromHook ?? [])
+  const canUseInitialRecords =
+    isFirstPage &&
+    initialData?.records &&
+    !hasRecordFilters &&
+    !recordsFromHook?.length
+  const rawRecords = canUseInitialRecords
+    ? initialData!.records.dnsRecords
+    : (recordsFromHook ?? [])
   const dnsRecords = useMemo(() => {
     if (!rawRecords.length) return []
     return [...rawRecords].sort((a, b) => {
@@ -168,7 +206,7 @@ export function View({ initialData }: ViewProps = {}) {
     })
   }, [rawRecords])
   const recordsTotal =
-    isFirstPage && initialData?.records
+    isFirstPage && initialData?.records && !hasRecordFilters
       ? (recordsTotalFromHook ?? initialData.records.total)
       : (recordsTotalFromHook ?? 0)
 
@@ -544,6 +582,64 @@ export function View({ initialData }: ViewProps = {}) {
     setSelectedRecords(new Set())
   }
 
+  const recordsRouteTo = '/organizations/$orgId/domains/$domainId' as const
+  const applyFilter = (compactKey: CompactFilterKey, queryStr: string) => {
+    const next = new Map(recordsFilterMap)
+    next.set(compactKey, queryStr)
+    setCurrentPage(1)
+    setSelectedRecords(new Set())
+    setFiltersOpen(false)
+    navigate({
+      to: recordsRouteTo,
+      params: { orgId: orgId!, domainId: domainId! },
+      search: (prev: Record<string, unknown>) => ({
+        ...(typeof prev === 'object' && prev !== null ? prev : {}),
+        query: mapToQueryParam(next) || undefined,
+      }),
+      replace: true,
+    })
+  }
+  const removeFilter = (compactKey: CompactFilterKey) => {
+    const next = new Map(recordsFilterMap)
+    next.delete(compactKey)
+    setCurrentPage(1)
+    setSelectedRecords(new Set())
+    setFiltersOpen(false)
+    navigate({
+      to: recordsRouteTo,
+      params: { orgId: orgId!, domainId: domainId! },
+      search: (prev: Record<string, unknown>) => {
+        const nextSearch = {
+          ...(typeof prev === 'object' && prev !== null ? prev : {}),
+        }
+        if (next.size > 0) {
+          ;(nextSearch as Record<string, unknown>).query = mapToQueryParam(next)
+        } else {
+          delete (nextSearch as Record<string, unknown>).query
+        }
+        return nextSearch
+      },
+      replace: true,
+    })
+  }
+  const clearAllFilters = () => {
+    setCurrentPage(1)
+    setSelectedRecords(new Set())
+    setFiltersOpen(false)
+    navigate({
+      to: recordsRouteTo,
+      params: { orgId: orgId!, domainId: domainId! },
+      search: (prev: Record<string, unknown>) => {
+        const nextSearch = {
+          ...(typeof prev === 'object' && prev !== null ? prev : {}),
+        }
+        delete (nextSearch as Record<string, unknown>).query
+        return nextSearch
+      },
+      replace: true,
+    })
+  }
+
   const handleBack = () => {
     navigate({
       to: '/organizations/$orgId/domains',
@@ -699,7 +795,7 @@ export function View({ initialData }: ViewProps = {}) {
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-              <span>{domain.domain}</span>
+              <span>{domain?.domain}</span>
             </div>
           }
           tabs={tabs}
@@ -842,7 +938,17 @@ export function View({ initialData }: ViewProps = {}) {
                 </div>
               )}
 
-              <div className="mb-4 flex items-center gap-2 sm:gap-3">
+              <div className="mb-4 flex flex-wrap items-center gap-2 sm:gap-3">
+                <FiltersPopover
+                  open={filtersOpen}
+                  onOpenChange={setFiltersOpen}
+                  columns={dnsRecordsFilterColumns}
+                  filterMap={recordsFilterMap}
+                  onRemoveFilter={removeFilter}
+                  onClearAll={clearAllFilters}
+                  onApplyFilter={applyFilter}
+                  resourceLabel="DNS records"
+                />
                 {/* Desktop: individual buttons */}
                 <div className="hidden sm:flex sm:items-center sm:gap-2">
                   <Button
@@ -914,7 +1020,7 @@ export function View({ initialData }: ViewProps = {}) {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
-                {/* Mobile: single line with More + Create Record */}
+                {/* Mobile: More dropdown */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -995,14 +1101,8 @@ export function View({ initialData }: ViewProps = {}) {
                 </div>
               </div>
 
-              {/* Only show loading when we have no data (loader prefetches first page) */}
-              {recordsLoading && dnsRecords.length === 0 ? (
-                <div className="rounded-lg border border-border bg-card py-12 text-center">
-                  <p className="text-[13px] text-muted-foreground">
-                    Loading DNS records...
-                  </p>
-                </div>
-              ) : dnsRecords.length > 0 ? (
+              {/* No loading state: keep previous results until new data is ready (see AGENTS.md → Filters) */}
+              {dnsRecords.length > 0 ? (
                 <>
                   <div className="rounded-lg border border-border bg-card overflow-x-auto overflow-y-visible">
                     <Table>
@@ -1042,9 +1142,6 @@ export function View({ initialData }: ViewProps = {}) {
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
                             Comment
-                          </TableHead>
-                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[120px]">
-                            Created
                           </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[100px] pr-4"></TableHead>
                         </TableRow>
@@ -1110,7 +1207,7 @@ export function View({ initialData }: ViewProps = {}) {
                                 </Badge>
                               </TableCell>
                               <TableCell className="px-4 py-3">
-                                <div className="flex items-center gap-2 max-w-[400px] group/value">
+                                <div className="flex items-center gap-2 max-w-[280px] group/value">
                                   {isAppwriteManaged ? (
                                     <Badge
                                       variant="outline"
@@ -1126,11 +1223,11 @@ export function View({ initialData }: ViewProps = {}) {
                                     </Badge>
                                   ) : (
                                     <>
-                                      {value && value.length > 50 ? (
+                                      {value && value.length > 28 ? (
                                         <TooltipProvider delayDuration={0}>
                                           <Tooltip>
                                             <TooltipTrigger asChild>
-                                              <code className="text-[12px] font-mono text-foreground cursor-pointer truncate max-w-[350px] block">
+                                              <code className="text-[12px] font-mono text-foreground cursor-pointer truncate max-w-[220px] block">
                                                 {value}
                                               </code>
                                             </TooltipTrigger>
@@ -1145,7 +1242,7 @@ export function View({ initialData }: ViewProps = {}) {
                                           </Tooltip>
                                         </TooltipProvider>
                                       ) : (
-                                        <code className="text-[12px] font-mono text-foreground break-all">
+                                        <code className="text-[12px] font-mono text-foreground truncate max-w-[220px] block">
                                           {value}
                                         </code>
                                       )}
@@ -1221,12 +1318,6 @@ export function View({ initialData }: ViewProps = {}) {
                                     —
                                   </span>
                                 )}
-                              </TableCell>
-                              <TableCell className="px-4 py-3">
-                                <DateTooltip
-                                  date={record.$createdAt}
-                                  className="text-[12px] font-medium text-muted-foreground"
-                                />
                               </TableCell>
                               <TableCell className="px-4 py-3 text-right pr-4">
                                 {record.lock ? (
@@ -1361,6 +1452,13 @@ export function View({ initialData }: ViewProps = {}) {
                     </DialogContent>
                   </Dialog>
                 </>
+              ) : hasRecordFilters ? (
+                <EmptyState
+                  icon={Globe}
+                  title="No records match your filters"
+                  description="Try adjusting or clearing filters to see more records"
+                  variant="card"
+                />
               ) : (
                 <EmptyState
                   icon={Globe}

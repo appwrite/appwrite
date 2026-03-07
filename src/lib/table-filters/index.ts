@@ -48,6 +48,7 @@ export { databasesFilterColumns } from './filter-configs/databases'
 export { functionsFilterColumns } from './filter-configs/functions'
 export { sitesFilterColumns } from './filter-configs/sites'
 export { domainsFilterColumns } from './filter-configs/domains'
+export { dnsRecordsFilterColumns } from './filter-configs/dns-records'
 export {
   rowsFilterColumnsFromAttributes,
   type TableIndexForFilters,

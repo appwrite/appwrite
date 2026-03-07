@@ -352,6 +352,19 @@ Fetch the **requested** page (to get `isFetching` and trigger load) and the **di
 
 Reference: `src/components/pages/projects/$projectId/storage/View.tsx`, `SiteLogs.tsx`, `Deployments.tsx`.
 
+**Filters (table/list):** Use the global filters component (`FiltersPopover`) with URL-backed state (`query` search param). Do **not** show a loading state when filters (or page) change—keep showing the previous list until the new data is ready. Use `placeholderData: keepPreviousData` on the list query so React Query keeps the previous result while the new request is in flight. Use different empty-state copy when there are no items at all vs when filters return no results.
+
+**How to add filters to a list:**
+
+1. **Filter config** – In `src/lib/table-filters/filter-configs/` add a column config (e.g. `dns-records.ts`) and export from `@/lib/table-filters`. For enum columns set `optional: false` when the attribute is always set (so "is null" / "is not null" are hidden).
+2. **URL state** – Parse `query` from the route search (e.g. `getQueryParam`, `queryParamToMap`). Derive `filterQueries = filterMap.size > 0 ? Array.from(filterMap.values()) : undefined` and pass to the list fetch/hook.
+3. **Query options** – Add `placeholderData: keepPreviousData` to the list `queryOptions` so the UI keeps showing the previous list until the filtered (or paginated) request completes. Do **not** show a loading spinner or empty table when the query key changes (e.g. after applying a filter).
+4. **Loader** – When the route has a `query` param (filters), skip prefetching the unfiltered list so only one request runs (the filtered one). Prefetch unfiltered first page only when there is no `query` param.
+5. **View** – Render `<FiltersPopover>` with `columns`, `filterMap`, `onRemoveFilter`, `onClearAll`, `onApplyFilter`. On apply/remove/clear, navigate with updated `search.query` (and reset page to 1). Never use loader `initialData` for the list when filters are active (so the table never shows unfiltered data).
+6. **Empty state** – When the list is empty: if filters are active show e.g. "No records match your filters" / "Try adjusting or clearing filters"; if no filters show e.g. "No DNS records" / "Add your first DNS record to get started".
+
+Example (DNS records on domain detail): `src/lib/table-filters/filter-configs/dns-records.ts`, `src/components/pages/organizations/$orgId/domains/$domainId/View.tsx`, `src/routes/_public/organizations.$orgId.domains.$domainId.index.tsx`, and `domainRecordsQueryOptions` in `src/lib/react-query/hooks/domains.ts`.
+
 ---
 
 ## UX Guidelines
@@ -928,6 +941,7 @@ Follow the modal structure pattern above. For no-content modals, skip content se
 | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Fetch data             | Extract query function, use in hook + route loader                                                                                                                    |
 | Pagination             | requestedPage + displayedPage; use displayed data/total for list and Pagination until new page loads                                                                  |
+| Filters                | FiltersPopover + URL `query`; `placeholderData: keepPreviousData` on list query; no loading state when filters change; different empty state for "no items" vs "no results for filters" (see "Filters (table/list)") |
 | Delete resource        | Use `refetchQueries` (not `invalidateQueries`) in onSuccess so list updates without reload                                                                            |
 | Create resource        | Form resets and closes dialog on success                                                                                                                              |
 | Update resource        | Use "Update" terminology, not "Edit"                                                                                                                                  |
