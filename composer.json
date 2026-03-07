@@ -1,14 +1,33 @@
 {
     "name": "appwrite/server-ce",
-    "description": "End to end backend server for frontend and mobile apps.",
+    "description": "End-to-end backend server for frontend, web, and mobile applications built with PHP.",
     "type": "project",
     "license": "BSD-3-Clause",
+
+    "keywords": [
+        "appwrite",
+        "backend",
+        "backend-as-a-service",
+        "api",
+        "php",
+        "cloud",
+        "server"
+    ],
+
+    "homepage": "https://appwrite.io",
+
     "authors": [
         {
             "name": "Eldad Fux",
             "email": "eldad@appwrite.io"
         }
     ],
+
+    "support": {
+        "issues": "https://github.com/appwrite/appwrite/issues",
+        "source": "https://github.com/appwrite/appwrite"
+    },
+
     "scripts": {
         "test": "vendor/bin/phpunit",
         "lint": "vendor/bin/pint --test --config pint.json",
@@ -16,12 +35,14 @@
         "bench": "vendor/bin/phpbench run --report=benchmark",
         "check": "./vendor/bin/phpstan analyse -c phpstan.neon"
     },
+
     "autoload": {
         "psr-4": {
             "Appwrite\\": "src/Appwrite",
             "Executor\\": "src/Executor"
         }
     },
+
     "autoload-dev": {
         "psr-4": {
             "Tests\\E2E\\": "tests/e2e",
@@ -29,6 +50,7 @@
             "Appwrite\\Tests\\": "tests/extensions"
         }
     },
+
     "require": {
         "php": ">=8.3.0",
         "ext-curl": "*",
@@ -43,8 +65,10 @@
         "ext-openssl": "*",
         "ext-zlib": "*",
         "ext-sockets": "*",
+
         "appwrite/php-runtimes": "0.19.*",
         "appwrite/php-clamav": "2.0.*",
+
         "utopia-php/abuse": "1.*",
         "utopia-php/analytics": "0.10.*",
         "utopia-php/audit": "1.*",
@@ -77,6 +101,7 @@
         "utopia-php/telemetry": "0.1.*",
         "utopia-php/vcs": "0.13.*",
         "utopia-php/websocket": "0.3.*",
+
         "matomo/device-detector": "6.4.*",
         "dragonmantank/cron-expression": "3.4.*",
         "phpmailer/phpmailer": "6.9.*",
@@ -87,6 +112,7 @@
         "league/csv": "9.24.*",
         "enshrined/svg-sanitize": "0.22.*"
     },
+
     "require-dev": {
         "ext-fileinfo": "*",
         "appwrite/sdk-generator": "*",
@@ -97,9 +123,11 @@
         "laravel/pint": "1.*",
         "phpbench/phpbench": "1.*"
     },
+
     "provide": {
         "ext-phpiredis": "*"
     },
+
     "config": {
         "platform": {
             "php": "8.3"
