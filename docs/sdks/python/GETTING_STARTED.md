@@ -20,10 +20,16 @@ client = Client()
 ### Make Your First Request
 Once your SDK object is set, create any of the Appwrite service objects and choose any request to send. Full documentation for any service method you would like to use can be found in your SDK documentation or in the [API References](https://appwrite.io/docs) section.
 
+All service methods return typed Pydantic models, so you can access response fields as attributes:
+
 ```python
 users = Users(client)
 
-result = users.create(ID.unique(), email = "email@example.com", phone = "+123456789", password = "password", name = "Walter O'Brien")
+user = users.create(ID.unique(), email = "email@example.com", phone = "+123456789", password = "password", name = "Walter O'Brien")
+
+print(user.name)   # "Walter O'Brien"
+print(user.email)  # "email@example.com"
+print(user.id)     # The generated user ID
 ```
 
 ### Full Example
@@ -43,7 +49,10 @@ client = Client()
 
 users = Users(client)
 
-result = users.create(ID.unique(), email = "email@example.com", phone = "+123456789", password = "password", name = "Walter O'Brien")
+user = users.create(ID.unique(), email = "email@example.com", phone = "+123456789", password = "password", name = "Walter O'Brien")
+
+print(user.name)       # Access fields as attributes
+print(user.to_dict())  # Convert to dictionary if needed
 ```
 
 ### Error Handling
@@ -52,7 +61,8 @@ The Appwrite Python SDK raises `AppwriteException` object with `message`, `code`
 ```python
 users = Users(client)
 try:
-  result = users.create(ID.unique(), email = "email@example.com", phone = "+123456789", password = "password", name = "Walter O'Brien")
+  user = users.create(ID.unique(), email = "email@example.com", phone = "+123456789", password = "password", name = "Walter O'Brien")
+  print(user.name)
 except AppwriteException as e:
   print(e.message)
 ```
