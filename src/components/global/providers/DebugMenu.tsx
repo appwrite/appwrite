@@ -14,6 +14,7 @@ import {
   Settings,
   Globe,
   FlaskConical,
+  AlertTriangle,
 } from 'lucide-react'
 import {
   Popover,
@@ -47,6 +48,7 @@ import {
   type EndpointPresetId,
 } from '@/lib/debug-endpoint'
 import { useDebugEndpoint } from '@/hooks/use-debug-endpoint'
+import { useNavigate } from '@tanstack/react-router'
 interface DebugAction {
   label: string
   onClick: () => void
@@ -88,6 +90,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
   const { profileId } = useConsoleProfile()
   const { preset: endpointPreset, customUrl: endpointCustomUrl } =
     useDebugEndpoint()
+  const navigate = useNavigate()
 
   useEffect(() => {
     const unsubscribe = subscribeToDebugOverrides(setOverrides)
@@ -232,6 +235,19 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               setDebugOverride('showNativeAppBar', checked)
             },
           },
+          {
+            label: 'Success team card',
+            description: 'Show the success team card on organization overview (custom plans).',
+            variant: 'switch' as const,
+            switchValue: overrides.showSuccessTeamCard,
+            switchOnChange: (checked: boolean) => {
+              setOverrides((prev) => ({
+                ...prev,
+                showSuccessTeamCard: checked,
+              }))
+              setDebugOverride('showSuccessTeamCard', checked)
+            },
+          },
         ],
       },
       {
@@ -307,6 +323,21 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         ],
       },
       {
+        title: 'Preview',
+        icon: <AlertTriangle className="h-3.5 w-3.5" />,
+        items: [
+          {
+            label: 'Error page',
+            description: 'Preview the error page as users see it.',
+            onClick: () => {
+              navigate({ to: '/debug/error-preview' })
+              setIsOpen(false)
+            },
+            icon: <AlertTriangle className="h-3 w-3" />,
+          },
+        ],
+      },
+      {
         title: 'Promos',
         icon: <Sparkles className="h-3.5 w-3.5" />,
         items: [
@@ -357,8 +388,10 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     endpointCustomUrl,
     overrides.showNativeAppBar,
     overrides.showAIAssistant,
+    overrides.showSuccessTeamCard,
     banners.length,
     actions,
+    navigate,
     setTheme,
     setFavicon,
     addMockBanner,

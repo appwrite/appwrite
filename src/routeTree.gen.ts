@@ -27,6 +27,7 @@ import { Route as AuthJoinRouteImport } from './routes/_auth/join'
 import { Route as ApiHelloRouteImport } from './routes/_api/hello'
 import { Route as PublicProjectsProjectIdRouteImport } from './routes/_public/projects.$projectId'
 import { Route as PublicOrganizationsOrgIdRouteImport } from './routes/_public/organizations.$orgId'
+import { Route as PublicDebugErrorPreviewRouteImport } from './routes/_public/debug.error-preview'
 import { Route as PublicAccountTabRouteImport } from './routes/_public/account.$tab'
 import { Route as PublicProjectsProjectIdIndexRouteImport } from './routes/_public/projects.$projectId.index'
 import { Route as PublicOrganizationsOrgIdIndexRouteImport } from './routes/_public/organizations.$orgId.index'
@@ -269,6 +270,11 @@ const PublicOrganizationsOrgIdRoute =
     path: '/organizations/$orgId',
     getParentRoute: () => PublicRoute,
   } as any)
+const PublicDebugErrorPreviewRoute = PublicDebugErrorPreviewRouteImport.update({
+  id: '/debug/error-preview',
+  path: '/debug/error-preview',
+  getParentRoute: () => PublicRoute,
+} as any)
 const PublicAccountTabRoute = PublicAccountTabRouteImport.update({
   id: '/$tab',
   path: '/$tab',
@@ -1244,6 +1250,7 @@ export interface FileRoutesByFullPath {
   '/reset': typeof PublicResetRoute
   '/': typeof PublicIndexRoute
   '/account/$tab': typeof PublicAccountTabRoute
+  '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
   '/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
   '/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
@@ -1413,6 +1420,7 @@ export interface FileRoutesByTo {
   '/reset': typeof PublicResetRoute
   '/': typeof PublicIndexRoute
   '/account/$tab': typeof PublicAccountTabRoute
+  '/debug/error-preview': typeof PublicDebugErrorPreviewRoute
   '/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
   '/organizations/$orgId/change-plan': typeof PublicOrganizationsOrgIdChangePlanRoute
   '/organizations/$orgId/members': typeof PublicOrganizationsOrgIdMembersRoute
@@ -1559,6 +1567,7 @@ export interface FileRoutesById {
   '/_public/reset': typeof PublicResetRoute
   '/_public/': typeof PublicIndexRoute
   '/_public/account/$tab': typeof PublicAccountTabRoute
+  '/_public/debug/error-preview': typeof PublicDebugErrorPreviewRoute
   '/_public/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/_public/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
   '/_public/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
@@ -1730,6 +1739,7 @@ export interface FileRouteTypes {
     | '/reset'
     | '/'
     | '/account/$tab'
+    | '/debug/error-preview'
     | '/organizations/$orgId'
     | '/projects/$projectId'
     | '/organizations/$orgId/billing'
@@ -1899,6 +1909,7 @@ export interface FileRouteTypes {
     | '/reset'
     | '/'
     | '/account/$tab'
+    | '/debug/error-preview'
     | '/organizations/$orgId/billing'
     | '/organizations/$orgId/change-plan'
     | '/organizations/$orgId/members'
@@ -2044,6 +2055,7 @@ export interface FileRouteTypes {
     | '/_public/reset'
     | '/_public/'
     | '/_public/account/$tab'
+    | '/_public/debug/error-preview'
     | '/_public/organizations/$orgId'
     | '/_public/projects/$projectId'
     | '/_public/organizations/$orgId/billing'
@@ -2332,6 +2344,13 @@ declare module '@tanstack/react-router' {
       path: '/organizations/$orgId'
       fullPath: '/organizations/$orgId'
       preLoaderRoute: typeof PublicOrganizationsOrgIdRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/debug/error-preview': {
+      id: '/_public/debug/error-preview'
+      path: '/debug/error-preview'
+      fullPath: '/debug/error-preview'
+      preLoaderRoute: typeof PublicDebugErrorPreviewRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_public/account/$tab': {
@@ -4299,6 +4318,7 @@ interface PublicRouteChildren {
   PublicOnboardingRoute: typeof PublicOnboardingRoute
   PublicResetRoute: typeof PublicResetRoute
   PublicIndexRoute: typeof PublicIndexRoute
+  PublicDebugErrorPreviewRoute: typeof PublicDebugErrorPreviewRoute
   PublicOrganizationsOrgIdRoute: typeof PublicOrganizationsOrgIdRouteWithChildren
   PublicProjectsProjectIdRoute: typeof PublicProjectsProjectIdRouteWithChildren
 }
@@ -4309,6 +4329,7 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicOnboardingRoute: PublicOnboardingRoute,
   PublicResetRoute: PublicResetRoute,
   PublicIndexRoute: PublicIndexRoute,
+  PublicDebugErrorPreviewRoute: PublicDebugErrorPreviewRoute,
   PublicOrganizationsOrgIdRoute: PublicOrganizationsOrgIdRouteWithChildren,
   PublicProjectsProjectIdRoute: PublicProjectsProjectIdRouteWithChildren,
 }

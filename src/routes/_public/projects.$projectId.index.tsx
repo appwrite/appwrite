@@ -26,7 +26,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/')({
       const apiKeys = mapApiKeysFromResponse(apiKeysRaw)
       const project = projectRaw as { platforms?: unknown[]; clients?: unknown[] } | null
       const platforms = project?.platforms ?? project?.clients ?? []
-      return { apiKeys, platforms }
+      return { apiKeys, apiKeysRaw, platforms }
     } catch (error) {
       console.warn('Failed to fetch overview data in loader:', error)
       return undefined
@@ -43,7 +43,11 @@ function ProjectOverviewPage() {
       projectId={projectId}
       initialData={
         loaderData
-          ? { apiKeys: loaderData.apiKeys, platforms: loaderData.platforms }
+          ? {
+              apiKeys: loaderData.apiKeys,
+              apiKeysRaw: loaderData.apiKeysRaw,
+              platforms: loaderData.platforms,
+            }
           : undefined
       }
     />

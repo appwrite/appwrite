@@ -1,14 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/api-keys/View'
 import {
-  fetchApiKeys,
-  fetchProject,
+  apiKeysQueryOptions,
   mapApiKeysFromResponse,
+  projectQueryOptions,
 } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
-
-const STALE_TIME = 30 * 1000
-const PROJECT_STALE_TIME = 5 * 60 * 1000
 
 export const Route = createFileRoute('/_public/projects/$projectId/api-keys')({
   head: () => ({ meta: [{ title: pageTitle('API keys') }] }),
@@ -20,23 +17,18 @@ export const Route = createFileRoute('/_public/projects/$projectId/api-keys')({
 
     if (!projectId) return undefined
 
-    // Fetch and populate cache (same keys as hooks). Return data for first paint (no flash).
+    // Use same queryOptions as hooks so we share cache (one project + one API keys fetch)
     const [project, apiKeysResponse] = await Promise.all([
-      queryClient.fetchQuery({
-        queryKey: ['project', projectId],
-        queryFn: () => fetchProject(projectId),
-        staleTime: PROJECT_STALE_TIME,
-      }),
-      queryClient.fetchQuery({
-        queryKey: ['apiKeys', projectId],
-        queryFn: () => fetchApiKeys(projectId),
-        staleTime: STALE_TIME,
-      }),
+      queryClient.ensureQueryData(projectQueryOptions(projectId)),
+      queryClient
+        .ensureQueryData(apiKeysQueryOptions(projectId))
+        .catch(() => null),
     ])
 
     return {
       project,
       apiKeys: mapApiKeysFromResponse(apiKeysResponse),
+      apiKeysRaw: apiKeysResponse,
     }
   },
   component: ApiKeysPage,
@@ -48,7 +40,11 @@ function ApiKeysPage() {
     <View
       initialData={
         loaderData
-          ? { project: loaderData.project, apiKeys: loaderData.apiKeys }
+          ? {
+              project: loaderData.project,
+              apiKeys: loaderData.apiKeys,
+              apiKeysRaw: loaderData.apiKeysRaw,
+            }
           : undefined
       }
     />

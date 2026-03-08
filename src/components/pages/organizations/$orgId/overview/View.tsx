@@ -36,6 +36,8 @@ import {
   Info,
   ExternalLink,
   ChevronRight,
+  Pin,
+  PinOff,
 } from '@/lib/icons'
 import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
 import { RegionFlag } from '@/components/global/shared/RegionFlag'
@@ -47,12 +49,20 @@ import {
   useOrganizationMemberships,
   organizationsQueryOptions,
   activeProjectsQueryOptions,
+  useConsoleTeam,
+  useUpdateConsoleTeamPrefs,
+  pinnedProjectsQueryOptions,
   useOrganizationPlan,
   useOrganizationScopes,
   useResendMembershipInvite,
   useUpdateMembershipRole,
   useRemoveTeamMember,
 } from '@/lib/react-query/hooks'
+import {
+  parsePinnedProjectIds,
+  buildPinnedProjectIdsPrefs,
+  MAX_PINNED_PROJECTS,
+} from '@/lib/team-prefs-keys'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
   canSeeProjects,
@@ -104,7 +114,12 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+} from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useAuth } from '@/components/global/auth/RequireAuth'
@@ -126,6 +141,7 @@ import { CreateOrganizationDialog } from './CreateOrganization'
 import { CreateProjectDialog } from './CreateProjectDialog'
 import { useCreateOrganization } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useDebugOverrides } from '@/lib/debug-overrides'
 import {
   Table,
   TableBody,
@@ -263,6 +279,7 @@ export function OrgOverview({
   const [searchQuery, setSearchQuery] = useState('')
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(orgId, initialData?.scopesData)
+  const { showSuccessTeamCard: debugShowSuccessTeamCard } = useDebugOverrides()
 
   // Check if we're on a domain detail route using route matches and pathname (for navigation transitions)
   const isDomainDetailRoute = useMemo(() => {
@@ -680,30 +697,49 @@ export function OrgOverview({
   // In Appwrite, organizations ARE teams, so we use the organization ID directly as the team ID
   const orgTeamId = orgId || null
 
-  // Fetch data for the requested page (triggers load when user changes page)
+  // Pinned projects: stored in team prefs, excluded from main list
+  const { data: consoleTeam } = useConsoleTeam(orgTeamId)
+  const teamPrefs = (consoleTeam as { prefs?: Record<string, unknown> } | null)
+    ?.prefs
+  const pinnedIds = useMemo(
+    () => parsePinnedProjectIds(teamPrefs),
+    [teamPrefs],
+  )
+  const updateTeamPrefsMutation = useUpdateConsoleTeamPrefs(orgTeamId)
+
+  const { data: pinnedProjectsData } = useQuery({
+    ...pinnedProjectsQueryOptions(orgTeamId, pinnedIds),
+    placeholderData: keepPreviousData,
+  })
+
+  // Fetch data for the requested page (triggers load when user changes page); exclude pinned
   const {
     isLoading: activeProjectsLoading,
     isFetching: activeProjectsFetching,
     error: activeProjectsError,
-  } = useQuery(
-    activeProjectsQueryOptions(
+  } = useQuery({
+    ...activeProjectsQueryOptions(
       orgTeamId,
       requestedPage - 1,
       DEFAULT_PAGE_SIZE,
       searchQuery,
+      pinnedIds,
     ),
-  )
+    placeholderData: keepPreviousData,
+  })
 
-  // Fetch data for the displayed page (what we show - stays until new page is ready)
+  // Fetch data for the displayed page (what we show - stays until new page is ready); exclude pinned
   const { data: activeProjectsData, isLoading: displayedProjectsLoading } =
-    useQuery(
-      activeProjectsQueryOptions(
+    useQuery({
+      ...activeProjectsQueryOptions(
         orgTeamId,
         displayedPage - 1,
         DEFAULT_PAGE_SIZE,
         searchQuery,
+        pinnedIds,
       ),
-    )
+      placeholderData: keepPreviousData,
+    })
 
   // Only show full loading when we have no data to display (initial load)
   const displayedProjects = activeProjectsData?.projects ?? []
@@ -726,8 +762,7 @@ export function OrgOverview({
     displayedPage,
   ])
 
-  // Get total count from the first page query (no search) - already fetched in route loader
-  // This is used for limit checking and doesn't change when searching
+  // Total count without search, without exclude - for plan limit checking (all org projects)
   const { data: totalProjectsData } = useQuery(
     activeProjectsQueryOptions(orgTeamId, 0, DEFAULT_PAGE_SIZE, ''),
   )
@@ -793,22 +828,73 @@ export function OrgOverview({
     orgId,
   ])
 
-  // Get active projects from API (already filtered by team server-side)
-  // Extract platforms and API keys count from raw project data
+  // Pinned projects in display shape (order preserved from pinnedIds)
+  const pinnedProjects = useMemo(() => {
+    if (!pinnedProjectsData?.projects?.length) return []
+    const raw = pinnedProjectsData.projects as Models.Project[]
+    const byId = new Map(raw.map((p) => [p.$id, p]))
+    return pinnedIds
+      .map((id) => byId.get(id))
+      .filter((p): p is Models.Project => p != null)
+      .map((project) => {
+        const platforms = project.platforms || []
+        const keys = project.keys || []
+        return {
+          $id: project.$id,
+          name: project.name,
+          teamId: project.teamId,
+          region: project.region || 'unknown',
+          createdAt: project.$createdAt || new Date().toISOString(),
+          icon: project.name.charAt(0).toUpperCase(),
+          archived: project.status === 'archived',
+          platformsCount: Array.isArray(platforms) ? platforms.length : 0,
+          apiKeysCount: Array.isArray(keys) ? keys.length : 0,
+        }
+      })
+  }, [pinnedProjectsData, pinnedIds])
+
+  // Filter pinned by search (independent from main list filter)
+  const pinnedFiltered = useMemo(() => {
+    if (!searchQuery.trim()) return pinnedProjects
+    const q = searchQuery.toLowerCase()
+    return pinnedProjects.filter((p) =>
+      p.name?.toLowerCase().includes(q),
+    )
+  }, [pinnedProjects, searchQuery])
+
+  const handlePinProject = (projectId: string) => {
+    if (
+      pinnedIds.length >= MAX_PINNED_PROJECTS &&
+      !pinnedIds.includes(projectId)
+    ) {
+      toast.error(`You can pin up to ${MAX_PINNED_PROJECTS} projects`)
+      return
+    }
+    const next = pinnedIds.includes(projectId)
+      ? pinnedIds.filter((id) => id !== projectId)
+      : [...pinnedIds, projectId].slice(0, MAX_PINNED_PROJECTS)
+    const prefs = {
+      ...(teamPrefs || {}),
+      ...buildPinnedProjectIdsPrefs(next),
+    }
+    updateTeamPrefsMutation.mutate(prefs as Record<string, unknown>, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['projects'] })
+        toast.success(
+          next.includes(projectId) ? 'Project pinned' : 'Project unpinned',
+        )
+      },
+      onError: () => toast.error('Failed to update pinned projects'),
+    })
+  }
+
+  // Get active projects from API (already filtered by team server-side, excludes pinned)
   const activeProjects = useMemo(() => {
     if (!activeProjectsData?.projects) return []
 
     return activeProjectsData.projects.map((project: Models.Project) => {
-      // Extract platforms count from raw project data
-      // platforms is an array in the project document
       const platforms = project.platforms || []
-      const platformsCount = Array.isArray(platforms) ? platforms.length : 0
-
-      // Extract API keys count from raw project data
-      // keys is an array in the project document
       const keys = project.keys || []
-      const apiKeysCount = Array.isArray(keys) ? keys.length : 0
-
       return {
         $id: project.$id,
         name: project.name,
@@ -817,14 +903,13 @@ export function OrgOverview({
         createdAt: project.$createdAt || new Date().toISOString(),
         icon: project.name.charAt(0).toUpperCase(),
         archived: project.status === 'archived',
-        platformsCount,
-        apiKeysCount,
+        platformsCount: Array.isArray(platforms) ? platforms.length : 0,
+        apiKeysCount: Array.isArray(keys) ? keys.length : 0,
       }
     })
   }, [activeProjectsData])
 
-  // Group active projects by team
-  // Since organizations are teams in Appwrite, we group all projects under the organization
+  // Group active projects by team (non-pinned only)
   const projectsByTeam = useMemo(() => {
     if (!selectedOrg || activeProjects.length === 0) return []
 
@@ -970,6 +1055,12 @@ export function OrgOverview({
       ),
     }))
     .filter(({ projects }) => projects.length > 0)
+
+  // While search is fetching, show current results (no client-side filter) to avoid empty state flash
+  const displayedProjectsByTeam =
+    activeProjectsFetching && searchQuery.trim()
+      ? projectsByTeam
+      : filteredProjectsByTeam
 
   const handleOrgNavigate = (tab: string) => {
     const tabRoutes: Record<string, string> = {
@@ -1580,49 +1671,153 @@ export function OrgOverview({
                           </div>
                         ) : (
                           <>
-                            {/* Projects by Team */}
+                            {/* Pinned projects (keeps previous data visible while refetching) */}
+                            {pinnedFiltered.length > 0 && (
+                              <div className="mb-8">
+                                <h2 className="mb-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider">
+                                  Pinned
+                                </h2>
+                                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                  {pinnedFiltered.map((project) => (
+                                    <div
+                                      key={project.$id}
+                                      className="group relative rounded-xl border border-border bg-card/50 p-4 transition-all hover:border-border hover:bg-card"
+                                      data-project-card
+                                    >
+                                      <Link
+                                        to="/projects/$projectId"
+                                        params={{ projectId: project.$id }}
+                                        className="block"
+                                      >
+                                        <div>
+                                          <h3 className="text-[14px] font-medium text-foreground group-hover:text-foreground">
+                                            {project.name}
+                                          </h3>
+                                          {project.region && (
+                                            <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                                              <RegionFlag
+                                                region={project.region}
+                                              />
+                                              {project.region}
+                                            </div>
+                                          )}
+                                        </div>
+                                        <ProjectCardFooter
+                                          platformsCount={
+                                            project.platformsCount || 0
+                                          }
+                                          apiKeysCount={
+                                            project.apiKeysCount || 0
+                                          }
+                                        />
+                                      </Link>
+                                      <TooltipProvider delayDuration={0}>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Button
+                                              variant="ghost"
+                                              size="icon"
+                                              className="absolute right-2 top-2 h-8 w-8 rounded-md opacity-0 transition-opacity group-hover:opacity-100"
+                                              onClick={(e) => {
+                                                e.preventDefault()
+                                                handlePinProject(project.$id)
+                                              }}
+                                              disabled={
+                                                updateTeamPrefsMutation.isPending
+                                              }
+                                            >
+                                              <PinOff className="h-4 w-4" />
+                                            </Button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p>Unpin project</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Projects by Team (non-pinned, paginated) */}
                             <div
                               className="space-y-8"
                               ref={projectsContainerRef}
                             >
-                              {filteredProjectsByTeam.map(
+                              {displayedProjectsByTeam.map(
                                 ({ team, projects }) => (
                                   <div key={team.$id}>
-                                    {/* Project Cards Grid */}
+                                    {pinnedFiltered.length > 0 && (
+                                      <h2 className="mb-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider">
+                                        All projects
+                                      </h2>
+                                    )}
                                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                                       {projects.map((project) => {
+                                        const canPin =
+                                          pinnedIds.length < MAX_PINNED_PROJECTS
                                         return (
-                                          <Link
+                                          <div
                                             key={project.$id}
-                                            to="/projects/$projectId"
-                                            params={{ projectId: project.$id }}
-                                            data-project-card
                                             className="group relative rounded-xl border border-border bg-card/50 p-4 transition-all hover:border-border hover:bg-card"
+                                            data-project-card
                                           >
-                                            <div>
-                                              <h3 className="text-[14px] font-medium text-foreground group-hover:text-foreground">
-                                                {project.name}
-                                              </h3>
-                                              {project.region && (
-                                                <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
-                                                  <RegionFlag
-                                                    region={project.region}
-                                                  />
-                                                  {project.region}
-                                                </div>
-                                              )}
-                                            </div>
-
-                                            {/* Platforms and API Keys */}
-                                            <ProjectCardFooter
-                                              platformsCount={
-                                                project.platformsCount || 0
-                                              }
-                                              apiKeysCount={
-                                                project.apiKeysCount || 0
-                                              }
-                                            />
-                                          </Link>
+                                            <Link
+                                              to="/projects/$projectId"
+                                              params={{ projectId: project.$id }}
+                                              className="block"
+                                            >
+                                              <div>
+                                                <h3 className="text-[14px] font-medium text-foreground group-hover:text-foreground">
+                                                  {project.name}
+                                                </h3>
+                                                {project.region && (
+                                                  <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                                                    <RegionFlag
+                                                      region={project.region}
+                                                    />
+                                                    {project.region}
+                                                  </div>
+                                                )}
+                                              </div>
+                                              <ProjectCardFooter
+                                                platformsCount={
+                                                  project.platformsCount || 0
+                                                }
+                                                apiKeysCount={
+                                                  project.apiKeysCount || 0
+                                                }
+                                              />
+                                            </Link>
+                                            {canPin && (
+                                              <TooltipProvider delayDuration={0}>
+                                                <Tooltip>
+                                                  <TooltipTrigger asChild>
+                                                    <Button
+                                                      variant="ghost"
+                                                      size="icon"
+                                                      className="absolute right-2 top-2 h-8 w-8 rounded-md opacity-0 transition-opacity group-hover:opacity-100"
+                                                      onClick={(e) => {
+                                                        e.preventDefault()
+                                                        handlePinProject(
+                                                          project.$id,
+                                                        )
+                                                      }}
+                                                      disabled={
+                                                        updateTeamPrefsMutation.isPending
+                                                      }
+                                                    >
+                                                      <Pin className="h-4 w-4" />
+                                                    </Button>
+                                                  </TooltipTrigger>
+                                                  <TooltipContent>
+                                                    <p>Pin project</p>
+                                                  </TooltipContent>
+                                                </Tooltip>
+                                              </TooltipProvider>
+                                            )}
+                                          </div>
                                         )
                                       })}
                                     </div>
@@ -1631,22 +1826,23 @@ export function OrgOverview({
                               )}
                             </div>
 
-                            {/* Empty State */}
-                            {filteredProjectsByTeam.length === 0 && (
-                              <EmptyState
-                                icon={Search}
-                                title="No projects found"
-                                description={
-                                  searchQuery
-                                    ? undefined
-                                    : 'Create your first project to get started'
-                                }
-                                isEmpty={!searchQuery}
-                                hasFilters={!!searchQuery}
-                                variant="centered"
-                                iconSize="md"
-                              />
-                            )}
+                            {/* Empty State: no pinned and no other projects (not shown while search is fetching) */}
+                            {pinnedFiltered.length === 0 &&
+                              displayedProjectsByTeam.length === 0 && (
+                                <EmptyState
+                                  icon={Search}
+                                  title="No projects found"
+                                  description={
+                                    searchQuery
+                                      ? undefined
+                                      : 'Create your first project to get started'
+                                  }
+                                  isEmpty={!searchQuery}
+                                  hasFilters={!!searchQuery}
+                                  variant="centered"
+                                  iconSize="md"
+                                />
+                              )}
 
                             {/* Pagination for Active Projects */}
                             {activeProjectsTotal > DEFAULT_PAGE_SIZE && (
@@ -1662,8 +1858,8 @@ export function OrgOverview({
                               />
                             )}
 
-                            {/* Enterprise Success Manager - Only show if plan supports it */}
-                            {supportsSuccessTeam && (
+                            {/* Enterprise Success Manager - Only show if plan supports it and debug option enabled */}
+                            {supportsSuccessTeam && debugShowSuccessTeamCard && (
                               <EnterpriseSuccessManager />
                             )}
                           </>

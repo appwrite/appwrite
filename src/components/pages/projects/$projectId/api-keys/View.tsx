@@ -50,6 +50,8 @@ export type ApiKeysInitialData = {
     ReturnType<typeof import('@/lib/react-query/hooks').fetchProject>
   >
   apiKeys: ApiKey[]
+  /** Raw listKeys response from loader; passed to useApiKeys to avoid duplicate fetch */
+  apiKeysRaw?: { keys?: unknown[] } | null
 }
 
 type ViewProps = {
@@ -68,8 +70,10 @@ export function View({ initialData }: ViewProps = {}) {
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [createdKeySecret, setCreatedKeySecret] = useState<string | null>(null)
 
-  // Fetch API keys (use initialData on first paint so no loading flash)
-  const { apiKeys: apiKeysFromHook, isLoading } = useApiKeys(projectId)
+  // Fetch API keys; pass loader prefetch as initialData to avoid duplicate fetch
+  const { apiKeys: apiKeysFromHook, isLoading } = useApiKeys(projectId, {
+    initialData: initialData?.apiKeysRaw,
+  })
   const apiKeys = apiKeysFromHook?.length
     ? apiKeysFromHook
     : (initialData?.apiKeys ?? [])

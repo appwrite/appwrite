@@ -82,9 +82,49 @@ export async function fetchOrganizationMemberships(
   }
 }
 
+/**
+ * Fetch a single console team (organization) by ID.
+ * Used to read team.prefs (e.g. pinned project IDs).
+ */
+export async function fetchConsoleTeam(teamId: string) {
+  if (!teamId) {
+    throw new Error('Team ID is required')
+  }
+  return await sdk.forConsole.teams.get({ teamId })
+}
+
+/**
+ * Update console team (organization) preferences.
+ * Merge your keys into existing team.prefs before calling.
+ */
+export async function updateConsoleTeamPrefs(
+  teamId: string,
+  prefs: Record<string, unknown>,
+) {
+  if (!teamId) {
+    throw new Error('Team ID is required')
+  }
+  await sdk.forConsole.teams.updatePrefs({ teamId, prefs })
+}
+
 // ============================================================================
 // QUERY OPTIONS
 // ============================================================================
+
+/**
+ * Query options for fetching a console team (for prefs, etc.)
+ */
+export function consoleTeamQueryOptions(teamId: string | null | undefined) {
+  return queryOptions({
+    queryKey: ['team', 'console', teamId],
+    queryFn: () => fetchConsoleTeam(teamId!),
+    enabled: !!teamId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    gcTime: teamId ? 5 * 60 * 1000 : 0,
+  })
+}
 
 /**
  * Query options for fetching organization memberships
@@ -152,6 +192,35 @@ export function useTeams() {
     error,
     refetch,
   }
+}
+
+/**
+ * Hook to fetch a console team by ID (e.g. for reading team.prefs).
+ */
+export function useConsoleTeam(teamId: string | null | undefined) {
+  return useQuery(consoleTeamQueryOptions(teamId))
+}
+
+/**
+ * Hook to update console team preferences.
+ * Invalidates the console team query on success.
+ */
+export function useUpdateConsoleTeamPrefs(
+  teamId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (prefs: Record<string, unknown>) =>
+      updateConsoleTeamPrefs(teamId!, prefs),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['team', 'console', teamId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['organizations', 'console'],
+      })
+    },
+  })
 }
 
 /**

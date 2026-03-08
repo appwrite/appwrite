@@ -5,12 +5,15 @@ const DEBUG_OVERRIDE_EVENT = 'debugOverridesChange'
 export const DEBUG_OVERRIDE_KEYS = {
   showNativeAppBar: 'debug:showNativeAppBar',
   showAIAssistant: 'debug:showAIAssistant',
+  showSuccessTeamCard: 'debug:showSuccessTeamCard',
 } as const
 
 export type DebugOverrides = {
   showNativeAppBar: boolean
   /** When true, the AI assistant is shown regardless of profile (experimental). Default false. */
   showAIAssistant: boolean
+  /** When true, the success team card is shown on organization overview (custom plans). Default false. */
+  showSuccessTeamCard: boolean
 }
 
 const isBrowser = typeof window !== 'undefined'
@@ -29,6 +32,10 @@ export function loadDebugOverrides(): DebugOverrides {
     ),
     showAIAssistant: readBooleanFromStorage(
       DEBUG_OVERRIDE_KEYS.showAIAssistant,
+      false,
+    ),
+    showSuccessTeamCard: readBooleanFromStorage(
+      DEBUG_OVERRIDE_KEYS.showSuccessTeamCard,
       false,
     ),
   }

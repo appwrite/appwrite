@@ -1123,6 +1123,34 @@ Use `console-access-checks` (e.g. `canShowProjectSettings`, `canShowConnectSecti
 
 ---
 
+## Team and user preferences (key-value format)
+
+Console uses **team** (organization) and **user** (account) preferences to store small key-value settings. Use a consistent, extendable format so new features can add keys without collisions.
+
+### Key format
+
+- **Pattern**: `console.<feature>.<optionalSubKey>`
+- **Examples**: `console.pinnedProjectIds`, `console.sidebarCollapsed`, `account.organization` (user-level).
+- **Scope**: Team prefs are per organization (`sdk.forConsole.teams.get/updatePrefs` with `teamId`). User/account prefs are per user (`sdk.forConsole.account.updatePrefs`).
+
+### Value format
+
+- **Type**: String. For complex data (e.g. arrays, objects), store a **JSON string** and parse when reading.
+- **Example**: Pinned project IDs → key `console.pinnedProjectIds`, value `["projectId1","projectId2"]`.
+
+### Reading and writing
+
+- **Team**: `const team = await sdk.forConsole.teams.get({ teamId })` → `team.prefs` is `Record<string, unknown>`. Merge your key into `prefs` and call `sdk.forConsole.teams.updatePrefs({ teamId, prefs })`.
+- **User**: Same idea with `sdk.forConsole.account.get()` / `account.prefs` and `sdk.forConsole.account.updatePrefs({ prefs })`.
+
+### Adding a new setting
+
+1. Define the key (and max length/format) in code (e.g. `src/lib/team-prefs-keys.ts`).
+2. Provide `parse*` / `build*` helpers that read from `prefs[key]` and return a merged `prefs` object for updates.
+3. Document the key in this section if it is a shared convention (e.g. `console.pinnedProjectIds`).
+
+---
+
 ## Environment
 
 Set `VITE_APPWRITE_ENDPOINT` in `.env` (default: `https://cloud.appwrite.io/v1`). Project endpoints are dynamic (per-project region); use `getApiEndpoint(region)` and `getProjectApiEndpoint(projectId)` from `@/lib/appwrite/sdk` for URL construction.

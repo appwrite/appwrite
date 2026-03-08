@@ -94,9 +94,11 @@ export function ConsoleHeader({
   const showAIAssistant = overrides.showAIAssistant
   const showConnectAndCreate = canShowConnectSection(access, features)
 
-  // Get organization ID for upgrade button
-  const orgId =
-    project?.teamId || (account?.prefs?.organization as string | undefined)
+  // Get organization ID for upgrade button. When on a project page, use only the
+  // project's org so we don't fetch plan for a different org (e.g. account prefs).
+  const orgId = projectId
+    ? (project?.teamId ?? undefined)
+    : (account?.prefs?.organization as string | undefined)
 
   // Fetch organization plan to check if upgrade button should be shown
   const { plan: organizationPlan } = useOrganizationPlan(orgId)
@@ -450,12 +452,7 @@ export function ConsoleHeader({
 
           {/* Support - hidden on small containers */}
           <div className="hidden @[900px]:flex shrink-0">
-            <SupportPopover
-              orgId={
-                project?.teamId ||
-                (account?.prefs?.organization as string | undefined)
-              }
-            />
+            <SupportPopover orgId={orgId} />
           </div>
 
           {/* Help/Assistant - hidden on small containers; enabled by profile or experimental override */}

@@ -10,6 +10,7 @@ import {
   useMutation,
   useQueryClient,
   queryOptions,
+  keepPreviousData,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { Query, ID } from '@appwrite.io/console'
@@ -21,6 +22,21 @@ import {
   DEFAULT_PAGE_SIZE,
   SMALL_PAGE_SIZE,
 } from './constants'
+
+// ============================================================================
+// LIST SELECT - minimal fields for project list/cards (selector, org overview)
+// ============================================================================
+
+const PROJECT_LIST_SELECT = [
+  '$id',
+  'name',
+  'teamId',
+  'region',
+  '$createdAt',
+  'status',
+  'platforms',
+  'keys',
+] as const
 
 // ============================================================================
 // QUERY FUNCTIONS
@@ -61,19 +77,45 @@ export async function fetchActiveProjects(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  excludeProjectIds?: string[],
 ) {
   if (!teamId) {
     return { projects: [], total: 0 }
   }
 
+  const baseQueries = [
+    Query.select([...PROJECT_LIST_SELECT]),
+    Query.equal('teamId', teamId),
+    Query.or([Query.isNull('status'), Query.notEqual('status', 'archived')]),
+    Query.orderDesc('$createdAt'),
+    Query.limit(limit),
+    Query.offset(page * limit),
+  ]
+
+  const excludeIds =
+    excludeProjectIds?.length &&
+    excludeProjectIds.every((id) => typeof id === 'string' && id.length > 0)
+      ? excludeProjectIds
+      : []
+
+  const queries =
+    excludeIds.length > 0
+      ? [
+          Query.select([...PROJECT_LIST_SELECT]),
+          Query.equal('teamId', teamId),
+          Query.or([
+            Query.isNull('status'),
+            Query.notEqual('status', 'archived'),
+          ]),
+          ...excludeIds.map((id) => Query.notEqual('$id', id)),
+          Query.orderDesc('$createdAt'),
+          Query.limit(limit),
+          Query.offset(page * limit),
+        ]
+      : baseQueries
+
   const response = await sdk.forConsole.projects.list({
-    queries: [
-      Query.equal('teamId', teamId),
-      Query.or([Query.isNull('status'), Query.notEqual('status', 'archived')]),
-      Query.orderDesc('$createdAt'),
-      Query.limit(limit),
-      Query.offset(page * limit),
-    ],
+    queries,
     search: search?.trim() || undefined,
     total: true,
   })
@@ -82,6 +124,48 @@ export async function fetchActiveProjects(
     projects: response.projects || [],
     total: response.total || 0,
   }
+}
+
+/**
+ * Fetch projects by IDs for a team (e.g. pinned projects).
+ * Returns projects in the same order as projectIds (missing/deleted projects omitted).
+ */
+export async function fetchProjectsByIds(
+  teamId: string,
+  projectIds: string[],
+): Promise<{ projects: unknown[] }> {
+  if (!teamId || projectIds.length === 0) {
+    return { projects: [] }
+  }
+
+  const validIds = projectIds.filter(
+    (id) => typeof id === 'string' && id.length > 0,
+  )
+  if (validIds.length === 0) return { projects: [] }
+
+  // Or requires at least two queries; for a single ID use equal
+  const idQuery =
+    validIds.length === 1
+      ? Query.equal('$id', validIds[0])
+      : Query.or(validIds.map((id) => Query.equal('$id', id)))
+
+  const response = await sdk.forConsole.projects.list({
+    queries: [
+      Query.select([...PROJECT_LIST_SELECT]),
+      Query.equal('teamId', teamId),
+      idQuery,
+      Query.or([Query.isNull('status'), Query.notEqual('status', 'archived')]),
+      Query.limit(validIds.length),
+    ],
+    total: false,
+  })
+
+  const list = response.projects || []
+  const byId = new Map(list.map((p: { $id: string }) => [p.$id, p]))
+  const projects: unknown[] = validIds
+    .map((id) => byId.get(id))
+    .filter((p): p is NonNullable<typeof p> => p != null)
+  return { projects }
 }
 
 /**
@@ -199,27 +283,51 @@ export async function fetchProjectVariables(
 // ============================================================================
 
 /**
- * Query options for fetching active projects for an organization
- *
- * This can be used in both route loaders and hooks to ensure consistent query configuration.
- * Note: Uses 'active' key format to match component usage.
+ * Query options for fetching active projects for an organization.
+ * Pass excludeProjectIds so pinned (or other) projects are omitted from the list.
  */
 export function activeProjectsQueryOptions(
   orgId: string | null | undefined,
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search: string = '',
+  excludeProjectIds?: string[],
 ) {
+  const excludeKey =
+    (excludeProjectIds?.length ?? 0) > 0
+      ? excludeProjectIds!.slice().sort().join(',')
+      : ''
   return queryOptions({
-    queryKey: ['projects', 'active', page, search, orgId],
-    queryFn: () => fetchActiveProjects(orgId!, page, limit, search),
+    queryKey: ['projects', 'active', page, search, orgId, excludeKey],
+    queryFn: () =>
+      fetchActiveProjects(orgId!, page, limit, search, excludeProjectIds),
     enabled: !!orgId,
     staleTime: DEFAULT_STALE_TIME,
-    retry: false, // Don't retry on error
-    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
-    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
-    refetchOnReconnect: false, // Prevent refetch on network reconnect
-    // Don't keep disabled queries in cache
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: orgId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Query options for fetching projects by IDs (e.g. pinned projects for an org).
+ * Enabled whenever orgId is set so keepPreviousData can show the previous org's
+ * list until the new org's data loads (avoids layout shift when switching orgs).
+ */
+export function pinnedProjectsQueryOptions(
+  orgId: string | null | undefined,
+  projectIds: string[],
+) {
+  const idsKey = projectIds.length > 0 ? projectIds.slice().sort().join(',') : ''
+  return queryOptions({
+    queryKey: ['projects', 'pinned', orgId, idsKey],
+    queryFn: () => fetchProjectsByIds(orgId!, projectIds),
+    enabled: !!orgId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
     gcTime: orgId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -384,21 +492,24 @@ export function useProjectsForTeam(
 }
 
 /**
- * Hook to fetch projects for a specific team with infinite scroll
- *
- * This is useful for the project selector when you need infinite scrolling
- * through projects for a specific team/organization.
+ * Hook to fetch projects for a specific team with infinite scroll.
+ * Pass excludeProjectIds (e.g. pinned) so they are omitted from the list.
  *
  * @param teamId - The team/organization ID
  * @param limit - Number of items per page
  * @param search - Optional search query
- * @returns Infinite query result with flattened projects
+ * @param excludeProjectIds - Optional project IDs to exclude (e.g. pinned)
  */
 export function useProjectsForTeamInfinite(
   teamId: string | null | undefined,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  excludeProjectIds?: string[],
 ) {
+  const excludeKey =
+    (excludeProjectIds?.length ?? 0) > 0
+      ? excludeProjectIds!.slice().sort().join(',')
+      : ''
   const {
     data,
     isLoading,
@@ -408,13 +519,28 @@ export function useProjectsForTeamInfinite(
     fetchNextPage,
     error,
     refetch,
+    isPlaceholderData,
   } = useInfiniteQuery({
-    queryKey: ['projects', 'team', 'infinite', teamId, limit, search ?? ''],
+    queryKey: [
+      'projects',
+      'team',
+      'infinite',
+      teamId,
+      limit,
+      search ?? '',
+      excludeKey,
+    ],
     queryFn: ({ pageParam = 0 }) =>
-      fetchActiveProjects(teamId!, pageParam, limit, search),
+      fetchActiveProjects(
+        teamId!,
+        pageParam,
+        limit,
+        search,
+        excludeProjectIds,
+      ),
     enabled: !!teamId,
     staleTime: DEFAULT_STALE_TIME,
-    // Rely on prefetching on hover - don't refetch if data is already cached
+    placeholderData: keepPreviousData,
     refetchOnMount: false,
     getNextPageParam: (lastPage, allPages) => {
       // If we have more items than what we've loaded, return next page number
@@ -461,22 +587,34 @@ export function useProjectsForTeamInfinite(
     fetchNextPage,
     error,
     refetch,
+    isPlaceholderData,
   }
 }
+
+/** Raw API keys response shape (from listKeys) for initialData from route loaders */
+export type ApiKeysResponseRaw = Awaited<ReturnType<typeof fetchApiKeys>>
 
 /**
  * Hook to fetch API keys for a project
  *
  * @param projectId - The project ID
+ * @param options.initialData - Prefetched raw response from route loader; prevents duplicate fetch when loader already ran
  * @returns API keys list with loading state
  */
-export function useApiKeys(projectId: string | undefined) {
+export function useApiKeys(
+  projectId: string | undefined,
+  options?: { initialData?: ApiKeysResponseRaw | null },
+) {
   const {
     data: apiKeysData,
     isLoading,
     error,
     refetch,
-  } = useQuery(apiKeysQueryOptions(projectId))
+  } = useQuery({
+    ...apiKeysQueryOptions(projectId),
+    initialData: options?.initialData ?? undefined,
+    initialDataUpdatedAt: options?.initialData ? 1 : 0,
+  })
 
   // Map the API response to our ApiKey type
   const apiKeys = useMemo(() => {

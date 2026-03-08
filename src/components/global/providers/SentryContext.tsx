@@ -3,6 +3,8 @@ import * as Sentry from '@sentry/tanstackstart-react'
 import { useLocation } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
+import { useProject } from '@/lib/react-query/hooks'
+import { organizationPlanQueryOptions } from '@/lib/react-query/hooks/organizations'
 
 const isSentryEnabled = () => !!import.meta.env.VITE_SENTRY_DSN
 
@@ -50,10 +52,9 @@ export function SentryContextProvider({
 }) {
   const location = useLocation()
 
-  // Fetch account data directly - don't use useAuth to avoid circular dependencies
-  // This query will fail gracefully if not authenticated
+  // Use same query key as RequireAuth/useAuth so we share cache (one account fetch)
   const { data: account } = useQuery({
-    queryKey: ['account', 'console', 'sentry'],
+    queryKey: ['account', 'console'],
     queryFn: async () => {
       try {
         return await sdk.forConsole.account.get()
@@ -68,24 +69,17 @@ export function SentryContextProvider({
 
   const isAuthenticated = !!account
 
-  // Determine current org ID from URL or user prefs
+  // Determine current org ID: URL (org pages) > project's org (project pages only when loaded) > user prefs
+  const projectId = extractProjectId(location.pathname)
+  const { project } = useProject(projectId)
   const orgIdFromUrl = extractOrgId(location.pathname)
-  const currentOrgId =
-    orgIdFromUrl || (account?.prefs?.organization as string | undefined)
+  const currentOrgId = projectId
+    ? (project?.teamId ?? undefined)
+    : (orgIdFromUrl ?? (account?.prefs?.organization as string | undefined))
 
-  // Fetch organization plan for context
+  // Use shared plan query so we don't duplicate API calls (loader already fetches on project pages)
   const { data: orgPlan } = useQuery({
-    queryKey: ['organization', 'plan', currentOrgId, 'sentry'],
-    queryFn: async () => {
-      try {
-        if (!currentOrgId) return null
-        return await sdk.forConsole.organizations.getPlan(currentOrgId)
-      } catch {
-        return null
-      }
-    },
-    retry: false,
-    staleTime: 5 * 60 * 1000,
+    ...organizationPlanQueryOptions(currentOrgId),
     enabled: !!currentOrgId && typeof window !== 'undefined',
   })
 

@@ -2,12 +2,11 @@ import { useState, useMemo, useEffect } from 'react'
 import {
   TrendingUp,
   TrendingDown,
-  Key,
   Plus,
-  Link,
   Plug2,
   Check,
   Copy,
+  Key,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { RequestsChart } from './RequestsChart'
@@ -127,6 +126,8 @@ const supportedLanguages = [
 
 export interface OverviewInitialData {
   apiKeys: ApiKey[]
+  /** Raw listKeys response from loader; passed to useApiKeys to avoid duplicate fetch */
+  apiKeysRaw?: { keys?: unknown[] } | null
   /** Prefetched platforms from project; avoids empty-state flash in Apps section */
   platforms?: unknown[]
 }
@@ -191,8 +192,10 @@ export function View({ projectId, initialData }: ViewProps) {
   // Fetch real project data from console SDK
   const { project: currentProject } = useProject(projectId)
 
-  // Fetch API keys using the hook; use initialData for first paint to avoid spinner
-  const { apiKeys, isLoading: isLoadingKeys } = useApiKeys(projectId)
+  // Fetch API keys using the hook; pass loader prefetch as initialData to avoid duplicate fetch
+  const { apiKeys, isLoading: isLoadingKeys } = useApiKeys(projectId, {
+    initialData: initialData?.apiKeysRaw,
+  })
   const effectiveApiKeys =
     apiKeys.length > 0 ? apiKeys : (initialData?.apiKeys ?? [])
   const showLoadingKeys = isLoadingKeys && !initialData
@@ -411,7 +414,6 @@ export function View({ projectId, initialData }: ViewProps) {
                       }
                       className="flex min-w-0 cursor-pointer items-center gap-1.5 rounded-md bg-muted/50 px-2.5 py-1.5 text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                     >
-                      <Link className="h-3.5 w-3.5 shrink-0" />
                       <span className="truncate max-w-[100px] sm:max-w-[160px] font-mono">
                         {endpointDisplay}
                       </span>
