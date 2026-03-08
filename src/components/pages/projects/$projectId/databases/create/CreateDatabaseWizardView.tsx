@@ -5,7 +5,7 @@
 
 import { useState, useMemo } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
-import { Database, Braces, Layers } from 'lucide-react'
+import { Table as TableIcon, Braces, Layers } from 'lucide-react'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -34,7 +34,7 @@ type DbTypeChoice = {
   label: string
   description: string
   tags: string[]
-  icon: 'database' | 'braces' | 'layers'
+  icon: 'table' | 'braces' | 'layers'
 }
 
 const DB_TYPE_OPTIONS: DbTypeChoice[] = [
@@ -44,7 +44,7 @@ const DB_TYPE_OPTIONS: DbTypeChoice[] = [
     description:
       'Relational-style database with tables, columns, and indexes. Ideal for structured data and complex queries.',
     tags: ['Relational data', 'CRUD apps', 'Structured schemas', 'SQL-like queries'],
-    icon: 'database',
+    icon: 'table',
   },
   {
     id: 'DocumentsDB',
@@ -111,7 +111,8 @@ export function CreateDatabaseWizardView() {
         s.id === 'shared' ? { ...s, comingSoon: false } : { ...s, comingSoon: true },
       )
     }
-    return SPEC_OPTIONS.map((s) => ({ ...s, comingSoon: false }))
+    // DocumentsDB / VectorsDB: only dedicated tiers, no Shared DB
+    return SPEC_OPTIONS.filter((s) => s.id !== 'shared').map((s) => ({ ...s, comingSoon: false }))
   }, [isTablesDB])
 
   const selectedSpec = useMemo(
@@ -235,12 +236,19 @@ export function CreateDatabaseWizardView() {
                 )}
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                  {opt.icon === 'database' && <Database className="h-5 w-5" />}
+                  {opt.icon === 'table' && <TableIcon className="h-5 w-5" />}
                   {opt.icon === 'braces' && <Braces className="h-5 w-5" />}
                   {opt.icon === 'layers' && <Layers className="h-5 w-5" />}
                 </div>
-                <span className="text-[14px] font-medium text-foreground">
-                  {opt.label}
+                <span className="flex items-center gap-2">
+                  <span className="text-[14px] font-medium text-foreground">
+                    {opt.label}
+                  </span>
+                  {(opt.id === 'DocumentsDB' || opt.id === 'VectorsDB') && (
+                    <Badge variant="info" className="text-[10px] shrink-0">
+                      Beta
+                    </Badge>
+                  )}
                 </span>
                 <p className="text-[12px] text-muted-foreground">{opt.description}</p>
                 <div className="flex flex-wrap gap-1.5">
@@ -255,17 +263,20 @@ export function CreateDatabaseWizardView() {
           </div>
         </section>
 
-        {/* 3. Specifications (table) – revealed when type selected */}
-        {showSpecs && dbType && (
+        {/* 3. Specifications (table) – revealed when type selected; hidden for TablesDB for now */}
+        {showSpecs && dbType && !isTablesDB && (
           <section>
             <h2 className="text-[15px] font-semibold text-foreground mb-1">
               Specifications
             </h2>
             <p className="text-[13px] text-muted-foreground mb-4">
-              {isTablesDB
-                ? 'Tables DB is currently available as a shared instance. Dedicated tiers are coming soon.'
-                : 'Select the compute and storage tier for your database.'}
+              Select the compute and storage tier for your database.
             </p>
+            <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 mb-4">
+              <p className="text-[13px] font-medium text-foreground">
+                Each organization includes <span className="font-semibold">$10 of compute credits</span> for database usage every month.
+              </p>
+            </div>
             <div className="rounded-xl border border-border bg-card overflow-hidden">
               <RadioGroup
                 value={specId ?? ''}
