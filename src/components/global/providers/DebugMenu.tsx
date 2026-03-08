@@ -13,6 +13,7 @@ import {
   Server,
   Settings,
   Globe,
+  FlaskConical,
 } from 'lucide-react'
 import {
   Popover,
@@ -199,6 +200,25 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             icon: <Image className="h-3 w-3" />,
             submenu: faviconOptions,
           },
+        ],
+      },
+      {
+        title: 'Experimental features',
+        icon: <FlaskConical className="h-3.5 w-3.5" />,
+        items: [
+          {
+            label: 'AI assistant',
+            description: 'In-app AI assistant chat panel and header button.',
+            variant: 'switch' as const,
+            switchValue: overrides.showAIAssistant,
+            switchOnChange: (checked: boolean) => {
+              setOverrides((prev) => ({
+                ...prev,
+                showAIAssistant: checked,
+              }))
+              setDebugOverride('showAIAssistant', checked)
+            },
+          },
           {
             label: 'Show native app bar',
             description: 'App bar above header (native OS).',
@@ -336,6 +356,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     endpointPreset,
     endpointCustomUrl,
     overrides.showNativeAppBar,
+    overrides.showAIAssistant,
     banners.length,
     actions,
     setTheme,

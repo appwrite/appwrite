@@ -81,6 +81,7 @@ import {
   type TablesSortBy,
 } from '@/lib/react-query/hooks'
 import {
+  COLUMNS_INDEXES_DEFAULT_PAGE_SIZE,
   DEFAULT_PAGE_SIZE,
   ROWS_DEFAULT_PAGE_SIZE,
 } from '@/lib/react-query/hooks/constants'
@@ -291,6 +292,8 @@ export function View() {
     page?: number
     limit?: number
   }
+  const { features } = useConsoleProfile()
+  const useCreateDatabaseWizard = features.createDatabaseWizard
   const queryClient = useQueryClient()
   const isDatabasesIndex =
     location.pathname.replace(/\/$/, '') === `/projects/${projectId}/databases`
@@ -338,22 +341,36 @@ export function View() {
     useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
 
-  // Open create database dialog when ?create=database (e.g. from header plus button)
+  // Open create database flow when ?create=database (wizard when feature enabled; else modal)
   useEffect(() => {
     if (search?.create === 'database' && !createDatabaseDialogOpen) {
-      setCreateDatabaseDialogOpen(true)
-      navigate({
-        to: location.pathname,
-        search: (prev: Record<string, unknown>) => {
-          if (!prev || typeof prev !== 'object') return {}
-          const next = { ...prev }
-          delete next.create
-          return Object.keys(next).length === 0 ? {} : next
-        },
-        replace: true,
-      })
+      if (useCreateDatabaseWizard) {
+        navigate({
+          to: '/projects/$projectId/databases/create',
+          params: { projectId: projectId! },
+          search: (prev: Record<string, unknown>) => {
+            if (!prev || typeof prev !== 'object') return {}
+            const next = { ...prev }
+            delete next.create
+            return Object.keys(next).length === 0 ? {} : next
+          },
+          replace: true,
+        })
+      } else {
+        setCreateDatabaseDialogOpen(true)
+        navigate({
+          to: location.pathname,
+          search: (prev: Record<string, unknown>) => {
+            if (!prev || typeof prev !== 'object') return {}
+            const next = { ...prev }
+            delete next.create
+            return Object.keys(next).length === 0 ? {} : next
+          },
+          replace: true,
+        })
+      }
     }
-  }, [search?.create, createDatabaseDialogOpen, navigate, location.pathname])
+  }, [search?.create, createDatabaseDialogOpen, useCreateDatabaseWizard, navigate, location.pathname, projectId])
 
   useEffect(() => {
     setSearchInput(urlSearch ?? '')
@@ -476,7 +493,6 @@ export function View() {
 
   // Get organization plan to check limits
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
-  const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
 
   // Total count of all databases (without search) - for limit checking
@@ -725,7 +741,14 @@ export function View() {
         searchValue={searchInput}
         onSearchChange={handleSearchChange}
         createLabel="Create database"
-        onCreate={() => setCreateDatabaseDialogOpen(true)}
+        onCreate={() =>
+          useCreateDatabaseWizard
+            ? navigate({
+                to: '/projects/$projectId/databases/create',
+                params: { projectId: projectId! },
+              })
+            : setCreateDatabaseDialogOpen(true)
+        }
         createDisabled={isCreateDisabled}
         createDisabledTooltip={
           noCreateDbPermission
@@ -1434,6 +1457,7 @@ export function TableView({
   const isDatabaseLevelView = tableId === '-' || databaseTab != null
   const { isDebugModeOpen } = useDebugMode()
   const { features } = useConsoleProfile()
+  const useCreateDatabaseWizard = features.createDatabaseWizard
 
   // Debug: create 50 random tables (only when debug mode is open and on tables list)
   const createFiftyTablesMutation = useMutation({
@@ -2026,7 +2050,14 @@ export function TableView({
                   })
                 }
               }}
-              onCreateClick={() => setCreateDatabaseDialogOpen(true)}
+              onCreateClick={() =>
+                useCreateDatabaseWizard
+                  ? navigate({
+                      to: '/projects/$projectId/databases/create',
+                      params: { projectId },
+                    })
+                  : setCreateDatabaseDialogOpen(true)
+              }
             />
           </div>
         </div>
@@ -2630,7 +2661,14 @@ export function TableView({
                       })
                     }
                   }}
-                  onCreateClick={() => setCreateDatabaseDialogOpen(true)}
+                  onCreateClick={() =>
+                    useCreateDatabaseWizard
+                      ? navigate({
+                          to: '/projects/$projectId/databases/create',
+                          params: { projectId },
+                        })
+                      : setCreateDatabaseDialogOpen(true)
+                  }
                 />
                 <TableSelector
                   projectId={projectId}
@@ -3804,7 +3842,7 @@ export function DatabaseOverview({
 
       <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">
         {activeTab === 'tables' && (
-          <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6">
+          <div className="mx-auto w-full max-w-7xl px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6">
             {showTablesLoading ? (
               <div className="rounded-lg border border-border bg-card py-12 text-center">
                 <div className="text-muted-foreground">Loading tables...</div>
@@ -7176,9 +7214,24 @@ function ColumnsSpreadsheet({
   const columnsFilterQueries =
     columnsFilterMap.size > 0 ? Array.from(columnsFilterMap.values()) : undefined
 
-  // Fetch columns from the project SDK (listColumns with optional filter queries)
+  const columnsListParams = useMemo(() => {
+    const url = new URL(
+      location.pathname + location.search,
+      window.location.origin,
+    )
+    return {
+      page: getPage(url, 1),
+      limit: getLimit(url, COLUMNS_INDEXES_DEFAULT_PAGE_SIZE),
+    }
+  }, [location.pathname, location.search])
+  const columnsPage = columnsListParams.page
+  const columnsLimit = columnsListParams.limit
+  const columnsPageIndexed = Math.max(0, columnsPage - 1)
+
+  // Fetch columns from the project SDK (listColumns with optional filter queries, ordered by $createdAt asc, paginated)
   const {
     columns: apiColumns,
+    total: columnsTotal,
     isLoading: columnsLoading,
     isFetching: columnsFetching,
   } = useProjectTableColumns(
@@ -7186,7 +7239,23 @@ function ColumnsSpreadsheet({
     databaseId,
     tableId,
     columnsFilterQueries,
+    columnsPageIndexed,
+    columnsLimit,
   )
+
+  const navigateColumnsList = (updates: { page?: number; limit?: number }) => {
+    navigate({
+      search: (prev: Record<string, unknown>) => {
+        const next = {
+          ...(typeof prev === 'object' && prev !== null ? prev : {}),
+          ...(updates.page != null && { page: updates.page }),
+          ...(updates.limit != null && { limit: updates.limit }),
+        }
+        return next
+      },
+      replace: true,
+    })
+  }
 
   // Fetch full table for row size metadata (bytesUsed, bytesMax) when creating varchar columns
   const { table: fullTable } = useProjectTable(projectId, databaseId, tableId)
@@ -8151,7 +8220,7 @@ function ColumnsSpreadsheet({
                   <td className={cn('px-3 py-2', bodyCellBorderClass)}>
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
-                        <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+                        <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                         <code
                           className={cn(
                             'font-mono text-[12px]',
@@ -8162,6 +8231,25 @@ function ColumnsSpreadsheet({
                         >
                           {col.key || 'unnamed'}
                         </code>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                const name = col.key || 'unnamed'
+                                navigator.clipboard.writeText(name)
+                                toast.success('Column name copied')
+                              }}
+                              className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover:opacity-100"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top">
+                            <p>Copy column name</p>
+                          </TooltipContent>
+                        </Tooltip>
                         {isSuggestion && (
                           <span className="inline-flex items-center rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400">
                             Suggested
@@ -8278,45 +8366,28 @@ function ColumnsSpreadsheet({
         </table>
       </div>
 
-      {/* Footer */}
-      <div className="flex items-center justify-between border-t border-border px-4 py-2 text-[12px] text-muted-foreground">
-        <div className="flex items-center gap-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="inline-flex">
-                <button
-                  type="button"
-                  onClick={handleCreateColumn}
-                  disabled={!canWriteTables}
-                  className={cn(
-                    'flex items-center gap-1.5 transition-colors',
-                    canWriteTables
-                      ? 'hover:text-foreground cursor-pointer'
-                      : 'cursor-not-allowed opacity-50',
-                  )}
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  <span>Create column</span>
-                </button>
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              {canWriteTables
-                ? 'Create column'
-                : "You don't have permission to perform this action."}
-            </TooltipContent>
-          </Tooltip>
-        </div>
-        <div className="flex items-center gap-4">
+      {/* Sticky Pagination Footer */}
+      <div className="shrink-0 bg-background border-t border-border">
+        <div className="@container flex items-center justify-between gap-4 px-4">
+          <div className="flex-1 min-w-0">
+            <Pagination
+              currentPage={columnsPage}
+              totalItems={columnsTotal ?? 0}
+              pageSize={columnsLimit}
+              pageSizeOptions={[10, 25, 50, 100]}
+              onPageChange={(page) => navigateColumnsList({ page })}
+              onPageSizeChange={(newLimit) =>
+                navigateColumnsList({ page: 1, limit: newLimit })
+              }
+              itemLabel="columns"
+            />
+          </div>
           {suggestedColumns.length > 0 && (
-            <span className="text-amber-600 dark:text-amber-400">
+            <div className="flex-shrink-0 text-[12px] text-amber-600 dark:text-amber-400">
               {suggestedColumns.length} suggestion
               {suggestedColumns.length !== 1 ? 's' : ''}
-            </span>
+            </div>
           )}
-          <span>
-            {columns.length} column{columns.length !== 1 ? 's' : ''}
-          </span>
         </div>
       </div>
       </>
@@ -8527,6 +8598,20 @@ function IndexesSpreadsheet({
   const indexesFilterQueries =
     indexesFilterMap.size > 0 ? Array.from(indexesFilterMap.values()) : undefined
 
+  const indexesListParams = useMemo(() => {
+    const url = new URL(
+      location.pathname + location.search,
+      window.location.origin,
+    )
+    return {
+      page: getPage(url, 1),
+      limit: getLimit(url, COLUMNS_INDEXES_DEFAULT_PAGE_SIZE),
+    }
+  }, [location.pathname, location.search])
+  const indexesPage = indexesListParams.page
+  const indexesLimit = indexesListParams.limit
+  const indexesPageIndexed = Math.max(0, indexesPage - 1)
+
   const [indexDialogOpen, setIndexDialogOpen] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState<unknown>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -8537,18 +8622,35 @@ function IndexesSpreadsheet({
 
   const queryClient = useQueryClient()
 
-  // Fetch indexes from the project SDK (listIndexes with optional filter queries)
+  // Fetch indexes from the project SDK (listIndexes with optional filter queries, ordered by $createdAt asc, paginated)
   const {
     indexes: apiIndexes,
+    total: indexesTotal,
     isFetching: indexesFetching,
   } = useProjectTableIndexes(
     projectId,
     databaseId,
     tableId,
     indexesFilterQueries,
+    indexesPageIndexed,
+    indexesLimit,
   )
 
-  // Fetch columns for index creation
+  const navigateIndexesList = (updates: { page?: number; limit?: number }) => {
+    navigate({
+      search: (prev: Record<string, unknown>) => {
+        const next = {
+          ...(typeof prev === 'object' && prev !== null ? prev : {}),
+          ...(updates.page != null && { page: updates.page }),
+          ...(updates.limit != null && { limit: updates.limit }),
+        }
+        return next
+      },
+      replace: true,
+    })
+  }
+
+  // Fetch columns for index creation (first page, default limit)
   const { columns: availableColumns } = useProjectTableColumns(
     projectId,
     databaseId,
@@ -9169,46 +9271,28 @@ function IndexesSpreadsheet({
         </table>
       </div>
 
-      {/* Footer */}
-      <div className="flex items-center justify-between border-t border-border px-4 py-2 text-[12px] text-muted-foreground">
-        <div className="flex items-center gap-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="inline-flex">
-                <button
-                  type="button"
-                  onClick={handleCreateIndex}
-                  disabled={!canWriteTables}
-                  className={cn(
-                    'flex items-center gap-1.5 transition-colors',
-                    canWriteTables
-                      ? 'hover:text-foreground cursor-pointer'
-                      : 'cursor-not-allowed opacity-50',
-                  )}
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  <span>Create index</span>
-                </button>
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              {canWriteTables
-                ? 'Create index'
-                : "You don't have permission to perform this action."}
-            </TooltipContent>
-          </Tooltip>
-        </div>
-        <div className="flex items-center gap-2">
+      {/* Sticky Pagination Footer */}
+      <div className="shrink-0 bg-background border-t border-border">
+        <div className="@container flex items-center justify-between gap-4 px-4">
+          <div className="flex-1 min-w-0">
+            <Pagination
+              currentPage={indexesPage}
+              totalItems={indexesTotal ?? 0}
+              pageSize={indexesLimit}
+              pageSizeOptions={[10, 25, 50, 100]}
+              onPageChange={(page) => navigateIndexesList({ page })}
+              onPageSizeChange={(newLimit) =>
+                navigateIndexesList({ page: 1, limit: newLimit })
+              }
+              itemLabel="indexes"
+            />
+          </div>
           {suggestedIndexes.length > 0 && (
-            <span className="text-amber-600 dark:text-amber-400">
+            <div className="flex-shrink-0 text-[12px] text-amber-600 dark:text-amber-400">
               {suggestedIndexes.length} suggestion
               {suggestedIndexes.length !== 1 ? 's' : ''}
-            </span>
+            </div>
           )}
-          <span>
-            {indexesToShow.length} index
-            {indexesToShow.length !== 1 ? 'es' : ''}
-          </span>
         </div>
       </div>
       </>

@@ -468,7 +468,7 @@ export function ConsoleSidebar({
         )}
       </aside>
 
-      {/* Mobile Sidebar - GPU-accelerated transform */}
+      {/* Mobile Sidebar - GPU-accelerated transform; inert when closed so it's skipped in tab order */}
       <aside
         className={cn(
           'fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col border-r border-border bg-background',
@@ -478,6 +478,7 @@ export function ConsoleSidebar({
         role="dialog"
         aria-modal="true"
         aria-label="Mobile navigation"
+        inert={!mobileOpen ? true : undefined}
       >
         {/* Mobile Header */}
         <div className="flex h-14 items-center justify-between px-4">

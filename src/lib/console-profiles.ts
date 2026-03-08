@@ -37,6 +37,8 @@ export type ConsoleProfileFeatures = {
   databaseBackups: boolean
   /** Database analytics and insights */
   databaseInsights: boolean
+  /** Fullscreen create database wizard (DB type + specs); when false, use modal only */
+  createDatabaseWizard: boolean
 }
 
 export type ConsoleProfile = {
@@ -66,6 +68,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       aiAssistant: true,
       databaseBackups: true,
       databaseInsights: true,
+      createDatabaseWizard: true,
     },
   },
   'self-hosted': {
@@ -87,6 +90,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       aiAssistant: false,
       databaseBackups: false,
       databaseInsights: false,
+      createDatabaseWizard: false,
     },
   },
 }
@@ -146,11 +150,15 @@ export function getActiveProfileId(): ConsoleProfileId {
 
 /**
  * Returns the currently active console profile (stored value when set, else from env).
+ * Stored profile features are merged with the canonical profile for that id so new
+ * feature keys added later get correct defaults (e.g. after localStorage was set).
  */
 export function getActiveProfile(): ConsoleProfile {
   const stored = getStoredProfile()
-  if (stored) return stored
-  return CONSOLE_PROFILES[getProfileFromEnv()]
+  if (!stored) return CONSOLE_PROFILES[getProfileFromEnv()]
+  const canonical = CONSOLE_PROFILES[stored.id]
+  const mergedFeatures = { ...canonical.features, ...stored.features } as ConsoleProfileFeatures
+  return { ...stored, features: mergedFeatures }
 }
 
 /**

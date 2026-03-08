@@ -52,6 +52,7 @@ import { useAIChat } from '@/components/global/providers/AIChat'
 import { Button } from '@/components/ui/button'
 import { useOrganizationPlan } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useDebugOverrides } from '@/lib/debug-overrides'
 
 interface ConsoleHeaderProps {
   onMenuClick?: () => void
@@ -88,7 +89,9 @@ export function ConsoleHeader({
   // Fetch current project to get teamId when in project context
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
+  const overrides = useDebugOverrides()
   const { access } = useOrganizationScopes(project?.teamId)
+  const showAIAssistant = overrides.showAIAssistant
   const showConnectAndCreate = canShowConnectSection(access, features)
 
   // Get organization ID for upgrade button
@@ -455,8 +458,8 @@ export function ConsoleHeader({
             />
           </div>
 
-          {/* Help/Assistant - hidden on small containers, cloud only */}
-          {features.aiAssistant && (
+          {/* Help/Assistant - hidden on small containers; enabled by profile or experimental override */}
+          {showAIAssistant && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <button

@@ -15,7 +15,11 @@ import { Query, ID } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import type { Database, Collection } from '@/lib/utils/mock-data'
 import { sdk } from '@/lib/appwrite/sdk'
-import { DEFAULT_STALE_TIME, DEFAULT_PAGE_SIZE } from './constants'
+import {
+  DEFAULT_STALE_TIME,
+  DEFAULT_PAGE_SIZE,
+  COLUMNS_INDEXES_DEFAULT_PAGE_SIZE,
+} from './constants'
 
 // ============================================================================
 // QUERY FUNCTIONS
@@ -541,6 +545,8 @@ export async function fetchProjectTableRow(
  * @param databaseId - The database ID
  * @param tableId - The table ID
  * @param filterQueries - Optional list of Appwrite Query condition strings (from table filters)
+ * @param page - Page number (0-indexed)
+ * @param limit - Number of items per page
  * @returns Columns data with total count
  */
 export async function fetchProjectTableColumns(
@@ -548,6 +554,8 @@ export async function fetchProjectTableColumns(
   databaseId: string,
   tableId: string,
   filterQueries?: string[],
+  page: number = 0,
+  limit: number = COLUMNS_INDEXES_DEFAULT_PAGE_SIZE,
 ) {
   if (!projectId || !databaseId || !tableId) {
     return { columns: [], total: 0 }
@@ -556,7 +564,9 @@ export async function fetchProjectTableColumns(
   const projectSdk = sdk.forProject(projectId)
   const queries = [
     ...(filterQueries ?? []),
-    Query.orderAsc('key'),
+    Query.orderAsc('$createdAt'),
+    Query.limit(limit),
+    Query.offset(page * limit),
   ]
 
   try {
@@ -582,6 +592,8 @@ export async function fetchProjectTableColumns(
  * @param databaseId - The database ID
  * @param tableId - The table ID
  * @param filterQueries - Optional list of Appwrite Query condition strings (from table filters)
+ * @param page - Page number (0-indexed)
+ * @param limit - Number of items per page
  * @returns Indexes data with total count
  */
 export async function fetchProjectTableIndexes(
@@ -589,6 +601,8 @@ export async function fetchProjectTableIndexes(
   databaseId: string,
   tableId: string,
   filterQueries?: string[],
+  page: number = 0,
+  limit: number = COLUMNS_INDEXES_DEFAULT_PAGE_SIZE,
 ) {
   if (!projectId || !databaseId || !tableId) {
     return { indexes: [], total: 0 }
@@ -597,7 +611,9 @@ export async function fetchProjectTableIndexes(
   const projectSdk = sdk.forProject(projectId)
   const queries = [
     ...(filterQueries ?? []),
-    Query.orderAsc('key'),
+    Query.orderAsc('$createdAt'),
+    Query.limit(limit),
+    Query.offset(page * limit),
   ]
 
   try {
@@ -1617,12 +1633,16 @@ export function databaseQueryOptions(
  * This can be used in both route loaders and hooks to ensure consistent query configuration.
  *
  * @param filterQueries - Optional list of Appwrite Query condition strings (from table filters)
+ * @param page - Page number (0-indexed)
+ * @param limit - Number of items per page
  */
 export function tableColumnsQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
   tableId: string | null | undefined,
   filterQueries?: string[],
+  page: number = 0,
+  limit: number = COLUMNS_INDEXES_DEFAULT_PAGE_SIZE,
 ) {
   const hasFilters =
     filterQueries !== undefined && filterQueries.length > 0
@@ -1634,6 +1654,8 @@ export function tableColumnsQueryOptions(
       databaseId,
       tableId,
       ...(hasFilters ? [filterQueries] : []),
+      page,
+      limit,
     ],
     queryFn: () =>
       fetchProjectTableColumns(
@@ -1641,6 +1663,8 @@ export function tableColumnsQueryOptions(
         databaseId!,
         tableId!,
         filterQueries,
+        page,
+        limit,
       ),
     enabled: !!projectId && !!databaseId && !!tableId,
     staleTime: DEFAULT_STALE_TIME,
@@ -1682,12 +1706,16 @@ export function tableQueryOptions(
  * This can be used in both route loaders and hooks to ensure consistent query configuration.
  *
  * @param filterQueries - Optional list of Appwrite Query condition strings (from table filters)
+ * @param page - Page number (0-indexed)
+ * @param limit - Number of items per page
  */
 export function tableIndexesQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
   tableId: string | null | undefined,
   filterQueries?: string[],
+  page: number = 0,
+  limit: number = COLUMNS_INDEXES_DEFAULT_PAGE_SIZE,
 ) {
   const hasFilters =
     filterQueries !== undefined && filterQueries.length > 0
@@ -1699,6 +1727,8 @@ export function tableIndexesQueryOptions(
       databaseId,
       tableId,
       ...(hasFilters ? [filterQueries] : []),
+      page,
+      limit,
     ],
     queryFn: () =>
       fetchProjectTableIndexes(
@@ -1706,6 +1736,8 @@ export function tableIndexesQueryOptions(
         databaseId!,
         tableId!,
         filterQueries,
+        page,
+        limit,
       ),
     enabled: !!projectId && !!databaseId && !!tableId,
     staleTime: DEFAULT_STALE_TIME,
@@ -2032,6 +2064,8 @@ export function useProjectTableRows(
  * @param databaseId - The database ID
  * @param tableId - The table ID
  * @param filterQueries - Optional list of Appwrite Query condition strings (from table filters)
+ * @param page - Page number (0-indexed)
+ * @param limit - Number of items per page
  * @returns Columns with loading state and total count
  */
 export function useProjectTableColumns(
@@ -2039,6 +2073,8 @@ export function useProjectTableColumns(
   databaseId: string | null | undefined,
   tableId: string | null | undefined,
   filterQueries?: string[],
+  page: number = 0,
+  limit: number = COLUMNS_INDEXES_DEFAULT_PAGE_SIZE,
 ) {
   const {
     data: columnsData,
@@ -2047,7 +2083,14 @@ export function useProjectTableColumns(
     error,
     refetch,
   } = useQuery(
-    tableColumnsQueryOptions(projectId, databaseId, tableId, filterQueries),
+    tableColumnsQueryOptions(
+      projectId,
+      databaseId,
+      tableId,
+      filterQueries,
+      page,
+      limit,
+    ),
   )
 
   return {
@@ -2067,6 +2110,8 @@ export function useProjectTableColumns(
  * @param databaseId - The database ID
  * @param tableId - The table ID
  * @param filterQueries - Optional list of Appwrite Query condition strings (from table filters)
+ * @param page - Page number (0-indexed)
+ * @param limit - Number of items per page
  * @returns Indexes with loading state and total count
  */
 export function useProjectTableIndexes(
@@ -2074,6 +2119,8 @@ export function useProjectTableIndexes(
   databaseId: string | null | undefined,
   tableId: string | null | undefined,
   filterQueries?: string[],
+  page: number = 0,
+  limit: number = COLUMNS_INDEXES_DEFAULT_PAGE_SIZE,
 ) {
   const {
     data: indexesData,
@@ -2082,7 +2129,14 @@ export function useProjectTableIndexes(
     error,
     refetch,
   } = useQuery(
-    tableIndexesQueryOptions(projectId, databaseId, tableId, filterQueries),
+    tableIndexesQueryOptions(
+      projectId,
+      databaseId,
+      tableId,
+      filterQueries,
+      page,
+      limit,
+    ),
   )
 
   return {

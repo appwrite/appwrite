@@ -77,6 +77,7 @@ import { Route as PublicProjectsProjectIdFunctionsTemplatesRouteImport } from '.
 import { Route as PublicProjectsProjectIdFunctionsEditorRouteImport } from './routes/_public/projects.$projectId.functions.editor'
 import { Route as PublicProjectsProjectIdFunctionsCreateRouteImport } from './routes/_public/projects.$projectId.functions.create'
 import { Route as PublicProjectsProjectIdFunctionsFunctionIdRouteImport } from './routes/_public/projects.$projectId.functions.$functionId'
+import { Route as PublicProjectsProjectIdDatabasesCreateRouteImport } from './routes/_public/projects.$projectId.databases.create'
 import { Route as PublicProjectsProjectIdDatabasesDatabaseIdRouteImport } from './routes/_public/projects.$projectId.databases.$databaseId'
 import { Route as PublicProjectsProjectIdAuthTemplatesRouteImport } from './routes/_public/projects.$projectId.auth.templates'
 import { Route as PublicProjectsProjectIdAuthTeamsRouteImport } from './routes/_public/projects.$projectId.auth.teams'
@@ -566,6 +567,12 @@ const PublicProjectsProjectIdFunctionsFunctionIdRoute =
     id: '/$functionId',
     path: '/$functionId',
     getParentRoute: () => PublicProjectsProjectIdFunctionsRoute,
+  } as any)
+const PublicProjectsProjectIdDatabasesCreateRoute =
+  PublicProjectsProjectIdDatabasesCreateRouteImport.update({
+    id: '/create',
+    path: '/create',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesRoute,
   } as any)
 const PublicProjectsProjectIdDatabasesDatabaseIdRoute =
   PublicProjectsProjectIdDatabasesDatabaseIdRouteImport.update({
@@ -1277,6 +1284,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/auth/teams': typeof PublicProjectsProjectIdAuthTeamsRouteWithChildren
   '/projects/$projectId/auth/templates': typeof PublicProjectsProjectIdAuthTemplatesRoute
   '/projects/$projectId/databases/$databaseId': typeof PublicProjectsProjectIdDatabasesDatabaseIdRouteWithChildren
+  '/projects/$projectId/databases/create': typeof PublicProjectsProjectIdDatabasesCreateRoute
   '/projects/$projectId/functions/$functionId': typeof PublicProjectsProjectIdFunctionsFunctionIdRouteWithChildren
   '/projects/$projectId/functions/create': typeof PublicProjectsProjectIdFunctionsCreateRouteWithChildren
   '/projects/$projectId/functions/editor': typeof PublicProjectsProjectIdFunctionsEditorRoute
@@ -1433,6 +1441,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/auth/settings': typeof PublicProjectsProjectIdAuthSettingsRoute
   '/projects/$projectId/auth/teams': typeof PublicProjectsProjectIdAuthTeamsRouteWithChildren
   '/projects/$projectId/auth/templates': typeof PublicProjectsProjectIdAuthTemplatesRoute
+  '/projects/$projectId/databases/create': typeof PublicProjectsProjectIdDatabasesCreateRoute
   '/projects/$projectId/functions/editor': typeof PublicProjectsProjectIdFunctionsEditorRoute
   '/projects/$projectId/functions/templates': typeof PublicProjectsProjectIdFunctionsTemplatesRoute
   '/projects/$projectId/realtime/channels': typeof PublicProjectsProjectIdRealtimeChannelsRoute
@@ -1590,6 +1599,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/auth/teams': typeof PublicProjectsProjectIdAuthTeamsRouteWithChildren
   '/_public/projects/$projectId/auth/templates': typeof PublicProjectsProjectIdAuthTemplatesRoute
   '/_public/projects/$projectId/databases/$databaseId': typeof PublicProjectsProjectIdDatabasesDatabaseIdRouteWithChildren
+  '/_public/projects/$projectId/databases/create': typeof PublicProjectsProjectIdDatabasesCreateRoute
   '/_public/projects/$projectId/functions/$functionId': typeof PublicProjectsProjectIdFunctionsFunctionIdRouteWithChildren
   '/_public/projects/$projectId/functions/create': typeof PublicProjectsProjectIdFunctionsCreateRouteWithChildren
   '/_public/projects/$projectId/functions/editor': typeof PublicProjectsProjectIdFunctionsEditorRoute
@@ -1760,6 +1770,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/auth/teams'
     | '/projects/$projectId/auth/templates'
     | '/projects/$projectId/databases/$databaseId'
+    | '/projects/$projectId/databases/create'
     | '/projects/$projectId/functions/$functionId'
     | '/projects/$projectId/functions/create'
     | '/projects/$projectId/functions/editor'
@@ -1916,6 +1927,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/auth/settings'
     | '/projects/$projectId/auth/teams'
     | '/projects/$projectId/auth/templates'
+    | '/projects/$projectId/databases/create'
     | '/projects/$projectId/functions/editor'
     | '/projects/$projectId/functions/templates'
     | '/projects/$projectId/realtime/channels'
@@ -2072,6 +2084,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/auth/teams'
     | '/_public/projects/$projectId/auth/templates'
     | '/_public/projects/$projectId/databases/$databaseId'
+    | '/_public/projects/$projectId/databases/create'
     | '/_public/projects/$projectId/functions/$functionId'
     | '/_public/projects/$projectId/functions/create'
     | '/_public/projects/$projectId/functions/editor'
@@ -2670,6 +2683,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/projects/$projectId/functions/$functionId'
       preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdRouteImport
       parentRoute: typeof PublicProjectsProjectIdFunctionsRoute
+    }
+    '/_public/projects/$projectId/databases/create': {
+      id: '/_public/projects/$projectId/databases/create'
+      path: '/create'
+      fullPath: '/projects/$projectId/databases/create'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesCreateRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesRoute
     }
     '/_public/projects/$projectId/databases/$databaseId': {
       id: '/_public/projects/$projectId/databases/$databaseId'
@@ -3738,6 +3758,7 @@ const PublicProjectsProjectIdDatabasesDatabaseIdRouteWithChildren =
 
 interface PublicProjectsProjectIdDatabasesRouteChildren {
   PublicProjectsProjectIdDatabasesDatabaseIdRoute: typeof PublicProjectsProjectIdDatabasesDatabaseIdRouteWithChildren
+  PublicProjectsProjectIdDatabasesCreateRoute: typeof PublicProjectsProjectIdDatabasesCreateRoute
   PublicProjectsProjectIdDatabasesIndexRoute: typeof PublicProjectsProjectIdDatabasesIndexRoute
 }
 
@@ -3745,6 +3766,8 @@ const PublicProjectsProjectIdDatabasesRouteChildren: PublicProjectsProjectIdData
   {
     PublicProjectsProjectIdDatabasesDatabaseIdRoute:
       PublicProjectsProjectIdDatabasesDatabaseIdRouteWithChildren,
+    PublicProjectsProjectIdDatabasesCreateRoute:
+      PublicProjectsProjectIdDatabasesCreateRoute,
     PublicProjectsProjectIdDatabasesIndexRoute:
       PublicProjectsProjectIdDatabasesIndexRoute,
   }

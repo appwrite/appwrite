@@ -22,9 +22,14 @@ export const LONG_STALE_TIME = 5 * 60 * 1000 // 5 minutes
 export const DEFAULT_PAGE_SIZE = 10
 
 /**
- * Default page size for database rows, indexes, and columns (larger for table-style data)
+ * Default page size for database rows (table-style data)
  */
 export const ROWS_DEFAULT_PAGE_SIZE = 25
+
+/**
+ * Default page size for database table columns and indexes lists
+ */
+export const COLUMNS_INDEXES_DEFAULT_PAGE_SIZE = 100
 
 /**
  * Default page size for activity logs (larger for log-style lists)
