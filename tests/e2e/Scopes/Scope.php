@@ -478,6 +478,9 @@ abstract class Scope extends TestCase
                 'x-appwrite-project' => 'console',
             ]);
 
+            var_dump($session['cookies']['a_session_console']);
+            var_dump($verify);
+
             if ($verify['headers']['status-code'] === 200) {
                 self::$root = [
                     '$id' => ID::custom($root['body']['$id']),
