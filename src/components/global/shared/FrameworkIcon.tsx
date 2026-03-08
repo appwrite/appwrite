@@ -1,5 +1,6 @@
 import { Globe } from 'lucide-react'
 import { getFrameworkIconFile } from '@/lib/frameworks'
+import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
 
 export interface FrameworkIconProps {
@@ -35,7 +36,7 @@ export function FrameworkIcon({
       <img
         src={`/icons/${iconFile}`}
         alt={framework}
-        className={cn(sizeClass, 'brightness-0 dark:brightness-100', className)}
+        className={cn(sizeClass, PUBLIC_ICON_MUTED_CLASSES, className)}
       />
     )
   }

@@ -533,89 +533,86 @@ export async function fetchProjectTableRow(
 }
 
 /**
- * Query function to fetch columns (attributes) for a table
+ * Query function to fetch columns (attributes) for a table via listColumns.
  *
  * This is extracted so it can be reused in both hooks and route loaders.
  *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
- * @returns Columns data
+ * @param filterQueries - Optional list of Appwrite Query condition strings (from table filters)
+ * @returns Columns data with total count
  */
 export async function fetchProjectTableColumns(
   projectId: string,
   databaseId: string,
   tableId: string,
+  filterQueries?: string[],
 ) {
   if (!projectId || !databaseId || !tableId) {
-    return { columns: [] }
+    return { columns: [], total: 0 }
   }
 
   const projectSdk = sdk.forProject(projectId)
+  const queries = [
+    ...(filterQueries ?? []),
+    Query.orderAsc('key'),
+  ]
 
-  // Use TablesDB API to get table details which includes attributes/columns
-  let response: unknown
   try {
-    if (typeof projectSdk.tablesDB.getTable === 'function') {
-      response = await projectSdk.tablesDB.getTable({ databaseId, tableId })
-    } else if (
-      typeof (projectSdk.tablesDB as unknown).getCollection === 'function'
-    ) {
-      response = await (projectSdk.tablesDB as unknown).getCollection({
-        databaseId,
-        tableId,
-      })
-    } else {
-      response = { attributes: [] }
+    const response = await projectSdk.tablesDB.listColumns({
+      databaseId,
+      tableId,
+      queries,
+      total: true,
+    })
+    return {
+      columns: response.columns ?? [],
+      total: response.total ?? 0,
     }
   } catch {
-    response = { attributes: [] }
-  }
-
-  return {
-    columns: response.attributes || response.columns || [],
+    return { columns: [], total: 0 }
   }
 }
 
 /**
- * Query function to fetch indexes for a table
+ * Query function to fetch indexes for a table via listIndexes.
  *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
- * @returns Indexes data
+ * @param filterQueries - Optional list of Appwrite Query condition strings (from table filters)
+ * @returns Indexes data with total count
  */
 export async function fetchProjectTableIndexes(
   projectId: string,
   databaseId: string,
   tableId: string,
+  filterQueries?: string[],
 ) {
   if (!projectId || !databaseId || !tableId) {
-    return { indexes: [] }
+    return { indexes: [], total: 0 }
   }
 
   const projectSdk = sdk.forProject(projectId)
+  const queries = [
+    ...(filterQueries ?? []),
+    Query.orderAsc('key'),
+  ]
 
-  let response: unknown
   try {
-    if (typeof projectSdk.tablesDB.getTable === 'function') {
-      response = await projectSdk.tablesDB.getTable({ databaseId, tableId })
-    } else if (
-      typeof (projectSdk.tablesDB as unknown).getCollection === 'function'
-    ) {
-      response = await (projectSdk.tablesDB as unknown).getCollection({
-        databaseId,
-        tableId,
-      })
-    } else {
-      response = { indexes: [] }
+    const response = await projectSdk.tablesDB.listIndexes({
+      databaseId,
+      tableId,
+      queries,
+      total: true,
+    })
+    return {
+      indexes: response.indexes ?? [],
+      total: response.total ?? 0,
     }
   } catch {
-    response = { indexes: [] }
-  }
-
-  return {
-    indexes: response.indexes || [],
+    return { indexes: [], total: 0 }
   }
 }
 
@@ -1618,22 +1615,39 @@ export function databaseQueryOptions(
  * Query options for fetching columns (attributes) for a table
  *
  * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ *
+ * @param filterQueries - Optional list of Appwrite Query condition strings (from table filters)
  */
 export function tableColumnsQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
   tableId: string | null | undefined,
+  filterQueries?: string[],
 ) {
+  const hasFilters =
+    filterQueries !== undefined && filterQueries.length > 0
   return queryOptions({
-    queryKey: ['columns', 'project', projectId, databaseId, tableId],
-    queryFn: () => fetchProjectTableColumns(projectId!, databaseId!, tableId!),
+    queryKey: [
+      'columns',
+      'project',
+      projectId,
+      databaseId,
+      tableId,
+      ...(hasFilters ? [filterQueries] : []),
+    ],
+    queryFn: () =>
+      fetchProjectTableColumns(
+        projectId!,
+        databaseId!,
+        tableId!,
+        filterQueries,
+      ),
     enabled: !!projectId && !!databaseId && !!tableId,
     staleTime: DEFAULT_STALE_TIME,
-    retry: false, // Don't retry on error
-    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
-    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
-    refetchOnReconnect: false, // Prevent refetch on network reconnect
-    // Don't keep disabled queries in cache
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     gcTime: projectId && databaseId && tableId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -1666,15 +1680,33 @@ export function tableQueryOptions(
  * Query options for fetching indexes for a table
  *
  * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ *
+ * @param filterQueries - Optional list of Appwrite Query condition strings (from table filters)
  */
 export function tableIndexesQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
   tableId: string | null | undefined,
+  filterQueries?: string[],
 ) {
+  const hasFilters =
+    filterQueries !== undefined && filterQueries.length > 0
   return queryOptions({
-    queryKey: ['indexes', 'project', projectId, databaseId, tableId],
-    queryFn: () => fetchProjectTableIndexes(projectId!, databaseId!, tableId!),
+    queryKey: [
+      'indexes',
+      'project',
+      projectId,
+      databaseId,
+      tableId,
+      ...(hasFilters ? [filterQueries] : []),
+    ],
+    queryFn: () =>
+      fetchProjectTableIndexes(
+        projectId!,
+        databaseId!,
+        tableId!,
+        filterQueries,
+      ),
     enabled: !!projectId && !!databaseId && !!tableId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -1994,56 +2026,70 @@ export function useProjectTableRows(
 }
 
 /**
- * Hook to fetch columns (attributes) for a table
+ * Hook to fetch columns (attributes) for a table via listColumns
  *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
- * @returns Columns with loading state
+ * @param filterQueries - Optional list of Appwrite Query condition strings (from table filters)
+ * @returns Columns with loading state and total count
  */
 export function useProjectTableColumns(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
   tableId: string | null | undefined,
+  filterQueries?: string[],
 ) {
   const {
     data: columnsData,
     isLoading,
+    isFetching,
     error,
     refetch,
-  } = useQuery(tableColumnsQueryOptions(projectId, databaseId, tableId))
+  } = useQuery(
+    tableColumnsQueryOptions(projectId, databaseId, tableId, filterQueries),
+  )
 
   return {
     columns: columnsData?.columns || [],
+    total: columnsData?.total ?? 0,
     isLoading,
+    isFetching,
     error,
     refetch,
   }
 }
 
 /**
- * Hook to fetch indexes for a table
+ * Hook to fetch indexes for a table via listIndexes
  *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
- * @returns Indexes with loading state
+ * @param filterQueries - Optional list of Appwrite Query condition strings (from table filters)
+ * @returns Indexes with loading state and total count
  */
 export function useProjectTableIndexes(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
   tableId: string | null | undefined,
+  filterQueries?: string[],
 ) {
   const {
     data: indexesData,
     isLoading,
+    isFetching,
     error,
     refetch,
-  } = useQuery(tableIndexesQueryOptions(projectId, databaseId, tableId))
+  } = useQuery(
+    tableIndexesQueryOptions(projectId, databaseId, tableId, filterQueries),
+  )
 
   return {
     indexes: indexesData?.indexes || [],
+    total: indexesData?.total ?? 0,
     isLoading,
+    isFetching,
     error,
     refetch,
   }

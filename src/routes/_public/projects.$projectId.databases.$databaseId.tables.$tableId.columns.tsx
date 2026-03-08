@@ -1,6 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { TableView } from '@/components/pages/projects/$projectId/databases/View'
 import {
+  getQueryParam,
+  listSearchSchema,
+  queryParamToMap,
+} from '@/lib/table-filters'
+import {
   projectQueryOptions,
   tablesQueryOptions,
   databaseQueryOptions,
@@ -18,11 +23,17 @@ export const Route = createFileRoute(
   head: ({ loaderData }) => ({
     meta: [
       {
-        title: pageTitle(loaderData?.database?.name ?? 'Database', 'Databases'),
+        title: pageTitle(
+          (loaderData as { database?: { name?: string } } | undefined)?.database
+            ?.name ?? 'Database',
+          'Databases',
+        ),
       },
     ],
   }),
-  loader: async ({ params, context }) => {
+  validateSearch: listSearchSchema,
+  // @ts-expect-error - route tree may infer loader as never; loader returns { database } on client
+  loader: async ({ params, context, location }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
       return
@@ -35,10 +46,17 @@ export const Route = createFileRoute(
       return
     }
 
+    const url = new URL(location.pathname + location.search, 'http://localhost')
+    const queryParam = getQueryParam(url)
+    const filterMap = queryParamToMap(queryParam)
+    const columnsFilterQueries =
+      filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
+
     // Fetch project first so setProjectRegion runs and project-scoped calls use the correct regional endpoint
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
 
-    // Fetch critical data before rendering to prevent layout shifts
+    // Fetch critical data before rendering to prevent layout shifts.
+    // Prefetch columns with same filterQueries as the View so one request and UI shows filtered list.
     await Promise.all([
       // Fetch tables list - blocks navigation until ready
       queryClient.ensureQueryData(
@@ -46,9 +64,14 @@ export const Route = createFileRoute(
       ),
       // Fetch database - blocks navigation until ready
       queryClient.ensureQueryData(databaseQueryOptions(projectId, databaseId)),
-      // Fetch columns - blocks navigation until ready
+      // Fetch columns with URL filters so component uses same query key (single request, filtered list)
       queryClient.ensureQueryData(
-        tableColumnsQueryOptions(projectId, databaseId, tableId),
+        tableColumnsQueryOptions(
+          projectId,
+          databaseId,
+          tableId,
+          columnsFilterQueries,
+        ),
       ),
       // Prefetch indexes (optional data)
       queryClient.prefetchQuery(

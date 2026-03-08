@@ -7,11 +7,11 @@ import {
   functionExecutionsQueryOptions,
 } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
+import { listSearchSchema } from '@/lib/table-filters'
 
 const EXECUTIONS_PER_PAGE = 25
 
-const searchSchema = z.object({
-  page: z.number().int().min(1).optional().catch(undefined),
+const searchSchema = listSearchSchema.extend({
   executionId: z.string().optional().catch(undefined),
 })
 
@@ -42,22 +42,25 @@ export const Route = createFileRoute(
     const urlParams = new URLSearchParams(location.search)
     const pageParam = urlParams.get('page')
     const page = pageParam ? Math.max(1, parseInt(pageParam, 10)) : 1
-    const pageIndex = page - 1 // Convert 1-indexed to 0-indexed
+    const pageIndex = page - 1
+    const hasFilterQuery = !!urlParams.get('query')
 
-    // Fetch critical data before rendering to prevent layout shifts
+    const executionsPromise = hasFilterQuery
+      ? Promise.resolve(undefined)
+      : queryClient.ensureQueryData(
+          functionExecutionsQueryOptions(
+            projectId,
+            functionId,
+            pageIndex,
+            EXECUTIONS_PER_PAGE,
+          ),
+        )
+
     await Promise.all([
       queryClient.ensureQueryData(
         projectFunctionQueryOptions(projectId, functionId),
       ),
-      // Fetch executions for the requested page - blocks navigation until ready
-      queryClient.ensureQueryData(
-        functionExecutionsQueryOptions(
-          projectId,
-          functionId,
-          pageIndex,
-          EXECUTIONS_PER_PAGE,
-        ),
-      ),
+      executionsPromise,
     ])
     const fn = queryClient.getQueryData<{ name?: string }>(
       projectFunctionQueryOptions(projectId, functionId).queryKey,

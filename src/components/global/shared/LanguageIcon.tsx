@@ -1,3 +1,4 @@
+import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
 
 interface LanguageIconProps {
@@ -50,12 +51,11 @@ export function LanguageIcon({
       alt={language}
       className={cn(
         sizeClass,
-        // Make icons work in both light and dark mode
-        // Most icons use #C4C6D7 (light gray) - make them dark in light mode, keep light in dark mode
+        // Make icons work in both light and dark mode (match muted-foreground in light)
         // Go icon uses #414146 (dark gray) - keep dark in light mode, invert to light in dark mode
         isGoIcon
           ? 'brightness-0 dark:brightness-0 dark:invert'
-          : 'brightness-0 dark:brightness-100',
+          : PUBLIC_ICON_MUTED_CLASSES,
         className,
       )}
     />

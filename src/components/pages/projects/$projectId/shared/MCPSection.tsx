@@ -1,6 +1,7 @@
 import { Code, FileText } from 'lucide-react'
 import { useMemo } from 'react'
 import { getMCPIDEs } from '@/lib/config/ide'
+import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { Button } from '@/components/ui/button'
 
 export interface MCPSectionProps {
@@ -98,7 +99,7 @@ export function MCPSection({ compact = false }: MCPSectionProps) {
                   <img
                     src={ide.iconPath}
                     alt=""
-                    className="mr-1.5 h-4 w-4 brightness-0 dark:brightness-100"
+                    className={`mr-1.5 h-4 w-4 ${PUBLIC_ICON_MUTED_CLASSES}`}
                   />
                   {ide.name}
                 </a>

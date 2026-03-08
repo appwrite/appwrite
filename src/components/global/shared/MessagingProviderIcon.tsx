@@ -1,4 +1,5 @@
 import { Mail, Phone, Bell } from 'lucide-react'
+import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
 
 interface MessagingProviderIconProps {
@@ -46,8 +47,7 @@ export function MessagingProviderIcon({
         alt={providerName || 'Provider'}
         className={cn(
           sizeClass,
-          // Make icons work in both light and dark mode
-          'brightness-0 dark:brightness-100',
+          PUBLIC_ICON_MUTED_CLASSES,
           className,
         )}
       />

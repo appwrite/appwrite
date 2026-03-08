@@ -9,6 +9,7 @@ import {
   useMutation,
   useQueryClient,
   queryOptions,
+  keepPreviousData,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { Query } from '@appwrite.io/console'
@@ -90,25 +91,23 @@ export async function fetchFunctionDeployments(
   functionId: string,
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
-  queries?: string[],
+  filterQueries?: string[],
 ) {
   if (!projectId || !functionId) {
     return { deployments: [], total: 0 }
   }
 
   const projectSdk = sdk.forProject(projectId)
-  const defaultQueries = [
+  const queries = [
+    ...(filterQueries ?? []),
     Query.orderDesc('$createdAt'),
     Query.limit(limit),
     Query.offset(page * limit),
   ]
-  const finalQueries = queries
-    ? [...defaultQueries, ...queries]
-    : defaultQueries
 
   const response = await projectSdk.functions.listDeployments({
     functionId,
-    queries: finalQueries,
+    queries,
   })
 
   return {
@@ -197,25 +196,23 @@ export async function fetchFunctionExecutions(
   functionId: string,
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
-  queries?: string[],
+  filterQueries?: string[],
 ) {
   if (!projectId || !functionId) {
     return { executions: [], total: 0 }
   }
 
   const projectSdk = sdk.forProject(projectId)
-  const defaultQueries = [
+  const queries = [
+    ...(filterQueries ?? []),
     Query.orderDesc('$createdAt'),
     Query.limit(limit),
     Query.offset(page * limit),
   ]
-  const finalQueries = queries
-    ? [...defaultQueries, ...queries]
-    : defaultQueries
 
   const response = await projectSdk.functions.listExecutions({
     functionId,
-    queries: finalQueries,
+    queries,
   })
 
   return {
@@ -294,24 +291,26 @@ export async function fetchFunctionDomains(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   if (!projectId || !functionId) {
     return { rules: [], total: 0 }
   }
 
   const projectSdk = sdk.forProject(projectId)
-  const defaultQueries = [
+  const fixedQueries = [
     Query.equal('type', ['deployment', 'redirect']),
     Query.equal('deploymentResourceType', 'function'),
     Query.equal('deploymentResourceId', functionId),
     Query.equal('trigger', 'manual'),
+    ...(filterQueries ?? []),
     Query.orderDesc('$createdAt'),
     Query.limit(limit),
     Query.offset(page * limit),
   ]
 
   const response = await projectSdk.proxy.listRules({
-    queries: defaultQueries,
+    queries: fixedQueries,
     search: search?.trim() || undefined,
   })
 
@@ -469,8 +468,10 @@ export function functionDeploymentsQueryOptions(
   functionId: string | null | undefined,
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
-  queries?: string[],
+  filterQueries?: string[],
 ) {
+  const hasFilters =
+    filterQueries !== undefined && filterQueries.length > 0
   return queryOptions({
     queryKey: [
       'deployments',
@@ -479,10 +480,16 @@ export function functionDeploymentsQueryOptions(
       functionId,
       page,
       limit,
-      queries,
+      ...(hasFilters ? [filterQueries] : []),
     ],
     queryFn: () =>
-      fetchFunctionDeployments(projectId!, functionId!, page, limit, queries),
+      fetchFunctionDeployments(
+        projectId!,
+        functionId!,
+        page,
+        limit,
+        filterQueries,
+      ),
     enabled: !!projectId && !!functionId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -490,6 +497,7 @@ export function functionDeploymentsQueryOptions(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     gcTime: projectId && functionId ? 5 * 60 * 1000 : 0,
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -503,8 +511,10 @@ export function functionExecutionsQueryOptions(
   functionId: string | null | undefined,
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
-  queries?: string[],
+  filterQueries?: string[],
 ) {
+  const hasFilters =
+    filterQueries !== undefined && filterQueries.length > 0
   return queryOptions({
     queryKey: [
       'executions',
@@ -513,10 +523,16 @@ export function functionExecutionsQueryOptions(
       functionId,
       page,
       limit,
-      queries,
+      ...(hasFilters ? [filterQueries] : []),
     ],
     queryFn: () =>
-      fetchFunctionExecutions(projectId!, functionId!, page, limit, queries),
+      fetchFunctionExecutions(
+        projectId!,
+        functionId!,
+        page,
+        limit,
+        filterQueries,
+      ),
     enabled: !!projectId && !!functionId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -524,6 +540,7 @@ export function functionExecutionsQueryOptions(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     gcTime: projectId && functionId ? 5 * 60 * 1000 : 0,
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -538,7 +555,10 @@ export function functionDomainsQueryOptions(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
+  const hasFilters =
+    filterQueries !== undefined && filterQueries.length > 0
   return queryOptions({
     queryKey: [
       'proxy-rules',
@@ -548,9 +568,17 @@ export function functionDomainsQueryOptions(
       page,
       limit,
       search,
+      ...(hasFilters ? [filterQueries] : []),
     ],
     queryFn: () =>
-      fetchFunctionDomains(projectId!, functionId!, page, limit, search),
+      fetchFunctionDomains(
+        projectId!,
+        functionId!,
+        page,
+        limit,
+        search,
+        filterQueries,
+      ),
     enabled: !!projectId && !!functionId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -558,6 +586,7 @@ export function functionDomainsQueryOptions(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     gcTime: projectId && functionId ? 5 * 60 * 1000 : 0,
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -728,7 +757,7 @@ export function useFunctionDeployments(
   functionId: string | null | undefined,
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
-  queries?: string[],
+  filterQueries?: string[],
 ) {
   const {
     data: deploymentsData,
@@ -742,7 +771,7 @@ export function useFunctionDeployments(
       functionId,
       page,
       limit,
-      queries,
+      filterQueries,
     ),
   )
 
@@ -876,7 +905,7 @@ export function useFunctionExecutions(
   functionId: string | null | undefined,
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
-  queries?: string[],
+  filterQueries?: string[],
 ) {
   const {
     data: executionsData,
@@ -885,7 +914,13 @@ export function useFunctionExecutions(
     error,
     refetch,
   } = useQuery(
-    functionExecutionsQueryOptions(projectId, functionId, page, limit, queries),
+    functionExecutionsQueryOptions(
+      projectId,
+      functionId,
+      page,
+      limit,
+      filterQueries,
+    ),
   )
 
   return {
@@ -936,9 +971,17 @@ export function useFunctionDomains(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   return useQuery(
-    functionDomainsQueryOptions(projectId, functionId, page, limit, search),
+    functionDomainsQueryOptions(
+      projectId,
+      functionId,
+      page,
+      limit,
+      search,
+      filterQueries,
+    ),
   )
 }
 

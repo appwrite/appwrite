@@ -49,9 +49,18 @@ export { functionsFilterColumns } from './filter-configs/functions'
 export { sitesFilterColumns } from './filter-configs/sites'
 export { domainsFilterColumns } from './filter-configs/domains'
 export { dnsRecordsFilterColumns } from './filter-configs/dns-records'
+export { deploymentsFilterColumns } from './filter-configs/deployments'
+export { executionsFilterColumns } from './filter-configs/executions'
+export { proxyRulesFilterColumns } from './filter-configs/proxy-rules'
+export { tableColumnsFilterColumns } from './filter-configs/table-columns'
+export { tableIndexesFilterColumns } from './filter-configs/table-indexes'
 export {
   rowsFilterColumnsFromAttributes,
   type TableIndexForFilters,
 } from './filter-configs/rows'
 
 export { SIZE_FILTER_UNITS, sizeFilterToBytes } from './size-filter'
+export {
+  recordMatchesCompactKey,
+  filterRecordsByCompactMap,
+} from './client-side-filter'

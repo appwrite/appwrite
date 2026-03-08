@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import {
   Outlet,
   useParams,
@@ -21,12 +21,26 @@ import {
   RefreshProvider,
   useRefresh,
 } from '@/components/global/shared/RefreshContext'
-import { toast } from 'sonner'
+import {
+  getQueryParam,
+  queryParamToMap,
+  mapToQueryParam,
+  deploymentsFilterColumns,
+  executionsFilterColumns,
+  proxyRulesFilterColumns,
+} from '@/lib/table-filters'
+import type { CompactFilterKey } from '@/lib/table-filters'
+import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 import { CreateDeploymentDropdown } from '../shared/CreateDeploymentDropdown'
 import { CreateGitDeploymentModal } from '../shared/CreateGitDeploymentModal'
 import { CreateCliDeploymentModal } from '../shared/CreateCliDeploymentModal'
 import { CreateManualDeploymentModal } from '../shared/CreateManualDeploymentModal'
 import { CreateDeploymentProvider } from '../shared/CreateDeploymentContext'
+
+/** When provided, Deployments view renders this below the active deployment card (filter + create). */
+export const DeploymentsToolbarContext = React.createContext<React.ReactNode>(
+  null,
+)
 
 export function Layout() {
   return (
@@ -69,11 +83,7 @@ function SiteLayoutContent() {
   const [gitDeployOpen, setGitDeployOpen] = useState(false)
   const [cliDeployOpen, setCliDeployOpen] = useState(false)
   const [manualDeployOpen, setManualDeployOpen] = useState(false)
-
-  const handleFilterClick = () => {
-    // TODO: Open filters dialog
-    toast.info('Filters coming soon')
-  }
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
   // Derive active tab from pathname
   const activeTab = useMemo(() => {
@@ -95,6 +105,65 @@ function SiteLayoutContent() {
     return 'deployments'
   }, [location.pathname])
 
+  const siteFilterMap = useMemo(() => {
+    const search = location.search
+    // TanStack Router may expose search as a parsed object; use it so filter count/active filters show
+    const queryParam =
+      typeof search === 'object' && search !== null && 'query' in search
+        ? (search as { query?: string }).query ?? null
+        : getQueryParam(
+            new URL(
+              location.pathname + (typeof search === 'string' ? search || '' : ''),
+              typeof window !== 'undefined' ? window.location.origin : 'http://dummy',
+            ),
+          )
+    return queryParamToMap(queryParam)
+  }, [location.pathname, location.search])
+
+  const siteFilterColumns = useMemo(() => {
+    if (activeTab === 'deployments') return deploymentsFilterColumns
+    if (activeTab === 'logs') return executionsFilterColumns
+    if (activeTab === 'domains') return proxyRulesFilterColumns
+    return deploymentsFilterColumns
+  }, [activeTab])
+
+  const applySiteFilter = (key: CompactFilterKey, queryStr: string) => {
+    const newMap = new Map(siteFilterMap)
+    newMap.set(key, queryStr)
+    navigate({
+      to: location.pathname,
+      search: (prev) => ({
+        ...(typeof prev === 'object' && prev !== null ? prev : {}),
+        query: mapToQueryParam(newMap),
+        page: 1,
+      }),
+      replace: true,
+    })
+  }
+  const removeSiteFilter = (key: CompactFilterKey) => {
+    const newMap = new Map(siteFilterMap)
+    newMap.delete(key)
+    navigate({
+      to: location.pathname,
+      search: (prev) => ({
+        ...(typeof prev === 'object' && prev !== null ? prev : {}),
+        query: newMap.size > 0 ? mapToQueryParam(newMap) : undefined,
+        page: newMap.size > 0 ? 1 : undefined,
+      }),
+      replace: true,
+    })
+  }
+  const clearAllSiteFilters = () => {
+    navigate({
+      to: location.pathname,
+      search: (prev) => ({
+        ...(typeof prev === 'object' && prev !== null ? prev : {}),
+        query: undefined,
+      }),
+      replace: true,
+    })
+  }
+
   const tabs: Tab[] = useMemo(
     () => [
       {
@@ -104,15 +173,15 @@ function SiteLayoutContent() {
         params: { projectId: projectId!, siteId: siteId! },
       },
       {
-        id: 'logs',
-        label: 'Logs',
-        to: '/projects/$projectId/sites/$siteId/logs',
-        params: { projectId: projectId!, siteId: siteId! },
-      },
-      {
         id: 'domains',
         label: 'Domains',
         to: '/projects/$projectId/sites/$siteId/domains',
+        params: { projectId: projectId!, siteId: siteId! },
+      },
+      {
+        id: 'logs',
+        label: 'Logs',
+        to: '/projects/$projectId/sites/$siteId/logs',
         params: { projectId: projectId!, siteId: siteId! },
       },
       ...(showSettingsTab
@@ -171,8 +240,23 @@ function SiteLayoutContent() {
           tabs={tabs}
           activeTab={activeTab}
           fullWidthBorder
-          showFilters={activeTab === 'logs'}
-          onFilterClick={activeTab === 'logs' ? handleFilterClick : undefined}
+          showFilters={activeTab === 'logs' || activeTab === 'domains'}
+          filterTrigger={
+            activeTab === 'logs' || activeTab === 'domains' ? (
+              <FiltersPopover
+                open={filtersOpen}
+                onOpenChange={setFiltersOpen}
+                columns={siteFilterColumns}
+                filterMap={siteFilterMap}
+                onRemoveFilter={removeSiteFilter}
+                onClearAll={clearAllSiteFilters}
+                onApplyFilter={applySiteFilter}
+                resourceLabel={
+                  activeTab === 'logs' ? 'logs' : 'domains'
+                }
+              />
+            ) : undefined
+          }
           showRefresh={activeTab === 'logs' && hasRefreshHandler}
           onRefresh={activeTab === 'logs' ? triggerRefresh : undefined}
           isRefreshing={isRefreshing}
@@ -188,15 +272,7 @@ function SiteLayoutContent() {
                   })
               : undefined
           }
-          beforeCreateButtons={
-            activeTab === 'deployments' ? (
-              <CreateDeploymentDropdown
-                onSelectGit={() => setGitDeployOpen(true)}
-                onSelectCli={() => setCliDeployOpen(true)}
-                onSelectManual={() => setManualDeployOpen(true)}
-              />
-            ) : undefined
-          }
+          beforeCreateButtons={undefined}
           contentAfterBorder={
             isBuilding ? (
               <div className="border-b border-border bg-blue-500/5">
@@ -216,7 +292,31 @@ function SiteLayoutContent() {
           }
         />
         <div className="flex-1 min-h-0">
-          <Outlet />
+          <DeploymentsToolbarContext.Provider
+            value={
+              activeTab === 'deployments' ? (
+                <>
+                  <FiltersPopover
+                    open={filtersOpen}
+                    onOpenChange={setFiltersOpen}
+                    columns={siteFilterColumns}
+                    filterMap={siteFilterMap}
+                    onRemoveFilter={removeSiteFilter}
+                    onClearAll={clearAllSiteFilters}
+                    onApplyFilter={applySiteFilter}
+                    resourceLabel="deployments"
+                  />
+                  <CreateDeploymentDropdown
+                    onSelectGit={() => setGitDeployOpen(true)}
+                    onSelectCli={() => setCliDeployOpen(true)}
+                    onSelectManual={() => setManualDeployOpen(true)}
+                  />
+                </>
+              ) : null
+            }
+          >
+            <Outlet />
+          </DeploymentsToolbarContext.Provider>
         </div>
         {site && siteId && projectId && (
           <>

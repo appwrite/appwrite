@@ -31,6 +31,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
 import {
   Tooltip,
@@ -1489,7 +1490,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
               <img
                 src="/icons/chatgpt.svg"
                 alt="ChatGPT"
-                className="h-4 w-4 mr-2 brightness-0 dark:brightness-100"
+                className={`h-4 w-4 mr-2 ${PUBLIC_ICON_MUTED_CLASSES}`}
               />
               ChatGPT
             </DropdownMenuItem>
@@ -1497,7 +1498,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
               <img
                 src="/icons/claude.svg"
                 alt="Claude"
-                className="h-4 w-4 mr-2 brightness-0 dark:brightness-100"
+                className={`h-4 w-4 mr-2 ${PUBLIC_ICON_MUTED_CLASSES}`}
               />
               Claude
             </DropdownMenuItem>
@@ -1505,7 +1506,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
               <img
                 src="/icons/cursor-ai.svg"
                 alt="Cursor"
-                className="h-4 w-4 mr-2 brightness-0 dark:brightness-100"
+                className={`h-4 w-4 mr-2 ${PUBLIC_ICON_MUTED_CLASSES}`}
               />
               Cursor
             </DropdownMenuItem>
@@ -1513,7 +1514,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
               <img
                 src="/icons/lovable.svg"
                 alt="Lovable"
-                className="h-4 w-4 mr-2 brightness-0 dark:brightness-100"
+                className={`h-4 w-4 mr-2 ${PUBLIC_ICON_MUTED_CLASSES}`}
               />
               Lovable
             </DropdownMenuItem>

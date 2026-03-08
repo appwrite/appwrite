@@ -1,5 +1,4 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { z } from 'zod'
 import { View } from '@/components/pages/projects/$projectId/sites/Deployments'
 import {
   siteQueryOptions,
@@ -10,12 +9,30 @@ import {
 } from '@/lib/react-query/hooks'
 import { Query } from '@appwrite.io/console'
 import { pageTitle } from '@/lib/utils/page-title'
+import { listSearchSchema } from '@/lib/table-filters'
 
 const DEPLOYMENTS_PER_PAGE = 25
 
-const searchSchema = z.object({
-  page: z.number().int().min(1).optional().catch(undefined),
-})
+const DEPLOYMENTS_SELECT = [
+  Query.select([
+    'buildSize',
+    'sourceSize',
+    'totalSize',
+    'buildDuration',
+    'status',
+    'type',
+    'resourceId',
+    'providerRepositoryUrl',
+    'providerRepositoryOwner',
+    'providerRepositoryName',
+    'providerBranchUrl',
+    'providerBranch',
+    'providerCommitMessage',
+    'providerCommitHash',
+    'providerCommitUrl',
+    '$createdAt',
+  ]),
+]
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/$siteId/',
@@ -30,7 +47,7 @@ export const Route = createFileRoute(
       },
     ],
   }),
-  validateSearch: searchSchema,
+  validateSearch: listSearchSchema,
   loader: async ({ params, context, location }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
@@ -51,44 +68,28 @@ export const Route = createFileRoute(
       const pageParam = urlParams.get('page')
       const page = pageParam ? Math.max(1, parseInt(pageParam, 10)) : 1
       const pageIndex = page - 1 // Convert 1-indexed to 0-indexed
+      const hasFilterQuery = !!urlParams.get('query')
 
       // Fetch site to get deploymentId - blocks navigation until ready
       const site = await queryClient.ensureQueryData(
         siteQueryOptions(projectId, siteId),
       )
 
+      // Prefetch deployments only when no filters (avoids duplicate request when filters applied)
+      const deploymentsPromise = hasFilterQuery
+        ? Promise.resolve(undefined)
+        : queryClient.ensureQueryData(
+            siteDeploymentsQueryOptions(
+              projectId,
+              siteId,
+              pageIndex,
+              DEPLOYMENTS_PER_PAGE,
+              DEPLOYMENTS_SELECT,
+            ),
+          )
+
       // Fetch critical data before rendering to prevent layout shifts
-      const criticalPromises: Promise<unknown>[] = [
-        // Fetch deployments list for the requested page - blocks navigation until ready
-        queryClient.ensureQueryData(
-          siteDeploymentsQueryOptions(
-            projectId,
-            siteId,
-            pageIndex,
-            DEPLOYMENTS_PER_PAGE,
-            [
-              Query.select([
-                'buildSize',
-                'sourceSize',
-                'totalSize',
-                'buildDuration',
-                'status',
-                'type',
-                'resourceId',
-                'providerRepositoryUrl',
-                'providerRepositoryOwner',
-                'providerRepositoryName',
-                'providerBranchUrl',
-                'providerBranch',
-                'providerCommitMessage',
-                'providerCommitHash',
-                'providerCommitUrl',
-                '$createdAt',
-              ]),
-            ],
-          ),
-        ),
-      ]
+      const criticalPromises: Promise<unknown>[] = [deploymentsPromise]
 
       // Fetch active deployment if site has a deploymentId - blocks navigation until ready
       if (site?.deploymentId) {

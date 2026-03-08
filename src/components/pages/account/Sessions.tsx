@@ -31,6 +31,7 @@ import {
   Monitor,
   Loader2,
 } from 'lucide-react'
+import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import type { Models } from '@appwrite.io/console'
@@ -413,7 +414,7 @@ export function AccountSessions() {
                                   <img
                                     src={`/icons/${providerIcon}`}
                                     alt={session.provider}
-                                    className="h-3 w-3 opacity-60"
+                                    className={`h-3 w-3 ${PUBLIC_ICON_MUTED_CLASSES}`}
                                     onError={(e) => {
                                       e.currentTarget.style.display = 'none'
                                     }}

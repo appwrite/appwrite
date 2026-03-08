@@ -77,15 +77,15 @@ function SiteLayoutContent() {
         params: { projectId: projectId!, siteId: siteId! },
       },
       {
-        id: 'logs',
-        label: 'Logs',
-        to: '/projects/$projectId/sites/$siteId/logs',
-        params: { projectId: projectId!, siteId: siteId! },
-      },
-      {
         id: 'domains',
         label: 'Domains',
         to: '/projects/$projectId/sites/$siteId/domains',
+        params: { projectId: projectId!, siteId: siteId! },
+      },
+      {
+        id: 'logs',
+        label: 'Logs',
+        to: '/projects/$projectId/sites/$siteId/logs',
         params: { projectId: projectId!, siteId: siteId! },
       },
       ...(showSettingsTab

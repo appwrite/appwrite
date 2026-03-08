@@ -1,3 +1,4 @@
+import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
 import { getColumnIcon } from '@/lib/utils/column-icons'
 import { isTextType } from '@/lib/utils/database-columns'
@@ -232,6 +233,8 @@ import {
   MIN_SEARCH_LENGTH,
   databasesFilterColumns,
   rowsFilterColumnsFromAttributes,
+  tableColumnsFilterColumns,
+  tableIndexesFilterColumns,
   type TableIndexForFilters,
 } from '@/lib/table-filters'
 import type { CompactFilterKey } from '@/lib/table-filters'
@@ -1453,8 +1456,11 @@ export function TableView({
 
   // Sidebar tables list: search, pagination, order (API-backed)
   const [sidebarTablesSearch, setSidebarTablesSearch] = useState('')
-  const [sidebarTablesPage, setSidebarTablesPage] = useState(1)
-  const sidebarTablesPageSize = DEFAULT_PAGE_SIZE
+  const [sidebarTablesRequestedPage, setSidebarTablesRequestedPage] =
+    useState(1)
+  const [sidebarTablesDisplayedPage, setSidebarTablesDisplayedPage] =
+    useState(1)
+  const sidebarTablesPageSize = ROWS_DEFAULT_PAGE_SIZE
   const [sidebarTablesOrder, setSidebarTablesOrder] = useState<'asc' | 'desc'>(
     'asc',
   )
@@ -1475,7 +1481,18 @@ export function TableView({
     100,
   )
 
-  // Paginated + searchable tables for sidebar list only (ordered by $createdAt)
+  // Requested page query (drives fetch when user changes page)
+  const { isFetching: sidebarTablesFetching } = useProjectTables(
+    projectId,
+    databaseId,
+    sidebarTablesRequestedPage - 1,
+    sidebarTablesPageSize,
+    sidebarTablesSearch.trim() || undefined,
+    sidebarTablesOrder,
+    sidebarTablesSortBy,
+  )
+
+  // Displayed page query (what we show - stays until new page has loaded)
   const {
     tables: sidebarTables,
     total: sidebarTablesTotal,
@@ -1483,12 +1500,26 @@ export function TableView({
   } = useProjectTables(
     projectId,
     databaseId,
-    sidebarTablesPage - 1,
+    sidebarTablesDisplayedPage - 1,
     sidebarTablesPageSize,
     sidebarTablesSearch.trim() || undefined,
     sidebarTablesOrder,
     sidebarTablesSortBy,
   )
+
+  // Update displayed page only when requested page has finished loading
+  useEffect(() => {
+    if (
+      !sidebarTablesFetching &&
+      sidebarTablesRequestedPage !== sidebarTablesDisplayedPage
+    ) {
+      setSidebarTablesDisplayedPage(sidebarTablesRequestedPage)
+    }
+  }, [
+    sidebarTablesFetching,
+    sidebarTablesRequestedPage,
+    sidebarTablesDisplayedPage,
+  ])
 
   // Keep previous table list visible while search/filter is fetching (no loading flash)
   const lastSidebarTablesRef = useRef<typeof sidebarTables>([])
@@ -1502,7 +1533,8 @@ export function TableView({
 
   // Reset sidebar to page 1 when search, sort, or database changes
   useEffect(() => {
-    setSidebarTablesPage(1)
+    setSidebarTablesRequestedPage(1)
+    setSidebarTablesDisplayedPage(1)
   }, [sidebarTablesSearch, sidebarTablesOrder, sidebarTablesSortBy, databaseId])
 
   const selectedTable =
@@ -1511,7 +1543,6 @@ export function TableView({
   // Only show loading if we don't have data yet (account for prefetched data)
   const isActuallyLoading =
     (databaseLoading && !database) || (tablesLoading && dbTables.length === 0)
-  const [searchValue, setSearchValue] = useState('')
   const rowsRefetchRef = useRef<(() => Promise<unknown>) | null>(null)
   const openCreateRowDrawerRef = useRef<(() => void) | null>(null)
   const openCreateColumnDialogRef = useRef<(() => void) | null>(null)
@@ -1821,6 +1852,66 @@ export function TableView({
     setRowsFiltersOpen(false)
   }
 
+  // Columns/indexes filter state (URL query) and handlers for header FiltersPopover
+  const tableDetailFilterMap = useMemo(
+    () =>
+      queryParamToMap((search?.query as string | undefined) ?? null),
+    [search?.query],
+  )
+  const [columnsFiltersOpen, setColumnsFiltersOpen] = useState(false)
+  const [indexesFiltersOpen, setIndexesFiltersOpen] = useState(false)
+  const navigateTableDetailSearch = (updates: { query?: string }) => {
+    navigate({
+      search: (prev: Record<string, unknown>) => {
+        const next = {
+          ...(typeof prev === 'object' && prev !== null ? prev : {}),
+          ...updates,
+        }
+        if ('query' in updates && updates.query === undefined) {
+          delete next.query
+        }
+        return next
+      },
+      replace: true,
+    })
+  }
+  const columnsApplyFilter = (key: CompactFilterKey, queryStr: string) => {
+    const newMap = new Map(tableDetailFilterMap)
+    newMap.set(key, queryStr)
+    navigateTableDetailSearch({
+      query: mapToQueryParam(newMap) || undefined,
+    })
+  }
+  const columnsRemoveFilter = (key: CompactFilterKey) => {
+    const newMap = new Map(tableDetailFilterMap)
+    newMap.delete(key)
+    navigateTableDetailSearch({
+      query: newMap.size > 0 ? mapToQueryParam(newMap) : undefined,
+    })
+  }
+  const columnsClearAllFilters = () => {
+    navigateTableDetailSearch({ query: undefined })
+    setColumnsFiltersOpen(false)
+  }
+  const indexesApplyFilter = (key: CompactFilterKey, queryStr: string) => {
+    const newMap = new Map(tableDetailFilterMap)
+    newMap.set(key, queryStr)
+    navigateTableDetailSearch({
+      query: mapToQueryParam(newMap) || undefined,
+    })
+  }
+  const indexesRemoveFilter = (key: CompactFilterKey) => {
+    const newMap = new Map(tableDetailFilterMap)
+    newMap.delete(key)
+    navigateTableDetailSearch({
+      query: newMap.size > 0 ? mapToQueryParam(newMap) : undefined,
+    })
+  }
+  const indexesClearAllFilters = () => {
+    navigateTableDetailSearch({ query: undefined })
+    setIndexesFiltersOpen(false)
+  }
+
   const getCreateLabel = () => {
     switch (activeTab) {
       case 'rows':
@@ -1992,7 +2083,8 @@ export function TableView({
                       ) {
                         setSidebarTablesSortBy(by)
                         setSidebarTablesOrder(dir)
-                        setSidebarTablesPage(1)
+                        setSidebarTablesRequestedPage(1)
+                        setSidebarTablesDisplayedPage(1)
                       }
                     }}
                   >
@@ -2111,7 +2203,7 @@ export function TableView({
               <span className="shrink-0 tabular-nums">
                 {sidebarTablesTotal === 0
                   ? '0 tables'
-                  : `${(sidebarTablesPage - 1) * sidebarTablesPageSize + 1}-${Math.min(sidebarTablesPage * sidebarTablesPageSize, sidebarTablesTotal ?? 0)} of ${(sidebarTablesTotal ?? 0).toLocaleString()}`}
+                  : `${(sidebarTablesDisplayedPage - 1) * sidebarTablesPageSize + 1}-${Math.min(sidebarTablesDisplayedPage * sidebarTablesPageSize, sidebarTablesTotal ?? 0)} of ${(sidebarTablesTotal ?? 0).toLocaleString()}`}
               </span>
               <div className="flex items-center gap-0.5">
                 <Button
@@ -2119,9 +2211,9 @@ export function TableView({
                   size="icon"
                   className="h-6 w-6"
                   onClick={() =>
-                    setSidebarTablesPage((p) => Math.max(1, p - 1))
+                    setSidebarTablesRequestedPage((p) => Math.max(1, p - 1))
                   }
-                  disabled={sidebarTablesPage <= 1}
+                  disabled={sidebarTablesDisplayedPage <= 1}
                   aria-label="Previous page"
                 >
                   <ChevronLeft className="h-3 w-3" />
@@ -2130,9 +2222,11 @@ export function TableView({
                   variant="ghost"
                   size="icon"
                   className="h-6 w-6"
-                  onClick={() => setSidebarTablesPage((p) => p + 1)}
+                  onClick={() =>
+                    setSidebarTablesRequestedPage((p) => p + 1)
+                  }
                   disabled={
-                    sidebarTablesPage >=
+                    sidebarTablesDisplayedPage >=
                     Math.ceil((sidebarTablesTotal ?? 0) / sidebarTablesPageSize)
                   }
                   aria-label="Next page"
@@ -2291,33 +2385,9 @@ export function TableView({
           }
           tabs={isDatabaseLevelView ? undefined : tableTabs}
           activeTab={isDatabaseLevelView ? undefined : activeTab}
-          searchPlaceholder={
-            isDatabaseLevelView
-              ? undefined
-              : activeTab === 'rows' ||
-                  activeTab === 'settings' ||
-                  activeTab === 'security'
-                ? undefined
-                : `Search ${activeTab}...`
-          }
-          searchValue={
-            isDatabaseLevelView
-              ? undefined
-              : activeTab === 'rows' ||
-                  activeTab === 'settings' ||
-                  activeTab === 'security'
-                ? undefined
-                : searchValue
-          }
-          onSearchChange={
-            isDatabaseLevelView
-              ? undefined
-              : activeTab === 'rows' ||
-                  activeTab === 'settings' ||
-                  activeTab === 'security'
-                ? undefined
-                : setSearchValue
-          }
+          searchPlaceholder={undefined}
+          searchValue={undefined}
+          onSearchChange={undefined}
           createLabel={isDatabaseLevelView ? undefined : getCreateLabel()}
           createDisabled={
             !isDatabaseLevelView &&
@@ -2349,7 +2419,12 @@ export function TableView({
                   }
                 }
           }
-          showFilters={!isDatabaseLevelView && activeTab === 'rows'}
+          showFilters={
+            !isDatabaseLevelView &&
+            (activeTab === 'rows' ||
+              activeTab === 'columns' ||
+              activeTab === 'indexes')
+          }
           filterTrigger={
             !isDatabaseLevelView && activeTab === 'rows' ? (
               <FiltersPopover
@@ -2361,6 +2436,28 @@ export function TableView({
                 onClearAll={rowsClearAllFilters}
                 onApplyFilter={rowsApplyFilter}
                 resourceLabel="rows"
+              />
+            ) : !isDatabaseLevelView && activeTab === 'columns' ? (
+              <FiltersPopover
+                open={columnsFiltersOpen}
+                onOpenChange={setColumnsFiltersOpen}
+                columns={tableColumnsFilterColumns}
+                filterMap={tableDetailFilterMap}
+                onRemoveFilter={columnsRemoveFilter}
+                onClearAll={columnsClearAllFilters}
+                onApplyFilter={columnsApplyFilter}
+                resourceLabel="columns"
+              />
+            ) : !isDatabaseLevelView && activeTab === 'indexes' ? (
+              <FiltersPopover
+                open={indexesFiltersOpen}
+                onOpenChange={setIndexesFiltersOpen}
+                columns={tableIndexesFilterColumns}
+                filterMap={tableDetailFilterMap}
+                onRemoveFilter={indexesRemoveFilter}
+                onClearAll={indexesClearAllFilters}
+                onApplyFilter={indexesApplyFilter}
+                resourceLabel="indexes"
               />
             ) : undefined
           }
@@ -2414,37 +2511,55 @@ export function TableView({
           beforeCreateButtons={
             isDatabaseLevelView || !showTableSecuritySettings
               ? undefined
-              : activeTab === 'columns'
+              :               activeTab === 'columns'
                 ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        if (openSuggestColumnsDialogRef.current) {
-                          openSuggestColumnsDialogRef.current()
-                        }
-                      }}
-                      className="h-9"
-                    >
-                      <Lightbulb className="h-3.5 w-3.5 mr-1.5" />
-                      Suggest columns
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            if (openSuggestColumnsDialogRef.current) {
+                              openSuggestColumnsDialogRef.current()
+                            }
+                          }}
+                          className="h-9"
+                        >
+                          <Lightbulb className="h-3.5 w-3.5 shrink-0 sm:mr-1.5" />
+                          <span className="hidden sm:inline">
+                            Suggest columns
+                          </span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        Suggest columns
+                      </TooltipContent>
+                    </Tooltip>
                   )
                 : activeTab === 'indexes'
                   ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          if (openSuggestIndexesDialogRef.current) {
-                            openSuggestIndexesDialogRef.current()
-                          }
-                        }}
-                        className="h-9"
-                      >
-                        <Lightbulb className="h-3.5 w-3.5 mr-1.5" />
-                        Suggest indexes
-                      </Button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              if (openSuggestIndexesDialogRef.current) {
+                                openSuggestIndexesDialogRef.current()
+                              }
+                            }}
+                            className="h-9"
+                          >
+                            <Lightbulb className="h-3.5 w-3.5 shrink-0 sm:mr-1.5" />
+                            <span className="hidden sm:inline">
+                              Suggest indexes
+                            </span>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                          Suggest indexes
+                        </TooltipContent>
+                      </Tooltip>
                     )
                   : undefined
           }
@@ -2635,6 +2750,7 @@ export function TableView({
                 <ColumnsSpreadsheet
                   table={selectedTable}
                   canWriteTables={!noCreateTablePermission}
+                  filterMap={tableDetailFilterMap}
                   onCreateReady={(openDialog) => {
                     openCreateColumnDialogRef.current = openDialog
                   }}
@@ -2647,6 +2763,7 @@ export function TableView({
                 <IndexesSpreadsheet
                   table={selectedTable}
                   canWriteTables={!noCreateTablePermission}
+                  filterMap={tableDetailFilterMap}
                   onCreateReady={(openDialog) => {
                     openCreateIndexDialogRef.current = openDialog
                   }}
@@ -3613,7 +3730,7 @@ export function DatabaseOverview({
                       <img
                         src="/icons/chatgpt.svg"
                         alt="ChatGPT"
-                        className="h-4 w-4 mr-2 brightness-0 dark:brightness-100"
+                        className={`h-4 w-4 mr-2 ${PUBLIC_ICON_MUTED_CLASSES}`}
                       />
                       ChatGPT
                     </DropdownMenuItem>
@@ -3621,7 +3738,7 @@ export function DatabaseOverview({
                       <img
                         src="/icons/claude.svg"
                         alt="Claude"
-                        className="h-4 w-4 mr-2 brightness-0 dark:brightness-100"
+                        className={`h-4 w-4 mr-2 ${PUBLIC_ICON_MUTED_CLASSES}`}
                       />
                       Claude
                     </DropdownMenuItem>
@@ -3629,7 +3746,7 @@ export function DatabaseOverview({
                       <img
                         src="/icons/cursor-ai.svg"
                         alt="Cursor"
-                        className="h-4 w-4 mr-2 brightness-0 dark:brightness-100"
+                        className={`h-4 w-4 mr-2 ${PUBLIC_ICON_MUTED_CLASSES}`}
                       />
                       Cursor
                     </DropdownMenuItem>
@@ -3637,7 +3754,7 @@ export function DatabaseOverview({
                       <img
                         src="/icons/lovable.svg"
                         alt="Lovable"
-                        className="h-4 w-4 mr-2 brightness-0 dark:brightness-100"
+                        className={`h-4 w-4 mr-2 ${PUBLIC_ICON_MUTED_CLASSES}`}
                       />
                       Lovable
                     </DropdownMenuItem>
@@ -5539,6 +5656,8 @@ interface SpreadsheetProps {
     page?: number
     limit?: number
   }) => void
+  /** When provided (e.g. from table view header), used for client-side filtering instead of URL */
+  filterMap?: Map<CompactFilterKey, string>
 }
 
 function RowsSpreadsheet({
@@ -7028,6 +7147,7 @@ function ColumnsSpreadsheet({
   onCreateReady,
   onSuggestReady,
   canWriteTables = true,
+  filterMap: filterMapProp,
 }: SpreadsheetProps) {
   const params = useParams({
     strict: false,
@@ -7047,10 +7167,26 @@ function ColumnsSpreadsheet({
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const location = useLocation()
+  const search = useSearch({ strict: false }) as { query?: string } | undefined
+  const columnsFilterMapFromUrl = useMemo(
+    () => queryParamToMap(search?.query ?? null),
+    [search?.query],
+  )
+  const columnsFilterMap = filterMapProp ?? columnsFilterMapFromUrl
+  const columnsFilterQueries =
+    columnsFilterMap.size > 0 ? Array.from(columnsFilterMap.values()) : undefined
 
-  // Fetch columns from the project SDK
-  const { columns: apiColumns, isLoading: columnsLoading } =
-    useProjectTableColumns(projectId, databaseId, tableId)
+  // Fetch columns from the project SDK (listColumns with optional filter queries)
+  const {
+    columns: apiColumns,
+    isLoading: columnsLoading,
+    isFetching: columnsFetching,
+  } = useProjectTableColumns(
+    projectId,
+    databaseId,
+    tableId,
+    columnsFilterQueries,
+  )
 
   // Fetch full table for row size metadata (bytesUsed, bytesMax) when creating varchar columns
   const { table: fullTable } = useProjectTable(projectId, databaseId, tableId)
@@ -7347,7 +7483,18 @@ function ColumnsSpreadsheet({
     }
   }
 
-  // Map API columns to the format expected by the component
+  const clearAllColumnsFilters = () => {
+    navigate({
+      to: location.pathname,
+      search: (prev) => ({
+        ...(typeof prev === 'object' && prev !== null ? prev : {}),
+        query: undefined,
+      }),
+      replace: true,
+    })
+  }
+
+  // Map API columns to the format expected by the component (use filtered list for display)
   const columns = apiColumns.map((col: unknown) => ({
     key: col.key || col.name || col.$id,
     type: col.type || 'string',
@@ -7374,7 +7521,7 @@ function ColumnsSpreadsheet({
     $id: col.$id,
   }))
 
-  // Generate mock columns based on table (fallback if no API columns)
+  // Local fallback only when API returns no columns (e.g. new table). Not fetched; not filtered.
   const generateMockColumns = () => {
     const baseColumns = [
       {
@@ -7837,15 +7984,35 @@ function ColumnsSpreadsheet({
     return [...baseColumns, ...(tableColumns[table.name] || [])]
   }
 
-  // Always include mock columns alongside API columns
+  // When no filters: show built-in columns then API columns. When filters applied: show only API result.
   const mockColumns = generateMockColumns()
   const displayColumns =
-    columns.length > 0 ? [...mockColumns, ...columns] : mockColumns
+    columnsFilterMap.size > 0
+      ? columns.length > 0
+        ? columns
+        : mockColumns
+      : columns.length > 0
+        ? [...mockColumns, ...columns]
+        : mockColumns
+
+  // Keep showing previous results while fetching new filter results (no empty state flash)
+  const lastDisplayColumnsRef = useRef<typeof displayColumns>([])
+  useEffect(() => {
+    if (!columnsFetching && displayColumns.length > 0) {
+      lastDisplayColumnsRef.current = displayColumns
+    }
+  }, [columnsFetching, displayColumns])
+  const columnsToShow =
+    columnsFilterMap.size > 0 &&
+    columnsFetching &&
+    lastDisplayColumnsRef.current.length > 0
+      ? lastDisplayColumnsRef.current
+      : displayColumns
 
   // Combine regular columns with suggestions
-  const allColumns = [...displayColumns, ...suggestedColumns]
+  const allColumns = [...columnsToShow, ...suggestedColumns]
 
-  if (columnsLoading) {
+  if (columnsLoading && lastDisplayColumnsRef.current.length === 0) {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="text-muted-foreground">Loading columns...</div>
@@ -7855,6 +8022,29 @@ function ColumnsSpreadsheet({
 
   return (
     <div className="flex h-full flex-col relative">
+      {!columnsFetching &&
+      apiColumns.length === 0 &&
+      columnsFilterMap.size > 0 ? (
+        <div className="flex flex-1 items-center justify-center py-12">
+          <div className="text-center">
+            <p className="text-[14px] font-medium text-foreground">
+              No columns match your filters
+            </p>
+            <p className="text-[13px] text-muted-foreground mt-1">
+              Try adjusting or clearing filters to see more results
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-4"
+              onClick={clearAllColumnsFilters}
+            >
+              Clear filters
+            </Button>
+          </div>
+        </div>
+      ) : (
+      <>
       <div
         className={cn(
           'flex-1 overflow-auto overscroll-contain',
@@ -8129,6 +8319,8 @@ function ColumnsSpreadsheet({
           </span>
         </div>
       </div>
+      </>
+      )}
 
       {/* Bulk Action Bar for Suggestions */}
       {suggestedColumns.length > 0 && (
@@ -8181,7 +8373,9 @@ function ColumnsSpreadsheet({
           $id: t.$id,
           name: t.name,
         }))}
-        existingColumns={columns.map((c: { key: string }) => ({ key: c.key }))}
+        existingColumns={apiColumns.map((c: unknown) => ({
+          key: (c as { key?: string }).key || (c as { name?: string }).name || (c as { $id?: string }).$id,
+        }))}
         isLoading={
           createColumnMutation.isPending || updateColumnMutation.isPending
         }
@@ -8314,6 +8508,7 @@ function IndexesSpreadsheet({
   onCreateReady,
   onSuggestReady,
   canWriteTables = true,
+  filterMap: filterMapProp,
 }: SpreadsheetProps) {
   const params = useParams({
     strict: false,
@@ -8321,6 +8516,16 @@ function IndexesSpreadsheet({
   const projectId = params.projectId as string
   const databaseId = params.databaseId as string
   const tableId = table.$id
+  const navigate = useNavigate()
+  const location = useLocation()
+  const search = useSearch({ strict: false }) as { query?: string } | undefined
+  const indexesFilterMapFromUrl = useMemo(
+    () => queryParamToMap(search?.query ?? null),
+    [search?.query],
+  )
+  const indexesFilterMap = filterMapProp ?? indexesFilterMapFromUrl
+  const indexesFilterQueries =
+    indexesFilterMap.size > 0 ? Array.from(indexesFilterMap.values()) : undefined
 
   const [indexDialogOpen, setIndexDialogOpen] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState<unknown>(null)
@@ -8332,11 +8537,15 @@ function IndexesSpreadsheet({
 
   const queryClient = useQueryClient()
 
-  // Fetch indexes from the project SDK
-  const { indexes: apiIndexes } = useProjectTableIndexes(
+  // Fetch indexes from the project SDK (listIndexes with optional filter queries)
+  const {
+    indexes: apiIndexes,
+    isFetching: indexesFetching,
+  } = useProjectTableIndexes(
     projectId,
     databaseId,
     tableId,
+    indexesFilterQueries,
   )
 
   // Fetch columns for index creation
@@ -8611,6 +8820,17 @@ function IndexesSpreadsheet({
     }
   }, [onSuggestReady])
 
+  const clearAllIndexesFilters = () => {
+    navigate({
+      to: location.pathname,
+      search: (prev) => ({
+        ...(typeof prev === 'object' && prev !== null ? prev : {}),
+        query: undefined,
+      }),
+      replace: true,
+    })
+  }
+
   // Map API indexes to ensure all fields are present
   const mappedIndexes = apiIndexes.map((idx: unknown) => ({
     key: idx.key,
@@ -8622,7 +8842,7 @@ function IndexesSpreadsheet({
     $id: idx.$id,
   }))
 
-  // Always include mock indexes alongside mapped indexes
+  // Use API indexes only when present; mock indexes only as empty-state fallback (so filters apply to the list)
   const mockIndexes = [
     {
       key: '_key_$id',
@@ -8694,14 +8914,58 @@ function IndexesSpreadsheet({
       : []),
   ]
 
+  // When no filters: show built-in indexes then API indexes. When filters applied: show only API result.
   const displayIndexes =
-    mappedIndexes.length > 0 ? [...mockIndexes, ...mappedIndexes] : mockIndexes
+    indexesFilterMap.size > 0
+      ? mappedIndexes.length > 0
+        ? mappedIndexes
+        : mockIndexes
+      : mappedIndexes.length > 0
+        ? [...mockIndexes, ...mappedIndexes]
+        : mockIndexes
+
+  // Keep showing previous results while fetching new filter results (no empty state flash)
+  const lastDisplayIndexesRef = useRef<typeof displayIndexes>([])
+  useEffect(() => {
+    if (!indexesFetching && displayIndexes.length > 0) {
+      lastDisplayIndexesRef.current = displayIndexes
+    }
+  }, [indexesFetching, displayIndexes])
+  const indexesToShow =
+    indexesFilterMap.size > 0 &&
+    indexesFetching &&
+    lastDisplayIndexesRef.current.length > 0
+      ? lastDisplayIndexesRef.current
+      : displayIndexes
 
   // Combine regular indexes with suggestions
-  const allIndexes = [...displayIndexes, ...suggestedIndexes]
+  const allIndexes = [...indexesToShow, ...suggestedIndexes]
 
   return (
     <div className="flex h-full flex-col relative">
+      {!indexesFetching &&
+      apiIndexes.length === 0 &&
+      indexesFilterMap.size > 0 ? (
+        <div className="flex flex-1 items-center justify-center py-12">
+          <div className="text-center">
+            <p className="text-[14px] font-medium text-foreground">
+              No indexes match your filters
+            </p>
+            <p className="text-[13px] text-muted-foreground mt-1">
+              Try adjusting or clearing filters to see more results
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-4"
+              onClick={clearAllIndexesFilters}
+            >
+              Clear filters
+            </Button>
+          </div>
+        </div>
+      ) : (
+      <>
       <div
         className={cn(
           'flex-1 overflow-y-auto overscroll-contain',
@@ -8942,11 +9206,13 @@ function IndexesSpreadsheet({
             </span>
           )}
           <span>
-            {displayIndexes.length} index
-            {displayIndexes.length !== 1 ? 'es' : ''}
+            {indexesToShow.length} index
+            {indexesToShow.length !== 1 ? 'es' : ''}
           </span>
         </div>
       </div>
+      </>
+      )}
 
       {/* Index Form Dialog */}
       <IndexDrawer
@@ -8960,7 +9226,7 @@ function IndexesSpreadsheet({
         onSubmit={handleIndexSubmitWrapper}
         index={selectedIndex}
         availableColumns={availableColumns}
-        existingIndexes={displayIndexes.map((i: { key: string }) => ({
+        existingIndexes={indexesToShow.map((i: { key: string }) => ({
           key: i.key,
         }))}
         isLoading={createIndexMutation.isPending}

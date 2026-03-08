@@ -9,10 +9,12 @@ import {
 } from '@/lib/react-query/hooks'
 import { Query } from '@appwrite.io/console'
 import { pageTitle } from '@/lib/utils/page-title'
+import { listSearchSchema } from '@/lib/table-filters'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/$siteId',
 )({
+  validateSearch: listSearchSchema,
   head: ({ loaderData }) => ({
     meta: [
       {

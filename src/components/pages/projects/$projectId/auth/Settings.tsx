@@ -33,6 +33,7 @@ import {
   DrawerTitle,
 } from '@/components/ui/drawer'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
 import { AuthMethod, OAuthProvider } from '@appwrite.io/console'
 
@@ -2309,7 +2310,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
                             <img
                               src={`/icons/${provider.icon}`}
                               alt=""
-                              className="h-5 w-5 brightness-[0.4] dark:brightness-100"
+                              className={`h-5 w-5 ${PUBLIC_ICON_MUTED_CLASSES}`}
                             />
                           </div>
                           <span className="text-[13px] font-medium text-foreground">
@@ -2370,7 +2371,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
                             <img
                               src={`/icons/${provider.icon}`}
                               alt=""
-                              className="h-5 w-5 brightness-[0.4] dark:brightness-100"
+                              className={`h-5 w-5 ${PUBLIC_ICON_MUTED_CLASSES}`}
                             />
                           </div>
                           <span className="text-[13px] font-medium text-foreground">

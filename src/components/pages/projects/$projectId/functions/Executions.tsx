@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from '@tanstack/react-router'
 import {
   useProjectFunction,
@@ -7,6 +7,7 @@ import {
 import { LogsListView } from '@/components/global/shared/LogsListView'
 import { Route } from '@/routes/_public/projects.$projectId.functions.$functionId.executions'
 import { useRefreshOptional } from '@/components/global/shared/RefreshContext'
+import { queryParamToMap } from '@/lib/table-filters'
 
 const EXECUTIONS_PER_PAGE = 25
 
@@ -45,10 +46,15 @@ export function View() {
   const navigate = useNavigate()
   const location = useLocation()
   const search = Route.useSearch()
-  const urlPage = search.page || 1 // 1-indexed from URL
+  const urlPage = search.page ?? 1
   const urlExecutionId = search.executionId
+  const filterMap = useMemo(
+    () => queryParamToMap(search.query ?? null),
+    [search.query],
+  )
+  const filterQueries =
+    filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
 
-  // Initialize displayed page from URL (0-indexed)
   const [displayedPage, setDisplayedPage] = useState(urlPage - 1)
   const [requestedPage, setRequestedPage] = useState(urlPage - 1)
   const [pageSize, setPageSize] = useState(EXECUTIONS_PER_PAGE)
@@ -71,17 +77,27 @@ export function View() {
     }
   }, [urlPage, requestedPage])
 
-  // Fetch data for the requested page (this will fetch in background)
   const {
     total,
     isLoading: executionsLoading,
     isFetching: executionsFetching,
     refetch,
-  } = useFunctionExecutions(projectId, functionId, requestedPage, pageSize)
+  } = useFunctionExecutions(
+    projectId,
+    functionId,
+    requestedPage,
+    pageSize,
+    filterQueries,
+  )
 
-  // Fetch data for the displayed page (this is what we show)
   const { executions: displayedExecutions, total: displayedTotal } =
-    useFunctionExecutions(projectId, functionId, displayedPage, pageSize)
+    useFunctionExecutions(
+      projectId,
+      functionId,
+      displayedPage,
+      pageSize,
+      filterQueries,
+    )
 
   // Update displayed page only when requested page data is ready (not fetching)
   // This keeps the current page visible until the next page data is fully loaded
@@ -95,8 +111,17 @@ export function View() {
     }
   }, [executionsFetching, executionsLoading, requestedPage, displayedPage])
 
-  // Use displayed executions for rendering (stays on current page until new data is ready)
-  const executions = displayedExecutions
+  // Keep showing previous results while fetching new filter results (no empty state flash)
+  const lastExecutionsRef = useRef<typeof displayedExecutions>([])
+  useEffect(() => {
+    if (!executionsFetching && displayedExecutions.length > 0) {
+      lastExecutionsRef.current = displayedExecutions
+    }
+  }, [executionsFetching, displayedExecutions])
+  const executions =
+    executionsFetching && lastExecutionsRef.current.length > 0
+      ? lastExecutionsRef.current
+      : displayedExecutions
 
   // Register refetch function with the context for the layout's refresh button
   useEffect(() => {
@@ -164,22 +189,32 @@ export function View() {
     setSelectedExecutionId(null)
   }
 
+  const hasFilters = filterMap.size > 0
+
   return (
-    <LogsListView
-      executions={executions}
-      total={displayedTotal ?? total}
-      isLoading={funcLoading || executionsLoading}
-      currentPage={displayedPage + 1}
-      pageSize={pageSize}
-      onPageChange={handlePageChange}
-      onPageSizeChange={handlePageSizeChange}
-      selectedExecutionId={selectedExecutionId}
-      onExecutionSelect={handleExecutionSelect}
-      onExecutionDeselect={handleExecutionDeselect}
-      func={func}
-      emptyStateTitle="No executions yet"
-      emptyStateDescription="Executions will appear here when your function runs."
-      itemLabel="executions"
-    />
+    <div className="flex flex-1 flex-col">
+      <LogsListView
+        executions={executions}
+        total={displayedTotal ?? total}
+        isLoading={funcLoading || executionsLoading}
+        isFetching={executionsFetching}
+        currentPage={displayedPage + 1}
+        pageSize={pageSize}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+        selectedExecutionId={selectedExecutionId}
+        onExecutionSelect={handleExecutionSelect}
+        onExecutionDeselect={handleExecutionDeselect}
+        func={func}
+        emptyStateTitle={hasFilters ? undefined : 'No executions yet'}
+        emptyStateDescription={
+          hasFilters
+            ? undefined
+            : 'Executions will appear here when your function runs.'
+        }
+        hasFilters={hasFilters}
+        itemLabel="executions"
+      />
+    </div>
   )
 }

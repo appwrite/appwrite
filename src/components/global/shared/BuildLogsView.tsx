@@ -5,6 +5,7 @@
 
 import { useMemo } from 'react'
 import * as React from 'react'
+import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 
 // ANSI color code mapping – light mode uses dark text, dark mode uses light text for readability
 const ANSI_COLORS: Record<number, string> = {
@@ -78,7 +79,7 @@ function replaceVercelTriangle(
           key={keyCounter++}
           src="/icons/appwrite.svg"
           alt="Appwrite"
-          className="inline-block h-[1em] w-[1em] align-middle"
+          className={`inline-block h-[1em] w-[1em] align-middle ${PUBLIC_ICON_MUTED_CLASSES}`}
         />,
       )
     }

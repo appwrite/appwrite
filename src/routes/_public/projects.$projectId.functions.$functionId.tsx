@@ -5,10 +5,12 @@ import {
   projectFunctionQueryOptions,
 } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
+import { listSearchSchema } from '@/lib/table-filters'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/functions/$functionId',
 )({
+  validateSearch: listSearchSchema,
   head: ({ loaderData }) => ({
     meta: [
       {

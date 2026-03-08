@@ -1,5 +1,6 @@
 import { ShieldCheck } from 'lucide-react'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 
 /**
  * ConsoleFooter Component
@@ -117,7 +118,7 @@ export function ConsoleFooter() {
                 <img
                   src={social.icon}
                   alt={social.label}
-                  className="h-4 w-4 opacity-70 brightness-50 transition-opacity hover:opacity-100 dark:brightness-100 dark:opacity-60"
+                  className={`h-4 w-4 transition-opacity hover:opacity-100 dark:opacity-60 ${PUBLIC_ICON_MUTED_CLASSES}`}
                 />
               </a>
             ))}

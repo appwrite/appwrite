@@ -5,6 +5,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useParams, useNavigate, Link } from '@tanstack/react-router'
 import { Database, Info, Zap } from 'lucide-react'
+import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -441,7 +442,7 @@ export function ImportWizardView() {
                   <img
                     src={p.icon}
                     alt=""
-                    className="h-5 w-5 object-contain"
+                    className={`h-5 w-5 object-contain ${PUBLIC_ICON_MUTED_CLASSES}`}
                   />
                 ) : p.lucideIcon === 'zap' ? (
                   <Zap className="h-5 w-5" />

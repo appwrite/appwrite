@@ -51,6 +51,7 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Skeleton } from '@/components/ui/skeleton'
 import { mockFirewallRules, type FirewallRule } from '@/lib/utils/mock-data'
 
@@ -368,20 +369,22 @@ export function RulesTab({ searchValue }: RulesTabProps) {
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
       {filteredRules.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border bg-card/50 p-8">
-          <div className="flex flex-col items-center text-center">
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-              <Shield className="h-6 w-6 text-muted-foreground" />
-            </div>
-            <h3 className="mb-2 text-[15px] font-medium text-foreground">
-              {searchValue ? 'No rules found' : 'No firewall rules'}
-            </h3>
-            <p className="mb-6 max-w-sm text-[13px] text-muted-foreground">
-              {searchValue
-                ? 'Try adjusting your search terms to find rules.'
-                : 'Create your first firewall rule to protect your project from malicious requests.'}
-            </p>
-            {!searchValue && (
+        <div>
+          <EmptyState
+            icon={Shield}
+            title={searchValue ? undefined : 'No firewall rules'}
+            description={
+              searchValue
+                ? undefined
+                : 'Create your first firewall rule to protect your project from malicious requests.'
+            }
+            isEmpty={!searchValue}
+            hasFilters={!!searchValue}
+            variant="card"
+            iconSize="md"
+          />
+          {!searchValue && (
+            <div className="mt-4 flex justify-center">
               <Button
                 onClick={() => {
                   if (typeof window !== 'undefined') {
@@ -396,8 +399,8 @@ export function RulesTab({ searchValue }: RulesTabProps) {
                 <Plus className="h-3.5 w-3.5" />
                 Create rule
               </Button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       ) : (
         <div className="rounded-xl border border-border bg-card/50">

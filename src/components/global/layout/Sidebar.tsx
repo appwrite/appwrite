@@ -1,5 +1,6 @@
 import { useRef, useCallback, useMemo } from 'react'
 import { Link } from '@tanstack/react-router'
+import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { useSidebarCollapsed, useProject, useOrganizationScopes } from '@/lib/react-query/hooks'
@@ -301,7 +302,8 @@ export function ConsoleSidebar({
             src="/imagine-icon.svg"
             alt=""
             className={cn(
-              'h-4 w-4 shrink-0 brightness-0 dark:brightness-100',
+              'h-4 w-4 shrink-0',
+              PUBLIC_ICON_MUTED_CLASSES,
               isMobile && 'h-[18px] w-[18px]',
             )}
           />
@@ -412,11 +414,13 @@ export function ConsoleSidebar({
 
   return (
     <TooltipProvider>
-      {/* Desktop Sidebar */}
+      {/* Desktop Sidebar - GPU layer + width-only transition to reduce lag */}
       <aside
         className={cn(
-          'relative hidden flex-col border-r border-border bg-background transition-all duration-200 lg:flex',
+          'relative hidden flex-col border-r border-border bg-background lg:flex',
           'h-full flex-shrink-0',
+          'transition-[width] duration-150 ease-out',
+          '[transform:translateZ(0)] [backface-visibility:hidden] [contain:layout]',
           collapsed ? 'w-[60px]' : 'w-[220px]',
           className,
         )}
@@ -464,10 +468,11 @@ export function ConsoleSidebar({
         )}
       </aside>
 
-      {/* Mobile Sidebar */}
+      {/* Mobile Sidebar - GPU-accelerated transform */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col border-r border-border bg-background transition-transform duration-300',
+          'fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col border-r border-border bg-background',
+          'transition-transform duration-200 ease-out [backface-visibility:hidden]',
           mobileOpen ? 'translate-x-0' : '-translate-x-full',
         )}
         role="dialog"

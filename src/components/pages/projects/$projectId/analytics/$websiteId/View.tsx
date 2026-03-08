@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import * as React from 'react'
+import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
 import { DateRange } from 'react-day-picker'
 import { startOfDay, endOfDay, subDays } from 'date-fns'
@@ -1280,7 +1281,7 @@ export function View({
                                 <img
                                   src={agent.icon}
                                   alt=""
-                                  className="h-3.5 w-3.5 object-contain"
+                                  className={`h-3.5 w-3.5 object-contain ${PUBLIC_ICON_MUTED_CLASSES}`}
                                   loading="lazy"
                                 />
                               </div>

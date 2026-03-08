@@ -5,6 +5,7 @@ import {
   useNavigate,
   Link,
 } from '@tanstack/react-router'
+import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
 import { getBaseEndpoint } from '@/lib/appwrite/sdk'
 import {
@@ -2120,7 +2121,7 @@ function IdentitiesTab({
                       <img
                         src={`/icons/${getProviderIcon(identity.provider)}`}
                         alt={identity.provider}
-                        className="h-4 w-4"
+                        className={`h-4 w-4 ${PUBLIC_ICON_MUTED_CLASSES}`}
                         onError={(e) => {
                           e.currentTarget.src = '/icons/empty.svg'
                         }}
@@ -2691,7 +2692,7 @@ function SessionsTab({
                                 <img
                                   src={`/icons/${providerIcon}`}
                                   alt={session.provider}
-                                  className="h-3 w-3 opacity-60"
+                                  className={`h-3 w-3 ${PUBLIC_ICON_MUTED_CLASSES}`}
                                   onError={(e) => {
                                     e.currentTarget.style.display = 'none'
                                   }}

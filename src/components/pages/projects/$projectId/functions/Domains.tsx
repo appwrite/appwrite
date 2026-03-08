@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react'
-import { useParams, useSearch, useNavigate } from '@tanstack/react-router'
+import { useState, useMemo, useRef, useEffect } from 'react'
+import { useParams, useSearch, useNavigate, useLocation } from '@tanstack/react-router'
 import {
   MoreHorizontal,
   Loader2,
@@ -7,6 +7,7 @@ import {
   RefreshCw,
   Trash2,
   ExternalLink,
+  Globe,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Pagination } from '@/components/global/shared/Pagination'
@@ -39,14 +40,16 @@ import { getDomainStatusBadgeConfig } from '@/lib/utils/status-badge'
 import { getApexDomain } from '@/lib/utils/proxy-domains'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
+import { queryParamToMap } from '@/lib/table-filters'
 
 const DOMAINS_PER_PAGE = 25
 
 export function View() {
   const { projectId, functionId } = useParams({ strict: false })
   const navigate = useNavigate()
+  const location = useLocation()
+  const search = useSearch({ strict: false }) as { search?: string; query?: string }
   const { project } = useProject(projectId)
-  const search = useSearch({ strict: false }) as { search?: string }
   const [currentPage, setCurrentPage] = useState(0)
   const [pageSize, setPageSize] = useState(DOMAINS_PER_PAGE)
   const [verifyOpen, setVerifyOpen] = useState(false)
@@ -57,18 +60,41 @@ export function View() {
     null,
   )
 
-  const searchValue = search?.search || ''
+  const searchValue = search?.search ?? ''
+  const filterMap = useMemo(
+    () => queryParamToMap(search?.query ?? null),
+    [search?.query],
+  )
+  const filterQueries =
+    filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
 
-  const { data: domainsData, isLoading: domainsLoading } = useFunctionDomains(
+  const {
+    data: domainsData,
+    isLoading: domainsLoading,
+    isFetching: domainsFetching,
+  } = useFunctionDomains(
     projectId,
     functionId,
     currentPage,
     pageSize,
     searchValue,
+    filterQueries,
   )
 
-  const rules = domainsData?.rules || []
+  const rulesFromApi = domainsData?.rules || []
   const total = domainsData?.total || 0
+
+  // Keep showing previous results while fetching new filter results (no empty state flash)
+  const lastRulesRef = useRef<typeof rulesFromApi>([])
+  useEffect(() => {
+    if (!domainsFetching && rulesFromApi.length > 0) {
+      lastRulesRef.current = rulesFromApi
+    }
+  }, [domainsFetching, rulesFromApi])
+  const rules =
+    domainsFetching && lastRulesRef.current.length > 0
+      ? lastRulesRef.current
+      : rulesFromApi
 
   const { domains: orgDomains } = useOrganizationDomains(
     project?.teamId,
@@ -98,7 +124,7 @@ export function View() {
     setDeleteDomainOpen(true)
   }
 
-  if (domainsLoading) {
+  if (domainsLoading && rules.length === 0 && !domainsFetching) {
     return (
       <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
         <div className="flex items-center justify-center py-12">
@@ -108,21 +134,22 @@ export function View() {
     )
   }
 
+  const hasFilters = filterMap.size > 0 || !!searchValue
   const domainsContent = rules.length === 0 ? (
     <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
-      <div className="rounded-lg border border-border bg-card py-12">
-        <EmptyState
-            title={searchValue ? undefined : 'No domains yet'}
-            description={
-              searchValue
-                ? undefined
-                : 'Connect a custom domain to your function for a branded experience'
-            }
-          isEmpty={!searchValue}
-          hasFilters={!!searchValue}
-          iconSize="md"
-        />
-      </div>
+      <EmptyState
+        icon={Globe}
+        title={hasFilters ? undefined : 'No domains yet'}
+        description={
+          hasFilters
+            ? undefined
+            : 'Connect a custom domain to your function for a branded experience'
+        }
+        isEmpty={!hasFilters}
+        hasFilters={hasFilters}
+        variant="card"
+        iconSize="md"
+      />
     </div>
   ) : (
     <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6">
