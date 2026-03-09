@@ -6,7 +6,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 
@@ -684,20 +684,14 @@ class FunctionsConsoleClientTest extends Scope
         ]);
         $this->assertNotEmpty($deploymentIdActive);
 
-        $response = $this->client->call(Client::METHOD_POST, '/mock/time-travels', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'projectId' => $this->getProject()['$id'],
-            'resourceType' => 'deployment',
-            'resourceId' => $deploymentIdInactiveOld,
-            'createdAt' => '2020-01-01T00:00:00Z' // More than 180 days ago
-        ]);
-        $this->assertSame(204, $response['headers']['status-code']);
+        $stdout = '';
+        $stderr = '';
+        $code = Console::execute("docker exec appwrite time-travel --projectId={$this->getProject()['$id']} --resourceType=deployment --resourceId={$deploymentIdInactiveOld} --createdAt=2020-01-01T00:00:00Z", '', $stdout, $stderr);
+        $this->assertSame(0, $code, "Time-travel command failed with code $code: $stderr ($stdout)");
 
         $stdout = '';
         $stderr = '';
-        $code = Console::execute("docker exec appwrite-task-maintenance maintenance --type=trigger", '', $stdout, $stderr);
+        $code = Console::execute("docker exec appwrite maintenance --type=trigger", '', $stdout, $stderr);
         $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
 
         $this->assertEventually(function () use ($functionId) {
