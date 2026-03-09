@@ -43,7 +43,7 @@ class V21 extends Filter
 
     protected function parseSpecs(array $content): array
     {
-        $content['specification'] = $content['buildSpecification'] ?? null;
+        $content['specification'] = $content['buildSpecification'] ?? $content['specification'] ?? null;
         unset($content['buildSpecification']);
         unset($content['runtimeSpecification']);
         return $content;

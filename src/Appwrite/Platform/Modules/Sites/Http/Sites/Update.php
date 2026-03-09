@@ -237,11 +237,9 @@ class Update extends Base
 
         if (!empty($site->getAttribute('deploymentId'))) {
             $specsChanged = false;
-            // TODO: backwards-compatibility dual-read, remove eventually.
-            if ($site->getAttribute('runtimeSpecification', $site->getAttribute('specification')) !== $runtimeSpecification) {
+            if ($site->getAttribute('runtimeSpecification', '') !== $runtimeSpecification) {
                 $specsChanged = true;
-                // TODO: backwards-compatibility dual-read, remove eventually.
-            } elseif ($site->getAttribute('buildSpecification', $site->getAttribute('specification')) !== $buildSpecification) {
+            } elseif ($site->getAttribute('buildSpecification', '') !== $buildSpecification) {
                 $specsChanged = true;
             }
 

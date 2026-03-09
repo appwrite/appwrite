@@ -240,11 +240,9 @@ class Update extends Base
         // Enforce Cold Start if spec limits change.
         if (!empty($function->getAttribute('deploymentId'))) {
             $specsChanged = false;
-            // TODO: backwards-compatibility dual-read, remove eventually.
-            if ($function->getAttribute('runtimeSpecification', $function->getAttribute('specification')) !== $runtimeSpecification) {
+            if ($function->getAttribute('runtimeSpecification', '') !== $runtimeSpecification) {
                 $specsChanged = true;
-                // TODO: backwards-compatibility dual-read, remove eventually.
-            } elseif ($function->getAttribute('buildSpecification', $function->getAttribute('specification')) !== $buildSpecification) {
+            } elseif ($function->getAttribute('buildSpecification', '') !== $buildSpecification) {
                 $specsChanged = true;
             }
 

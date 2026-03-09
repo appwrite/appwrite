@@ -196,12 +196,17 @@ class FunctionsCustomServerTest extends Scope
     {
         $specifications = $this->listSpecifications();
         $this->assertEquals(200, $specifications['headers']['status-code']);
-        $this->assertGreaterThan(0, $specifications['body']['total']);
+        $this->assertGreaterThanOrEqual(2, $specifications['body']['total']);
         $this->assertArrayHasKey(0, $specifications['body']['specifications']);
+        $this->assertArrayHasKey(1, $specifications['body']['specifications']);
         $this->assertArrayHasKey('memory', $specifications['body']['specifications'][0]);
         $this->assertArrayHasKey('cpus', $specifications['body']['specifications'][0]);
         $this->assertArrayHasKey('enabled', $specifications['body']['specifications'][0]);
         $this->assertArrayHasKey('slug', $specifications['body']['specifications'][0]);
+        $this->assertArrayHasKey('memory', $specifications['body']['specifications'][1]);
+        $this->assertArrayHasKey('cpus', $specifications['body']['specifications'][1]);
+        $this->assertArrayHasKey('enabled', $specifications['body']['specifications'][1]);
+        $this->assertArrayHasKey('slug', $specifications['body']['specifications'][1]);
 
         $function = $this->createFunction([
             'functionId' => ID::unique(),
@@ -1650,8 +1655,6 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(400, $function['headers']['status-code']);
         $this->assertStringStartsWith('Invalid `runtimeSpecification` param: Specification must be one of:', $function['body']['message']);
-
-        return $data;
     }
 
     public function testDeleteDeployment(): void
