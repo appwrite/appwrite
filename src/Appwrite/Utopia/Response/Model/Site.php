@@ -185,6 +185,12 @@ class Site extends Model
                 'default' => null,
                 'example' => 'index.html',
             ])
+            ->addRule('deploymentBadge', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether to display the deployment badge in the site response.',
+                'default' => false,
+                'example' => false,
+            ])
         ;
     }
 

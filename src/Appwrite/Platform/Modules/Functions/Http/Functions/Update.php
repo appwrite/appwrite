@@ -93,6 +93,7 @@ class Update extends Base
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
             ), 'Runtime specification for the function and builds.', true, ['plan'])
+            ->param('deploymentBadge', null, new Nullable(new Boolean()), 'Whether to display the deployment badge for this function.', true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
@@ -125,6 +126,7 @@ class Update extends Base
         bool $providerSilentMode,
         string $providerRootDirectory,
         string $specification,
+        ?bool $deploymentBadge,
         Request $request,
         Response $response,
         Database $dbForProject,
@@ -240,6 +242,8 @@ class Update extends Base
             }
         }
 
+        $deploymentBadge ??= $function->getAttribute('deploymentBadge', false);
+
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'execute' => $execute,
             'name' => $name,
@@ -266,6 +270,7 @@ class Update extends Base
             'specification' => $specification,
             'buildSpecification' => $specification,
             'runtimeSpecification' => $specification,
+            'deploymentBadge' => $deploymentBadge,
             'search' => implode(' ', [$functionId, $name, $runtime]),
         ])));
 

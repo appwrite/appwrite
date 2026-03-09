@@ -182,6 +182,12 @@ class Func extends Model
                 'default' => APP_COMPUTE_SPECIFICATION_DEFAULT,
                 'example' => APP_COMPUTE_SPECIFICATION_DEFAULT,
             ])
+            ->addRule('deploymentBadge', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether to display the deployment badge in the function response.',
+                'default' => false,
+                'example' => false,
+            ])
         ;
     }
 

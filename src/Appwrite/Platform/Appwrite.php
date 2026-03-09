@@ -4,6 +4,7 @@ namespace Appwrite\Platform;
 
 use Appwrite\Platform\Modules\Account;
 use Appwrite\Platform\Modules\Avatars;
+use Appwrite\Platform\Modules\Badge;
 use Appwrite\Platform\Modules\Console;
 use Appwrite\Platform\Modules\Core;
 use Appwrite\Platform\Modules\Databases;
@@ -25,6 +26,7 @@ class Appwrite extends Platform
         parent::__construct(new Core());
         $this->addModule(new Account\Module());
         $this->addModule(new Avatars\Module());
+        $this->addModule(new Badge\Module());
         $this->addModule(new Databases\Module());
         $this->addModule(new Projects\Module());
         $this->addModule(new Functions\Module());
