@@ -20,7 +20,7 @@ class XList extends DatabaseUsageXList
 
     public function getResponseModel(): string
     {
-        return UtopiaResponse::MODEL_USAGE_VECTORSDBSS;
+        return UtopiaResponse::MODEL_USAGE_VECTORSDBS;
     }
 
     public function __construct()
@@ -42,7 +42,7 @@ class XList extends DatabaseUsageXList
                     responses: [
                         new SDKResponse(
                             code: SwooleResponse::STATUS_CODE_OK,
-                            model: UtopiaResponse::MODEL_USAGE_VECTORSDBSS,
+                            model: UtopiaResponse::MODEL_USAGE_VECTORSDBS,
                         )
                     ],
                     contentType: ContentType::JSON

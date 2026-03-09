@@ -30,7 +30,7 @@ class XList extends Action
     {
         $this->databaseType = match (true) {
             str_contains($path, '/documentsdb') => DATABASE_TYPE_DOCUMENTSDB,
-            str_contains($path, '/vectorsdb') => DATABASE_TYPE_VECTORSDBS,
+            str_contains($path, '/vectorsdb') => DATABASE_TYPE_VECTORSDB,
             default => DATABASE_TYPE_LEGACY,
         };
 

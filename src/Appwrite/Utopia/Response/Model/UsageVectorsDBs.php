@@ -104,6 +104,6 @@ class UsageVectorsDBs extends Model
 
     public function getType(): string
     {
-        return Response::MODEL_USAGE_VECTORSDBSS;
+        return Response::MODEL_USAGE_VECTORSDB;
     }
 }

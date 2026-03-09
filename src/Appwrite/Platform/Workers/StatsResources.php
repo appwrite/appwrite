@@ -112,7 +112,7 @@ class StatsResources extends Action
 
             $databases = $dbForProject->count('databases', [Query::equal('type', [DATABASE_TYPE_LEGACY, DATABASE_TYPE_TABLESDB])]);
             $documentsdb = $dbForProject->count('databases', [Query::equal('type', [DATABASE_TYPE_DOCUMENTSDB])]);
-            $vectorsdb = $dbForProject->count('databases', [Query::equal('type', [DATABASE_TYPE_VECTORSDBS])]);
+            $vectorsdb = $dbForProject->count('databases', [Query::equal('type', [DATABASE_TYPE_VECTORSDB])]);
             $buckets = $dbForProject->count('buckets');
             $users = $dbForProject->count('users');
 
@@ -148,7 +148,7 @@ class StatsResources extends Action
             $metrics = [
                 METRIC_DATABASES => $databases,
                 METRIC_DATABASES_DOCUMENTSDB => $documentsdb,
-                METRIC_DATABASES_VECTORSDBS => $vectorsdb,
+                METRIC_DATABASES_VECTORSDB => $vectorsdb,
                 METRIC_BUCKETS => $buckets,
                 METRIC_USERS => $users,
                 METRIC_FUNCTIONS => $functions,
@@ -282,7 +282,7 @@ class StatsResources extends Action
                     $totalDocumentsDocumentsdb += $documents;
                     $totalCollectionsDocumentsdb += $collections;
                     break;
-                case DATABASE_TYPE_VECTORSDBS:
+                case DATABASE_TYPE_VECTORSDB:
                     $totalDatabaseStorageVectordb += $storage;
                     $totalDocumentsVectordb += $documents;
                     $totalCollectionsVectordb += $collections;
@@ -302,9 +302,9 @@ class StatsResources extends Action
         $this->createStatsDocuments($region, METRIC_DOCUMENTS_DOCUMENTSDB, $totalDocumentsDocumentsdb);
         $this->createStatsDocuments($region, METRIC_DATABASES_STORAGE_DOCUMENTSDB, $totalDatabaseStorageDocumentsdb);
 
-        $this->createStatsDocuments($region, METRIC_COLLECTIONS_VECTORSDBS, $totalCollectionsVectordb);
-        $this->createStatsDocuments($region, METRIC_DOCUMENTS_VECTORSDBS, $totalDocumentsVectordb);
-        $this->createStatsDocuments($region, METRIC_DATABASES_STORAGE_VECTORSDBS, $totalDatabaseStorageVectordb);
+        $this->createStatsDocuments($region, METRIC_COLLECTIONS_VECTORSDB, $totalCollectionsVectordb);
+        $this->createStatsDocuments($region, METRIC_DOCUMENTS_VECTORSDB, $totalDocumentsVectordb);
+        $this->createStatsDocuments($region, METRIC_DATABASES_STORAGE_VECTORSDB, $totalDatabaseStorageVectordb);
     }
     protected function countForCollections(Database $dbForProject, Database $dbForDatabases, Document $database, string $region): array
     {

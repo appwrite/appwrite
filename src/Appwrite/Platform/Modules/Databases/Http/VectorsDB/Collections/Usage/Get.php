@@ -26,7 +26,7 @@ class Get extends CollectionUsageGet
 
     protected function getMetric(): string
     {
-        return METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS_VECTORSDBS;
+        return METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS_VECTORSDB;
     }
 
     public function __construct()

@@ -63,11 +63,11 @@ class Create extends Action
                 break;
             case VECTORSDB:
                 $databases = Config::getParam('pools-vectorsdb', []);
-                $databaseKeys = System::getEnv('_APP_DATABASE_VECTORSDBS_KEYS', '');
-                $databaseOverride = System::getEnv('_APP_DATABASE_VECTORSDBS_OVERRIDE');
-                $dbScheme = System::getEnv('_APP_DB_HOST_VECTORSDBS', 'postgresql');
-                $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_VECTORSDBS_SHARED_TABLES', ''));
-                $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_VECTORSDBS_SHARED_TABLES_V1', ''));
+                $databaseKeys = System::getEnv('_APP_DATABASE_VECTORSDB_KEYS', '');
+                $databaseOverride = System::getEnv('_APP_DATABASE_VECTORSDB_OVERRIDE');
+                $dbScheme = System::getEnv('_APP_DB_HOST_VECTORSDB', 'postgresql');
+                $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES', ''));
+                $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES_V1', ''));
                 break;
             default:
                 // legacy/tablesdb

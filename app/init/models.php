@@ -219,7 +219,7 @@ Response::setModel(new BaseList('Migrations List', Response::MODEL_MIGRATION_LIS
 Response::setModel(new BaseList('Migrations Firebase Projects List', Response::MODEL_MIGRATION_FIREBASE_PROJECT_LIST, 'projects', Response::MODEL_MIGRATION_FIREBASE_PROJECT));
 Response::setModel(new BaseList('Specifications List', Response::MODEL_SPECIFICATION_LIST, 'specifications', Response::MODEL_SPECIFICATION));
 Response::setModel(new BaseList('VCS Content List', Response::MODEL_VCS_CONTENT_LIST, 'contents', Response::MODEL_VCS_CONTENT));
-Response::setModel(new BaseList('VectorsDB Collections List', Response::MODEL_VECTORSDBS_COLLECTION_LIST, 'collections', Response::MODEL_VECTORSDBS_COLLECTION));
+Response::setModel(new BaseList('VectorsDB Collections List', Response::MODEL_VECTORSDB_COLLECTION_LIST, 'collections', Response::MODEL_VECTORSDB_COLLECTION));
 Response::setModel(new BaseList('Embedding list', Response::MODEL_EMBEDDING_LIST, 'embeddings', Response::MODEL_EMBEDDING));
 
 // Entities

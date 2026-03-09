@@ -36,6 +36,6 @@ class VectorsDBCollection extends Collection
 
     public function getType(): string
     {
-        return Response::MODEL_VECTORSDBS_COLLECTION;
+        return Response::MODEL_VECTORSDB_COLLECTION;
     }
 }

@@ -29,7 +29,7 @@ class Update extends CollectionAction
 
     protected function getResponseModel(): string
     {
-        return UtopiaResponse::MODEL_VECTORSDBS_COLLECTION;
+        return UtopiaResponse::MODEL_VECTORSDB_COLLECTION;
     }
 
     public function __construct()
@@ -53,7 +53,7 @@ class Update extends CollectionAction
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
-                        model: UtopiaResponse::MODEL_VECTORSDBS_COLLECTION,
+                        model: UtopiaResponse::MODEL_VECTORSDB_COLLECTION,
                     )
                 ],
                 contentType: ContentType::JSON

@@ -37,7 +37,7 @@ class Create extends CollectionAction
 
     protected function getResponseModel(): string
     {
-        return UtopiaResponse::MODEL_VECTORSDBS_COLLECTION;
+        return UtopiaResponse::MODEL_VECTORSDB_COLLECTION;
     }
 
     public function __construct()
