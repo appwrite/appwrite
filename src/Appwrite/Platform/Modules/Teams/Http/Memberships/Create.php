@@ -266,17 +266,22 @@ class Create extends Action
                 $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
             }
         } elseif ($membership->getAttribute('confirm') === false) {
-            $membership->setAttribute('secret', $proofForToken->hash($secret));
-            $membership->setAttribute('invited', DateTime::now());
+            $secretHash = $proofForToken->hash($secret);
+            $invitedTime = DateTime::now();
 
             if ($isPrivilegedUser || $isAppUser) {
-                $membership->setAttribute('joined', DateTime::now());
-                $membership->setAttribute('confirm', true);
+                $membership = $authorization->skip(fn () => $dbForProject->updateDocument('memberships', $membership->getId(), new Document([
+                    'secret' => $secretHash,
+                    'invited' => $invitedTime,
+                    'joined' => DateTime::now(),
+                    'confirm' => true
+                ])));
+            } else {
+                $membership = $dbForProject->updateDocument('memberships', $membership->getId(), new Document([
+                    'secret' => $secretHash,
+                    'invited' => $invitedTime
+                ]));
             }
-
-            $membership = ($isPrivilegedUser || $isAppUser) ?
-                $authorization->skip(fn () => $dbForProject->updateDocument('memberships', $membership->getId(), $membership)) :
-                $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
         } else {
             throw new Exception(Exception::MEMBERSHIP_ALREADY_CONFIRMED);
         }
