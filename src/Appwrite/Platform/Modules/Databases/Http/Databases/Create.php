@@ -64,7 +64,7 @@ class Create extends Action
                 $databaseSharedTables = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES', ''));
                 $databaseSharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES_V1', ''));
                 break;
-            case VECTORDB:
+            case VECTORSDB:
                 $databases = Config::getParam('pools-vectordb', []);
                 $databaseKeys = System::getEnv('_APP_DATABASE_VECTORDB_KEYS', '');
                 $databaseOverride = System::getEnv('_APP_DATABASE_VECTORDB_OVERRIDE');
