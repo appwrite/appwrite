@@ -292,7 +292,12 @@ class Create extends Base
             $function->setAttribute('repositoryInternalId', $repository->getSequence());
         }
 
-        $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
+        $function = $dbForProject->updateDocument('functions', $function->getId(), new Document([
+            'scheduleId' => $function->getAttribute('scheduleId'),
+            'scheduleInternalId' => $function->getAttribute('scheduleInternalId'),
+            'repositoryId' => $function->getAttribute('repositoryId'),
+            'repositoryInternalId' => $function->getAttribute('repositoryInternalId'),
+        ]));
 
         // Backwards compatibility with 1.6 behaviour
         $requestFormat = $request->getHeader('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
@@ -330,12 +335,12 @@ class Create extends Base
                     referenceType: 'branch'
                 );
 
-                $function = $function
-                    ->setAttribute('latestDeploymentId', $deployment->getId())
-                    ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
-                    ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
-                    ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-                $dbForProject->updateDocument('functions', $function->getId(), $function);
+                $function = $dbForProject->updateDocument('functions', $function->getId(), new Document([
+                    'latestDeploymentId' => $deployment->getId(),
+                    'latestDeploymentInternalId' => $deployment->getSequence(),
+                    'latestDeploymentCreatedAt' => $deployment->getCreatedAt(),
+                    'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
+                ]));
             } elseif (!$template->isEmpty()) {
                 // Deploy non-VCS from template
                 $deploymentId = ID::unique();
@@ -356,12 +361,12 @@ class Create extends Base
                     'activate' => true,
                 ]));
 
-                $function = $function
-                    ->setAttribute('latestDeploymentId', $deployment->getId())
-                    ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
-                    ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
-                    ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-                $dbForProject->updateDocument('functions', $function->getId(), $function);
+                $function = $dbForProject->updateDocument('functions', $function->getId(), new Document([
+                    'latestDeploymentId' => $deployment->getId(),
+                    'latestDeploymentInternalId' => $deployment->getSequence(),
+                    'latestDeploymentCreatedAt' => $deployment->getCreatedAt(),
+                    'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
+                ]));
 
                 $queueForBuilds
                     ->setType(BUILD_TYPE_DEPLOYMENT)

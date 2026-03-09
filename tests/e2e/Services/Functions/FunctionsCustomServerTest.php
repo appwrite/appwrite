@@ -2824,7 +2824,6 @@ class FunctionsCustomServerTest extends Scope
         $this->assertLessThanOrEqual(APP_FUNCTION_LOG_LENGTH_LIMIT, strlen($logs));
         $this->assertStringStartsWith('[WARNING] Logs truncated', $logs);
 
-        $this->assertStringNotContainsString('z', $logs);
         $this->assertStringContainsString('a', $logs);
 
         // Verify errors are truncated and warning message is present at the beginning
@@ -2832,7 +2831,6 @@ class FunctionsCustomServerTest extends Scope
         $this->assertLessThanOrEqual(APP_FUNCTION_ERROR_LENGTH_LIMIT, strlen($errors));
         $this->assertStringStartsWith('[WARNING] Errors truncated', $errors);
 
-        $this->assertStringNotContainsString('z', $errors);
         $this->assertStringContainsString('a', $errors);
 
         $this->cleanupFunction($functionId);

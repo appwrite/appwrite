@@ -92,7 +92,9 @@ class Create extends Base
             throw new Exception(Exception::VARIABLE_ALREADY_EXISTS);
         }
 
-        $dbForProject->updateDocument('sites', $site->getId(), $site->setAttribute('live', false));
+        $dbForProject->updateDocument('sites', $site->getId(), new Document([
+            'live' => false,
+        ]));
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

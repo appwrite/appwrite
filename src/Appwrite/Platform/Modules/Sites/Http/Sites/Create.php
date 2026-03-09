@@ -203,9 +203,12 @@ class Create extends Base
             $repository = $dbForPlatform->createDocument('repositories', $repository);
             $site->setAttribute('repositoryId', $repository->getId());
             $site->setAttribute('repositoryInternalId', $repository->getSequence());
-        }
 
-        $site = $dbForProject->updateDocument('sites', $site->getId(), $site);
+            $site = $dbForProject->updateDocument('sites', $site->getId(), new Document([
+                'repositoryId' => $repository->getId(),
+                'repositoryInternalId' => $repository->getSequence(),
+            ]));
+        }
 
         $queueForEvents->setParam('siteId', $site->getId());
 
