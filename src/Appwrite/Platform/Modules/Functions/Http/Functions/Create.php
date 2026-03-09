@@ -235,7 +235,6 @@ class Create extends Base
                 'entrypoint' => $entrypoint,
                 'commands' => $commands,
                 'scopes' => $scopes,
-                'deploymentRetention' => 0,
                 'startCommand' => '',
                 'search' => implode(' ', [$functionId, $name, $runtime]),
                 'version' => 'v5',
