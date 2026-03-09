@@ -71,7 +71,8 @@ class Get extends Action
             } finally {
                 try {
                     $device->delete($path);
-                } catch (\Throwable) {}
+                } catch (\Throwable) {
+                }
             }
         }
 
