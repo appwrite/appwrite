@@ -11,6 +11,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator;
@@ -77,9 +78,9 @@ class Update extends Action
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $project->setAttribute('labels', (array) \array_values(\array_unique($labels)));
+        $labels = (array) \array_values(\array_unique($labels));
 
-        $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project);
+        $project = $dbForPlatform->updateDocument('projects', $project->getId(), new Document(['labels' => $labels]));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }

@@ -9,6 +9,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -73,7 +74,7 @@ class Update extends Action
             ->setAttribute('name', $name)
             ->setAttribute('expire', $expire);
 
-        $dbForPlatform->updateDocument('devKeys', $key->getId(), $key);
+        $dbForPlatform->updateDocument('devKeys', $key->getId(), new Document(['name' => $name, 'expire' => $expire]));
 
         $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 

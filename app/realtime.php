@@ -356,7 +356,10 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
                     ->setAttribute('timestamp', DateTime::now())
                     ->setAttribute('value', json_encode($payload));
 
-                $database->getAuthorization()->skip(fn () => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
+                $database->getAuthorization()->skip(fn () => $database->updateDocument('realtime', $statsDocument->getId(), new Document([
+                    'timestamp' => $statsDocument->getAttribute('timestamp'),
+                    'value' => $statsDocument->getAttribute('value')
+                ])));
             } catch (Throwable $th) {
                 logError($th, "updateWorkerDocument");
             }

@@ -604,11 +604,10 @@ class Migrations extends Action
             } finally {
                 $message = "Export file size {$sizeMB}MB exceeds your plan limit.";
 
-                $this->dbForProject->updateDocument('migrations', $migration->getId(), $migration->setAttribute(
-                    'errors',
-                    json_encode(['code' => 0, 'message' => $message]),
-                    Document::SET_TYPE_APPEND,
-                ));
+                $errors = $migration->getAttribute('errors', []);
+                $errors[] = json_encode(['code' => 0, 'message' => $message]);
+                $migration->setAttribute('errors', $errors);
+                $migration = $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
                 $this->sendCSVEmail(
                     success: false,

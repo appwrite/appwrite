@@ -152,7 +152,13 @@ class Get extends Action
                     ->setAttribute('personalRefreshToken', $refreshToken)
                     ->setAttribute('personalAccessToken', $accessToken)
                     ->setAttribute('personalAccessTokenExpiry', $accessTokenExpiry);
-                $installation = $dbForPlatform->updateDocument('installations', $installation->getId(), $installation);
+                $installation = $dbForPlatform->updateDocument('installations', $installation->getId(), new Document([
+                    'organization' => $installation->getAttribute('organization'),
+                    'personal' => $installation->getAttribute('personal'),
+                    'personalRefreshToken' => $installation->getAttribute('personalRefreshToken'),
+                    'personalAccessToken' => $installation->getAttribute('personalAccessToken'),
+                    'personalAccessTokenExpiry' => $installation->getAttribute('personalAccessTokenExpiry'),
+                ]));
             }
         } else {
             $error = 'Installation of the Appwrite GitHub App on organization accounts is restricted to organization owners. As a member of the organization, you do not have the necessary permissions to install this GitHub App. Please contact the organization owner to create the installation from the Appwrite console.';

@@ -132,8 +132,9 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
     if (!$project->isEmpty() && $project->getId() !== 'console') {
         $accessedAt = $project->getAttribute('accessedAt', 0);
         if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
-            $project->setAttribute('accessedAt', DateTime::now());
-            $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $project));
+            $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                'accessedAt' => DateTime::now()
+            ])));
         }
 
         /**
@@ -1649,7 +1650,10 @@ Http::get('/v1/ping')
             ->setAttribute('pingedAt', $pingedAt);
 
         $authorization->skip(function () use ($dbForPlatform, $project) {
-            $dbForPlatform->updateDocument('projects', $project->getId(), $project);
+            $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                'pingCount' => $project->getAttribute('pingCount'),
+                'pingedAt' => $project->getAttribute('pingedAt')
+            ]));
         });
 
         $queueForEvents
