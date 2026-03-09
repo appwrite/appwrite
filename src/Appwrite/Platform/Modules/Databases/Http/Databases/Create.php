@@ -54,18 +54,6 @@ class Create extends Action
         $projectSharedTables = [];
         $projectSharedTablesV1 = [];
         $projectSharedTablesV2 = [];
-        $debug = function (string $stage, array $context = []): void {
-            \error_log('[db-dsn-debug] ' . \json_encode([
-                'stage' => $stage,
-                ...$context,
-            ], JSON_UNESCAPED_SLASHES));
-        };
-
-        $debug('start', [
-            'databaseType' => $databasetype,
-            'region' => $region,
-            'projectDatabaseDsn' => $dsn,
-        ]);
 
         switch ($databasetype) {
             case DOCUMENTSDB:
@@ -90,16 +78,6 @@ class Create extends Action
                 return $dsn;
         }
 
-        $debug('after-switch', [
-            'databaseType' => $databasetype,
-            'databaseKeys' => $databaseKeys,
-            'databaseOverride' => $databaseOverride,
-            'dbScheme' => $dbScheme,
-            'databaseSharedTables' => $databaseSharedTables,
-            'databaseSharedTablesV1' => $databaseSharedTablesV1,
-            'pools' => $databases,
-        ]);
-
         $isSharedTablesV1 = false;
         $isSharedTablesV2 = false;
 
@@ -116,15 +94,6 @@ class Create extends Action
             $projectSharedTablesV2 = \array_diff($projectSharedTables, $projectSharedTablesV1);
             $isSharedTablesV1 = \in_array($dsnHost, $projectSharedTablesV1);
             $isSharedTablesV2 = \in_array($dsnHost, $projectSharedTablesV2);
-
-            $debug('after-project-dsn-parse', [
-                'dsnHost' => $dsnHost,
-                'projectSharedTables' => $projectSharedTables,
-                'projectSharedTablesV1' => $projectSharedTablesV1,
-                'projectSharedTablesV2' => $projectSharedTablesV2,
-                'isSharedTablesV1' => $isSharedTablesV1,
-                'isSharedTablesV2' => $isSharedTablesV2,
-            ]);
         }
 
         if ($region !== 'default') {
@@ -134,14 +103,6 @@ class Create extends Action
             });
         }
         $databaseSharedTablesV2 = \array_diff($databaseSharedTables, $databaseSharedTablesV1);
-
-        $debug('after-region-filter', [
-            'region' => $region,
-            'databases' => \array_values($databases),
-            'databaseSharedTables' => $databaseSharedTables,
-            'databaseSharedTablesV1' => $databaseSharedTablesV1,
-            'databaseSharedTablesV2' => $databaseSharedTablesV2,
-        ]);
 
         $index = \array_search($databaseOverride, $databases);
         if ($index !== false) {
@@ -156,13 +117,6 @@ class Create extends Action
                 } else {
                     $databases = array_filter($databases, fn ($value) => !\in_array($value, $databaseSharedTables));
                 }
-
-                $debug('after-shared-filter', [
-                    'beforeFilter' => $beforeFilter,
-                    'afterFilter' => \array_values($databases),
-                    'isSharedTablesV1' => $isSharedTablesV1,
-                    'isSharedTablesV2' => $isSharedTablesV2,
-                ]);
             }
             $selectedDsn = !empty($databases) ? $databases[array_rand($databases)] : '';
         }
@@ -182,11 +136,6 @@ class Create extends Action
         } catch (\InvalidArgumentException) {
             $selectedDsn = $dbScheme.'://' . $selectedDsn;
         }
-
-        $debug('final-selection', [
-            'selectedDsn' => $selectedDsn,
-            'databaseOverride' => $databaseOverride,
-        ]);
 
         return $selectedDsn;
     }
