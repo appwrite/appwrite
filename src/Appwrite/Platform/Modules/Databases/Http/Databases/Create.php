@@ -48,9 +48,12 @@ class Create extends Action
         */
         $databaseOverride = '';
         $dbScheme = '';
-        $sharedTables = [];
-        $sharedTablesV1 = [];
-        $sharedTablesV2 = [];
+        $databaseSharedTables = [];
+        $databaseSharedTablesV1 = [];
+        $databaseSharedTablesV2 = [];
+        $projectSharedTables = [];
+        $projectSharedTablesV1 = [];
+        $projectSharedTablesV2 = [];
         $debug = function (string $stage, array $context = []): void {
             \error_log('[db-dsn-debug] ' . \json_encode([
                 'stage' => $stage,
@@ -70,16 +73,16 @@ class Create extends Action
                 $databaseKeys = System::getEnv('_APP_DATABASE_DOCUMENTSDB_KEYS', '');
                 $databaseOverride = System::getEnv('_APP_DATABASE_DOCUMENTSDB_OVERRIDE');
                 $dbScheme = System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb');
-                $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES', ''));
-                $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES_V1', ''));
+                $databaseSharedTables = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES', ''));
+                $databaseSharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES_V1', ''));
                 break;
             case VECTORDB:
                 $databases = Config::getParam('pools-vectordb', []);
                 $databaseKeys = System::getEnv('_APP_DATABASE_VECTORDB_KEYS', '');
                 $databaseOverride = System::getEnv('_APP_DATABASE_VECTORDB_OVERRIDE');
                 $dbScheme = System::getEnv('_APP_DB_HOST_VECTORDB', 'postgresql');
-                $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_VECTORDB_SHARED_TABLES', ''));
-                $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_VECTORDB_SHARED_TABLES_V1', ''));
+                $databaseSharedTables = \explode(',', System::getEnv('_APP_DATABASE_VECTORDB_SHARED_TABLES', ''));
+                $databaseSharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_VECTORDB_SHARED_TABLES_V1', ''));
                 break;
             default:
                 // legacy/tablesdb
@@ -92,8 +95,8 @@ class Create extends Action
             'databaseKeys' => $databaseKeys,
             'databaseOverride' => $databaseOverride,
             'dbScheme' => $dbScheme,
-            'sharedTables' => $sharedTables,
-            'sharedTablesV1' => $sharedTablesV1,
+            'databaseSharedTables' => $databaseSharedTables,
+            'databaseSharedTablesV1' => $databaseSharedTablesV1,
             'pools' => $databases,
         ]);
 
@@ -108,17 +111,17 @@ class Create extends Action
                 $dsnHost = $dsn;
             }
 
-            $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-            $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
-            $sharedTablesV2 = \array_diff($sharedTables, $sharedTablesV1);
-            $isSharedTablesV1 = \in_array($dsnHost, $sharedTablesV1);
-            $isSharedTablesV2 = \in_array($dsnHost, $sharedTablesV2);
+            $projectSharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+            $projectSharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
+            $projectSharedTablesV2 = \array_diff($projectSharedTables, $projectSharedTablesV1);
+            $isSharedTablesV1 = \in_array($dsnHost, $projectSharedTablesV1);
+            $isSharedTablesV2 = \in_array($dsnHost, $projectSharedTablesV2);
 
             $debug('after-project-dsn-parse', [
                 'dsnHost' => $dsnHost,
-                'projectSharedTables' => $sharedTables,
-                'projectSharedTablesV1' => $sharedTablesV1,
-                'projectSharedTablesV2' => $sharedTablesV2,
+                'projectSharedTables' => $projectSharedTables,
+                'projectSharedTablesV1' => $projectSharedTablesV1,
+                'projectSharedTablesV2' => $projectSharedTablesV2,
                 'isSharedTablesV1' => $isSharedTablesV1,
                 'isSharedTablesV2' => $isSharedTablesV2,
             ]);
@@ -130,14 +133,14 @@ class Create extends Action
                 return str_contains($value, $region);
             });
         }
-        $sharedTablesV2 = \array_diff($sharedTables, $sharedTablesV1);
+        $databaseSharedTablesV2 = \array_diff($databaseSharedTables, $databaseSharedTablesV1);
 
         $debug('after-region-filter', [
             'region' => $region,
             'databases' => \array_values($databases),
-            'sharedTables' => $sharedTables,
-            'sharedTablesV1' => $sharedTablesV1,
-            'sharedTablesV2' => $sharedTablesV2,
+            'databaseSharedTables' => $databaseSharedTables,
+            'databaseSharedTablesV1' => $databaseSharedTablesV1,
+            'databaseSharedTablesV2' => $databaseSharedTablesV2,
         ]);
 
         $index = \array_search($databaseOverride, $databases);
@@ -147,11 +150,11 @@ class Create extends Action
             if (!empty($dsn)) {
                 $beforeFilter = \array_values($databases);
                 if ($isSharedTablesV1) {
-                    $databases = array_filter($databases, fn ($value) => \in_array($value, $sharedTablesV1));
+                    $databases = array_filter($databases, fn ($value) => \in_array($value, $databaseSharedTablesV1));
                 } elseif ($isSharedTablesV2) {
-                    $databases = array_filter($databases, fn ($value) => \in_array($value, $sharedTablesV2));
+                    $databases = array_filter($databases, fn ($value) => \in_array($value, $databaseSharedTablesV2));
                 } else {
-                    $databases = array_filter($databases, fn ($value) => !\in_array($value, $sharedTables));
+                    $databases = array_filter($databases, fn ($value) => !\in_array($value, $databaseSharedTables));
                 }
 
                 $debug('after-shared-filter', [
@@ -164,7 +167,7 @@ class Create extends Action
             $selectedDsn = !empty($databases) ? $databases[array_rand($databases)] : '';
         }
 
-        if (\in_array($selectedDsn, $sharedTables)) {
+        if (\in_array($selectedDsn, $databaseSharedTables)) {
             $schema = 'appwrite';
             $database = 'appwrite';
             $namespace = System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
