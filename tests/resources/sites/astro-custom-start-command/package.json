@@ -9,10 +9,9 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/node": "^9.5.1",
-    "express": "^5.2.1"
+    "@astrojs/node": "^9.5.4",
+    "astro": "^5.2.5"
   },
   "devDependencies": {
-    "astro": "^5.16.6"
   }
 }
