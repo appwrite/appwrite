@@ -1399,6 +1399,9 @@ Http::error()
             $sdk = $route?->getLabel("sdk", false);
             $action = 'UNKNOWN_NAMESPACE.UNKNOWN.METHOD';
             if (!empty($sdk)) {
+                if (\is_array($sdk)) {
+                    $sdk = $sdk[0];
+                }
                 /** @var \Appwrite\SDK\Method $sdk */
                 $action = $sdk->getNamespace() . '.' . $sdk->getMethodName();
             } elseif ($route === null) {
