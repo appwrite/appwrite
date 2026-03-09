@@ -763,7 +763,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         $database = getConsoleDB();
         $database->setAuthorization($authorization);
 
-        if ($projectId !== 'console') {
+        if (!empty($projectId) && $projectId !== 'console') {
             $project = $authorization->skip(fn () => $database->getDocument('projects', $projectId));
 
             $database = getProjectDB($project);
@@ -793,6 +793,11 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
 
         if (is_null($message) || (!array_key_exists('type', $message) && !array_key_exists('data', $message))) {
             throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Message format is not valid.');
+        }
+
+        // Ping does not require project context; other messages do (e.g. after unsubscribe during auth)
+        if (empty($projectId) && ($message['type'] ?? '') !== 'ping') {
+            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Missing project context. Reconnect to the project first.');
         }
 
         switch ($message['type']) {
