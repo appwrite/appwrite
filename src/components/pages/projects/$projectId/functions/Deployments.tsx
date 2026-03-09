@@ -79,6 +79,7 @@ import {
   useFunctionSpecifications,
   Dependencies,
   deleteFunctionDeployment,
+  DEFAULT_PAGE_SIZE,
 } from '@/lib/react-query/hooks'
 import {
   getFirstEnabledSpecification,
@@ -94,8 +95,6 @@ import { useCreateDeployment } from '../shared/CreateDeploymentContext'
 import { CreateDeploymentDropdown } from '../shared/CreateDeploymentDropdown'
 import { DeploymentsToolbarContext } from './Layout'
 import { getQueryParam, queryParamToMap } from '@/lib/table-filters'
-
-const DEPLOYMENTS_PER_PAGE = 25
 
 function formatSize(bytes: number): string {
   if (bytes === 0) return '0 B'
@@ -249,7 +248,7 @@ export function View() {
 
   const [displayedPage, setDisplayedPage] = useState(urlPage - 1)
   const [requestedPage, setRequestedPage] = useState(urlPage - 1)
-  const [pageSize, setPageSize] = useState(DEPLOYMENTS_PER_PAGE)
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
   const [selectedDeployments, setSelectedDeployments] = useState<Set<string>>(
     new Set(),
   )

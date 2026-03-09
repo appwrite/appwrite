@@ -40,6 +40,7 @@ import { useFavicon } from '@/hooks/use-favicon'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   setDebugProfileOverride,
+  setDebugProfileFeatureOverride,
   CONSOLE_PROFILES,
 } from '@/lib/console-profiles'
 import {
@@ -87,7 +88,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
   const [currentFavicon, setCurrentFavicon] = useState<string | null>(null)
   const { theme, setTheme } = useTheme()
   const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null)
-  const { profileId } = useConsoleProfile()
+  const { profileId, features } = useConsoleProfile()
   const { preset: endpointPreset, customUrl: endpointCustomUrl } =
     useDebugEndpoint()
   const navigate = useNavigate()
@@ -260,6 +261,49 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             icon: profileId === 'cloud' ? <Cloud className="h-3 w-3" /> : <Server className="h-3 w-3" />,
             submenu: profileOptions,
           },
+          {
+            label: 'Feature flags',
+            description: 'Dedicated DBs and create wizard',
+            icon: <FlaskConical className="h-3 w-3" />,
+            submenu: [
+              {
+                label: 'Dedicated DBs support (global)',
+                description: 'Use fullscreen create wizard and show spec upgrade for supported DB types.',
+                variant: 'switch' as const,
+                switchValue: features.dedicatedDbsSupport,
+                switchOnChange: (checked: boolean) => {
+                  setTimeout(() => setDebugProfileFeatureOverride('dedicatedDbsSupport', checked), 0)
+                },
+              },
+              {
+                label: 'Dedicated DBs: Tables DB',
+                description: 'Spec selector in wizard and "Upgrade database specs" in rows view.',
+                variant: 'switch' as const,
+                switchValue: features.dedicatedDbsTablesDB,
+                switchOnChange: (checked: boolean) => {
+                  setTimeout(() => setDebugProfileFeatureOverride('dedicatedDbsTablesDB', checked), 0)
+                },
+              },
+              {
+                label: 'Dedicated DBs: Documents DB',
+                description: 'Dedicated DBs support for Documents DB.',
+                variant: 'switch' as const,
+                switchValue: features.dedicatedDbsDocumentsDB,
+                switchOnChange: (checked: boolean) => {
+                  setTimeout(() => setDebugProfileFeatureOverride('dedicatedDbsDocumentsDB', checked), 0)
+                },
+              },
+              {
+                label: 'Dedicated DBs: Vectors DB',
+                description: 'Dedicated DBs support for Vectors DB.',
+                variant: 'switch' as const,
+                switchValue: features.dedicatedDbsVectorsDB,
+                switchOnChange: (checked: boolean) => {
+                  setTimeout(() => setDebugProfileFeatureOverride('dedicatedDbsVectorsDB', checked), 0)
+                },
+              },
+            ],
+          },
           (() => {
             const activeEndpointLabel = !endpointPreset
               ? 'Use env var'
@@ -384,6 +428,10 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     theme,
     currentFavicon,
     profileId,
+    features.dedicatedDbsSupport,
+    features.dedicatedDbsTablesDB,
+    features.dedicatedDbsDocumentsDB,
+    features.dedicatedDbsVectorsDB,
     endpointPreset,
     endpointCustomUrl,
     overrides.showNativeAppBar,
@@ -463,34 +511,57 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           <div className="overflow-y-auto p-3" style={{ maxHeight: 'calc(85vh - 52px)' }}>
             {currentSubmenu ? (
               <nav className="space-y-0.5" aria-label={currentSubmenu.title}>
-                {currentSubmenu.items.map((item, itemIndex) => (
-                  <button
-                    key={`submenu-${itemIndex}`}
-                    onClick={item.onClick}
-                    className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9B87F5]/50 ${
-                      item.active
-                        ? 'bg-[#9B87F5]/25 text-white'
-                        : 'text-[#E5DEFF]/90 hover:bg-[#9B87F5]/15 hover:text-white'
-                    }`}
-                  >
-                    {item.icon && (
-                      <span className="flex-shrink-0 text-[#9B87F5]">{item.icon}</span>
-                    )}
-                    <span className="flex-1">
-                      <span className="block font-medium">{item.label}</span>
-                      {item.description && (
-                        <span className="mt-0.5 block text-[11px] font-normal opacity-80">
-                          {item.description}
+                {currentSubmenu.items.map((item, itemIndex) =>
+                  item.variant === 'switch' ? (
+                    <div
+                      key={`submenu-${itemIndex}`}
+                      className="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-[#9B87F5]/10"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[13px] font-medium text-[#E5DEFF]">
+                          {item.label}
+                        </div>
+                        {item.description && (
+                          <div className="mt-0.5 text-[11px] text-[#9B87F5]/80">
+                            {item.description}
+                          </div>
+                        )}
+                      </div>
+                      <Switch
+                        checked={item.switchValue}
+                        onCheckedChange={item.switchOnChange}
+                        className="flex-shrink-0"
+                      />
+                    </div>
+                  ) : (
+                    <button
+                      key={`submenu-${itemIndex}`}
+                      onClick={item.onClick}
+                      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9B87F5]/50 ${
+                        item.active
+                          ? 'bg-[#9B87F5]/25 text-white'
+                          : 'text-[#E5DEFF]/90 hover:bg-[#9B87F5]/15 hover:text-white'
+                      }`}
+                    >
+                      {item.icon && (
+                        <span className="flex-shrink-0 text-[#9B87F5]">{item.icon}</span>
+                      )}
+                      <span className="flex-1">
+                        <span className="block font-medium">{item.label}</span>
+                        {item.description && (
+                          <span className="mt-0.5 block text-[11px] font-normal opacity-80">
+                            {item.description}
+                          </span>
+                        )}
+                      </span>
+                      {item.badge !== undefined && (
+                        <span className="flex-shrink-0 rounded-full bg-[#9B87F5]/30 px-2 py-0.5 text-[11px] font-medium text-[#9B87F5]">
+                          {item.badge}
                         </span>
                       )}
-                    </span>
-                    {item.badge !== undefined && (
-                      <span className="flex-shrink-0 rounded-full bg-[#9B87F5]/30 px-2 py-0.5 text-[11px] font-medium text-[#9B87F5]">
-                        {item.badge}
-                      </span>
-                    )}
-                  </button>
-                ))}
+                    </button>
+                  ),
+                )}
               </nav>
             ) : (
               <nav className="space-y-5" aria-label="Debug options">

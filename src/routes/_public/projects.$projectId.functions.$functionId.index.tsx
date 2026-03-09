@@ -8,11 +8,11 @@ import {
   functionDomainsQueryOptions,
   projectRuntimesQueryOptions,
   functionSpecificationsQueryOptions,
+  DEFAULT_PAGE_SIZE,
 } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
 import { listSearchSchema } from '@/lib/table-filters'
 
-const DEPLOYMENTS_PER_PAGE = 25
 const DOMAINS_LIMIT = 25 // Align with domains tab to share cache; overview card shows 3
 
 export const Route = createFileRoute(
@@ -56,7 +56,7 @@ export const Route = createFileRoute(
             projectId,
             functionId,
             pageIndex,
-            DEPLOYMENTS_PER_PAGE,
+            DEFAULT_PAGE_SIZE,
           ),
         )
 

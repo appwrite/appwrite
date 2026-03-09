@@ -26,6 +26,7 @@ import { toast } from 'sonner'
 import { createProjectDatabase } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 export type DatabaseTypeOption = 'TablesDB' | 'DocumentsDB' | 'VectorsDB'
 
@@ -64,26 +65,7 @@ const DB_TYPE_OPTIONS: DbTypeChoice[] = [
   },
 ]
 
-type SpecOption = {
-  id: string
-  label: string
-  cpu: string
-  memory: string
-  price: string
-  comingSoon?: boolean
-}
-
-// Specs and pricing aligned with Supabase compute add-ons: https://supabase.com/docs/guides/platform/compute-add-ons
-const SPEC_OPTIONS: SpecOption[] = [
-  { id: 'shared', label: 'Shared DB', cpu: 'Shared', memory: 'Shared', price: 'Pay as you go (disk + DB ops)' },
-  { id: 'micro', label: 'Micro', cpu: '2-core (shared)', memory: '1 GB', price: '$10/mo', comingSoon: true },
-  { id: 'small', label: 'Small', cpu: '2-core (shared)', memory: '2 GB', price: '$15/mo', comingSoon: true },
-  { id: 'medium', label: 'Medium', cpu: '2-core (shared)', memory: '4 GB', price: '$60/mo', comingSoon: true },
-  { id: 'large', label: 'Large', cpu: '2-core (dedicated)', memory: '8 GB', price: '$110/mo', comingSoon: true },
-  { id: 'xl', label: 'XL', cpu: '4-core (dedicated)', memory: '16 GB', price: '$210/mo', comingSoon: true },
-  { id: '2xl', label: '2XL', cpu: '8-core (dedicated)', memory: '32 GB', price: '$410/mo', comingSoon: true },
-  { id: '4xl', label: '4XL', cpu: '16-core (dedicated)', memory: '64 GB', price: '$960/mo', comingSoon: true },
-]
+import { TABLE_DB_SPEC_OPTIONS as SPEC_OPTIONS } from '@/lib/database-specs'
 
 function validateDatabaseId(id: string): boolean {
   if (!id || id.length === 0) return true
@@ -96,6 +78,7 @@ export function CreateDatabaseWizardView() {
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const pid = projectId as string
+  const { features } = useConsoleProfile()
 
   const [dbType, setDbType] = useState<DatabaseTypeOption | null>(null)
   const [specId, setSpecId] = useState<string | null>(null)
@@ -104,6 +87,12 @@ export function CreateDatabaseWizardView() {
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const isTablesDB = dbType === 'TablesDB'
+
+  /** Show specs section only when the selected DB type has dedicated support enabled. */
+  const showSpecsForType =
+    (dbType === 'TablesDB' && features.dedicatedDbsTablesDB) ||
+    (dbType === 'DocumentsDB' && features.dedicatedDbsDocumentsDB) ||
+    (dbType === 'VectorsDB' && features.dedicatedDbsVectorsDB)
 
   const selectableSpecs = useMemo(() => {
     if (isTablesDB) {
@@ -148,7 +137,6 @@ export function CreateDatabaseWizardView() {
   }
 
   const isCreatePending = createMutation.isPending
-  const showSpecs = dbType !== null
   const showNameForm = selectedSpec && (!isTablesDB || selectedSpec.id === 'shared')
 
   const canCreate = showNameForm && dbType === 'TablesDB' && name.trim().length > 0
@@ -263,8 +251,8 @@ export function CreateDatabaseWizardView() {
           </div>
         </section>
 
-        {/* 3. Specifications (table) – revealed when type selected; hidden for TablesDB for now */}
-        {showSpecs && dbType && !isTablesDB && (
+        {/* 3. Specifications (table) – revealed when type selected and that type has dedicated support */}
+        {dbType && showSpecsForType && (
           <section>
             <h2 className="text-[15px] font-semibold text-foreground mb-1">
               Specifications

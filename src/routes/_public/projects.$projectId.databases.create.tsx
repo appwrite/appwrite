@@ -17,7 +17,7 @@ function CreateDatabaseWizardPage() {
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const { features } = useConsoleProfile()
-  const showWizard = features.createDatabaseWizard
+  const showWizard = features.dedicatedDbsSupport
 
   useEffect(() => {
     if (!showWizard && projectId) {

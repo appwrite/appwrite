@@ -29,6 +29,7 @@ import {
   X,
   Check,
   BarChart3,
+  Cpu,
   Network,
   Lightbulb,
   BookOpen,
@@ -124,6 +125,7 @@ import {
   canShowDatabaseSecuritySettings,
 } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { TABLE_DB_SPEC_OPTIONS } from '@/lib/database-specs'
 import type { Models } from '@appwrite.io/console'
 
 /** Database list item: API may return extra backup/createdAt fields */
@@ -293,7 +295,7 @@ export function View() {
     limit?: number
   }
   const { features } = useConsoleProfile()
-  const useCreateDatabaseWizard = features.createDatabaseWizard
+  const useCreateDatabaseWizard = features.dedicatedDbsSupport
   const queryClient = useQueryClient()
   const isDatabasesIndex =
     location.pathname.replace(/\/$/, '') === `/projects/${projectId}/databases`
@@ -1197,11 +1199,32 @@ export function DatabaseDetailLayout({
     from: '/_public/projects/$projectId/databases/$databaseId',
   })
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [tablesExpanded, setTablesExpanded] = useState(true)
+  const [createTableDialogOpen, setCreateTableDialogOpen] = useState(false)
   const { features } = useConsoleProfile()
 
   const database = databases.find((db) => db.$id === databaseId)
   const dbTables = collections.filter((c) => c.databaseId === databaseId)
+
+  const createTableMutation = useMutation({
+    mutationFn: (data: { tableId?: string; name: string }) =>
+      createProjectTable(projectId!, databaseId, data),
+    onSuccess: async (table) => {
+      toast.success(`${table.name} has been created`)
+      await queryClient.refetchQueries({
+        queryKey: ['tables', 'project', projectId, databaseId],
+      })
+      setCreateTableDialogOpen(false)
+      navigate({
+        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+        params: { projectId: projectId!, databaseId, tableId: table.$id },
+      })
+    },
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error) || 'Failed to create table')
+    },
+  })
 
   // Get current tableId from URL if we're on a table route
   const currentTableId = window.location.pathname.split('/').pop()
@@ -1340,6 +1363,22 @@ export function DatabaseDetailLayout({
             <span className="text-[13px]">Security</span>
           </Link>
 
+          {features.dedicatedDbsTablesDB && (
+            <Link
+              to="/projects/$projectId/databases/$databaseId/settings"
+              params={{ projectId, databaseId }}
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+            >
+              <Cpu className="h-3.5 w-3.5 shrink-0" />
+              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span className="text-[13px]">Upgrade database specs</span>
+                <span className="text-[11px] text-muted-foreground/80">
+                  Shared DB
+                </span>
+              </span>
+            </Link>
+          )}
+
           {features.databaseInsights && (
             <>
               {/* Insights Link - Coming Soon */}
@@ -1397,6 +1436,12 @@ export function DatabaseDetailLayout({
           </div>
         )}
       </div>
+      <CreateTable
+        open={createTableDialogOpen}
+        onOpenChange={setCreateTableDialogOpen}
+        onCreate={(data) => createTableMutation.mutate(data)}
+        isLoading={createTableMutation.isPending}
+      />
     </div>
   )
 }
@@ -1457,7 +1502,7 @@ export function TableView({
   const isDatabaseLevelView = tableId === '-' || databaseTab != null
   const { isDebugModeOpen } = useDebugMode()
   const { features } = useConsoleProfile()
-  const useCreateDatabaseWizard = features.createDatabaseWizard
+  const useCreateDatabaseWizard = features.dedicatedDbsSupport
 
   // Debug: create 50 random tables (only when debug mode is open and on tables list)
   const createFiftyTablesMutation = useMutation({
@@ -2986,6 +3031,22 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
             <span className="text-[13px]">Security</span>
           </Link>
 
+          {features.dedicatedDbsTablesDB && (
+            <Link
+              to="/projects/$projectId/databases/$databaseId/settings"
+              params={{ projectId, databaseId }}
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+            >
+              <Cpu className="h-3.5 w-3.5 shrink-0" />
+              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span className="text-[13px]">Upgrade database specs</span>
+                <span className="text-[11px] text-muted-foreground/80">
+                  Shared DB
+                </span>
+              </span>
+            </Link>
+          )}
+
           {features.databaseInsights && (
             <>
               {/* Insights Link - Coming Soon */}
@@ -3077,6 +3138,8 @@ interface DatabaseOverviewProps {
   contentOnly?: boolean
 }
 
+const CURRENT_TIER_ID = 'shared'
+
 export function DatabaseOverview({
   databaseId,
   activeTab,
@@ -3089,6 +3152,7 @@ export function DatabaseOverview({
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const location = useLocation()
+  const { features } = useConsoleProfile()
   const [searchValue, setSearchValue] = useState('')
   const [requestedPage, setRequestedPage] = useState(1)
   const [displayedPage, setDisplayedPage] = useState(1)
@@ -3404,7 +3468,6 @@ export function DatabaseOverview({
     })
   }
 
-  const { features } = useConsoleProfile()
   const { project } = useProject(projectId)
   const { access } = useOrganizationScopes(project?.teamId)
   const showDbSecuritySettings =
@@ -4343,49 +4406,98 @@ export function DatabaseOverview({
                 </div>
               </div>
 
-              {/* Overview */}
-              <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                <div className="px-6 py-4">
-                  <h3 className="text-[15px] font-semibold text-foreground">
-                    Overview
-                  </h3>
-                </div>
-                <div className="border-t border-border" />
-                <div className="px-6 py-4">
-                  <div className="space-y-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5">
-                          Database ID
-                        </p>
-                        <CopyableId id={database.$id} size="sm" />
-                      </div>
-                    </div>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div>
-                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5">
-                          Created
-                        </p>
-                        <DateTooltip
-                          date={database.createdAt}
-                          className="text-[13px] text-foreground"
-                          showFormattedDate
-                        />
-                      </div>
-                      <div>
-                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5">
-                          Updated
-                        </p>
-                        <DateTooltip
-                          date={database.updatedAt || database.createdAt}
-                          className="text-[13px] text-foreground"
-                          showFormattedDate
-                        />
-                      </div>
+              {features.dedicatedDbsTablesDB && (
+                <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                  <div className="px-6 py-4">
+                    <h3 className="text-[15px] font-semibold text-foreground">
+                      Specification
+                    </h3>
+                    <p className="text-[13px] text-muted-foreground mt-2">
+                      Current tier: Shared DB. Dedicated tiers are coming soon.
+                    </p>
+                  </div>
+                  <div className="border-t border-border" />
+                  <div className="px-6 py-4">
+                    <div className="rounded-lg border border-border overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="hover:bg-transparent border-b border-border bg-muted/40">
+                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                              Tier
+                            </TableHead>
+                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                              CPU
+                            </TableHead>
+                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                              Memory
+                            </TableHead>
+                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[180px]">
+                              Price
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {TABLE_DB_SPEC_OPTIONS.map((spec) => {
+                            const isCurrent = spec.id === CURRENT_TIER_ID
+                            const locked = spec.comingSoon === true
+                            return (
+                              <TableRow
+                                key={spec.id}
+                                className={cn(
+                                  'border-b border-border last:border-b-0 transition-colors',
+                                  isCurrent && 'bg-primary/5',
+                                )}
+                              >
+                                <TableCell className="px-4 py-3">
+                                  <span className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-[13px] font-medium text-foreground">
+                                      {spec.label}
+                                    </span>
+                                    {isCurrent && (
+                                      <Badge
+                                        variant="success"
+                                        className="gap-1 text-[10px] shrink-0"
+                                      >
+                                        <CheckCircle2 className="h-3 w-3" />
+                                        Current
+                                      </Badge>
+                                    )}
+                                    {locked && (
+                                      <Badge
+                                        variant="inactive"
+                                        className="text-[10px] shrink-0"
+                                      >
+                                        Coming soon
+                                      </Badge>
+                                    )}
+                                  </span>
+                                </TableCell>
+                                <TableCell className="px-4 py-3 text-[13px] text-muted-foreground">
+                                  {spec.cpu}
+                                </TableCell>
+                                <TableCell className="px-4 py-3 text-[13px] text-muted-foreground">
+                                  {spec.memory}
+                                </TableCell>
+                                <TableCell className="px-4 py-3 text-right">
+                                  {locked ? (
+                                    <span className="text-[13px] text-muted-foreground">
+                                      {spec.price}
+                                    </span>
+                                  ) : (
+                                    <span className="text-[13px] font-medium tabular-nums text-foreground">
+                                      {spec.price}
+                                    </span>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            )
+                          })}
+                        </TableBody>
+                      </Table>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Delete Database */}
               <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">

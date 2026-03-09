@@ -37,8 +37,14 @@ export type ConsoleProfileFeatures = {
   databaseBackups: boolean
   /** Database analytics and insights */
   databaseInsights: boolean
-  /** Fullscreen create database wizard (DB type + specs); when false, use modal only */
-  createDatabaseWizard: boolean
+  /** Global: dedicated DBs support (wizard + specs). When true, use fullscreen create wizard and show spec upgrade for supported DB types. */
+  dedicatedDbsSupport: boolean
+  /** Dedicated DBs support for Tables DB: show spec selector in wizard and "Upgrade database specs" in rows view. */
+  dedicatedDbsTablesDB: boolean
+  /** Dedicated DBs support for Documents DB. */
+  dedicatedDbsDocumentsDB: boolean
+  /** Dedicated DBs support for Vectors DB. */
+  dedicatedDbsVectorsDB: boolean
 }
 
 export type ConsoleProfile = {
@@ -68,7 +74,10 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       aiAssistant: true,
       databaseBackups: true,
       databaseInsights: true,
-      createDatabaseWizard: true,
+      dedicatedDbsSupport: true,
+      dedicatedDbsTablesDB: true,
+      dedicatedDbsDocumentsDB: false,
+      dedicatedDbsVectorsDB: false,
     },
   },
   'self-hosted': {
@@ -90,7 +99,10 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       aiAssistant: false,
       databaseBackups: false,
       databaseInsights: false,
-      createDatabaseWizard: false,
+      dedicatedDbsSupport: false,
+      dedicatedDbsTablesDB: false,
+      dedicatedDbsDocumentsDB: false,
+      dedicatedDbsVectorsDB: false,
     },
   },
 }
@@ -193,6 +205,33 @@ export function setDebugProfileOverride(profileId: ConsoleProfileId | null) {
   } else {
     localStorage.removeItem(DEBUG_PROFILE_KEY)
   }
+  window.dispatchEvent(new CustomEvent(CONSOLE_PROFILE_CHANGE_EVENT))
+}
+
+/**
+ * Override a single feature flag for the current profile (debug mode only).
+ * Creates or updates the stored profile so the override is persisted.
+ * Stored profile only keeps override keys in features; getActiveProfile merges with canonical.
+ * Dispatches CONSOLE_PROFILE_CHANGE_EVENT so UI re-renders.
+ */
+export function setDebugProfileFeatureOverride<K extends keyof ConsoleProfileFeatures>(
+  key: K,
+  value: ConsoleProfileFeatures[K],
+) {
+  if (typeof window === 'undefined') return
+  const stored = getStoredProfile()
+  const profileId = stored?.id ?? getProfileFromEnv()
+  const canonical = CONSOLE_PROFILES[profileId]
+  const nextOverrideFeatures = {
+    ...(stored?.features ?? {}),
+    [key]: value,
+  } as Partial<ConsoleProfileFeatures>
+  const nextStored = {
+    ...canonical,
+    id: profileId,
+    features: nextOverrideFeatures,
+  }
+  localStorage.setItem(DEBUG_PROFILE_KEY, JSON.stringify(nextStored))
   window.dispatchEvent(new CustomEvent(CONSOLE_PROFILE_CHANGE_EVENT))
 }
 

@@ -82,6 +82,7 @@ import {
   useSiteDomains,
   deleteSiteDeployment,
   Dependencies,
+  DEFAULT_PAGE_SIZE,
 } from '@/lib/react-query/hooks'
 import { sdk } from '@/lib/appwrite/sdk'
 import { DeploymentDownloadType } from '@appwrite.io/console'
@@ -97,7 +98,6 @@ import {
   getPage,
 } from '@/lib/table-filters'
 
-const DEPLOYMENTS_PER_PAGE = 25
 const DEPLOYMENTS_SELECT = [
   Query.select([
     'buildSize',
@@ -285,7 +285,7 @@ export function View() {
   // Initialize displayed page from URL (0-indexed)
   const [displayedPage, setDisplayedPage] = useState(urlPage - 1)
   const [requestedPage, setRequestedPage] = useState(urlPage - 1)
-  const [pageSize, setPageSize] = useState(DEPLOYMENTS_PER_PAGE)
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
   const [selectedDeployments, setSelectedDeployments] = useState<Set<string>>(
     new Set(),
   )

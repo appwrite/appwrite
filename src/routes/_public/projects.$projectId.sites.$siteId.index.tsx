@@ -6,12 +6,11 @@ import {
   siteDeploymentQueryOptions,
   deploymentProxyRulesQueryOptions,
   projectQueryOptions,
+  DEFAULT_PAGE_SIZE,
 } from '@/lib/react-query/hooks'
 import { Query } from '@appwrite.io/console'
 import { pageTitle } from '@/lib/utils/page-title'
 import { listSearchSchema } from '@/lib/table-filters'
-
-const DEPLOYMENTS_PER_PAGE = 25
 
 const DEPLOYMENTS_SELECT = [
   Query.select([
@@ -83,7 +82,7 @@ export const Route = createFileRoute(
               projectId,
               siteId,
               pageIndex,
-              DEPLOYMENTS_PER_PAGE,
+              DEFAULT_PAGE_SIZE,
               DEPLOYMENTS_SELECT,
             ),
           )

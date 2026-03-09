@@ -109,7 +109,7 @@ export function ApiKeysList({
 
   return (
     <>
-      <div className="rounded-xl border border-border bg-card/50">
+      <div className="overflow-hidden rounded-xl border border-border bg-card/50">
         <div className="divide-y divide-border">
           {apiKeys.map((apiKey) => {
             const expirationStatus = getExpirationStatus(apiKey.expire)
