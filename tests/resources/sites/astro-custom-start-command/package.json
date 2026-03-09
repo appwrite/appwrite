@@ -13,5 +13,9 @@
     "astro": "^5.2.5"
   },
   "devDependencies": {
+  },
+  "overrides": {
+    "rollup": ">=4.58.1",
+    "svgo": ">=4.0.1"
   }
 }
