@@ -149,12 +149,12 @@ use Appwrite\Utopia\Response\Model\UsageSites;
 use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageTable;
 use Appwrite\Utopia\Response\Model\UsageUsers;
-use Appwrite\Utopia\Response\Model\UsageVectorDB;
-use Appwrite\Utopia\Response\Model\UsageVectorDBs;
+use Appwrite\Utopia\Response\Model\UsageVectorsDB;
+use Appwrite\Utopia\Response\Model\UsageVectorsDBs;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Variable;
 use Appwrite\Utopia\Response\Model\VcsContent;
-use Appwrite\Utopia\Response\Model\VectorDBCollection;
+use Appwrite\Utopia\Response\Model\VectorsDBCollection;
 use Appwrite\Utopia\Response\Model\Webhook;
 
 // General
@@ -219,7 +219,7 @@ Response::setModel(new BaseList('Migrations List', Response::MODEL_MIGRATION_LIS
 Response::setModel(new BaseList('Migrations Firebase Projects List', Response::MODEL_MIGRATION_FIREBASE_PROJECT_LIST, 'projects', Response::MODEL_MIGRATION_FIREBASE_PROJECT));
 Response::setModel(new BaseList('Specifications List', Response::MODEL_SPECIFICATION_LIST, 'specifications', Response::MODEL_SPECIFICATION));
 Response::setModel(new BaseList('VCS Content List', Response::MODEL_VCS_CONTENT_LIST, 'contents', Response::MODEL_VCS_CONTENT));
-Response::setModel(new BaseList('VectorDB Collections List', Response::MODEL_VECTORDB_COLLECTION_LIST, 'collections', Response::MODEL_VECTORDB_COLLECTION));
+Response::setModel(new BaseList('VectorsDB Collections List', Response::MODEL_VECTORSDBS_COLLECTION_LIST, 'collections', Response::MODEL_VECTORSDBS_COLLECTION));
 Response::setModel(new BaseList('Embedding list', Response::MODEL_EMBEDDING_LIST, 'embeddings', Response::MODEL_EMBEDDING));
 
 // Entities
@@ -252,12 +252,12 @@ Response::setModel(new AttributeLongtext());
 Response::setModel(new UsageDocumentsDBs());
 Response::setModel(new UsageDocumentsDB());
 
-// VectorDB API Models
-Response::setModel(new VectorDBCollection());
+// VectorsDB API Models
+Response::setModel(new VectorsDBCollection());
 Response::setModel(new AttributeObject());
 Response::setModel(new AttributeVector());
-Response::setModel(new UsageVectorDBs());
-Response::setModel(new UsageVectorDB());
+Response::setModel(new UsageVectorsDBs());
+Response::setModel(new UsageVectorsDB());
 
 // Table API Models
 Response::setModel(new Table());

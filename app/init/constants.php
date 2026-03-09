@@ -303,20 +303,20 @@ const METRIC_DATABASE_ID_OPERATIONS_READS_DOCUMENTSDB = 'documentsdb.{databaseIn
 const METRIC_DATABASES_OPERATIONS_WRITES_DOCUMENTSDB  = 'documentsdb.databases.operations.writes';
 const METRIC_DATABASE_ID_OPERATIONS_WRITES_DOCUMENTSDB = 'documentsdb.{databaseInternalId}.databases.operations.writes';
 
-// vectordb
-const METRIC_DATABASES_VECTORDB = 'vectordb.databases';
-const METRIC_COLLECTIONS_VECTORDB = 'vectordb.collections';
-const METRIC_DATABASES_STORAGE_VECTORDB = 'vectordb.databases.storage';
-const METRIC_DATABASE_ID_COLLECTIONS_VECTORDB = 'vectordb.{databaseInternalId}.collections';
-const METRIC_DATABASE_ID_STORAGE_VECTORDB = 'vectordb.{databaseInternalId}.databases.storage';
-const METRIC_DOCUMENTS_VECTORDB = 'vectordb.documents';
-const METRIC_DATABASE_ID_DOCUMENTS_VECTORDB = 'vectordb.{databaseInternalId}.documents';
-const METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS_VECTORDB = 'vectordb.{databaseInternalId}.{collectionInternalId}.documents';
-const METRIC_DATABASE_ID_COLLECTION_ID_STORAGE_VECTORDB = 'vectordb.{databaseInternalId}.{collectionInternalId}.databases.storage';
-const METRIC_DATABASES_OPERATIONS_READS_VECTORDB  = 'vectordb.databases.operations.reads';
-const METRIC_DATABASE_ID_OPERATIONS_READS_VECTORDB = 'vectordb.{databaseInternalId}.databases.operations.reads';
-const METRIC_DATABASES_OPERATIONS_WRITES_VECTORDB  = 'vectordb.databases.operations.writes';
-const METRIC_DATABASE_ID_OPERATIONS_WRITES_VECTORDB = 'vectordb.{databaseInternalId}.databases.operations.writes';
+// vectorsdb
+const METRIC_DATABASES_VECTORSDBS = 'vectorsdb.databases';
+const METRIC_COLLECTIONS_VECTORSDBS = 'vectorsdb.collections';
+const METRIC_DATABASES_STORAGE_VECTORSDBS = 'vectorsdb.databases.storage';
+const METRIC_DATABASE_ID_COLLECTIONS_VECTORSDBS = 'vectorsdb.{databaseInternalId}.collections';
+const METRIC_DATABASE_ID_STORAGE_VECTORSDBS = 'vectorsdb.{databaseInternalId}.databases.storage';
+const METRIC_DOCUMENTS_VECTORSDBS = 'vectorsdb.documents';
+const METRIC_DATABASE_ID_DOCUMENTS_VECTORSDBS = 'vectorsdb.{databaseInternalId}.documents';
+const METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS_VECTORSDBS = 'vectorsdb.{databaseInternalId}.{collectionInternalId}.documents';
+const METRIC_DATABASE_ID_COLLECTION_ID_STORAGE_VECTORSDBS = 'vectorsdb.{databaseInternalId}.{collectionInternalId}.databases.storage';
+const METRIC_DATABASES_OPERATIONS_READS_VECTORSDBS  = 'vectorsdb.databases.operations.reads';
+const METRIC_DATABASE_ID_OPERATIONS_READS_VECTORSDBS = 'vectorsdb.{databaseInternalId}.databases.operations.reads';
+const METRIC_DATABASES_OPERATIONS_WRITES_VECTORSDBS  = 'vectorsdb.databases.operations.writes';
+const METRIC_DATABASE_ID_OPERATIONS_WRITES_VECTORSDBS = 'vectorsdb.{databaseInternalId}.databases.operations.writes';
 const METRIC_EMBEDDINGS_TEXT = 'embeddings.text';
 const METRIC_EMBEDDINGS_MODEL_TEXT = 'embeddings.text.{embeddingModel}';
 const METRIC_EMBEDDINGS_TEXT_TOTAL_ERROR = 'embeddings.text.totalErrors';
@@ -439,11 +439,11 @@ const PROJECT_STATUS_ACTIVE = 'active';
 const DATABASE_TYPE_LEGACY = 'legacy';
 const DATABASE_TYPE_TABLESDB = 'tablesdb';
 const DATABASE_TYPE_DOCUMENTSDB = 'documentsdb';
-const DATABASE_TYPE_VECTORDB = 'vectordb';
+const DATABASE_TYPE_VECTORSDBS = 'vectorsdb';
 
 // CSV import/export allowed database types
 const CSV_ALLOWED_DATABASE_TYPES = [
     DATABASE_TYPE_LEGACY,
     DATABASE_TYPE_TABLESDB,
-    DATABASE_TYPE_VECTORDB
+    DATABASE_TYPE_VECTORSDBS
 ];

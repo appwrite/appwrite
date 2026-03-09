@@ -1718,7 +1718,7 @@ trait MigrationsBase
     }
 
     /**
-     * Import VectorDB documents from CSV
+     * Import VectorsDB documents from CSV
      */
     public function testImportVectordbCSV(): void
     {
@@ -1727,7 +1727,7 @@ trait MigrationsBase
         $bucketId = null;
 
         try {
-            $database = $this->client->call(Client::METHOD_POST, '/vectordb', [
+            $database = $this->client->call(Client::METHOD_POST, '/vectorsdb', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey']
@@ -1739,7 +1739,7 @@ trait MigrationsBase
             $this->assertEquals(201, $database['headers']['status-code']);
             $databaseId = $database['body']['$id'];
 
-            $collection = $this->client->call(Client::METHOD_POST, '/vectordb/' . $databaseId . '/collections', [
+            $collection = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey']
@@ -1773,7 +1773,7 @@ trait MigrationsBase
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ], [
                 'fileId' => ID::unique(),
-                'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/csv/vectordb-documents.csv'), 'text/csv', 'vectordb-documents.csv'),
+                'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/csv/vectorsdb-documents.csv'), 'text/csv', 'vectorsdb-documents.csv'),
             ]);
 
             $this->assertEquals(201, $file['headers']['status-code']);
@@ -1805,7 +1805,7 @@ trait MigrationsBase
                 return true;
             }, 60_000, 500);
 
-            $documents = $this->client->call(Client::METHOD_GET, '/vectordb/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+            $documents = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $databaseId . '/collections/' . $collectionId . '/documents', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -1831,7 +1831,7 @@ trait MigrationsBase
             }
 
             if ($databaseId) {
-                $this->client->call(Client::METHOD_DELETE, '/vectordb/' . $databaseId, [
+                $this->client->call(Client::METHOD_DELETE, '/vectorsdb/' . $databaseId, [
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $this->getProject()['$id'],
                     'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -1841,14 +1841,14 @@ trait MigrationsBase
     }
 
     /**
-     * Export VectorDB documents to CSV
+     * Export VectorsDB documents to CSV
      */
     public function testExportVectordbCSV(): void
     {
         $databaseId = null;
 
         try {
-            $database = $this->client->call(Client::METHOD_POST, '/vectordb', [
+            $database = $this->client->call(Client::METHOD_POST, '/vectorsdb', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -1860,7 +1860,7 @@ trait MigrationsBase
             $this->assertEquals(201, $database['headers']['status-code']);
             $databaseId = $database['body']['$id'];
 
-            $collection = $this->client->call(Client::METHOD_POST, '/vectordb/' . $databaseId . '/collections', [
+            $collection = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -1892,7 +1892,7 @@ trait MigrationsBase
             ];
 
             foreach ($documentsPayload as $payload) {
-                $response = $this->client->call(Client::METHOD_POST, '/vectordb/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+                $response = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections/' . $collectionId . '/documents', [
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $this->getProject()['$id'],
                     'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -1901,7 +1901,7 @@ trait MigrationsBase
                 $this->assertEquals(201, $response['headers']['status-code']);
             }
 
-            $filename = 'vectordb-export-' . ID::unique();
+            $filename = 'vectorsdb-export-' . ID::unique();
             $migration = $this->client->call(Client::METHOD_POST, '/migrations/csv/exports', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
@@ -1958,7 +1958,7 @@ trait MigrationsBase
             $this->assertStringContainsString('[0.11,0.22,0.33]', $csvData);
         } finally {
             if ($databaseId) {
-                $this->client->call(Client::METHOD_DELETE, '/vectordb/' . $databaseId, [
+                $this->client->call(Client::METHOD_DELETE, '/vectorsdb/' . $databaseId, [
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $this->getProject()['$id'],
                     'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -2030,11 +2030,11 @@ trait MigrationsBase
     }
 
     /**
-     * VectorDB (embeddings collections)
+     * VectorsDB (embeddings collections)
      */
-    public function testAppwriteMigrationVectorDBDatabase(): array
+    public function testAppwriteMigrationVectorsDBDatabase(): array
     {
-        $response = $this->client->call(Client::METHOD_POST, '/vectordb', [
+        $response = $this->client->call(Client::METHOD_POST, '/vectorsdb', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -2051,7 +2051,7 @@ trait MigrationsBase
 
         $result = $this->performMigrationSync([
             'resources' => [
-                Resource::TYPE_DATABASE_VECTORDB,
+                Resource::TYPE_DATABASE_VECTORSDBS,
             ],
             'endpoint' => $this->endpoint,
             'projectId' => $this->getProject()['$id'],
@@ -2059,11 +2059,11 @@ trait MigrationsBase
         ]);
 
         $this->assertEquals('completed', $result['status']);
-        $this->assertEquals([Resource::TYPE_DATABASE_VECTORDB], $result['resources']);
-        $this->assertArrayHasKey(Resource::TYPE_DATABASE_VECTORDB, $result['statusCounters']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_VECTORDB]['error'] ?? 0);
+        $this->assertEquals([Resource::TYPE_DATABASE_VECTORSDBS], $result['resources']);
+        $this->assertArrayHasKey(Resource::TYPE_DATABASE_VECTORSDBS, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_VECTORSDBS]['error'] ?? 0);
 
-        $response = $this->client->call(Client::METHOD_GET, '/vectordb/' . $databaseId, [
+        $response = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $databaseId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
@@ -2076,7 +2076,7 @@ trait MigrationsBase
         $this->assertEquals('VDB - Migration DB', $response['body']['name']);
 
         // Cleanup on destination
-        $this->client->call(Client::METHOD_DELETE, '/vectordb/' . $databaseId, [
+        $this->client->call(Client::METHOD_DELETE, '/vectorsdb/' . $databaseId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
@@ -2087,12 +2087,12 @@ trait MigrationsBase
         ];
     }
 
-    #[Depends('testAppwriteMigrationVectorDBDatabase')]
-    public function testAppwriteMigrationVectorDBCollection(array $data): array
+    #[Depends('testAppwriteMigrationVectorsDBDatabase')]
+    public function testAppwriteMigrationVectorsDBCollection(array $data): array
     {
         $databaseId = $data['databaseId'];
 
-        $collection = $this->client->call(Client::METHOD_POST, '/vectordb/' . $databaseId . '/collections', [
+        $collection = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -2108,7 +2108,7 @@ trait MigrationsBase
 
         $result = $this->performMigrationSync([
             'resources' => [
-                Resource::TYPE_DATABASE_VECTORDB,
+                Resource::TYPE_DATABASE_VECTORSDBS,
                 Resource::TYPE_COLLECTION,
                 Resource::TYPE_ATTRIBUTE,
             ],
@@ -2118,7 +2118,7 @@ trait MigrationsBase
         ]);
         $this->assertEquals('completed', $result['status']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/vectordb/' . $databaseId . '/collections/' . $collectionId, [
+        $response = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $databaseId . '/collections/' . $collectionId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
@@ -2133,7 +2133,7 @@ trait MigrationsBase
         $this->assertIsArray($response['body']['attributes']);
 
         // Cleanup
-        $this->client->call(Client::METHOD_DELETE, '/vectordb/' . $databaseId, [
+        $this->client->call(Client::METHOD_DELETE, '/vectorsdb/' . $databaseId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
@@ -2145,13 +2145,13 @@ trait MigrationsBase
         ];
     }
 
-    #[Depends('testAppwriteMigrationVectorDBCollection')]
-    public function testAppwriteMigrationVectorDBDocument(array $data): void
+    #[Depends('testAppwriteMigrationVectorsDBCollection')]
+    public function testAppwriteMigrationVectorsDBDocument(array $data): void
     {
         $databaseId = $data['databaseId'];
         $collectionId = $data['collectionId'];
 
-        $document = $this->client->call(Client::METHOD_POST, '/vectordb/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+        $document = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections/' . $collectionId . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -2169,7 +2169,7 @@ trait MigrationsBase
         // Ensure attributes are exported before documents
         $result = $this->performMigrationSync([
             'resources' => [
-                Resource::TYPE_DATABASE_VECTORDB,
+                Resource::TYPE_DATABASE_VECTORSDBS,
                 Resource::TYPE_COLLECTION,
                 Resource::TYPE_ATTRIBUTE,
                 Resource::TYPE_DOCUMENT,
@@ -2180,11 +2180,11 @@ trait MigrationsBase
         ]);
 
         $this->assertEquals('completed', $result['status']);
-        // Verify that TYPE_ATTRIBUTE appears in the resources array for VectorDB
-        $this->assertContains(Resource::TYPE_ATTRIBUTE, $result['resources'], 'TYPE_ATTRIBUTE should be in resources array for VectorDB');
+        // Verify that TYPE_ATTRIBUTE appears in the resources array for VectorsDB
+        $this->assertContains(Resource::TYPE_ATTRIBUTE, $result['resources'], 'TYPE_ATTRIBUTE should be in resources array for VectorsDB');
 
         // Verify attributes exist on destination before checking document
-        $collectionResponse = $this->client->call(Client::METHOD_GET, '/vectordb/' . $databaseId . '/collections/' . $collectionId, [
+        $collectionResponse = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $databaseId . '/collections/' . $collectionId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
@@ -2194,7 +2194,7 @@ trait MigrationsBase
         $this->assertArrayHasKey('attributes', $collectionResponse['body']);
         $this->assertIsArray($collectionResponse['body']['attributes']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/vectordb/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId, [
+        $response = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
@@ -2206,13 +2206,13 @@ trait MigrationsBase
         $this->assertEquals('Migration Test Movie', $response['body']['metadata']['title']);
 
         // Cleanup
-        $this->client->call(Client::METHOD_DELETE, '/vectordb/' . $databaseId, [
+        $this->client->call(Client::METHOD_DELETE, '/vectorsdb/' . $databaseId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ]);
 
-        $this->client->call(Client::METHOD_DELETE, '/vectordb/' . $databaseId, [
+        $this->client->call(Client::METHOD_DELETE, '/vectorsdb/' . $databaseId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -2517,22 +2517,22 @@ trait MigrationsBase
         $this->assertEquals(201, $document['headers']['status-code']);
         $documentId = $document['body']['$id'];
 
-        // ====== Create VectorDB (/vectordb) with collection and document ======
-        $vector = $this->client->call(Client::METHOD_POST, '/vectordb', [
+        // ====== Create VectorsDB (/vectorsdb) with collection and document ======
+        $vector = $this->client->call(Client::METHOD_POST, '/vectorsdb', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $sourceProject['$id'],
             'x-appwrite-key' => $sourceProject['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'Mixed VectorDB',
+            'name' => 'Mixed VectorsDB',
         ]);
 
         $this->assertEquals(201, $vector['headers']['status-code']);
         $this->assertNotEmpty($vector['body']['$id']);
         $vectorDatabaseId = $vector['body']['$id'];
 
-        // Create Collection in VectorDB
-        $vectorCollection = $this->client->call(Client::METHOD_POST, '/vectordb/' . $vectorDatabaseId . '/collections', [
+        // Create Collection in VectorsDB
+        $vectorCollection = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $vectorDatabaseId . '/collections', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $sourceProject['$id'],
             'x-appwrite-key' => $sourceProject['apiKey'],
@@ -2545,9 +2545,9 @@ trait MigrationsBase
         $this->assertEquals(201, $vectorCollection['headers']['status-code']);
         $vectorCollectionId = $vectorCollection['body']['$id'];
 
-        // Wait for VectorDB collection attributes to be ready
+        // Wait for VectorsDB collection attributes to be ready
         $this->assertEventually(function () use ($vectorDatabaseId, $vectorCollectionId, $sourceProject) {
-            $response = $this->client->call(Client::METHOD_GET, '/vectordb/' . $vectorDatabaseId . '/collections/' . $vectorCollectionId, [
+            $response = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $vectorDatabaseId . '/collections/' . $vectorCollectionId, [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $sourceProject['$id'],
                 'x-appwrite-key' => $sourceProject['apiKey'],
@@ -2570,7 +2570,7 @@ trait MigrationsBase
         }, 10000, 500);
 
         $metadataIndexKey = '_key_metadata';
-        $vectorIndexes = $this->client->call(Client::METHOD_GET, '/vectordb/' . $vectorDatabaseId . '/collections/' . $vectorCollectionId . '/indexes', [
+        $vectorIndexes = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $vectorDatabaseId . '/collections/' . $vectorCollectionId . '/indexes', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $sourceProject['$id'],
             'x-appwrite-key' => $sourceProject['apiKey'],
@@ -2587,7 +2587,7 @@ trait MigrationsBase
         $this->assertEquals(Database::INDEX_OBJECT, $metadataIndex['type']);
 
         $vectorEmbeddingIndexKey = 'embedding_euclidean';
-        $vectorEmbeddingIndex = $this->client->call(Client::METHOD_POST, '/vectordb/' . $vectorDatabaseId . '/collections/' . $vectorCollectionId . '/indexes', [
+        $vectorEmbeddingIndex = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $vectorDatabaseId . '/collections/' . $vectorCollectionId . '/indexes', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $sourceProject['$id'],
             'x-appwrite-key' => $sourceProject['apiKey'],
@@ -2599,7 +2599,7 @@ trait MigrationsBase
         $this->assertEquals(202, $vectorEmbeddingIndex['headers']['status-code']);
 
         $this->assertEventually(function () use ($vectorDatabaseId, $vectorCollectionId, $vectorEmbeddingIndexKey, $sourceProject) {
-            $index = $this->client->call(Client::METHOD_GET, '/vectordb/' . $vectorDatabaseId . '/collections/' . $vectorCollectionId . '/indexes/' . $vectorEmbeddingIndexKey, [
+            $index = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $vectorDatabaseId . '/collections/' . $vectorCollectionId . '/indexes/' . $vectorEmbeddingIndexKey, [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $sourceProject['$id'],
                 'x-appwrite-key' => $sourceProject['apiKey'],
@@ -2612,8 +2612,8 @@ trait MigrationsBase
             }
         }, 30000, 500);
 
-        // Create Document in VectorDB Collection
-        $vectorDocument = $this->client->call(Client::METHOD_POST, '/vectordb/' . $vectorDatabaseId . '/collections/' . $vectorCollectionId . '/documents', [
+        // Create Document in VectorsDB Collection
+        $vectorDocument = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $vectorDatabaseId . '/collections/' . $vectorCollectionId . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $sourceProject['$id'],
             'x-appwrite-key' => $sourceProject['apiKey'],
@@ -2638,7 +2638,7 @@ trait MigrationsBase
                 Resource::TYPE_DATABASE_DOCUMENTSDB,
                 Resource::TYPE_COLLECTION,
                 Resource::TYPE_DOCUMENT,
-                Resource::TYPE_DATABASE_VECTORDB,
+                Resource::TYPE_DATABASE_VECTORSDBS,
                 Resource::TYPE_ATTRIBUTE,
                 Resource::TYPE_INDEX,
             ],
@@ -2661,7 +2661,7 @@ trait MigrationsBase
             Resource::TYPE_DATABASE_DOCUMENTSDB,
             Resource::TYPE_COLLECTION,
             Resource::TYPE_DOCUMENT,
-            Resource::TYPE_DATABASE_VECTORDB,
+            Resource::TYPE_DATABASE_VECTORSDBS,
             Resource::TYPE_ATTRIBUTE,
             Resource::TYPE_INDEX,
         ], $result['resources']);
@@ -2734,7 +2734,7 @@ trait MigrationsBase
             return $pendingCount === 0;
         }, 30000, 1000); // 30 second timeout, check every 1 second
 
-        // Assert Collection counters (covers both DocumentsDB and VectorDB collections)
+        // Assert Collection counters (covers both DocumentsDB and VectorsDB collections)
         $this->assertArrayHasKey(Resource::TYPE_COLLECTION, $result['statusCounters']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_COLLECTION]['error']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_COLLECTION]['pending']);
@@ -2744,7 +2744,7 @@ trait MigrationsBase
 
         // Get migration status before asserting Document counters
         $result = $this->getMigrationStatus($migrationId);
-        // Assert Document counters (covers both DocumentsDB and VectorDB documents)
+        // Assert Document counters (covers both DocumentsDB and VectorsDB documents)
         $this->assertArrayHasKey(Resource::TYPE_DOCUMENT, $result['statusCounters']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DOCUMENT]['error']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DOCUMENT]['pending']);
@@ -2752,19 +2752,19 @@ trait MigrationsBase
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DOCUMENT]['processing']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DOCUMENT]['warning']);
 
-        // Get migration status before asserting VectorDB counters
+        // Get migration status before asserting VectorsDB counters
         $result = $this->getMigrationStatus($migrationId);
-        // Assert VectorDB counters
-        $this->assertArrayHasKey(Resource::TYPE_DATABASE_VECTORDB, $result['statusCounters']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_VECTORDB]['error']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_VECTORDB]['pending']);
-        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_DATABASE_VECTORDB]['success']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_VECTORDB]['processing']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_VECTORDB]['warning']);
+        // Assert VectorsDB counters
+        $this->assertArrayHasKey(Resource::TYPE_DATABASE_VECTORSDBS, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_VECTORSDBS]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_VECTORSDBS]['pending']);
+        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_DATABASE_VECTORSDBS]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_VECTORSDBS]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_VECTORSDBS]['warning']);
 
         // Get migration status before asserting Attribute counters
         $result = $this->getMigrationStatus($migrationId);
-        // Assert Attribute counters (for VectorDB)
+        // Assert Attribute counters (for VectorsDB)
         $this->assertArrayHasKey(Resource::TYPE_ATTRIBUTE, $result['statusCounters']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_ATTRIBUTE]['error']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_ATTRIBUTE]['pending']);
@@ -2889,8 +2889,8 @@ trait MigrationsBase
             $this->assertEquals(['email'], $documentsIndexDestination['body']['attributes']);
         }
 
-        // ====== Validate on destination: VectorDB resources ======
-        $response = $this->client->call(Client::METHOD_GET, '/vectordb/' . $vectorDatabaseId, [
+        // ====== Validate on destination: VectorsDB resources ======
+        $response = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $vectorDatabaseId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
@@ -2898,10 +2898,10 @@ trait MigrationsBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($vectorDatabaseId, $response['body']['$id']);
-        $this->assertEquals('Mixed VectorDB', $response['body']['name']);
+        $this->assertEquals('Mixed VectorsDB', $response['body']['name']);
 
-        // Validate VectorDB Collection
-        $response = $this->client->call(Client::METHOD_GET, '/vectordb/' . $vectorDatabaseId . '/collections/' . $vectorCollectionId, [
+        // Validate VectorsDB Collection
+        $response = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $vectorDatabaseId . '/collections/' . $vectorCollectionId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
@@ -2914,7 +2914,7 @@ trait MigrationsBase
         $this->assertArrayHasKey('attributes', $response['body']);
         $this->assertIsArray($response['body']['attributes']);
 
-        $vectorIndexesDestination = $this->client->call(Client::METHOD_GET, '/vectordb/' . $vectorDatabaseId . '/collections/' . $vectorCollectionId . '/indexes', [
+        $vectorIndexesDestination = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $vectorDatabaseId . '/collections/' . $vectorCollectionId . '/indexes', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
@@ -2931,8 +2931,8 @@ trait MigrationsBase
         $this->assertArrayHasKey($vectorEmbeddingIndexKey, $indexByKey, 'Embeddings HNSW index should exist on destination');
         $this->assertEquals(Database::INDEX_HNSW_EUCLIDEAN, $indexByKey[$vectorEmbeddingIndexKey]['type']);
 
-        // Validate VectorDB Document
-        $response = $this->client->call(Client::METHOD_GET, '/vectordb/' . $vectorDatabaseId . '/collections/' . $vectorCollectionId . '/documents/' . $vectorDocumentId, [
+        // Validate VectorsDB Document
+        $response = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $vectorDatabaseId . '/collections/' . $vectorCollectionId . '/documents/' . $vectorDocumentId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
@@ -2955,7 +2955,7 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ]);
 
-        $this->client->call(Client::METHOD_DELETE, '/vectordb/' . $vectorDatabaseId, [
+        $this->client->call(Client::METHOD_DELETE, '/vectorsdb/' . $vectorDatabaseId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
@@ -2974,7 +2974,7 @@ trait MigrationsBase
             'x-appwrite-key' => $sourceProject['apiKey'],
         ]);
 
-        $this->client->call(Client::METHOD_DELETE, '/vectordb/' . $vectorDatabaseId, [
+        $this->client->call(Client::METHOD_DELETE, '/vectorsdb/' . $vectorDatabaseId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $sourceProject['$id'],
             'x-appwrite-key' => $sourceProject['apiKey'],

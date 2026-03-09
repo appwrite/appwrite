@@ -61,13 +61,13 @@ class Create extends Action
                 $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES', ''));
                 $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES_V1', ''));
                 break;
-            case VECTORDB:
-                $databases = Config::getParam('pools-vectordb', []);
-                $databaseKeys = System::getEnv('_APP_DATABASE_VECTORDB_KEYS', '');
-                $databaseOverride = System::getEnv('_APP_DATABASE_VECTORDB_OVERRIDE');
-                $dbScheme = System::getEnv('_APP_DB_HOST_VECTORDB', 'postgresql');
-                $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_VECTORDB_SHARED_TABLES', ''));
-                $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_VECTORDB_SHARED_TABLES_V1', ''));
+            case VECTORSDB:
+                $databases = Config::getParam('pools-vectorsdb', []);
+                $databaseKeys = System::getEnv('_APP_DATABASE_VECTORSDBS_KEYS', '');
+                $databaseOverride = System::getEnv('_APP_DATABASE_VECTORSDBS_OVERRIDE');
+                $dbScheme = System::getEnv('_APP_DB_HOST_VECTORSDBS', 'postgresql');
+                $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_VECTORSDBS_SHARED_TABLES', ''));
+                $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_VECTORSDBS_SHARED_TABLES_V1', ''));
                 break;
             default:
                 // legacy/tablesdb
@@ -138,7 +138,7 @@ class Create extends Action
     protected function getDatabaseCollection()
     {
         return match ($this->getDatabaseType()) {
-            'vectordb' => (Config::getParam('collections', [])['vectordb'] ?? [])['collections'] ?? [],
+            'vectorsdb' => (Config::getParam('collections', [])['vectorsdb'] ?? [])['collections'] ?? [],
             default => (Config::getParam('collections', [])['databases'] ?? [])['collections'] ?? [],
         };
     }

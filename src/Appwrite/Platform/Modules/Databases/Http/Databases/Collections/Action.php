@@ -27,8 +27,8 @@ abstract class Action extends UtopiaAction
         if (\str_contains($path, '/tablesdb')) {
             $this->context = TABLES;
             $this->databaseType = TABLESDB;
-        } elseif (\str_contains($path, '/vectordb')) {
-            $this->databaseType = VECTORDB;
+        } elseif (\str_contains($path, '/vectorsdb')) {
+            $this->databaseType = VECTORSDB;
         }
         return parent::setHttpPath($path);
     }

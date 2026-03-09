@@ -5061,7 +5061,7 @@ class RealtimeCustomClientTest extends Scope
         $client->close();
     }
 
-    public function testChannelVectorDB()
+    public function testChannelVectorsDB()
     {
         $user = $this->getUser();
         $session = $user['session'] ?? '';
@@ -5084,8 +5084,8 @@ class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($response['data']['user']);
         $this->assertEquals($user['$id'], $response['data']['user']['$id']);
 
-        // Create VectorDB database
-        $database = $this->client->call(Client::METHOD_POST, '/vectordb', array_merge([
+        // Create VectorsDB database
+        $database = $this->client->call(Client::METHOD_POST, '/vectorsdb', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -5096,8 +5096,8 @@ class RealtimeCustomClientTest extends Scope
 
         $databaseId = $database['body']['$id'];
 
-        // Create collection in VectorDB
-        $actors = $this->client->call(Client::METHOD_POST, '/vectordb/' . $databaseId . '/collections', array_merge([
+        // Create collection in VectorsDB
+        $actors = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -5113,8 +5113,8 @@ class RealtimeCustomClientTest extends Scope
 
         $actorsId = $actors['body']['$id'];
 
-        // Create document in VectorDB
-        $document = $this->client->call(Client::METHOD_POST, '/vectordb/' . $databaseId . '/collections/' . $actorsId . '/documents', array_merge([
+        // Create document in VectorsDB
+        $document = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections/' . $actorsId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -5138,18 +5138,18 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('event', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
-        // vectordb channels should include 3 items like documentsdb
+        // vectorsdb channels should include 3 items like documentsdb
         $this->assertCount(3, $response['data']['channels']);
         $this->assertContains('documents', $response['data']['channels']);
-        $this->assertContains('vectordb.' . $databaseId . '.collections.' . $actorsId . '.documents.' . $documentId, $response['data']['channels']);
-        $this->assertContains('vectordb.' . $databaseId . '.collections.' . $actorsId . '.documents', $response['data']['channels']);
+        $this->assertContains('vectorsdb.' . $databaseId . '.collections.' . $actorsId . '.documents.' . $documentId, $response['data']['channels']);
+        $this->assertContains('vectorsdb.' . $databaseId . '.collections.' . $actorsId . '.documents', $response['data']['channels']);
         $this->assertNotEmpty($response['data']['payload']);
         $this->assertIsArray($response['data']['payload']['embeddings']);
         $this->assertCount(3, $response['data']['payload']['embeddings']);
         $this->assertEquals('Chris Evans', $response['data']['payload']['metadata']['name']);
 
         // Update document
-        $this->client->call(Client::METHOD_PATCH, '/vectordb/' . $databaseId . '/collections/' . $actorsId . '/documents/' . $documentId, array_merge([
+        $this->client->call(Client::METHOD_PATCH, '/vectorsdb/' . $databaseId . '/collections/' . $actorsId . '/documents/' . $documentId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -5171,14 +5171,14 @@ class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(3, $response['data']['channels']);
-        $this->assertContains('vectordb.' . $databaseId . '.collections.' . $actorsId . '.documents.' . $documentId, $response['data']['channels']);
-        $this->assertContains('vectordb.' . $databaseId . '.collections.' . $actorsId . '.documents', $response['data']['channels']);
+        $this->assertContains('vectorsdb.' . $databaseId . '.collections.' . $actorsId . '.documents.' . $documentId, $response['data']['channels']);
+        $this->assertContains('vectorsdb.' . $databaseId . '.collections.' . $actorsId . '.documents', $response['data']['channels']);
         $this->assertNotEmpty($response['data']['payload']);
         $this->assertIsArray($response['data']['payload']['embeddings']);
         $this->assertEquals('Chris Evans 2', $response['data']['payload']['metadata']['name']);
 
         // Delete document
-        $this->client->call(Client::METHOD_DELETE, '/vectordb/' . $databaseId . '/collections/' . $actorsId . '/documents/' . $documentId, array_merge([
+        $this->client->call(Client::METHOD_DELETE, '/vectorsdb/' . $databaseId . '/collections/' . $actorsId . '/documents/' . $documentId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -5190,11 +5190,11 @@ class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(3, $response['data']['channels']);
-        $this->assertContains('vectordb.' . $databaseId . '.collections.' . $actorsId . '.documents.' . $documentId, $response['data']['channels']);
-        $this->assertContains('vectordb.' . $databaseId . '.collections.' . $actorsId . '.documents', $response['data']['channels']);
+        $this->assertContains('vectorsdb.' . $databaseId . '.collections.' . $actorsId . '.documents.' . $documentId, $response['data']['channels']);
+        $this->assertContains('vectorsdb.' . $databaseId . '.collections.' . $actorsId . '.documents', $response['data']['channels']);
 
         // Bulk create two documents
-        $this->client->call(Client::METHOD_POST, "/vectordb/{$databaseId}/collections/{$actorsId}/documents", array_merge([
+        $this->client->call(Client::METHOD_POST, "/vectorsdb/{$databaseId}/collections/{$actorsId}/documents", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -5229,10 +5229,10 @@ class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(3, $response['data']['channels']);
-        $this->assertContains('vectordb.' . $databaseId . '.collections.' . $actorsId . '.documents.' . $response['data']['payload']['$id'] . '.create', $response['data']['events']);
-        $this->assertContains('vectordb.*.collections.*.documents.*.create', $response['data']['events']);
-        $this->assertContains('vectordb.' . $databaseId . '.collections.*.documents.*.create', $response['data']['events']);
-        $this->assertContains('vectordb.*.collections.' . $actorsId . '.documents.*.create', $response['data']['events']);
+        $this->assertContains('vectorsdb.' . $databaseId . '.collections.' . $actorsId . '.documents.' . $response['data']['payload']['$id'] . '.create', $response['data']['events']);
+        $this->assertContains('vectorsdb.*.collections.*.documents.*.create', $response['data']['events']);
+        $this->assertContains('vectorsdb.' . $databaseId . '.collections.*.documents.*.create', $response['data']['events']);
+        $this->assertContains('vectorsdb.*.collections.' . $actorsId . '.documents.*.create', $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
         $this->assertIsArray($response['data']['payload']);
 
@@ -5244,7 +5244,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($response['data']);
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(3, $response['data']['channels']);
-        $this->assertContains('vectordb.' . $databaseId . '.collections.' . $actorsId . '.documents.' . $response['data']['payload']['$id'] . '.create', $response['data']['events']);
+        $this->assertContains('vectorsdb.' . $databaseId . '.collections.' . $actorsId . '.documents.' . $response['data']['payload']['$id'] . '.create', $response['data']['events']);
 
         $client->close();
     }

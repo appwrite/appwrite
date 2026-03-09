@@ -46,9 +46,9 @@ abstract class Action extends DatabasesAction
                 $this->context = COLLECTIONS;
                 $this->databaseType = DOCUMENTSDB;
                 break;
-            case str_contains($path, '/vectordb'):
+            case str_contains($path, '/vectorsdb'):
                 $this->context = COLLECTIONS;
-                $this->databaseType = VECTORDB;
+                $this->databaseType = VECTORSDB;
                 break;
         }
         return parent::setHttpPath($path);

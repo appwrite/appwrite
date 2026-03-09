@@ -6,7 +6,7 @@ use Appwrite\Platform\Modules\Databases\Http\Init\Timeout;
 use Appwrite\Platform\Modules\Databases\Services\Registry\DocumentsDB as DocumentsDBRegistry;
 use Appwrite\Platform\Modules\Databases\Services\Registry\Legacy as LegacyRegistry;
 use Appwrite\Platform\Modules\Databases\Services\Registry\TablesDB as TablesDBDBRegistry;
-use Appwrite\Platform\Modules\Databases\Services\Registry\VectorDB as VectorDBRegistry;
+use Appwrite\Platform\Modules\Databases\Services\Registry\VectorsDB as VectorsDBRegistry;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -21,7 +21,7 @@ class Http extends Service
             LegacyRegistry::class,
             TablesDBDBRegistry::class,
             DocumentsDBRegistry::class,
-            VectorDBRegistry::class
+            VectorsDBRegistry::class
         ] as $registrar) {
             new $registrar($this);
         }

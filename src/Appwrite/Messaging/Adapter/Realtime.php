@@ -493,7 +493,7 @@ class Realtime extends MessagingAdapter
             case 'databases':
             case 'tablesdb':
             case 'documentsdb':
-            case 'vectordb':
+            case 'vectorsdb':
                 $resource = $parts[4] ?? '';
                 if (in_array($resource, ['columns', 'attributes', 'indexes'])) {
                     $channels[] = 'console';
@@ -627,7 +627,7 @@ class Realtime extends MessagingAdapter
                 break;
 
             case 'documentsdb':
-            case 'vectordb':
+            case 'vectorsdb':
                 $channels[] = 'documents';
                 $channels[] = "{$basePrefix}.{$databaseId}.collections.{$resourceId}.documents";
                 $channels[] = "{$basePrefix}.{$databaseId}.collections.{$resourceId}.documents.{$payloadId}";

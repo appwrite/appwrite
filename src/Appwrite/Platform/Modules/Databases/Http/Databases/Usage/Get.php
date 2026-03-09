@@ -32,7 +32,7 @@ class Get extends Action
     {
         $this->databaseType = match (true) {
             str_contains($path, '/documentsdb') => DATABASE_TYPE_DOCUMENTSDB,
-            str_contains($path, '/vectordb') => DATABASE_TYPE_VECTORDB,
+            str_contains($path, '/vectorsdb') => DATABASE_TYPE_VECTORSDBS,
             default => DATABASE_TYPE_LEGACY,
         };
 
