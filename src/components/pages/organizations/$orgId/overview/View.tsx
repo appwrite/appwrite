@@ -209,8 +209,8 @@ function ProjectCardFooter({
       {/* Platforms Label */}
       {platformsCount > 0 ? (
         <Badge
-          variant="secondary"
-          className="h-6 gap-1.5 px-2 text-[11px] font-medium border-0"
+          variant="info"
+          className="gap-1.5 text-[10px] shrink-0"
         >
           <Globe className="h-3 w-3" />
           {platformsCount} app{platformsCount !== 1 ? 's' : ''}
@@ -218,7 +218,7 @@ function ProjectCardFooter({
       ) : (
         <Badge
           variant="warning"
-          className="h-6 gap-1.5 px-2 text-[11px] font-medium border-0"
+          className="gap-1.5 text-[10px] shrink-0"
         >
           <AlertTriangle className="h-3 w-3" />
           No apps
@@ -228,8 +228,8 @@ function ProjectCardFooter({
       {/* API Keys Label */}
       {apiKeysCount > 0 ? (
         <Badge
-          variant="secondary"
-          className="h-6 gap-1.5 px-2 text-[11px] font-medium border-0"
+          variant="info"
+          className="gap-1.5 text-[10px] shrink-0"
         >
           <Key className="h-3 w-3" />
           {apiKeysCount} API key{apiKeysCount !== 1 ? 's' : ''}
@@ -237,7 +237,7 @@ function ProjectCardFooter({
       ) : (
         <Badge
           variant="warning"
-          className="h-6 gap-1.5 px-2 text-[11px] font-medium border-0"
+          className="gap-1.5 text-[10px] shrink-0"
         >
           <AlertTriangle className="h-3 w-3" />
           No API keys
