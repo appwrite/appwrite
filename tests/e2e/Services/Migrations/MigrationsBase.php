@@ -2051,7 +2051,7 @@ trait MigrationsBase
 
         $result = $this->performMigrationSync([
             'resources' => [
-                Resource::TYPE_DATABASE_VECTORSDBS,
+                Resource::TYPE_DATABASE_VECTORSDB,
             ],
             'endpoint' => $this->endpoint,
             'projectId' => $this->getProject()['$id'],
@@ -2059,9 +2059,9 @@ trait MigrationsBase
         ]);
 
         $this->assertEquals('completed', $result['status']);
-        $this->assertEquals([Resource::TYPE_DATABASE_VECTORSDBS], $result['resources']);
-        $this->assertArrayHasKey(Resource::TYPE_DATABASE_VECTORSDBS, $result['statusCounters']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_VECTORSDBS]['error'] ?? 0);
+        $this->assertEquals([Resource::TYPE_DATABASE_VECTORSDB], $result['resources']);
+        $this->assertArrayHasKey(Resource::TYPE_DATABASE_VECTORSDB, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_VECTORSDB]['error'] ?? 0);
 
         $response = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $databaseId, [
             'content-type' => 'application/json',
@@ -2108,7 +2108,7 @@ trait MigrationsBase
 
         $result = $this->performMigrationSync([
             'resources' => [
-                Resource::TYPE_DATABASE_VECTORSDBS,
+                Resource::TYPE_DATABASE_VECTORSDB,
                 Resource::TYPE_COLLECTION,
                 Resource::TYPE_ATTRIBUTE,
             ],
@@ -2169,7 +2169,7 @@ trait MigrationsBase
         // Ensure attributes are exported before documents
         $result = $this->performMigrationSync([
             'resources' => [
-                Resource::TYPE_DATABASE_VECTORSDBS,
+                Resource::TYPE_DATABASE_VECTORSDB,
                 Resource::TYPE_COLLECTION,
                 Resource::TYPE_ATTRIBUTE,
                 Resource::TYPE_DOCUMENT,
@@ -2638,7 +2638,7 @@ trait MigrationsBase
                 Resource::TYPE_DATABASE_DOCUMENTSDB,
                 Resource::TYPE_COLLECTION,
                 Resource::TYPE_DOCUMENT,
-                Resource::TYPE_DATABASE_VECTORSDBS,
+                Resource::TYPE_DATABASE_VECTORSDB,
                 Resource::TYPE_ATTRIBUTE,
                 Resource::TYPE_INDEX,
             ],
@@ -2661,7 +2661,7 @@ trait MigrationsBase
             Resource::TYPE_DATABASE_DOCUMENTSDB,
             Resource::TYPE_COLLECTION,
             Resource::TYPE_DOCUMENT,
-            Resource::TYPE_DATABASE_VECTORSDBS,
+            Resource::TYPE_DATABASE_VECTORSDB,
             Resource::TYPE_ATTRIBUTE,
             Resource::TYPE_INDEX,
         ], $result['resources']);
@@ -2755,12 +2755,12 @@ trait MigrationsBase
         // Get migration status before asserting VectorsDB counters
         $result = $this->getMigrationStatus($migrationId);
         // Assert VectorsDB counters
-        $this->assertArrayHasKey(Resource::TYPE_DATABASE_VECTORSDBS, $result['statusCounters']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_VECTORSDBS]['error']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_VECTORSDBS]['pending']);
-        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_DATABASE_VECTORSDBS]['success']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_VECTORSDBS]['processing']);
-        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_VECTORSDBS]['warning']);
+        $this->assertArrayHasKey(Resource::TYPE_DATABASE_VECTORSDB, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_VECTORSDB]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_VECTORSDB]['pending']);
+        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_DATABASE_VECTORSDB]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_VECTORSDB]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DATABASE_VECTORSDB]['warning']);
 
         // Get migration status before asserting Attribute counters
         $result = $this->getMigrationStatus($migrationId);
