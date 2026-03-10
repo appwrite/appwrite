@@ -1345,7 +1345,7 @@ services:
       args:
         MODELS: ${_APP_EMBEDDING_MODELS:-embeddinggemma}
         # duration to keep model in memory
-        OLLAMA_KEEP_ALIVE: 24h
+        OLLAMA_KEEP_ALIVE: -1
     container_name: ollama
     ports:
       - "11434:11434"
