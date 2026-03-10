@@ -1321,10 +1321,7 @@ services:
       - mongodb
 
   postgresql:
-    build:
-      context: ./tests/resources/postgresql
-      args:
-        POSTGRES_VERSION: 17
+    image: appwrite/postgres:0.1.0
     container_name: appwrite-postgresql
     <<: *x-logging
     networks:
