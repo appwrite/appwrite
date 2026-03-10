@@ -16,6 +16,8 @@ class OriginTest extends TestCase
 
         $this->assertEquals(false, $validator->isValid(''));
         $this->assertEquals(false, $validator->isValid('/'));
+        $this->assertEquals(false, $validator->isValid([]));
+        $this->assertEquals(false, $validator->isValid(['http://localhost']));
 
         $this->assertEquals(true, $validator->isValid('https://localhost'));
         $this->assertEquals(true, $validator->isValid('http://localhost'));
@@ -73,5 +75,61 @@ class OriginTest extends TestCase
 
         $this->assertEquals(false, $validator->isValid('random-scheme://localhost'));
         $this->assertEquals('Invalid Scheme. The scheme used (random-scheme) in the Origin (random-scheme://localhost) is not supported. If you are using a custom scheme, please change it to `appwrite-callback-<PROJECT_ID>`', $validator->getDescription());
+    }
+
+    public function testGetAllowedHostnames(): void
+    {
+        $validator = new Origin(
+            allowedHostnames: ['appwrite.io', 'localhost'],
+            allowedSchemes: ['exp']
+        );
+
+        $this->assertEquals(['appwrite.io', 'localhost'], $validator->getAllowedHostnames());
+    }
+
+    public function testGetAllowedSchemes(): void
+    {
+        $validator = new Origin(
+            allowedHostnames: ['appwrite.io'],
+            allowedSchemes: ['exp', 'appwrite-callback-123']
+        );
+
+        $this->assertEquals(['exp', 'appwrite-callback-123'], $validator->getAllowedSchemes());
+    }
+
+    public function testSetAllowedHostnames(): void
+    {
+        $validator = new Origin(
+            allowedHostnames: ['appwrite.io'],
+            allowedSchemes: ['exp']
+        );
+
+        $this->assertEquals(true, $validator->isValid('https://appwrite.io'));
+        $this->assertEquals(false, $validator->isValid('https://example.com'));
+
+        $result = $validator->setAllowedHostnames(['example.com']);
+
+        $this->assertSame($validator, $result);
+        $this->assertEquals(['example.com'], $validator->getAllowedHostnames());
+        $this->assertEquals(true, $validator->isValid('https://example.com'));
+        $this->assertEquals(false, $validator->isValid('https://appwrite.io'));
+    }
+
+    public function testSetAllowedSchemes(): void
+    {
+        $validator = new Origin(
+            allowedHostnames: ['appwrite.io'],
+            allowedSchemes: ['exp']
+        );
+
+        $this->assertEquals(true, $validator->isValid('exp://'));
+        $this->assertEquals(false, $validator->isValid('appwrite-callback-456://'));
+
+        $result = $validator->setAllowedSchemes(['appwrite-callback-456']);
+
+        $this->assertSame($validator, $result);
+        $this->assertEquals(['appwrite-callback-456'], $validator->getAllowedSchemes());
+        $this->assertEquals(true, $validator->isValid('appwrite-callback-456://'));
+        $this->assertEquals(false, $validator->isValid('exp://'));
     }
 }

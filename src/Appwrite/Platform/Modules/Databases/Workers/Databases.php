@@ -4,7 +4,7 @@ namespace Appwrite\Platform\Modules\Databases\Workers;
 
 use Appwrite\Event\Realtime;
 use Exception;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception as DatabaseException;
@@ -142,6 +142,18 @@ class Databases extends Action
         $size = $attribute->getAttribute('size', 0);
         $required = $attribute->getAttribute('required', false);
         $default = $attribute->getAttribute('default', null);
+
+        // Cast default to correct PHP type after queue deserialization
+        // Float/int/bool values may be converted to strings during serialization
+        if ($default !== null) {
+            $default = match ($type) {
+                Database::VAR_FLOAT => \floatval($default),
+                Database::VAR_INTEGER => \intval($default),
+                Database::VAR_BOOLEAN => \boolval($default),
+                default => $default,
+            };
+        }
+
         $signed = $attribute->getAttribute('signed', true);
         $array = $attribute->getAttribute('array', false);
         $format = $attribute->getAttribute('format', '');
@@ -310,13 +322,19 @@ class Databases extends Action
                 $dbForProject->updateDocument(
                     'attributes',
                     $attribute->getId(),
-                    $attribute->setAttribute('status', 'stuck')
+                    new Document([
+                        'error' => $attribute->getAttribute('error'),
+                        'status' => 'stuck',
+                    ])
                 );
                 if (!$relatedAttribute->isEmpty()) {
                     $dbForProject->updateDocument(
                         'attributes',
                         $relatedAttribute->getId(),
-                        $relatedAttribute->setAttribute('status', 'stuck')
+                        new Document([
+                            'error' => $relatedAttribute->getAttribute('error'),
+                            'status' => 'stuck',
+                        ])
                     );
                 }
 
@@ -370,7 +388,11 @@ class Databases extends Action
                         if ($exists) { // Delete the duplicate if created, else update in db
                             $this->deleteIndex($database, $collection, $index, $project, $dbForPlatform, $dbForProject, $queueForRealtime);
                         } else {
-                            $dbForProject->updateDocument('indexes', $index->getId(), $index);
+                            $dbForProject->updateDocument('indexes', $index->getId(), new Document([
+                                'attributes' => $index->getAttribute('attributes'),
+                                'lengths' => $index->getAttribute('lengths'),
+                                'orders' => $index->getAttribute('orders'),
+                            ]));
                         }
                     }
                 }
@@ -578,7 +600,7 @@ class Databases extends Action
      * @return void
      * @throws Exception
      */
-    protected function deleteByGroup(string $collectionId, array $queries, Database $database, callable $callback = null): void
+    protected function deleteByGroup(string $collectionId, array $queries, Database $database, ?callable $callback = null): void
     {
         $start = \microtime(true);
 

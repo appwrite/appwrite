@@ -4,6 +4,7 @@ namespace Tests\Unit\Utopia\Request\Filters;
 
 use Appwrite\Utopia\Request\Filter;
 use Appwrite\Utopia\Request\Filters\V17;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class V17Test extends TestCase
@@ -22,7 +23,7 @@ class V17Test extends TestCase
     {
     }
 
-    public function createUpdateRecoveryProvider()
+    public static function createUpdateRecoveryProvider(): array
     {
         return [
             'remove passwordAgain' => [
@@ -41,9 +42,7 @@ class V17Test extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider createUpdateRecoveryProvider
-     */
+    #[DataProvider('createUpdateRecoveryProvider')]
     public function testUpdateRecovery(array $content, array $expected): void
     {
         $model = 'account.updateRecovery';
@@ -53,7 +52,7 @@ class V17Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function createQueryProvider()
+    public static function createQueryProvider(): array
     {
         return [
             'convert queries' => [
@@ -75,9 +74,7 @@ class V17Test extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider createQueryProvider
-     */
+    #[DataProvider('createQueryProvider')]
     public function testQuery(array $content, array $expected): void
     {
         $model = 'databases.getDocument';

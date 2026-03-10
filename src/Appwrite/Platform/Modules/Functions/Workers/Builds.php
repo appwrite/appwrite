@@ -6,18 +6,18 @@ use Ahc\Jwt\JWT;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Realtime;
+use Appwrite\Event\Screenshot;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
-use Appwrite\Permission;
-use Appwrite\Role;
+use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
 use Exception;
 use Executor\Executor;
 use Swoole\Coroutine as Co;
 use Utopia\Cache\Cache;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -25,22 +25,17 @@ use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
-use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Detector\Detection\Rendering\SSR;
 use Utopia\Detector\Detection\Rendering\XStatic;
 use Utopia\Detector\Detector\Rendering;
-use Utopia\Fetch\Client as FetchClient;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
-use Utopia\Storage\Compression\Compression;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
-
-use function Swoole\Coroutine\batch;
 
 class Builds extends Action
 {
@@ -61,6 +56,7 @@ class Builds extends Action
             ->inject('project')
             ->inject('dbForPlatform')
             ->inject('queueForEvents')
+            ->inject('queueForScreenshots')
             ->inject('queueForWebhooks')
             ->inject('queueForFunctions')
             ->inject('queueForRealtime')
@@ -82,6 +78,7 @@ class Builds extends Action
      * @param Document $project
      * @param Database $dbForPlatform
      * @param Event $queueForEvents
+     * @param Screenshot $queueForScreenshots
      * @param Webhook $queueForWebhooks
      * @param Func $queueForFunctions
      * @param Realtime $queueForRealtime
@@ -102,6 +99,7 @@ class Builds extends Action
         Document $project,
         Database $dbForPlatform,
         Event $queueForEvents,
+        Screenshot $queueForScreenshots,
         Webhook $queueForWebhooks,
         Func $queueForFunctions,
         Realtime $queueForRealtime,
@@ -142,6 +140,7 @@ class Builds extends Action
                     $deviceForFunctions,
                     $deviceForSites,
                     $deviceForFiles,
+                    $queueForScreenshots,
                     $queueForWebhooks,
                     $queueForFunctions,
                     $queueForRealtime,
@@ -171,6 +170,7 @@ class Builds extends Action
      * @param Device $deviceForFunctions
      * @param Device $deviceForSites
      * @param Device $deviceForFiles
+     * @param Screenshot $queueForScreenshots
      * @param Webhook $queueForWebhooks
      * @param Func $queueForFunctions
      * @param Realtime $queueForRealtime
@@ -195,6 +195,7 @@ class Builds extends Action
         Device $deviceForFunctions,
         Device $deviceForSites,
         Device $deviceForFiles,
+        Screenshot $queueForScreenshots,
         Webhook $queueForWebhooks,
         Func $queueForFunctions,
         Realtime $queueForRealtime,
@@ -254,7 +255,7 @@ class Builds extends Action
         $version = $this->getVersion($resource);
         $runtime = $this->getRuntime($resource, $version);
 
-        $spec = Config::getParam('specifications')[$resource->getAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
+        $spec = Config::getParam('specifications')[$resource->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
 
         if ($resource->getCollection() === 'functions' && \is_null($runtime)) {
             throw new \Exception('Runtime "' . $resource->getAttribute('runtime', '') . '" is not supported');
@@ -278,7 +279,10 @@ class Builds extends Action
 
         $deployment->setAttribute('buildStartedAt', $startTime);
         $deployment->setAttribute('status', 'processing');
-        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+            'buildStartedAt' => $startTime,
+            'status' => 'processing',
+        ]));
 
         if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
             $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
@@ -365,7 +369,11 @@ class Builds extends Action
                         ->setAttribute('sourcePath', $source)
                         ->setAttribute('sourceSize', $directorySize)
                         ->setAttribute('totalSize', $directorySize);
-                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                        'sourcePath' => $deployment->getAttribute('sourcePath'),
+                        'sourceSize' => $deployment->getAttribute('sourceSize'),
+                        'totalSize' => $deployment->getAttribute('totalSize'),
+                    ]));
 
                     $queueForRealtime
                         ->setPayload($deployment->getArrayCopy())
@@ -479,7 +487,13 @@ class Builds extends Action
                     $deployment->setAttribute('providerCommitAuthor', APP_VCS_GITHUB_USERNAME);
                     $deployment->setAttribute('providerCommitMessage', "Create '" . $resource->getAttribute('name', '') . "' function");
                     $deployment->setAttribute('providerCommitUrl', "https://github.com/$cloneOwner/$cloneRepository/commit/$providerCommitHash");
-                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                        'providerCommitHash' => $deployment->getAttribute('providerCommitHash'),
+                        'providerCommitAuthorUrl' => $deployment->getAttribute('providerCommitAuthorUrl'),
+                        'providerCommitAuthor' => $deployment->getAttribute('providerCommitAuthor'),
+                        'providerCommitMessage' => $deployment->getAttribute('providerCommitMessage'),
+                        'providerCommitUrl' => $deployment->getAttribute('providerCommitUrl'),
+                    ]));
 
                     $queueForRealtime
                         ->setPayload($deployment->getArrayCopy())
@@ -527,7 +541,11 @@ class Builds extends Action
                     ->setAttribute('sourcePath', $source)
                     ->setAttribute('sourceSize', $directorySize)
                     ->setAttribute('totalSize', $directorySize);
-                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                    'sourcePath' => $deployment->getAttribute('sourcePath'),
+                    'sourceSize' => $deployment->getAttribute('sourceSize'),
+                    'totalSize' => $deployment->getAttribute('totalSize'),
+                ]));
 
                 $queueForRealtime
                     ->setPayload($deployment->getArrayCopy())
@@ -542,7 +560,9 @@ class Builds extends Action
 
             /** Request the executor to build the code... */
             $deployment->setAttribute('status', 'building');
-            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                'status' => 'building',
+            ]));
 
             if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
                 $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
@@ -818,7 +838,9 @@ class Builds extends Action
 
                                     if ($affected) {
                                         $deployment = $deployment->setAttribute('buildLogs', $currentLogs);
-                                        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+                                        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                                            'buildLogs' => $currentLogs,
+                                        ]));
 
                                         $queueForRealtime
                                             ->setPayload($deployment->getArrayCopy())
@@ -904,7 +926,14 @@ class Builds extends Action
                 }
             }
 
-            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                'buildPath' => $deployment->getAttribute('buildPath'),
+                'buildSize' => $deployment->getAttribute('buildSize'),
+                'totalSize' => $deployment->getAttribute('totalSize'),
+                'buildLogs' => $deployment->getAttribute('buildLogs'),
+                'adapter' => $deployment->getAttribute('adapter'),
+                'fallbackFile' => $deployment->getAttribute('fallbackFile'),
+            ]));
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
@@ -912,196 +941,18 @@ class Builds extends Action
             Console::log('Build details stored');
 
             $this->afterBuildSuccess($queueForRealtime, $dbForProject, $deployment, $runtime, $adapter);
-            $logs = $deployment->getAttribute('buildLogs', '');
-
-            /** Screenshot site */
-            if ($resource->getCollection() === 'sites') {
-                Console::log('Site screenshot started');
-
-                $date = \date('H:i:s');
-                $logs .= "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing started. [0m\n";
-                $deployment->setAttribute('buildLogs', $logs);
-                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
-                $queueForRealtime
-                    ->setPayload($deployment->getArrayCopy())
-                    ->trigger();
-
-                try {
-                    $rule = $dbForPlatform->findOne('rules', [
-                        Query::equal("projectInternalId", [$project->getSequence()]),
-                        Query::equal("type", ["deployment"]),
-                        Query::equal('deploymentInternalId', [$deployment->getSequence()]),
-                    ]);
-
-                    if ($rule->isEmpty()) {
-                        throw new \Exception("Rule for build not found");
-                    }
-
-                    $client = new FetchClient();
-                    $client->setTimeout(\intval($resource->getAttribute('timeout', '15')));
-                    $client->addHeader('content-type', FetchClient::CONTENT_TYPE_APPLICATION_JSON);
-
-                    $bucket = $dbForPlatform->getDocument('buckets', 'screenshots');
-
-                    $configs = [
-                        'screenshotLight' => [
-                            'headers' => [ 'x-appwrite-hostname' => $rule->getAttribute('domain') ],
-                            'url' => 'http://appwrite/?appwrite-preview=1&appwrite-theme=light',
-                            'theme' => 'light'
-                        ],
-                        'screenshotDark' => [
-                            'headers' => [ 'x-appwrite-hostname' => $rule->getAttribute('domain') ],
-                            'url' => 'http://appwrite/?appwrite-preview=1&appwrite-theme=dark',
-                            'theme' => 'dark'
-                        ],
-                    ];
-
-                    $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
-                    $apiKey = $jwtObj->encode([
-                        'hostnameOverride' => true,
-                        'disabledMetrics' => [
-                            METRIC_EXECUTIONS,
-                            METRIC_EXECUTIONS_COMPUTE,
-                            METRIC_EXECUTIONS_MB_SECONDS,
-                            METRIC_NETWORK_REQUESTS,
-                            METRIC_NETWORK_INBOUND,
-                            METRIC_NETWORK_OUTBOUND,
-                            str_replace(["{resourceType}"], [RESOURCE_TYPE_SITES], METRIC_RESOURCE_TYPE_EXECUTIONS),
-                            str_replace(["{resourceType}"], [RESOURCE_TYPE_SITES], METRIC_RESOURCE_TYPE_EXECUTIONS_COMPUTE),
-                            str_replace(["{resourceType}"], [RESOURCE_TYPE_SITES], METRIC_RESOURCE_TYPE_EXECUTIONS_MB_SECONDS),
-                            str_replace(["{resourceType}", "{resourceInternalId}"], [RESOURCE_TYPE_SITES, $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS),
-                            str_replace(["{resourceType}", "{resourceInternalId}"], [RESOURCE_TYPE_SITES, $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_COMPUTE),
-                            str_replace(["{resourceType}", "{resourceInternalId}"], [RESOURCE_TYPE_SITES, $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS),
-                        ],
-                        'bannerDisabled' => true,
-                        'projectCheckDisabled' => true,
-                        'previewAuthDisabled' => true,
-                        'deploymentStatusIgnored' => true
-                    ]);
-
-                    $screenshotError = null;
-                    $screenshots = batch(\array_map(function ($key) use ($configs, $apiKey, $resource, $client, &$screenshotError) {
-                        return function () use ($key, $configs, $apiKey, $resource, $client, &$screenshotError) {
-                            try {
-                                $config = $configs[$key];
-
-                                $config['headers'] = \array_merge($config['headers'] ?? [], [
-                                    'x-appwrite-key' => API_KEY_DYNAMIC . '_' . $apiKey
-                                ]);
-                                $config['sleep'] = 3000;
-
-                                $frameworks = Config::getParam('frameworks', []);
-                                $framework = $frameworks[$resource->getAttribute('framework', '')] ?? null;
-                                if (!is_null($framework)) {
-                                    $config['sleep'] = $framework['screenshotSleep'];
-                                }
-
-                                $browserEndpoint = System::getEnv('_APP_BROWSER_HOST', 'http://appwrite-browser:3000/v1');
-                                $fetchResponse = $client->fetch(
-                                    url: $browserEndpoint . '/screenshots',
-                                    method: 'POST',
-                                    body: $config
-                                );
-
-                                if ($fetchResponse->getStatusCode() >= 400) {
-                                    throw new \Exception($fetchResponse->getBody());
-                                }
-
-                                $screenshot = $fetchResponse->getBody();
-
-                                return ['key' => $key, 'screenshot' => $screenshot];
-                            } catch (\Throwable $th) {
-                                $screenshotError = $th->getMessage();
-                                return;
-                            }
-                        };
-                    }, \array_keys($configs)));
-
-                    if (!\is_null($screenshotError)) {
-                        throw new \Exception($screenshotError);
-                    }
-
-                    $mimeType = "image/png";
-
-                    foreach ($screenshots as $data) {
-                        $key = $data['key'];
-                        $screenshot = $data['screenshot'];
-
-                        $fileId = ID::unique();
-                        $fileName = $fileId . '.png';
-                        $path = $deviceForFiles->getPath($fileName);
-                        $path = str_ireplace($deviceForFiles->getRoot(), $deviceForFiles->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path); // Add bucket id to path after root
-                        $success = $deviceForFiles->write($path, $screenshot, $mimeType);
-
-                        if (!$success) {
-                            throw new \Exception("Screenshot failed to save");
-                        }
-
-                        $teamId = $project->getAttribute('teamId', '');
-                        $file = new Document([
-                            '$id' => $fileId,
-                            '$permissions' => [
-                                Permission::read(Role::team(ID::custom($teamId))),
-                            ],
-                            'bucketId' => $bucket->getId(),
-                            'bucketInternalId' => $bucket->getSequence(),
-                            'name' => $fileName,
-                            'path' => $path,
-                            'signature' => $deviceForFiles->getFileHash($path),
-                            'mimeType' => $mimeType,
-                            'sizeOriginal' => \strlen($screenshot),
-                            'sizeActual' => $deviceForFiles->getFileSize($path),
-                            'algorithm' => Compression::NONE,
-                            'comment' => '',
-                            'chunksTotal' => 1,
-                            'chunksUploaded' => 1,
-                            'openSSLVersion' => null,
-                            'openSSLCipher' => null,
-                            'openSSLTag' => null,
-                            'openSSLIV' => null,
-                            'search' => implode(' ', [$fileId, $fileName]),
-                            'metadata' => ['content_type' => $mimeType],
-                        ]);
-
-                        $dbForPlatform->createDocument('bucket_' . $bucket->getSequence(), $file);
-
-                        $deployment->setAttribute($key, $fileId);
-                    }
-
-                    $logs = $deployment->getAttribute('buildLogs', '');
-                    $date = \date('H:i:s');
-                    $logs .= "[90m[$date] [90m[[0mappwrite[90m][97m Screenshot capturing finished. [0m\n";
-
-                    $deployment->setAttribute('buildLogs', $logs);
-                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
-
-                    $queueForRealtime
-                        ->setPayload($deployment->getArrayCopy())
-                        ->trigger();
-                } catch (\Throwable $th) {
-                    Console::warning("Screenshot failed to generate:");
-                    Console::warning($th->getMessage());
-                    Console::warning($th->getTraceAsString());
-
-                    $logs = $deployment->getAttribute('buildLogs', '');
-                    $date = \date('H:i:s');
-                    $logs .= "[90m[$date] [90m[[0mappwrite[90m][33m Screenshot capturing failed. Deployment will continue. [0m\n";
-
-                    $deployment->setAttribute('buildLogs', $logs);
-                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
-                }
-
-                Console::log('Site screenshot finished');
-            }
 
             $logs = $deployment->getAttribute('buildLogs', '');
             $date = \date('H:i:s');
-            $logs .= "[90m[$date] [90m[[0mappwrite[90m][32m Deployment finished. [0m\n";
+            $logs .= "\033[90m[$date] \033[90m[\033[0mappwrite\033[90m]\033[32m Deployment finished. \033[0m\n";
             $deployment->setAttribute('buildLogs', $logs);
 
             /** Update the status */
             $deployment->setAttribute('status', 'ready');
-            $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
+            $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
+                'buildLogs' => $deployment->getAttribute('buildLogs'),
+                'status' => 'ready',
+            ]));
 
             Console::log('Status marked as ready');
 
@@ -1170,8 +1021,6 @@ class Builds extends Action
                             'live' => true,
                             'deploymentId' => $deployment->getId(),
                             'deploymentInternalId' => $deployment->getSequence(),
-                            'deploymentScreenshotDark' => $deployment->getAttribute('screenshotDark', ''),
-                            'deploymentScreenshotLight' => $deployment->getAttribute('screenshotLight', ''),
                             'deploymentCreatedAt' => $deployment->getCreatedAt(),
                         ]));
                         $queries = [
@@ -1196,6 +1045,11 @@ class Builds extends Action
                 Console::log('Deployment activated');
             }
 
+            $this->afterDeploymentSuccess(
+                $project,
+                $deployment,
+            );
+
             // Send realtime event after updating the associated resource so that Console will have the resource's deployment details when re-fetching.
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
@@ -1205,14 +1059,12 @@ class Builds extends Action
                 // VCS branch
                 $branchName = $deployment->getAttribute('providerBranch');
                 if (!empty($branchName)) {
-                    $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-                    $branchPrefix = substr($branchName, 0, 16);
-                    if (strlen($branchName) > 16) {
-                        $remainingChars = substr($branchName, 16);
-                        $branchPrefix .= '-' . substr(hash('sha256', $remainingChars), 0, 7);
-                    }
-                    $resourceProjectHash = substr(hash('sha256', $resource->getId() . $project->getId()), 0, 7);
-                    $domain = "branch-{$branchPrefix}-{$resourceProjectHash}.{$sitesDomain}";
+                    $domain = (new BranchDomainFilter())->apply([
+                        'branch' => $branchName,
+                        'resourceId' => $resource->getId(),
+                        'projectId' => $project->getId(),
+                        'sitesDomain' => $platform['sitesDomain'],
+                    ]);
                     $ruleId = md5($domain);
 
                     try {
@@ -1264,9 +1116,10 @@ class Builds extends Action
 
             $endTime = DateTime::now();
             $durationEnd = \microtime(true);
-            $deployment->setAttribute('buildEndedAt', $endTime);
-            $deployment->setAttribute('buildDuration', \intval(\ceil($durationEnd - $durationStart)));
-            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                'buildEndedAt' => $endTime,
+                'buildDuration' => \intval(\ceil($durationEnd - $durationStart)),
+            ]));
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
@@ -1287,7 +1140,21 @@ class Builds extends Action
                     ->setAttribute('resourceUpdatedAt', DateTime::now())
                     ->setAttribute('schedule', $resource->getAttribute('schedule'))
                     ->setAttribute('active', !empty($resource->getAttribute('schedule')) && !empty($resource->getAttribute('deploymentId')));
-                $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule);
+                $dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document([
+                    'resourceUpdatedAt' => $schedule->getAttribute('resourceUpdatedAt'),
+                    'schedule' => $schedule->getAttribute('schedule'),
+                    'active' => $schedule->getAttribute('active'),
+                ]));
+            }
+
+            /** Screenshot site */
+            if ($resource->getCollection() === 'sites') {
+                $queueForScreenshots
+                    ->setDeploymentId($deployment->getId())
+                    ->setProject($project)
+                    ->trigger();
+
+                Console::log('Site screenshot queued');
             }
 
             Console::info('Deployment action finished');
@@ -1328,7 +1195,12 @@ class Builds extends Action
             $deployment->setAttribute('status', 'failed');
 
             $deployment->setAttribute('buildLogs', $message);
-            $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
+            $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
+                'buildEndedAt' => $deployment->getAttribute('buildEndedAt'),
+                'buildDuration' => $deployment->getAttribute('buildDuration'),
+                'status' => 'failed',
+                'buildLogs' => $message,
+            ]));
 
             if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
                 $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
@@ -1357,7 +1229,7 @@ class Builds extends Action
 
     protected function sendUsage(Document $resource, Document $deployment, Document $project, StatsUsage $queue): void
     {
-        $spec = Config::getParam('specifications')[$resource->getAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
+        $spec = Config::getParam('specifications')[$resource->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
 
         switch ($deployment->getAttribute('status')) {
             case 'ready':
@@ -1424,6 +1296,26 @@ class Builds extends Action
         }
         if (!is_string($adapter) && !is_null($adapter)) {
             throw new Exception('adapter must be a string or null');
+        }
+    }
+
+    /**
+     * Hook to run after deployment is activated
+     *
+     * @param Document $project
+     * @param Document $deployment
+     * @return void
+     */
+    protected function afterDeploymentSuccess(
+        Document $project,
+        Document $deployment,
+    ): void {
+        if (!($project instanceof Document)) {
+            throw new Exception('project must be an instance of Document');
+        }
+
+        if (!($deployment instanceof Document)) {
+            throw new Exception('deployment must be an instance of Document');
         }
     }
 
@@ -1615,7 +1507,9 @@ class Builds extends Action
             $logs .= "[90m[$date] [90m[[0mappwrite[90m][33m Git action failed. Deployment will continue. [0m\n";
 
             $deployment->setAttribute('buildLogs', $logs);
-            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                'buildLogs' => $deployment->getAttribute('buildLogs'),
+            ]));
 
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
@@ -1631,10 +1525,12 @@ class Builds extends Action
 
         $logs = $deployment->getAttribute('buildLogs', '');
         $date = \date('H:i:s');
-        $logs .= "[90m[$date] [90m[[0mappwrite[90m][33m Build has been canceled. [0m\n";
+        $logs .= "\033[90m[$date] \033[90m[\033[0mappwrite\033[90m]\033[33m Build has been canceled. \033[0m\n";
 
         $deployment->setAttribute('buildLogs', $logs);
-        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+            'buildLogs' => $deployment->getAttribute('buildLogs'),
+        ]));
 
         $queueForRealtime
             ->setPayload($deployment->getArrayCopy())

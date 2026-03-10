@@ -2,69 +2,36 @@
 
 namespace Appwrite\Tests;
 
-use PHPUnit\Framework\TestCase;
-
 /**
- * Allows test methods annotated with {@see Retry} to be retried.
+ * Marker trait for classes that support retry functionality.
+ * The actual retry logic is handled by the RetrySubscriber extension.
+ *
+ * Test methods can be annotated with #[Retry(count: N)] to enable retries.
+ * When a test with this attribute fails, the RetrySubscriber logs the failure
+ * and tracks retry attempts.
  */
 trait Retryable
 {
     /**
-     * Custom runBare, hides and defers to PHPUnit {@see TestCase} runBare function,
-     * accounting for any retries configured by the {@see Retry} annotation.
+     * Get the number of retries configured for the current test method.
      *
-     * @return void
-     * @throws \ReflectionException
-     * @throws \Throwable
-     */
-    public function runBare(): void
-    {
-        $retries = $this->getNumberOfRetries();
-        $ex = null;
-        for ($i = 0; $i <= $retries; ++$i) {
-            try {
-                parent::runBare();
-                return;
-            } catch (\Throwable | \Exception $ex) {
-                // Swallow the exception until we have exhausted our retries.
-                if ($i !== $retries) {
-                    echo 'Flaky test failed, retrying...' . PHP_EOL;
-                }
-            }
-        }
-        if ($ex) {
-            throw $ex;
-        }
-    }
-
-    /**
      * @return int
      * @throws \ReflectionException
      */
-    private function getNumberOfRetries(): int
+    public function getNumberOfRetries(): int
     {
         $root = new \ReflectionClass($this);
-        $case = $this->getTestCaseRoot($root);
-        $name = $case->getProperty('name');
-        $name->setAccessible(true);
-        $name = $name->getValue($this);
+        $name = $this->name();
+
+        if (!$root->hasMethod($name)) {
+            return 0;
+        }
+
         $method = $root->getMethod($name);
         $attributes = $method->getAttributes(Retry::class);
         $attribute = $attributes[0] ?? null;
         $args = $attribute?->getArguments();
-        $retries = $args['count'] ?? 0;
+        $retries = $args['count'] ?? $args[0] ?? 0;
         return \max(0, $retries);
-    }
-
-    /**
-     * @param \ReflectionClass $reflection
-     * @return \ReflectionClass
-     */
-    private function getTestCaseRoot(\ReflectionClass $reflection): \ReflectionClass
-    {
-        if ($reflection->getName() === TestCase::class) {
-            return $reflection;
-        }
-        return $this->getTestCaseRoot($reflection->getParentClass());
     }
 }

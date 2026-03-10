@@ -4,6 +4,7 @@ namespace Appwrite\Event;
 
 use Utopia\Config\Config;
 use Utopia\Queue\Publisher;
+use Utopia\System\System;
 
 class Mail extends Event
 {
@@ -24,8 +25,8 @@ class Mail extends Event
         parent::__construct($publisher);
 
         $this
-            ->setQueue(Event::MAILS_QUEUE_NAME)
-            ->setClass(Event::MAILS_CLASS_NAME);
+            ->setQueue(System::getEnv('_APP_MAILS_QUEUE_NAME', Event::MAILS_QUEUE_NAME))
+            ->setClass(System::getEnv('_APP_MAILS_CLASS_NAME', Event::MAILS_CLASS_NAME));
     }
 
     /**
@@ -360,6 +361,18 @@ class Mail extends Event
     public function setVariables(array $variables): self
     {
         $this->variables = $variables;
+        return $this;
+    }
+
+    /**
+     * Append variables to the email event.
+     *
+     * @param array $variables
+     * @return self
+     */
+    public function appendVariables(array $variables): self
+    {
+        $this->variables = \array_merge($this->variables, $variables);
         return $this;
     }
 

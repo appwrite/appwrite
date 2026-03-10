@@ -1,6 +1,0 @@
-query {
-    healthGetCache {
-        ping
-        status
-    }
-}

@@ -77,16 +77,17 @@ class AccountConsoleClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
         $this->assertEquals($response['headers']['status-code'], 204);
-        sleep(2);
 
-        $response = $this->client->call(Client::METHOD_DELETE, '/account', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]));
+        $this->assertEventually(function () use ($session) {
+            $response = $this->client->call(Client::METHOD_DELETE, '/account', array_merge([
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            ]));
 
-        $this->assertEquals($response['headers']['status-code'], 204);
+            $this->assertEquals(204, $response['headers']['status-code']);
+        }, 10_000, 500);
     }
 
     public function testSessionAlert(): void
@@ -136,9 +137,9 @@ class AccountConsoleClientTest extends Scope
 
 
         // Check the alert email
-        $lastEmail = $this->getLastEmail();
+        $lastEmail = $this->getLastEmailByAddress($email);
 
-        $this->assertEquals($email, $lastEmail['to'][0]['address']);
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
         $this->assertStringContainsString('Security alert: new session', $lastEmail['subject']);
         $this->assertStringContainsString($response['body']['ip'], $lastEmail['text']); // IP Address
         $this->assertStringContainsString('Unknown', $lastEmail['text']); // Country
@@ -166,9 +167,9 @@ class AccountConsoleClientTest extends Scope
 
         $userId = $response['body']['userId'];
 
-        $lastEmail = $this->getLastEmail();
+        $lastEmail = $this->getLastEmailByAddress('otpuser2@appwrite.io');
 
-        $this->assertEquals('otpuser2@appwrite.io', $lastEmail['to'][0]['address']);
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: otpuser2@appwrite.io');
         $this->assertEquals('OTP for ' . $this->getProject()['name'] . ' Login', $lastEmail['subject']);
 
         // Find 6 concurrent digits in email text - OTP
@@ -193,7 +194,58 @@ class AccountConsoleClientTest extends Scope
         $this->assertEmpty($response['body']['secret']);
 
         $lastEmailId = $lastEmail['id'];
-        $lastEmail = $this->getLastEmail();
+        $lastEmail = $this->getLastEmailByAddress('otpuser2@appwrite.io');
         $this->assertEquals($lastEmailId, $lastEmail['id']);
+    }
+
+    public function testGetAccountLogs(): void
+    {
+        $email = uniqid() . 'user@localhost.test';
+        $password = 'password';
+        $name = 'User Name';
+
+        /**
+         * Test for SUCCESS - Create account and session for console project
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 201);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 201);
+
+        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
+
+        /**
+         * Test for SUCCESS - Get account logs
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsArray($response['body']['logs']);
+        $this->assertNotEmpty($response['body']['logs']);
+        $this->assertIsNumeric($response['body']['total']);
     }
 }

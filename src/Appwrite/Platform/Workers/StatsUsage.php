@@ -4,7 +4,7 @@ namespace Appwrite\Platform\Workers;
 
 use Exception;
 use Throwable;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -538,13 +538,11 @@ class StatsUsage extends Action
                 $this->statDocuments
             );
             Console::success('Usage logs pushed to Logs DB');
-
-            /**
-             * todo: Do we need to unset $this->statDocuments?
-             */
-
         } catch (Throwable $th) {
             Console::error($th->getMessage());
+        } finally {
+            // Clear statDocuments to prevent memory accumulation across batches
+            $this->statDocuments = [];
         }
     }
 }

@@ -116,13 +116,27 @@ class AccountTest extends Scope
     }
 
     /**
-     * @depends testUpdateAccountPhone
      * @return array
      * @throws \Exception
      */
     public function testCreatePhoneVerification(): array
     {
         $projectId = $this->getProject()['$id'];
+
+        // Ensure phone is set up for this test to be self-contained
+        $phoneQuery = $this->getQuery(self::UPDATE_ACCOUNT_PHONE);
+        $phonePayload = [
+            'query' => $phoneQuery,
+            'variables' => [
+                'phone' => '+123456789',
+                'password' => 'password',
+            ]
+        ];
+
+        $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $phonePayload);
 
         $query = $this->getQuery(self::CREATE_PHONE_VERIFICATION);
         $graphQLPayload = [

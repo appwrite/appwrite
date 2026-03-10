@@ -25,7 +25,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Index as IndexValidator;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\JSON;
@@ -74,8 +74,8 @@ class Create extends Action
                     replaceWith: 'tablesDB.createTable',
                 ),
             ))
-            ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('collectionId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE)), 'An array of permissions strings. By default, no user is granted with any permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documentSecurity', false, new Boolean(true), 'Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
@@ -186,7 +186,13 @@ class Create extends Action
             $dbForProject->getAdapter()->getSupportForVectors(),
             $dbForProject->getAdapter()->getSupportForAttributes(),
             $dbForProject->getAdapter()->getSupportForMultipleFulltextIndexes(),
-            $dbForProject->getAdapter()->getSupportForIdenticalIndexes()
+            $dbForProject->getAdapter()->getSupportForIdenticalIndexes(),
+            $dbForProject->getAdapter()->getSupportForObjectIndexes(),
+            $dbForProject->getAdapter()->getSupportForTrigramIndex(),
+            $dbForProject->getAdapter()->getSupportForSpatialAttributes(),
+            $dbForProject->getAdapter()->getSupportForIndex(),
+            $dbForProject->getAdapter()->getSupportForUniqueIndex(),
+            $dbForProject->getAdapter()->getSupportForFulltextIndex(),
         );
 
         foreach ($collectionIndexes as $indexDoc) {
@@ -241,6 +247,8 @@ class Create extends Action
             ->setContext('database', $database)
             ->setParam('databaseId', $databaseId)
             ->setParam($this->getEventsParamKey(), $collection->getId());
+
+        $this->addRowBytesInfo($collection, $dbForProject);
 
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)
