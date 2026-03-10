@@ -37,6 +37,18 @@ export const COLUMNS_INDEXES_DEFAULT_PAGE_SIZE = 100
 export const ACTIVITY_DEFAULT_PAGE_SIZE = 25
 
 /**
+ * Default page size for proxy/domains lists (sites and functions domains tabs).
+ * Must match between route loader and View to prevent layout shift.
+ */
+export const DOMAINS_DEFAULT_PAGE_SIZE = 25
+
+/**
+ * Default page size for auth teams list.
+ * Must match between route loader and View to prevent layout shift.
+ */
+export const TEAMS_DEFAULT_PAGE_SIZE = 25
+
+/**
  * Default page size for smaller lists (e.g., variables, API keys)
  */
 export const SMALL_PAGE_SIZE = 10

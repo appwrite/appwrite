@@ -1144,6 +1144,29 @@ export function useDeleteFunctionVariable(
 }
 
 /**
+ * Cancel a function deployment build (stops the build, deployment remains with status canceled).
+ *
+ * @param projectId - The project ID
+ * @param functionId - The function ID
+ * @param deploymentId - The deployment ID
+ */
+export async function cancelFunctionDeployment(
+  projectId: string,
+  functionId: string,
+  deploymentId: string,
+) {
+  if (!projectId || !functionId || !deploymentId) {
+    throw new Error('Project ID, Function ID, and Deployment ID are required')
+  }
+
+  const projectSdk = sdk.forProject(projectId)
+  return await projectSdk.functions.updateDeploymentStatus({
+    functionId,
+    deploymentId,
+  })
+}
+
+/**
  * Delete a function deployment
  *
  * @param projectId - The project ID

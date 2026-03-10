@@ -29,6 +29,7 @@ import {
 } from 'lucide-react'
 import {
   getDeploymentStatusBadge,
+  isDeploymentCompleted,
   isDeploymentTimeout,
 } from '@/lib/utils/deployment-status'
 import {
@@ -1035,7 +1036,15 @@ export function SiteDeploymentsView() {
                       <FileCode className="mr-2 h-4 w-4" />
                       Source code
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleDownloadBuild}>
+                    <DropdownMenuItem
+                      onClick={handleDownloadBuild}
+                      disabled={!isDeploymentCompleted(activeDeployment?.status)}
+                      title={
+                        !isDeploymentCompleted(activeDeployment?.status)
+                          ? 'Build output is available after the deployment has completed.'
+                          : undefined
+                      }
+                    >
                       <Package className="mr-2 h-4 w-4" />
                       Build output
                     </DropdownMenuItem>

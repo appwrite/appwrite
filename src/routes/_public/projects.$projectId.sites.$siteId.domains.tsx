@@ -5,7 +5,7 @@ import {
   projectQueryOptions,
   organizationDomainsQueryOptions,
 } from '@/lib/react-query/hooks'
-import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
@@ -42,7 +42,13 @@ export const Route = createFileRoute(
     await Promise.all([
       // Fetch first page of domains - blocks navigation until ready
       queryClient.ensureQueryData(
-        siteDomainsQueryOptions(projectId, siteId, 0, DEFAULT_PAGE_SIZE, ''),
+        siteDomainsQueryOptions(
+          projectId,
+          siteId,
+          0,
+          DOMAINS_DEFAULT_PAGE_SIZE,
+          '',
+        ),
       ),
       // Fetch organization domains (for verification status) - cloud only
       projectData?.teamId

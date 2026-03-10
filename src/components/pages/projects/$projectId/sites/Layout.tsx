@@ -5,18 +5,29 @@ import {
   useNavigate,
   useLocation,
 } from '@tanstack/react-router'
+import { useQueryClient, useMutation } from '@tanstack/react-query'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import {
   useProjectSite,
   useSiteDeployment,
   useProject,
   useOrganizationScopes,
+  cancelSiteDeployment,
 } from '@/lib/react-query/hooks'
 import { canShowSiteSettingsTab } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { DeploymentInfo } from '@/components/global/shared/DeploymentInfo'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Info, ArrowLeft } from 'lucide-react'
+import { toast } from 'sonner'
 import {
   RefreshProvider,
   useRefresh,
@@ -54,6 +65,7 @@ function SiteLayoutContent() {
   const { projectId, siteId } = useParams({ strict: false })
   const location = useLocation()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { isRefreshing, triggerRefresh, hasRefreshHandler } = useRefresh()
   const { data: site } = useProjectSite(projectId, siteId)
   const { data: activeDeployment } = useSiteDeployment(
@@ -65,6 +77,35 @@ function SiteLayoutContent() {
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const showSettingsTab = canShowSiteSettingsTab(access, features)
+
+  const [cancelBuildDialogOpen, setCancelBuildDialogOpen] = useState(false)
+  const cancelBuildMutation = useMutation({
+    mutationFn: async () => {
+      if (!projectId || !siteId || !activeDeployment?.$id) {
+        throw new Error('Project ID, Site ID, and Deployment ID are required')
+      }
+      return await cancelSiteDeployment(
+        projectId,
+        siteId,
+        activeDeployment.$id,
+      )
+    },
+    onSuccess: async () => {
+      setCancelBuildDialogOpen(false)
+      await queryClient.refetchQueries({
+        queryKey: ['deployments', 'site', projectId, siteId],
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['site', 'project', projectId, siteId],
+      })
+      toast.success('Build cancelled')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to cancel build')
+    },
+  })
+
+  const handleCancelBuild = () => setCancelBuildDialogOpen(true)
 
   const isBuilding = useMemo(
     () =>
@@ -281,9 +322,18 @@ function SiteLayoutContent() {
                     variant="default"
                     className="border-blue-500/30 bg-transparent"
                   >
-                    <Info className="h-4 w-4 text-blue-500" />
-                    <AlertDescription className="text-[12px] text-blue-600/80 dark:text-blue-400/80">
-                      Your site is currently being deployed.
+                    <Info className="h-4 w-4 text-blue-500 shrink-0" />
+                    <AlertDescription className="flex flex-1 items-center justify-between gap-3 text-[12px] text-blue-600/80 dark:text-blue-400/80">
+                      <span>Your site is currently being deployed.</span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="shrink-0 border-blue-500/40 text-blue-600 hover:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/10"
+                        onClick={handleCancelBuild}
+                        disabled={cancelBuildMutation.isPending}
+                      >
+                        Cancel build
+                      </Button>
                     </AlertDescription>
                   </Alert>
                 </div>
@@ -351,6 +401,44 @@ function SiteLayoutContent() {
           </>
         )}
       </div>
+
+      {/* Cancel build confirmation */}
+      <Dialog
+        open={cancelBuildDialogOpen}
+        onOpenChange={setCancelBuildDialogOpen}
+      >
+        <DialogContent className="sm:max-w-md p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+            <DialogTitle>Cancel build</DialogTitle>
+            <DialogDescription className="text-[13px] mt-2">
+              Stop the current deployment? You can deploy again later.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="border-t border-border" />
+          <div className="px-6 pb-4 pt-4">
+            {activeDeployment && (
+              <DeploymentInfo deployment={activeDeployment} showStatus={true} />
+            )}
+          </div>
+          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setCancelBuildDialogOpen(false)}
+              className="h-9 text-[13px]"
+            >
+              Keep building
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => cancelBuildMutation.mutate()}
+              disabled={cancelBuildMutation.isPending}
+              className="h-9 text-[13px]"
+            >
+              Cancel build
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </CreateDeploymentProvider>
   )
 }

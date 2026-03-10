@@ -950,6 +950,29 @@ export function useDeploymentProxyRules(
 // ============================================================================
 
 /**
+ * Cancel a site deployment build (stops the build, deployment remains with status canceled).
+ *
+ * @param projectId - The project ID
+ * @param siteId - The site ID
+ * @param deploymentId - The deployment ID
+ */
+export async function cancelSiteDeployment(
+  projectId: string,
+  siteId: string,
+  deploymentId: string,
+) {
+  if (!projectId || !siteId || !deploymentId) {
+    throw new Error('Project ID, Site ID, and Deployment ID are required')
+  }
+
+  const projectSdk = sdk.forProject(projectId)
+  return await projectSdk.sites.updateDeploymentStatus({
+    siteId,
+    deploymentId,
+  })
+}
+
+/**
  * Query function to delete a site deployment
  *
  * This is extracted so it can be reused in both hooks and mutations.

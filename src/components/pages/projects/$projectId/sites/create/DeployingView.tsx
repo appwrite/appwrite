@@ -7,6 +7,7 @@
  */
 
 import { useState, useEffect, useMemo } from 'react'
+import { useMutation } from '@tanstack/react-query'
 import { useParams, useNavigate, Link } from '@tanstack/react-router'
 import { useTheme } from 'next-themes'
 import { Button } from '@/components/ui/button'
@@ -29,6 +30,7 @@ import { BuildLogsCard } from '@/components/global/shared/BuildLogsCard'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { DeploymentInfo } from '@/components/global/shared/DeploymentInfo'
 import { getDeploymentStatusBadge } from '@/lib/utils/deployment-status'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
@@ -45,6 +47,7 @@ import {
   useSiteDeployment,
   useRepository,
   useSiteDomains,
+  cancelSiteDeployment,
 } from '@/lib/react-query/hooks'
 import { useWizard } from './WizardContext'
 
@@ -85,6 +88,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
   const { formData, frameworks, resetFormData } = useWizard()
   const [qrDialogOpen, setQrDialogOpen] = useState(false)
   const [previewImageLoaded, setPreviewImageLoaded] = useState(false)
+  const [cancelBuildDialogOpen, setCancelBuildDialogOpen] = useState(false)
 
   // Use provided IDs or fall back to form data
   const actualSiteId = siteId || formData.createdSiteId
@@ -120,6 +124,38 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
       setStatus(deployment.status)
     }
   }, [deployment])
+
+  const isBuilding =
+    status === 'building' ||
+    status === 'processing' ||
+    status === 'waiting'
+
+  const cancelDeploymentMutation = useMutation({
+    mutationFn: async () => {
+      if (!projectId || !actualSiteId || !actualDeploymentId) {
+        throw new Error('Project, site, and deployment IDs are required')
+      }
+      return await cancelSiteDeployment(
+        projectId,
+        actualSiteId,
+        actualDeploymentId,
+      )
+    },
+    onSuccess: () => {
+      setCancelBuildDialogOpen(false)
+      resetFormData()
+      toast.success('Deployment cancelled')
+      navigate({
+        to: '/projects/$projectId/sites',
+        params: { projectId: projectId! },
+      })
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to cancel deployment')
+    },
+  })
+
+  const handleCancelDeployment = () => setCancelBuildDialogOpen(true)
 
   const handleGoToDashboard = () => {
     if (status === 'ready') {
@@ -367,6 +403,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
     ) : null
 
   return (
+    <>
     <WizardLayout
       title="Create site"
       fallbackPath={`/projects/${projectId}/sites`}
@@ -375,12 +412,23 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
       footerAlign="right"
       sidebar={sidebarContent}
       footer={
-        <Button
-          variant={status === 'ready' ? 'default' : 'outline'}
-          onClick={handleGoToDashboard}
-        >
-          Go to dashboard
-        </Button>
+        <div className="flex items-center gap-2">
+          {isBuilding && (
+            <Button
+              variant="ghost"
+              onClick={handleCancelDeployment}
+              disabled={cancelDeploymentMutation.isPending}
+            >
+              Cancel deployment
+            </Button>
+          )}
+          <Button
+            variant={status === 'ready' ? 'default' : 'outline'}
+            onClick={handleGoToDashboard}
+          >
+            Go to dashboard
+          </Button>
+        </div>
       }
     >
       <div className="space-y-4">
@@ -570,5 +618,44 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
         )}
       </div>
     </WizardLayout>
+
+    {/* Cancel build confirmation */}
+    <Dialog
+      open={cancelBuildDialogOpen}
+      onOpenChange={setCancelBuildDialogOpen}
+    >
+      <DialogContent className="sm:max-w-md p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 text-left">
+          <DialogTitle>Cancel build</DialogTitle>
+          <DialogDescription className="text-[13px] mt-2">
+            Stop the current deployment? You can deploy again later.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="border-t border-border" />
+        <div className="px-6 pb-4 pt-4">
+          {deployment && (
+            <DeploymentInfo deployment={deployment} showStatus={true} />
+          )}
+        </div>
+        <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button
+            variant="outline"
+            onClick={() => setCancelBuildDialogOpen(false)}
+            className="h-9 text-[13px]"
+          >
+            Keep building
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => cancelDeploymentMutation.mutate()}
+            disabled={cancelDeploymentMutation.isPending}
+            className="h-9 text-[13px]"
+          >
+            Cancel build
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   )
 }

@@ -7,7 +7,7 @@ import {
   Link,
 } from '@tanstack/react-router'
 import { useQueryClient, useQuery } from '@tanstack/react-query'
-import { Plus, Clock, Play, FileCode } from 'lucide-react'
+import { Clock, Play, FileCode } from 'lucide-react'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { ResourceCard } from '../shared/ResourceCard'
@@ -546,7 +546,7 @@ export function View() {
           <>
             {showLoading ? (
               <div className="rounded-lg border border-border bg-card py-12 text-center">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-[13px] text-muted-foreground">
                   Loading functions...
                 </p>
               </div>
@@ -556,68 +556,20 @@ export function View() {
                 isEmpty={false}
                 hasFilters={hasFilters}
                 variant="card"
-                iconSize="md"
-              >
-                <div className="flex flex-col items-center text-center">
-                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                    <Play className="h-6 w-6 text-muted-foreground" />
-                  </div>
-                  <p className="mb-1 text-[14px] font-medium text-foreground">
-                    No results found
-                  </p>
-                  <p className="mb-4 text-[13px] text-muted-foreground">
-                    Try adjusting your search or filters to see more results.
-                  </p>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setSearchInput('')
-                      setRequestedPage(1)
-                      setDisplayedPage(1)
-                      navigateToFunctionsList({ page: 1, limit: urlLimit })
-                    }}
-                  >
-                    Clear search
-                  </Button>
-                </div>
-              </EmptyState>
+              />
             ) : !hasFunctions ? (
               <EmptyState
                 icon={Play}
-                title="No functions yet"
-                description="Deploy and manage serverless functions with Appwrite Functions"
+                title={hasFilters ? undefined : 'No functions yet'}
+                description={
+                  hasFilters
+                    ? undefined
+                    : 'Create your first function to deploy and manage serverless functions'
+                }
                 isEmpty={true}
+                hasFilters={hasFilters}
                 variant="card"
-                iconSize="md"
-              >
-                <div className="flex flex-col items-center text-center">
-                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                    <Play className="h-6 w-6 text-muted-foreground" />
-                  </div>
-                  <p className="mb-1 text-[14px] font-medium text-foreground">
-                    No functions yet
-                  </p>
-                  <p className="mb-4 text-[13px] text-muted-foreground">
-                    Deploy and manage serverless functions with Appwrite
-                    Functions
-                  </p>
-                  <div className="flex items-center justify-center gap-2">
-                    <Button variant="outline" asChild className="gap-1.5">
-                      <a
-                        href="https://appwrite.io/docs/functions"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Documentation
-                      </a>
-                    </Button>
-                    <Button onClick={handleCreateFunction} className="gap-1.5">
-                      <Plus className="h-4 w-4" />
-                      Create function
-                    </Button>
-                  </div>
-                </div>
-              </EmptyState>
+              />
             ) : (
               <>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

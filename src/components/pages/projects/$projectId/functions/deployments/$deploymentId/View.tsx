@@ -4,6 +4,7 @@ import {
   useProjectFunction,
   useFunctionDeployments,
   deleteFunctionDeployment,
+  cancelFunctionDeployment,
 } from '@/lib/react-query/hooks'
 import { sdk } from '@/lib/appwrite/sdk'
 import { DeploymentDownloadType } from '@appwrite.io/console'
@@ -35,6 +36,13 @@ export function View() {
       throw new Error('Project ID and Function ID are required')
     }
     await deleteFunctionDeployment(projectId, functionId, deploymentId)
+  }
+
+  const handleCancelBuild = async (deploymentId: string): Promise<void> => {
+    if (!projectId || !functionId) {
+      throw new Error('Project ID and Function ID are required')
+    }
+    await cancelFunctionDeployment(projectId, functionId, deploymentId)
   }
 
   const handleDownloadSource = (
@@ -125,6 +133,7 @@ export function View() {
       deploymentDetailRoute="/projects/$projectId/functions/$functionId/deployments/$deploymentId"
       listRoute="/projects/$projectId/functions/$functionId"
       onDelete={handleDelete}
+      onCancelBuild={handleCancelBuild}
       onDownloadSource={handleDownloadSource}
       onDownloadBuild={handleDownloadBuild}
       onRedeploy={handleRedeploy}
@@ -134,6 +143,7 @@ export function View() {
       invalidateQueries={[
         ['deployments', 'project', projectId!, functionId!],
         ['function', 'project', projectId!, functionId!],
+        ['deployment', 'function', projectId!, functionId!, deploymentId!],
       ]}
       fallbackPath={`/projects/${projectId}/functions/${functionId}`}
     />

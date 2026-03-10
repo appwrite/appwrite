@@ -6,7 +6,10 @@ import {
   useNavigate,
   useSearch,
 } from '@tanstack/react-router'
-import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import {
+  DEFAULT_PAGE_SIZE,
+  TEAMS_DEFAULT_PAGE_SIZE,
+} from '@/lib/react-query/hooks/constants'
 import {
   getSearch,
   getPage,
@@ -151,7 +154,7 @@ export function View({
     return {
       search: search.teamsSearch ?? undefined,
       page: search.teamsPage ?? 1,
-      limit: search.teamsLimit ?? DEFAULT_PAGE_SIZE,
+      limit: search.teamsLimit ?? TEAMS_DEFAULT_PAGE_SIZE,
       filterMap: queryParamToMap(search.teamsQuery ?? null),
     }
   }, [isAuthTeamsList, search?.teamsSearch, search?.teamsQuery, search?.teamsPage, search?.teamsLimit])
@@ -214,7 +217,7 @@ export function View({
     usersFilterMap.size > 0 ? Array.from(usersFilterMap.values()) : undefined
 
   const teamsUrlPage = teamsListParams?.page ?? 1
-  const teamsUrlLimit = teamsListParams?.limit ?? DEFAULT_PAGE_SIZE
+  const teamsUrlLimit = teamsListParams?.limit ?? TEAMS_DEFAULT_PAGE_SIZE
   const teamsUrlSearch = teamsListParams?.search
   const teamsFilterMap = teamsListParams?.filterMap ?? new Map()
   const teamsFilterQueries =
@@ -904,7 +907,7 @@ export function View({
         next.teamsLimit = teamsUrlLimit
         if (!next.teamsSearch) delete next.teamsSearch
         if (page === 1) delete next.teamsPage
-        if (next.teamsLimit === DEFAULT_PAGE_SIZE) delete next.teamsLimit
+        if (next.teamsLimit === TEAMS_DEFAULT_PAGE_SIZE) delete next.teamsLimit
         return next
       },
       replace: true,

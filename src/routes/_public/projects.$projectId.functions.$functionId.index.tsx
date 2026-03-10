@@ -10,10 +10,9 @@ import {
   functionSpecificationsQueryOptions,
   DEFAULT_PAGE_SIZE,
 } from '@/lib/react-query/hooks'
+import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { pageTitle } from '@/lib/utils/page-title'
 import { listSearchSchema } from '@/lib/table-filters'
-
-const DOMAINS_LIMIT = 25 // Align with domains tab to share cache; overview card shows 3
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/functions/$functionId/',
@@ -64,7 +63,13 @@ export const Route = createFileRoute(
       deploymentsPromise,
       // Fetch domains/rules (for overview card) - use same params as domains tab to share cache
       queryClient.ensureQueryData(
-        functionDomainsQueryOptions(projectId, functionId, 0, DOMAINS_LIMIT, ''),
+        functionDomainsQueryOptions(
+          projectId,
+          functionId,
+          0,
+          DOMAINS_DEFAULT_PAGE_SIZE,
+          '',
+        ),
       ),
       // Fetch runtimes (for runtime name display) - blocks navigation until ready
       queryClient.ensureQueryData(projectRuntimesQueryOptions(projectId)),

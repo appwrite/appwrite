@@ -11,6 +11,7 @@ import {
   MoreHorizontal,
   Clock,
   Trash2,
+  XCircle,
   GitBranch,
   GitCommit,
   Shield,
@@ -30,6 +31,7 @@ import {
 } from 'lucide-react'
 import {
   getDeploymentStatusBadge,
+  isDeploymentCompleted,
   isDeploymentInProgress,
   isDeploymentTimeout,
 } from '@/lib/utils/deployment-status'
@@ -81,6 +83,7 @@ import {
   useSiteDeployment,
   useSiteDomains,
   deleteSiteDeployment,
+  cancelSiteDeployment,
   Dependencies,
   DEFAULT_PAGE_SIZE,
 } from '@/lib/react-query/hooks'
@@ -291,6 +294,9 @@ export function View() {
   )
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteActiveDialogOpen, setDeleteActiveDialogOpen] = useState(false)
+  const [cancelBuildDialogOpen, setCancelBuildDialogOpen] = useState(false)
+  const [cancelTargetDeploymentId, setCancelTargetDeploymentId] =
+    useState<string | null>(null)
   const [redeployDialogOpen, setRedeployDialogOpen] = useState(false)
   const [activateDialogOpen, setActivateDialogOpen] = useState(false)
   const [screenshotLoaded, setScreenshotLoaded] = useState(false)
@@ -575,6 +581,34 @@ export function View() {
     },
   })
 
+  // Cancel build mutation (stop the build, deployment remains with status canceled)
+  const cancelBuildMutation = useMutation({
+    mutationFn: async (deploymentIdToCancel: string) => {
+      if (!projectId || !siteId) {
+        throw new Error('Project ID and Site ID are required')
+      }
+      return await cancelSiteDeployment(
+        projectId,
+        siteId,
+        deploymentIdToCancel,
+      )
+    },
+    onSuccess: async () => {
+      setCancelBuildDialogOpen(false)
+      setCancelTargetDeploymentId(null)
+      await queryClient.refetchQueries({
+        queryKey: Dependencies.DEPLOYMENTS,
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['site', 'project', projectId, siteId],
+      })
+      toast.success('Build cancelled')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to cancel build')
+    },
+  })
+
   // Delete mutation for active deployment
   const deleteActiveMutation = useMutation({
     mutationFn: async () => {
@@ -738,14 +772,32 @@ export function View() {
                 activeDeploymentForCard ?? activeDeploymentResolved
               return (
                 <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                  <div className="px-6 py-4 flex items-center gap-2">
-                    <h3 className="text-[15px] font-semibold text-foreground">
-                      Active deployment
-                    </h3>
+                  <div className="px-6 py-4 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-[15px] font-semibold text-foreground">
+                        Active deployment
+                      </h3>
+                      {isBuilding && (
+                        <Badge variant="warning" className="text-[10px] shrink-0">
+                          Building
+                        </Badge>
+                      )}
+                    </div>
                     {isBuilding && (
-                      <Badge variant="warning" className="text-[10px] shrink-0">
-                        Building
-                      </Badge>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="shrink-0 h-8 text-[12px]"
+                        onClick={() => {
+                          setCancelTargetDeploymentId(
+                            activeDeploymentResolved?.$id ?? null,
+                          )
+                          setCancelBuildDialogOpen(true)
+                        }}
+                        disabled={cancelBuildMutation.isPending}
+                      >
+                        Cancel build
+                      </Button>
                     )}
                   </div>
                   <div className="border-t border-border" />
@@ -1180,7 +1232,19 @@ export function View() {
                           <FileCode className="mr-2 h-4 w-4" />
                           Source code
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={handleDownloadBuild}>
+                        <DropdownMenuItem
+                          onClick={handleDownloadBuild}
+                          disabled={!isDeploymentCompleted(
+                            activeDeploymentResolved?.status,
+                          )}
+                          title={
+                            !isDeploymentCompleted(
+                              activeDeploymentResolved?.status,
+                            )
+                              ? 'Build output is available after the deployment has completed.'
+                              : undefined
+                          }
+                        >
                           <Package className="mr-2 h-4 w-4" />
                           Build output
                         </DropdownMenuItem>
@@ -1700,7 +1764,10 @@ export function View() {
                                   <RefreshCw className="mr-2 h-4 w-4" />
                                   Redeploy
                                 </DropdownMenuItem>
-                                {!isActive && (
+                                {!isActive &&
+                                  !isDeploymentInProgress(
+                                    deploymentData.status,
+                                  ) && (
                                   <DropdownMenuItem
                                     onClick={async (e) => {
                                       e.stopPropagation()
@@ -1734,10 +1801,25 @@ export function View() {
                                         )
                                       }
                                     }}
-                                    className="text-destructive focus:text-destructive"
                                   >
                                     <Trash2 className="mr-2 h-4 w-4" />
                                     Delete
+                                  </DropdownMenuItem>
+                                )}
+                                {isDeploymentInProgress(
+                                  deploymentData.status,
+                                ) && (
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      setCancelTargetDeploymentId(
+                                        deploymentData.$id,
+                                      )
+                                      setCancelBuildDialogOpen(true)
+                                    }}
+                                  >
+                                    <XCircle className="mr-2 h-4 w-4" />
+                                    Cancel
                                   </DropdownMenuItem>
                                 )}
                               </DropdownMenuContent>
@@ -1920,6 +2002,64 @@ export function View() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Cancel build confirmation */}
+      <Dialog
+        open={cancelBuildDialogOpen}
+        onOpenChange={(open) => {
+          setCancelBuildDialogOpen(open)
+          if (!open) setCancelTargetDeploymentId(null)
+        }}
+      >
+        <DialogContent className="sm:max-w-md p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+            <DialogTitle>Cancel build</DialogTitle>
+            <DialogDescription className="text-[13px] mt-2">
+              Stop the current deployment? You can deploy again later.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="border-t border-border" />
+          <div className="px-6 pb-4 pt-4">
+            {(displayedDeployments?.find(
+              (d) => d.$id === cancelTargetDeploymentId,
+            ) ?? (cancelTargetDeploymentId === activeDeploymentResolved?.$id
+              ? activeDeploymentResolved
+              : null)) && (
+              <DeploymentInfo
+                deployment={
+                  displayedDeployments?.find(
+                    (d) => d.$id === cancelTargetDeploymentId,
+                  ) ?? activeDeploymentResolved!
+                }
+                showStatus={true}
+              />
+            )}
+          </div>
+          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCancelBuildDialogOpen(false)
+                setCancelTargetDeploymentId(null)
+              }}
+              className="h-9 text-[13px]"
+            >
+              Keep building
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() =>
+                cancelTargetDeploymentId &&
+                cancelBuildMutation.mutate(cancelTargetDeploymentId)
+              }
+              disabled={cancelBuildMutation.isPending || !cancelTargetDeploymentId}
+              className="h-9 text-[13px]"
+            >
+              Cancel build
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Redeploy Confirmation Dialog for Active Deployment */}
       {activeDeploymentResolved && (

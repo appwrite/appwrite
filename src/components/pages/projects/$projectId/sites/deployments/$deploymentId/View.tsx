@@ -4,6 +4,7 @@ import {
   useProjectSite,
   useSiteDeployments,
   deleteSiteDeployment,
+  cancelSiteDeployment,
   Dependencies,
 } from '@/lib/react-query/hooks'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -35,6 +36,13 @@ export function View() {
       throw new Error('Project ID and Site ID are required')
     }
     await deleteSiteDeployment(projectId, siteId, deploymentId)
+  }
+
+  const handleCancelBuild = async (deploymentId: string): Promise<void> => {
+    if (!projectId || !siteId) {
+      throw new Error('Project ID and Site ID are required')
+    }
+    await cancelSiteDeployment(projectId, siteId, deploymentId)
   }
 
   const handleDownloadSource = (
@@ -124,6 +132,7 @@ export function View() {
       deploymentDetailRoute="/projects/$projectId/sites/$siteId/deployments/$deploymentId"
       listRoute="/projects/$projectId/sites/$siteId/"
       onDelete={handleDelete}
+      onCancelBuild={handleCancelBuild}
       onDownloadSource={handleDownloadSource}
       onDownloadBuild={handleDownloadBuild}
       onRedeploy={handleRedeploy}
@@ -131,6 +140,7 @@ export function View() {
       invalidateQueries={[
         [...Dependencies.DEPLOYMENTS],
         [...Dependencies.SITE],
+        ['deployment', 'site', projectId!, siteId!, deploymentId!],
       ]}
       fallbackPath={`/projects/${projectId}/sites/${siteId}`}
     />

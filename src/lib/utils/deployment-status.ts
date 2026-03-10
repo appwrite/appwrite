@@ -38,8 +38,13 @@ export function isDeploymentTimeout(
   status: string,
   createdAt?: string | null,
 ): boolean {
-  // If status is already 'ready' or 'failed', never timeout
-  if (status === 'ready' || status === 'failed') {
+  // If status is already terminal or canceled, never show as timeout
+  if (
+    status === 'ready' ||
+    status === 'failed' ||
+    status === 'canceled' ||
+    status === 'cancelled'
+  ) {
     return false
   }
 
@@ -102,6 +107,16 @@ export function getDeploymentStatusBadge(
     },
     waiting: { label: 'Waiting', badgeVariant: 'pending', icon: Clock },
     failed: { label: 'Failed', badgeVariant: 'failed', icon: AlertCircle },
+    canceled: {
+      label: 'Canceled',
+      badgeVariant: 'pending',
+      icon: AlertCircle,
+    },
+    cancelled: {
+      label: 'Canceled',
+      badgeVariant: 'pending',
+      icon: AlertCircle,
+    },
     timeout: {
       label: 'Timeout',
       badgeVariant: 'failed',
@@ -128,4 +143,12 @@ export function getDeploymentStatusBadge(
  */
 export function isDeploymentInProgress(status: string): boolean {
   return status === 'building' || status === 'processing'
+}
+
+/**
+ * Check if a deployment has completed (ready or failed).
+ * Build output download is only available for completed deployments.
+ */
+export function isDeploymentCompleted(status: string | undefined | null): boolean {
+  return status === 'ready' || status === 'failed'
 }

@@ -535,8 +535,8 @@ export function View() {
             icon={Globe}
             title="No domains yet"
             description="Create your first domain to get started"
-            isEmpty={!searchValue}
-            hasFilters={!!searchValue}
+            isEmpty={!(urlSearch || filterMap.size > 0)}
+            hasFilters={!!(urlSearch || filterMap.size > 0)}
             variant="card"
           />
         )}

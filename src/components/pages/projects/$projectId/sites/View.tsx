@@ -829,8 +829,8 @@ export function View() {
                 icon={Globe}
                 title="No sites yet"
                 description="Create your first site to start deploying static sites"
-                isEmpty={!searchValue}
-                hasFilters={!!searchValue}
+                isEmpty={!(urlSearch || filterMap.size > 0)}
+                hasFilters={!!(urlSearch || filterMap.size > 0)}
                 variant="card"
               />
             )}

@@ -41,8 +41,7 @@ import { getApexDomain } from '@/lib/utils/proxy-domains'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 import { queryParamToMap } from '@/lib/table-filters'
-
-const DOMAINS_PER_PAGE = 25
+import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 
 function getStatusBadge(status: string) {
   const config = getDomainStatusBadgeConfig(status)
@@ -69,7 +68,7 @@ export function View() {
   const search = useSearch({ strict: false }) as { search?: string; query?: string } | undefined
   const { project } = useProject(projectId)
   const [currentPage, setCurrentPage] = useState(0)
-  const [pageSize, setPageSize] = useState(DOMAINS_PER_PAGE)
+  const [pageSize, setPageSize] = useState(DOMAINS_DEFAULT_PAGE_SIZE)
   const [verifyOpen, setVerifyOpen] = useState(false)
   const [viewLogsOpen, setViewLogsOpen] = useState(false)
   const [deleteDomainOpen, setDeleteDomainOpen] = useState(false)

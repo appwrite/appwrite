@@ -9,9 +9,9 @@ import {
   listSearchSchema,
   queryParamToMap,
 } from '@/lib/table-filters'
+import { TEAMS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { pageTitle } from '@/lib/utils/page-title'
 
-const TEAMS_PER_PAGE = 25
 const DEFAULT_PAGE = 1
 
 const authTeamsSearchSchema = listSearchSchema.extend({
@@ -42,9 +42,9 @@ export const Route = createFileRoute('/_public/projects/$projectId/auth/teams')(
       })()
       const teamsLimit = (() => {
         const p = url.searchParams.get('teamsLimit')
-        if (p == null || p === '') return TEAMS_PER_PAGE
+        if (p == null || p === '') return TEAMS_DEFAULT_PAGE_SIZE
         const n = Number(p)
-        return Number.isInteger(n) && n >= 1 ? n : TEAMS_PER_PAGE
+        return Number.isInteger(n) && n >= 1 ? n : TEAMS_DEFAULT_PAGE_SIZE
       })()
       const teamsQueryParam = url.searchParams.get('teamsQuery')
       const teamsFilterMap = queryParamToMap(teamsQueryParam)
