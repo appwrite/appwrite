@@ -11,7 +11,6 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Services\Functions\FunctionsBase;
-use Tests\E2E\Services\Realtime\RealtimeBase;
 use Tests\E2E\Services\Sites\SitesBase;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -24,7 +23,6 @@ class UsageTest extends Scope
     use ProjectCustom;
     use SideServer;
     use FunctionsBase;
-    use RealtimeBase;
     use SitesBase {
         FunctionsBase::createDeployment insteadof SitesBase;
         FunctionsBase::setupDeployment insteadof SitesBase;
