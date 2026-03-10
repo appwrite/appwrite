@@ -105,7 +105,7 @@ class ModuleTest extends TestCase
         $this->assertEquals(Action::HTTP_REQUEST_METHOD_POST, $action->getHttpMethod());
         $this->assertEquals('/install/shutdown', $action->getHttpPath());
         $this->assertEquals(Action::TYPE_DEFAULT, $action->getType());
-        $this->assertActionInjects($action, ['response', 'swooleServer']);
+        $this->assertActionInjects($action, ['request', 'response', 'swooleServer']);
     }
 
     public function testInstallAction(): void
@@ -145,8 +145,6 @@ class ModuleTest extends TestCase
         $this->assertTrue(true);
     }
 
-    // --- Module service type coverage ---
-
     public function testModuleHasNoTaskServices(): void
     {
         $services = $this->module->getServicesByType(Service::TYPE_TASK);
@@ -159,8 +157,6 @@ class ModuleTest extends TestCase
         $this->assertEmpty($services);
     }
 
-    // --- Action descriptions ---
-
     public function testAllDefaultActionsHaveDescriptions(): void
     {
         $services = $this->module->getServicesByType(Service::TYPE_HTTP);
@@ -172,8 +168,6 @@ class ModuleTest extends TestCase
         }
     }
 
-    // --- Action callbacks ---
-
     public function testAllActionsHaveCallableCallbacks(): void
     {
         $services = $this->module->getServicesByType(Service::TYPE_HTTP);
@@ -184,8 +178,6 @@ class ModuleTest extends TestCase
         }
     }
 
-    // --- Action names are unique ---
-
     public function testActionNamesAreUnique(): void
     {
         $services = $this->module->getServicesByType(Service::TYPE_HTTP);
@@ -194,8 +186,6 @@ class ModuleTest extends TestCase
         $names = array_keys($actions);
         $this->assertEquals($names, array_unique($names));
     }
-
-    // --- Route paths are unique per method ---
 
     public function testRoutePathsAreUniquePerMethod(): void
     {
@@ -209,8 +199,6 @@ class ModuleTest extends TestCase
         }
     }
 
-    // --- Static getName returns correct values ---
-
     public function testStaticGetNameValues(): void
     {
         $this->assertEquals('installerView', View::getName());
@@ -221,8 +209,6 @@ class ModuleTest extends TestCase
         $this->assertEquals('installerInstall', Install::getName());
         $this->assertEquals('installerError', Error::getName());
     }
-
-    // --- Action instances are correct types ---
 
     public function testActionInstanceTypes(): void
     {
@@ -237,8 +223,6 @@ class ModuleTest extends TestCase
         $this->assertInstanceOf(Shutdown::class, $actions['installerShutdown']);
         $this->assertInstanceOf(Install::class, $actions['installerInstall']);
     }
-
-    // --- GET routes use GET method, POST routes use POST ---
 
     public function testGetRoutesUseGetMethod(): void
     {
@@ -265,8 +249,6 @@ class ModuleTest extends TestCase
             );
         }
     }
-
-    // --- Validate action exposes static CSRF method ---
 
     public function testValidateClassHasCsrfMethod(): void
     {
