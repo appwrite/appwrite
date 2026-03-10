@@ -15,7 +15,7 @@ abstract class Action extends UtopiaAction
      */
     private ?string $context = COLLECTIONS;
 
-    private ?string $databaseType = TABLESDB;
+    private ?string $databaseType = LEGACY;
 
     /**
      * Get the response model used in the SDK and HTTP responses.

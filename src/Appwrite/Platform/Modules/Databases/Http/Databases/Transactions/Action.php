@@ -10,7 +10,7 @@ abstract class Action extends DatabasesAction
      * The current API context (either 'table' or 'collection').
      */
     private ?string $context = COLLECTIONS;
-    private ?string $databaseType = TABLESDB;
+    private ?string $databaseType = LEGACY;
 
     public function getDatabaseType(): string
     {
@@ -19,7 +19,7 @@ abstract class Action extends DatabasesAction
 
     protected function getDatabasesOperationWriteMetric(): string
     {
-        if ($this->databaseType === DATABASE_TYPE_LEGACY || $this->databaseType === TABLESDB) {
+        if ($this->databaseType === LEGACY || $this->databaseType === TABLESDB) {
             return METRIC_DATABASES_OPERATIONS_WRITES;
         }
         return $this->databaseType.'.'.METRIC_DATABASES_OPERATIONS_WRITES;
@@ -27,7 +27,7 @@ abstract class Action extends DatabasesAction
     }
     protected function getDatabasesIdOperationWriteMetric(): string
     {
-        if ($this->databaseType === DATABASE_TYPE_LEGACY || $this->databaseType === TABLESDB) {
+        if ($this->databaseType === LEGACY || $this->databaseType === TABLESDB) {
             return METRIC_DATABASE_ID_OPERATIONS_WRITES;
         }
         return $this->databaseType.'.'.METRIC_DATABASE_ID_OPERATIONS_WRITES;
@@ -36,7 +36,6 @@ abstract class Action extends DatabasesAction
     public function setHttpPath(string $path): DatabasesAction
     {
         switch (true) {
-            // TODO: set the getDatabaseType() from each database group instead of path matching
             case str_contains($path, '/tablesdb'):
                 $this->context = TABLES;
                 $this->databaseType = TABLESDB;

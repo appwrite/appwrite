@@ -110,8 +110,7 @@ class Create extends Action
                         new Parameter('databaseId', optional: false),
                         new Parameter('collectionId', optional: false),
                         new Parameter('documents', optional: false),
-                        new Parameter('transactionId', optional: true),
-                        new Parameter('transactionId', optional: true),
+                        new Parameter('transactionId', optional: true)
                     ],
                     deprecated: new Deprecated(
                         since: '1.8.0',

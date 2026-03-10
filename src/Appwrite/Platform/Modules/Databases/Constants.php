@@ -23,6 +23,7 @@ const DOCUMENTS = 'document';
 const ATTRIBUTES = 'attribute';
 const COLLECTIONS = 'collection';
 
+const LEGACY = 'legacy';
 const TABLESDB = 'tablesdb';
 const DOCUMENTSDB = 'documentsdb';
 const VECTORDB = 'vectordb';
