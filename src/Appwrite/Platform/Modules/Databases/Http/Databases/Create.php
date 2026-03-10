@@ -64,13 +64,13 @@ class Create extends Action
                 $databaseSharedTables = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES', ''));
                 $databaseSharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES_V1', ''));
                 break;
-            case VECTORDB:
-                $databases = Config::getParam('pools-vectordb', []);
-                $databaseKeys = System::getEnv('_APP_DATABASE_VECTORDB_KEYS', '');
-                $databaseOverride = System::getEnv('_APP_DATABASE_VECTORDB_OVERRIDE');
-                $dbScheme = System::getEnv('_APP_DB_HOST_VECTORDB', 'postgresql');
-                $databaseSharedTables = \explode(',', System::getEnv('_APP_DATABASE_VECTORDB_SHARED_TABLES', ''));
-                $databaseSharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_VECTORDB_SHARED_TABLES_V1', ''));
+            case VECTORSDB:
+                $databases = Config::getParam('pools-vectorsdb', []);
+                $databaseKeys = System::getEnv('_APP_DATABASE_VECTORSDB_KEYS', '');
+                $databaseOverride = System::getEnv('_APP_DATABASE_VECTORSDB_OVERRIDE');
+                $dbScheme = System::getEnv('_APP_DB_HOST_VECTORSDB', 'postgresql');
+                $databaseSharedTables = \explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES', ''));
+                $databaseSharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES_V1', ''));
                 break;
             default:
                 // legacy/tablesdb
@@ -143,7 +143,7 @@ class Create extends Action
     protected function getDatabaseCollection()
     {
         return match ($this->getDatabaseType()) {
-            'vectordb' => (Config::getParam('collections', [])['vectordb'] ?? [])['collections'] ?? [],
+            'vectorsdb' => (Config::getParam('collections', [])['vectorsdb'] ?? [])['collections'] ?? [],
             default => (Config::getParam('collections', [])['databases'] ?? [])['collections'] ?? [],
         };
     }

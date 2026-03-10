@@ -367,7 +367,7 @@ abstract class Format
                         }
                 }
                 break;
-            case 'vectorDB':
+            case 'vectorsDB':
                 switch ($method) {
                     case 'getUsage':
                     case 'listUsage':
@@ -380,7 +380,7 @@ abstract class Format
                     case 'createIndex':
                         switch ($param) {
                             case 'type':
-                                return 'VectorDBIndexType';
+                                return 'VectorsDBIndexType';
                             case 'orders':
                                 return 'OrderBy';
                         }
@@ -669,7 +669,7 @@ abstract class Format
                 break;
             case 'databases':
             case 'documentsDB':
-            case 'vectorDB':
+            case 'vectorsDB':
                 switch ($method) {
                     case 'getUsage':
                     case 'listUsage':

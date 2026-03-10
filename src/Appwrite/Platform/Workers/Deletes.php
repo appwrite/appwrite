@@ -624,7 +624,7 @@ class Deletes extends Action
                     'database' => $document->getAttribute('database')
                 ]),
                 ...$dbForProject->find('databases', [
-                    Query::equal('type', [DATABASE_TYPE_DOCUMENTSDB, DATABASE_TYPE_VECTORDB]),
+                    Query::equal('type', [DATABASE_TYPE_DOCUMENTSDB, DATABASE_TYPE_VECTORSDB]),
                     Query::limit(5000),
                 ]),
             ];

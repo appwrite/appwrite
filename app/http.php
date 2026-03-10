@@ -420,8 +420,8 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $tot
         $documentsSharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES_V1', ''));
         $documentsSharedTablesV2 = \array_diff($documentsSharedTables, $documentsSharedTablesV1);
 
-        $vectorSharedTables = \explode(',', System::getEnv('_APP_DATABASE_VECTORDB_SHARED_TABLES', ''));
-        $vectorSharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_VECTORDB_SHARED_TABLES_V1', ''));
+        $vectorSharedTables = \explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES', ''));
+        $vectorSharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES_V1', ''));
         $vectorSharedTablesV2 = \array_diff($vectorSharedTables, $vectorSharedTablesV1);
 
         $cache = $app->getResource('cache');

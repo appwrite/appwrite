@@ -48,7 +48,7 @@ class StatsUsage extends Action
     protected array $skipBaseMetrics = [
         METRIC_DATABASES => true,
         METRIC_DATABASES_DOCUMENTSDB => true,
-        METRIC_DATABASES_VECTORDB => true,
+        METRIC_DATABASES_VECTORSDB => true,
         METRIC_BUCKETS => true,
         METRIC_USERS => true,
         METRIC_FUNCTIONS => true,
@@ -70,11 +70,11 @@ class StatsUsage extends Action
         METRIC_DOCUMENTS => true,
         METRIC_COLLECTIONS_DOCUMENTSDB => true,
         METRIC_DOCUMENTS_DOCUMENTSDB => true,
-        METRIC_COLLECTIONS_VECTORDB => true,
-        METRIC_DOCUMENTS_VECTORDB => true,
+        METRIC_COLLECTIONS_VECTORSDB => true,
+        METRIC_DOCUMENTS_VECTORSDB => true,
         METRIC_DATABASES_STORAGE => true,
         METRIC_DATABASES_STORAGE_DOCUMENTSDB => true,
-        METRIC_DATABASES_STORAGE_VECTORDB => true,
+        METRIC_DATABASES_STORAGE_VECTORSDB => true,
     ];
 
     /**

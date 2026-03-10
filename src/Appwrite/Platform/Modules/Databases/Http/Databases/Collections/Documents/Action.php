@@ -30,8 +30,8 @@ abstract class Action extends DatabasesAction
             $this->context = ROWS;
         } elseif (str_contains($path, '/documentsdb/')) {
             $this->databaseType = DATABASE_TYPE_DOCUMENTSDB;
-        } elseif (str_contains($path, '/vectordb/')) {
-            $this->databaseType = DATABASE_TYPE_VECTORDB;
+        } elseif (str_contains($path, '/vectorsdb/')) {
+            $this->databaseType = DATABASE_TYPE_VECTORSDB;
         }
 
         $contextId = '$' . $this->getCollectionsEventsContext() . 'Id';

@@ -169,7 +169,7 @@ class Update extends Action
             $databaseDoc = null;
             switch ($this->getDatabaseType()) {
                 case DATABASE_TYPE_DOCUMENTSDB:
-                case DATABASE_TYPE_VECTORDB:
+                case DATABASE_TYPE_VECTORSDB:
                     $databaseDoc = $authorization->skip(fn () => $dbForProject->findOne('databases', [
                         Query::equal('$sequence', [$firstOperation['databaseInternalId']])
                     ]));
