@@ -222,18 +222,19 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache, Authoriza
 Server::setResource('getDatabasesDB', function (Cache $cache, Registry $register, Document $project, Authorization $authorization) {
     return function (Document $database, ?Document $projectDocument = null) use ($cache, $register, $project, $authorization): Database {
         $projectDocument ??= $project;
-        $databaseType = $database->getAttribute('database', '');
+        $databaseDSN = $database->getAttribute('database', '');
+        $databaseType = $database->getAttribute('type', '');
 
         // Backwards‑compatibility: older or seeded legacy databases may not have a DSN stored
         // in the "database" attribute. In that case, fall back to the project's database DSN.
-        if ($databaseType === '') {
-            $databaseType = $projectDocument->getAttribute('database', '');
+        if ($databaseDSN === '') {
+            $databaseDSN = $projectDocument->getAttribute('database', '');
         }
 
         try {
-            $databaseDSN = new DSN($databaseType);
+            $databaseDSN = new DSN($databaseDSN);
         } catch (\InvalidArgumentException) {
-            $databaseDSN = new DSN('mysql://'.$databaseType);
+            $databaseDSN = new DSN('mysql://'.$databaseDSN);
         }
 
         try {
