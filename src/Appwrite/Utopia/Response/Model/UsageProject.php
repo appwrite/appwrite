@@ -100,24 +100,6 @@ class UsageProject extends Model
                 'default' => 0,
                 'example' => 0,
             ])
-            ->addRule('realtimeConnectionsTotal', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Current aggregated number of open Realtime connections.',
-                'default' => 0,
-                'example' => 0,
-            ])
-            ->addRule('realtimeMessagesTotal', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Total number of Realtime messages sent to clients.',
-                'default' => 0,
-                'example' => 0,
-            ])
-            ->addRule('realtimeBandwidthTotal', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Total consumed Realtime bandwidth (in bytes).',
-                'default' => 0,
-                'example' => 0,
-            ])
             ->addRule('requests', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated  number of requests per period.',
@@ -128,27 +110,6 @@ class UsageProject extends Model
             ->addRule('network', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated number of consumed bandwidth per period.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('realtimeConnections', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated number of open Realtime connections per period.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('realtimeMessages', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated number of Realtime messages sent to clients per period.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('realtimeBandwidth', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated consumed Realtime bandwidth (in bytes) per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true

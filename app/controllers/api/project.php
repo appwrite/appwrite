@@ -72,10 +72,6 @@ Http::get('/v1/project/usage')
                 METRIC_DATABASES_OPERATIONS_READS,
                 METRIC_DATABASES_OPERATIONS_WRITES,
                 METRIC_FILES_IMAGES_TRANSFORMED,
-                METRIC_REALTIME_CONNECTIONS,
-                METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT,
-                METRIC_REALTIME_INBOUND,
-                METRIC_REALTIME_OUTBOUND,
             ],
             'period' => [
                 METRIC_NETWORK_REQUESTS,
@@ -89,10 +85,6 @@ Http::get('/v1/project/usage')
                 METRIC_DATABASES_OPERATIONS_READS,
                 METRIC_DATABASES_OPERATIONS_WRITES,
                 METRIC_FILES_IMAGES_TRANSFORMED,
-                METRIC_REALTIME_CONNECTIONS,
-                METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT,
-                METRIC_REALTIME_INBOUND,
-                METRIC_REALTIME_OUTBOUND,
             ]
         ];
 
@@ -355,26 +347,6 @@ Http::get('/v1/project/usage')
             ];
         }
 
-        // Realtime bandwidth = realtime.inbound + realtime.outbound (per bucket)
-        $realtimeProjectBandwidth = [];
-        foreach ($usage[METRIC_REALTIME_INBOUND] as $item) {
-            $realtimeProjectBandwidth[$item['date']] ??= 0;
-            $realtimeProjectBandwidth[$item['date']] += $item['value'];
-        }
-
-        foreach ($usage[METRIC_REALTIME_OUTBOUND] as $item) {
-            $realtimeProjectBandwidth[$item['date']] ??= 0;
-            $realtimeProjectBandwidth[$item['date']] += $item['value'];
-        }
-
-        $realtimeBandwidth = [];
-        foreach ($realtimeProjectBandwidth as $date => $value) {
-            $realtimeBandwidth[] = [
-                'date' => $date,
-                'value' => $value
-            ];
-        }
-
         $response->dynamic(new Document([
             'requests' => ($usage[METRIC_NETWORK_REQUESTS]),
             'network' => $network,
@@ -395,16 +367,10 @@ Http::get('/v1/project/usage')
             'deploymentsStorageTotal' => $total[METRIC_DEPLOYMENTS_STORAGE],
             'databasesReadsTotal' => $total[METRIC_DATABASES_OPERATIONS_READS],
             'databasesWritesTotal' => $total[METRIC_DATABASES_OPERATIONS_WRITES],
-            'realtimeConnectionsTotal' => $total[METRIC_REALTIME_CONNECTIONS],
-            'realtimeMessagesTotal' => $total[METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT],
-            'realtimeBandwidthTotal' => ($total[METRIC_REALTIME_INBOUND] ?? 0) + ($total[METRIC_REALTIME_OUTBOUND] ?? 0),
             'executionsBreakdown' => $executionsBreakdown,
             'bucketsBreakdown' => $bucketsBreakdown,
             'databasesReads' => $usage[METRIC_DATABASES_OPERATIONS_READS],
             'databasesWrites' => $usage[METRIC_DATABASES_OPERATIONS_WRITES],
-            'realtimeConnections' => $usage[METRIC_REALTIME_CONNECTIONS],
-            'realtimeMessages' => $usage[METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT],
-            'realtimeBandwidth' => $realtimeBandwidth,
             'databasesStorageBreakdown' => $databasesStorageBreakdown,
             'executionsMbSecondsBreakdown' => $executionsMbSecondsBreakdown,
             'buildsMbSecondsBreakdown' => $buildsMbSecondsBreakdown,

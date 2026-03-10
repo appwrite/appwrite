@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Messaging\Adapter\Realtime;
@@ -38,7 +37,6 @@ use Utopia\DSN\DSN;
 use Utopia\Http\Http;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
-use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
@@ -226,65 +224,10 @@ if (!function_exists('getTelemetry')) {
     }
 }
 
-if (!function_exists('getQueueForStatsUsageForProject')) {
-    function getQueueForStatsUsageForProject(Document $project): StatsUsage
-    {
-        $ctx = Coroutine::getContext();
-
-        if (!isset($ctx['queueForStatsUsage'])) {
-            $ctx['queueForStatsUsage'] = [];
-        }
-
-        if (isset($ctx['queueForStatsUsage'][$project->getSequence()])) {
-            return $ctx['queueForStatsUsage'][$project->getSequence()];
-        }
-
-        global $register;
-
-        /** @var Group $pools */
-        $pools = $register->get('pools');
-
-        $queue = new StatsUsage(new BrokerPool(publisher: $pools->get('publisher')));
-        $queue->setProject($project);
-
-        return $ctx['queueForStatsUsage'][$project->getSequence()] = $queue;
-    }
-}
-
 if (!function_exists('triggerStats')) {
-    /**
-     * Trigger realtime usage stats with a generic metric map.
-     *
-     * @param array<string,int|float> $event Metrics in the form METRIC_CONSTANT => value
-     */
     function triggerStats(array $event, string $projectId): void
     {
-        if (empty($projectId)) {
-            return;
-        }
-
-        try {
-            $consoleDB = getConsoleDB();
-            /** @var Document $project */
-            $project = $consoleDB->getAuthorization()->skip(
-                fn () => $consoleDB->getDocument('projects', $projectId)
-            );
-
-            if ($project->isEmpty()) {
-                return;
-            }
-
-            $queueForStatsUsage = getQueueForStatsUsageForProject($project);
-
-            foreach ($event as $metric => $value) {
-                $queueForStatsUsage->addMetric($metric, $value);
-            }
-
-            $queueForStatsUsage->trigger();
-            $queueForStatsUsage->reset();
-        } catch (Throwable $th) {
-            logError($th, 'realtimeStats', tags: ['projectId' => $projectId]);
-        }
+        return;
     }
 }
 
