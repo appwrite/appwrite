@@ -1393,11 +1393,14 @@ class Builds extends Action
         $durationEnd = \microtime(true);
         $buildDuration = (int) \ceil($durationEnd - $durationStart);
 
+        $existingLogs = $deployment->getAttribute('buildLogs', '');
+        $buildLogs = empty($existingLogs) ? $message : $existingLogs . "\n" . $message;
+
         $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
             'buildEndedAt' => $endTime,
             'buildDuration' => $buildDuration,
             'status' => 'failed',
-            'buildLogs' => $message,
+            'buildLogs' => $buildLogs,
         ]));
 
         if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
