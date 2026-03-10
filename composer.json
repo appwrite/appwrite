@@ -22,7 +22,8 @@
     "autoload": {
         "psr-4": {
             "Appwrite\\": "src/Appwrite",
-            "Executor\\": "src/Executor"
+            "Executor\\": "src/Executor",
+            "Utopia\\Bus\\": "src/Utopia/Bus"
         }
     },
     "autoload-dev": {
@@ -102,6 +103,7 @@
         "swoole/ide-helper": "6.*",
         "phpstan/phpstan": "1.12.*",
         "textalk/websocket": "1.5.*",
+        "czproject/git-php": "4.*",
         "laravel/pint": "1.*",
         "phpbench/phpbench": "1.*"
     },

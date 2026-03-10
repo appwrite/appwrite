@@ -10,6 +10,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
@@ -72,34 +73,31 @@ class Update extends Action
 
         $permissions = $this->getPermissions($teamId, $projectId);
 
-        $project
-            ->setAttribute('teamId', $teamId)
-            ->setAttribute('teamInternalId', $team->getSequence())
-            ->setAttribute('$permissions', $permissions);
-        $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project);
+        $project = $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+            'teamId' => $teamId,
+            'teamInternalId' => $team->getSequence(),
+            '$permissions' => $permissions,
+        ]));
 
         $installations = $dbForPlatform->find('installations', [
             Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
         foreach ($installations as $installation) {
-            $installation->setAttribute('$permissions', $permissions);
-            $dbForPlatform->updateDocument('installations', $installation->getId(), $installation);
+            $dbForPlatform->updateDocument('installations', $installation->getId(), new Document(['$permissions' => $permissions]));
         }
 
         $repositories = $dbForPlatform->find('repositories', [
             Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
         foreach ($repositories as $repository) {
-            $repository->setAttribute('$permissions', $permissions);
-            $dbForPlatform->updateDocument('repositories', $repository->getId(), $repository);
+            $dbForPlatform->updateDocument('repositories', $repository->getId(), new Document(['$permissions' => $permissions]));
         }
 
         $vcsComments = $dbForPlatform->find('vcsComments', [
             Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
         foreach ($vcsComments as $vcsComment) {
-            $vcsComment->setAttribute('$permissions', $permissions);
-            $dbForPlatform->updateDocument('vcsComments', $vcsComment->getId(), $vcsComment);
+            $dbForPlatform->updateDocument('vcsComments', $vcsComment->getId(), new Document(['$permissions' => $permissions]));
         }
 
         $response->dynamic($project, Response::MODEL_PROJECT);
