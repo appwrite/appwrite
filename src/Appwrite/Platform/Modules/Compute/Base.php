@@ -143,7 +143,12 @@ class Base extends Action
             ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
             ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
             ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-        $dbForProject->updateDocument('functions', $function->getId(), $function);
+        $dbForProject->updateDocument('functions', $function->getId(), new Document([
+            'latestDeploymentId' => $deployment->getId(),
+            'latestDeploymentInternalId' => $deployment->getSequence(),
+            'latestDeploymentCreatedAt' => $deployment->getCreatedAt(),
+            'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
+        ]));
 
         $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)
@@ -249,7 +254,12 @@ class Base extends Action
             ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
             ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
             ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-        $dbForProject->updateDocument('sites', $site->getId(), $site);
+        $dbForProject->updateDocument('sites', $site->getId(), new Document([
+            'latestDeploymentId' => $deployment->getId(),
+            'latestDeploymentInternalId' => $deployment->getSequence(),
+            'latestDeploymentCreatedAt' => $deployment->getCreatedAt(),
+            'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
+        ]));
 
         $sitesDomain = $platform['sitesDomain'];
         $domain = ID::unique() . "." . $sitesDomain;

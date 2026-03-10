@@ -93,16 +93,23 @@ class Create extends Base
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function.', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo.', true)
-            ->param('specification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+            ->param('buildSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
-            ), 'Runtime specification for the function and builds.', true, ['plan'])
+            ), 'Build specification for the function deployments.', true, ['plan'])
+            ->param('runtimeSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+                $plan,
+                Config::getParam('specifications', []),
+                System::getEnv('_APP_COMPUTE_CPUS', 0),
+                System::getEnv('_APP_COMPUTE_MEMORY', 0)
+            ), 'Runtime specification for the function executions.', true, ['plan'])
             ->param('templateRepository', '', new Text(128, 0), 'Repository name of the template.', true, deprecated: true)
             ->param('templateOwner', '', new Text(128, 0), 'The name of the owner of the template.', true, deprecated: true)
             ->param('templateRootDirectory', '', new Text(128, 0), 'Path to function code in the template repo.', true, deprecated: true)
             ->param('templateVersion', '', new Text(128, 0), 'Version (tag) for the repo linked to the function template.', true, deprecated: true)
+            ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 means all deployments will be kept.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('timelimit')
@@ -138,11 +145,13 @@ class Create extends Base
         string $providerBranch,
         bool $providerSilentMode,
         string $providerRootDirectory,
-        string $specification,
+        string $buildSpecification,
+        string $runtimeSpecification,
         string $templateRepository,
         string $templateOwner,
         string $templateRootDirectory,
         string $templateVersion,
+        int $deploymentRetention,
         Response $response,
         Database $dbForProject,
         callable $timelimit,
@@ -215,6 +224,7 @@ class Create extends Base
                 'logging' => $logging,
                 'name' => $name,
                 'runtime' => $runtime,
+                'deploymentRetention' => $deploymentRetention,
                 'deploymentInternalId' => '',
                 'deploymentId' => '',
                 'events' => $events,
@@ -225,7 +235,6 @@ class Create extends Base
                 'entrypoint' => $entrypoint,
                 'commands' => $commands,
                 'scopes' => $scopes,
-                'deploymentRetention' => 0,
                 'startCommand' => '',
                 'search' => implode(' ', [$functionId, $name, $runtime]),
                 'version' => 'v5',
@@ -237,9 +246,8 @@ class Create extends Base
                 'providerBranch' => $providerBranch,
                 'providerRootDirectory' => $providerRootDirectory,
                 'providerSilentMode' => $providerSilentMode,
-                'specification' => $specification,
-                'buildSpecification' => $specification,
-                'runtimeSpecification' => $specification,
+                'buildSpecification' => $buildSpecification,
+                'runtimeSpecification' => $runtimeSpecification,
             ]));
         } catch (DuplicateException) {
             throw new Exception(Exception::FUNCTION_ALREADY_EXISTS);
@@ -283,7 +291,12 @@ class Create extends Base
             $function->setAttribute('repositoryInternalId', $repository->getSequence());
         }
 
-        $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
+        $function = $dbForProject->updateDocument('functions', $function->getId(), new Document([
+            'scheduleId' => $function->getAttribute('scheduleId'),
+            'scheduleInternalId' => $function->getAttribute('scheduleInternalId'),
+            'repositoryId' => $function->getAttribute('repositoryId'),
+            'repositoryInternalId' => $function->getAttribute('repositoryInternalId'),
+        ]));
 
         // Backwards compatibility with 1.6 behaviour
         $requestFormat = $request->getHeader('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
@@ -321,12 +334,12 @@ class Create extends Base
                     referenceType: 'branch'
                 );
 
-                $function = $function
-                    ->setAttribute('latestDeploymentId', $deployment->getId())
-                    ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
-                    ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
-                    ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-                $dbForProject->updateDocument('functions', $function->getId(), $function);
+                $function = $dbForProject->updateDocument('functions', $function->getId(), new Document([
+                    'latestDeploymentId' => $deployment->getId(),
+                    'latestDeploymentInternalId' => $deployment->getSequence(),
+                    'latestDeploymentCreatedAt' => $deployment->getCreatedAt(),
+                    'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
+                ]));
             } elseif (!$template->isEmpty()) {
                 // Deploy non-VCS from template
                 $deploymentId = ID::unique();
@@ -347,12 +360,12 @@ class Create extends Base
                     'activate' => true,
                 ]));
 
-                $function = $function
-                    ->setAttribute('latestDeploymentId', $deployment->getId())
-                    ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
-                    ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
-                    ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-                $dbForProject->updateDocument('functions', $function->getId(), $function);
+                $function = $dbForProject->updateDocument('functions', $function->getId(), new Document([
+                    'latestDeploymentId' => $deployment->getId(),
+                    'latestDeploymentInternalId' => $deployment->getSequence(),
+                    'latestDeploymentCreatedAt' => $deployment->getCreatedAt(),
+                    'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
+                ]));
 
                 $queueForBuilds
                     ->setType(BUILD_TYPE_DEPLOYMENT)

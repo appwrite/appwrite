@@ -214,6 +214,8 @@ Http::init()
                 }
 
                 if (!$dbKey) {
+                    \var_dump($apiKey);
+                    \var_dump($request->getHeader('x-appwrite-key', ''));
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
 
@@ -372,9 +374,13 @@ Http::init()
                 $user->setAttribute('accessedAt', DateTime::now());
 
                 if ($project->getId() !== 'console' && APP_MODE_ADMIN !== $mode) {
-                    $dbForProject->updateDocument('users', $user->getId(), $user);
+                    $dbForProject->updateDocument('users', $user->getId(), new Document([
+                        'accessedAt' => $user->getAttribute('accessedAt')
+                    ]));
                 } else {
-                    $authorization->skip(fn () => $dbForPlatform->updateDocument('users', $user->getId(), $user));
+                    $authorization->skip(fn () => $dbForPlatform->updateDocument('users', $user->getId(), new Document([
+                        'accessedAt' => $user->getAttribute('accessedAt')
+                    ])));
                 }
             }
         }
@@ -650,7 +656,9 @@ Http::init()
                         $transformedAt = $file->getAttribute('transformedAt', '');
                         if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
                             $file->setAttribute('transformedAt', DateTime::now());
-                            $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $file->getAttribute('bucketInternalId'), $file->getId(), $file));
+                            $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $file->getAttribute('bucketInternalId'), $file->getId(), new Document([
+                                'transformedAt' => $file->getAttribute('transformedAt')
+                            ])));
                         }
                     }
                 }
@@ -949,7 +957,9 @@ Http::shutdown()
                     }
                 } elseif (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $accessedAt) {
                     $cacheLog->setAttribute('accessedAt', $now);
-                    $authorization->skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
+                    $authorization->skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), new Document([
+                        'accessedAt' => $cacheLog->getAttribute('accessedAt')
+                    ])));
                     // Overwrite the file every APP_CACHE_UPDATE seconds to update the file modified time that is used in the TTL checks in cache->load()
                     $cache->save($key, $data['payload']);
                 }

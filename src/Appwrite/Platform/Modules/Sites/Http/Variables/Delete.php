@@ -10,6 +10,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -76,7 +77,9 @@ class Delete extends Base
 
         $dbForProject->deleteDocument('variables', $variable->getId());
 
-        $dbForProject->updateDocument('sites', $site->getId(), $site->setAttribute('live', false));
+        $dbForProject->updateDocument('sites', $site->getId(), new Document([
+            'live' => false,
+        ]));
 
         $response->noContent();
     }
