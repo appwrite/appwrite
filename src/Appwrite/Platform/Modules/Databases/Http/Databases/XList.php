@@ -91,7 +91,6 @@ class XList extends Action
             $cursor->setValue($cursorDocument);
         }
 
-        // use base action to get all types, contexts, etc!
         $queries[] = Query::equal('type', [$this->getDatabaseType()]);
 
         try {

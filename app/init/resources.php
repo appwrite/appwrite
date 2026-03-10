@@ -1615,6 +1615,6 @@ Http::setResource('executionsRetentionCount', function (Document $project, array
 Http::setResource('embeddingAgent', function ($register) {
     $adapter = new Ollama();
     $adapter->setEndpoint(System::getEnv('_APP_EMBEDDING_ENDPOINT', 'http://ollama:11434/api/embed'));
-    $adapter->setTimeout(90000);
+    $adapter->setTimeout((int) System::getEnv('_APP_EMBEDDING_TIMEOUT', '30000'));
     return new Agent($adapter);
 }, ['register']);

@@ -218,6 +218,50 @@ class Deletes extends Action
         }
     }
 
+    private function cleanDatabase(
+        Document $databaseDoc,
+        callable $executionActionPerDatabase,
+        bool $projectTables,
+        array $projectCollectionIds
+    ): void {
+        $executionActionPerDatabase(
+            $databaseDoc,
+            fn (Database $dbForDatabases) => $this->cleanDatabaseCollections(
+                $dbForDatabases,
+                $projectTables,
+                $projectCollectionIds
+            )
+        );
+    }
+
+    private function cleanDatabaseCollections(
+        Database $dbForDatabases,
+        bool $projectTables,
+        array $projectCollectionIds
+    ): void {
+        $dbForDatabases->foreach(
+            Database::METADATA,
+            function (Document $collection) use ($dbForDatabases, $projectTables, $projectCollectionIds) {
+                $collectionId = $collection->getId();
+
+                try {
+                    if ($projectTables || !\in_array($collectionId, $projectCollectionIds, true)) {
+                        $dbForDatabases->deleteCollection($collectionId);
+                        return;
+                    }
+
+                    $this->deleteByGroup(
+                        $collectionId,
+                        [Query::orderAsc()],
+                        database: $dbForDatabases
+                    );
+                } catch (Throwable $e) {
+                    Console::error('Error deleting ' . $collectionId . ' ' . $e->getMessage());
+                }
+            }
+        );
+    }
+
     /**
      * @param Database $dbForPlatform
      * @param callable $getProjectDB
@@ -590,32 +634,12 @@ class Deletes extends Action
             };
 
             batch(array_map(
-                fn ($databaseDoc) =>
-                    fn () => $executionActionPerDatabase(
-                        $databaseDoc,
-                        function (Database $dbForDatabases) use ($projectTables, $projectCollectionIds) {
-                            $dbForDatabases->foreach(
-                                Database::METADATA,
-                                function (Document $collection) use ($dbForDatabases, $projectTables, $projectCollectionIds) {
-                                    try {
-                                        if ($projectTables || !\in_array($collection->getId(), $projectCollectionIds, true)) {
-                                            $dbForDatabases->deleteCollection($collection->getId());
-                                        } else {
-                                            $this->deleteByGroup(
-                                                $collection->getId(),
-                                                [Query::orderAsc()],
-                                                database: $dbForDatabases
-                                            );
-                                        }
-                                    } catch (Throwable $e) {
-                                        Console::error(
-                                            'Error deleting ' . $collection->getId() . ' ' . $e->getMessage()
-                                        );
-                                    }
-                                }
-                            );
-                        }
-                    ),
+                fn ($databaseDoc) => fn () => $this->cleanDatabase(
+                    $databaseDoc,
+                    $executionActionPerDatabase,
+                    $projectTables,
+                    $projectCollectionIds
+                ),
                 $databasesToClean
             ));
 

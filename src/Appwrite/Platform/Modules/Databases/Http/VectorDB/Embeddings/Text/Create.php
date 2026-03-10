@@ -74,7 +74,7 @@ class Create extends CreateDocumentAction
                     ]
                 )
             ])
-            ->param('texts', [], fn (array $plan) => new ArrayList(new Text(0), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of text to generate embeddings.', false, ['plan'])
+            ->param('texts', [], fn (array $plan) => new ArrayList(new Text(0), $plan['databasesMaxEmbeddingTexts'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of text to generate embeddings.', false, ['plan'])
             ->param('model', Ollama::MODEL_EMBEDDING_GEMMA, new WhiteList(Ollama::MODELS), 'The embedding model to use for generating vector embeddings.', true)
             ->inject('response')
             ->inject('project')
@@ -88,7 +88,7 @@ class Create extends CreateDocumentAction
     public function action(array $texts, string $model, UtopiaResponse $response, Document $project, Agent $embeddingAgent, StatsUsage $queueForStatsUsage, Log $log, ?Logger $logger): void
     {
         $results = [];
-        $embeddingAgent->getAdapter()->setModel($model)->setTimeout(60000);
+        $embeddingAgent->getAdapter()->setModel($model);
         $dimension = $embeddingAgent->getAdapter()->getEmbeddingDimension();
 
         $totalDuration = 0;
