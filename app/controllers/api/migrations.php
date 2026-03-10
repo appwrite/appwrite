@@ -48,7 +48,8 @@ function getDatabaseTransferResourceServices(string $databaseType)
     return match($databaseType) {
         DATABASE_TYPE_LEGACY,
         DATABASE_TYPE_TABLESDB => Transfer::GROUP_DATABASES_TABLES_DB,
-        DATABASE_TYPE_VECTORDB => Transfer::GROUP_DATABASES_VECTOR_DB
+        DATABASE_TYPE_VECTORDB => Transfer::GROUP_DATABASES_VECTOR_DB,
+        DATABASE_TYPE_DOCUMENTSDB => Transfer::GROUP_DATABASES_DOCUMENTS_DB
     };
 }
 
@@ -442,7 +443,7 @@ Http::post('/v1/migrations/csv/imports')
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         $databaseType = $database->getAttribute('type');
         if (!in_array($databaseType, CSV_ALLOWED_DATABASE_TYPES)) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Database type not supported for csv');
+            throw new Exception(Exception::MIGRATION_DATABASE_TYPE_UNSUPPORTED, 'Database type not supported for csv');
         }
         $fileSize = $deviceForMigrations->getFileSize($newPath);
         $resources = Transfer::extractServices([getDatabaseTransferResourceServices($databaseType)]);
@@ -580,7 +581,7 @@ Http::post('/v1/migrations/csv/exports')
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         $databaseType = $database->getAttribute('type');
         if (!in_array($databaseType, CSV_ALLOWED_DATABASE_TYPES)) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Database type not supported for csv');
+            throw new Exception(Exception::MIGRATION_DATABASE_TYPE_UNSUPPORTED, 'Database type not supported for csv');
         }
         $resources = Transfer::extractServices([getDatabaseTransferResourceServices($databaseType)]);
 
@@ -743,10 +744,8 @@ Http::get('/v1/migrations/appwrite/report')
     ->inject('getDatabasesDB')
     ->action(function (array $resources, string $endpoint, string $projectID, string $key, Response $response, callable $getDatabasesDB) {
 
-        $appwrite = new Appwrite($projectID, $endpoint, $key, $getDatabasesDB);
-
         try {
-            $appwrite = new Appwrite($projectID, $endpoint, $key);
+            $appwrite = new Appwrite($projectID, $endpoint, $key, $getDatabasesDB);
             $report = $appwrite->report($resources);
         } catch (\Throwable $e) {
             throw new Exception(

@@ -344,7 +344,7 @@ $register->set('pools', function () {
 
             $poolAdapter = System::getEnv('_APP_POOL_ADAPTER', default: 'stack') === 'swoole' ? new SwoolePool() : new StackPool();
 
-            $pool = new Pool($poolAdapter, $name, $poolSize, function () use ($type, $resource, $dsn, $key) {
+            $pool = new Pool($poolAdapter, $name, $poolSize, function () use ($type, $resource, $dsn) {
                 // Get Adapter
                 switch ($type) {
                     case 'database':
@@ -357,9 +357,6 @@ $register->set('pools', function () {
                         };
 
                         $adapter->setDatabase($dsn->getPath());
-                        if ($key === 'documentsdb') {
-                            $adapter->setSupportForAttributes(false);
-                        }
                         return $adapter;
                     case 'pubsub':
                         return match ($dsn->getScheme()) {

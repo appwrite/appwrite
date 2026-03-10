@@ -21,9 +21,9 @@ class TransactionState
 {
     private Database $dbForProject;
     private Authorization $authorization;
-    /** @var Authorization $authorization */    /**
+    /**
      * @var callable(Document $database): Database
-    */
+     */
     private mixed $getDatabasesDB;
 
     public function __construct(Database $dbForProject, Authorization $authorization, callable $getDatabasesDB)
