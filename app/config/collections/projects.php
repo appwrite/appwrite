@@ -777,6 +777,7 @@ return [
                 'filters' => [],
             ],
             [
+                // At the moment, always empty (no runtime supports it yet)
                 'array' => false,
                 '$id' => ID::custom('startCommand'),
                 'type' => Database::VAR_STRING,
@@ -785,17 +786,6 @@ return [
                 'signed' => true,
                 'required' => false,
                 'default' => null,
-                'filters' => [],
-            ],
-            [
-                'array' => false,
-                '$id' => ID::custom('specification'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 128,
-                'signed' => false,
-                'required' => false,
-                'default' => APP_COMPUTE_SPECIFICATION_DEFAULT,
                 'filters' => [],
             ],
             [
@@ -1253,17 +1243,6 @@ return [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
-            ],
-            [
-                'array' => false,
-                '$id' => ID::custom('specification'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 128,
-                'signed' => false,
-                'required' => false,
-                'default' => APP_COMPUTE_SPECIFICATION_DEFAULT,
                 'filters' => [],
             ],
             [
@@ -2189,13 +2168,6 @@ return [
                 'attributes' => ['duration'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => ID::custom('_key_function_internal_id'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['resourceInternalId'],
-                'lengths' => [],
-                'orders' => [],
             ],
             [
                 '$id' => ID::custom('_key_resourceType'),

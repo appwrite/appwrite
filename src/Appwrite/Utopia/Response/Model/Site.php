@@ -58,6 +58,12 @@ class Site extends Model
                 'default' => '',
                 'example' => 'react',
             ])
+            ->addRule('deploymentRetention', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'How many days to keep the non-active deployments before they will be automatically deleted.',
+                'default' => 0,
+                'example' => 7,
+            ])
             ->addRule('deploymentId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Site\'s active deployment ID.',
@@ -125,6 +131,12 @@ class Site extends Model
                 'default' => '',
                 'example' => 'npm run build',
             ])
+            ->addRule('startCommand', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Custom command to use when starting site runtime.',
+                'default' => '',
+                'example' => 'node custom-server.mjs',
+            ])
             ->addRule('outputDirectory', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The directory where the site build output is located.',
@@ -161,9 +173,15 @@ class Site extends Model
                 'default' => false,
                 'example' => false,
             ])
-            ->addRule('specification', [
+            ->addRule('buildSpecification', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Machine specification for builds and executions.',
+                'description' => 'Machine specification for deployment builds.',
+                'default' => APP_COMPUTE_SPECIFICATION_DEFAULT,
+                'example' => APP_COMPUTE_SPECIFICATION_DEFAULT,
+            ])
+            ->addRule('runtimeSpecification', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Machine specification for SSR executions.',
                 'default' => APP_COMPUTE_SPECIFICATION_DEFAULT,
                 'example' => APP_COMPUTE_SPECIFICATION_DEFAULT,
             ])

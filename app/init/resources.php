@@ -10,7 +10,6 @@ use Appwrite\Event\Certificate;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Event\Execution;
 use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
@@ -160,9 +159,6 @@ Http::setResource('queueForAudits', function (Publisher $publisher) {
 }, ['publisher']);
 Http::setResource('queueForFunctions', function (Publisher $publisher) {
     return new Func($publisher);
-}, ['publisher']);
-Http::setResource('queueForExecutions', function (Publisher $publisher) {
-    return new Execution($publisher);
 }, ['publisher']);
 Http::setResource('eventProcessor', function () {
     return new EventProcessor();
@@ -1240,7 +1236,9 @@ Http::setResource('devKey', function (Request $request, Document $project, array
     $accessedAt = $key->getAttribute('accessedAt', 0);
     if (empty($accessedAt) || DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
         $key->setAttribute('accessedAt', DatabaseDateTime::now());
-        $authorization->skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), $key));
+        $authorization->skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), new Document([
+            'accessedAt' => $key->getAttribute('accessedAt')
+        ])));
         $dbForPlatform->purgeCachedDocument('projects', $project->getId());
     }
 
@@ -1257,7 +1255,10 @@ Http::setResource('devKey', function (Request $request, Document $project, array
 
             /** Update access time as well */
             $key->setAttribute('accessedAt', DatabaseDateTime::now());
-            $key = $authorization->skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), $key));
+            $key = $authorization->skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), new Document([
+                'sdks' => $key->getAttribute('sdks'),
+                'accessedAt' => $key->getAttribute('accessedAt')
+            ])));
             $dbForPlatform->purgeCachedDocument('projects', $project->getId());
         }
     }
@@ -1413,7 +1414,9 @@ Http::setResource('resourceToken', function ($project, $dbForProject, $request, 
                 $accessedAt = $token->getAttribute('accessedAt', 0);
                 if (empty($accessedAt) || DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), -APP_RESOURCE_TOKEN_ACCESS)) > $accessedAt) {
                     $token->setAttribute('accessedAt', DatabaseDateTime::now());
-                    $authorization->skip(fn () => $dbForProject->updateDocument('resourceTokens', $token->getId(), $token));
+                    $authorization->skip(fn () => $dbForProject->updateDocument('resourceTokens', $token->getId(), new Document([
+                        'accessedAt' => $token->getAttribute('accessedAt')
+                    ])));
                 }
 
                 return new Document([

@@ -107,11 +107,12 @@ class Delete extends Action
             $site = $dbForProject->updateDocument(
                 'sites',
                 $site->getId(),
-                $site
-                ->setAttribute('latestDeploymentCreatedAt', $latestDeployment->isEmpty() ? '' : $latestDeployment->getCreatedAt())
-                ->setAttribute('latestDeploymentInternalId', $latestDeployment->isEmpty() ? '' : $latestDeployment->getSequence())
-                ->setAttribute('latestDeploymentId', $latestDeployment->isEmpty() ? '' : $latestDeployment->getId())
-                ->setAttribute('latestDeploymentStatus', $latestDeployment->isEmpty() ? '' : $latestDeployment->getAttribute('status', ''))
+                new Document([
+                    'latestDeploymentCreatedAt' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getCreatedAt(),
+                    'latestDeploymentInternalId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getSequence(),
+                    'latestDeploymentId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getId(),
+                    'latestDeploymentStatus' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getAttribute('status', ''),
+                ])
             );
         }
 

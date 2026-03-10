@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Health\Http\Health\Storage;
 
-use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -58,33 +57,21 @@ class Get extends Action
         $checkStart = \microtime(true);
 
         foreach ($devices as $device) {
-            $uniqueFileName = \uniqid('health', true);
-            $filePath = $device->getPath($uniqueFileName);
+            $path = $device->getPath(\uniqid('health', true));
 
-            if (!$device->write($filePath, 'test', 'text/plain')) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed writing test file to ' . $device->getRoot());
-            }
-
-            $readError = null;
             try {
-                if ($device->read($filePath) !== 'test') {
-                    $readError = new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed reading test file from ' . $device->getRoot());
+                if (!$device->write($path, 'test', 'text/plain')) {
+                    throw new \Exception("Failed writing test file to {$device->getRoot()}");
                 }
-            } catch (\Throwable $e) {
-                $readError = $e;
+
+                $content = $device->read($path);
+                if ($content !== 'test') {
+                    throw new \Exception("Failed reading test file from {$device->getRoot()}: content mismatch");
+                }
             } finally {
-                // Always attempt to clean up test file
-                if (!$device->delete($filePath)) {
-                    if ($readError !== null) {
-                        // If read already failed, wrap delete error but preserve original
-                        \error_log('Failed deleting test file from ' . $device->getRoot() . ' during read error recovery');
-                    } else {
-                        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed deleting test file from ' . $device->getRoot());
-                    }
-                }
-                // Re-throw read error if it occurred
-                if ($readError !== null) {
-                    throw $readError;
+                try {
+                    $device->delete($path);
+                } catch (\Throwable) {
                 }
             }
         }

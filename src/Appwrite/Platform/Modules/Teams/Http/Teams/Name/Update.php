@@ -10,6 +10,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Text;
@@ -67,7 +68,7 @@ class Update extends Action
             ->setAttribute('name', $name)
             ->setAttribute('search', implode(' ', [$teamId, $name]));
 
-        $team = $dbForProject->updateDocument('teams', $team->getId(), $team);
+        $team = $dbForProject->updateDocument('teams', $team->getId(), new Document(['name' => $name, 'search' => implode(' ', [$teamId, $name])]));
 
         $queueForEvents->setParam('teamId', $team->getId());
 

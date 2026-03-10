@@ -255,7 +255,7 @@ class Builds extends Action
         $version = $this->getVersion($resource);
         $runtime = $this->getRuntime($resource, $version);
 
-        $spec = Config::getParam('specifications')[$resource->getAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
+        $spec = Config::getParam('specifications')[$resource->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
 
         if ($resource->getCollection() === 'functions' && \is_null($runtime)) {
             throw new \Exception('Runtime "' . $resource->getAttribute('runtime', '') . '" is not supported');
@@ -279,7 +279,10 @@ class Builds extends Action
 
         $deployment->setAttribute('buildStartedAt', $startTime);
         $deployment->setAttribute('status', 'processing');
-        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+            'buildStartedAt' => $startTime,
+            'status' => 'processing',
+        ]));
 
         if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
             $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
@@ -366,7 +369,11 @@ class Builds extends Action
                         ->setAttribute('sourcePath', $source)
                         ->setAttribute('sourceSize', $directorySize)
                         ->setAttribute('totalSize', $directorySize);
-                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                        'sourcePath' => $deployment->getAttribute('sourcePath'),
+                        'sourceSize' => $deployment->getAttribute('sourceSize'),
+                        'totalSize' => $deployment->getAttribute('totalSize'),
+                    ]));
 
                     $queueForRealtime
                         ->setPayload($deployment->getArrayCopy())
@@ -480,7 +487,13 @@ class Builds extends Action
                     $deployment->setAttribute('providerCommitAuthor', APP_VCS_GITHUB_USERNAME);
                     $deployment->setAttribute('providerCommitMessage', "Create '" . $resource->getAttribute('name', '') . "' function");
                     $deployment->setAttribute('providerCommitUrl', "https://github.com/$cloneOwner/$cloneRepository/commit/$providerCommitHash");
-                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                        'providerCommitHash' => $deployment->getAttribute('providerCommitHash'),
+                        'providerCommitAuthorUrl' => $deployment->getAttribute('providerCommitAuthorUrl'),
+                        'providerCommitAuthor' => $deployment->getAttribute('providerCommitAuthor'),
+                        'providerCommitMessage' => $deployment->getAttribute('providerCommitMessage'),
+                        'providerCommitUrl' => $deployment->getAttribute('providerCommitUrl'),
+                    ]));
 
                     $queueForRealtime
                         ->setPayload($deployment->getArrayCopy())
@@ -528,7 +541,11 @@ class Builds extends Action
                     ->setAttribute('sourcePath', $source)
                     ->setAttribute('sourceSize', $directorySize)
                     ->setAttribute('totalSize', $directorySize);
-                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+                $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                    'sourcePath' => $deployment->getAttribute('sourcePath'),
+                    'sourceSize' => $deployment->getAttribute('sourceSize'),
+                    'totalSize' => $deployment->getAttribute('totalSize'),
+                ]));
 
                 $queueForRealtime
                     ->setPayload($deployment->getArrayCopy())
@@ -543,7 +560,9 @@ class Builds extends Action
 
             /** Request the executor to build the code... */
             $deployment->setAttribute('status', 'building');
-            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                'status' => 'building',
+            ]));
 
             if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
                 $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
@@ -819,7 +838,9 @@ class Builds extends Action
 
                                     if ($affected) {
                                         $deployment = $deployment->setAttribute('buildLogs', $currentLogs);
-                                        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+                                        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                                            'buildLogs' => $currentLogs,
+                                        ]));
 
                                         $queueForRealtime
                                             ->setPayload($deployment->getArrayCopy())
@@ -905,7 +926,14 @@ class Builds extends Action
                 }
             }
 
-            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                'buildPath' => $deployment->getAttribute('buildPath'),
+                'buildSize' => $deployment->getAttribute('buildSize'),
+                'totalSize' => $deployment->getAttribute('totalSize'),
+                'buildLogs' => $deployment->getAttribute('buildLogs'),
+                'adapter' => $deployment->getAttribute('adapter'),
+                'fallbackFile' => $deployment->getAttribute('fallbackFile'),
+            ]));
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
                 ->trigger();
@@ -916,12 +944,15 @@ class Builds extends Action
 
             $logs = $deployment->getAttribute('buildLogs', '');
             $date = \date('H:i:s');
-            $logs .= "[90m[$date] [90m[[0mappwrite[90m][32m Deployment finished. [0m\n";
+            $logs .= "\033[90m[$date] \033[90m[\033[0mappwrite\033[90m]\033[32m Deployment finished. \033[0m\n";
             $deployment->setAttribute('buildLogs', $logs);
 
             /** Update the status */
             $deployment->setAttribute('status', 'ready');
-            $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
+            $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
+                'buildLogs' => $deployment->getAttribute('buildLogs'),
+                'status' => 'ready',
+            ]));
 
             Console::log('Status marked as ready');
 
@@ -1109,7 +1140,11 @@ class Builds extends Action
                     ->setAttribute('resourceUpdatedAt', DateTime::now())
                     ->setAttribute('schedule', $resource->getAttribute('schedule'))
                     ->setAttribute('active', !empty($resource->getAttribute('schedule')) && !empty($resource->getAttribute('deploymentId')));
-                $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule);
+                $dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document([
+                    'resourceUpdatedAt' => $schedule->getAttribute('resourceUpdatedAt'),
+                    'schedule' => $schedule->getAttribute('schedule'),
+                    'active' => $schedule->getAttribute('active'),
+                ]));
             }
 
             /** Screenshot site */
@@ -1160,7 +1195,12 @@ class Builds extends Action
             $deployment->setAttribute('status', 'failed');
 
             $deployment->setAttribute('buildLogs', $message);
-            $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment);
+            $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
+                'buildEndedAt' => $deployment->getAttribute('buildEndedAt'),
+                'buildDuration' => $deployment->getAttribute('buildDuration'),
+                'status' => 'failed',
+                'buildLogs' => $message,
+            ]));
 
             if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
                 $resource = $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => $deployment->getAttribute('status', '')]));
@@ -1189,7 +1229,7 @@ class Builds extends Action
 
     protected function sendUsage(Document $resource, Document $deployment, Document $project, StatsUsage $queue): void
     {
-        $spec = Config::getParam('specifications')[$resource->getAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
+        $spec = Config::getParam('specifications')[$resource->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
 
         switch ($deployment->getAttribute('status')) {
             case 'ready':
@@ -1467,7 +1507,9 @@ class Builds extends Action
             $logs .= "[90m[$date] [90m[[0mappwrite[90m][33m Git action failed. Deployment will continue. [0m\n";
 
             $deployment->setAttribute('buildLogs', $logs);
-            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+                'buildLogs' => $deployment->getAttribute('buildLogs'),
+            ]));
 
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
@@ -1483,10 +1525,12 @@ class Builds extends Action
 
         $logs = $deployment->getAttribute('buildLogs', '');
         $date = \date('H:i:s');
-        $logs .= "[90m[$date] [90m[[0mappwrite[90m][33m Build has been canceled. [0m\n";
+        $logs .= "\033[90m[$date] \033[90m[\033[0mappwrite\033[90m]\033[33m Build has been canceled. \033[0m\n";
 
         $deployment->setAttribute('buildLogs', $logs);
-        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
+            'buildLogs' => $deployment->getAttribute('buildLogs'),
+        ]));
 
         $queueForRealtime
             ->setPayload($deployment->getArrayCopy())

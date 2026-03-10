@@ -365,7 +365,13 @@ class Messaging extends Action
         $message->setAttribute('deliveredTotal', $deliveredTotal);
         $message->setAttribute('deliveredAt', DateTime::now());
 
-        $dbForProject->updateDocument('messages', $message->getId(), $message);
+        $dbForProject->updateDocument('messages', $message->getId(), new Document([
+            'deliveryErrors' => $message->getAttribute('deliveryErrors'),
+            'status' => $message->getAttribute('status'),
+            'search' => $message->getAttribute('search'),
+            'deliveredTotal' => $message->getAttribute('deliveredTotal'),
+            'deliveredAt' => $message->getAttribute('deliveredAt'),
+        ]));
 
         // Delete any attachments that were downloaded to local storage
         if ($provider->getAttribute('type') === MESSAGE_TYPE_EMAIL) {
