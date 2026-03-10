@@ -153,7 +153,7 @@ class Server
             ->inject('response')
             ->action($errorHandler->action(...));
 
-        $adapter = new class($host, $port, ['worker_num' => 1]) extends SwooleAdapter {
+        $adapter = new class ($host, $port, ['worker_num' => 1]) extends SwooleAdapter {
             public function getNativeServer(): SwooleServer
             {
                 return $this->server;

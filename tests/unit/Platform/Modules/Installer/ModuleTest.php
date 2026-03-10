@@ -138,7 +138,7 @@ class ModuleTest extends TestCase
      */
     public function testRouteRegistration(): void
     {
-        $platform = new class(new Module()) extends Platform {};
+        $platform = new class (new Module()) extends Platform {};
         $platform->init(Service::TYPE_HTTP);
 
         // If we get here without exceptions, route registration succeeded
