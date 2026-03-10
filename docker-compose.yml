@@ -1327,7 +1327,7 @@ services:
     networks:
       - appwrite
     volumes:
-      - appwrite-postgresql:/var/lib/postgresql/data:rw
+      - appwrite-postgresql:/var/lib/postgresql/18/data:rw
     ports:
       - "5432:5432"
     environment:
