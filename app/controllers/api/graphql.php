@@ -134,7 +134,15 @@ Http::post('/v1/graphql/mutation')
         }
 
         if ($request->getHeader('x-sdk-graphql') == 'true' && isset($query['query'])) {
-            $query = $query['query'];
+            if (\is_array($query['query'])) {
+                $query = $query['query'];
+            } elseif (\is_string($query['query'])) {
+                $query = [
+                    'query' => $query['query'],
+                    'operationName' => $query['operationName'] ?? null,
+                    'variables' => $query['variables'] ?? null,
+                ];
+            }
         }
 
         $output = execute($schema, $promiseAdapter, $query);
@@ -192,7 +200,15 @@ Http::post('/v1/graphql')
         }
 
         if ($request->getHeader('x-sdk-graphql') == 'true' && isset($query['query'])) {
-            $query = $query['query'];
+            if (\is_array($query['query'])) {
+                $query = $query['query'];
+            } elseif (\is_string($query['query'])) {
+                $query = [
+                    'query' => $query['query'],
+                    'operationName' => $query['operationName'] ?? null,
+                    'variables' => $query['variables'] ?? null,
+                ];
+            }
         }
 
         $output = execute($schema, $promiseAdapter, $query);
