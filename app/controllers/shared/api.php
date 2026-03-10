@@ -214,6 +214,8 @@ Http::init()
                 }
 
                 if (!$dbKey) {
+                    \var_dump($apiKey);
+                    \var_dump($request->getHeader('x-appwrite-key', ''));
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
 
