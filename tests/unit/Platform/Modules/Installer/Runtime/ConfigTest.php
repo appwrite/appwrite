@@ -7,7 +7,6 @@ use PHPUnit\Framework\TestCase;
 
 class ConfigTest extends TestCase
 {
-
     public function testDefaultValues(): void
     {
         $config = new Config();
