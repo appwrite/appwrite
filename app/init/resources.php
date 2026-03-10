@@ -874,7 +874,6 @@ Http::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Docume
         $pool = $pools->get($databaseDSN->getHost());
 
         $adapter = new DatabasePool($pool);
-        $adapter->setSupportForAttributes($databaseType !== DOCUMENTSDB);
         $database = new Database($adapter, $cache);
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
@@ -885,7 +884,8 @@ Http::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Docume
             ->setMetadata('project', $project->getId())
             ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
             ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
-
+        // inside pools authorization needs to be set first
+        $database->getAdapter()->setSupportForAttributes($databaseType !== DOCUMENTSDB);
         if (\in_array($dsn->getHost(), $sharedTables)) {
             $database
                 ->setSharedTables(true)

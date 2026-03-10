@@ -247,11 +247,11 @@ Server::setResource('getDatabasesDB', function (Cache $cache, Registry $register
         $pool = $pools->get($databaseDSN->getHost());
 
         $adapter = new DatabasePool($pool);
-        $adapter->setSupportForAttributes($databaseType !== DOCUMENTSDB);
         $database = new Database($adapter, $cache);
         $database
             ->setDatabase(APP_DATABASE)
             ->setAuthorization($authorization);
+        $database->getAdapter()->setSupportForAttributes($databaseType !== DOCUMENTSDB);
 
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
