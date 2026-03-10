@@ -168,12 +168,15 @@ class Webhooks extends Action
 
             $webhook->setAttribute('logs', $logs);
 
+            $updatePayload = ['logs' => $logs];
+
             if ($attempts >= \intval(System::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS', '10'))) {
                 $webhook->setAttribute('enabled', false);
+                $updatePayload['enabled'] = false;
                 $this->sendEmailAlert($attempts, $statusCode, $webhook, $project, $dbForPlatform, $queueForMails, $plan);
             }
 
-            $dbForPlatform->updateDocument('webhooks', $webhook->getId(), $webhook);
+            $dbForPlatform->updateDocument('webhooks', $webhook->getId(), new Document($updatePayload));
             $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
             $this->errors[] = $logs;
@@ -184,8 +187,9 @@ class Webhooks extends Action
 
 
         } else {
-            $webhook->setAttribute('attempts', 0); // Reset attempts on success
-            $dbForPlatform->updateDocument('webhooks', $webhook->getId(), $webhook);
+            $dbForPlatform->updateDocument('webhooks', $webhook->getId(), new Document([
+                'attempts' => 0,
+            ]));
             $dbForPlatform->purgeCachedDocument('projects', $project->getId());
             $queueForStatsUsage
                 ->addMetric(METRIC_WEBHOOKS_SENT, 1)

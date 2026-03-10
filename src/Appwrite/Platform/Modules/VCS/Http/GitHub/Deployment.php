@@ -326,7 +326,12 @@ trait Deployment
                     ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
                     ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
                     ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-                $authorization->skip(fn () => $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource));
+                $authorization->skip(fn () => $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document([
+                    'latestDeploymentId' => $resource->getAttribute('latestDeploymentId'),
+                    'latestDeploymentInternalId' => $resource->getAttribute('latestDeploymentInternalId'),
+                    'latestDeploymentCreatedAt' => $resource->getAttribute('latestDeploymentCreatedAt'),
+                    'latestDeploymentStatus' => $resource->getAttribute('latestDeploymentStatus'),
+                ])));
 
                 if ($resource->getCollection() === 'sites') {
                     $projectId = $project->getId();
