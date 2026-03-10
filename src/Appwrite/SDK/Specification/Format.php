@@ -309,7 +309,7 @@ abstract class Format
                     case 'createIndex':
                         switch ($param) {
                             case 'type':
-                                return 'IndexType';
+                                return 'DatabasesIndexType';
                             case 'orders':
                                 return 'OrderBy';
                         }
@@ -342,7 +342,7 @@ abstract class Format
                     case 'createIndex':
                         switch ($param) {
                             case 'type':
-                                return 'IndexType';
+                                return 'TablesDBIndexType';
                             case 'orders':
                                 return 'OrderBy';
                         }
@@ -361,7 +361,7 @@ abstract class Format
                     case 'createIndex':
                         switch ($param) {
                             case 'type':
-                                return 'IndexType';
+                                return 'DocumentsDBIndexType';
                             case 'orders':
                                 return 'OrderBy';
                         }

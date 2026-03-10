@@ -45,7 +45,7 @@ class Attributes extends Validator
     /**
      * @param int $maxAttributes Maximum number of attributes allowed
      * @param bool $supportForSpatialAttributes Whether DB supports spatial attributes
-     * @param bool $supportForSpatialAttributes Whether DB supports attributes or not
+     * @param bool $supportForAttributes Whether DB supports attributes or not
      */
     public function __construct(
         int $maxAttributes = APP_LIMIT_ARRAY_PARAMS_SIZE,
@@ -81,7 +81,7 @@ class Attributes extends Validator
         }
 
         if (\count($value) && !$this->supportForAttributes) {
-            $this->message = "Attributes are not supported by the current database";
+            $this->message = 'Attributes are not supported by the current database';
             return false;
         }
 

@@ -544,9 +544,9 @@ class Migrations extends Action
     protected function getDatabasesDBForProject(Document $database)
     {
         if ($this->sourceProject) {
-            return call_user_func($this->getDatabasesDB, $database, $this->sourceProject);
+            return ($this->getDatabasesDB)($database, $this->sourceProject);
         }
-        return call_user_func($this->getDatabasesDB, $database);
+        return ($this->getDatabasesDB)($database);
     }
 
     /**
