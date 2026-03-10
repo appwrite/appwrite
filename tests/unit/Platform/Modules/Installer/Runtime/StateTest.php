@@ -68,8 +68,6 @@ class StateTest extends TestCase
         $this->progressFiles[] = $this->state->progressFilePath($installId);
     }
 
-    // --- sanitizeInstallId ---
-
     public function testSanitizeInstallIdWithValidId(): void
     {
         $this->assertEquals('abc123', $this->state->sanitizeInstallId('abc123'));
@@ -101,8 +99,6 @@ class StateTest extends TestCase
         $this->assertEquals('', $this->state->sanitizeInstallId(123));
         $this->assertEquals('', $this->state->sanitizeInstallId(null));
     }
-
-    // --- hashSensitiveValue ---
 
     public function testHashSensitiveValueProducesConsistentHash(): void
     {
@@ -138,8 +134,6 @@ class StateTest extends TestCase
         $this->assertMatchesRegularExpression('/^[a-f0-9]{64}$/', $hash);
     }
 
-    // --- isValidPort ---
-
     public function testIsValidPortWithValidPorts(): void
     {
         $this->assertTrue($this->state->isValidPort('1'));
@@ -167,8 +161,6 @@ class StateTest extends TestCase
         $this->assertFalse($this->state->isValidPort(0));
     }
 
-    // --- isValidEmailAddress ---
-
     public function testIsValidEmailAddressWithValidEmails(): void
     {
         $this->assertTrue($this->state->isValidEmailAddress('user@example.com'));
@@ -183,8 +175,6 @@ class StateTest extends TestCase
         $this->assertFalse($this->state->isValidEmailAddress('@domain.com'));
         $this->assertFalse($this->state->isValidEmailAddress('user@'));
     }
-
-    // --- isValidPassword ---
 
     public function testIsValidPasswordWithValidPasswords(): void
     {
@@ -201,8 +191,6 @@ class StateTest extends TestCase
         $this->assertFalse($this->state->isValidPassword('        ')); // 8 spaces, no non-whitespace
     }
 
-    // --- isValidSecretKey ---
-
     public function testIsValidSecretKeyWithValidKeys(): void
     {
         $this->assertTrue($this->state->isValidSecretKey('a'));
@@ -216,8 +204,6 @@ class StateTest extends TestCase
         $this->assertFalse($this->state->isValidSecretKey(str_repeat('x', 65)));
     }
 
-    // --- isValidAccountName ---
-
     public function testIsValidAccountNameWithValidNames(): void
     {
         $this->assertTrue($this->state->isValidAccountName('John'));
@@ -229,8 +215,6 @@ class StateTest extends TestCase
         $this->assertFalse($this->state->isValidAccountName(''));
         $this->assertFalse($this->state->isValidAccountName('   '));
     }
-
-    // --- isValidAppDomainInput ---
 
     public function testIsValidAppDomainInputWithValidDomains(): void
     {
@@ -263,8 +247,6 @@ class StateTest extends TestCase
         $this->assertFalse($this->state->isValidAppDomainInput('host:port:extra'));
     }
 
-    // --- isValidDatabaseAdapter ---
-
     public function testIsValidDatabaseAdapterWithValidAdapters(): void
     {
         $this->assertTrue($this->state->isValidDatabaseAdapter('mongodb'));
@@ -281,16 +263,12 @@ class StateTest extends TestCase
         $this->assertFalse($this->state->isValidDatabaseAdapter('MongoDB')); // case sensitive
     }
 
-    // --- progressFilePath ---
-
     public function testProgressFilePathFormat(): void
     {
         $path = $this->state->progressFilePath('test123');
         $this->assertStringContainsString('appwrite-install-test123.json', $path);
         $this->assertStringStartsWith(sys_get_temp_dir(), $path);
     }
-
-    // --- readProgressFile / writeProgressFile ---
 
     public function testReadProgressFileReturnsDefaultForMissing(): void
     {
@@ -417,8 +395,6 @@ class StateTest extends TestCase
         @unlink($this->state->progressFilePath($installId));
     }
 
-    // --- buildConfig ---
-
     public function testBuildConfigReturnsConfigInstance(): void
     {
         // Clear env to avoid interference
@@ -464,8 +440,6 @@ class StateTest extends TestCase
         putenv('APPWRITE_INSTALLER_CONFIG');
     }
 
-    // --- sanitizeInstallId edge cases ---
-
     public function testSanitizeInstallIdWithOnlySpecialChars(): void
     {
         $this->assertEquals('', $this->state->sanitizeInstallId('!@#$%^&*()'));
@@ -500,8 +474,6 @@ class StateTest extends TestCase
     {
         $this->assertEquals('AbCdEf', $this->state->sanitizeInstallId('AbCdEf'));
     }
-
-    // --- isValidPort edge cases ---
 
     public function testIsValidPortBoundaryValues(): void
     {
@@ -539,8 +511,6 @@ class StateTest extends TestCase
         $this->assertFalse($this->state->isValidPort('100000'));
     }
 
-    // --- isValidPassword edge cases ---
-
     public function testIsValidPasswordExactly8Chars(): void
     {
         $this->assertTrue($this->state->isValidPassword('12345678'));
@@ -559,8 +529,6 @@ class StateTest extends TestCase
         $this->assertTrue($this->state->isValidPassword('   a    ')); // has non-whitespace
     }
 
-    // --- isValidSecretKey edge cases ---
-
     public function testIsValidSecretKeyExactly64Chars(): void
     {
         $this->assertTrue($this->state->isValidSecretKey(str_repeat('a', 64)));
@@ -572,8 +540,6 @@ class StateTest extends TestCase
         $this->assertTrue($this->state->isValidSecretKey(' '));
         $this->assertTrue($this->state->isValidSecretKey('   '));
     }
-
-    // --- isValidAppDomainInput edge cases ---
 
     public function testIsValidAppDomainInputWithEmptyPort(): void
     {
@@ -615,8 +581,6 @@ class StateTest extends TestCase
         $this->assertFalse($this->state->isValidAppDomainInput('[::1]:70000'));
     }
 
-    // --- isValidDatabaseAdapter edge cases ---
-
     public function testIsValidDatabaseAdapterWithWhitespace(): void
     {
         $this->assertFalse($this->state->isValidDatabaseAdapter(' mongodb'));
@@ -631,8 +595,6 @@ class StateTest extends TestCase
         $this->assertFalse($this->state->isValidDatabaseAdapter('PostgreSQL'));
         $this->assertFalse($this->state->isValidDatabaseAdapter('MONGODB'));
     }
-
-    // --- readProgressFile edge cases ---
 
     public function testReadProgressFileWithCorruptedJson(): void
     {
@@ -672,8 +634,6 @@ class StateTest extends TestCase
         $this->assertIsArray($data);
         $this->assertEmpty($data['steps']);
     }
-
-    // --- writeProgressFile edge cases ---
 
     public function testWriteProgressFileOverwritesExistingStep(): void
     {
@@ -795,8 +755,6 @@ class StateTest extends TestCase
         $this->assertEquals($startedAt, $data['startedAt']);
     }
 
-    // --- Global lock: reserveGlobalLock / updateGlobalLock ---
-
     public function testReserveGlobalLockFirstLockSucceeds(): void
     {
         @unlink(Server::INSTALLER_LOCK_FILE);
@@ -912,8 +870,6 @@ class StateTest extends TestCase
         $this->assertEquals(Server::STATUS_IN_PROGRESS, $lock['status']);
     }
 
-    // --- applyEnvConfig ---
-
     public function testApplyEnvConfigWithConfigObject(): void
     {
         putenv('APPWRITE_INSTALLER_CONFIG');
@@ -965,8 +921,6 @@ class StateTest extends TestCase
         $this->assertEquals('4444', $rebuilt->getDefaultHttpPort());
         $this->assertTrue($rebuilt->isUpgrade());
     }
-
-    // --- buildConfig edge cases ---
 
     public function testBuildConfigWithInvalidEnvJson(): void
     {
@@ -1041,8 +995,6 @@ class StateTest extends TestCase
         $this->assertEquals('80', $config->getDefaultHttpPort());
     }
 
-    // --- hashSensitiveValue edge cases ---
-
     public function testHashSensitiveValueWithNewlines(): void
     {
         // Newlines are not stripped by trim but surrounding whitespace is
@@ -1058,8 +1010,6 @@ class StateTest extends TestCase
         // "\n" trimmed becomes "" => should return ''
         $this->assertEquals('', $this->state->hashSensitiveValue("\n"));
     }
-
-    // --- isValidEmailAddress edge cases ---
 
     public function testIsValidEmailAddressWithUnicodeLocal(): void
     {
@@ -1078,8 +1028,6 @@ class StateTest extends TestCase
         $this->assertFalse($this->state->isValidEmailAddress('user@ example.com'));
     }
 
-    // --- isValidAccountName edge cases ---
-
     public function testIsValidAccountNameWithOnlyTabs(): void
     {
         $this->assertFalse($this->state->isValidAccountName("\t\t"));
@@ -1089,8 +1037,6 @@ class StateTest extends TestCase
     {
         $this->assertTrue($this->state->isValidAccountName(" a "));
     }
-
-    // --- progressFilePath edge cases ---
 
     public function testProgressFilePathWithSpecialCharsInId(): void
     {
@@ -1105,8 +1051,6 @@ class StateTest extends TestCase
         $path = $this->state->progressFilePath('');
         $this->assertStringContainsString('appwrite-install-.json', $path);
     }
-
-    // --- writeProgressFile with non-error status doesn't set error key ---
 
     public function testWriteProgressFileCompletedDoesNotSetError(): void
     {
@@ -1140,8 +1084,6 @@ class StateTest extends TestCase
         $this->assertArrayNotHasKey('error', $data);
     }
 
-    // --- writeProgressFile with no step or empty payload ---
-
     public function testWriteProgressFileWithNoStep(): void
     {
         $installId = 'test-nostep-' . uniqid();
@@ -1159,8 +1101,6 @@ class StateTest extends TestCase
         // But updatedAt should still be set
         $this->assertArrayHasKey('updatedAt', $data);
     }
-
-    // --- Full lifecycle: lock -> progress -> complete ---
 
     public function testFullInstallationLifecycle(): void
     {

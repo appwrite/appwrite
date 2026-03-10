@@ -19,8 +19,6 @@ class AppDomainTest extends TestCase
         $this->validator = null;
     }
 
-    // --- Metadata ---
-
     public function testDescription(): void
     {
         $this->assertNotEmpty($this->validator->getDescription());
@@ -37,8 +35,6 @@ class AppDomainTest extends TestCase
         $this->assertEquals($this->validator::TYPE_STRING, $this->validator->getType());
     }
 
-    // --- Non-string types ---
-
     public function testRejectsNonStringTypes(): void
     {
         $this->assertFalse($this->validator->isValid(null));
@@ -49,8 +45,6 @@ class AppDomainTest extends TestCase
         $this->assertFalse($this->validator->isValid([]));
         $this->assertFalse($this->validator->isValid(new \stdClass()));
     }
-
-    // --- Empty / whitespace ---
 
     public function testRejectsEmptyString(): void
     {
@@ -63,8 +57,6 @@ class AppDomainTest extends TestCase
         $this->assertFalse($this->validator->isValid("\t"));
         $this->assertFalse($this->validator->isValid("\n"));
     }
-
-    // --- Localhost ---
 
     public function testAcceptsLocalhost(): void
     {
@@ -79,8 +71,6 @@ class AppDomainTest extends TestCase
         $this->assertTrue($this->validator->isValid('localhost:1'));
         $this->assertTrue($this->validator->isValid('localhost:65535'));
     }
-
-    // --- Valid domains ---
 
     public function testAcceptsValidDomains(): void
     {
@@ -98,8 +88,6 @@ class AppDomainTest extends TestCase
         $this->assertTrue($this->validator->isValid('sub.example.com:3000'));
     }
 
-    // --- Valid IPv4 ---
-
     public function testAcceptsIPv4Addresses(): void
     {
         $this->assertTrue($this->validator->isValid('127.0.0.1'));
@@ -116,8 +104,6 @@ class AppDomainTest extends TestCase
         $this->assertTrue($this->validator->isValid('10.0.0.1:3000'));
     }
 
-    // --- Valid IPv6 bracket notation ---
-
     public function testAcceptsIPv6BracketNotation(): void
     {
         $this->assertTrue($this->validator->isValid('[::1]'));
@@ -128,16 +114,12 @@ class AppDomainTest extends TestCase
         $this->assertFalse($this->validator->isValid('[fe80::1%25eth0]'));
     }
 
-    // --- Invalid domains ---
-
     public function testRejectsInvalidDomains(): void
     {
         $this->assertFalse($this->validator->isValid('-invalid.com'));
         $this->assertFalse($this->validator->isValid('invalid-.com'));
         $this->assertFalse($this->validator->isValid('.example.com'));
     }
-
-    // --- Invalid port ---
 
     public function testRejectsInvalidPorts(): void
     {
@@ -148,16 +130,12 @@ class AppDomainTest extends TestCase
         $this->assertFalse($this->validator->isValid('localhost:-1'));
     }
 
-    // --- Multiple colons without brackets ---
-
     public function testRejectsMultipleColonsWithoutBrackets(): void
     {
         $this->assertFalse($this->validator->isValid('::1'));
         $this->assertFalse($this->validator->isValid('2001:db8::1'));
         $this->assertFalse($this->validator->isValid('a:b:c'));
     }
-
-    // --- Malformed IPv6 brackets ---
 
     public function testRejectsMalformedIPv6Brackets(): void
     {
@@ -168,8 +146,6 @@ class AppDomainTest extends TestCase
         $this->assertFalse($this->validator->isValid('[invalid'));
     }
 
-    // --- Port boundary values ---
-
     public function testPortBoundaryValues(): void
     {
         $this->assertTrue($this->validator->isValid('localhost:1'));
@@ -178,15 +154,11 @@ class AppDomainTest extends TestCase
         $this->assertFalse($this->validator->isValid('localhost:65536'));
     }
 
-    // --- Trimming ---
-
     public function testTrimsWhitespace(): void
     {
         $this->assertTrue($this->validator->isValid('  localhost  '));
         $this->assertTrue($this->validator->isValid('  example.com  '));
     }
-
-    // --- Empty port segment ---
 
     public function testAcceptsEmptyPortSegment(): void
     {

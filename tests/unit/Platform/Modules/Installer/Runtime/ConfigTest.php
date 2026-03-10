@@ -7,7 +7,6 @@ use PHPUnit\Framework\TestCase;
 
 class ConfigTest extends TestCase
 {
-    // --- Constructor ---
 
     public function testDefaultValues(): void
     {
@@ -50,8 +49,6 @@ class ConfigTest extends TestCase
         // Defaults should remain
         $this->assertEquals('80', $config->getDefaultHttpPort());
     }
-
-    // --- apply ---
 
     public function testApplyAllFields(): void
     {
@@ -117,8 +114,6 @@ class ConfigTest extends TestCase
         $this->assertEquals('updated', $config->getOrganization());
     }
 
-    // --- toArray ---
-
     public function testToArrayRoundTrip(): void
     {
         $config = new Config();
@@ -164,8 +159,6 @@ class ConfigTest extends TestCase
         $this->assertEquals($original->getLockedDatabase(), $rebuilt->getLockedDatabase());
         $this->assertEquals($original->toArray(), $rebuilt->toArray());
     }
-
-    // --- Setters and Getters ---
 
     public function testSetAndGetDefaultHttpPort(): void
     {
@@ -251,8 +244,6 @@ class ConfigTest extends TestCase
         $this->assertEquals($vars, $config->getVars());
     }
 
-    // --- JSON serialization ---
-
     public function testJsonRoundTrip(): void
     {
         $config = new Config([
@@ -270,8 +261,6 @@ class ConfigTest extends TestCase
         $rebuilt = new Config($decoded);
         $this->assertEquals($config->toArray(), $rebuilt->toArray());
     }
-
-    // --- Constructor edge cases ---
 
     public function testConstructorWithEmptyArray(): void
     {
@@ -295,8 +284,6 @@ class ConfigTest extends TestCase
         // Vars should remain empty since containsKnownKeys returns true
         $this->assertEmpty($config->getVars());
     }
-
-    // --- apply edge cases ---
 
     public function testApplyWithEmptyArray(): void
     {
@@ -410,8 +397,6 @@ class ConfigTest extends TestCase
         $this->assertEquals('3000', $config->getDefaultHttpPort());
     }
 
-    // --- toArray edge cases ---
-
     public function testToArrayContainsAllExpectedKeys(): void
     {
         $config = new Config();
@@ -453,8 +438,6 @@ class ConfigTest extends TestCase
         $this->assertNull($array['lockedDatabase']);
     }
 
-    // --- Multiple apply calls ---
-
     public function testMultipleApplyCallsAccumulate(): void
     {
         $config = new Config();
@@ -481,8 +464,6 @@ class ConfigTest extends TestCase
         $config->apply(['defaultHttpPort' => '3333']);
         $this->assertEquals('3333', $config->getDefaultHttpPort());
     }
-
-    // --- Vars replacement (not merge) ---
 
     public function testSetVarsReplacesNotMerges(): void
     {
