@@ -176,10 +176,10 @@ $register->set('pools', function () {
         'pass' => System::getEnv('_APP_DB_PASS', ''),
         'path' => System::getEnv('_APP_DB_SCHEMA', ''),
     ]);
-    $fallbackForVectorDB = 'db_main=' . AppwriteURL::unparse([
-        'scheme' => System::getEnv('_APP_DB_ADAPTER_VECTORDB', 'postgresql'),
-        'host' => System::getEnv('_APP_DB_HOST_VECTORDB', 'postgresql'),
-        'port' => System::getEnv('_APP_DB_PORT_VECTORDB', '5432'),
+    $fallbackForVectorsDB = 'db_main=' . AppwriteURL::unparse([
+        'scheme' => System::getEnv('_APP_DB_ADAPTER_VECTORSDB', 'postgresql'),
+        'host' => System::getEnv('_APP_DB_HOST_VECTORSDB', 'postgresql'),
+        'port' => System::getEnv('_APP_DB_PORT_VECTORSDB', '5432'),
         'user' => System::getEnv('_APP_DB_USER', ''),
         'pass' => System::getEnv('_APP_DB_PASS', ''),
         'path' => System::getEnv('_APP_DB_SCHEMA', ''),
@@ -204,9 +204,9 @@ $register->set('pools', function () {
             'multiple' => true,
             'schemes' => ['mongodb'],
         ],
-        'vectordb' => [
+        'vectorsdb' => [
             'type' => 'database',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_DATABASE_VECTORDB', $fallbackForVectorDB),
+            'dsns' => System::getEnv('_APP_CONNECTIONS_DATABASE_VECTORSDB', $fallbackForVectorsDB),
             'multiple' => true,
             'schemes' => ['postgresql'],
         ],

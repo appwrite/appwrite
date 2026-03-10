@@ -267,81 +267,81 @@ class UsageProject extends Model
                 'default' => 0,
                 'example' => 0,
             ])
-            // VectorDB aggregates
-            ->addRule('vectordbDatabasesTotal', [
+            // VectorsDB aggregates
+            ->addRule('vectorsdbDatabasesTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Total aggregated number of VectorDB databases.',
+                'description' => 'Total aggregated number of VectorsDB databases.',
                 'default' => 0,
                 'example' => 0,
             ])
-            ->addRule('vectordbCollectionsTotal', [
+            ->addRule('vectorsdbCollectionsTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Total aggregated number of VectorDB collections.',
+                'description' => 'Total aggregated number of VectorsDB collections.',
                 'default' => 0,
                 'example' => 0,
             ])
-            ->addRule('vectordbDocumentsTotal', [
+            ->addRule('vectorsdbDocumentsTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Total aggregated number of VectorDB documents.',
+                'description' => 'Total aggregated number of VectorsDB documents.',
                 'default' => 0,
                 'example' => 0,
             ])
-            ->addRule('vectordbDatabasesStorageTotal', [
+            ->addRule('vectorsdbDatabasesStorageTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Total aggregated VectorDB storage (bytes).',
+                'description' => 'Total aggregated VectorsDB storage (bytes).',
                 'default' => 0,
                 'example' => 0,
             ])
-            ->addRule('vectordbDatabasesReadsTotal', [
+            ->addRule('vectorsdbDatabasesReadsTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Total aggregated number of VectorDB reads.',
+                'description' => 'Total aggregated number of VectorsDB reads.',
                 'default' => 0,
                 'example' => 0,
             ])
-            ->addRule('vectordbDatabasesWritesTotal', [
+            ->addRule('vectorsdbDatabasesWritesTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Total aggregated number of VectorDB writes.',
+                'description' => 'Total aggregated number of VectorsDB writes.',
                 'default' => 0,
                 'example' => 0,
             ])
-            ->addRule('vectordbDatabases', [
+            ->addRule('vectorsdbDatabases', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated VectorDB databases per period.',
+                'description' => 'Aggregated VectorsDB databases per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
-            ->addRule('vectordbCollections', [
+            ->addRule('vectorsdbCollections', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated VectorDB collections per period.',
+                'description' => 'Aggregated VectorsDB collections per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
-            ->addRule('vectordbDocuments', [
+            ->addRule('vectorsdbDocuments', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated VectorDB documents per period.',
+                'description' => 'Aggregated VectorsDB documents per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
-            ->addRule('vectordbDatabasesStorage', [
+            ->addRule('vectorsdbDatabasesStorage', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated VectorDB storage per period.',
+                'description' => 'Aggregated VectorsDB storage per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
-            ->addRule('vectordbDatabasesReads', [
+            ->addRule('vectorsdbDatabasesReads', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated VectorDB reads per period.',
+                'description' => 'Aggregated VectorsDB reads per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
-            ->addRule('vectordbDatabasesWrites', [
+            ->addRule('vectorsdbDatabasesWrites', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated VectorDB writes per period.',
+                'description' => 'Aggregated VectorsDB writes per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true

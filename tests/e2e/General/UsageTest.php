@@ -1150,7 +1150,7 @@ class UsageTest extends Scope
     }
 
     #[Depends('testDocumentsDBStats')]
-    public function testPrepareVectorDBStats(array $data): array
+    public function testPrepareVectorsDBStats(array $data): array
     {
         $documentsTotal = 0;
         $collectionsTotal = 0;
@@ -1159,11 +1159,11 @@ class UsageTest extends Scope
         $requestsTotal = $data['requestsTotal'];
 
         for ($i = 0; $i < self::CREATE; $i++) {
-            $name = uniqid() . ' vectordb';
+            $name = uniqid() . ' vectorsdb';
 
             $response = $this->client->call(
                 Client::METHOD_POST,
-                '/vectordb',
+                '/vectorsdb',
                 array_merge([
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $this->getProject()['$id']
@@ -1185,7 +1185,7 @@ class UsageTest extends Scope
             if ($i < (self::CREATE / 2)) {
                 $response = $this->client->call(
                     Client::METHOD_DELETE,
-                    '/vectordb/' . $vectordbId,
+                    '/vectorsdb/' . $vectordbId,
                     array_merge([
                         'x-appwrite-project' => $this->getProject()['$id']
                     ], $this->getHeaders()),
@@ -1203,7 +1203,7 @@ class UsageTest extends Scope
 
             $response = $this->client->call(
                 Client::METHOD_POST,
-                '/vectordb/' . $vectordbId . '/collections',
+                '/vectorsdb/' . $vectordbId . '/collections',
                 array_merge([
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $this->getProject()['$id']
@@ -1233,7 +1233,7 @@ class UsageTest extends Scope
             if ($i < (self::CREATE / 2)) {
                 $response = $this->client->call(
                     Client::METHOD_DELETE,
-                    '/vectordb/' . $vectordbId . '/collections/' . $collectionId,
+                    '/vectorsdb/' . $vectordbId . '/collections/' . $collectionId,
                     array_merge([
                         'x-appwrite-project' => $this->getProject()['$id']
                     ], $this->getHeaders()),
@@ -1249,7 +1249,7 @@ class UsageTest extends Scope
         for ($i = 0; $i < self::CREATE; $i++) {
             $response = $this->client->call(
                 Client::METHOD_POST,
-                '/vectordb/' . $vectordbId . '/collections/' . $collectionId . '/documents',
+                '/vectorsdb/' . $vectordbId . '/collections/' . $collectionId . '/documents',
                 array_merge([
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $this->getProject()['$id']
@@ -1276,7 +1276,7 @@ class UsageTest extends Scope
             if ($i < (self::CREATE / 2)) {
                 $response = $this->client->call(
                     Client::METHOD_DELETE,
-                    '/vectordb/' . $vectordbId . '/collections/' . $collectionId . '/documents/' . $documentId,
+                    '/vectorsdb/' . $vectordbId . '/collections/' . $collectionId . '/documents/' . $documentId,
                     array_merge([
                         'x-appwrite-project' => $this->getProject()['$id']
                     ], $this->getHeaders()),
@@ -1300,9 +1300,9 @@ class UsageTest extends Scope
         ]);
     }
 
-    #[Depends('testPrepareVectorDBStats')]
+    #[Depends('testPrepareVectorsDBStats')]
     #[Retry(count: 1)]
-    public function testVectorDBStats(array $data): array
+    public function testVectorsDBStats(array $data): array
     {
         $vectordbId = $data['vectordbId'];
         $collectionId = $data['vectordbCollectionId'];
@@ -1329,7 +1329,7 @@ class UsageTest extends Scope
             $this->assertCount(1, $response['body']['network']);
             $this->assertEquals($requestsTotal, $response['body']['requests'][array_key_last($response['body']['requests'])]['value']);
             $this->validateDates($response['body']['requests']);
-            // vectordbTotal should reflect only VectorDB instances, not relational databases.
+            // vectordbTotal should reflect only VectorsDB instances, not relational databases.
             $this->assertEquals($vectordbTotal, $response['body']['vectordbDatabasesTotal']);
             $this->assertEquals($documentsTotal, $response['body']['vectordbDocumentsTotal']);
         });
@@ -1346,7 +1346,7 @@ class UsageTest extends Scope
         $this->assertEventually(function () use ($vectordbId, $collectionsTotal, $documentsTotal) {
             $response = $this->client->call(
                 Client::METHOD_GET,
-                '/vectordb/' . $vectordbId . '/usage?range=30d',
+                '/vectorsdb/' . $vectordbId . '/usage?range=30d',
                 $this->getConsoleHeaders()
             );
 
@@ -1360,7 +1360,7 @@ class UsageTest extends Scope
         $this->assertEventually(function () use ($vectordbId, $collectionId, $documentsTotal) {
             $response = $this->client->call(
                 Client::METHOD_GET,
-                '/vectordb/' . $vectordbId . '/collections/' . $collectionId . '/usage?range=30d',
+                '/vectorsdb/' . $vectordbId . '/collections/' . $collectionId . '/usage?range=30d',
                 $this->getConsoleHeaders()
             );
 
@@ -1371,7 +1371,7 @@ class UsageTest extends Scope
         return $data;
     }
 
-    #[Depends('testVectorDBStats')]
+    #[Depends('testVectorsDBStats')]
     public function testPrepareFunctionsStats(array $data): array
     {
         $executionTime = 0;
@@ -1401,7 +1401,8 @@ class UsageTest extends Scope
                 ],
                 'schedule' => '0 0 1 1 *',
                 'timeout' => 10,
-                'specification' => Specification::S_8VCPU_8GB
+                'buildSpecification' => Specification::S_8VCPU_8GB,
+                'runtimeSpecification' => Specification::S_4VCPU_4GB,
             ]
         );
 
@@ -1857,7 +1858,7 @@ class UsageTest extends Scope
         for ($i = 0; $i < 3; $i++) {
             $response = $this->client->call(
                 Client::METHOD_POST,
-                '/vectordb/embeddings/text',
+                '/vectorsdb/embeddings/text',
                 array_merge([
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $this->getProject()['$id'],

@@ -177,15 +177,15 @@ class ProjectsConsoleClientTest extends Scope
         ]);
         $this->assertEquals(201, $documentsCollection['headers']['status-code']);
 
-        // Create vectordb database and collection
-        $vectorDb = $this->client->call(Client::METHOD_POST, '/vectordb', $projectAdminHeaders, [
+        // Create vectorsdb database and collection
+        $vectorDb = $this->client->call(Client::METHOD_POST, '/vectorsdb', $projectAdminHeaders, [
             'databaseId' => ID::unique(),
             'name' => 'Vector DB',
         ]);
         $this->assertEquals(201, $vectorDb['headers']['status-code']);
         $vectorDbId = $vectorDb['body']['$id'];
 
-        $vectorCollection = $this->client->call(Client::METHOD_POST, '/vectordb/' . $vectorDbId . '/collections', $projectAdminHeaders, [
+        $vectorCollection = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $vectorDbId . '/collections', $projectAdminHeaders, [
             'collectionId' => ID::unique(),
             'name' => 'Vector Collection',
             'dimension' => 3,

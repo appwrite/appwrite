@@ -93,6 +93,7 @@ const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite?sub_confirmation=
 const APP_COMPUTE_CPUS_DEFAULT = 0.5;
 const APP_COMPUTE_MEMORY_DEFAULT = 512;
 const APP_COMPUTE_SPECIFICATION_DEFAULT = Specification::S_1VCPU_512MB;
+const APP_COMPUTE_DEPLOYMENT_MAX_RETENTION = 100 * 365; // 100 years
 const APP_SDK_PLATFORM_SERVER = 'server';
 const APP_SDK_PLATFORM_CLIENT = 'client';
 const APP_SDK_PLATFORM_CONSOLE = 'console';
@@ -303,20 +304,20 @@ const METRIC_DATABASE_ID_OPERATIONS_READS_DOCUMENTSDB = 'documentsdb.{databaseIn
 const METRIC_DATABASES_OPERATIONS_WRITES_DOCUMENTSDB  = 'documentsdb.databases.operations.writes';
 const METRIC_DATABASE_ID_OPERATIONS_WRITES_DOCUMENTSDB = 'documentsdb.{databaseInternalId}.databases.operations.writes';
 
-// vectordb
-const METRIC_DATABASES_VECTORDB = 'vectordb.databases';
-const METRIC_COLLECTIONS_VECTORDB = 'vectordb.collections';
-const METRIC_DATABASES_STORAGE_VECTORDB = 'vectordb.databases.storage';
-const METRIC_DATABASE_ID_COLLECTIONS_VECTORDB = 'vectordb.{databaseInternalId}.collections';
-const METRIC_DATABASE_ID_STORAGE_VECTORDB = 'vectordb.{databaseInternalId}.databases.storage';
-const METRIC_DOCUMENTS_VECTORDB = 'vectordb.documents';
-const METRIC_DATABASE_ID_DOCUMENTS_VECTORDB = 'vectordb.{databaseInternalId}.documents';
-const METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS_VECTORDB = 'vectordb.{databaseInternalId}.{collectionInternalId}.documents';
-const METRIC_DATABASE_ID_COLLECTION_ID_STORAGE_VECTORDB = 'vectordb.{databaseInternalId}.{collectionInternalId}.databases.storage';
-const METRIC_DATABASES_OPERATIONS_READS_VECTORDB  = 'vectordb.databases.operations.reads';
-const METRIC_DATABASE_ID_OPERATIONS_READS_VECTORDB = 'vectordb.{databaseInternalId}.databases.operations.reads';
-const METRIC_DATABASES_OPERATIONS_WRITES_VECTORDB  = 'vectordb.databases.operations.writes';
-const METRIC_DATABASE_ID_OPERATIONS_WRITES_VECTORDB = 'vectordb.{databaseInternalId}.databases.operations.writes';
+// vectorsdb
+const METRIC_DATABASES_VECTORSDB = 'vectorsdb.databases';
+const METRIC_COLLECTIONS_VECTORSDB = 'vectorsdb.collections';
+const METRIC_DATABASES_STORAGE_VECTORSDB = 'vectorsdb.databases.storage';
+const METRIC_DATABASE_ID_COLLECTIONS_VECTORSDB = 'vectorsdb.{databaseInternalId}.collections';
+const METRIC_DATABASE_ID_STORAGE_VECTORSDB = 'vectorsdb.{databaseInternalId}.databases.storage';
+const METRIC_DOCUMENTS_VECTORSDB = 'vectorsdb.documents';
+const METRIC_DATABASE_ID_DOCUMENTS_VECTORSDB = 'vectorsdb.{databaseInternalId}.documents';
+const METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS_VECTORSDB = 'vectorsdb.{databaseInternalId}.{collectionInternalId}.documents';
+const METRIC_DATABASE_ID_COLLECTION_ID_STORAGE_VECTORSDB = 'vectorsdb.{databaseInternalId}.{collectionInternalId}.databases.storage';
+const METRIC_DATABASES_OPERATIONS_READS_VECTORSDB  = 'vectorsdb.databases.operations.reads';
+const METRIC_DATABASE_ID_OPERATIONS_READS_VECTORSDB = 'vectorsdb.{databaseInternalId}.databases.operations.reads';
+const METRIC_DATABASES_OPERATIONS_WRITES_VECTORSDB  = 'vectorsdb.databases.operations.writes';
+const METRIC_DATABASE_ID_OPERATIONS_WRITES_VECTORSDB = 'vectorsdb.{databaseInternalId}.databases.operations.writes';
 const METRIC_EMBEDDINGS_TEXT = 'embeddings.text';
 const METRIC_EMBEDDINGS_MODEL_TEXT = 'embeddings.text.{embeddingModel}';
 const METRIC_EMBEDDINGS_TEXT_TOTAL_ERROR = 'embeddings.text.totalErrors';
@@ -439,11 +440,11 @@ const PROJECT_STATUS_ACTIVE = 'active';
 const DATABASE_TYPE_LEGACY = 'legacy';
 const DATABASE_TYPE_TABLESDB = 'tablesdb';
 const DATABASE_TYPE_DOCUMENTSDB = 'documentsdb';
-const DATABASE_TYPE_VECTORDB = 'vectordb';
+const DATABASE_TYPE_VECTORSDB = 'vectorsdb';
 
 // CSV import/export allowed database types
 const CSV_ALLOWED_DATABASE_TYPES = [
     DATABASE_TYPE_LEGACY,
     DATABASE_TYPE_TABLESDB,
-    DATABASE_TYPE_VECTORDB
+    DATABASE_TYPE_VECTORSDB
 ];
