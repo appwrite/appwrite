@@ -251,7 +251,7 @@ class Comment
         $json = \base64_decode($state);
 
         $builds = \json_decode($json, true);
-        $this->builds = $builds;
+        $this->builds = \is_array($builds) ? $builds : [];
 
         return $this;
     }
