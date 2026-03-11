@@ -3,6 +3,7 @@
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Redis\RedisConnection;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Utopia\Database\Documents\User;
@@ -171,13 +172,8 @@ if (!function_exists('getRedis')) {
         $pass = System::getEnv('_APP_REDIS_PASS', '');
 
         $redis = new \Redis();
-        @$redis->pconnect($host, (int)$port);
-        if ($pass) {
-            $redis->auth($pass);
-        }
-        $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
 
-        return $ctx['redis'] = $redis;
+        return $ctx['redis'] = RedisConnection::create($redis, $host, (int)$port, $pass);
     }
 }
 

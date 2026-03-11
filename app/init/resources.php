@@ -21,6 +21,7 @@ use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Network\Cors;
+use Appwrite\Redis\RedisConnection;
 use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Network\Validator\Redirect;
@@ -672,13 +673,8 @@ App::setResource('redis', function () {
     $pass = System::getEnv('_APP_REDIS_PASS', '');
 
     $redis = new \Redis();
-    @$redis->pconnect($host, (int) $port);
-    if ($pass) {
-        $redis->auth($pass);
-    }
-    $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
 
-    return $redis;
+    return RedisConnection::create($redis, $host, (int) $port, $pass);
 });
 
 App::setResource('timelimit', function (\Redis $redis) {

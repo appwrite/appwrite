@@ -4,6 +4,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Promises\Adapter\Swoole;
 use Appwrite\Hooks\Hooks;
 use Appwrite\PubSub\Adapter\Redis as PubSub;
+use Appwrite\Redis\RedisConnection;
 use Appwrite\URL\URL as AppwriteURL;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
@@ -274,13 +275,8 @@ $register->set('pools', function () {
                 },
                 'redis' => function () use ($dsnHost, $dsnPort, $dsnPass) {
                     $redis = new \Redis();
-                    @$redis->pconnect($dsnHost, (int)$dsnPort);
-                    if ($dsnPass) {
-                        $redis->auth($dsnPass);
-                    }
-                    $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
 
-                    return $redis;
+                    return RedisConnection::create($redis, $dsnHost, (int)$dsnPort, $dsnPass);
                 },
                 default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid scheme'),
             };
