@@ -19,13 +19,7 @@ import { useSavedFilters } from '@/lib/react-query/hooks/auth'
 import type { SavedFilter } from '@/lib/user-prefs-keys'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Tooltip,
@@ -253,18 +247,17 @@ export function FiltersPopoverContent({
             </div>
             <div>
               <span className={subLabelClass}>Unit</span>
-              <Select value={filterSizeUnit} onValueChange={setFilterSizeUnit}>
-                <SelectTrigger className="h-9 w-full text-[13px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="z-[200]">
-                  {SIZE_FILTER_UNITS.map((u) => (
-                    <SelectItem key={u.value} value={u.value}>
-                      {u.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                value={filterSizeUnit}
+                onValueChange={setFilterSizeUnit}
+                items={SIZE_FILTER_UNITS.map((u) => ({
+                  value: u.value,
+                  label: u.label,
+                }))}
+                placeholder="Unit"
+                searchPlaceholder="Search units…"
+                emptyMessage="No units found"
+              />
             </div>
           </div>
         )
@@ -333,19 +326,17 @@ export function FiltersPopoverContent({
       return (
         <div key="value-bool">
           {label}
-            <Select value={filterValue} onValueChange={setFilterValue}>
-            <SelectTrigger className="h-9 w-full text-[13px]">
-              <SelectValue placeholder="Select" />
-            </SelectTrigger>
-            <SelectContent className="z-[200]">
-              <SelectItem value="true" className="text-[13px]">
-                Enabled
-              </SelectItem>
-              <SelectItem value="false" className="text-[13px]">
-                Disabled
-              </SelectItem>
-            </SelectContent>
-          </Select>
+          <SearchableSelect
+            value={filterValue}
+            onValueChange={setFilterValue}
+            items={[
+              { value: 'true', label: 'Enabled' },
+              { value: 'false', label: 'Disabled' },
+            ]}
+            placeholder="Select"
+            searchPlaceholder="Search…"
+            emptyMessage="No results"
+          />
         </div>
       )
     }
@@ -379,18 +370,18 @@ export function FiltersPopoverContent({
               onChange={(e) => setFilterValue(e.target.value)}
               placeholder="Amount"
             />
-            <Select value={filterSizeUnit} onValueChange={setFilterSizeUnit}>
-              <SelectTrigger className="h-9 w-full min-w-[100px] text-[13px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="z-[200]">
-                {SIZE_FILTER_UNITS.map((u) => (
-                  <SelectItem key={u.value} value={u.value}>
-                    {u.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              value={filterSizeUnit}
+              onValueChange={setFilterSizeUnit}
+              items={SIZE_FILTER_UNITS.map((u) => ({
+                value: u.value,
+                label: u.label,
+              }))}
+              placeholder="Unit"
+              searchPlaceholder="Search units…"
+              emptyMessage="No units found"
+              triggerClassName="min-w-[100px]"
+            />
           </div>
         </div>
       )
@@ -414,22 +405,17 @@ export function FiltersPopoverContent({
       return (
         <div key="value-enum">
           {label}
-            <Select value={filterValue} onValueChange={setFilterValue}>
-            <SelectTrigger className="h-9 w-full text-[13px]">
-              <SelectValue placeholder="Select" />
-            </SelectTrigger>
-            <SelectContent className="z-[200]">
-              {col.elements.map((el) => (
-                <SelectItem
-                  key={String(el.value)}
-                  value={String(el.value)}
-                  className="text-[13px]"
-                >
-                  {el.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SearchableSelect
+            value={filterValue}
+            onValueChange={setFilterValue}
+            items={col.elements.map((el) => ({
+              value: String(el.value),
+              label: el.label,
+            }))}
+            placeholder="Select"
+            searchPlaceholder="Search values…"
+            emptyMessage="No values found"
+          />
         </div>
       )
     }
@@ -472,7 +458,7 @@ export function FiltersPopoverContent({
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
               <label className={labelClass}>Column</label>
-              <Select
+              <SearchableSelect
                 value={filterColumnId}
                 onValueChange={(v) => {
                   setFilterColumnId(v)
@@ -489,34 +475,23 @@ export function FiltersPopoverContent({
                     : null
                   setFilterOperatorKey(firstOp?.key ?? '')
                 }}
-              >
-                <SelectTrigger className="h-9 w-full text-[13px]">
-                  <SelectValue placeholder="Column" />
-                </SelectTrigger>
-                <SelectContent className="z-[200]">
-                  {columns.map((c) => (
-                    <SelectItem key={c.id} value={c.id} className="text-[13px]">
-                      {c.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                items={columns.map((c) => ({ value: c.id, label: c.title }))}
+                placeholder="Column"
+                searchPlaceholder="Search columns…"
+                emptyMessage="No columns found"
+              />
             </div>
             <div className="space-y-1">
               <label className={labelClass}>Operator</label>
-              <Select
+              <SearchableSelect
                 value={filterOperatorKey}
                 onValueChange={(v) => {
                   setFilterOperatorKey(v)
                   setFilterValueEnd('')
                 }}
                 disabled={!filterColumnId}
-              >
-                <SelectTrigger className="h-9 w-full text-[13px]">
-                  <SelectValue placeholder="Operator" />
-                </SelectTrigger>
-                <SelectContent className="z-[200]">
-                  {(filterColumnId
+                items={
+                  filterColumnId
                     ? (() => {
                         const column = columns.find(
                           (c) => c.id === filterColumnId,
@@ -528,21 +503,15 @@ export function FiltersPopoverContent({
                                 column.type === 'enum'
                                   ? column.optional
                                   : undefined,
-                            })
+                            }).map((op) => ({ value: op.key, label: op.label }))
                           : []
                       })()
                     : []
-                  ).map((op) => (
-                    <SelectItem
-                      key={op.key}
-                      value={op.key}
-                      className="text-[13px]"
-                    >
-                      {op.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                }
+                placeholder="Operator"
+                searchPlaceholder="Search operators…"
+                emptyMessage="No operators found"
+              />
             </div>
           </div>
           {filterColumnId && renderValueInput()}
