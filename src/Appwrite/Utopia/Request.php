@@ -200,7 +200,6 @@ class Request extends UtopiaRequest
     {
         $headers = $this->getHeaders();
         return $headers[$key] ?? $default;
-        
     }
 
     /**

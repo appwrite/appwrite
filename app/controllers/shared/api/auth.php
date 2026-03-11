@@ -48,7 +48,7 @@ Http::init()
             }
         }
 
-        $route = $utopia->match($request, fresh: true);
+        $route = $utopia->match($request);
 
         $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
         $isAppUser = User::isApp($authorization->getRoles());
