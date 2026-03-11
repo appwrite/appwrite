@@ -107,34 +107,26 @@ export function UserContextMenu({
       <ContextMenu>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
         <ContextMenuContent className="w-56">
-          <ContextMenuSub>
-            <ContextMenuSubTrigger>
-              <ContextMenuIcon icon={LayoutList} />
-              Tabs
-            </ContextMenuSubTrigger>
-            <ContextMenuSubContent>
-              <ContextMenuItem onSelect={() => navigateToTab('overview')}>
-                <ContextMenuIcon icon={LayoutList} />
-                Overview
-              </ContextMenuItem>
-              <ContextMenuItem onSelect={() => navigateToTab('memberships')}>
-                <ContextMenuIcon icon={Users} />
-                Memberships
-              </ContextMenuItem>
-              <ContextMenuItem onSelect={() => navigateToTab('identities')}>
-                <ContextMenuIcon icon={Shield} />
-                Identities
-              </ContextMenuItem>
-              <ContextMenuItem onSelect={() => navigateToTab('targets')}>
-                <ContextMenuIcon icon={Target} />
-                Targets
-              </ContextMenuItem>
-              <ContextMenuItem onSelect={() => navigateToTab('sessions')}>
-                <ContextMenuIcon icon={Activity} />
-                Sessions
-              </ContextMenuItem>
-            </ContextMenuSubContent>
-          </ContextMenuSub>
+          <ContextMenuItem onSelect={() => navigateToTab('overview')}>
+            <ContextMenuIcon icon={LayoutList} />
+            Overview
+          </ContextMenuItem>
+          <ContextMenuItem onSelect={() => navigateToTab('memberships')}>
+            <ContextMenuIcon icon={Users} />
+            Memberships
+          </ContextMenuItem>
+          <ContextMenuItem onSelect={() => navigateToTab('identities')}>
+            <ContextMenuIcon icon={Shield} />
+            Identities
+          </ContextMenuItem>
+          <ContextMenuItem onSelect={() => navigateToTab('targets')}>
+            <ContextMenuIcon icon={Target} />
+            Targets
+          </ContextMenuItem>
+          <ContextMenuItem onSelect={() => navigateToTab('sessions')}>
+            <ContextMenuIcon icon={Activity} />
+            Sessions
+          </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuSub>
             <ContextMenuSubTrigger>

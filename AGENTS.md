@@ -294,6 +294,7 @@ Context menus should follow a consistent action pattern and ordering across reso
 **Standard ordering (top to bottom):**
 
 - **Tabs** (list the resource tabs: `Overview`, `Deployments`, `Settings`, `Security`, etc.). No verbs here.
+  Tabs must be first-level context-menu items (no nested "Tabs" submenu), followed by a separator.
 - **Copy** (submenu with `Copy ID`, `Copy value` (only for row columns), `Copy link`, `Copy as JSON`). Include `Duplicate` here only where it makes sense (single resources; never for container resources like tables, buckets, databases, etc).
 - **Links** (`Open in new tab`, `Open in new window`) for all context menus.
 - **Delete** last. No special styling (no red text or destructive styles).

@@ -6,7 +6,6 @@ import {
   Square,
   Link2,
   FileJson,
-  LayoutList,
   Folder,
   Shield,
   Settings,
@@ -103,26 +102,18 @@ export function BucketContextMenu({
       <ContextMenu>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
         <ContextMenuContent className="w-56">
-          <ContextMenuSub>
-            <ContextMenuSubTrigger>
-              <ContextMenuIcon icon={LayoutList} />
-              Tabs
-            </ContextMenuSubTrigger>
-            <ContextMenuSubContent>
-              <ContextMenuItem onSelect={() => navigateToTab('files')}>
-                <ContextMenuIcon icon={Folder} />
-                Files
-              </ContextMenuItem>
-              <ContextMenuItem onSelect={() => navigateToTab('security')}>
-                <ContextMenuIcon icon={Shield} />
-                Security
-              </ContextMenuItem>
-              <ContextMenuItem onSelect={() => navigateToTab('settings')}>
-                <ContextMenuIcon icon={Settings} />
-                Settings
-              </ContextMenuItem>
-            </ContextMenuSubContent>
-          </ContextMenuSub>
+          <ContextMenuItem onSelect={() => navigateToTab('files')}>
+            <ContextMenuIcon icon={Folder} />
+            Files
+          </ContextMenuItem>
+          <ContextMenuItem onSelect={() => navigateToTab('security')}>
+            <ContextMenuIcon icon={Shield} />
+            Security
+          </ContextMenuItem>
+          <ContextMenuItem onSelect={() => navigateToTab('settings')}>
+            <ContextMenuIcon icon={Settings} />
+            Settings
+          </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuSub>
             <ContextMenuSubTrigger>

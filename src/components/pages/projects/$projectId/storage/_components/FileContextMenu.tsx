@@ -19,6 +19,7 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu'
+import { toast } from 'sonner'
 import {
   Dialog,
   DialogContent,
@@ -98,29 +99,20 @@ export function FileContextMenu({
   }
 
   const hasName = !!file.name
-  const disabled = !!file.pending
 
   return (
     <>
       <ContextMenu>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
         <ContextMenuContent className="w-56">
-          <ContextMenuSub>
-            <ContextMenuSubTrigger>
-              <ContextMenuIcon icon={LayoutList} />
-              Tabs
-            </ContextMenuSubTrigger>
-            <ContextMenuSubContent>
-              <ContextMenuItem onSelect={() => navigateToTab('overview')}>
-                <ContextMenuIcon icon={LayoutList} />
-                Overview
-              </ContextMenuItem>
-              <ContextMenuItem onSelect={() => navigateToTab('security')}>
-                <ContextMenuIcon icon={Shield} />
-                Security
-              </ContextMenuItem>
-            </ContextMenuSubContent>
-          </ContextMenuSub>
+          <ContextMenuItem onSelect={() => navigateToTab('overview')}>
+            <ContextMenuIcon icon={LayoutList} />
+            Overview
+          </ContextMenuItem>
+          <ContextMenuItem onSelect={() => navigateToTab('security')}>
+            <ContextMenuIcon icon={Shield} />
+            Security
+          </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuSub>
             <ContextMenuSubTrigger>

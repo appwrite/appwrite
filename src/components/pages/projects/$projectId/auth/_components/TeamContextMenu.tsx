@@ -99,26 +99,18 @@ export function TeamContextMenu({
       <ContextMenu>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
         <ContextMenuContent className="w-56">
-          <ContextMenuSub>
-            <ContextMenuSubTrigger>
-              <ContextMenuIcon icon={LayoutList} />
-              Tabs
-            </ContextMenuSubTrigger>
-            <ContextMenuSubContent>
-              <ContextMenuItem onSelect={() => navigateToTab('overview')}>
-                <ContextMenuIcon icon={LayoutList} />
-                Overview
-              </ContextMenuItem>
-              <ContextMenuItem onSelect={() => navigateToTab('members')}>
-                <ContextMenuIcon icon={Users} />
-                Members
-              </ContextMenuItem>
-              <ContextMenuItem onSelect={() => navigateToTab('activity')}>
-                <ContextMenuIcon icon={Activity} />
-                Activity
-              </ContextMenuItem>
-            </ContextMenuSubContent>
-          </ContextMenuSub>
+          <ContextMenuItem onSelect={() => navigateToTab('overview')}>
+            <ContextMenuIcon icon={LayoutList} />
+            Overview
+          </ContextMenuItem>
+          <ContextMenuItem onSelect={() => navigateToTab('members')}>
+            <ContextMenuIcon icon={Users} />
+            Members
+          </ContextMenuItem>
+          <ContextMenuItem onSelect={() => navigateToTab('activity')}>
+            <ContextMenuIcon icon={Activity} />
+            Activity
+          </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuSub>
             <ContextMenuSubTrigger>
