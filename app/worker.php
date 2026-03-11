@@ -17,6 +17,7 @@ use Appwrite\Event\Realtime;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Platform\Appwrite;
+use Appwrite\Redis\RedisConnection;
 use Appwrite\Utopia\Database\Documents\User;
 use Executor\Executor;
 use Swoole\Runtime;
@@ -243,13 +244,8 @@ Server::setResource('redis', function () {
     $pass = System::getEnv('_APP_REDIS_PASS', '');
 
     $redis = new \Redis();
-    @$redis->pconnect($host, (int)$port);
-    if ($pass) {
-        $redis->auth($pass);
-    }
-    $redis->setOption(\Redis::OPT_READ_TIMEOUT, -1);
 
-    return $redis;
+    return RedisConnection::create($redis, $host, (int)$port, $pass);
 });
 
 Server::setResource('timelimit', function (\Redis $redis) {
