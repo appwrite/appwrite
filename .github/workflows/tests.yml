@@ -168,8 +168,7 @@ jobs:
         run: >-
           docker compose exec -T
           -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-          appwrite test /usr/src/code/tests/e2e/General --debug
-
+          appwrite test /usr/src/code/tests/e2e/General
       - name: Failure Logs
         if: failure()
         run: |
