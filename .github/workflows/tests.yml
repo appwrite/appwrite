@@ -109,7 +109,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Load and Start Appwrite
-        timeout-minutes: 3
+        timeout-minutes: 10
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
@@ -153,7 +153,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Load and Start Appwrite
-        timeout-minutes: 3
+        timeout-minutes: 10
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
@@ -259,7 +259,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Load and Start Appwrite
-        timeout-minutes: 3
+        timeout-minutes: 10
         env:
           _APP_BROWSER_HOST: http://invalid-browser/v1
           _APP_DATABASE_SHARED_TABLES: ""
@@ -359,7 +359,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Load and Start Appwrite
-        timeout-minutes: 3
+        timeout-minutes: 10
         env:
           _APP_DATABASE_SHARED_TABLES: database_db_main
           _APP_DATABASE_SHARED_TABLES_V1: ${{ matrix.tables-mode == 'Shared V1' && 'database_db_main' || '' }}
@@ -427,7 +427,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Load and Start Appwrite
-        timeout-minutes: 3
+        timeout-minutes: 10
         env:
           _APP_OPTIONS_ABUSE: enabled
           _APP_DATABASE_SHARED_TABLES: ""
@@ -488,7 +488,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Load and Start Appwrite
-        timeout-minutes: 3
+        timeout-minutes: 10
         env:
           _APP_OPTIONS_ABUSE: enabled
           _APP_DATABASE_SHARED_TABLES: database_db_main
@@ -541,7 +541,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Load and Start Appwrite
-        timeout-minutes: 3
+        timeout-minutes: 10
         env:
           _APP_DATABASE_SHARED_TABLES: ""
           _APP_DATABASE_SHARED_TABLES_V1: ""
@@ -609,7 +609,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Load and Start Appwrite
-        timeout-minutes: 3
+        timeout-minutes: 10
         env:
           _APP_DATABASE_SHARED_TABLES: database_db_main
           _APP_DATABASE_SHARED_TABLES_V1: ${{ matrix.tables-mode == 'Shared V1' && 'database_db_main' || '' }}
