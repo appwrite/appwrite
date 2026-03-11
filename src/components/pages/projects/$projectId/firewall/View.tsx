@@ -1,5 +1,11 @@
 import { useMemo, useState } from 'react'
 import { useParams, useLocation } from '@tanstack/react-router'
+import {
+  useProject,
+  useOrganizationScopes,
+} from '@/lib/react-query/hooks'
+import { canWriteRules } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { RulesTab } from './Rules'
 import { AnalyticsTab } from './Analytics'
@@ -53,6 +59,12 @@ export function View() {
     [projectId],
   )
 
+  const { project } = useProject(projectId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
+  const noCreatePermission =
+    activeTab === 'rules' && !canWriteRules(access, features)
+
   const hasSearch = activeTab === 'rules' || activeTab === 'logs'
   const searchPlaceholder = hasSearch
     ? activeTab === 'rules'
@@ -80,6 +92,12 @@ export function View() {
                   window.dispatchEvent(event)
                 }
               }
+            : undefined
+        }
+        createDisabled={noCreatePermission}
+        createDisabledTooltip={
+          noCreatePermission
+            ? "You don't have permission to create firewall rules."
             : undefined
         }
         showRefresh={activeTab === 'analytics'}

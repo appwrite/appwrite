@@ -1,53 +1,62 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { z } from 'zod'
 import { View } from '@/components/pages/projects/$projectId/databases/View'
 import {
   databasesQueryOptions,
   projectQueryOptions,
   organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
+import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import {
+  listSearchSchema,
+  getSearch,
+  getPage,
+  getLimit,
+  getQueryParam,
+  queryParamToMap,
+} from '@/lib/table-filters'
 import { pageTitle } from '@/lib/utils/page-title'
 
-const DATABASES_PER_PAGE = 25
+const DEFAULT_PAGE = 1
+
+const databasesSearchSchema = listSearchSchema.extend({
+  create: z.string().optional().catch(undefined),
+})
 
 export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
   {
     head: () => ({ meta: [{ title: pageTitle('Databases') }] }),
-    pendingComponent: () => (
-      <div className="flex h-full items-center justify-center">
-        <div className="text-muted-foreground">Loading databases...</div>
-      </div>
-    ),
-    loader: async ({ params, context }) => {
-      // Only run on client side (SDK requires browser environment)
-      if (typeof window === 'undefined') {
-        return
-      }
+    validateSearch: databasesSearchSchema,
+    loader: async ({ params, context, location }) => {
+      if (typeof window === 'undefined') return
 
       const { projectId } = params
       const { queryClient } = context
+      if (!projectId) return
 
-      if (projectId) {
-        // Fetch project data (needed for header/sidebar) - blocks navigation
-        // Uses ensureQueryData with queryOptions to prevent duplicate API calls
-        const projectData = await queryClient.ensureQueryData(
-          projectQueryOptions(projectId),
-        )
+      const url = new URL(location.pathname + location.search, 'http://localhost')
+      const search = getSearch(url)
+      const page = getPage(url, DEFAULT_PAGE)
+      const limit = getLimit(url, ROWS_DEFAULT_PAGE_SIZE)
+      const queryParam = getQueryParam(url)
+      const filterMap = queryParamToMap(queryParam)
+      const filterQueries =
+        filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
 
-        // Fetch critical data before rendering to prevent layout shifts
-        // ensureQueryData blocks navigation and uses cache if fresh, fetches if stale/missing
-        await Promise.all([
-          // Fetch first page of databases - blocks navigation until ready
-          queryClient.ensureQueryData(
-            databasesQueryOptions(projectId, 0, DATABASES_PER_PAGE, ''),
-          ),
-          // Fetch organization plan if we have a teamId - CRITICAL for limit checking
-          projectData?.teamId
-            ? queryClient.ensureQueryData(
-                organizationPlanQueryOptions(projectData.teamId),
-              )
-            : Promise.resolve(),
-        ])
-      }
+      const projectData = await queryClient.ensureQueryData(
+        projectQueryOptions(projectId),
+      )
+
+      await Promise.all([
+        queryClient.ensureQueryData(
+          databasesQueryOptions(projectId, page - 1, limit, search ?? undefined, filterQueries),
+        ),
+        projectData?.teamId
+          ? queryClient.ensureQueryData(
+              organizationPlanQueryOptions(projectData.teamId),
+            )
+          : Promise.resolve(),
+      ])
     },
     component: DatabasesIndexPage,
   },

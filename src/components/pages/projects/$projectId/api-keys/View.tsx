@@ -11,7 +11,11 @@ import {
   useUpdateApiKey,
   useDeleteApiKey,
   fetchApiKeys,
+  useProject,
+  useOrganizationScopes,
 } from '@/lib/react-query/hooks'
+import { canCreateKey } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import type { ApiKey } from '../shared/ApiKeysList'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
@@ -46,6 +50,8 @@ export type ApiKeysInitialData = {
     ReturnType<typeof import('@/lib/react-query/hooks').fetchProject>
   >
   apiKeys: ApiKey[]
+  /** Raw listKeys response from loader; passed to useApiKeys to avoid duplicate fetch */
+  apiKeysRaw?: { keys?: unknown[] } | null
 }
 
 type ViewProps = {
@@ -62,9 +68,12 @@ export function View({ initialData }: ViewProps = {}) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedKeyId, setSelectedKeyId] = useState<string | null>(null)
   const [copiedField, setCopiedField] = useState<string | null>(null)
+  const [createdKeySecret, setCreatedKeySecret] = useState<string | null>(null)
 
-  // Fetch API keys (use initialData on first paint so no loading flash)
-  const { apiKeys: apiKeysFromHook, isLoading } = useApiKeys(projectId)
+  // Fetch API keys; pass loader prefetch as initialData to avoid duplicate fetch
+  const { apiKeys: apiKeysFromHook, isLoading } = useApiKeys(projectId, {
+    initialData: initialData?.apiKeysRaw,
+  })
   const apiKeys = apiKeysFromHook?.length
     ? apiKeysFromHook
     : (initialData?.apiKeys ?? [])
@@ -74,6 +83,11 @@ export function View({ initialData }: ViewProps = {}) {
   const filteredApiKeys = apiKeys.filter((key) =>
     key.name.toLowerCase().includes(searchValue.toLowerCase()),
   )
+
+  const { project } = useProject(projectId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
+  const noCreatePermission = !canCreateKey(access, features)
 
   // Clear selection when search changes
   useEffect(() => {
@@ -100,9 +114,14 @@ export function View({ initialData }: ViewProps = {}) {
     expire?: string
   }) => {
     createMutation.mutate(data, {
-      onSuccess: () => {
+      onSuccess: (createdKey) => {
         toast.success('API key created successfully')
-        setCreateDrawerOpen(false)
+        if (createdKey?.secret) {
+          setCreatedKeySecret(createdKey.secret)
+          // Keep drawer open so user can copy the key
+        } else {
+          setCreateDrawerOpen(false)
+        }
       },
       onError: (error: Error) => {
         toast.error(getErrorMessage(error) || 'Failed to create API key')
@@ -203,6 +222,12 @@ export function View({ initialData }: ViewProps = {}) {
         onSearchChange={handleSearchChange}
         createLabel="Create API key"
         onCreate={() => setCreateDrawerOpen(true)}
+        createDisabled={noCreatePermission}
+        createDisabledTooltip={
+          noCreatePermission
+            ? "You don't have permission to create API keys."
+            : undefined
+        }
         showFilters={false}
         fullWidthBorder
       />
@@ -261,9 +286,11 @@ export function View({ initialData }: ViewProps = {}) {
                     {supportedLanguages.map(({ id, name }) => (
                       <Button
                         key={id}
-                        onClick={() => setCreateDrawerOpen(true)}
+                        onClick={() => !noCreatePermission && setCreateDrawerOpen(true)}
                         variant="outline"
                         size="lg"
+                        disabled={noCreatePermission}
+                        title={noCreatePermission ? "You don't have permission to create API keys." : undefined}
                       >
                         <LanguageIcon language={id} size="sm" />
                         <span>{name}</span>
@@ -299,9 +326,15 @@ export function View({ initialData }: ViewProps = {}) {
       {/* Create Drawer */}
       <ApiKeyDrawer
         open={createDrawerOpen}
-        onOpenChange={setCreateDrawerOpen}
+        onOpenChange={(open) => {
+          setCreateDrawerOpen(open)
+          if (!open) setCreatedKeySecret(null)
+        }}
         onSubmit={handleCreate}
         isLoading={createMutation.isPending}
+        createdKeySecret={createdKeySecret}
+        onCopy={handleCopy}
+        copiedField={copiedField}
       />
 
       {/* Update Drawer */}
@@ -317,6 +350,8 @@ export function View({ initialData }: ViewProps = {}) {
         onSubmit={handleUpdateSubmit}
         isLoading={updateMutation.isPending}
         apiKey={updateKeyData}
+        onCopy={handleCopy}
+        copiedField={copiedField}
       />
 
       {/* Delete Confirmation Dialog */}

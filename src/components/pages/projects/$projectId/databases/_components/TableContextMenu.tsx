@@ -45,9 +45,11 @@ interface TableContextMenuProps {
   children: React.ReactNode
   onCreateSimilar?: (newTableId: string) => void
   onDeleted?: () => void
+  /** When false, Security and Settings are hidden from the context menu (e.g. read-only roles) */
+  showSecuritySettings?: boolean
 }
 
-const TABLE_TABS = [
+const TABLE_TABS_ALL = [
   { id: 'rows', label: 'Rows', path: 'rows', icon: Table2 },
   { id: 'columns', label: 'Columns', path: 'columns', icon: LayoutGrid },
   { id: 'indexes', label: 'Indexes', path: 'indexes', icon: Key },
@@ -62,11 +64,22 @@ export function TableContextMenu({
   children,
   onCreateSimilar,
   onDeleted,
+  showSecuritySettings = true,
 }: TableContextMenuProps) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [createSimilarOpen, setCreateSimilarOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+
+  const tableTabs = useMemo(
+    () =>
+      showSecuritySettings
+        ? TABLE_TABS_ALL
+        : TABLE_TABS_ALL.filter(
+            (t) => t.id !== 'security' && t.id !== 'settings',
+          ),
+    [showSecuritySettings],
+  )
 
   const deleteTableMutation = useMutation({
     mutationFn: () => deleteProjectTable(projectId, databaseId, table.$id),
@@ -164,7 +177,7 @@ export function TableContextMenu({
       <ContextMenu>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
         <ContextMenuContent className="w-52">
-          {TABLE_TABS.map(({ id, label, path, icon: Icon }) => (
+          {tableTabs.map(({ id, label, path, icon: Icon }) => (
             <ContextMenuItem key={id} onSelect={() => handleGoToTab(path)}>
               <span className="flex h-4 w-4 shrink-0 items-center justify-center">
                 <Icon className="size-4" />

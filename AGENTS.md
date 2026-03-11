@@ -376,6 +376,19 @@ Fetch the **requested** page (to get `isFetching` and trigger load) and the **di
 
 Reference: `src/components/pages/projects/$projectId/storage/View.tsx`, `SiteLogs.tsx`, `Deployments.tsx`.
 
+**Filters (table/list):** Use the global filters component (`FiltersPopover`) with URL-backed state (`query` search param). Do **not** show a loading state when filters (or page) change—keep showing the previous list until the new data is ready. Use `placeholderData: keepPreviousData` on the list query so React Query keeps the previous result while the new request is in flight. Use different empty-state copy when there are no items at all vs when filters return no results.
+
+**How to add filters to a list:**
+
+1. **Filter config** – In `src/lib/table-filters/filter-configs/` add a column config (e.g. `dns-records.ts`) and export from `@/lib/table-filters`. For enum columns set `optional: false` when the attribute is always set (so "is null" / "is not null" are hidden).
+2. **URL state** – Parse `query` from the route search (e.g. `getQueryParam`, `queryParamToMap`). Derive `filterQueries = filterMap.size > 0 ? Array.from(filterMap.values()) : undefined` and pass to the list fetch/hook.
+3. **Query options** – Add `placeholderData: keepPreviousData` to the list `queryOptions` so the UI keeps showing the previous list until the filtered (or paginated) request completes. Do **not** show a loading spinner or empty table when the query key changes (e.g. after applying a filter).
+4. **Loader** – When the route has a `query` param (filters), skip prefetching the unfiltered list so only one request runs (the filtered one). Prefetch unfiltered first page only when there is no `query` param.
+5. **View** – Render `<FiltersPopover>` with `columns`, `filterMap`, `onRemoveFilter`, `onClearAll`, `onApplyFilter`. On apply/remove/clear, navigate with updated `search.query` (and reset page to 1). Never use loader `initialData` for the list when filters are active (so the table never shows unfiltered data).
+6. **Empty state** – When the list is empty: if filters are active show e.g. "No records match your filters" / "Try adjusting or clearing filters"; if no filters show e.g. "No DNS records" / "Add your first DNS record to get started".
+
+Example (DNS records on domain detail): `src/lib/table-filters/filter-configs/dns-records.ts`, `src/components/pages/organizations/$orgId/domains/$domainId/View.tsx`, `src/routes/_public/organizations.$orgId.domains.$domainId.index.tsx`, and `domainRecordsQueryOptions` in `src/lib/react-query/hooks/domains.ts`.
+
 ---
 
 ## UX Guidelines
@@ -385,12 +398,14 @@ Reference: `src/components/pages/projects/$projectId/storage/View.tsx`, `SiteLog
 - **Never change button text during actions** - Keep text consistent, use `disabled` state
 - **Use "Update" not "Edit"** - Align with API terminology
 - **Disable with tooltip, don't hide** - Always prefer disabling buttons with a tooltip explaining why they are disabled over hiding them completely. This helps users understand what actions exist and why they can't perform them (e.g., "Upgrade your plan to access this feature", "Complete the form to continue"). Only hide buttons if explicitly requested.
+- **No tooltip on text buttons** - Buttons that already have a text label (not just an icon) don't need a tooltip in addition to the label.
 
 ### Loading & Navigation
 
 - **No individual loaders** - Rely on fullscreen loader for initial load
 - **Stay on current page** - Until next page is ready to prevent layout shifts
 - **Prefetch crucial data** - All critical API calls at route level
+- **List pages: same default limit in loader and View** - Route and View must use the same default limit (same constant) so prefetched query key matches and no loading flash occurs. See "Route Prefetching" → "List pages: loader and View must use the same default limit".
 
 ### Form Behavior
 
@@ -622,6 +637,16 @@ export const Route = createFileRoute('/_public/projects/$projectId/storage/')({
 2. **Cache Matching**: React Query recognizes prefetched data because query keys match exactly
 3. **No Duplicates**: `ensureQueryData` uses cached data if fresh, and hook reads from same cache
 4. **Type Safety**: TypeScript ensures query keys and functions match between loader and hook
+
+**List pages: loader and View must use the same default limit (CRITICAL – prevents layout shift)**
+
+- The route loader prefetches list data using **URL-derived params** (page, limit, search, filters). The View reads the same params from the URL (or from route-passed search) and calls the same hook with the same arguments.
+- **If the default limit differs** (e.g. loader uses `25`, View uses `DEFAULT_PAGE_SIZE` = `10`), the **query keys will not match**. The View will get a cache miss, show a loading state, and cause a layout shift even though the loader already fetched data.
+- **Rule:** Use the **same constant** for the default limit in both the route and the View. Import from `@/lib/react-query/hooks/constants` (e.g. `DEFAULT_PAGE_SIZE`, `ROWS_DEFAULT_PAGE_SIZE`) and use it in:
+  - **Route:** `getLimit(url, DEFAULT_PAGE_SIZE)` (or the chosen constant) and in `queryOptions(projectId, page - 1, limit, ...)`.
+  - **View:** `getLimit(url, DEFAULT_PAGE_SIZE)` (or same constant) and `urlLimit = listParams?.limit ?? DEFAULT_PAGE_SIZE`, and pass that `urlLimit` into the hook.
+- **Do not** define a local constant in the route (e.g. `const SITES_PER_PAGE = 25`) unless the View uses the exact same value for its default limit; otherwise prefer a shared constant from `constants.ts` so route and View cannot drift.
+- **Optional:** Omit `pendingComponent` on list index routes so the previous page stays visible until the loader completes; then the list renders with data and no intermediate loading UI.
 
 **When to Use QueryOptions:**
 
@@ -940,11 +965,13 @@ Follow the modal structure pattern above. For no-content modals, skip content se
 | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Fetch data             | Extract query function, use in hook + route loader                                                                                                                    |
 | Pagination             | requestedPage + displayedPage; use displayed data/total for list and Pagination until new page loads                                                                  |
+| Filters                | FiltersPopover + URL `query`; `placeholderData: keepPreviousData` on list query; no loading state when filters change; different empty state for "no items" vs "no results for filters" (see "Filters (table/list)") |
 | Delete resource        | Use `refetchQueries` (not `invalidateQueries`) in onSuccess so list updates without reload                                                                            |
 | Create resource        | Form resets and closes dialog on success                                                                                                                              |
 | Update resource        | Use "Update" terminology, not "Edit"                                                                                                                                  |
 | Button during action   | Keep text, use `disabled` state                                                                                                                                       |
 | Unavailable action     | Disable button with tooltip, don't hide                                                                                                                               |
+| Text buttons           | No tooltip when button has a text label (tooltips only for icon-only buttons)                                                                                        |
 | Service avatar         | `bg-muted text-muted-foreground` (never colored)                                                                                                                      |
 | Badge style            | Use status variants (`error`, `warning`, `success`, `info`) for same design; `text-[10px] shrink-0` when inline with text                                             |
 | Icon spacing           | `mr-1.5` or `gap-1.5`                                                                                                                                                 |
@@ -956,6 +983,7 @@ Follow the modal structure pattern above. For no-content modals, skip content se
 | Actions column         | Never use "Actions" as title—use empty `TableHead`                                                                                                                     |
 | Table cells            | `px-4 py-3` on all cells (preserve special padding like `pl-6 sm:pl-8` where needed)                                                                                  |
 | Long-running progress  | One panel per scope; flat list of cards (no wrapper per type); same card style + ProgressBarRow; per-card dismiss; auto-action only on status transition to completed |
+| RBAC (roles)           | Use **feature check methods** from `@/lib/console-access-checks` only; never check `access.isOwner` or `access.canWrite*` directly. Use `canAccess*` from `console-rbac-loader` in route loaders. See "Role-based access control (RBAC)". |
 
 ---
 
@@ -974,6 +1002,190 @@ Profiles control which features are available based on deployment type (cloud vs
 **Feature flags:** Use `useConsoleProfile()` or `getActiveProfileFeatures()` to check feature flags (e.g. `features.billing`, `features.domains`, `features.compliance`, `features.databaseBackups`).
 
 **Feature-driven keys:** Each flag must map to a single, specific feature. Do not use generic or grouped flags (e.g. `orgCloudSettings`, `databaseCloudFeatures`). Split into explicit flags per feature (e.g. `compliance`, `oauthApps`, `orgApiKeys` for org settings; `databaseBackups`, `databaseInsights` for database).
+
+---
+
+## Role-based access control (RBAC)
+
+Access is driven by **organization roles and scopes** when the Console profile has `orgRoles: true` (e.g. cloud). When `orgRoles` is false (e.g. self-hosted), all users are treated as having full access. Use the same patterns everywhere so screens and components stay consistent.
+
+### When RBAC applies
+
+- **Profile**: Check `features.orgRoles` from `useConsoleProfile()` or `getActiveProfileFeatures()`. If `false`, do not gate by role/scope; show everything.
+- **Context**: For **project** screens use the project’s organization (`project.teamId`). For **organization** screens use `orgId`. Resolve scopes for that organization via `useOrganizationScopes(orgIdOrTeamId)` or loader helpers in `console-rbac-loader.ts`.
+
+### Key files and hooks
+
+| File / hook | Purpose |
+|-------------|--------|
+| `src/lib/console-roles.ts` | `ConsoleAccess` type, `deriveAccessFromRolesScopes`, `FULL_ACCESS` when roles disabled |
+| `src/lib/console-access-checks.ts` | **Single source of truth** for all permission checks. Use these functions in UI and routes; **never** check `access.isOwner`, `access.canWrite*`, etc. directly. |
+| `src/lib/console-rbac-loader.ts` | Async `canAccess*` helpers for **route loaders** (delegate to `console-access-checks` internally) |
+| `useOrganizationScopes(organizationId)` | Returns `{ access: ConsoleAccess, ... }`; pass `access` and `features` into functions from `console-access-checks` |
+| `useProject(projectId)` | Returns `project` (includes `teamId`) so you can pass `project?.teamId` to `useOrganizationScopes` |
+| `useConsoleProfile()` | Returns `features`; pass to `console-access-checks` functions that need `orgRoles` or other flags |
+
+### Rules
+
+1. **Use feature check methods only**  
+   **Never** read `access.isOwner`, `access.isDeveloper`, `access.canWrite*`, or `access.canSee*` directly in components or routes. Always use a function from `@/lib/console-access-checks` (e.g. `canShowBucketSecuritySettings(access, features)`, `canCreateProject(access, features)`). This keeps rules reusable, consistent, and maintainable.
+
+2. **Components (UI)**  
+   Use `useOrganizationScopes(project?.teamId)` or `useOrganizationScopes(orgId)` and `useConsoleProfile()`. Call the appropriate check from `console-access-checks` (e.g. `showSecuritySettings = canShowBucketSecuritySettings(access, features)`), then:
+   - Filter **tabs** (e.g. hide Security/Settings/Variables when `!showSecuritySettings`)
+   - **Disable** create buttons with a tooltip using `!canCreateX(access, features)` and a permission message
+   - Hide or show **sidebar** items (e.g. `canSeeProjectNavItem`, `canShowProjectSettings`, `canShowConnectSection`), **Command Center** commands, org **tabs** (e.g. `canShowOrgDomainsTab`, `canShowOrgSettingsTab`)
+
+3. **Route loaders (blocking access)**  
+   For Security, Settings, Variables, or other write-only pages, use the **loader** so unauthorized users never see the page. Import the matching helper from `@/lib/console-rbac-loader` and redirect when `!canAccess`:
+   - Project resources: `canAccessDatabaseSecuritySettings`, `canAccessProjectSettings`, `canAccessAuthSecuritySettings`, `canAccessBucketSecuritySettings`, `canAccessFunctionSecuritySettings`, `canAccessSiteSettings`, `canAccessTopicSettings`
+   - Organization: `canAccessOrganizationSettings` (owner-only org settings), `canAccessOrganizationDomains` (owner or developer)
+
+4. **Redirect from disallowed tabs**  
+   In the same view that builds the tabs, add a `useEffect`: if the user is on a tab they’re not allowed (e.g. `activeTab === 'security' && !showSecuritySettings`), navigate to a safe tab (e.g. first tab or list).
+
+5. **Command Center and global nav**  
+   Use the same `console-access-checks` functions (e.g. `canShowProjectSettings`, `canShowConnectSection`, `canCreateBucket`) to hide or disable navigation/create commands and filter the keyboard-shortcuts reference.
+
+6. **Adding new checks**  
+   When you need a new permission rule, add a single function in `console-access-checks.ts` (and use it in loaders via `console-rbac-loader` if a route must be blocked). Do not scatter role/scope logic in components.
+
+### Examples
+
+**1. Hiding tabs on a detail page (e.g. bucket Security/Settings)**
+
+```tsx
+import { canShowBucketSecuritySettings } from '@/lib/console-access-checks'
+
+const { project } = useProject(projectId)
+const { features } = useConsoleProfile()
+const { access } = useOrganizationScopes(project?.teamId)
+const showSecuritySettings = canShowBucketSecuritySettings(access, features)
+
+const tabs = useMemo(() => [
+  { id: 'files', label: 'Files', to: '...', params: { ... } },
+  ...(showSecuritySettings
+    ? [
+        { id: 'security', label: 'Security', to: '...', params: { ... } },
+        { id: 'settings', label: 'Settings', to: '...', params: { ... } },
+      ]
+    : []),
+], [projectId, bucketId, showSecuritySettings])
+```
+
+**2. Redirect when user is on a tab they can’t access**
+
+```tsx
+useEffect(() => {
+  if (showSecuritySettings || !projectId || !bucketId) return
+  if (activeTab === 'security' || activeTab === 'settings') {
+    navigate({ to: '/projects/$projectId/storage/$bucketId', params: { projectId, bucketId }, replace: true })
+  }
+}, [showSecuritySettings, activeTab, projectId, bucketId, navigate])
+```
+
+**3. Route loader: block Security/Settings page**
+
+```tsx
+import { canAccessBucketSecuritySettings } from '@/lib/console-rbac-loader'
+
+loader: async ({ params, context }) => {
+  if (typeof window === 'undefined') return
+  const { projectId, bucketId } = params
+  const { queryClient } = context
+  if (!projectId || !bucketId) return
+  const canAccess = await canAccessBucketSecuritySettings(queryClient, projectId)
+  if (!canAccess) {
+    throw redirect({ to: '/projects/$projectId/storage/$bucketId', params: { projectId, bucketId }, replace: true })
+  }
+},
+```
+
+**4. Disable create button with tooltip (ServiceHeader / list view)**
+
+```tsx
+import { canCreateBucket } from '@/lib/console-access-checks'
+
+const noCreatePermission = !canCreateBucket(access, features)
+const createPermissionTooltip = noCreatePermission ? "You don't have permission to create buckets." : undefined
+
+<ServiceHeader
+  createLabel="Create bucket"
+  onCreate={handleCreate}
+  createDisabled={noCreatePermission}
+  createDisabledTooltip={createPermissionTooltip}
+  ...
+/>
+```
+
+**5. Command Center: hide or disable by access**
+
+Use `console-access-checks` (e.g. `canShowProjectSettings`, `canShowConnectSection`, `canShowOrgDomainsTab`, `canCreateBucket`) so navigation and create commands are filtered by the same rules as the rest of the app.
+
+### Mapping: screen/component type → what to use
+
+| Screen / component type | Where to gate | What to use |
+|-------------------------|----------------|-------------|
+| Service detail tabs (Security, Settings, Variables) | View that renders `ServiceHeader` + tabs | `canShowXSecuritySettings(access, features)` or `canShowTopicSettingsTab` etc.; filter tabs, add redirect `useEffect` |
+| Security/Settings/Variables **route** (URL) | Route file | `canAccess*` from `console-rbac-loader` in **loader**; `throw redirect(...)` if `!canAccess` |
+| Create buttons (list, header, dialogs) | Same view as list/header | `!canCreateX(access, features)`; set `createDisabled` and `createDisabledTooltip` (prefer disable + tooltip over hiding) |
+| Sidebar (project Settings, Connect, Get started) | Layout/sidebar component | `canShowProjectSettings`, `canShowConnectSection`, `canShowGetStartedSection`, `canSeeProjectNavItem` from `console-access-checks` |
+| Command Center (nav, create, org) | CommandCenter.tsx | Same `console-access-checks` functions; hide or disable commands and shortcuts accordingly |
+| Org overview (tabs, invite, Domains, Settings sub-tabs) | Org overview View | `canShowOrgDomainsTab`, `canShowOrgSettingsTab`, `canAccessOrgSettings*`, `getFirstAllowedOrgSettingsPath`, `canInviteOrgMember`, `canCreateProject` from `console-access-checks` |
+
+### Adding a new gated area
+
+1. **New project resource (e.g. “X” with Security/Settings)**  
+   - In **console-access-checks.ts**: add e.g. `canShowXSecuritySettings(access, features)` using `whenOrgRoles(access, features, access.canWriteX)`. In **console-rbac-loader.ts**: add `canAccessXSecuritySettings(queryClient, projectId)` that gets access and returns `canShowXSecuritySettings(access, getActiveProfileFeatures())`.  
+   - In **route loaders** for `.../security` and `.../settings`: call that helper and `throw redirect` when `!canAccess`.  
+   - In the **detail View**: use `showSecuritySettings = canShowXSecuritySettings(access, features)`; filter tabs and add redirect `useEffect`.
+
+2. **New org-level area (e.g. “Y” for owner and developer)**  
+   - In **console-access-checks.ts**: add e.g. `canShowOrgYTab(access, features)` or `canAccessOrgY(access, features)`.  
+   - If a route must be blocked: add `canAccessOrganizationY` in console-rbac-loader that uses the new check; use it in the route loader.  
+   - In the org View: show the tab or nav item using the new check; redirect from the sub-route when the user lands without access (e.g. `getFirstAllowedOrgSettingsPath` for settings).
+
+---
+
+## Team and user preferences (key-value format)
+
+Console uses **team** (organization) and **user** (account) preferences to store small key-value settings. Use a consistent, extendable format so new features can add keys without collisions.
+
+### Key format
+
+- **Pattern**: `console.<feature>.<optionalSubKey>`
+- **Examples**: `console.pinnedProjectIds`, `console.sidebarCollapsed`, `account.organization` (user-level).
+- **Scope**: Team prefs are per organization (`sdk.forConsole.teams.get/updatePrefs` with `teamId`). User/account prefs are per user (`sdk.forConsole.account.updatePrefs`).
+
+### Value format
+
+- **Type**: String. For complex data (e.g. arrays, objects), store a **JSON string** and parse when reading.
+- **Example**: Pinned project IDs → key `console.pinnedProjectIds`, value `["projectId1","projectId2"]`.
+
+### Reading and writing
+
+- **Team**: `const team = await sdk.forConsole.teams.get({ teamId })` → `team.prefs` is `Record<string, unknown>`. Merge your key into `prefs` and call `sdk.forConsole.teams.updatePrefs({ teamId, prefs })`.
+- **User**: Same idea with `sdk.forConsole.account.get()` / `account.prefs` and `sdk.forConsole.account.updatePrefs({ prefs })`.
+
+### Adding a new setting
+
+1. Define the key (and max length/format) in code (e.g. `src/lib/team-prefs-keys.ts`).
+2. Provide `parse*` / `build*` helpers that read from `prefs[key]` and return a merged `prefs` object for updates.
+3. Document the key in this section if it is a shared convention (e.g. `console.pinnedProjectIds`).
+
+### User prefs: saved filter presets
+
+- **Key**: `console.savedFilters.<scope>` (e.g. `console.savedFilters.sites`, `console.savedFilters.storage.files.<bucketId>`). Scope identifies the list view and, when the list structure is unique per resource, includes resource type and id.
+- **Value**: JSON string of `SavedFilter[]` (`{ id, name, query }`). `query` is the same encoded format as the URL `query` param (compact filter keys).
+- **Storage**: Account (user) prefs via `sdk.forConsole.account.updatePrefs`. See `src/lib/user-prefs-keys.ts` and `useSavedFilters` in `src/lib/react-query/hooks/auth.ts`.
+
+**Scope convention:**
+
+- **Shared** (same structure for all items in the view): use a fixed scope so filters are shared across the list.
+  - Examples: `sites`, `auth.users`, `auth.teams`, `storage.buckets`, `functions`, `databases`, `organizations.domains`, `organizations.domains.records`, `sites.deployments`, `sites.logs`, `sites.domains`, `functions.deployments`, `functions.executions`, `functions.domains`.
+- **Per resource** (unique structure per resource): include resource type and id in the scope so each resource has its own saved filters.
+  - Examples: `databases.rows.<databaseId>.<tableId>`, `databases.columns.<databaseId>.<tableId>`, `databases.indexes.<databaseId>.<tableId>` (each table has its own columns/attributes).
+  - Files use shared scope `storage.files` (same filter structure across buckets).
 
 ---
 

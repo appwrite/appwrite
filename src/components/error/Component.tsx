@@ -99,10 +99,13 @@ export function ErrorComponent({
   error,
   info,
   reset,
+  preview = false,
 }: {
   error: Error
   info?: { componentStack: string }
   reset: () => void
+  /** When true, used for debug preview: skips Sentry and parent postMessage. */
+  preview?: boolean
 }) {
   const randomErrorId = useRef<string>(
     Math.random().toString(36).substring(2, 15),
@@ -176,8 +179,9 @@ export function ErrorComponent({
   // Extract all available context from the current route
   const routeContext = extractRouteContext(location.pathname)
 
-  // Capture error in Sentry with full context (no-op when VITE_SENTRY_DSN is not set)
+  // Capture error in Sentry with full context (no-op when VITE_SENTRY_DSN is not set; skipped in preview)
   useEffect(() => {
+    if (preview) return
     captureExceptionWithContext(error, {
       // Route-based context
       ...routeContext,
@@ -210,6 +214,7 @@ export function ErrorComponent({
         typeof window !== 'undefined' ? window.innerHeight : undefined,
     })
   }, [
+    preview,
     error,
     info,
     location.href,
@@ -219,14 +224,15 @@ export function ErrorComponent({
     routeContext,
   ])
 
-  // Every 2 seconds, notify parent that an error exists
+  // Every 2 seconds, notify parent that an error exists (skipped in preview)
   useEffect(() => {
+    if (preview) return
     const interval = setInterval(() => {
       window.parent.postMessage(message)
     }, 2000)
 
     return () => clearInterval(interval)
-  }, [message])
+  }, [preview, message])
 
   const handleGoHome = () => {
     navigate({ to: '/' })
@@ -268,13 +274,13 @@ export function ErrorComponent({
   }
 
   return (
-    <div className="flex-grow flex flex-col justify-center items-center gap-6 my-20 px-4">
-      <div className="flex flex-col items-center gap-4 max-w-md w-full">
+    <div className="flex-grow flex flex-col justify-center items-center gap-8 my-20 px-4">
+      <div className="flex flex-col items-center max-w-md w-full gap-8">
         <div className="rounded-full bg-destructive/10 p-3">
           <AlertTriangle className="h-8 w-8 text-destructive" />
         </div>
 
-        <div className="space-y-2 text-center">
+        <div className="space-y-3 text-center">
           <h1 className="text-2xl font-semibold">{formattedError.title}</h1>
           <p className="text-muted-foreground text-sm leading-relaxed">
             {formattedError.message}
@@ -282,7 +288,7 @@ export function ErrorComponent({
         </div>
 
         {!(isProjectNotFound || isProjectAccessDenied) && (
-          <div className="mt-2 relative w-full max-w-full rounded-lg border bg-card px-4 py-3">
+          <div className="relative w-full max-w-full rounded-lg border bg-card px-4 py-3">
             <div className="flex items-start gap-2 pr-8 min-w-0 w-full">
               <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-destructive" />
               <div
@@ -308,7 +314,26 @@ export function ErrorComponent({
           </div>
         )}
 
-        <div className="flex flex-col sm:flex-row gap-3 mt-4 w-full">
+        {!(isProjectNotFound || isProjectAccessDenied) && (
+          <div className="w-full border-t border-border pt-6">
+            <p className="text-muted-foreground text-[13px] leading-relaxed text-center">
+              We’ve already logged it to our error system and will probably
+              spin up a super agent any minute to hunt this bug down. If you
+              think this might be more than a client-side hiccup, check our{' '}
+              <a
+                href="https://status.appwrite.online"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded"
+              >
+                status page
+              </a>
+              . Until then - try again or head home. You’ve got this.
+            </p>
+          </div>
+        )}
+
+        <div className="flex flex-col sm:flex-row gap-3 w-full">
           <Button
             variant="outline"
             onClick={handleGoHome}

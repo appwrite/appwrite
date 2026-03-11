@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { useLocation, Link, useSearch } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import {
@@ -45,6 +45,9 @@ import {
 } from '@/components/ui/dialog'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useProject, useOrganizationScopes } from '@/lib/react-query/hooks'
+import { canShowBucketSecuritySettings } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -54,6 +57,19 @@ import { BucketSecurity } from '../_components/BucketSecurity'
 import { useUploadQueue } from '@/lib/upload-queue/use-upload-queue'
 import type { Models } from '@appwrite.io/console'
 import { FileContextMenu } from '../_components/FileContextMenu'
+import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import {
+  getSearch,
+  getPage,
+  getLimit,
+  getQueryParam,
+  queryParamToMap,
+  mapToQueryParam,
+  MIN_SEARCH_LENGTH,
+  filesFilterColumns,
+} from '@/lib/table-filters'
+import type { CompactFilterKey } from '@/lib/table-filters'
+import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 
 function getFileIcon(type: string) {
   if (type.startsWith('image/')) return Image
@@ -75,7 +91,18 @@ export function View() {
   })
   const navigate = useNavigate()
   const location = useLocation()
-  const search = useSearch({ strict: false }) as { create?: string }
+  const search = useSearch({ strict: false }) as {
+    create?: string
+    search?: string
+    query?: string
+    page?: number
+    limit?: number
+  }
+  const { project } = useProject(projectId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
+  const showSecuritySettings =
+    canShowBucketSecuritySettings(access, features)
 
   // Derive active tab from pathname
   const activeTab = useMemo(() => {
@@ -94,15 +121,48 @@ export function View() {
       }
     }
 
-    // Default to files for index route
     return 'files'
   }, [location.pathname, bucketId])
+
+  const isFilesIndex =
+    activeTab === 'files' &&
+    location.pathname.replace(/\/$/, '') ===
+      `/projects/${projectId}/storage/${bucketId}`
+
+  const filesListParams = useMemo(() => {
+    if (!isFilesIndex || typeof search !== 'object') return null
+    const url = new URL(location.pathname + location.search, window.location.origin)
+    return {
+      search: getSearch(url) ?? search.search,
+      page: getPage(url, 1),
+      limit: getLimit(url, DEFAULT_PAGE_SIZE),
+      filterMap: queryParamToMap(getQueryParam(url) ?? search.query ?? null),
+    }
+  }, [isFilesIndex, search?.search, search?.query, search?.page, search?.limit, location.pathname, location.search, projectId, bucketId])
+
+  const urlPage = filesListParams?.page ?? 1
+  const urlLimit = filesListParams?.limit ?? DEFAULT_PAGE_SIZE
+  const urlSearch = filesListParams?.search
+  const filterMap = filesListParams?.filterMap ?? new Map()
+  const filterQueries =
+    filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
+
   const queryClient = useQueryClient()
-  const [searchValue, setSearchValue] = useState('')
+  const [searchInput, setSearchInput] = useState('')
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
-  const [requestedPage, setRequestedPage] = useState(1)
   const [displayedPage, setDisplayedPage] = useState(1)
-  const [pageSize, setPageSize] = useState(25)
+  const [displayedSearch, setDisplayedSearch] = useState<string | undefined>(
+    undefined,
+  )
+  const [displayedFilterQueryString, setDisplayedFilterQueryString] =
+    useState('')
+  const displayedFilterQueries = useMemo(() => {
+    if (!displayedFilterQueryString) return undefined
+    const map = queryParamToMap(displayedFilterQueryString)
+    return map.size > 0 ? Array.from(map.values()) : undefined
+  }, [displayedFilterQueryString])
+  const hasInitedDisplayedRef = useRef(false)
   const [uploadFileDialogOpen, setUploadFileDialogOpen] = useState(false)
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -122,6 +182,9 @@ export function View() {
     })
   }, [search?.create, uploadFileDialogOpen, navigate, location.pathname])
 
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const filterQueryString = filterMap.size > 0 ? mapToQueryParam(filterMap) : ''
+
   // Refetch files list when an upload completes (list uses refetchOnMount: false)
   const refetchFiles = useCallback(() => {
     if (projectId && bucketId) {
@@ -139,43 +202,114 @@ export function View() {
   // Fetch bucket data
   const { data: bucket } = useBucket(projectId, bucketId)
 
-  // Fetch data for the requested page (triggers load when user changes page)
+  useEffect(() => {
+    setSearchInput(urlSearch ?? '')
+  }, [urlSearch])
+
+  useEffect(() => {
+    if (!isFilesIndex || !filesListParams) return
+    if (!hasInitedDisplayedRef.current) {
+      setDisplayedPage(urlPage)
+      setDisplayedSearch(urlSearch ?? undefined)
+      setDisplayedFilterQueryString(filterQueryString)
+      hasInitedDisplayedRef.current = true
+    }
+  }, [isFilesIndex, filesListParams, urlPage, urlSearch, filterQueryString])
+
+  useEffect(() => {
+    if (activeTab !== 'files') return
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    searchDebounceRef.current = setTimeout(() => {
+      const trimmed = searchInput.trim()
+      if (trimmed === (urlSearch ?? '')) return
+      if (trimmed.length > 0 && trimmed.length < MIN_SEARCH_LENGTH) return
+      navigate({
+        to: '/projects/$projectId/storage/$bucketId/',
+        params: { projectId: projectId!, bucketId: bucketId! },
+        search: (prev: Record<string, unknown>) => {
+          const next = { ...prev } as Record<string, unknown>
+          next.search = trimmed || undefined
+          next.query = filterQueryString || undefined
+          next.page = 1
+          next.limit = urlLimit
+          if (!trimmed) delete next.search
+          if (next.page === 1) delete next.page
+          return next
+        },
+        replace: true,
+      })
+    }, 300)
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    }
+  }, [
+    activeTab,
+    searchInput,
+    projectId,
+    bucketId,
+    navigate,
+    urlSearch,
+    urlLimit,
+    filterQueryString,
+  ])
+
   const {
     data: requestedFilesData,
     isLoading: filesLoading,
     isFetching: filesFetching,
+    isFetched: filesFetched,
   } = useBucketFiles(
     projectId,
     bucketId,
-    requestedPage - 1,
-    pageSize,
-    searchValue,
+    urlPage - 1,
+    urlLimit,
+    urlSearch ?? undefined,
+    undefined,
+    filterQueries,
   )
 
-  // Fetch data for the displayed page (what we show - stays until new page is ready)
   const { data: displayedFilesData, isLoading: displayedFilesLoading } =
     useBucketFiles(
       projectId,
       bucketId,
       displayedPage - 1,
-      pageSize,
-      searchValue,
+      urlLimit,
+      displayedSearch ?? undefined,
+      undefined,
+      displayedFilterQueries,
     )
 
-  // Update displayed page only when requested page data is ready (no flash)
   useEffect(() => {
-    if (!filesFetching && requestedPage !== displayedPage && !filesLoading) {
-      setDisplayedPage(requestedPage)
+    if (!isFilesIndex || filesFetching || filesLoading || !filesFetched) return
+    const match =
+      urlPage === displayedPage &&
+      (urlSearch ?? '') === (displayedSearch ?? '') &&
+      filterQueryString === displayedFilterQueryString
+    if (!match) {
+      setDisplayedPage(urlPage)
+      setDisplayedSearch(urlSearch ?? undefined)
+      setDisplayedFilterQueryString(filterQueryString)
     }
-  }, [filesFetching, filesLoading, requestedPage, displayedPage])
+  }, [
+    isFilesIndex,
+    filesFetching,
+    filesLoading,
+    filesFetched,
+    urlPage,
+    urlSearch,
+    filterQueryString,
+    displayedPage,
+    displayedSearch,
+    displayedFilterQueryString,
+  ])
 
   const files = (displayedFilesData?.files || []) as Models.File[]
   const filesTotal = displayedFilesData?.total ?? requestedFilesData?.total ?? 0
   const showFilesLoading =
     displayedFilesLoading && (displayedFilesData?.files?.length ?? 0) === 0
 
-  const tabs: Tab[] = useMemo(
-    () => [
+  const tabs: Tab[] = useMemo(() => {
+    const base: Tab[] = [
       {
         id: 'files',
         label: 'Files',
@@ -185,27 +319,43 @@ export function View() {
           bucketId: bucketId as string,
         },
       },
-      {
-        id: 'security',
-        label: 'Security',
-        to: '/projects/$projectId/storage/$bucketId/security',
-        params: {
-          projectId: projectId as string,
-          bucketId: bucketId as string,
-        },
-      },
-      {
-        id: 'settings',
-        label: 'Settings',
-        to: '/projects/$projectId/storage/$bucketId/settings',
-        params: {
-          projectId: projectId as string,
-          bucketId: bucketId as string,
-        },
-      },
-    ],
-    [projectId, bucketId],
-  )
+      ...(showSecuritySettings
+        ? [
+            {
+              id: 'security' as const,
+              label: 'Security',
+              to: '/projects/$projectId/storage/$bucketId/security',
+              params: {
+                projectId: projectId as string,
+                bucketId: bucketId as string,
+              },
+            },
+            {
+              id: 'settings' as const,
+              label: 'Settings',
+              to: '/projects/$projectId/storage/$bucketId/settings',
+              params: {
+                projectId: projectId as string,
+                bucketId: bucketId as string,
+              },
+            },
+          ]
+        : []),
+    ]
+    return base
+  }, [projectId, bucketId, showSecuritySettings])
+
+  // Redirect from security/settings when user lacks permission
+  useEffect(() => {
+    if (showSecuritySettings || !projectId || !bucketId) return
+    if (activeTab === 'security' || activeTab === 'settings') {
+      navigate({
+        to: '/projects/$projectId/storage/$bucketId',
+        params: { projectId, bucketId },
+        replace: true,
+      })
+    }
+  }, [showSecuritySettings, activeTab, projectId, bucketId, navigate])
 
   // Handle file upload - queues in background
   const handleFileUpload = async (data: {
@@ -235,17 +385,73 @@ export function View() {
     return file.chunksTotal > 0 && file.chunksUploaded < file.chunksTotal
   }
 
-  // Clear selection when navigating or when search changes
   useEffect(() => {
     setSelectedFiles(new Set())
     setDeleteDialogOpen(false)
-  }, [location.pathname, projectId, bucketId, searchValue])
+  }, [location.pathname, projectId, bucketId, urlSearch, filterMap.size])
 
   const handleSearchChange = (value: string) => {
-    setSearchValue(value)
-    setRequestedPage(1)
-    setDisplayedPage(1)
-    setSelectedFiles(new Set()) // Clear selection on search change
+    setSearchInput(value)
+    setSelectedFiles(new Set())
+  }
+
+  const applyFilter = (compactKey: CompactFilterKey, queryStr: string) => {
+    const newMap = new Map(filterMap)
+    newMap.set(compactKey, queryStr)
+    navigate({
+      to: '/projects/$projectId/storage/$bucketId/',
+      params: { projectId: projectId!, bucketId: bucketId! },
+      search: (prev: Record<string, unknown>) => {
+        const next = { ...prev } as Record<string, unknown>
+        next.search = urlSearch ?? undefined
+        next.query = mapToQueryParam(newMap)
+        next.page = 1
+        next.limit = urlLimit
+        if (!next.search) delete next.search
+        delete next.page
+        return next
+      },
+      replace: true,
+    })
+  }
+
+  const removeFilter = (key: CompactFilterKey) => {
+    const newMap = new Map(filterMap)
+    newMap.delete(key)
+    navigate({
+      to: '/projects/$projectId/storage/$bucketId/',
+      params: { projectId: projectId!, bucketId: bucketId! },
+      search: (prev: Record<string, unknown>) => {
+        const next = { ...prev } as Record<string, unknown>
+        next.search = urlSearch ?? undefined
+        next.query = newMap.size > 0 ? mapToQueryParam(newMap) : undefined
+        next.page = 1
+        next.limit = urlLimit
+        if (!next.search) delete next.search
+        if (newMap.size === 0) delete next.query
+        delete next.page
+        return next
+      },
+      replace: true,
+    })
+  }
+
+  const clearAllFilters = () => {
+    navigate({
+      to: '/projects/$projectId/storage/$bucketId/',
+      params: { projectId: projectId!, bucketId: bucketId! },
+      search: (prev: Record<string, unknown>) => {
+        const next = { ...prev } as Record<string, unknown>
+        next.search = urlSearch ?? undefined
+        next.limit = urlLimit
+        if (!next.search) delete next.search
+        delete next.query
+        delete next.page
+        return next
+      },
+      replace: true,
+    })
+    setFiltersOpen(false)
   }
 
   // Bulk delete mutation
@@ -308,15 +514,41 @@ export function View() {
   }
 
   const handlePageChange = (page: number) => {
-    setRequestedPage(page)
-    setSelectedFiles(new Set()) // Clear selection on page change
+    setSelectedFiles(new Set())
+    navigate({
+      to: '/projects/$projectId/storage/$bucketId/',
+      params: { projectId: projectId!, bucketId: bucketId! },
+      search: (prev: Record<string, unknown>) => {
+        const next = { ...prev } as Record<string, unknown>
+        next.search = urlSearch ?? undefined
+        next.query = filterQueryString || undefined
+        next.page = page
+        next.limit = urlLimit
+        if (!next.search) delete next.search
+        if (page === 1) delete next.page
+        if (next.limit === DEFAULT_PAGE_SIZE) delete next.limit
+        return next
+      },
+      replace: true,
+    })
   }
 
   const handlePageSizeChange = (newPageSize: number) => {
-    setPageSize(newPageSize)
-    setRequestedPage(1)
-    setDisplayedPage(1)
-    setSelectedFiles(new Set()) // Clear selection on page size change
+    setSelectedFiles(new Set())
+    navigate({
+      to: '/projects/$projectId/storage/$bucketId/',
+      params: { projectId: projectId!, bucketId: bucketId! },
+      search: (prev: Record<string, unknown>) => {
+        const next = { ...prev } as Record<string, unknown>
+        next.search = urlSearch ?? undefined
+        next.query = filterQueryString || undefined
+        delete next.page
+        next.limit = newPageSize
+        if (!next.search) delete next.search
+        return next
+      },
+      replace: true,
+    })
   }
 
   const handleBack = () => {
@@ -374,7 +606,7 @@ export function View() {
         searchPlaceholder={
           activeTab === 'files' ? 'Search files...' : undefined
         }
-        searchValue={activeTab === 'files' ? searchValue : ''}
+        searchValue={activeTab === 'files' ? searchInput : ''}
         onSearchChange={activeTab === 'files' ? handleSearchChange : undefined}
         createLabel={activeTab === 'files' ? 'Create file' : undefined}
         onCreate={
@@ -382,7 +614,39 @@ export function View() {
             ? () => setUploadFileDialogOpen(true)
             : undefined
         }
-        showFilters={false}
+        showFilters={activeTab === 'files'}
+        filterTrigger={
+          activeTab === 'files' ? (
+            <FiltersPopover
+              open={filtersOpen}
+              onOpenChange={setFiltersOpen}
+              columns={filesFilterColumns}
+              filterMap={filterMap}
+              onRemoveFilter={removeFilter}
+              onClearAll={clearAllFilters}
+              onApplyFilter={applyFilter}
+              resourceLabel="files"
+              filterScope="storage.files"
+              onApplyQuery={(queryParam) => {
+                navigate({
+                  to: '/projects/$projectId/storage/$bucketId/',
+                  params: { projectId: projectId!, bucketId: bucketId! },
+                  search: (prev: Record<string, unknown>) => {
+                    const next = { ...prev } as Record<string, unknown>
+                    next.search = urlSearch ?? undefined
+                    next.query = queryParam ?? undefined
+                    next.page = 1
+                    next.limit = urlLimit
+                    if (!next.search) delete next.search
+                    return next
+                  },
+                  replace: true,
+                })
+              }}
+              teamId={project?.teamId}
+            />
+          ) : undefined
+        }
         fullWidthBorder
         rightContent={activeTab === 'files' ? <ViewToggle /> : undefined}
         contentAfterBorder={
@@ -694,7 +958,7 @@ export function View() {
                     <Pagination
                       currentPage={displayedPage}
                       totalItems={filesTotal}
-                      pageSize={pageSize}
+                      pageSize={urlLimit}
                       pageSizeOptions={[10, 25, 50, 100]}
                       onPageChange={handlePageChange}
                       onPageSizeChange={handlePageSizeChange}
@@ -704,10 +968,14 @@ export function View() {
                 ) : (
                   <EmptyState
                     icon={File}
-                    title="No files found"
-                    description="Upload your first file to this bucket"
-                    isEmpty={!searchValue}
-                    hasFilters={!!searchValue}
+                    title={urlSearch || filterMap.size > 0 ? undefined : 'No files found'}
+                    description={
+                      urlSearch || filterMap.size > 0
+                        ? undefined
+                        : 'Upload your first file to this bucket'
+                    }
+                    isEmpty={!urlSearch && filterMap.size === 0}
+                    hasFilters={!!urlSearch || filterMap.size > 0}
                     variant="card"
                   />
                 )
@@ -810,18 +1078,39 @@ export function View() {
                     <div>
                       <EmptyState
                         icon={File}
-                        isEmpty={!searchValue}
-                        hasFilters={!!searchValue}
+                        title={urlSearch || filterMap.size > 0 ? undefined : 'No files found'}
+                        description={
+                          urlSearch || filterMap.size > 0
+                            ? undefined
+                            : 'Upload your first file to this bucket'
+                        }
+                        isEmpty={!urlSearch && filterMap.size === 0}
+                        hasFilters={!!urlSearch || filterMap.size > 0}
                         variant="card"
                       />
-                      {searchValue && (
+                      {(urlSearch || filterMap.size > 0) && (
                         <div className="mt-4 text-center">
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setSearchValue('')}
+                            onClick={() => {
+                              setSearchInput('')
+                              navigate({
+                                to: '/projects/$projectId/storage/$bucketId/',
+                                params: { projectId: projectId!, bucketId: bucketId! },
+                                search: (prev: Record<string, unknown>) => {
+                                  const next = { ...prev } as Record<string, unknown>
+                                  next.limit = urlLimit
+                                  delete next.search
+                                  delete next.query
+                                  delete next.page
+                                  return next
+                                },
+                                replace: true,
+                              })
+                            }}
                           >
-                            Clear search
+                            Clear search and filters
                           </Button>
                         </div>
                       )}
@@ -831,7 +1120,7 @@ export function View() {
                     <Pagination
                       currentPage={displayedPage}
                       totalItems={filesTotal}
-                      pageSize={pageSize}
+                      pageSize={urlLimit}
                       pageSizeOptions={[10, 25, 50, 100]}
                       onPageChange={handlePageChange}
                       onPageSizeChange={handlePageSizeChange}

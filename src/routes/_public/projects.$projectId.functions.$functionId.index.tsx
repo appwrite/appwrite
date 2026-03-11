@@ -1,5 +1,4 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { z } from 'zod'
 import { View } from '@/components/pages/projects/$projectId/functions/Deployments'
 import {
   projectQueryOptions,
@@ -9,15 +8,11 @@ import {
   functionDomainsQueryOptions,
   projectRuntimesQueryOptions,
   functionSpecificationsQueryOptions,
+  DEFAULT_PAGE_SIZE,
 } from '@/lib/react-query/hooks'
+import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { pageTitle } from '@/lib/utils/page-title'
-
-const DEPLOYMENTS_PER_PAGE = 25
-const DOMAINS_LIMIT = 25 // Align with domains tab to share cache; overview card shows 3
-
-const searchSchema = z.object({
-  page: z.number().int().min(1).optional().catch(undefined),
-})
+import { listSearchSchema } from '@/lib/table-filters'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/functions/$functionId/',
@@ -29,7 +24,7 @@ export const Route = createFileRoute(
       },
     ],
   }),
-  validateSearch: searchSchema,
+  validateSearch: listSearchSchema,
   loader: async ({ params, context, location }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
@@ -42,32 +37,39 @@ export const Route = createFileRoute(
     // Fetch project first so setProjectRegion runs and project-scoped calls use the correct regional endpoint
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
 
-    // Parse page from URL search params as fallback
     const urlParams = new URLSearchParams(location.search)
     const pageParam = urlParams.get('page')
     const page = pageParam ? Math.max(1, parseInt(pageParam, 10)) : 1
-    const pageIndex = page - 1 // Convert 1-indexed to 0-indexed
+    const pageIndex = page - 1
+    const hasFilterQuery = !!urlParams.get('query')
 
     // Fetch function to get deploymentId - blocks navigation until ready
     const func = await queryClient.ensureQueryData(
       projectFunctionQueryOptions(projectId, functionId),
     )
 
-    // Fetch critical data before rendering to prevent layout shifts
-    // All data is prefetched using queryOptions to prevent duplicate API calls
+    const deploymentsPromise = hasFilterQuery
+      ? Promise.resolve(undefined)
+      : queryClient.ensureQueryData(
+          functionDeploymentsQueryOptions(
+            projectId,
+            functionId,
+            pageIndex,
+            DEFAULT_PAGE_SIZE,
+          ),
+        )
+
     const criticalPromises: Promise<unknown>[] = [
-      // Fetch deployments list for the requested page - blocks navigation until ready
-      queryClient.ensureQueryData(
-        functionDeploymentsQueryOptions(
-          projectId,
-          functionId,
-          pageIndex,
-          DEPLOYMENTS_PER_PAGE,
-        ),
-      ),
+      deploymentsPromise,
       // Fetch domains/rules (for overview card) - use same params as domains tab to share cache
       queryClient.ensureQueryData(
-        functionDomainsQueryOptions(projectId, functionId, 0, DOMAINS_LIMIT, ''),
+        functionDomainsQueryOptions(
+          projectId,
+          functionId,
+          0,
+          DOMAINS_DEFAULT_PAGE_SIZE,
+          '',
+        ),
       ),
       // Fetch runtimes (for runtime name display) - blocks navigation until ready
       queryClient.ensureQueryData(projectRuntimesQueryOptions(projectId)),

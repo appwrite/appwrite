@@ -5,6 +5,7 @@ import {
   tablesQueryOptions,
 } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
+import { canAccessDatabaseSecuritySettings } from '@/lib/console-rbac-loader'
 
 const TABLES_PER_PAGE = 100
 
@@ -19,6 +20,18 @@ export const Route = createFileRoute(
     const { queryClient } = context
 
     if (!projectId || !databaseId) return
+
+    const canAccess = await canAccessDatabaseSecuritySettings(
+      queryClient,
+      projectId,
+    )
+    if (!canAccess) {
+      throw redirect({
+        to: '/projects/$projectId/databases/$databaseId',
+        params: { projectId, databaseId },
+        replace: true,
+      })
+    }
 
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
     await queryClient.ensureQueryData(

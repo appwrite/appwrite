@@ -22,7 +22,7 @@
     "check": "tsc --noEmit"
   },
   "dependencies": {
-    "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@c6f60aa",
+    "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@8e7decc",
     "@faker-js/faker": "^10.1.0",
     "@hookform/resolvers": "^5.2.2",
     "@monaco-editor/react": "^4.7.0",

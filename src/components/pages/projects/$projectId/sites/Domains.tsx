@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { useParams, useNavigate } from '@tanstack/react-router'
+import { useParams, useNavigate, useLocation, useSearch } from '@tanstack/react-router'
 import {
   MoreHorizontal,
   Loader2,
@@ -40,8 +40,8 @@ import { getDomainStatusBadgeConfig } from '@/lib/utils/status-badge'
 import { getApexDomain } from '@/lib/utils/proxy-domains'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
-
-const DOMAINS_PER_PAGE = 25
+import { queryParamToMap } from '@/lib/table-filters'
+import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 
 function getStatusBadge(status: string) {
   const config = getDomainStatusBadgeConfig(status)
@@ -64,23 +64,37 @@ function getStatusBadge(status: string) {
 export function View() {
   const { projectId, siteId } = useParams({ strict: false })
   const navigate = useNavigate()
+  const location = useLocation()
+  const search = useSearch({ strict: false }) as { search?: string; query?: string } | undefined
   const { project } = useProject(projectId)
   const [currentPage, setCurrentPage] = useState(0)
-  const [pageSize, setPageSize] = useState(DOMAINS_PER_PAGE)
+  const [pageSize, setPageSize] = useState(DOMAINS_DEFAULT_PAGE_SIZE)
   const [verifyOpen, setVerifyOpen] = useState(false)
   const [viewLogsOpen, setViewLogsOpen] = useState(false)
   const [deleteDomainOpen, setDeleteDomainOpen] = useState(false)
   const [selectedRule, setSelectedRule] = useState<Models.ProxyRule | null>(null)
   const [viewLogsRule, setViewLogsRule] = useState<Models.ProxyRule | null>(null)
-  const search = { search: '' }
 
-  const searchValue = search?.search || ''
+  const searchValue = search?.search ?? ''
+  const filterMap = useMemo(
+    () => queryParamToMap(search?.query ?? null),
+    [search?.query],
+  )
+  const filterQueries =
+    filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
 
   const {
     rules,
     total,
     isLoading: domainsLoading,
-  } = useSiteDomains(projectId, siteId, currentPage, pageSize, searchValue)
+  } = useSiteDomains(
+    projectId,
+    siteId,
+    currentPage,
+    pageSize,
+    searchValue,
+    filterQueries,
+  )
 
   const { domains: orgDomains } = useOrganizationDomains(
     project?.teamId,
@@ -121,7 +135,6 @@ export function View() {
   return (
     <div className="flex-1">
       <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6">
-        {/* Domains Table */}
         {rules.length > 0 ? (
           <>
             <div className="rounded-lg border border-border">
@@ -291,14 +304,18 @@ export function View() {
         ) : (
           <EmptyState
             icon={Globe}
-            title={searchValue ? undefined : 'No domains yet'}
+            title={
+              filterMap.size > 0 || searchValue
+                ? undefined
+                : 'No domains yet'
+            }
             description={
-              searchValue
+              filterMap.size > 0 || searchValue
                 ? undefined
                 : 'Connect a custom domain to your site for a branded experience'
             }
-            isEmpty={!searchValue}
-            hasFilters={!!searchValue}
+            isEmpty={!filterMap.size && !searchValue}
+            hasFilters={filterMap.size > 0 || !!searchValue}
             variant="card"
           />
         )}

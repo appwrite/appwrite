@@ -7,12 +7,15 @@ import {
   siteDomainsQueryOptions,
   projectQueryOptions,
 } from '@/lib/react-query/hooks'
+import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { Query } from '@appwrite.io/console'
 import { pageTitle } from '@/lib/utils/page-title'
+import { listSearchSchema } from '@/lib/table-filters'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/$siteId',
 )({
+  validateSearch: listSearchSchema,
   head: ({ loaderData }) => ({
     meta: [
       {
@@ -69,9 +72,15 @@ export const Route = createFileRoute(
               siteDeploymentQueryOptions(projectId, siteId, site.deploymentId),
             )
           : Promise.resolve(),
-        // Fetch first page of domains
+        // Fetch first page of domains (same limit as Domains tab to share cache)
         queryClient.ensureQueryData(
-          siteDomainsQueryOptions(projectId, siteId, 0, 25, ''),
+          siteDomainsQueryOptions(
+            projectId,
+            siteId,
+            0,
+            DOMAINS_DEFAULT_PAGE_SIZE,
+            '',
+          ),
         ),
       ])
       return { site }

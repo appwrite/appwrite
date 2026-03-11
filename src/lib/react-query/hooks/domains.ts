@@ -11,6 +11,7 @@ import {
   useMutation,
   useQueryClient,
   queryOptions,
+  keepPreviousData,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { Query } from '@appwrite.io/console'
@@ -38,6 +39,7 @@ export async function fetchOrganizationDomains(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   if (!organizationId) {
     return { domains: [], total: 0 }
@@ -45,6 +47,7 @@ export async function fetchOrganizationDomains(
 
   const queries = [
     Query.equal('teamId', organizationId),
+    ...(filterQueries ?? []),
     Query.orderDesc('$createdAt'),
     Query.limit(limit),
     Query.offset(page * limit),
@@ -166,18 +169,21 @@ export async function updateDomainTeam(domainId: string, teamId: string) {
  * @param domainId - The domain ID
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
+ * @param filterQueries - Optional Appwrite Query strings for filtering
  * @returns Paginated DNS records list response from the API
  */
 export async function fetchDomainRecords(
   domainId: string,
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
+  filterQueries?: string[],
 ) {
   if (!domainId) {
     return { dnsRecords: [], total: 0 }
   }
 
   const queries = [
+    ...(filterQueries ?? []),
     Query.orderAsc('$createdAt'),
     Query.offset(page * limit),
     Query.limit(limit),
@@ -442,17 +448,18 @@ export function organizationDomainsQueryOptions(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   return queryOptions({
-    queryKey: ['domains', 'organization', organizationId, page, limit, search],
+    queryKey: ['domains', 'organization', organizationId, page, limit, search, filterQueries],
     queryFn: () =>
-      fetchOrganizationDomains(organizationId!, page, limit, search),
+      fetchOrganizationDomains(organizationId!, page, limit, search, filterQueries),
     enabled: !!organizationId,
     staleTime: DEFAULT_STALE_TIME,
-    retry: false, // Don't retry on error
-    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
-    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
-    refetchOnReconnect: false, // Prevent refetch on network reconnect
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     // Don't keep disabled queries in cache
     gcTime: organizationId ? 5 * 60 * 1000 : 0,
   })
@@ -493,16 +500,28 @@ export function domainRecordsQueryOptions(
   domainId: string | null | undefined,
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
+  filterQueries?: string[],
 ) {
+  const hasFilters =
+    filterQueries !== undefined && filterQueries.length > 0
   return queryOptions({
-    queryKey: ['dns-records', 'domain', domainId, page, limit],
-    queryFn: () => fetchDomainRecords(domainId!, page, limit),
+    queryKey: [
+      'dns-records',
+      'domain',
+      domainId,
+      page,
+      limit,
+      ...(hasFilters ? [filterQueries] : []),
+    ],
+    queryFn: () =>
+      fetchDomainRecords(domainId!, page, limit, filterQueries),
     enabled: !!domainId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false, // Don't retry on error
     refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
     refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
     refetchOnReconnect: false, // Prevent refetch on network reconnect
+    placeholderData: keepPreviousData, // Keep showing previous list until new data is ready (filters/page change)
   })
 }
 
@@ -524,15 +543,17 @@ export function useOrganizationDomains(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   const {
     data: domainsData,
     isLoading,
     isFetching,
+    isFetched,
     error,
     refetch,
   } = useQuery(
-    organizationDomainsQueryOptions(organizationId, page, limit, search),
+    organizationDomainsQueryOptions(organizationId, page, limit, search, filterQueries),
   )
 
   const domains = useMemo(() => {
@@ -551,6 +572,7 @@ export function useOrganizationDomains(
     totalPages,
     isLoading,
     isFetching,
+    isFetched,
     error,
     refetch,
   }
@@ -573,7 +595,7 @@ export function useDomainPrices(
 ) {
   const domains = useMemo(
     () =>
-      baseName && baseName.length >= 2
+      baseName && baseName.length >= 1
         ? tlds.map((tld) => `${baseName}.${tld}`)
         : [],
     [baseName, tlds],
@@ -746,6 +768,7 @@ export function useDomainRecords(
   domainId: string | null | undefined,
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
+  filterQueries?: string[],
 ) {
   const {
     data: recordsData,
@@ -753,7 +776,9 @@ export function useDomainRecords(
     isFetching,
     error,
     refetch,
-  } = useQuery(domainRecordsQueryOptions(domainId, page, limit))
+  } = useQuery(
+    domainRecordsQueryOptions(domainId, page, limit, filterQueries),
+  )
 
   const dnsRecords = useMemo(() => {
     if (!recordsData?.dnsRecords) return []

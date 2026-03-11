@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { sdk } from '@/lib/appwrite/sdk'
+import { getApiEndpoint, sdk } from '@/lib/appwrite/sdk'
 import { useFile, useFileTokens, Dependencies } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { Button } from '@/components/ui/button'
@@ -94,19 +94,11 @@ export function FileSecurity() {
   const tokens = tokensData?.tokens || []
   const tokensTotal = tokensData?.total || 0
 
-  // Get endpoint from project region
-  const projectEndpoint = useMemo(() => {
-    if (!currentProject?.region || currentProject.region === 'unknown') {
-      return (
-        import.meta.env.VITE_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1'
-      )
-    }
-    const normalizedRegion = currentProject.region
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, '')
-    return `https://${normalizedRegion}.cloud.appwrite.io/v1`
-  }, [currentProject?.region])
+  // Get endpoint from project region (uses env base, e.g. stage.cloud.appwrite.io)
+  const projectEndpoint = useMemo(
+    () => getApiEndpoint(currentProject?.region),
+    [currentProject?.region],
+  )
 
   // Initialize state when file loads
   useEffect(() => {

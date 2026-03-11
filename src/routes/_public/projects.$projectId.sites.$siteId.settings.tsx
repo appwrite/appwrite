@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/sites/Settings'
 import {
   siteQueryOptions,
@@ -10,6 +10,7 @@ import {
   vcsInstallationsQueryOptions,
 } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
+import { canAccessSiteSettings } from '@/lib/console-rbac-loader'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/$siteId/settings',
@@ -25,15 +26,20 @@ export const Route = createFileRoute(
     ],
   }),
   loader: async ({ params, context }) => {
-    // Only run on client side (SDK requires browser environment)
-    if (typeof window === 'undefined') {
-      return
-    }
+    if (typeof window === 'undefined') return
 
     const { projectId, siteId } = params
     const { queryClient } = context
 
-    // Fetch project first so setProjectRegion runs and project-scoped calls use the correct regional endpoint
+    const canAccess = await canAccessSiteSettings(queryClient, projectId)
+    if (!canAccess) {
+      throw redirect({
+        to: '/projects/$projectId/sites/$siteId',
+        params: { projectId, siteId },
+        replace: true,
+      })
+    }
+
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
     // Fetch site - blocks navigation until ready
     await queryClient.ensureQueryData(siteQueryOptions(projectId, siteId))
@@ -49,7 +55,7 @@ export const Route = createFileRoute(
       queryClient.ensureQueryData(siteFrameworksQueryOptions(projectId)),
       // Fetch VCS installations
       queryClient.ensureQueryData(
-        vcsInstallationsQueryOptions(projectId, 0, 25),
+        vcsInstallationsQueryOptions(projectId, 0, 10),
       ),
       // Fetch specifications (cloud only)
       queryClient

@@ -234,6 +234,13 @@ export function BuyDomainWizard() {
     return v
   }, [normalizedSearch])
 
+  // When user typed a domain (e.g. "x.net"), the TLD part for similarity ranking
+  const typedTld = useMemo(() => {
+    if (!normalizedSearch.includes('.')) return ''
+    const afterDot = normalizedSearch.slice(normalizedSearch.indexOf('.') + 1)
+    return afterDot.replace(/\./g, '') // in case of multiple dots
+  }, [normalizedSearch])
+
   // Debounce baseName for API calls (wait for typing to settle before fetching prices)
   const DEBOUNCE_MS = 500
   useEffect(() => {
@@ -241,8 +248,13 @@ export function BuyDomainWizard() {
     return () => clearTimeout(timer)
   }, [baseName])
 
+  // Allow single-char base when user typed a full domain (e.g. "x.net" → show x.com, x.net, …)
+  const showSuggestions =
+    baseName.length >= 2 || (baseName.length === 1 && normalizedSearch.includes('.'))
+
+  // Only fetch prices when we show suggestions (avoids fetching for bare "x" without a TLD)
   const { pricesByDomain, error } = useDomainPrices(
-    debouncedSearch,
+    showSuggestions ? debouncedSearch : '',
     requestedTlds,
   )
 
@@ -268,9 +280,23 @@ export function BuyDomainWizard() {
     return map
   }, [pricesByDomain])
 
+  // Rank tier: 0 = exact match, 1 = TLD starts with typed (e.g. net → network), 2 = TLD contains typed, 3 = .com, 4 = rest
+  const tldRank = useCallback(
+    (tld: string) => {
+      if (!typedTld) return 4
+      const lower = tld.toLowerCase()
+      if (lower === typedTld) return 0
+      if (lower.startsWith(typedTld)) return 1
+      if (lower.includes(typedTld)) return 2
+      if (lower === 'com') return 3
+      return 4
+    },
+    [typedTld],
+  )
+
   // Optimistic: show suggestions immediately (baseName + TLDs), merge API data when it arrives
   const suggestions = useMemo((): DomainSuggestion[] => {
-    if (!baseName || baseName.length < 2) return []
+    if (!baseName || !showSuggestions) return []
     const hasExactMatch = ALL_TLDS.some(
       (tld) => `${baseName}.${tld}` === normalizedSearch,
     )
@@ -294,17 +320,22 @@ export function BuyDomainWizard() {
       const aExact = a.full === normalizedSearch ? 1 : 0
       const bExact = b.full === normalizedSearch ? 1 : 0
       if (aExact !== bExact) return bExact - aExact
+      const aRank = tldRank(a.tld)
+      const bRank = tldRank(b.tld)
+      if (aRank !== bRank) return aRank - bRank
       const aCom = a.tld === 'com' ? 1 : 0
       const bCom = b.tld === 'com' ? 1 : 0
       return bCom - aCom
     })
-  }, [baseName, normalizedSearch, apiDataByDomain])
+  }, [baseName, normalizedSearch, apiDataByDomain, typedTld, tldRank])
 
   const handleSelectDomain = (_full: string) => {
     toast.info(
       'Domain purchase will be available soon. The API integration is coming this week.',
     )
   }
+
+  const hasContent = searchValue.trim().length > 0
 
   return (
     <WizardLayout
@@ -323,44 +354,57 @@ export function BuyDomainWizard() {
         </div>
       }
     >
-      <div className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="domain-search" className="text-[13px]">
-            Domain name
-          </Label>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              id="domain-search"
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              placeholder="myawesomeproject.com"
-              className="h-11 pl-10 font-mono text-[14px] tracking-tight bg-muted/30 border-border/80 focus:bg-background"
-              autoFocus
-            />
+      <div className="flex min-h-full flex-col">
+        <div
+          className={cn(
+            'transition-[min-height] duration-300 ease-out',
+            hasContent
+              ? 'min-h-0'
+              : 'flex min-h-[50vh] flex-1 items-center justify-center',
+          )}
+        >
+          <div className="w-full max-w-md space-y-2">
+            <Label htmlFor="domain-search" className="text-[13px]">
+              Domain name
+            </Label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="domain-search"
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                placeholder="e.g. mycompany or mycompany.com"
+                className="h-11 pl-10 font-mono text-[14px] tracking-tight bg-muted/30 border-border/80 focus:bg-background"
+                autoFocus
+              />
+            </div>
           </div>
         </div>
 
-        {suggestions.length > 0 ? (
-          <div className="grid gap-3 grid-cols-3 md:grid-cols-4">
-            {suggestions.map((s) => (
-              <DomainCard
-                key={s.full}
-                suggestion={s}
-                onSelect={handleSelectDomain}
-                onVisible={() => addRequestedTld(s.tld)}
-              />
-            ))}
+        {hasContent && (
+          <div className="mt-6 flex-1 min-h-0">
+            {suggestions.length > 0 ? (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                {suggestions.map((s) => (
+                  <DomainCard
+                    key={s.full}
+                    suggestion={s}
+                    onSelect={handleSelectDomain}
+                    onVisible={() => addRequestedTld(s.tld)}
+                  />
+                ))}
+              </div>
+            ) : baseName.length > 0 && baseName.length < 2 ? (
+              <p className="text-[12px] text-muted-foreground">
+                Type at least 2 characters to see suggestions
+              </p>
+            ) : baseName.length >= 2 && error ? (
+              <p className="text-[12px] text-destructive">
+                Failed to load domain prices. Please try again.
+              </p>
+            ) : null}
           </div>
-        ) : baseName.length > 0 && baseName.length < 2 ? (
-          <p className="text-[12px] text-muted-foreground">
-            Type at least 2 characters to see suggestions
-          </p>
-        ) : baseName.length >= 2 && error ? (
-          <p className="text-[12px] text-destructive">
-            Failed to load domain prices. Please try again.
-          </p>
-        ) : null}
+        )}
       </div>
     </WizardLayout>
   )
@@ -407,7 +451,7 @@ function DomainCard({
     <div
       ref={cardRef}
       className={cn(
-        'group flex flex-col gap-3 rounded-xl border px-4 py-3.5 backdrop-blur-sm',
+        'group flex min-w-0 flex-col gap-3 rounded-xl border px-4 py-3.5 backdrop-blur-sm',
         taken
           ? 'border-border/40 bg-muted/20 opacity-75'
           : isPerfectMatch
@@ -441,8 +485,8 @@ function DomainCard({
           </Badge>
         )}
       </div>
-      <div className="flex items-center justify-between gap-3 min-h-8">
-        <div className="min-h-5 flex items-center">
+      <div className="flex min-w-0 items-center justify-between gap-2 min-h-8">
+        <div className="min-h-5 flex min-w-0 items-center overflow-hidden">
           {priceLoaded ? (
             taken ? (
               <span className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground animate-in fade-in-0 slide-in-from-bottom-1 duration-200">
@@ -450,7 +494,7 @@ function DomainCard({
                 Taken
               </span>
             ) : price != null && price > 0 ? (
-              <span className="font-mono text-[13px] font-semibold tabular-nums text-foreground animate-in fade-in-0 slide-in-from-bottom-1 duration-200">
+              <span className="truncate font-mono text-[13px] font-semibold tabular-nums text-foreground animate-in fade-in-0 slide-in-from-bottom-1 duration-200">
                 ${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 <span className="font-normal text-[11px] text-muted-foreground">
                   {formatPricePeriod(periodYears)}
@@ -469,7 +513,7 @@ function DomainCard({
           <Button
             size="sm"
             variant="ghost"
-            className="h-8 gap-1 text-[12px] shrink-0 -mr-1 opacity-70 group-hover:opacity-100 transition-opacity"
+            className="h-8 shrink-0 gap-1 text-[12px] -mr-1 opacity-70 group-hover:opacity-100 transition-opacity"
             onClick={() => onSelect(full)}
             disabled={!priceLoaded}
           >

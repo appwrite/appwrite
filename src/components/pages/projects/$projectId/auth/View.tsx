@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import {
   useParams,
   useLocation,
@@ -6,6 +6,23 @@ import {
   useNavigate,
   useSearch,
 } from '@tanstack/react-router'
+import {
+  DEFAULT_PAGE_SIZE,
+  TEAMS_DEFAULT_PAGE_SIZE,
+} from '@/lib/react-query/hooks/constants'
+import {
+  getSearch,
+  getPage,
+  getLimit,
+  getQueryParam,
+  queryParamToMap,
+  mapToQueryParam,
+  buildListSearchParams,
+  MIN_SEARCH_LENGTH,
+  usersFilterColumns,
+  teamsFilterColumns,
+} from '@/lib/table-filters'
+import type { CompactFilterKey } from '@/lib/table-filters'
 import { cn } from '@/lib/utils'
 import {
   Users,
@@ -23,7 +40,10 @@ import {
   useCreateProjectUser,
   useCreateProjectTeam,
   useProject,
+  useOrganizationScopes,
 } from '@/lib/react-query/hooks'
+import { canShowAuthSecuritySettings, canCreateUser, canCreateTeam } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   deleteProjectUser,
@@ -60,6 +80,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 import { LightningCollectorGame } from './LightningCollectorGame'
 import { useDebugMode } from '@/components/global/providers/DebugMode'
 import { CreateUserDrawer } from './CreateUserDrawer'
@@ -71,14 +92,74 @@ import { toast } from 'sonner'
 import { UserContextMenu } from './_components/UserContextMenu'
 import { TeamContextMenu } from './_components/TeamContextMenu'
 
-export function View() {
+export type UsersListSearch = {
+  search?: string
+  query?: string
+  page?: number
+  limit?: number
+}
+
+export function View({
+  usersListSearch,
+}: {
+  usersListSearch?: UsersListSearch
+} = {}) {
   const { projectId } = useParams({
     strict: false,
   })
   const location = useLocation()
   const navigate = useNavigate()
-  const search = useSearch({ strict: false }) as { create?: string }
+  const search = useSearch({ strict: false }) as {
+    create?: string
+    search?: string
+    page?: number
+    limit?: number
+    query?: string
+    teamsSearch?: string
+    teamsQuery?: string
+    teamsPage?: number
+    teamsLimit?: number
+  }
   const { isDebugModeOpen } = useDebugMode()
+
+  const isAuthUsersIndex =
+    location.pathname.replace(/\/$/, '') === `/projects/${projectId}/auth`
+
+  // URL-backed list params for users tab. Prefer validated search from index route (usersListSearch) so tags and table update immediately after navigate; fallback to parsing location.
+  const usersListParams = useMemo(() => {
+    if (!isAuthUsersIndex) return null
+    if (typeof window === 'undefined') return null
+    if (usersListSearch) {
+      return {
+        search: usersListSearch.search,
+        page: usersListSearch.page ?? 1,
+        limit: usersListSearch.limit ?? DEFAULT_PAGE_SIZE,
+        filterMap: queryParamToMap(usersListSearch.query ?? null),
+      }
+    }
+    const url = new URL(location.pathname + location.search, window.location.origin)
+    return {
+      search: getSearch(url),
+      page: getPage(url, 1),
+      limit: getLimit(url, DEFAULT_PAGE_SIZE),
+      filterMap: queryParamToMap(getQueryParam(url)),
+    }
+  }, [isAuthUsersIndex, usersListSearch, location.pathname, location.search, projectId])
+
+  const isAuthTeamsList =
+    location.pathname.includes('/auth/teams') &&
+    !location.pathname.match(/\/auth\/teams\/[^/]+/)
+
+  // URL-backed list params for teams tab (from search when on auth/teams).
+  const teamsListParams = useMemo(() => {
+    if (!isAuthTeamsList || typeof search !== 'object') return null
+    return {
+      search: search.teamsSearch ?? undefined,
+      page: search.teamsPage ?? 1,
+      limit: search.teamsLimit ?? TEAMS_DEFAULT_PAGE_SIZE,
+      filterMap: queryParamToMap(search.teamsQuery ?? null),
+    }
+  }, [isAuthTeamsList, search?.teamsSearch, search?.teamsQuery, search?.teamsPage, search?.teamsLimit])
 
   // Check if we're on a user detail route - if so, don't render this component
   const isUserDetailRoute = useMemo(() => {
@@ -123,8 +204,32 @@ export function View() {
     // Default to users for index route (/projects/:projectId/auth or /projects/:projectId/auth/)
     return 'users'
   }, [location.pathname])
-  const [usersSearchValue, setUsersSearchValue] = useState('')
-  const [teamsSearchValue, setTeamsSearchValue] = useState('')
+
+  const { project } = useProject(projectId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
+  const showAuthSecuritySettings =
+    canShowAuthSecuritySettings(access, features)
+
+  const urlPage = usersListParams?.page ?? 1
+  const urlLimit = usersListParams?.limit ?? DEFAULT_PAGE_SIZE
+  const urlSearch = usersListParams?.search
+  const usersFilterMap = usersListParams?.filterMap ?? new Map()
+  const usersFilterQueries =
+    usersFilterMap.size > 0 ? Array.from(usersFilterMap.values()) : undefined
+
+  const teamsUrlPage = teamsListParams?.page ?? 1
+  const teamsUrlLimit = teamsListParams?.limit ?? TEAMS_DEFAULT_PAGE_SIZE
+  const teamsUrlSearch = teamsListParams?.search
+  const teamsFilterMap = teamsListParams?.filterMap ?? new Map()
+  const teamsFilterQueries =
+    teamsFilterMap.size > 0 ? Array.from(teamsFilterMap.values()) : undefined
+
+  const [usersSearchInput, setUsersSearchInput] = useState('')
+  const usersSearchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const [teamsSearchInput, setTeamsSearchInput] = useState('')
+  const teamsSearchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [usersViewMode, setUsersViewMode] = useState<'list' | 'grid'>('list')
   const [teamsViewMode, setTeamsViewMode] = useState<'list' | 'grid'>('grid')
   const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false)
@@ -168,37 +273,120 @@ export function View() {
     }
   }, [search?.create, createTeamDialogOpen, navigate, location.pathname])
 
-  // Pagination state for users (1-indexed for UI)
-  const [usersRequestedPage, setUsersRequestedPage] = useState(1)
-  const [usersDisplayedPage, setUsersDisplayedPage] = useState(1)
-  const [usersPageSize, setUsersPageSize] = useState(25)
+  // Sync users search input from URL (e.g. back button)
+  useEffect(() => {
+    setUsersSearchInput(urlSearch ?? '')
+  }, [urlSearch])
+
+  const usersFilterQueryString =
+    usersFilterMap.size > 0 ? mapToQueryParam(usersFilterMap) : ''
+
+  // Debounced navigate when users search input changes
+  useEffect(() => {
+    if (usersSearchDebounceRef.current) clearTimeout(usersSearchDebounceRef.current)
+    usersSearchDebounceRef.current = setTimeout(() => {
+      const trimmed = usersSearchInput.trim()
+      if (trimmed === (urlSearch ?? '')) return
+      if (trimmed.length > 0 && trimmed.length < MIN_SEARCH_LENGTH) return
+      navigate({
+        to: '/projects/$projectId/auth/',
+        params: { projectId: projectId! },
+        search: (prev: Record<string, unknown>) => {
+          const next = {
+            ...prev,
+            ...buildListSearchParams({
+              search: trimmed || undefined,
+              query: usersFilterQueryString || undefined,
+              page: 1,
+              limit: urlLimit,
+            }),
+          }
+          // Remove search param when cleared so URL and results update
+          if (!trimmed) delete next.search
+          return next
+        },
+        replace: true,
+      })
+    }, 300)
+    return () => {
+      if (usersSearchDebounceRef.current) clearTimeout(usersSearchDebounceRef.current)
+    }
+  }, [
+    usersSearchInput,
+    projectId,
+    navigate,
+    urlLimit,
+    urlSearch,
+    usersFilterQueryString,
+  ])
+
+  const [usersDisplayedPage, setUsersDisplayedPage] = useState(urlPage)
+  const [usersDisplayedSearch, setUsersDisplayedSearch] = useState<
+    string | undefined
+  >(undefined)
+  const [usersDisplayedFilterQueryString, setUsersDisplayedFilterQueryString] =
+    useState('')
+  const usersDisplayedFilterQueries = useMemo(() => {
+    if (!usersDisplayedFilterQueryString) return undefined
+    const map = queryParamToMap(usersDisplayedFilterQueryString)
+    return map.size > 0 ? Array.from(map.values()) : undefined
+  }, [usersDisplayedFilterQueryString])
+  const hasInitedUsersDisplayedRef = useRef(false)
+  const [usersFiltersOpen, setUsersFiltersOpen] = useState(false)
+
+  const [teamsFiltersOpen, setTeamsFiltersOpen] = useState(false)
 
   const queryClient = useQueryClient()
 
-  // Clear selection when navigating between pages/routes or when search changes
+  // Sync teams search input from URL (e.g. back button)
+  useEffect(() => {
+    setTeamsSearchInput(teamsUrlSearch ?? '')
+  }, [teamsUrlSearch])
+
+  // Clear selection when navigating between pages/routes or when search/filters change
   useEffect(() => {
     setSelectedUsers(new Set())
     setDeleteDialogOpen(false)
     setSelectedTeams(new Set())
     setDeleteTeamDialogOpen(false)
-  }, [location.pathname, projectId, usersSearchValue, teamsSearchValue])
+  }, [location.pathname, projectId, urlSearch, teamsUrlSearch, usersFilterMap.size, teamsFilterMap.size])
 
-  // Pagination state for teams
-  const [teamsRequestedPage, setTeamsRequestedPage] = useState(1)
   const [teamsDisplayedPage, setTeamsDisplayedPage] = useState(1)
-  const [teamsPageSize, setTeamsPageSize] = useState(25)
+  const [teamsDisplayedSearch, setTeamsDisplayedSearch] = useState<
+    string | undefined
+  >(undefined)
+  const [teamsDisplayedFilterQueryString, setTeamsDisplayedFilterQueryString] =
+    useState('')
+  const teamsDisplayedFilterQueries = useMemo(() => {
+    if (!teamsDisplayedFilterQueryString) return undefined
+    const map = queryParamToMap(teamsDisplayedFilterQueryString)
+    return map.size > 0 ? Array.from(map.values()) : undefined
+  }, [teamsDisplayedFilterQueryString])
+  const hasInitedTeamsDisplayedRef = useRef(false)
 
-  // Fetch users for the requested page (triggers load when user changes page)
+  // Fetch users for the requested page (URL page - triggers load when user changes page)
   const {
     total: usersTotal,
     isLoading: usersLoading,
     isFetching: usersFetching,
+    isFetched: usersFetched,
   } = useProjectUsers(
     projectId,
-    usersRequestedPage - 1,
-    usersPageSize,
-    usersSearchValue,
+    urlPage - 1,
+    urlLimit,
+    urlSearch ?? undefined,
+    usersFilterQueries,
   )
+
+  useEffect(() => {
+    if (!isAuthUsersIndex || !usersListParams) return
+    if (!hasInitedUsersDisplayedRef.current) {
+      setUsersDisplayedPage(urlPage)
+      setUsersDisplayedSearch(urlSearch ?? undefined)
+      setUsersDisplayedFilterQueryString(usersFilterQueryString)
+      hasInitedUsersDisplayedRef.current = true
+    }
+  }, [isAuthUsersIndex, usersListParams, urlPage, urlSearch, usersFilterQueryString])
 
   // Fetch users for the displayed page (what we show - stays until new page is ready)
   const {
@@ -208,34 +396,62 @@ export function View() {
   } = useProjectUsers(
     projectId,
     usersDisplayedPage - 1,
-    usersPageSize,
-    usersSearchValue,
+    urlLimit,
+    usersDisplayedSearch ?? undefined,
+    usersDisplayedFilterQueries,
   )
 
-  // Update displayed users page only when requested page data is ready (no flash)
   useEffect(() => {
-    if (
-      !usersFetching &&
-      usersRequestedPage !== usersDisplayedPage &&
-      !usersLoading
-    ) {
-      setUsersDisplayedPage(usersRequestedPage)
+    if (!isAuthUsersIndex || usersFetching || usersLoading || !usersFetched) return
+    const match =
+      urlPage === usersDisplayedPage &&
+      (urlSearch ?? '') === (usersDisplayedSearch ?? '') &&
+      usersFilterQueryString === usersDisplayedFilterQueryString
+    if (!match) {
+      setUsersDisplayedPage(urlPage)
+      setUsersDisplayedSearch(urlSearch ?? undefined)
+      setUsersDisplayedFilterQueryString(usersFilterQueryString)
     }
-  }, [usersFetching, usersLoading, usersRequestedPage, usersDisplayedPage])
+  }, [
+    isAuthUsersIndex,
+    usersFetching,
+    usersLoading,
+    usersFetched,
+    urlPage,
+    urlSearch,
+    usersFilterQueryString,
+    usersDisplayedPage,
+    usersDisplayedSearch,
+    usersDisplayedFilterQueryString,
+  ])
 
   const showUsersLoading = usersDisplayedLoading && apiUsers.length === 0
 
-  // Fetch teams for the requested page (triggers load when user changes page)
+  // Fetch teams for the requested page (URL page - triggers load when URL changes)
   const {
     total: teamsTotal,
     isLoading: teamsLoading,
     isFetching: teamsFetching,
   } = useProjectTeams(
     projectId,
-    teamsRequestedPage - 1,
-    teamsPageSize,
-    teamsSearchValue,
+    teamsUrlPage - 1,
+    teamsUrlLimit,
+    teamsUrlSearch ?? undefined,
+    teamsFilterQueries,
   )
+
+  const teamsFilterQueryString =
+    teamsFilterMap.size > 0 ? mapToQueryParam(teamsFilterMap) : ''
+
+  useEffect(() => {
+    if (!isAuthTeamsList || !teamsListParams) return
+    if (!hasInitedTeamsDisplayedRef.current) {
+      setTeamsDisplayedPage(teamsUrlPage)
+      setTeamsDisplayedSearch(teamsUrlSearch ?? undefined)
+      setTeamsDisplayedFilterQueryString(teamsFilterQueryString)
+      hasInitedTeamsDisplayedRef.current = true
+    }
+  }, [isAuthTeamsList, teamsListParams, teamsUrlPage, teamsUrlSearch, teamsFilterQueryString])
 
   // Fetch teams for the displayed page (what we show - stays until new page is ready)
   const {
@@ -245,20 +461,33 @@ export function View() {
   } = useProjectTeams(
     projectId,
     teamsDisplayedPage - 1,
-    teamsPageSize,
-    teamsSearchValue,
+    teamsUrlLimit,
+    teamsDisplayedSearch ?? undefined,
+    teamsDisplayedFilterQueries,
   )
 
-  // Update displayed teams page only when requested page data is ready (no flash)
   useEffect(() => {
-    if (
-      !teamsFetching &&
-      teamsRequestedPage !== teamsDisplayedPage &&
-      !teamsLoading
-    ) {
-      setTeamsDisplayedPage(teamsRequestedPage)
+    if (!isAuthTeamsList || teamsFetching || teamsLoading) return
+    const match =
+      teamsUrlPage === teamsDisplayedPage &&
+      (teamsUrlSearch ?? '') === (teamsDisplayedSearch ?? '') &&
+      teamsFilterQueryString === teamsDisplayedFilterQueryString
+    if (!match) {
+      setTeamsDisplayedPage(teamsUrlPage)
+      setTeamsDisplayedSearch(teamsUrlSearch ?? undefined)
+      setTeamsDisplayedFilterQueryString(teamsFilterQueryString)
     }
-  }, [teamsFetching, teamsLoading, teamsRequestedPage, teamsDisplayedPage])
+  }, [
+    isAuthTeamsList,
+    teamsFetching,
+    teamsLoading,
+    teamsUrlPage,
+    teamsUrlSearch,
+    teamsFilterQueryString,
+    teamsDisplayedPage,
+    teamsDisplayedSearch,
+    teamsDisplayedFilterQueryString,
+  ])
 
   const showTeamsLoading = teamsDisplayedLoading && apiTeams.length === 0
 
@@ -298,12 +527,132 @@ export function View() {
     return { label: 'Unverified', tone: 'warning' as const }
   }
 
-  // Reset page when search changes
   const handleUsersSearchChange = (value: string) => {
-    setUsersSearchValue(value)
-    setUsersRequestedPage(1)
-    setUsersDisplayedPage(1)
-    setSelectedUsers(new Set()) // Clear selection on search change
+    setUsersSearchInput(value)
+  }
+
+  const applyUsersFilter = (compactKey: CompactFilterKey, queryStr: string) => {
+    const newMap = new Map(usersFilterMap)
+    newMap.set(compactKey, queryStr)
+    const queryEncoded = mapToQueryParam(newMap)
+    navigate({
+      to: '/projects/$projectId/auth/',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => ({
+        ...prev,
+        ...buildListSearchParams({
+          search: urlSearch,
+          query: queryEncoded,
+          page: 1,
+          limit: urlLimit,
+        }),
+      }),
+      replace: true,
+    })
+  }
+
+  const removeUsersFilter = (key: CompactFilterKey) => {
+    const newMap = new Map(usersFilterMap)
+    newMap.delete(key)
+    navigate({
+      to: '/projects/$projectId/auth/',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => {
+        const next = {
+          ...prev,
+          ...buildListSearchParams({
+            search: urlSearch,
+            query: newMap.size > 0 ? mapToQueryParam(newMap) : undefined,
+            page: 1,
+            limit: urlLimit,
+          }),
+        }
+        if (newMap.size === 0) delete next.query
+        return next
+      },
+      replace: true,
+    })
+  }
+
+  const clearAllUsersFilters = () => {
+    navigate({
+      to: '/projects/$projectId/auth/',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => {
+        const next = {
+          ...prev,
+          ...buildListSearchParams({
+            search: urlSearch,
+            page: 1,
+            limit: urlLimit,
+          }),
+        }
+        delete next.query
+        return next
+      },
+      replace: true,
+    })
+    setUsersFiltersOpen(false)
+  }
+
+  const applyTeamsFilter = (compactKey: CompactFilterKey, queryStr: string) => {
+    const newMap = new Map(teamsFilterMap)
+    newMap.set(compactKey, queryStr)
+    const queryEncoded = mapToQueryParam(newMap)
+    navigate({
+      to: '/projects/$projectId/auth/teams',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => {
+        const next = { ...prev } as Record<string, unknown>
+        next.teamsSearch = teamsUrlSearch ?? undefined
+        next.teamsQuery = queryEncoded
+        next.teamsPage = 1
+        next.teamsLimit = teamsUrlLimit
+        if (!next.teamsSearch) delete next.teamsSearch
+        delete next.teamsPage
+        return next
+      },
+      replace: true,
+    })
+  }
+
+  const removeTeamsFilter = (key: CompactFilterKey) => {
+    const newMap = new Map(teamsFilterMap)
+    newMap.delete(key)
+    navigate({
+      to: '/projects/$projectId/auth/teams',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => {
+        const next = { ...prev } as Record<string, unknown>
+        next.teamsSearch = teamsUrlSearch ?? undefined
+        next.teamsQuery = newMap.size > 0 ? mapToQueryParam(newMap) : undefined
+        next.teamsPage = 1
+        next.teamsLimit = teamsUrlLimit
+        if (!next.teamsSearch) delete next.teamsSearch
+        if (newMap.size === 0) delete next.teamsQuery
+        delete next.teamsPage
+        return next
+      },
+      replace: true,
+    })
+  }
+
+  const clearAllTeamsFilters = () => {
+    navigate({
+      to: '/projects/$projectId/auth/teams',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => {
+        const next = { ...prev } as Record<string, unknown>
+        next.teamsSearch = teamsUrlSearch ?? undefined
+        next.teamsLimit = teamsUrlLimit
+        if (!next.teamsSearch) delete next.teamsSearch
+        delete next.teamsQuery
+        delete next.teamsPage
+        return next
+      },
+      replace: true,
+    })
+    setTeamsFiltersOpen(false)
   }
 
   // Bulk delete mutation
@@ -361,16 +710,52 @@ export function View() {
     }
   }
 
-  const handlePageChange = (page: number) => {
-    setUsersRequestedPage(page)
-    setSelectedUsers(new Set()) // Clear selection on page change
+  const handleUsersPageChange = (page: number) => {
+    navigate({
+      to: '/projects/$projectId/auth/',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => {
+        const next = {
+          ...prev,
+          ...buildListSearchParams({
+            search: urlSearch,
+            query:
+              usersFilterMap.size > 0 ? mapToQueryParam(usersFilterMap) : undefined,
+            page,
+            limit: urlLimit,
+          }),
+        }
+        // When going to page 1, buildListSearchParams omits page so prev.page would persist; remove it explicitly
+        if (page === 1) delete next.page
+        return next
+      },
+      replace: true,
+    })
+    setSelectedUsers(new Set())
   }
 
-  const handlePageSizeChange = (newPageSize: number) => {
-    setUsersPageSize(newPageSize)
-    setUsersRequestedPage(1)
-    setUsersDisplayedPage(1)
-    setSelectedUsers(new Set()) // Clear selection on page size change
+  const handleUsersPageSizeChange = (newPageSize: number) => {
+    navigate({
+      to: '/projects/$projectId/auth/',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => {
+        const next = {
+          ...prev,
+          ...buildListSearchParams({
+            search: urlSearch,
+            query:
+              usersFilterMap.size > 0 ? mapToQueryParam(usersFilterMap) : undefined,
+            page: 1,
+            limit: newPageSize,
+          }),
+        }
+        // Reset to page 1 when changing size; buildListSearchParams omits page when 1 so remove it
+        delete next.page
+        return next
+      },
+      replace: true,
+    })
+    setSelectedUsers(new Set())
   }
 
   // Format last accessed date - shows relative time but only at day resolution or higher
@@ -414,11 +799,45 @@ export function View() {
   }
 
   const handleTeamsSearchChange = (value: string) => {
-    setTeamsSearchValue(value)
-    setTeamsRequestedPage(1)
-    setTeamsDisplayedPage(1)
-    setSelectedTeams(new Set()) // Clear selection on search change
+    setTeamsSearchInput(value)
+    setSelectedTeams(new Set())
   }
+
+  // Debounced navigate when teams search input changes
+  useEffect(() => {
+    if (activeTab !== 'teams') return
+    if (teamsSearchDebounceRef.current) clearTimeout(teamsSearchDebounceRef.current)
+    teamsSearchDebounceRef.current = setTimeout(() => {
+      const trimmed = teamsSearchInput.trim()
+      if (trimmed === (teamsUrlSearch ?? '')) return
+      navigate({
+        to: '/projects/$projectId/auth/teams',
+        params: { projectId: projectId! },
+        search: (prev: Record<string, unknown>) => {
+          const next = { ...prev } as Record<string, unknown>
+          next.teamsSearch = trimmed || undefined
+          next.teamsQuery = teamsFilterQueryString || undefined
+          next.teamsPage = 1
+          next.teamsLimit = teamsUrlLimit
+          if (!trimmed) delete next.teamsSearch
+          if (next.teamsPage === 1) delete next.teamsPage
+          return next
+        },
+        replace: true,
+      })
+    }, 300)
+    return () => {
+      if (teamsSearchDebounceRef.current) clearTimeout(teamsSearchDebounceRef.current)
+    }
+  }, [
+    activeTab,
+    teamsSearchInput,
+    projectId,
+    navigate,
+    teamsUrlSearch,
+    teamsUrlLimit,
+    teamsFilterQueryString,
+  ])
 
   // Bulk delete mutation for teams
   const bulkDeleteTeamsMutation = useMutation({
@@ -476,15 +895,41 @@ export function View() {
   }
 
   const handleTeamsPageChange = (page: number) => {
-    setTeamsRequestedPage(page)
-    setSelectedTeams(new Set()) // Clear selection on page change
+    setSelectedTeams(new Set())
+    navigate({
+      to: '/projects/$projectId/auth/teams',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => {
+        const next = { ...prev } as Record<string, unknown>
+        next.teamsSearch = teamsUrlSearch ?? undefined
+        next.teamsQuery = teamsFilterQueryString || undefined
+        next.teamsPage = page
+        next.teamsLimit = teamsUrlLimit
+        if (!next.teamsSearch) delete next.teamsSearch
+        if (page === 1) delete next.teamsPage
+        if (next.teamsLimit === TEAMS_DEFAULT_PAGE_SIZE) delete next.teamsLimit
+        return next
+      },
+      replace: true,
+    })
   }
 
   const handleTeamsPageSizeChange = (newPageSize: number) => {
-    setTeamsPageSize(newPageSize)
-    setTeamsRequestedPage(1)
-    setTeamsDisplayedPage(1)
-    setSelectedTeams(new Set()) // Clear selection on page size change
+    setSelectedTeams(new Set())
+    navigate({
+      to: '/projects/$projectId/auth/teams',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => {
+        const next = { ...prev } as Record<string, unknown>
+        next.teamsSearch = teamsUrlSearch ?? undefined
+        next.teamsQuery = teamsFilterQueryString || undefined
+        delete next.teamsPage
+        next.teamsLimit = newPageSize
+        if (!next.teamsSearch) delete next.teamsSearch
+        return next
+      },
+      replace: true,
+    })
   }
 
   // Update tabs with dynamic user and team counts and route paths
@@ -502,27 +947,47 @@ export function View() {
         to: '/projects/$projectId/auth/teams',
         params: { projectId: projectId as string },
       },
-      {
-        id: 'security',
-        label: 'Security',
-        to: '/projects/$projectId/auth/security',
-        params: { projectId: projectId as string },
-      },
-      {
-        id: 'templates',
-        label: 'Templates',
-        to: '/projects/$projectId/auth/templates',
-        params: { projectId: projectId as string },
-      },
-      {
-        id: 'settings',
-        label: 'Settings',
-        to: '/projects/$projectId/auth/settings',
-        params: { projectId: projectId as string },
-      },
+      ...(showAuthSecuritySettings
+        ? [
+            {
+              id: 'security' as const,
+              label: 'Security',
+              to: '/projects/$projectId/auth/security',
+              params: { projectId: projectId as string },
+            },
+            {
+              id: 'templates' as const,
+              label: 'Templates',
+              to: '/projects/$projectId/auth/templates',
+              params: { projectId: projectId as string },
+            },
+            {
+              id: 'settings' as const,
+              label: 'Settings',
+              to: '/projects/$projectId/auth/settings',
+              params: { projectId: projectId as string },
+            },
+          ]
+        : []),
     ],
-    [projectId],
+    [projectId, showAuthSecuritySettings],
   )
+
+  // Redirect from security/templates/settings when user lacks permission
+  useEffect(() => {
+    if (showAuthSecuritySettings || !projectId) return
+    if (
+      activeTab === 'security' ||
+      activeTab === 'settings' ||
+      activeTab === 'templates'
+    ) {
+      navigate({
+        to: '/projects/$projectId/auth/',
+        params: { projectId },
+        replace: true,
+      })
+    }
+  }, [showAuthSecuritySettings, activeTab, projectId, navigate])
 
   const getCreateLabel = () => {
     switch (activeTab) {
@@ -575,9 +1040,21 @@ export function View() {
     }
   }
 
-  // Get project data for SMTP status
-  const { project } = useProject(projectId)
+  // Get project data for SMTP status (project, features, access already from above)
   const isSmtpEnabled = (project as unknown)?.smtpEnabled ?? false
+
+  const noCreatePermission =
+    activeTab === 'users'
+      ? !canCreateUser(access, features)
+      : activeTab === 'teams'
+        ? !canCreateTeam(access, features)
+        : false
+  const createPermissionTooltip =
+    noCreatePermission && activeTab === 'users'
+      ? "You don't have permission to create users."
+      : noCreatePermission && activeTab === 'teams'
+        ? "You don't have permission to create teams."
+        : undefined
 
   // SMTP alert for templates tab
   const smtpAlert =
@@ -664,9 +1141,9 @@ export function View() {
         }
         searchValue={
           activeTab === 'users'
-            ? usersSearchValue
+            ? usersSearchInput
             : activeTab === 'teams'
-              ? teamsSearchValue
+              ? teamsSearchInput
               : undefined
         }
         onSearchChange={
@@ -678,10 +1155,73 @@ export function View() {
         }
         createLabel={activeTab === 'templates' ? undefined : getCreateLabel()}
         onCreate={activeTab === 'templates' ? undefined : handleCreateClick}
-        showFilters={activeTab === 'users'}
+        createDisabled={noCreatePermission}
+        createDisabledTooltip={createPermissionTooltip}
+        showFilters={activeTab === 'users' || activeTab === 'teams'}
+        filterTrigger={
+          activeTab === 'users' ? (
+            <FiltersPopover
+              open={usersFiltersOpen}
+              onOpenChange={setUsersFiltersOpen}
+              columns={usersFilterColumns}
+              filterMap={usersFilterMap}
+              onRemoveFilter={removeUsersFilter}
+              onClearAll={clearAllUsersFilters}
+              onApplyFilter={applyUsersFilter}
+              resourceLabel="users"
+              filterScope="auth.users"
+              onApplyQuery={(queryParam) => {
+                navigate({
+                  to: '/projects/$projectId/auth/',
+                  params: { projectId: projectId! },
+                  search: (prev: Record<string, unknown>) => ({
+                    ...prev,
+                    ...buildListSearchParams({
+                      search: urlSearch,
+                      query: queryParam ?? undefined,
+                      page: 1,
+                      limit: urlLimit,
+                    }),
+                  }),
+                  replace: true,
+                })
+              }}
+              teamId={project?.teamId}
+            />
+          ) : activeTab === 'teams' ? (
+            <FiltersPopover
+              open={teamsFiltersOpen}
+              onOpenChange={setTeamsFiltersOpen}
+              columns={teamsFilterColumns}
+              filterMap={teamsFilterMap}
+              onRemoveFilter={removeTeamsFilter}
+              onClearAll={clearAllTeamsFilters}
+              onApplyFilter={applyTeamsFilter}
+              resourceLabel="teams"
+              filterScope="auth.teams"
+              onApplyQuery={(queryParam) => {
+                navigate({
+                  to: '/projects/$projectId/auth/teams',
+                  params: { projectId: projectId! },
+                  search: (prev: Record<string, unknown>) => {
+                    const next = { ...prev } as Record<string, unknown>
+                    next.teamsSearch = teamsUrlSearch ?? undefined
+                    next.teamsQuery = queryParam ?? undefined
+                    next.teamsPage = 1
+                    next.teamsLimit = teamsUrlLimit
+                    if (!next.teamsSearch) delete next.teamsSearch
+                    return next
+                  },
+                  replace: true,
+                })
+              }}
+              teamId={project?.teamId}
+            />
+          ) : undefined
+        }
         fullWidthBorder
         contentAfterBorder={smtpAlert}
-        rightContent={
+        beforeCreateButtons={
           activeTab === 'users' ? (
             <ViewToggle
               viewMode={usersViewMode}
@@ -1038,24 +1578,30 @@ export function View() {
                   <Pagination
                     currentPage={usersDisplayedPage}
                     totalItems={displayedUsersTotal ?? usersTotal}
-                    pageSize={usersPageSize}
+                    pageSize={urlLimit}
                     pageSizeOptions={[10, 25, 50, 100]}
-                    onPageChange={handlePageChange}
-                    onPageSizeChange={handlePageSizeChange}
+                    onPageChange={handleUsersPageChange}
+                    onPageSizeChange={handleUsersPageSizeChange}
                     itemLabel="users"
                   />
                 </>
               ) : (
                 <EmptyState
                   icon={Users}
-                  title={usersSearchValue ? undefined : 'No users yet'}
-                  description={
-                    usersSearchValue
+                  title={
+                    urlSearch || usersFilterMap.size > 0
                       ? undefined
-                      : 'Create your first user to get started with authentication'
+                      : 'No users yet'
                   }
-                  isEmpty={!usersSearchValue}
-                  hasFilters={!!usersSearchValue}
+                  description={
+                    urlSearch
+                      ? `No results for "${urlSearch}". Try a different search.`
+                      : usersFilterMap.size > 0
+                        ? 'No users match your filters.'
+                        : 'Create your first user to get started with authentication'
+                  }
+                  isEmpty={!(urlSearch || usersFilterMap.size > 0)}
+                  hasFilters={!!(urlSearch || usersFilterMap.size > 0)}
                   variant="card"
                 />
               )
@@ -1117,14 +1663,20 @@ export function View() {
                     <div className="col-span-full">
                       <EmptyState
                         icon={Users}
-                        title={usersSearchValue ? undefined : 'No users yet'}
-                        description={
-                          usersSearchValue
+                        title={
+                          urlSearch || usersFilterMap.size > 0
                             ? undefined
-                            : 'Create your first user to get started with authentication'
+                            : 'No users yet'
                         }
-                        isEmpty={!usersSearchValue}
-                        hasFilters={!!usersSearchValue}
+                        description={
+                          urlSearch
+                            ? `No results for "${urlSearch}". Try a different search.`
+                            : usersFilterMap.size > 0
+                              ? 'No users match your filters.'
+                              : 'Create your first user to get started with authentication'
+                        }
+                        isEmpty={!(urlSearch || usersFilterMap.size > 0)}
+                        hasFilters={!!(urlSearch || usersFilterMap.size > 0)}
                         variant="card"
                       />
                     </div>
@@ -1134,10 +1686,10 @@ export function View() {
                   <Pagination
                     currentPage={usersDisplayedPage}
                     totalItems={displayedUsersTotal ?? usersTotal}
-                    pageSize={usersPageSize}
+                    pageSize={urlLimit}
                     pageSizeOptions={[10, 25, 50, 100]}
-                    onPageChange={handlePageChange}
-                    onPageSizeChange={handlePageSizeChange}
+                    onPageChange={handleUsersPageChange}
+                    onPageSizeChange={handleUsersPageSizeChange}
                     itemLabel="users"
                   />
                 )}
@@ -1330,7 +1882,7 @@ export function View() {
                   <Pagination
                     currentPage={teamsDisplayedPage}
                     totalItems={displayedTeamsTotal ?? teamsTotal}
-                    pageSize={teamsPageSize}
+                    pageSize={teamsUrlLimit}
                     pageSizeOptions={[10, 25, 50, 100]}
                     onPageChange={handleTeamsPageChange}
                     onPageSizeChange={handleTeamsPageSizeChange}
@@ -1340,14 +1892,14 @@ export function View() {
               ) : (
                 <EmptyState
                   icon={Users}
-                  title={teamsSearchValue ? undefined : 'No teams yet'}
+                  title={teamsUrlSearch || teamsFilterMap.size > 0 ? undefined : 'No teams yet'}
                   description={
-                    teamsSearchValue
+                    teamsUrlSearch || teamsFilterMap.size > 0
                       ? undefined
                       : 'Create your first team to organize users into groups'
                   }
-                  isEmpty={!teamsSearchValue}
-                  hasFilters={!!teamsSearchValue}
+                  isEmpty={!teamsUrlSearch && teamsFilterMap.size === 0}
+                  hasFilters={!!teamsUrlSearch || teamsFilterMap.size > 0}
                   variant="card"
                 />
               )
@@ -1388,14 +1940,14 @@ export function View() {
                     <div className="col-span-full">
                       <EmptyState
                         icon={Users}
-                        title={teamsSearchValue ? undefined : 'No teams yet'}
+                        title={teamsUrlSearch || teamsFilterMap.size > 0 ? undefined : 'No teams yet'}
                         description={
-                          teamsSearchValue
+                          teamsUrlSearch || teamsFilterMap.size > 0
                             ? undefined
                             : 'Create your first team to organize users into groups'
                         }
-                        isEmpty={!teamsSearchValue}
-                        hasFilters={!!teamsSearchValue}
+                        isEmpty={!teamsUrlSearch && teamsFilterMap.size === 0}
+                        hasFilters={!!teamsUrlSearch || teamsFilterMap.size > 0}
                         variant="card"
                       />
                     </div>
@@ -1405,7 +1957,7 @@ export function View() {
                   <Pagination
                     currentPage={teamsDisplayedPage}
                     totalItems={displayedTeamsTotal ?? teamsTotal}
-                    pageSize={teamsPageSize}
+                    pageSize={teamsUrlLimit}
                     pageSizeOptions={[10, 25, 50, 100]}
                     onPageChange={handleTeamsPageChange}
                     onPageSizeChange={handleTeamsPageSizeChange}

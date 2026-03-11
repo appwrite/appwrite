@@ -42,7 +42,7 @@ export const Route = createFileRoute(
             0,
             25,
           ],
-          queryFn: () => fetchFileTokens(projectId, bucketId, fileId, 0, 25),
+          queryFn: () => fetchFileTokens(projectId, bucketId, fileId, 0, 10),
           staleTime: 30 * 1000,
         }),
       ])

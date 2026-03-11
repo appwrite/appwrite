@@ -8,6 +8,7 @@ import {
   Copy,
   Download,
   Trash2,
+  XCircle,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
@@ -24,6 +25,7 @@ import {
 } from 'lucide-react'
 import {
   getDeploymentStatusBadge,
+  isDeploymentCompleted,
   isDeploymentInProgress,
   isDeploymentTimeout,
 } from '@/lib/utils/deployment-status'
@@ -402,6 +404,8 @@ export interface DeploymentDetailViewConfig {
 
   // Actions
   onDelete: (deploymentId: string) => Promise<void>
+  /** Cancel an in-progress build (stops build, deployment remains). When not provided, Cancel button is hidden when building. */
+  onCancelBuild?: (deploymentId: string) => Promise<void>
   onDownloadSource: (
     projectId: string,
     resourceId: string,
@@ -451,6 +455,7 @@ export function DeploymentDetailView({
   deploymentDetailRoute,
   listRoute,
   onDelete,
+  onCancelBuild,
   onDownloadSource,
   onDownloadBuild,
   onRedeploy,
@@ -466,6 +471,7 @@ export function DeploymentDetailView({
   const queryClient = useQueryClient()
   const [logsSearch, setLogsSearch] = useState('')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [cancelBuildDialogOpen, setCancelBuildDialogOpen] = useState(false)
   const [redeployDialogOpen, setRedeployDialogOpen] = useState(false)
   const [activateDialogOpen, setActivateDialogOpen] = useState(false)
   const logsContainerRef = useRef<HTMLDivElement>(null)
@@ -608,7 +614,45 @@ export function DeploymentDetailView({
 
   const buildLogs = deployment?.buildLogs || ''
 
-  // Delete deployment mutation
+  const refetchAndNavigate = async () => {
+    for (const queryKey of invalidateQueries) {
+      const normalizedKey: readonly unknown[] = Array.isArray(queryKey)
+        ? queryKey
+        : [queryKey]
+      await queryClient.refetchQueries({ queryKey: normalizedKey })
+    }
+    setDeleteDialogOpen(false)
+    setCancelBuildDialogOpen(false)
+    navigate({
+      to: listRoute as unknown,
+      params: { projectId, [parentResourceParam]: resourceId } as unknown,
+    })
+  }
+
+  // Cancel build mutation (stops build via onCancelBuild; deployment remains, no navigate)
+  const cancelBuildMutation = useMutation({
+    mutationFn: async () => {
+      if (!onCancelBuild) {
+        throw new Error('Cancel build is not available')
+      }
+      return await onCancelBuild(deploymentId)
+    },
+    onSuccess: async () => {
+      for (const queryKey of invalidateQueries) {
+        const normalizedKey: readonly unknown[] = Array.isArray(queryKey)
+          ? queryKey
+          : [queryKey]
+        await queryClient.refetchQueries({ queryKey: normalizedKey })
+      }
+      setCancelBuildDialogOpen(false)
+      toast.success('Build cancelled')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to cancel build')
+    },
+  })
+
+  // Delete deployment mutation (blocks when active)
   const deleteMutation = useMutation({
     mutationFn: async () => {
       if (isActiveDeployment) {
@@ -619,20 +663,8 @@ export function DeploymentDetailView({
       return await onDelete(deploymentId)
     },
     onSuccess: async () => {
-      // Refetch lists so the UI updates (lists use refetchOnMount: false)
-      for (const queryKey of invalidateQueries) {
-        const normalizedKey: readonly unknown[] = Array.isArray(queryKey)
-          ? queryKey
-          : [queryKey]
-        await queryClient.refetchQueries({ queryKey: normalizedKey })
-      }
+      await refetchAndNavigate()
       toast.success('Deployment deleted successfully')
-      setDeleteDialogOpen(false)
-      // Navigate back to list
-      navigate({
-        to: listRoute as unknown,
-        params: { projectId, [parentResourceParam]: resourceId } as unknown,
-      })
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to delete deployment')
@@ -690,8 +722,9 @@ export function DeploymentDetailView({
     onDownloadSource(projectId, resourceId, deploymentId)
   }
 
-  // Handle download build output
+  // Handle download build output (only when deployment has completed)
   const handleDownloadBuild = () => {
+    if (!isDeploymentCompleted(deployment?.status)) return
     onDownloadBuild(projectId, resourceId, deploymentId)
   }
 
@@ -1366,34 +1399,49 @@ export function DeploymentDetailView({
       contentClassName="flex flex-col h-full min-h-0 overflow-hidden -mx-6"
       footer={
         <div className="hidden sm:flex flex-row items-center justify-between gap-2 w-full">
-          {/* Left side - Delete button */}
+          {/* Left side - Cancel (when building) or Delete button */}
           <div className="flex items-center">
-            <TooltipProvider delayDuration={0}>
-              <TooltipPrimitive.Root>
-                <TooltipTrigger asChild>
-                  <span>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => setDeleteDialogOpen(true)}
-                      disabled={isActiveDeployment}
-                      className="h-9 text-[13px]"
-                    >
-                      <Trash2 className="mr-1.5 h-4 w-4" />
-                      Delete
-                    </Button>
-                  </span>
-                </TooltipTrigger>
-                {isActiveDeployment && (
-                  <TooltipContent sideOffset={4} className="z-[200]">
-                    <p>
-                      Cannot delete the active deployment. Please activate
-                      another deployment first.
-                    </p>
-                  </TooltipContent>
-                )}
-              </TooltipPrimitive.Root>
-            </TooltipProvider>
+            {deployment &&
+            isDeploymentInProgress(deployment.status) &&
+            onCancelBuild ? (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setCancelBuildDialogOpen(true)}
+                disabled={cancelBuildMutation.isPending}
+                className="h-9 text-[13px]"
+              >
+                <XCircle className="mr-1.5 h-4 w-4" />
+                Cancel
+              </Button>
+            ) : (
+              <TooltipProvider delayDuration={0}>
+                <TooltipPrimitive.Root>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => setDeleteDialogOpen(true)}
+                        disabled={isActiveDeployment}
+                        className="h-9 text-[13px]"
+                      >
+                        <Trash2 className="mr-1.5 h-4 w-4" />
+                        Delete
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  {isActiveDeployment && (
+                    <TooltipContent sideOffset={4} className="z-[200]">
+                      <p>
+                        Cannot delete the active deployment. Please activate
+                        another deployment first.
+                      </p>
+                    </TooltipContent>
+                  )}
+                </TooltipPrimitive.Root>
+              </TooltipProvider>
+            )}
           </div>
 
           {/* Right side - Individual buttons */}
@@ -1411,7 +1459,15 @@ export function DeploymentDetailView({
                   <FileCode className="mr-2 h-4 w-4" />
                   Source code
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleDownloadBuild}>
+                <DropdownMenuItem
+                  onClick={handleDownloadBuild}
+                  disabled={!isDeploymentCompleted(deployment?.status)}
+                  title={
+                    !isDeploymentCompleted(deployment?.status)
+                      ? 'Build output is available after the deployment has completed.'
+                      : undefined
+                  }
+                >
                   <Package className="mr-2 h-4 w-4" />
                   Build output
                 </DropdownMenuItem>
@@ -1566,6 +1622,44 @@ export function DeploymentDetailView({
           </div>
         )}
       </div>
+
+      {/* Cancel build confirmation */}
+      <Dialog
+        open={cancelBuildDialogOpen}
+        onOpenChange={setCancelBuildDialogOpen}
+      >
+        <DialogContent className="sm:max-w-md p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+            <DialogTitle>Cancel build</DialogTitle>
+            <DialogDescription className="text-[13px] mt-2">
+              Stop the current deployment? You can deploy again later.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="border-t border-border" />
+          <div className="px-6 pb-4 pt-4">
+            {deployment && (
+              <DeploymentInfo deployment={deployment} showStatus={true} />
+            )}
+          </div>
+          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setCancelBuildDialogOpen(false)}
+              className="h-9 text-[13px]"
+            >
+              Keep building
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => cancelBuildMutation.mutate()}
+              disabled={cancelBuildMutation.isPending}
+              className="h-9 text-[13px]"
+            >
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

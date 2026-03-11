@@ -36,6 +36,7 @@ import {
   Copy,
   Check,
 } from 'lucide-react'
+import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { AuthenticatorType, AuthenticationFactor } from '@appwrite.io/console'
@@ -496,7 +497,7 @@ function IdentitiesSection() {
                       <img
                         src={`/icons/${getProviderIcon(identity.provider)}`}
                         alt={identity.provider}
-                        className="h-4 w-4"
+                        className={`h-4 w-4 ${PUBLIC_ICON_MUTED_CLASSES}`}
                         onError={(e) => {
                           e.currentTarget.src = '/icons/empty.svg'
                         }}

@@ -1,3 +1,4 @@
+import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
 import { getColumnIcon } from '@/lib/utils/column-icons'
 import { isTextType } from '@/lib/utils/database-columns'
@@ -28,6 +29,7 @@ import {
   X,
   Check,
   BarChart3,
+  Cpu,
   Network,
   Lightbulb,
   BookOpen,
@@ -69,6 +71,7 @@ import {
   deleteProjectTable,
   useProject,
   useOrganizationPlan,
+  useOrganizationScopes,
   fetchProjectDatabases,
   createProjectDatabase,
   createProjectTable,
@@ -78,6 +81,11 @@ import {
   tableRowsQueryOptions,
   type TablesSortBy,
 } from '@/lib/react-query/hooks'
+import {
+  COLUMNS_INDEXES_DEFAULT_PAGE_SIZE,
+  DEFAULT_PAGE_SIZE,
+  ROWS_DEFAULT_PAGE_SIZE,
+} from '@/lib/react-query/hooks/constants'
 import { ColumnDrawer, ColumnFormData, type ColumnType } from './tables/Column'
 import { IndexDrawer, IndexFormData } from './tables/Index'
 import {
@@ -110,7 +118,14 @@ import {
   getClaudeDeepLink,
 } from '@/lib/utils/database-schema-export'
 import { useDebugMode } from '@/components/global/providers/DebugMode'
+import {
+  canCreateDatabase,
+  canCreateRow,
+  canShowTableSecuritySettings,
+  canShowDatabaseSecuritySettings,
+} from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { TABLE_DB_SPEC_OPTIONS } from '@/lib/database-specs'
 import type { Models } from '@appwrite.io/console'
 
 /** Database list item: API may return extra backup/createdAt fields */
@@ -210,6 +225,23 @@ import {
   useLocation,
   useSearch,
 } from '@tanstack/react-router'
+import {
+  getSearch,
+  getPage,
+  getLimit,
+  getQueryParam,
+  queryParamToMap,
+  mapToQueryParam,
+  buildListSearchParams,
+  MIN_SEARCH_LENGTH,
+  databasesFilterColumns,
+  rowsFilterColumnsFromAttributes,
+  tableColumnsFilterColumns,
+  tableIndexesFilterColumns,
+  type TableIndexForFilters,
+} from '@/lib/table-filters'
+import type { CompactFilterKey } from '@/lib/table-filters'
+import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
 import {
@@ -255,61 +287,192 @@ export function View() {
   })
   const navigate = useNavigate()
   const location = useLocation()
-  const search = useSearch({ strict: false }) as { create?: string }
+  const search = useSearch({ strict: false }) as {
+    create?: string
+    search?: string
+    query?: string
+    page?: number
+    limit?: number
+  }
+  const { features } = useConsoleProfile()
+  const useCreateDatabaseWizard = features.dedicatedDbsSupport
   const queryClient = useQueryClient()
-  const [searchValue, setSearchValue] = useState('')
+  const isDatabasesIndex =
+    location.pathname.replace(/\/$/, '') === `/projects/${projectId}/databases`
+  const databaseListParams = useMemo(() => {
+    if (!isDatabasesIndex || typeof search !== 'object') return null
+    const url = new URL(location.pathname + location.search, window.location.origin)
+    return {
+      search: getSearch(url) ?? search.search,
+      page: getPage(url, 1),
+      limit: getLimit(url, ROWS_DEFAULT_PAGE_SIZE),
+      filterMap: queryParamToMap(getQueryParam(url) ?? search.query ?? null),
+    }
+  }, [isDatabasesIndex, search?.search, search?.query, search?.page, search?.limit, location.pathname, location.search])
+
+  const urlPage = databaseListParams?.page ?? 1
+  const urlLimit = databaseListParams?.limit ?? ROWS_DEFAULT_PAGE_SIZE
+  const urlSearch = databaseListParams?.search
+  const filterMap = databaseListParams?.filterMap ?? new Map()
+  const filterQueries =
+    filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
+  const filterQueryString = filterMap.size > 0 ? mapToQueryParam(filterMap) : ''
+
+  const [searchInput, setSearchInput] = useState('')
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid')
   const [requestedPage, setRequestedPage] = useState(1)
   const [displayedPage, setDisplayedPage] = useState(1)
-  const [pageSize, setPageSize] = useState(25)
+  const [displayedSearch, setDisplayedSearch] = useState<string | undefined>(
+    undefined,
+  )
+  const [displayedFilterQueryString, setDisplayedFilterQueryString] =
+    useState('')
+  const displayedFilterQueries = useMemo(() => {
+    if (!displayedFilterQueryString) return undefined
+    const map = queryParamToMap(displayedFilterQueryString)
+    return map.size > 0 ? Array.from(map.values()) : undefined
+  }, [displayedFilterQueryString])
+  const hasInitedDisplayedRef = useRef(false)
+  const [pageSize, setPageSize] = useState(ROWS_DEFAULT_PAGE_SIZE)
   const [selectedDatabases, setSelectedDatabases] = useState<Set<string>>(
     new Set(),
   )
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [createDatabaseDialogOpen, setCreateDatabaseDialogOpen] =
     useState(false)
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
-  // Open create database dialog when ?create=database (e.g. from header plus button)
+  // Open create database flow when ?create=database (wizard when feature enabled; else modal)
   useEffect(() => {
     if (search?.create === 'database' && !createDatabaseDialogOpen) {
-      setCreateDatabaseDialogOpen(true)
+      if (useCreateDatabaseWizard) {
+        navigate({
+          to: '/projects/$projectId/databases/create',
+          params: { projectId: projectId! },
+          search: (prev: Record<string, unknown>) => {
+            if (!prev || typeof prev !== 'object') return {}
+            const next = { ...prev }
+            delete next.create
+            return Object.keys(next).length === 0 ? {} : next
+          },
+          replace: true,
+        })
+      } else {
+        setCreateDatabaseDialogOpen(true)
+        navigate({
+          to: location.pathname,
+          search: (prev: Record<string, unknown>) => {
+            if (!prev || typeof prev !== 'object') return {}
+            const next = { ...prev }
+            delete next.create
+            return Object.keys(next).length === 0 ? {} : next
+          },
+          replace: true,
+        })
+      }
+    }
+  }, [search?.create, createDatabaseDialogOpen, useCreateDatabaseWizard, navigate, location.pathname, projectId])
+
+  useEffect(() => {
+    setSearchInput(urlSearch ?? '')
+  }, [urlSearch])
+
+  useEffect(() => {
+    if (!isDatabasesIndex) return
+    setRequestedPage((prev) => (prev === urlPage ? prev : urlPage))
+    setPageSize((prev) => (prev === urlLimit ? prev : urlLimit))
+  }, [isDatabasesIndex, urlPage, urlLimit])
+
+  useEffect(() => {
+    if (!isDatabasesIndex || !databaseListParams) return
+    if (!hasInitedDisplayedRef.current) {
+      setDisplayedPage(urlPage)
+      setDisplayedSearch(urlSearch ?? undefined)
+      setDisplayedFilterQueryString(filterQueryString)
+      hasInitedDisplayedRef.current = true
+    }
+  }, [isDatabasesIndex, databaseListParams, urlPage, urlSearch, filterQueryString])
+
+  useEffect(() => {
+    if (!isDatabasesIndex) return
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    searchDebounceRef.current = setTimeout(() => {
+      const trimmed = searchInput.trim()
+      if (trimmed === (urlSearch ?? '')) return
+      if (trimmed.length > 0 && trimmed.length < MIN_SEARCH_LENGTH) return
       navigate({
-        to: location.pathname,
+        to: '/projects/$projectId/databases/',
+        params: { projectId: projectId! },
         search: (prev: Record<string, unknown>) => {
-          if (!prev || typeof prev !== 'object') return {}
-          const next = { ...prev }
-          delete next.create
-          return Object.keys(next).length === 0 ? {} : next
+          const next = {
+            ...prev,
+            ...buildListSearchParams({
+              search: trimmed || undefined,
+              query: filterQueryString || undefined,
+              page: 1,
+              limit: urlLimit,
+            }),
+          }
+          if (!trimmed) delete next.search
+          return next
         },
         replace: true,
       })
+    }, 300)
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
     }
-  }, [search?.create, createDatabaseDialogOpen, navigate, location.pathname])
+  }, [searchInput, projectId, navigate, urlSearch, urlLimit, filterQueryString, isDatabasesIndex])
 
-  // Fetch data for the requested page (triggers load when user changes page)
   const {
     total: databasesTotal,
     isLoading: databasesLoading,
     isFetching: databasesFetching,
-  } = useProjectDatabases(projectId, requestedPage - 1, pageSize, searchValue)
+    isFetched: databasesFetched,
+  } = useProjectDatabases(
+    projectId,
+    requestedPage - 1,
+    urlLimit,
+    urlSearch ?? undefined,
+    filterQueries,
+  )
 
-  // Fetch data for the displayed page (what we show - stays until new page is ready)
   const {
     databases: apiDatabases,
     total: displayedDatabasesTotal,
     isLoading: displayedLoading,
-  } = useProjectDatabases(projectId, displayedPage - 1, pageSize, searchValue)
+  } = useProjectDatabases(
+    projectId,
+    displayedPage - 1,
+    urlLimit,
+    displayedSearch ?? undefined,
+    displayedFilterQueries,
+  )
 
-  // Update displayed page only when requested page data is ready (no flash)
   useEffect(() => {
-    if (
-      !databasesFetching &&
-      requestedPage !== displayedPage &&
-      !databasesLoading
-    ) {
-      setDisplayedPage(requestedPage)
+    if (!isDatabasesIndex || databasesFetching || databasesLoading || !databasesFetched) return
+    const match =
+      urlPage === displayedPage &&
+      (urlSearch ?? '') === (displayedSearch ?? '') &&
+      filterQueryString === displayedFilterQueryString
+    if (!match) {
+      setDisplayedPage(urlPage)
+      setDisplayedSearch(urlSearch ?? undefined)
+      setDisplayedFilterQueryString(filterQueryString)
     }
-  }, [databasesFetching, databasesLoading, requestedPage, displayedPage])
+  }, [
+    isDatabasesIndex,
+    databasesFetching,
+    databasesLoading,
+    databasesFetched,
+    urlPage,
+    urlSearch,
+    filterQueryString,
+    displayedPage,
+    displayedSearch,
+    displayedFilterQueryString,
+  ])
 
   // Only show full loading when we have no data to display (initial load)
   const showLoading = displayedLoading && apiDatabases.length === 0
@@ -332,28 +495,92 @@ export function View() {
 
   // Get organization plan to check limits
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  const { access } = useOrganizationScopes(project?.teamId)
 
   // Total count of all databases (without search) - for limit checking
   const totalDatabasesCount = totalDatabasesData?.total || 0
 
-  // Check if create button should be disabled
+  // Check if create button should be disabled (plan limit or missing write scope)
+  const noCreateDbPermission = !canCreateDatabase(access, features)
   const databasesLimit = organizationPlan?.databases ?? 0
   const isCreateDisabled =
-    databasesLimit > 0 && totalDatabasesCount >= databasesLimit
+    noCreateDbPermission ||
+    (databasesLimit > 0 && totalDatabasesCount >= databasesLimit)
 
-  const { features } = useConsoleProfile()
-
-  // Clear selection when navigating or when search changes
+  // Clear selection when navigating or when search/filters change
   useEffect(() => {
     setSelectedDatabases(new Set())
     setDeleteDialogOpen(false)
-  }, [location.pathname, projectId, searchValue])
+  }, [location.pathname, projectId, urlSearch, filterMap.size])
 
   const handleSearchChange = (value: string) => {
-    setSearchValue(value)
+    setSearchInput(value)
     setRequestedPage(1)
     setDisplayedPage(1)
-    setSelectedDatabases(new Set()) // Clear selection on search change
+    setSelectedDatabases(new Set())
+  }
+
+  const applyFilter = (compactKey: CompactFilterKey, queryStr: string) => {
+    const newMap = new Map(filterMap)
+    newMap.set(compactKey, queryStr)
+    navigate({
+      to: '/projects/$projectId/databases/',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => ({
+        ...prev,
+        ...buildListSearchParams({
+          search: urlSearch,
+          query: mapToQueryParam(newMap),
+          page: 1,
+          limit: urlLimit,
+        }),
+      }),
+      replace: true,
+    })
+  }
+
+  const removeFilter = (key: CompactFilterKey) => {
+    const newMap = new Map(filterMap)
+    newMap.delete(key)
+    navigate({
+      to: '/projects/$projectId/databases/',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => {
+        const next = {
+          ...prev,
+          ...buildListSearchParams({
+            search: urlSearch,
+            query: newMap.size > 0 ? mapToQueryParam(newMap) : undefined,
+            page: 1,
+            limit: urlLimit,
+          }),
+        }
+        if (newMap.size === 0) delete next.query
+        return next
+      },
+      replace: true,
+    })
+  }
+
+  const clearAllFilters = () => {
+    navigate({
+      to: '/projects/$projectId/databases/',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => {
+        const next = {
+          ...prev,
+          ...buildListSearchParams({
+            search: urlSearch,
+            page: 1,
+            limit: urlLimit,
+          }),
+        }
+        delete next.query
+        return next
+      },
+      replace: true,
+    })
+    setFiltersOpen(false)
   }
 
   // Bulk delete mutation
@@ -442,14 +669,42 @@ export function View() {
 
   const handlePageChange = (page: number) => {
     setRequestedPage(page)
-    setSelectedDatabases(new Set()) // Clear selection on page change
+    setSelectedDatabases(new Set())
+    navigate({
+      to: '/projects/$projectId/databases/',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => ({
+        ...prev,
+        ...buildListSearchParams({
+          search: urlSearch,
+          query: filterQueryString || undefined,
+          page,
+          limit: urlLimit,
+        }),
+      }),
+      replace: true,
+    })
   }
 
   const handlePageSizeChange = (newPageSize: number) => {
     setPageSize(newPageSize)
     setRequestedPage(1)
     setDisplayedPage(1)
-    setSelectedDatabases(new Set()) // Clear selection on page size change
+    setSelectedDatabases(new Set())
+    navigate({
+      to: '/projects/$projectId/databases/',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => ({
+        ...prev,
+        ...buildListSearchParams({
+          search: urlSearch,
+          query: filterQueryString || undefined,
+          page: 1,
+          limit: newPageSize,
+        }),
+      }),
+      replace: true,
+    })
   }
 
   const ViewToggle = () => (
@@ -484,12 +739,54 @@ export function View() {
       <ServiceHeader
         title="Databases"
         searchPlaceholder="Search databases..."
-        searchValue={searchValue}
+        searchValue={searchInput}
         onSearchChange={handleSearchChange}
         createLabel="Create database"
-        onCreate={() => setCreateDatabaseDialogOpen(true)}
+        onCreate={() =>
+          useCreateDatabaseWizard
+            ? navigate({
+                to: '/projects/$projectId/databases/create',
+                params: { projectId: projectId! },
+              })
+            : setCreateDatabaseDialogOpen(true)
+        }
         createDisabled={isCreateDisabled}
-        showFilters={false}
+        createDisabledTooltip={
+          noCreateDbPermission
+            ? "You don't have permission to create databases."
+            : undefined
+        }
+        showFilters={true}
+        filterTrigger={
+          <FiltersPopover
+            open={filtersOpen}
+            onOpenChange={setFiltersOpen}
+            columns={databasesFilterColumns}
+            filterMap={filterMap}
+            onRemoveFilter={removeFilter}
+            onClearAll={clearAllFilters}
+            onApplyFilter={applyFilter}
+            resourceLabel="databases"
+            filterScope="databases"
+            onApplyQuery={(queryParam) => {
+              navigate({
+                to: '/projects/$projectId/databases/',
+                params: { projectId: projectId! },
+                search: (prev: Record<string, unknown>) => ({
+                  ...prev,
+                  ...buildListSearchParams({
+                    search: urlSearch,
+                    query: queryParam ?? undefined,
+                    page: 1,
+                    limit: urlLimit,
+                  }),
+                }),
+                replace: true,
+              })
+            }}
+            teamId={project?.teamId}
+          />
+        }
         fullWidthBorder
         rightContent={<ViewToggle />}
         contentAfterBorder={
@@ -728,10 +1025,14 @@ export function View() {
           ) : (
             <EmptyState
               icon={Database}
-              title="No databases yet"
-              description="Create your first database to get started"
-              isEmpty={!searchValue}
-              hasFilters={!!searchValue}
+              title={urlSearch || filterMap.size > 0 ? undefined : 'No databases yet'}
+              description={
+                urlSearch || filterMap.size > 0
+                  ? undefined
+                  : 'Create your first database to get started'
+              }
+              isEmpty={!urlSearch && filterMap.size === 0}
+              hasFilters={!!urlSearch || filterMap.size > 0}
               variant="card"
             />
           )
@@ -802,10 +1103,14 @@ export function View() {
                 <div className="col-span-full">
                   <EmptyState
                     icon={Database}
-                    title="No databases yet"
-                    description="Create your first database to get started"
-                    isEmpty={!searchValue}
-                    hasFilters={!!searchValue}
+                    title={urlSearch || filterMap.size > 0 ? undefined : 'No databases yet'}
+                    description={
+                      urlSearch || filterMap.size > 0
+                        ? undefined
+                        : 'Create your first database to get started'
+                    }
+                    isEmpty={!urlSearch && filterMap.size === 0}
+                    hasFilters={!!urlSearch || filterMap.size > 0}
                     variant="card"
                   />
                 </div>
@@ -911,11 +1216,32 @@ export function DatabaseDetailLayout({
     from: '/_public/projects/$projectId/databases/$databaseId',
   })
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [tablesExpanded, setTablesExpanded] = useState(true)
+  const [createTableDialogOpen, setCreateTableDialogOpen] = useState(false)
   const { features } = useConsoleProfile()
 
   const database = databases.find((db) => db.$id === databaseId)
   const dbTables = collections.filter((c) => c.databaseId === databaseId)
+
+  const createTableMutation = useMutation({
+    mutationFn: (data: { tableId?: string; name: string }) =>
+      createProjectTable(projectId!, databaseId, data),
+    onSuccess: async (table) => {
+      toast.success(`${table.name} has been created`)
+      await queryClient.refetchQueries({
+        queryKey: ['tables', 'project', projectId, databaseId],
+      })
+      setCreateTableDialogOpen(false)
+      navigate({
+        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+        params: { projectId: projectId!, databaseId, tableId: table.$id },
+      })
+    },
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error) || 'Failed to create table')
+    },
+  })
 
   // Get current tableId from URL if we're on a table route
   const currentTableId = window.location.pathname.split('/').pop()
@@ -1034,18 +1360,13 @@ export function DatabaseDetailLayout({
               )}
 
               {/* Create Table Button */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => setCreateTableDialogOpen(true)}
-                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground cursor-pointer"
-                  >
-                    <Plus className="h-3.5 w-3.5 shrink-0" />
-                    <span className="text-[13px]">Create table</span>
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="right">Create table</TooltipContent>
-              </Tooltip>
+              <button
+                onClick={() => setCreateTableDialogOpen(true)}
+                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground cursor-pointer"
+              >
+                <Plus className="h-3.5 w-3.5 shrink-0" />
+                <span className="text-[13px]">Create table</span>
+              </button>
             </div>
           )}
 
@@ -1058,6 +1379,22 @@ export function DatabaseDetailLayout({
             <Lock className="h-3.5 w-3.5 shrink-0" />
             <span className="text-[13px]">Security</span>
           </Link>
+
+          {features.dedicatedDbsTablesDB && (
+            <Link
+              to="/projects/$projectId/databases/$databaseId/settings"
+              params={{ projectId, databaseId }}
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+            >
+              <Cpu className="h-3.5 w-3.5 shrink-0" />
+              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span className="text-[13px]">Upgrade database specs</span>
+                <span className="text-[11px] text-muted-foreground/80">
+                  Shared DB
+                </span>
+              </span>
+            </Link>
+          )}
 
           {features.databaseInsights && (
             <>
@@ -1116,6 +1453,12 @@ export function DatabaseDetailLayout({
           </div>
         )}
       </div>
+      <CreateTable
+        open={createTableDialogOpen}
+        onOpenChange={setCreateTableDialogOpen}
+        onCreate={(data) => createTableMutation.mutate(data)}
+        isLoading={createTableMutation.isPending}
+      />
     </div>
   )
 }
@@ -1168,14 +1511,15 @@ export function TableView({
   activeTab,
   databaseTab,
 }: TableViewProps) {
-  const params = useParams({
-    strict: false,
-  })
+  const params = useParams({ strict: false })
   const projectId = params.projectId as string
   const navigate = useNavigate()
+  const location = useLocation()
+  const search = useSearch({ strict: false }) as Record<string, unknown> | undefined
   const isDatabaseLevelView = tableId === '-' || databaseTab != null
   const { isDebugModeOpen } = useDebugMode()
   const { features } = useConsoleProfile()
+  const useCreateDatabaseWizard = features.dedicatedDbsSupport
 
   // Debug: create 50 random tables (only when debug mode is open and on tables list)
   const createFiftyTablesMutation = useMutation({
@@ -1198,16 +1542,16 @@ export function TableView({
 
   // Sidebar tables list: search, pagination, order (API-backed)
   const [sidebarTablesSearch, setSidebarTablesSearch] = useState('')
-  const [sidebarTablesPage, setSidebarTablesPage] = useState(1)
-  const sidebarTablesPageSize = 25
+  const [sidebarTablesRequestedPage, setSidebarTablesRequestedPage] =
+    useState(1)
+  const [sidebarTablesDisplayedPage, setSidebarTablesDisplayedPage] =
+    useState(1)
+  const sidebarTablesPageSize = ROWS_DEFAULT_PAGE_SIZE
   const [sidebarTablesOrder, setSidebarTablesOrder] = useState<'asc' | 'desc'>(
     'asc',
   )
   const [sidebarTablesSortBy, setSidebarTablesSortBy] =
     useState<TablesSortBy>('$createdAt')
-
-  // Fetch all databases for the switcher
-  const { databases: allDatabases } = useProjectDatabases(projectId, 0, 100, '')
 
   // Fetch database
   const { database, isLoading: databaseLoading } = useProjectDatabase(
@@ -1223,7 +1567,18 @@ export function TableView({
     100,
   )
 
-  // Paginated + searchable tables for sidebar list only (ordered by $createdAt)
+  // Requested page query (drives fetch when user changes page)
+  const { isFetching: sidebarTablesFetching } = useProjectTables(
+    projectId,
+    databaseId,
+    sidebarTablesRequestedPage - 1,
+    sidebarTablesPageSize,
+    sidebarTablesSearch.trim() || undefined,
+    sidebarTablesOrder,
+    sidebarTablesSortBy,
+  )
+
+  // Displayed page query (what we show - stays until new page has loaded)
   const {
     tables: sidebarTables,
     total: sidebarTablesTotal,
@@ -1231,12 +1586,26 @@ export function TableView({
   } = useProjectTables(
     projectId,
     databaseId,
-    sidebarTablesPage - 1,
+    sidebarTablesDisplayedPage - 1,
     sidebarTablesPageSize,
     sidebarTablesSearch.trim() || undefined,
     sidebarTablesOrder,
     sidebarTablesSortBy,
   )
+
+  // Update displayed page only when requested page has finished loading
+  useEffect(() => {
+    if (
+      !sidebarTablesFetching &&
+      sidebarTablesRequestedPage !== sidebarTablesDisplayedPage
+    ) {
+      setSidebarTablesDisplayedPage(sidebarTablesRequestedPage)
+    }
+  }, [
+    sidebarTablesFetching,
+    sidebarTablesRequestedPage,
+    sidebarTablesDisplayedPage,
+  ])
 
   // Keep previous table list visible while search/filter is fetching (no loading flash)
   const lastSidebarTablesRef = useRef<typeof sidebarTables>([])
@@ -1248,18 +1617,10 @@ export function TableView({
       ? lastSidebarTablesRef.current
       : sidebarTables
 
-  // Sort databases by name in ascending order
-  const sortedDatabases = useMemo(() => {
-    return [...allDatabases].sort((a, b) => {
-      const nameA = a.name?.toLowerCase() || ''
-      const nameB = b.name?.toLowerCase() || ''
-      return nameA.localeCompare(nameB)
-    })
-  }, [allDatabases])
-
   // Reset sidebar to page 1 when search, sort, or database changes
   useEffect(() => {
-    setSidebarTablesPage(1)
+    setSidebarTablesRequestedPage(1)
+    setSidebarTablesDisplayedPage(1)
   }, [sidebarTablesSearch, sidebarTablesOrder, sidebarTablesSortBy, databaseId])
 
   const selectedTable =
@@ -1268,7 +1629,6 @@ export function TableView({
   // Only show loading if we don't have data yet (account for prefetched data)
   const isActuallyLoading =
     (databaseLoading && !database) || (tablesLoading && dbTables.length === 0)
-  const [searchValue, setSearchValue] = useState('')
   const rowsRefetchRef = useRef<(() => Promise<unknown>) | null>(null)
   const openCreateRowDrawerRef = useRef<(() => void) | null>(null)
   const openCreateColumnDialogRef = useRef<(() => void) | null>(null)
@@ -1289,6 +1649,37 @@ export function TableView({
 
   const { project } = useProject(projectId)
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  const { access } = useOrganizationScopes(project?.teamId)
+  const showTableSecuritySettings =
+    canShowTableSecuritySettings(access, features)
+  const noCreateTablePermission = !canShowTableSecuritySettings(access, features)
+  const noCreateDbPermission = !canCreateDatabase(access, features)
+  const noCreateRowPermission = !canCreateRow(access, features)
+  const createPermissionTooltip =
+    "You don't have permission to perform this action."
+
+  // Redirect from table security/settings when user lacks permission
+  useEffect(() => {
+    if (
+      !showTableSecuritySettings &&
+      selectedTable &&
+      (activeTab === 'security' || activeTab === 'settings')
+    ) {
+      navigate({
+        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+        params: { projectId, databaseId, tableId },
+        replace: true,
+      })
+    }
+  }, [
+    showTableSecuritySettings,
+    activeTab,
+    selectedTable,
+    projectId,
+    databaseId,
+    tableId,
+    navigate,
+  ])
 
   // Reset rows total when switching tables
   useEffect(() => {
@@ -1393,47 +1784,218 @@ export function TableView({
     },
   })
 
-  // Fetch columns and table only when a table is selected (skip when tableId is '-')
   const effectiveTableId = tableId === '-' ? undefined : tableId
-  useProjectTableColumns(projectId, databaseId, effectiveTableId)
+  const { columns: tableColumns } = useProjectTableColumns(
+    projectId,
+    databaseId,
+    effectiveTableId,
+  )
+  const { indexes: tableIndexes } = useProjectTableIndexes(
+    projectId,
+    databaseId,
+    effectiveTableId,
+  )
   const { table: tableDataForStatus } = useProjectTable(
     projectId,
     databaseId,
     effectiveTableId,
   )
 
-  const tableTabs: Tab[] = [
-    {
-      id: 'rows',
-      label: 'Rows',
+  const tableTabs: Tab[] = useMemo(() => {
+    const all: Tab[] = [
+      {
+        id: 'rows',
+        label: 'Rows',
+        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+        params: { projectId, databaseId, tableId },
+      },
+      {
+        id: 'columns',
+        label: 'Columns',
+        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/columns',
+        params: { projectId, databaseId, tableId },
+      },
+      {
+        id: 'indexes',
+        label: 'Indexes',
+        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/indexes',
+        params: { projectId, databaseId, tableId },
+      },
+      ...(showTableSecuritySettings
+        ? [
+            {
+              id: 'security' as const,
+              label: 'Security',
+              to: '/projects/$projectId/databases/$databaseId/tables/$tableId/security',
+              params: { projectId, databaseId, tableId },
+            },
+            {
+              id: 'settings' as const,
+              label: 'Settings',
+              to: '/projects/$projectId/databases/$databaseId/tables/$tableId/settings',
+              params: { projectId, databaseId, tableId },
+            },
+          ]
+        : []),
+    ]
+    return all
+  }, [
+    projectId,
+    databaseId,
+    tableId,
+    showTableSecuritySettings,
+  ])
+
+  const isRowsTab = activeTab === 'rows' && tableId !== '-'
+  const rowsListParams = useMemo(() => {
+    if (!isRowsTab || typeof search !== 'object') return null
+    const url = new URL(location.pathname + location.search, window.location.origin)
+    return {
+      search: getSearch(url) ?? (search?.search as string | undefined),
+      page: getPage(url, 1),
+      limit: getLimit(url, ROWS_DEFAULT_PAGE_SIZE),
+      filterMap: queryParamToMap(getQueryParam(url) ?? (search?.query as string | undefined) ?? null),
+    }
+  }, [isRowsTab, search, location.pathname, location.search])
+
+  const rowsUrlPage = rowsListParams?.page ?? 1
+  const rowsUrlLimit = rowsListParams?.limit ?? ROWS_DEFAULT_PAGE_SIZE
+  const rowsUrlSearch = rowsListParams?.search
+  const rowsFilterMap = rowsListParams?.filterMap ?? new Map()
+  const rowsFilterQueries =
+    rowsFilterMap.size > 0 ? Array.from(rowsFilterMap.values()) : undefined
+  const rowsFilterQueryString =
+    rowsFilterMap.size > 0 ? mapToQueryParam(rowsFilterMap) : ''
+
+  const rowsFilterColumns = useMemo(
+    () =>
+      rowsFilterColumnsFromAttributes(
+        tableColumns,
+        tableIndexes as TableIndexForFilters[],
+      ),
+    [tableColumns, tableIndexes],
+  )
+
+  const [rowsFiltersOpen, setRowsFiltersOpen] = useState(false)
+
+  const navigateToRowsList = (params: {
+    search?: string
+    query?: string
+    page?: number
+    limit?: number
+  }) => {
+    const hasQueryKey = 'query' in params
+    navigate({
       to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
       params: { projectId, databaseId, tableId },
-    },
-    {
-      id: 'columns',
-      label: 'Columns',
-      to: '/projects/$projectId/databases/$databaseId/tables/$tableId/columns',
-      params: { projectId, databaseId, tableId },
-    },
-    {
-      id: 'indexes',
-      label: 'Indexes',
-      to: '/projects/$projectId/databases/$databaseId/tables/$tableId/indexes',
-      params: { projectId, databaseId, tableId },
-    },
-    {
-      id: 'security',
-      label: 'Security',
-      to: '/projects/$projectId/databases/$databaseId/tables/$tableId/security',
-      params: { projectId, databaseId, tableId },
-    },
-    {
-      id: 'settings',
-      label: 'Settings',
-      to: '/projects/$projectId/databases/$databaseId/tables/$tableId/settings',
-      params: { projectId, databaseId, tableId },
-    },
-  ]
+      search: (prev: Record<string, unknown>) => {
+        const built = buildListSearchParams({
+          search: params.search ?? rowsUrlSearch ?? undefined,
+          query: hasQueryKey
+            ? params.query
+            : (rowsFilterQueryString || undefined),
+          page: params.page ?? rowsUrlPage,
+          limit: params.limit ?? rowsUrlLimit,
+        })
+        const next = { ...prev, ...built }
+        if (hasQueryKey && params.query === undefined) delete next.query
+        return next
+      },
+      replace: true,
+    })
+  }
+
+  const rowsApplyFilter = (compactKey: CompactFilterKey, queryStr: string) => {
+    const next = new Map(rowsFilterMap)
+    next.set(compactKey, queryStr)
+    navigateToRowsList({
+      search: rowsUrlSearch ?? undefined,
+      query: mapToQueryParam(next) || undefined,
+      page: 1,
+      limit: rowsUrlLimit,
+    })
+  }
+
+  const rowsRemoveFilter = (compactKey: CompactFilterKey) => {
+    const next = new Map(rowsFilterMap)
+    next.delete(compactKey)
+    navigateToRowsList({
+      search: rowsUrlSearch ?? undefined,
+      query: next.size > 0 ? mapToQueryParam(next) : undefined,
+      page: 1,
+      limit: rowsUrlLimit,
+    })
+  }
+
+  const rowsClearAllFilters = () => {
+    navigateToRowsList({
+      search: rowsUrlSearch ?? undefined,
+      query: undefined,
+      page: 1,
+      limit: rowsUrlLimit,
+    })
+    setRowsFiltersOpen(false)
+  }
+
+  // Columns/indexes filter state (URL query) and handlers for header FiltersPopover
+  const tableDetailFilterMap = useMemo(
+    () =>
+      queryParamToMap((search?.query as string | undefined) ?? null),
+    [search?.query],
+  )
+  const [columnsFiltersOpen, setColumnsFiltersOpen] = useState(false)
+  const [indexesFiltersOpen, setIndexesFiltersOpen] = useState(false)
+  const navigateTableDetailSearch = (updates: { query?: string }) => {
+    navigate({
+      search: (prev: Record<string, unknown>) => {
+        const next = {
+          ...(typeof prev === 'object' && prev !== null ? prev : {}),
+          ...updates,
+        }
+        if ('query' in updates && updates.query === undefined) {
+          delete next.query
+        }
+        return next
+      },
+      replace: true,
+    })
+  }
+  const columnsApplyFilter = (key: CompactFilterKey, queryStr: string) => {
+    const newMap = new Map(tableDetailFilterMap)
+    newMap.set(key, queryStr)
+    navigateTableDetailSearch({
+      query: mapToQueryParam(newMap) || undefined,
+    })
+  }
+  const columnsRemoveFilter = (key: CompactFilterKey) => {
+    const newMap = new Map(tableDetailFilterMap)
+    newMap.delete(key)
+    navigateTableDetailSearch({
+      query: newMap.size > 0 ? mapToQueryParam(newMap) : undefined,
+    })
+  }
+  const columnsClearAllFilters = () => {
+    navigateTableDetailSearch({ query: undefined })
+    setColumnsFiltersOpen(false)
+  }
+  const indexesApplyFilter = (key: CompactFilterKey, queryStr: string) => {
+    const newMap = new Map(tableDetailFilterMap)
+    newMap.set(key, queryStr)
+    navigateTableDetailSearch({
+      query: mapToQueryParam(newMap) || undefined,
+    })
+  }
+  const indexesRemoveFilter = (key: CompactFilterKey) => {
+    const newMap = new Map(tableDetailFilterMap)
+    newMap.delete(key)
+    navigateTableDetailSearch({
+      query: newMap.size > 0 ? mapToQueryParam(newMap) : undefined,
+    })
+  }
+  const indexesClearAllFilters = () => {
+    navigateTableDetailSearch({ query: undefined })
+    setIndexesFiltersOpen(false)
+  }
 
   const getCreateLabel = () => {
     switch (activeTab) {
@@ -1505,80 +2067,59 @@ export function TableView({
             </span>
           </div>
           <div className="flex min-w-0 items-center gap-2 px-2 py-2">
-            <div className="min-w-0 flex-1 [&_[data-slot=select-trigger]]:h-8">
-              <Select
-                value={databaseId}
-                onValueChange={async (newDatabaseId) => {
-                  try {
-                    const tablesData = await queryClient.ensureQueryData(
-                      tablesQueryOptions(
-                        projectId,
-                        newDatabaseId,
-                        0,
-                        100,
-                        undefined,
-                      ),
-                    )
-                    const sorted = [...(tablesData.tables || [])].sort(
-                      (a: { name?: string }, b: { name?: string }) => {
-                        const nameA = a.name?.toLowerCase() || ''
-                        const nameB = b.name?.toLowerCase() || ''
-                        return nameA.localeCompare(nameB)
-                      },
-                    )
-                    const firstTable = sorted[0] as { $id?: string } | undefined
-                    navigate({
-                      to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
-                      params: {
-                        projectId,
-                        databaseId: newDatabaseId,
-                        tableId: firstTable?.$id ?? '-',
-                      },
+            <DatabaseSelector
+              projectId={projectId}
+              value={databaseId}
+              selectedName={database?.name}
+              createDisabled={noCreateDbPermission}
+              createDisabledTooltip={createPermissionTooltip}
+              onSelect={async (newDatabaseId) => {
+                try {
+                  const tablesData = await queryClient.ensureQueryData(
+                    tablesQueryOptions(
+                      projectId,
+                      newDatabaseId,
+                      0,
+                      100,
+                      undefined,
+                    ),
+                  )
+                  const sorted = [...(tablesData.tables || [])].sort(
+                    (a: { name?: string }, b: { name?: string }) => {
+                      const nameA = a.name?.toLowerCase() || ''
+                      const nameB = b.name?.toLowerCase() || ''
+                      return nameA.localeCompare(nameB)
+                    },
+                  )
+                  const firstTable = sorted[0] as { $id?: string } | undefined
+                  navigate({
+                    to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+                    params: {
+                      projectId,
+                      databaseId: newDatabaseId,
+                      tableId: firstTable?.$id ?? '-',
+                    },
+                  })
+                } catch {
+                  navigate({
+                    to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+                    params: {
+                      projectId,
+                      databaseId: newDatabaseId,
+                      tableId: '-',
+                    },
+                  })
+                }
+              }}
+              onCreateClick={() =>
+                useCreateDatabaseWizard
+                  ? navigate({
+                      to: '/projects/$projectId/databases/create',
+                      params: { projectId },
                     })
-                  } catch {
-                    navigate({
-                      to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
-                      params: {
-                        projectId,
-                        databaseId: newDatabaseId,
-                        tableId: '-',
-                      },
-                    })
-                  }
-                }}
-              >
-                <SelectTrigger className="h-8 w-full text-[13px]">
-                  <SelectValue placeholder="Select database" />
-                </SelectTrigger>
-                <SelectContent>
-                  {sortedDatabases.map((db) => (
-                    <SelectItem
-                      key={db.$id}
-                      value={db.$id}
-                      className="text-[13px]"
-                    >
-                      <span className="flex items-center gap-1.5">
-                        <Database className="h-4 w-4 shrink-0 text-muted-foreground" />
-                        {db.name}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8 shrink-0"
-                  onClick={() => setCreateDatabaseDialogOpen(true)}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">Create database</TooltipContent>
-            </Tooltip>
+                  : setCreateDatabaseDialogOpen(true)
+              }
+            />
           </div>
         </div>
 
@@ -1634,7 +2175,8 @@ export function TableView({
                       ) {
                         setSidebarTablesSortBy(by)
                         setSidebarTablesOrder(dir)
-                        setSidebarTablesPage(1)
+                        setSidebarTablesRequestedPage(1)
+                        setSidebarTablesDisplayedPage(1)
                       }
                     }}
                   >
@@ -1667,7 +2209,7 @@ export function TableView({
                 Loading…
               </div>
             ) : (
-              <div className="space-y-0.5 px-2.5 py-1">
+              <div className="space-y-0.5 px-2.5 py-2.5">
                 {displayedSidebarTables.map((table) => {
                   const isTableSelected =
                     selectedTable?.$id === table.$id && !databaseTab
@@ -1677,6 +2219,7 @@ export function TableView({
                       projectId={projectId!}
                       databaseId={databaseId}
                       table={table}
+                      showSecuritySettings={showTableSecuritySettings}
                       onCreateSimilar={async (newTableId) => {
                         await queryClient.refetchQueries({
                           queryKey: [
@@ -1708,7 +2251,7 @@ export function TableView({
                               databaseId,
                               newTableId,
                               0,
-                              25,
+                              ROWS_DEFAULT_PAGE_SIZE,
                               undefined,
                             ),
                           ),
@@ -1752,7 +2295,7 @@ export function TableView({
               <span className="shrink-0 tabular-nums">
                 {sidebarTablesTotal === 0
                   ? '0 tables'
-                  : `${(sidebarTablesPage - 1) * sidebarTablesPageSize + 1}-${Math.min(sidebarTablesPage * sidebarTablesPageSize, sidebarTablesTotal ?? 0)} of ${(sidebarTablesTotal ?? 0).toLocaleString()}`}
+                  : `${(sidebarTablesDisplayedPage - 1) * sidebarTablesPageSize + 1}-${Math.min(sidebarTablesDisplayedPage * sidebarTablesPageSize, sidebarTablesTotal ?? 0)} of ${(sidebarTablesTotal ?? 0).toLocaleString()}`}
               </span>
               <div className="flex items-center gap-0.5">
                 <Button
@@ -1760,9 +2303,9 @@ export function TableView({
                   size="icon"
                   className="h-6 w-6"
                   onClick={() =>
-                    setSidebarTablesPage((p) => Math.max(1, p - 1))
+                    setSidebarTablesRequestedPage((p) => Math.max(1, p - 1))
                   }
-                  disabled={sidebarTablesPage <= 1}
+                  disabled={sidebarTablesDisplayedPage <= 1}
                   aria-label="Previous page"
                 >
                   <ChevronLeft className="h-3 w-3" />
@@ -1771,9 +2314,11 @@ export function TableView({
                   variant="ghost"
                   size="icon"
                   className="h-6 w-6"
-                  onClick={() => setSidebarTablesPage((p) => p + 1)}
+                  onClick={() =>
+                    setSidebarTablesRequestedPage((p) => p + 1)
+                  }
                   disabled={
-                    sidebarTablesPage >=
+                    sidebarTablesDisplayedPage >=
                     Math.ceil((sidebarTablesTotal ?? 0) / sidebarTablesPageSize)
                   }
                   aria-label="Next page"
@@ -1784,15 +2329,37 @@ export function TableView({
             </div>
           </div>
           <div className="shrink-0 border-t border-border px-2 py-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 w-full gap-2 pl-6 pr-6 text-[13px] font-medium"
-              onClick={() => setCreateTableDialogOpen(true)}
-            >
-              <Plus className="h-4 w-4" />
-              Create table
-            </Button>
+            {noCreateTablePermission ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="block w-full">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9 w-full gap-2 pl-6 pr-6 text-[13px] font-medium"
+                      onClick={() => setCreateTableDialogOpen(true)}
+                      disabled
+                    >
+                      <Plus className="h-4 w-4" />
+                      Create table
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  {createPermissionTooltip}
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 w-full gap-2 pl-6 pr-6 text-[13px] font-medium"
+                onClick={() => setCreateTableDialogOpen(true)}
+              >
+                <Plus className="h-4 w-4" />
+                Create table
+              </Button>
+            )}
           </div>
         </div>
 
@@ -1811,19 +2378,21 @@ export function TableView({
             <Network className="h-3.5 w-3.5 shrink-0" />
             <span>Visualizer</span>
           </Link>
-          <Link
-            to="/projects/$projectId/databases/$databaseId/tables/$tableId/db-security"
-            params={{ projectId, databaseId, tableId }}
-            className={cn(
-              'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
-              databaseTab === 'db-security'
-                ? 'bg-accent text-foreground'
-                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-            )}
-          >
-            <Lock className="h-3.5 w-3.5 shrink-0" />
-            <span>Security</span>
-          </Link>
+          {!noCreateDbPermission && (
+            <Link
+              to="/projects/$projectId/databases/$databaseId/tables/$tableId/db-security"
+              params={{ projectId, databaseId, tableId }}
+              className={cn(
+                'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
+                databaseTab === 'db-security'
+                  ? 'bg-accent text-foreground'
+                  : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+              )}
+            >
+              <Lock className="h-3.5 w-3.5 shrink-0" />
+              <span>Security</span>
+            </Link>
+          )}
           {features.databaseInsights && (
             <Link
               to="/projects/$projectId/databases/$databaseId/tables/$tableId/insights"
@@ -1867,19 +2436,21 @@ export function TableView({
             <Download className="h-3.5 w-3.5 shrink-0" />
             <span>Export / Import</span>
           </Link>
-          <Link
-            to="/projects/$projectId/databases/$databaseId/tables/$tableId/db-settings"
-            params={{ projectId, databaseId, tableId }}
-            className={cn(
-              'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
-              databaseTab === 'db-settings'
-                ? 'bg-accent text-foreground'
-                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-            )}
-          >
-            <Settings className="h-3.5 w-3.5 shrink-0" />
-            <span>Settings</span>
-          </Link>
+          {!noCreateDbPermission && (
+            <Link
+              to="/projects/$projectId/databases/$databaseId/tables/$tableId/db-settings"
+              params={{ projectId, databaseId, tableId }}
+              className={cn(
+                'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
+                databaseTab === 'db-settings'
+                  ? 'bg-accent text-foreground'
+                  : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+              )}
+            >
+              <Settings className="h-3.5 w-3.5 shrink-0" />
+              <span>Settings</span>
+            </Link>
+          )}
         </div>
       </div>
 
@@ -1906,34 +2477,21 @@ export function TableView({
           }
           tabs={isDatabaseLevelView ? undefined : tableTabs}
           activeTab={isDatabaseLevelView ? undefined : activeTab}
-          searchPlaceholder={
-            isDatabaseLevelView
-              ? undefined
-              : activeTab === 'settings' ||
-                  activeTab === 'security' ||
-                  activeTab === 'rows'
-                ? undefined
-                : `Search ${activeTab}...`
-          }
-          searchValue={
-            isDatabaseLevelView
-              ? undefined
-              : activeTab === 'settings' ||
-                  activeTab === 'security' ||
-                  activeTab === 'rows'
-                ? undefined
-                : searchValue
-          }
-          onSearchChange={
-            isDatabaseLevelView
-              ? undefined
-              : activeTab === 'settings' ||
-                  activeTab === 'security' ||
-                  activeTab === 'rows'
-                ? undefined
-                : setSearchValue
-          }
+          searchPlaceholder={undefined}
+          searchValue={undefined}
+          onSearchChange={undefined}
           createLabel={isDatabaseLevelView ? undefined : getCreateLabel()}
+          createDisabled={
+            !isDatabaseLevelView &&
+            (activeTab === 'rows'
+              ? noCreateRowPermission
+              : (activeTab === 'columns' || activeTab === 'indexes')
+                ? noCreateTablePermission
+                : false)
+          }
+          createDisabledTooltip={
+            !isDatabaseLevelView ? createPermissionTooltip : undefined
+          }
           onCreate={
             isDatabaseLevelView
               ? undefined
@@ -1953,7 +2511,72 @@ export function TableView({
                   }
                 }
           }
-          showFilters={!isDatabaseLevelView && activeTab === 'rows' && hasRows}
+          showFilters={
+            !isDatabaseLevelView &&
+            (activeTab === 'rows' ||
+              activeTab === 'columns' ||
+              activeTab === 'indexes')
+          }
+          filterTrigger={
+            !isDatabaseLevelView && activeTab === 'rows' ? (
+              <FiltersPopover
+                open={rowsFiltersOpen}
+                onOpenChange={setRowsFiltersOpen}
+                columns={rowsFilterColumns}
+                filterMap={rowsFilterMap}
+                onRemoveFilter={rowsRemoveFilter}
+                onClearAll={rowsClearAllFilters}
+                onApplyFilter={rowsApplyFilter}
+                resourceLabel="rows"
+                filterScope={`databases.rows.${databaseId}.${tableId}`}
+                onApplyQuery={(queryParam) =>
+                  navigateToRowsList({
+                    search: rowsUrlSearch ?? undefined,
+                    query: queryParam ?? undefined,
+                    page: 1,
+                    limit: rowsUrlLimit,
+                  })
+                }
+                teamId={project?.teamId}
+              />
+            ) : !isDatabaseLevelView && activeTab === 'columns' ? (
+              <FiltersPopover
+                open={columnsFiltersOpen}
+                onOpenChange={setColumnsFiltersOpen}
+                columns={tableColumnsFilterColumns}
+                filterMap={tableDetailFilterMap}
+                onRemoveFilter={columnsRemoveFilter}
+                onClearAll={columnsClearAllFilters}
+                onApplyFilter={columnsApplyFilter}
+                resourceLabel="columns"
+                filterScope={`databases.columns.${databaseId}.${tableId}`}
+                onApplyQuery={(queryParam) =>
+                  navigateTableDetailSearch({
+                    query: queryParam ?? undefined,
+                  })
+                }
+                teamId={project?.teamId}
+              />
+            ) : !isDatabaseLevelView && activeTab === 'indexes' ? (
+              <FiltersPopover
+                open={indexesFiltersOpen}
+                onOpenChange={setIndexesFiltersOpen}
+                columns={tableIndexesFilterColumns}
+                filterMap={tableDetailFilterMap}
+                onRemoveFilter={indexesRemoveFilter}
+                onClearAll={indexesClearAllFilters}
+                onApplyFilter={indexesApplyFilter}
+                resourceLabel="indexes"
+                filterScope={`databases.indexes.${databaseId}.${tableId}`}
+                onApplyQuery={(queryParam) =>
+                  navigateTableDetailSearch({
+                    query: queryParam ?? undefined,
+                  })
+                }
+                teamId={project?.teamId}
+              />
+            ) : undefined
+          }
           showRefresh={!isDatabaseLevelView && activeTab === 'rows'}
           onRefresh={
             !isDatabaseLevelView && activeTab === 'rows'
@@ -2002,35 +2625,59 @@ export function TableView({
             !isDatabaseLevelView && activeTab === 'rows' && !hasRows
           }
           beforeCreateButtons={
-            isDatabaseLevelView ? undefined : activeTab === 'columns' ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  if (openSuggestColumnsDialogRef.current) {
-                    openSuggestColumnsDialogRef.current()
-                  }
-                }}
-                className="h-9"
-              >
-                <Lightbulb className="h-3.5 w-3.5 mr-1.5" />
-                Suggest columns
-              </Button>
-            ) : activeTab === 'indexes' ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  if (openSuggestIndexesDialogRef.current) {
-                    openSuggestIndexesDialogRef.current()
-                  }
-                }}
-                className="h-9"
-              >
-                <Lightbulb className="h-3.5 w-3.5 mr-1.5" />
-                Suggest indexes
-              </Button>
-            ) : undefined
+            isDatabaseLevelView || !showTableSecuritySettings
+              ? undefined
+              :               activeTab === 'columns'
+                ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            if (openSuggestColumnsDialogRef.current) {
+                              openSuggestColumnsDialogRef.current()
+                            }
+                          }}
+                          className="h-9"
+                        >
+                          <Lightbulb className="h-3.5 w-3.5 shrink-0 sm:mr-1.5" />
+                          <span className="hidden sm:inline">
+                            Suggest columns
+                          </span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        Suggest columns
+                      </TooltipContent>
+                    </Tooltip>
+                  )
+                : activeTab === 'indexes'
+                  ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              if (openSuggestIndexesDialogRef.current) {
+                                openSuggestIndexesDialogRef.current()
+                              }
+                            }}
+                            className="h-9"
+                          >
+                            <Lightbulb className="h-3.5 w-3.5 shrink-0 sm:mr-1.5" />
+                            <span className="hidden sm:inline">
+                              Suggest indexes
+                            </span>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                          Suggest indexes
+                        </TooltipContent>
+                      </Tooltip>
+                    )
+                  : undefined
           }
           collapsible={!isDatabaseLevelView}
           fullWidthBorder
@@ -2058,6 +2705,8 @@ export function TableView({
                   projectId={projectId}
                   value={databaseId}
                   selectedName={database?.name}
+                  createDisabled={noCreateDbPermission}
+                  createDisabledTooltip={createPermissionTooltip}
                   onSelect={async (newDatabaseId) => {
                     try {
                       const tablesData =
@@ -2097,13 +2746,22 @@ export function TableView({
                       })
                     }
                   }}
-                  onCreateClick={() => setCreateDatabaseDialogOpen(true)}
+                  onCreateClick={() =>
+                    useCreateDatabaseWizard
+                      ? navigate({
+                          to: '/projects/$projectId/databases/create',
+                          params: { projectId },
+                        })
+                      : setCreateDatabaseDialogOpen(true)
+                  }
                 />
                 <TableSelector
                   projectId={projectId}
                   databaseId={databaseId}
                   value={tableId}
                   selectedName={selectedTable?.name}
+                  createDisabled={noCreateTablePermission}
+                  createDisabledTooltip={createPermissionTooltip}
                   onSelect={(newTableId) => {
                     navigate({
                       to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
@@ -2193,6 +2851,8 @@ export function TableView({
               {activeTab === 'rows' && (
                 <RowsSpreadsheet
                   table={selectedTable}
+                  canWriteRows={!noCreateRowPermission}
+                  canWriteTables={!noCreateTablePermission}
                   onRefetchReady={(refetchFn) => {
                     rowsRefetchRef.current = refetchFn
                   }}
@@ -2201,11 +2861,19 @@ export function TableView({
                   }}
                   onCreateColumnReady={openCreateColumnDialogRef.current}
                   onRowsCountChange={handleRowsCountChange}
+                  rowsUrlSearch={rowsUrlSearch}
+                  rowsUrlPage={rowsUrlPage}
+                  rowsUrlLimit={rowsUrlLimit}
+                  rowsFilterQueries={rowsFilterQueries}
+                  rowsFilterQueryString={rowsFilterQueryString}
+                  onNavigateToRowsList={navigateToRowsList}
                 />
               )}
               {activeTab === 'columns' && (
                 <ColumnsSpreadsheet
                   table={selectedTable}
+                  canWriteTables={!noCreateTablePermission}
+                  filterMap={tableDetailFilterMap}
                   onCreateReady={(openDialog) => {
                     openCreateColumnDialogRef.current = openDialog
                   }}
@@ -2217,6 +2885,8 @@ export function TableView({
               {activeTab === 'indexes' && (
                 <IndexesSpreadsheet
                   table={selectedTable}
+                  canWriteTables={!noCreateTablePermission}
+                  filterMap={tableDetailFilterMap}
                   onCreateReady={(openDialog) => {
                     openCreateIndexDialogRef.current = openDialog
                   }}
@@ -2381,18 +3051,13 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
           {tablesExpanded && (
             <div className="ml-3 mt-0.5 border-l border-border pl-2">
               {/* Create Table Button */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => setCreateTableDialogOpen(true)}
-                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground cursor-pointer"
-                  >
-                    <Plus className="h-3.5 w-3.5 shrink-0" />
-                    <span className="text-[13px]">Create table</span>
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="right">Create table</TooltipContent>
-              </Tooltip>
+              <button
+                onClick={() => setCreateTableDialogOpen(true)}
+                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground cursor-pointer"
+              >
+                <Plus className="h-3.5 w-3.5 shrink-0" />
+                <span className="text-[13px]">Create table</span>
+              </button>
             </div>
           )}
 
@@ -2405,6 +3070,22 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
             <Lock className="h-3.5 w-3.5 shrink-0" />
             <span className="text-[13px]">Security</span>
           </Link>
+
+          {features.dedicatedDbsTablesDB && (
+            <Link
+              to="/projects/$projectId/databases/$databaseId/settings"
+              params={{ projectId, databaseId }}
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+            >
+              <Cpu className="h-3.5 w-3.5 shrink-0" />
+              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span className="text-[13px]">Upgrade database specs</span>
+                <span className="text-[11px] text-muted-foreground/80">
+                  Shared DB
+                </span>
+              </span>
+            </Link>
+          )}
 
           {features.databaseInsights && (
             <>
@@ -2497,6 +3178,8 @@ interface DatabaseOverviewProps {
   contentOnly?: boolean
 }
 
+const CURRENT_TIER_ID = 'shared'
+
 export function DatabaseOverview({
   databaseId,
   activeTab,
@@ -2509,10 +3192,11 @@ export function DatabaseOverview({
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const location = useLocation()
+  const { features } = useConsoleProfile()
   const [searchValue, setSearchValue] = useState('')
   const [requestedPage, setRequestedPage] = useState(1)
   const [displayedPage, setDisplayedPage] = useState(1)
-  const [pageSize, setPageSize] = useState(25)
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
   const [databaseName, setDatabaseName] = useState('')
   const [enabled, setEnabled] = useState(false)
   const [deleteConfirmation, setDeleteConfirmation] = useState('')
@@ -2824,7 +3508,12 @@ export function DatabaseOverview({
     })
   }
 
-  const { features } = useConsoleProfile()
+  const { project } = useProject(projectId)
+  const { access } = useOrganizationScopes(project?.teamId)
+  const showDbSecuritySettings =
+    canShowDatabaseSecuritySettings(access, features)
+  const noCreateTablePermission = !canShowTableSecuritySettings(access, features)
+  const showTableSecuritySettings = canShowTableSecuritySettings(access, features)
 
   // Redirect from backups/insights when feature disabled
   useEffect(() => {
@@ -2847,6 +3536,26 @@ export function DatabaseOverview({
     navigate,
   ])
 
+  // Redirect from security/settings when user lacks permission
+  useEffect(() => {
+    if (
+      !showDbSecuritySettings &&
+      (activeTab === 'security' || activeTab === 'settings')
+    ) {
+      navigate({
+        to: '/projects/$projectId/databases/$databaseId',
+        params: { projectId, databaseId },
+        replace: true,
+      })
+    }
+  }, [
+    showDbSecuritySettings,
+    activeTab,
+    projectId,
+    databaseId,
+    navigate,
+  ])
+
   const databaseTabs: Tab[] = useMemo(
     () =>
       [
@@ -2862,12 +3571,16 @@ export function DatabaseOverview({
           to: '/projects/$projectId/databases/$databaseId/visualizer',
           params: { projectId, databaseId },
         },
-        {
-          id: 'security',
-          label: 'Security',
-          to: '/projects/$projectId/databases/$databaseId/security',
-          params: { projectId, databaseId },
-        },
+        ...(showDbSecuritySettings
+          ? [
+              {
+                id: 'security' as const,
+                label: 'Security',
+                to: '/projects/$projectId/databases/$databaseId/security',
+                params: { projectId, databaseId },
+              },
+            ]
+          : []),
         ...(features.databaseInsights
           ? [
               {
@@ -2894,14 +3607,24 @@ export function DatabaseOverview({
           to: '/projects/$projectId/databases/$databaseId/export-import',
           params: { projectId, databaseId },
         },
-        {
-          id: 'settings',
-          label: 'Settings',
-          to: '/projects/$projectId/databases/$databaseId/settings',
-          params: { projectId, databaseId },
-        },
+        ...(showDbSecuritySettings
+          ? [
+              {
+                id: 'settings' as const,
+                label: 'Settings',
+                to: '/projects/$projectId/databases/$databaseId/settings',
+                params: { projectId, databaseId },
+              },
+            ]
+          : []),
       ] as Tab[],
-    [projectId, databaseId, features.databaseBackups, features.databaseInsights],
+    [
+      projectId,
+      databaseId,
+      features.databaseBackups,
+      features.databaseInsights,
+      showDbSecuritySettings,
+    ],
   )
 
   // Tables are already paginated by the API
@@ -3068,6 +3791,14 @@ export function DatabaseOverview({
             activeTab === 'tables' ? handleSearchChange : undefined
           }
           createLabel={activeTab === 'tables' ? 'Create table' : undefined}
+          createDisabled={
+            activeTab === 'tables' ? noCreateTablePermission : false
+          }
+          createDisabledTooltip={
+            activeTab === 'tables'
+              ? "You don't have permission to perform this action."
+              : undefined
+          }
           onCreate={
             activeTab === 'tables'
               ? () => setCreateTableDialogOpen(true)
@@ -3140,7 +3871,7 @@ export function DatabaseOverview({
                       <img
                         src="/icons/chatgpt.svg"
                         alt="ChatGPT"
-                        className="h-4 w-4 mr-2 brightness-0 dark:brightness-100"
+                        className={`h-4 w-4 mr-2 ${PUBLIC_ICON_MUTED_CLASSES}`}
                       />
                       ChatGPT
                     </DropdownMenuItem>
@@ -3148,7 +3879,7 @@ export function DatabaseOverview({
                       <img
                         src="/icons/claude.svg"
                         alt="Claude"
-                        className="h-4 w-4 mr-2 brightness-0 dark:brightness-100"
+                        className={`h-4 w-4 mr-2 ${PUBLIC_ICON_MUTED_CLASSES}`}
                       />
                       Claude
                     </DropdownMenuItem>
@@ -3156,7 +3887,7 @@ export function DatabaseOverview({
                       <img
                         src="/icons/cursor-ai.svg"
                         alt="Cursor"
-                        className="h-4 w-4 mr-2 brightness-0 dark:brightness-100"
+                        className={`h-4 w-4 mr-2 ${PUBLIC_ICON_MUTED_CLASSES}`}
                       />
                       Cursor
                     </DropdownMenuItem>
@@ -3164,7 +3895,7 @@ export function DatabaseOverview({
                       <img
                         src="/icons/lovable.svg"
                         alt="Lovable"
-                        className="h-4 w-4 mr-2 brightness-0 dark:brightness-100"
+                        className={`h-4 w-4 mr-2 ${PUBLIC_ICON_MUTED_CLASSES}`}
                       />
                       Lovable
                     </DropdownMenuItem>
@@ -3214,7 +3945,7 @@ export function DatabaseOverview({
 
       <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">
         {activeTab === 'tables' && (
-          <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6">
+          <div className="mx-auto w-full max-w-7xl px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6">
             {showTablesLoading ? (
               <div className="rounded-lg border border-border bg-card py-12 text-center">
                 <div className="text-muted-foreground">Loading tables...</div>
@@ -3292,6 +4023,7 @@ export function DatabaseOverview({
                               projectId={projectId}
                               databaseId={databaseId}
                               table={table}
+                              showSecuritySettings={showTableSecuritySettings}
                               onCreateSimilar={async () => {
                                 await queryClient.refetchQueries({
                                   queryKey: [
@@ -3714,49 +4446,98 @@ export function DatabaseOverview({
                 </div>
               </div>
 
-              {/* Overview */}
-              <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                <div className="px-6 py-4">
-                  <h3 className="text-[15px] font-semibold text-foreground">
-                    Overview
-                  </h3>
-                </div>
-                <div className="border-t border-border" />
-                <div className="px-6 py-4">
-                  <div className="space-y-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5">
-                          Database ID
-                        </p>
-                        <CopyableId id={database.$id} size="sm" />
-                      </div>
-                    </div>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div>
-                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5">
-                          Created
-                        </p>
-                        <DateTooltip
-                          date={database.createdAt}
-                          className="text-[13px] text-foreground"
-                          showFormattedDate
-                        />
-                      </div>
-                      <div>
-                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5">
-                          Updated
-                        </p>
-                        <DateTooltip
-                          date={database.updatedAt || database.createdAt}
-                          className="text-[13px] text-foreground"
-                          showFormattedDate
-                        />
-                      </div>
+              {features.dedicatedDbsTablesDB && (
+                <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                  <div className="px-6 py-4">
+                    <h3 className="text-[15px] font-semibold text-foreground">
+                      Specification
+                    </h3>
+                    <p className="text-[13px] text-muted-foreground mt-2">
+                      Current tier: Shared DB. Dedicated tiers are coming soon.
+                    </p>
+                  </div>
+                  <div className="border-t border-border" />
+                  <div className="px-6 py-4">
+                    <div className="rounded-lg border border-border overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="hover:bg-transparent border-b border-border bg-muted/40">
+                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                              Tier
+                            </TableHead>
+                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                              CPU
+                            </TableHead>
+                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                              Memory
+                            </TableHead>
+                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[180px]">
+                              Price
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {TABLE_DB_SPEC_OPTIONS.map((spec) => {
+                            const isCurrent = spec.id === CURRENT_TIER_ID
+                            const locked = spec.comingSoon === true
+                            return (
+                              <TableRow
+                                key={spec.id}
+                                className={cn(
+                                  'border-b border-border last:border-b-0 transition-colors',
+                                  isCurrent && 'bg-primary/5',
+                                )}
+                              >
+                                <TableCell className="px-4 py-3">
+                                  <span className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-[13px] font-medium text-foreground">
+                                      {spec.label}
+                                    </span>
+                                    {isCurrent && (
+                                      <Badge
+                                        variant="success"
+                                        className="gap-1 text-[10px] shrink-0"
+                                      >
+                                        <CheckCircle2 className="h-3 w-3" />
+                                        Current
+                                      </Badge>
+                                    )}
+                                    {locked && (
+                                      <Badge
+                                        variant="inactive"
+                                        className="text-[10px] shrink-0"
+                                      >
+                                        Coming soon
+                                      </Badge>
+                                    )}
+                                  </span>
+                                </TableCell>
+                                <TableCell className="px-4 py-3 text-[13px] text-muted-foreground">
+                                  {spec.cpu}
+                                </TableCell>
+                                <TableCell className="px-4 py-3 text-[13px] text-muted-foreground">
+                                  {spec.memory}
+                                </TableCell>
+                                <TableCell className="px-4 py-3 text-right">
+                                  {locked ? (
+                                    <span className="text-[13px] text-muted-foreground">
+                                      {spec.price}
+                                    </span>
+                                  ) : (
+                                    <span className="text-[13px] font-medium tabular-nums text-foreground">
+                                      {spec.price}
+                                    </span>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            )
+                          })}
+                        </TableBody>
+                      </Table>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Delete Database */}
               <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
@@ -3925,7 +4706,7 @@ interface RowData {
   /** Server-provided sequence (stable); fallback to computed rowNumber when absent */
   $sequence?: number
   rowNumber: number
-  data: Record<string, string | number | boolean>
+  data: Record<string, string | number | boolean | unknown[] | null>
   $createdAt?: string
   $updatedAt?: string
   $permissions?: string[]
@@ -3955,6 +4736,43 @@ interface RowEditDrawerProps {
 function formatDateTimeLocalForInput(d: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+/** Parse a comma-separated string into an array, with optional type coercion per element. */
+function parseCommaSeparatedToArray(
+  value: string,
+  columnType?: string,
+): unknown[] {
+  if (typeof value !== 'string' || value.trim() === '') return []
+  const parts = value.split(',').map((s) => s.trim())
+  const type = (columnType || 'string').toLowerCase()
+  if (type === 'integer' || type === 'int') {
+    return parts.map((p) => (p === '' || p === 'null' ? null : parseInt(p, 10)))
+  }
+  if (type === 'double' || type === 'float' || type === 'number') {
+    return parts.map((p) => (p === '' || p === 'null' ? null : parseFloat(p)))
+  }
+  if (type === 'boolean' || type === 'bool') {
+    return parts.map((p) =>
+      p === '' || p === 'null' ? null : /^(true|1|yes)$/i.test(p),
+    )
+  }
+  return parts.map((p) => (p === '' || p === 'null' ? null : p))
+}
+
+/** Normalize a value for a column: e.g. comma-separated string → array when column is array type. */
+function normalizeValueForColumn(
+  value: unknown,
+  columnInfo?: unknown,
+): string | number | boolean | unknown[] | null {
+  if (value === null || value === undefined) return null
+  const col = columnInfo as { array?: boolean; type?: string } | undefined
+  if (!col?.array) return value as string | number | boolean | null
+  if (Array.isArray(value)) return value
+  if (typeof value === 'string') {
+    return parseCommaSeparatedToArray(value, col.type)
+  }
+  return value as unknown[]
 }
 
 function RowEditDrawer({
@@ -4014,14 +4832,22 @@ function RowEditDrawer({
   // Update form data when row changes - only when row actually changes
   useEffect(() => {
     if (row) {
-      // Preserve null values explicitly - ensure null is not converted to undefined
+      // Preserve null values explicitly; normalize array columns (e.g. comma-separated string → array)
       const initialData: Record<
         string,
         string | number | boolean | unknown[] | null
       > = {}
       Object.entries(row.data).forEach(([key, value]) => {
-        // Explicitly preserve null values
-        initialData[key] = value === null || value === undefined ? null : value
+        const columnInfo = getColumnInfo(key)
+        initialData[key] =
+          value === null || value === undefined
+            ? null
+            : (normalizeValueForColumn(value, columnInfo) as
+                | string
+                | number
+                | boolean
+                | unknown[]
+                | null)
       })
       initialData['$createdAt'] = row.$createdAt ?? null
       initialData['$updatedAt'] = row.$updatedAt ?? null
@@ -4159,8 +4985,10 @@ function RowEditDrawer({
   const handleAddArrayItem = (key: string) => {
     const currentArray = (formData[key] as unknown[]) || []
     const newIndex = currentArray.length
-    handleFieldChange(key, [...currentArray, ''])
-    // Track the newly added item to focus it after render
+    const col = getColumnInfo(key) as { type?: string } | undefined
+    const defaultItem =
+      col?.type === 'boolean' || col?.type === 'bool' ? false : ''
+    handleFieldChange(key, [...currentArray, defaultItem])
     setNewlyAddedItem({ key, index: newIndex })
   }
 
@@ -4207,11 +5035,14 @@ function RowEditDrawer({
     columnInfo?: unknown,
   ): string => {
     if (key === '$createdAt' || key === '$updatedAt') return 'datetime'
-    // Use column type from metadata if available
-    if (columnInfo?.type) {
-      return columnInfo.type
-    }
-    // Fallback to value-based inference
+    const col = columnInfo as { array?: boolean; type?: string } | undefined
+    // Array columns always use the array UI (add/remove items per element)
+    if (col?.array) return 'array'
+    if (col?.type === 'array' || (typeof col?.type === 'string' && col.type.endsWith('[]')))
+      return 'array'
+    // Use column type from metadata if available (element type for arrays)
+    if (col?.type) return col.type
+    // Fallback to value-based inference (e.g. API returned actual array)
     if (Array.isArray(value)) return 'array'
     if (typeof value === 'boolean') return 'boolean'
     if (typeof value === 'number') return 'number'
@@ -4522,9 +5353,11 @@ function RowEditDrawer({
                                       (item, index) => {
                                         const columnInfo = getColumnInfo(key)
                                         const size = columnInfo?.size || null
-                                        const colType =
-                                          columnInfo?.type || 'string'
-                                        // Check multiple possible properties for required status
+                                        const rawType =
+                                          ((columnInfo as { type?: string })?.type || 'string') as string
+                                        const colType = rawType.endsWith('[]')
+                                          ? rawType.slice(0, -2)
+                                          : rawType
                                         const isRequired =
                                           columnInfo?.required === true ||
                                           columnInfo?.required === 'true' ||
@@ -4535,7 +5368,7 @@ function RowEditDrawer({
                                         const isNull = item === null
                                         const stringValue = isNull
                                           ? ''
-                                          : String(item || '')
+                                          : String(item ?? '')
                                         const charCount = stringValue.length
                                         const hasLimit =
                                           (colType === 'string' ||
@@ -4544,140 +5377,274 @@ function RowEditDrawer({
                                           size > 0
                                         const isRTLContent = isRTL(stringValue)
                                         const showNullCheckbox = !isRequired
+                                        const setRef = (
+                                          el:
+                                            | HTMLInputElement
+                                            | HTMLSelectElement
+                                            | HTMLButtonElement
+                                            | HTMLTextAreaElement
+                                            | null,
+                                        ) => {
+                                          const itemKey = `${key}-${index}`
+                                          if (el) {
+                                            fieldRefs.current[itemKey] = el
+                                            if (index === 0)
+                                              fieldRefs.current[key] = el
+                                          } else {
+                                            delete fieldRefs.current[itemKey]
+                                            if (index === 0)
+                                              delete fieldRefs.current[key]
+                                          }
+                                        }
+                                        const focusGuard = () => {
+                                          const scrollContainer =
+                                            scrollContainerRef.current
+                                          if (scrollContainer) {
+                                            const scrollTop =
+                                              scrollContainer.scrollTop
+                                            const scrollLeft =
+                                              scrollContainer.scrollLeft
+                                            requestAnimationFrame(() => {
+                                              scrollContainer.scrollTop = scrollTop
+                                              scrollContainer.scrollLeft = scrollLeft
+                                            })
+                                          }
+                                        }
+
+                                        const isNumericType =
+                                          colType === 'integer' ||
+                                          colType === 'int' ||
+                                          colType === 'double' ||
+                                          colType === 'float' ||
+                                          colType === 'number'
+                                        const isBoolType =
+                                          colType === 'boolean' || colType === 'bool'
+                                        const isEnumType = colType === 'enum'
+                                        const isDateTimeType =
+                                          colType === 'datetime' || colType === 'date'
 
                                         return (
                                           <div
                                             key={index}
                                             className="flex items-start gap-2 rounded-md border border-border bg-background px-2 py-1.5"
                                           >
-                                            <div className="relative flex-1">
-                                              <Textarea
-                                                value={stringValue}
-                                                onChange={(e) => {
-                                                  e.stopPropagation()
-                                                  const newValue =
-                                                    e.target.value
-                                                  // Don't auto-convert empty to null - only checkbox sets null
-                                                  handleArrayItemChange(
-                                                    key,
-                                                    index,
-                                                    newValue,
-                                                  )
-                                                }}
-                                                onFocus={() => {
-                                                  // Prevent browser from auto-scrolling focused element into view
-                                                  const scrollContainer =
-                                                    scrollContainerRef.current
-                                                  if (scrollContainer) {
-                                                    const scrollTop =
-                                                      scrollContainer.scrollTop
-                                                    const scrollLeft =
-                                                      scrollContainer.scrollLeft
-
-                                                    // Temporarily prevent scroll
-                                                    requestAnimationFrame(
-                                                      () => {
-                                                        scrollContainer.scrollTop =
-                                                          scrollTop
-                                                        scrollContainer.scrollLeft =
-                                                          scrollLeft
-                                                      },
+                                            <div className="relative flex-1 min-w-0">
+                                              {isNumericType ? (
+                                                <Input
+                                                  type="number"
+                                                  value={
+                                                    isNull
+                                                      ? ''
+                                                      : String(item ?? '')
+                                                  }
+                                                  ref={(el) => setRef(el)}
+                                                  autoFocus={
+                                                    shouldFocus && index === 0
+                                                  }
+                                                  disabled={isNull}
+                                                  onFocus={focusGuard}
+                                                  onChange={(e) => {
+                                                    const v = e.target.value
+                                                    handleArrayItemChange(
+                                                      key,
+                                                      index,
+                                                      v === ''
+                                                        ? null
+                                                        : colType === 'integer' || colType === 'int'
+                                                          ? parseInt(v, 10)
+                                                          : parseFloat(v),
+                                                    )
+                                                  }}
+                                                  step={
+                                                    colType === 'double' ||
+                                                    colType === 'float'
+                                                      ? 0.1
+                                                      : 1
+                                                  }
+                                                  placeholder={`Item ${index + 1}`}
+                                                  className="h-9 text-[13px] border-0 bg-transparent px-0"
+                                                />
+                                              ) : isBoolType ? (
+                                                <div className="flex items-center gap-2 py-1">
+                                                  <Switch
+                                                    checked={item === true}
+                                                    onCheckedChange={(checked) =>
+                                                      handleArrayItemChange(
+                                                        key,
+                                                        index,
+                                                        checked,
+                                                      )
+                                                    }
+                                                  />
+                                                  <span className="text-[12px] text-muted-foreground">
+                                                    {item === true
+                                                      ? 'True'
+                                                      : 'False'}
+                                                  </span>
+                                                </div>
+                                              ) : isEnumType ? (
+                                                <Select
+                                                  value={
+                                                    isNull
+                                                      ? 'null'
+                                                      : String(item ?? '')
+                                                  }
+                                                  onValueChange={(val) =>
+                                                    handleArrayItemChange(
+                                                      key,
+                                                      index,
+                                                      val === 'null'
+                                                        ? null
+                                                        : val,
                                                     )
                                                   }
-                                                }}
-                                                ref={(el) => {
-                                                  if (el) {
-                                                    // Register ref for this specific array item
-                                                    const itemKey = `${key}-${index}`
-                                                    fieldRefs.current[itemKey] =
-                                                      el
-
-                                                    // Also register first textarea for auto-focus on drawer open
-                                                    if (index === 0) {
-                                                      fieldRefs.current[key] =
-                                                        el
-                                                    }
-                                                  } else {
-                                                    // Clear ref when unmounted
-                                                    const itemKey = `${key}-${index}`
-                                                    delete fieldRefs.current[
-                                                      itemKey
-                                                    ]
-                                                    if (index === 0) {
-                                                      delete fieldRefs.current[
-                                                        key
-                                                      ]
-                                                    }
-                                                  }
-                                                }}
-                                                autoFocus={
-                                                  shouldFocus && index === 0
-                                                }
-                                                disabled={isNull}
-                                                dir={
-                                                  isRTLContent ? 'rtl' : 'ltr'
-                                                }
-                                                maxLength={
-                                                  hasLimit ? size : undefined
-                                                }
-                                                className={cn(
-                                                  'min-h-[32px] max-h-[600px] text-[13px] flex-1 border-0 bg-transparent px-0 py-1.5 resize-none focus-visible:ring-0 focus-visible:ring-offset-0',
-                                                  isNull &&
-                                                    'opacity-50 cursor-not-allowed',
-                                                  showNullCheckbox
-                                                    ? 'pb-7'
-                                                    : 'pb-1',
-                                                )}
-                                                placeholder={`Item ${index + 1}`}
-                                                rows={1}
-                                              />
-                                              <div className="absolute bottom-1 right-1 flex items-center gap-1.5 pointer-events-none">
-                                                {hasLimit && (
-                                                  <span
-                                                    className={cn(
-                                                      'text-[10px] px-1 py-0.5 rounded pointer-events-auto whitespace-nowrap',
-                                                      charCount > size
-                                                        ? 'text-destructive bg-destructive/10'
-                                                        : 'text-muted-foreground bg-muted/80',
-                                                    )}
+                                                >
+                                                  <SelectTrigger
+                                                    className="h-9 text-[13px] border-0 bg-transparent px-0"
+                                                    ref={(el) => setRef(el)}
                                                   >
-                                                    {charCount}/{size}
-                                                  </span>
-                                                )}
-                                                {showNullCheckbox && (
-                                                  <div className="pointer-events-auto flex items-center gap-1">
-                                                    <Checkbox
-                                                      id={`${key}-${index}-null`}
-                                                      checked={isNull}
-                                                      onCheckedChange={(
-                                                        checked,
-                                                      ) => {
-                                                        const newArray = [
-                                                          ...((currentValue as unknown[]) ||
-                                                            []),
-                                                        ]
-                                                        newArray[index] =
-                                                          checked ? null : ''
-                                                        handleFieldChange(
-                                                          key,
-                                                          newArray,
-                                                        )
-                                                      }}
-                                                      onClick={(e) =>
-                                                        e.stopPropagation()
+                                                    <SelectValue
+                                                      placeholder={
+                                                        isRequired
+                                                          ? undefined
+                                                          : 'NULL'
                                                       }
-                                                      className="h-3.5 w-3.5"
-                                                      disabled={false}
                                                     />
-                                                    <label
-                                                      htmlFor={`${key}-${index}-null`}
-                                                      className="text-[10px] text-muted-foreground cursor-pointer select-none"
+                                                  </SelectTrigger>
+                                                  <SelectContent>
+                                                    {!isRequired && (
+                                                      <SelectItem value="null">
+                                                        NULL
+                                                      </SelectItem>
+                                                    )}
+                                                    {getEnumOptions(
+                                                      columnInfo,
+                                                    ).map((option) => (
+                                                      <SelectItem
+                                                        key={option}
+                                                        value={option}
+                                                      >
+                                                        {option}
+                                                      </SelectItem>
+                                                    ))}
+                                                  </SelectContent>
+                                                </Select>
+                                              ) : isDateTimeType ? (
+                                                <Input
+                                                  type="datetime-local"
+                                                  value={
+                                                    isNull || !item
+                                                      ? ''
+                                                      : formatDateTimeLocalForInput(
+                                                          new Date(
+                                                            item as string,
+                                                          ),
+                                                        )
+                                                  }
+                                                  ref={(el) => setRef(el)}
+                                                  autoFocus={
+                                                    shouldFocus && index === 0
+                                                  }
+                                                  disabled={isNull}
+                                                  onFocus={focusGuard}
+                                                  onChange={(e) =>
+                                                    handleArrayItemChange(
+                                                      key,
+                                                      index,
+                                                      e.target.value
+                                                        ? new Date(
+                                                            e.target.value,
+                                                          ).toISOString()
+                                                        : null,
+                                                    )
+                                                  }
+                                                  placeholder={`Item ${index + 1}`}
+                                                  className="h-9 text-[13px] border-0 bg-transparent px-0"
+                                                />
+                                              ) : (
+                                                <Textarea
+                                                  value={stringValue}
+                                                  onChange={(e) => {
+                                                    e.stopPropagation()
+                                                    handleArrayItemChange(
+                                                      key,
+                                                      index,
+                                                      e.target.value,
+                                                    )
+                                                  }}
+                                                  onFocus={focusGuard}
+                                                  ref={(el) => setRef(el)}
+                                                  autoFocus={
+                                                    shouldFocus && index === 0
+                                                  }
+                                                  disabled={isNull}
+                                                  dir={
+                                                    isRTLContent ? 'rtl' : 'ltr'
+                                                  }
+                                                  maxLength={
+                                                    hasLimit ? size : undefined
+                                                  }
+                                                  className={cn(
+                                                    'min-h-[32px] max-h-[600px] text-[13px] flex-1 border-0 bg-transparent px-0 py-1.5 resize-none focus-visible:ring-0 focus-visible:ring-offset-0',
+                                                    isNull &&
+                                                      'opacity-50 cursor-not-allowed',
+                                                    showNullCheckbox
+                                                      ? 'pb-7'
+                                                      : 'pb-1',
+                                                  )}
+                                                  placeholder={`Item ${index + 1}`}
+                                                  rows={1}
+                                                />
+                                              )}
+                                              {!isBoolType && !isEnumType && (
+                                                <div className="absolute bottom-1 right-1 flex items-center gap-1.5 pointer-events-none">
+                                                  {hasLimit && (
+                                                    <span
+                                                      className={cn(
+                                                        'text-[10px] px-1 py-0.5 rounded pointer-events-auto whitespace-nowrap',
+                                                        charCount > size
+                                                          ? 'text-destructive bg-destructive/10'
+                                                          : 'text-muted-foreground bg-muted/80',
+                                                      )}
                                                     >
-                                                      Null
-                                                    </label>
-                                                  </div>
-                                                )}
-                                              </div>
+                                                      {charCount}/{size}
+                                                    </span>
+                                                  )}
+                                                  {showNullCheckbox && (
+                                                    <div className="pointer-events-auto flex items-center gap-1">
+                                                      <Checkbox
+                                                        id={`${key}-${index}-null`}
+                                                        checked={isNull}
+                                                        onCheckedChange={(
+                                                          checked,
+                                                        ) => {
+                                                          const newArray = [
+                                                            ...((currentValue as unknown[]) ||
+                                                              []),
+                                                          ]
+                                                          newArray[index] =
+                                                            checked ? null : ''
+                                                          handleFieldChange(
+                                                            key,
+                                                            newArray,
+                                                          )
+                                                        }}
+                                                        onClick={(e) =>
+                                                          e.stopPropagation()
+                                                        }
+                                                        className="h-3.5 w-3.5"
+                                                        disabled={false}
+                                                      />
+                                                      <label
+                                                        htmlFor={`${key}-${index}-null`}
+                                                        className="text-[10px] text-muted-foreground cursor-pointer select-none"
+                                                      >
+                                                        Null
+                                                      </label>
+                                                    </div>
+                                                  )}
+                                                </div>
+                                              )}
                                             </div>
                                             <Button
                                               type="button"
@@ -5050,6 +6017,23 @@ interface SpreadsheetProps {
   onCreateReady?: (openDialog: () => void) => void
   onSuggestReady?: (openDialog: () => void) => void
   onRowsCountChange?: (count: number) => void
+  /** When false, create row/column and suggest actions are disabled (e.g. read-only roles) */
+  canWriteRows?: boolean
+  canWriteTables?: boolean
+  /** URL-driven rows list (when set, search/page/limit/filters come from URL) */
+  rowsUrlSearch?: string
+  rowsUrlPage?: number
+  rowsUrlLimit?: number
+  rowsFilterQueries?: string[]
+  rowsFilterQueryString?: string
+  onNavigateToRowsList?: (params: {
+    search?: string
+    query?: string
+    page?: number
+    limit?: number
+  }) => void
+  /** When provided (e.g. from table view header), used for client-side filtering instead of URL */
+  filterMap?: Map<CompactFilterKey, string>
 }
 
 function RowsSpreadsheet({
@@ -5058,6 +6042,14 @@ function RowsSpreadsheet({
   onCreateRowReady,
   onCreateColumnReady,
   onRowsCountChange,
+  canWriteRows = true,
+  canWriteTables = true,
+  rowsUrlSearch,
+  rowsUrlPage = 1,
+  rowsUrlLimit = ROWS_DEFAULT_PAGE_SIZE,
+  rowsFilterQueries,
+  rowsFilterQueryString,
+  onNavigateToRowsList,
 }: SpreadsheetProps) {
   const params = useParams({
     strict: false,
@@ -5066,14 +6058,27 @@ function RowsSpreadsheet({
   const databaseId = params.databaseId as string
   const tableId = table.$id
 
+  const urlDriven = onNavigateToRowsList != null
+
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
-  const [requestedPage, setRequestedPage] = useState(1)
-  const [displayedPage, setDisplayedPage] = useState(1)
+  const [requestedPage, setRequestedPage] = useState(urlDriven ? rowsUrlPage : 1)
+  const [displayedPage, setDisplayedPage] = useState(urlDriven ? rowsUrlPage : 1)
+  const [displayedSearch, setDisplayedSearch] = useState<string>(
+    urlDriven ? (rowsUrlSearch ?? '') : '',
+  )
+  const [displayedFilterQueryString, setDisplayedFilterQueryString] =
+    useState<string>(urlDriven ? (rowsFilterQueryString ?? '') : '')
+  const displayedFilterQueries = useMemo(() => {
+    if (!displayedFilterQueryString) return undefined
+    const map = queryParamToMap(displayedFilterQueryString)
+    return map.size > 0 ? Array.from(map.values()) : undefined
+  }, [displayedFilterQueryString])
+  const hasInitedDisplayedRef = useRef(false)
   const [displayedSortBy, setDisplayedSortBy] = useState<string>('$createdAt')
   const [displayedSortOrder, setDisplayedSortOrder] = useState<'asc' | 'desc'>(
     'desc',
   )
-  const [pageSize, setPageSize] = useState(25)
+  const [pageSize, setPageSize] = useState(urlDriven ? rowsUrlLimit : ROWS_DEFAULT_PAGE_SIZE)
   const [sortBy, setSortBy] = useState<string>('$createdAt')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [editDrawerOpen, setEditDrawerOpen] = useState(false)
@@ -5098,19 +6103,46 @@ function RowsSpreadsheet({
   const navigate = useNavigate()
   const location = useLocation()
 
-  // Clear selection and reset page when navigating between pages/routes or switching tables
+  useEffect(() => {
+    if (urlDriven && rowsUrlPage != null && rowsUrlLimit != null) {
+      setRequestedPage((p) => (p === rowsUrlPage ? p : rowsUrlPage))
+      setPageSize((s) => (s === rowsUrlLimit ? s : rowsUrlLimit))
+    }
+  }, [urlDriven, rowsUrlPage, rowsUrlLimit])
+
+  useEffect(() => {
+    if (!urlDriven || rowsUrlPage == null || rowsUrlLimit == null) return
+    if (!hasInitedDisplayedRef.current) {
+      setDisplayedPage(rowsUrlPage)
+      setDisplayedSearch(rowsUrlSearch ?? '')
+      setDisplayedFilterQueryString(rowsFilterQueryString ?? '')
+      hasInitedDisplayedRef.current = true
+    }
+  }, [urlDriven, rowsUrlPage, rowsUrlLimit, rowsUrlSearch, rowsFilterQueryString])
+
   useEffect(() => {
     setSelectedRows(new Set())
     setDeleteDialogOpen(false)
-    setRequestedPage(1)
-    setDisplayedPage(1)
+    if (!urlDriven) {
+      setRequestedPage(1)
+      setDisplayedPage(1)
+    }
     setDisplayedSortBy('$createdAt')
     setDisplayedSortOrder('desc')
     setSortBy('$createdAt')
     setSortOrder('desc')
-  }, [location.pathname, projectId, databaseId, tableId])
+  }, [location.pathname, projectId, databaseId, tableId, urlDriven])
 
-  // Fetch data for the requested page (triggers load when user changes page)
+  const effectiveSearch = urlDriven ? (rowsUrlSearch ?? '') : ''
+  const effectivePageSize = urlDriven ? rowsUrlLimit : pageSize
+  const effectiveRequestedPage = urlDriven ? requestedPage : requestedPage
+  const effectiveDisplayedPage = urlDriven ? displayedPage : displayedPage
+  const effectiveDisplayedSearch = urlDriven ? (displayedSearch ?? '') : ''
+  const effectiveFilterQueries = urlDriven ? rowsFilterQueries : undefined
+  const effectiveDisplayedFilterQueries = urlDriven
+    ? displayedFilterQueries
+    : undefined
+
   const {
     total: rowsTotal,
     isLoading: rowsLoading,
@@ -5120,14 +6152,14 @@ function RowsSpreadsheet({
     projectId,
     databaseId,
     tableId,
-    requestedPage - 1,
-    pageSize,
-    '',
+    effectiveRequestedPage - 1,
+    effectivePageSize,
+    effectiveSearch,
     sortOrder,
     sortBy,
+    effectiveFilterQueries,
   )
 
-  // Fetch data for the displayed view (what we show - stays until new data is ready)
   const {
     rows: apiRows,
     total: displayedRowsTotal,
@@ -5136,27 +6168,34 @@ function RowsSpreadsheet({
     projectId,
     databaseId,
     tableId,
-    displayedPage - 1,
-    pageSize,
-    '',
+    effectiveDisplayedPage - 1,
+    effectivePageSize,
+    effectiveDisplayedSearch,
     displayedSortOrder,
     displayedSortBy,
+    effectiveDisplayedFilterQueries,
   )
 
-  // Update displayed page/sort only when requested data is ready (no loading flash)
   useEffect(() => {
-    if (
-      !rowsFetching &&
-      !rowsLoading &&
-      (requestedPage !== displayedPage ||
-        sortBy !== displayedSortBy ||
-        sortOrder !== displayedSortOrder)
-    ) {
+    if (!urlDriven || rowsFetching || rowsLoading) return
+    const urlSearchMatch = (rowsUrlSearch ?? '') === (displayedSearch ?? '')
+    const filterMatch =
+      (rowsFilterQueryString ?? '') === (displayedFilterQueryString ?? '')
+    const match =
+      requestedPage === displayedPage &&
+      sortBy === displayedSortBy &&
+      sortOrder === displayedSortOrder &&
+      urlSearchMatch &&
+      filterMatch
+    if (!match) {
       setDisplayedPage(requestedPage)
       setDisplayedSortBy(sortBy)
       setDisplayedSortOrder(sortOrder)
+      setDisplayedSearch(rowsUrlSearch ?? '')
+      setDisplayedFilterQueryString(rowsFilterQueryString ?? '')
     }
   }, [
+    urlDriven,
     rowsFetching,
     rowsLoading,
     requestedPage,
@@ -5165,6 +6204,10 @@ function RowsSpreadsheet({
     sortOrder,
     displayedSortBy,
     displayedSortOrder,
+    rowsUrlSearch,
+    displayedSearch,
+    rowsFilterQueryString,
+    displayedFilterQueryString,
   ])
 
   // Only show full loading when we have no data to display (initial load)
@@ -5264,26 +6307,37 @@ function RowsSpreadsheet({
     (col: unknown) => col.type === 'relationship',
   )
 
-  // Map API rows to RowData format
+  // Map API rows to RowData format (normalize array columns: comma-separated string → array)
   const rows: RowData[] = apiRows.map((row: unknown, index: number) => {
-    // Extract data from row, excluding system fields
-    const data: Record<string, string | number | boolean> = {}
-    Object.keys(row).forEach((key) => {
+    const rowObj = row as Record<string, unknown>
+    const data: Record<string, string | number | boolean | unknown[] | null> =
+      {}
+    Object.keys(rowObj).forEach((key) => {
       if (!key.startsWith('$')) {
-        data[key] = row[key]
+        const value = rowObj[key]
+        const col = apiColumns.find(
+          (c: Record<string, unknown>) =>
+            c.key === key || c.name === key || c.$id === key || c.attribute === key,
+        )
+        data[key] = normalizeValueForColumn(value, col) as
+          | string
+          | number
+          | boolean
+          | unknown[]
+          | null
       }
     })
 
     return {
-      $id: row.$id,
-      $sequence: row.$sequence,
+      $id: rowObj.$id,
+      $sequence: rowObj.$sequence,
       rowNumber:
         (displayedRowsTotal ?? rowsTotal) -
-        (currentPageIndexed * pageSize + index),
+        (currentPageIndexed * effectivePageSize + index),
       data,
-      $createdAt: row.$createdAt,
-      $updatedAt: row.$updatedAt,
-      $permissions: row.$permissions || [],
+      $createdAt: rowObj.$createdAt,
+      $updatedAt: rowObj.$updatedAt,
+      $permissions: (rowObj.$permissions as string[]) || [],
     }
   })
 
@@ -5317,14 +6371,20 @@ function RowsSpreadsheet({
 
   const handlePageChange = (page: number) => {
     setRequestedPage(page)
-    setSelectedRows(new Set()) // Clear selection on page change
+    setSelectedRows(new Set())
+    if (urlDriven && onNavigateToRowsList) {
+      onNavigateToRowsList({ page })
+    }
   }
 
   const handlePageSizeChange = (newPageSize: number) => {
     setPageSize(newPageSize)
     setRequestedPage(1)
     setDisplayedPage(1)
-    setSelectedRows(new Set()) // Clear selection on page size change
+    setSelectedRows(new Set())
+    if (urlDriven && onNavigateToRowsList) {
+      onNavigateToRowsList({ page: 1, limit: newPageSize })
+    }
   }
 
   const handleSortColumn = (columnKey: string) => {
@@ -5375,7 +6435,11 @@ function RowsSpreadsheet({
   // Use window.location.hash and hashchange so it works on new-tab load and when hash is set after load.
   const lastProcessedHashRef = useRef<string | null>(null)
   const openRowDrawerFromHash = useCallback(
-    (hash: string, currentRows: RowData[]) => {
+    (
+      hash: string,
+      currentRows: RowData[],
+      columnsForNormalize: unknown[] = [],
+    ) => {
       const rawHash = hash.replace(/^#/, '')
       const match = rawHash.match(/^row-(.+?)(-permissions)?$/)
       if (!match || !projectId || !databaseId || !tableId) {
@@ -5400,10 +6464,27 @@ function RowsSpreadsheet({
         (apiRow: unknown) => {
           if (!apiRow || typeof apiRow !== 'object') return
           const rowObj = apiRow as Record<string, unknown>
-          const data: Record<string, string | number | boolean> = {}
+          const data: Record<
+            string,
+            string | number | boolean | unknown[] | null
+          > = {}
           Object.keys(rowObj).forEach((key) => {
-            if (!key.startsWith('$'))
-              data[key] = rowObj[key] as string | number | boolean
+            if (!key.startsWith('$')) {
+              const value = rowObj[key]
+              const col = columnsForNormalize.find(
+                (c: Record<string, unknown>) =>
+                  c.key === key ||
+                  c.name === key ||
+                  c.$id === key ||
+                  c.attribute === key,
+              )
+              data[key] = normalizeValueForColumn(value, col) as
+                | string
+                | number
+                | boolean
+                | unknown[]
+                | null
+            }
           })
           const rowData: RowData = {
             $id: (rowObj.$id as string) ?? rowId,
@@ -5426,7 +6507,7 @@ function RowsSpreadsheet({
 
   useEffect(() => {
     const hash = window.location.hash
-    if (hash) openRowDrawerFromHash(hash, rows)
+    if (hash) openRowDrawerFromHash(hash, rows, apiColumns)
   }, [rows, openRowDrawerFromHash])
 
   useEffect(() => {
@@ -5436,7 +6517,7 @@ function RowsSpreadsheet({
         lastProcessedHashRef.current = null
         return
       }
-      openRowDrawerFromHash(hash, rows)
+      openRowDrawerFromHash(hash, rows, apiColumns)
     }
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
@@ -5635,14 +6716,18 @@ function RowsSpreadsheet({
       | string
       | number
       | boolean
+      | unknown[]
       | Record<string, unknown>
       | null
       | undefined,
   ) => {
     if (value === null || value === undefined)
       return { full: 'null', display: 'null', isNull: true }
-    const stringValue =
-      typeof value === 'object' ? JSON.stringify(value) : String(value)
+    const stringValue = Array.isArray(value)
+      ? value.map((v) => (v === null ? 'null' : String(v))).join(', ')
+      : typeof value === 'object'
+        ? JSON.stringify(value)
+        : String(value)
     const trimmed =
       stringValue.length > 80 ? `${stringValue.slice(0, 77)}…` : stringValue
     return { full: stringValue, display: trimmed, isNull: false }
@@ -5728,43 +6813,118 @@ function RowsSpreadsheet({
             </div>
             <div className="grid grid-cols-2 gap-3 w-full max-w-2xl">
               {/* Row 1 */}
-              <Card
-                onClick={handleSuggestColumns}
-                className="cursor-pointer transition-colors hover:bg-accent/50 p-0 gap-0 shadow-none"
-              >
-                <div className="flex items-start gap-3 p-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-                    <Lightbulb className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="text-sm font-medium text-foreground">
-                      Suggest columns
-                    </h3>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Use AI to generate columns
-                    </p>
-                  </div>
-                </div>
-              </Card>
-              {hasCustomColumns ? (
+              {!canWriteTables ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Card
+                      className="cursor-not-allowed opacity-60 p-0 gap-0 shadow-none"
+                    >
+                      <div className="flex items-start gap-3 p-4">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                          <Lightbulb className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-sm font-medium text-foreground">
+                            Suggest columns
+                          </h3>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Use AI to generate columns
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    You don't have permission to perform this action.
+                  </TooltipContent>
+                </Tooltip>
+              ) : (
                 <Card
-                  onClick={handleCreateRow}
+                  onClick={handleSuggestColumns}
                   className="cursor-pointer transition-colors hover:bg-accent/50 p-0 gap-0 shadow-none"
                 >
                   <div className="flex items-start gap-3 p-4">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-                      <Plus className="h-5 w-5 text-muted-foreground" />
+                      <Lightbulb className="h-5 w-5 text-muted-foreground" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <h3 className="text-sm font-medium text-foreground">
-                        Create row
+                        Suggest columns
                       </h3>
                       <p className="mt-1 text-xs text-muted-foreground">
-                        Add a new row to this table
+                        Use AI to generate columns
                       </p>
                     </div>
                   </div>
                 </Card>
+              )}
+              {hasCustomColumns ? (
+                !canWriteRows ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Card className="cursor-not-allowed opacity-60 p-0 gap-0 shadow-none">
+                        <div className="flex items-start gap-3 p-4">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                            <Plus className="h-5 w-5 text-muted-foreground" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h3 className="text-sm font-medium text-foreground">
+                              Create row
+                            </h3>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              Add a new row to this table
+                            </p>
+                          </div>
+                        </div>
+                      </Card>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      You don't have permission to perform this action.
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <Card
+                    onClick={handleCreateRow}
+                    className="cursor-pointer transition-colors hover:bg-accent/50 p-0 gap-0 shadow-none"
+                  >
+                    <div className="flex items-start gap-3 p-4">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                        <Plus className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-sm font-medium text-foreground">
+                          Create row
+                        </h3>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Add a new row to this table
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+                )
+              ) : !canWriteTables ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Card className="cursor-not-allowed opacity-60 p-0 gap-0 shadow-none">
+                      <div className="flex items-start gap-3 p-4">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                          <Plus className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-sm font-medium text-foreground">
+                            Create column
+                          </h3>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Create columns manually
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    You don't have permission to perform this action.
+                  </TooltipContent>
+                </Tooltip>
               ) : (
                 <Card
                   onClick={handleCreateColumn}
@@ -6035,17 +7195,30 @@ function RowsSpreadsheet({
               >
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleCreateColumn()
-                      }}
-                      className="absolute inset-0 flex cursor-pointer items-center justify-center transition-colors hover:bg-muted/50"
-                    >
-                      <Plus className="h-4 w-4 text-muted-foreground" />
-                    </button>
+                    <span className="absolute inset-0 flex items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          if (canWriteTables) handleCreateColumn()
+                        }}
+                        disabled={!canWriteTables}
+                        className={cn(
+                          'flex items-center justify-center transition-colors',
+                          canWriteTables
+                            ? 'cursor-pointer hover:bg-muted/50'
+                            : 'cursor-not-allowed opacity-50',
+                        )}
+                      >
+                        <Plus className="h-4 w-4 text-muted-foreground" />
+                      </button>
+                    </span>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom">Create column</TooltipContent>
+                  <TooltipContent side="bottom">
+                    {canWriteTables
+                      ? 'Create column'
+                      : "You don't have permission to perform this action."}
+                  </TooltipContent>
                 </Tooltip>
               </th>
             </tr>
@@ -6123,6 +7296,7 @@ function RowsSpreadsheet({
                             | string
                             | number
                             | boolean
+                            | unknown[]
                             | Record<string, unknown>
                             | null
                             | undefined,
@@ -6278,7 +7452,7 @@ function RowsSpreadsheet({
             <Pagination
               currentPage={displayedPage}
               totalItems={displayedRowsTotal ?? rowsTotal}
-              pageSize={pageSize}
+              pageSize={effectivePageSize}
               pageSizeOptions={[10, 25, 50, 100]}
               onPageChange={handlePageChange}
               onPageSizeChange={handlePageSizeChange}
@@ -6381,6 +7555,8 @@ function ColumnsSpreadsheet({
   table,
   onCreateReady,
   onSuggestReady,
+  canWriteTables = true,
+  filterMap: filterMapProp,
 }: SpreadsheetProps) {
   const params = useParams({
     strict: false,
@@ -6400,10 +7576,57 @@ function ColumnsSpreadsheet({
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const location = useLocation()
+  const search = useSearch({ strict: false }) as { query?: string } | undefined
+  const columnsFilterMapFromUrl = useMemo(
+    () => queryParamToMap(search?.query ?? null),
+    [search?.query],
+  )
+  const columnsFilterMap = filterMapProp ?? columnsFilterMapFromUrl
+  const columnsFilterQueries =
+    columnsFilterMap.size > 0 ? Array.from(columnsFilterMap.values()) : undefined
 
-  // Fetch columns from the project SDK
-  const { columns: apiColumns, isLoading: columnsLoading } =
-    useProjectTableColumns(projectId, databaseId, tableId)
+  const columnsListParams = useMemo(() => {
+    const url = new URL(
+      location.pathname + location.search,
+      window.location.origin,
+    )
+    return {
+      page: getPage(url, 1),
+      limit: getLimit(url, COLUMNS_INDEXES_DEFAULT_PAGE_SIZE),
+    }
+  }, [location.pathname, location.search])
+  const columnsPage = columnsListParams.page
+  const columnsLimit = columnsListParams.limit
+  const columnsPageIndexed = Math.max(0, columnsPage - 1)
+
+  // Fetch columns from the project SDK (listColumns with optional filter queries, ordered by $createdAt asc, paginated)
+  const {
+    columns: apiColumns,
+    total: columnsTotal,
+    isLoading: columnsLoading,
+    isFetching: columnsFetching,
+  } = useProjectTableColumns(
+    projectId,
+    databaseId,
+    tableId,
+    columnsFilterQueries,
+    columnsPageIndexed,
+    columnsLimit,
+  )
+
+  const navigateColumnsList = (updates: { page?: number; limit?: number }) => {
+    navigate({
+      search: (prev: Record<string, unknown>) => {
+        const next = {
+          ...(typeof prev === 'object' && prev !== null ? prev : {}),
+          ...(updates.page != null && { page: updates.page }),
+          ...(updates.limit != null && { limit: updates.limit }),
+        }
+        return next
+      },
+      replace: true,
+    })
+  }
 
   // Fetch full table for row size metadata (bytesUsed, bytesMax) when creating varchar columns
   const { table: fullTable } = useProjectTable(projectId, databaseId, tableId)
@@ -6589,7 +7812,12 @@ function ColumnsSpreadsheet({
           suggestionType === 'string' || suggestionType === 'varchar'
             ? suggestion.size
             : undefined,
-        encrypt: suggestionType === 'string' ? suggestion.encrypt : undefined,
+        encrypt:
+          ['string', 'text', 'mediumtext', 'longtext', 'varchar'].includes(
+            suggestionType,
+          )
+            ? suggestion.encrypt
+            : undefined,
         min: suggestion.min,
         max: suggestion.max,
         elements: suggestion.elements,
@@ -6695,7 +7923,18 @@ function ColumnsSpreadsheet({
     }
   }
 
-  // Map API columns to the format expected by the component
+  const clearAllColumnsFilters = () => {
+    navigate({
+      to: location.pathname,
+      search: (prev) => ({
+        ...(typeof prev === 'object' && prev !== null ? prev : {}),
+        query: undefined,
+      }),
+      replace: true,
+    })
+  }
+
+  // Map API columns to the format expected by the component (use filtered list for display)
   const columns = apiColumns.map((col: unknown) => ({
     key: col.key || col.name || col.$id,
     type: col.type || 'string',
@@ -6722,7 +7961,7 @@ function ColumnsSpreadsheet({
     $id: col.$id,
   }))
 
-  // Generate mock columns based on table (fallback if no API columns)
+  // Local fallback only when API returns no columns (e.g. new table). Not fetched; not filtered.
   const generateMockColumns = () => {
     const baseColumns = [
       {
@@ -7185,15 +8424,35 @@ function ColumnsSpreadsheet({
     return [...baseColumns, ...(tableColumns[table.name] || [])]
   }
 
-  // Always include mock columns alongside API columns
+  // When no filters: show built-in columns then API columns. When filters applied: show only API result.
   const mockColumns = generateMockColumns()
   const displayColumns =
-    columns.length > 0 ? [...mockColumns, ...columns] : mockColumns
+    columnsFilterMap.size > 0
+      ? columns.length > 0
+        ? columns
+        : mockColumns
+      : columns.length > 0
+        ? [...mockColumns, ...columns]
+        : mockColumns
+
+  // Keep showing previous results while fetching new filter results (no empty state flash)
+  const lastDisplayColumnsRef = useRef<typeof displayColumns>([])
+  useEffect(() => {
+    if (!columnsFetching && displayColumns.length > 0) {
+      lastDisplayColumnsRef.current = displayColumns
+    }
+  }, [columnsFetching, displayColumns])
+  const columnsToShow =
+    columnsFilterMap.size > 0 &&
+    columnsFetching &&
+    lastDisplayColumnsRef.current.length > 0
+      ? lastDisplayColumnsRef.current
+      : displayColumns
 
   // Combine regular columns with suggestions
-  const allColumns = [...displayColumns, ...suggestedColumns]
+  const allColumns = [...columnsToShow, ...suggestedColumns]
 
-  if (columnsLoading) {
+  if (columnsLoading && lastDisplayColumnsRef.current.length === 0) {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="text-muted-foreground">Loading columns...</div>
@@ -7203,6 +8462,29 @@ function ColumnsSpreadsheet({
 
   return (
     <div className="flex h-full flex-col relative">
+      {!columnsFetching &&
+      apiColumns.length === 0 &&
+      columnsFilterMap.size > 0 ? (
+        <div className="flex flex-1 items-center justify-center py-12">
+          <div className="text-center">
+            <p className="text-[14px] font-medium text-foreground">
+              No columns match your filters
+            </p>
+            <p className="text-[13px] text-muted-foreground mt-1">
+              Try adjusting or clearing filters to see more results
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-4"
+              onClick={clearAllColumnsFilters}
+            >
+              Clear filters
+            </Button>
+          </div>
+        </div>
+      ) : (
+      <>
       <div
         className={cn(
           'flex-1 overflow-auto overscroll-contain',
@@ -7264,6 +8546,16 @@ function ColumnsSpreadsheet({
               </th>
               <th
                 className={cn(
+                  'min-w-[80px] px-3 py-2 text-left',
+                  headerCellBorderClass,
+                )}
+              >
+                <span className="text-[12px] font-medium text-foreground">
+                  Encrypted
+                </span>
+              </th>
+              <th
+                className={cn(
                   'min-w-[120px] px-3 py-2 text-left',
                   headerCellBorderClass,
                 )}
@@ -7272,7 +8564,13 @@ function ColumnsSpreadsheet({
                   Default
                 </span>
               </th>
-              <th className="w-10 px-2 py-2"></th>
+              <th
+                className={cn(
+                  'w-10 px-2 py-2 bg-background',
+                  'shadow-[inset_0_1px_0_0_#d1d5db,inset_0_-1px_0_0_#d1d5db]',
+                  'dark:shadow-[inset_0_1px_0_0_rgb(255_255_255_/_0.1),inset_0_-1px_0_0_rgb(255_255_255_/_0.1)]',
+                )}
+              />
             </tr>
           </thead>
           <tbody>
@@ -7293,7 +8591,7 @@ function ColumnsSpreadsheet({
                   <td className={cn('px-3 py-2', bodyCellBorderClass)}>
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
-                        <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+                        <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                         <code
                           className={cn(
                             'font-mono text-[12px]',
@@ -7304,6 +8602,25 @@ function ColumnsSpreadsheet({
                         >
                           {col.key || 'unnamed'}
                         </code>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                const name = col.key || 'unnamed'
+                                navigator.clipboard.writeText(name)
+                                toast.success('Column name copied')
+                              }}
+                              className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover:opacity-100"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top">
+                            <p>Copy column name</p>
+                          </TooltipContent>
+                        </Tooltip>
                         {isSuggestion && (
                           <span className="inline-flex items-center rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400">
                             Suggested
@@ -7376,6 +8693,15 @@ function ColumnsSpreadsheet({
                     )}
                   </td>
                   <td className={cn('px-3 py-2', bodyCellBorderClass)}>
+                    {col.encrypt ? (
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    ) : (
+                      <span className="text-[12px] text-muted-foreground">
+                        —
+                      </span>
+                    )}
+                  </td>
+                  <td className={cn('px-3 py-2', bodyCellBorderClass)}>
                     <code className="font-mono text-[11px] text-muted-foreground">
                       {col.default ?? 'NULL'}
                     </code>
@@ -7411,29 +8737,32 @@ function ColumnsSpreadsheet({
         </table>
       </div>
 
-      {/* Footer */}
-      <div className="flex items-center justify-between border-t border-border px-4 py-2 text-[12px] text-muted-foreground">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleCreateColumn}
-            className="flex items-center gap-1.5 hover:text-foreground transition-colors"
-          >
-            <Plus className="h-3.5 w-3.5 cursor-pointer" />
-            <span>Create column</span>
-          </button>
-        </div>
-        <div className="flex items-center gap-4">
+      {/* Sticky Pagination Footer */}
+      <div className="shrink-0 bg-background border-t border-border">
+        <div className="@container flex items-center justify-between gap-4 px-4">
+          <div className="flex-1 min-w-0">
+            <Pagination
+              currentPage={columnsPage}
+              totalItems={columnsTotal ?? 0}
+              pageSize={columnsLimit}
+              pageSizeOptions={[10, 25, 50, 100]}
+              onPageChange={(page) => navigateColumnsList({ page })}
+              onPageSizeChange={(newLimit) =>
+                navigateColumnsList({ page: 1, limit: newLimit })
+              }
+              itemLabel="columns"
+            />
+          </div>
           {suggestedColumns.length > 0 && (
-            <span className="text-amber-600 dark:text-amber-400">
+            <div className="flex-shrink-0 text-[12px] text-amber-600 dark:text-amber-400">
               {suggestedColumns.length} suggestion
               {suggestedColumns.length !== 1 ? 's' : ''}
-            </span>
+            </div>
           )}
-          <span>
-            {columns.length} column{columns.length !== 1 ? 's' : ''}
-          </span>
         </div>
       </div>
+      </>
+      )}
 
       {/* Bulk Action Bar for Suggestions */}
       {suggestedColumns.length > 0 && (
@@ -7486,7 +8815,9 @@ function ColumnsSpreadsheet({
           $id: t.$id,
           name: t.name,
         }))}
-        existingColumns={columns.map((c: { key: string }) => ({ key: c.key }))}
+        existingColumns={apiColumns.map((c: unknown) => ({
+          key: (c as { key?: string }).key || (c as { name?: string }).name || (c as { $id?: string }).$id,
+        }))}
         isLoading={
           createColumnMutation.isPending || updateColumnMutation.isPending
         }
@@ -7618,6 +8949,8 @@ function IndexesSpreadsheet({
   table,
   onCreateReady,
   onSuggestReady,
+  canWriteTables = true,
+  filterMap: filterMapProp,
 }: SpreadsheetProps) {
   const params = useParams({
     strict: false,
@@ -7625,6 +8958,30 @@ function IndexesSpreadsheet({
   const projectId = params.projectId as string
   const databaseId = params.databaseId as string
   const tableId = table.$id
+  const navigate = useNavigate()
+  const location = useLocation()
+  const search = useSearch({ strict: false }) as { query?: string } | undefined
+  const indexesFilterMapFromUrl = useMemo(
+    () => queryParamToMap(search?.query ?? null),
+    [search?.query],
+  )
+  const indexesFilterMap = filterMapProp ?? indexesFilterMapFromUrl
+  const indexesFilterQueries =
+    indexesFilterMap.size > 0 ? Array.from(indexesFilterMap.values()) : undefined
+
+  const indexesListParams = useMemo(() => {
+    const url = new URL(
+      location.pathname + location.search,
+      window.location.origin,
+    )
+    return {
+      page: getPage(url, 1),
+      limit: getLimit(url, COLUMNS_INDEXES_DEFAULT_PAGE_SIZE),
+    }
+  }, [location.pathname, location.search])
+  const indexesPage = indexesListParams.page
+  const indexesLimit = indexesListParams.limit
+  const indexesPageIndexed = Math.max(0, indexesPage - 1)
 
   const [indexDialogOpen, setIndexDialogOpen] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState<unknown>(null)
@@ -7636,14 +8993,35 @@ function IndexesSpreadsheet({
 
   const queryClient = useQueryClient()
 
-  // Fetch indexes from the project SDK
-  const { indexes: apiIndexes } = useProjectTableIndexes(
+  // Fetch indexes from the project SDK (listIndexes with optional filter queries, ordered by $createdAt asc, paginated)
+  const {
+    indexes: apiIndexes,
+    total: indexesTotal,
+    isFetching: indexesFetching,
+  } = useProjectTableIndexes(
     projectId,
     databaseId,
     tableId,
+    indexesFilterQueries,
+    indexesPageIndexed,
+    indexesLimit,
   )
 
-  // Fetch columns for index creation
+  const navigateIndexesList = (updates: { page?: number; limit?: number }) => {
+    navigate({
+      search: (prev: Record<string, unknown>) => {
+        const next = {
+          ...(typeof prev === 'object' && prev !== null ? prev : {}),
+          ...(updates.page != null && { page: updates.page }),
+          ...(updates.limit != null && { limit: updates.limit }),
+        }
+        return next
+      },
+      replace: true,
+    })
+  }
+
+  // Fetch columns for index creation (first page, default limit)
   const { columns: availableColumns } = useProjectTableColumns(
     projectId,
     databaseId,
@@ -7915,6 +9293,17 @@ function IndexesSpreadsheet({
     }
   }, [onSuggestReady])
 
+  const clearAllIndexesFilters = () => {
+    navigate({
+      to: location.pathname,
+      search: (prev) => ({
+        ...(typeof prev === 'object' && prev !== null ? prev : {}),
+        query: undefined,
+      }),
+      replace: true,
+    })
+  }
+
   // Map API indexes to ensure all fields are present
   const mappedIndexes = apiIndexes.map((idx: unknown) => ({
     key: idx.key,
@@ -7926,7 +9315,7 @@ function IndexesSpreadsheet({
     $id: idx.$id,
   }))
 
-  // Always include mock indexes alongside mapped indexes
+  // Use API indexes only when present; mock indexes only as empty-state fallback (so filters apply to the list)
   const mockIndexes = [
     {
       key: '_key_$id',
@@ -7998,14 +9387,58 @@ function IndexesSpreadsheet({
       : []),
   ]
 
+  // When no filters: show built-in indexes then API indexes. When filters applied: show only API result.
   const displayIndexes =
-    mappedIndexes.length > 0 ? [...mockIndexes, ...mappedIndexes] : mockIndexes
+    indexesFilterMap.size > 0
+      ? mappedIndexes.length > 0
+        ? mappedIndexes
+        : mockIndexes
+      : mappedIndexes.length > 0
+        ? [...mockIndexes, ...mappedIndexes]
+        : mockIndexes
+
+  // Keep showing previous results while fetching new filter results (no empty state flash)
+  const lastDisplayIndexesRef = useRef<typeof displayIndexes>([])
+  useEffect(() => {
+    if (!indexesFetching && displayIndexes.length > 0) {
+      lastDisplayIndexesRef.current = displayIndexes
+    }
+  }, [indexesFetching, displayIndexes])
+  const indexesToShow =
+    indexesFilterMap.size > 0 &&
+    indexesFetching &&
+    lastDisplayIndexesRef.current.length > 0
+      ? lastDisplayIndexesRef.current
+      : displayIndexes
 
   // Combine regular indexes with suggestions
-  const allIndexes = [...displayIndexes, ...suggestedIndexes]
+  const allIndexes = [...indexesToShow, ...suggestedIndexes]
 
   return (
     <div className="flex h-full flex-col relative">
+      {!indexesFetching &&
+      apiIndexes.length === 0 &&
+      indexesFilterMap.size > 0 ? (
+        <div className="flex flex-1 items-center justify-center py-12">
+          <div className="text-center">
+            <p className="text-[14px] font-medium text-foreground">
+              No indexes match your filters
+            </p>
+            <p className="text-[13px] text-muted-foreground mt-1">
+              Try adjusting or clearing filters to see more results
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-4"
+              onClick={clearAllIndexesFilters}
+            >
+              Clear filters
+            </Button>
+          </div>
+        </div>
+      ) : (
+      <>
       <div
         className={cn(
           'flex-1 overflow-y-auto overscroll-contain',
@@ -8055,7 +9488,13 @@ function IndexesSpreadsheet({
                   Status
                 </span>
               </th>
-              <th className="w-10 px-2 py-2"></th>
+              <th
+                className={cn(
+                  'w-10 px-2 py-2 bg-background',
+                  'shadow-[inset_0_1px_0_0_#d1d5db,inset_0_-1px_0_0_#d1d5db]',
+                  'dark:shadow-[inset_0_1px_0_0_rgb(255_255_255_/_0.1),inset_0_-1px_0_0_rgb(255_255_255_/_0.1)]',
+                )}
+              />
             </tr>
           </thead>
           <tbody>
@@ -8203,30 +9642,32 @@ function IndexesSpreadsheet({
         </table>
       </div>
 
-      {/* Footer */}
-      <div className="flex items-center justify-between border-t border-border px-4 py-2 text-[12px] text-muted-foreground">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleCreateIndex}
-            className="flex items-center gap-1.5 hover:text-foreground transition-colors"
-          >
-            <Plus className="h-3.5 w-3.5 cursor-pointer" />
-            <span>Create index</span>
-          </button>
-        </div>
-        <div className="flex items-center gap-2">
+      {/* Sticky Pagination Footer */}
+      <div className="shrink-0 bg-background border-t border-border">
+        <div className="@container flex items-center justify-between gap-4 px-4">
+          <div className="flex-1 min-w-0">
+            <Pagination
+              currentPage={indexesPage}
+              totalItems={indexesTotal ?? 0}
+              pageSize={indexesLimit}
+              pageSizeOptions={[10, 25, 50, 100]}
+              onPageChange={(page) => navigateIndexesList({ page })}
+              onPageSizeChange={(newLimit) =>
+                navigateIndexesList({ page: 1, limit: newLimit })
+              }
+              itemLabel="indexes"
+            />
+          </div>
           {suggestedIndexes.length > 0 && (
-            <span className="text-amber-600 dark:text-amber-400">
+            <div className="flex-shrink-0 text-[12px] text-amber-600 dark:text-amber-400">
               {suggestedIndexes.length} suggestion
               {suggestedIndexes.length !== 1 ? 's' : ''}
-            </span>
+            </div>
           )}
-          <span>
-            {displayIndexes.length} index
-            {displayIndexes.length !== 1 ? 'es' : ''}
-          </span>
         </div>
       </div>
+      </>
+      )}
 
       {/* Index Form Dialog */}
       <IndexDrawer
@@ -8240,7 +9681,7 @@ function IndexesSpreadsheet({
         onSubmit={handleIndexSubmitWrapper}
         index={selectedIndex}
         availableColumns={availableColumns}
-        existingIndexes={displayIndexes.map((i: { key: string }) => ({
+        existingIndexes={indexesToShow.map((i: { key: string }) => ({
           key: i.key,
         }))}
         isLoading={createIndexMutation.isPending}

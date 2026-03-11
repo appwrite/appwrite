@@ -3,9 +3,16 @@ import { Plug2 } from 'lucide-react'
 import { useParams } from '@tanstack/react-router'
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { ConnectProject } from '../shared/ConnectProject'
+import { PlatformDrawer } from './_components/PlatformDrawer'
 import { PlatformIcon } from '@/components/global/shared/Icon'
 import { EmptyState } from '@/components/global/shared/EmptyState'
-import { usePlatforms } from '@/lib/react-query/hooks'
+import {
+  usePlatforms,
+  useProject,
+  useOrganizationScopes,
+} from '@/lib/react-query/hooks'
+import { canCreatePlatform } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { getPlatformDisplayName } from '@/lib/utils/platform'
 import type { Models } from '@appwrite.io/console'
 
@@ -45,6 +52,10 @@ export function View({ initialData }: ViewProps = {}) {
   const [searchValue, setSearchValue] = useState('')
   const [connectDialogOpen, setConnectDialogOpen] = useState(false)
   const [connectInitialSdk, setConnectInitialSdk] = useState('web')
+  const [platformDrawerOpen, setPlatformDrawerOpen] = useState(false)
+  const [selectedPlatform, setSelectedPlatform] = useState<Models.Platform | null>(
+    null,
+  )
 
   // Use initialData on first paint so no loading skeleton flash
   const { platforms: platformsFromHook, isLoading } = usePlatforms(projectId)
@@ -53,6 +64,11 @@ export function View({ initialData }: ViewProps = {}) {
     ? platformsFromHook
     : (initialData?.platforms ?? [])
   const showLoading = isLoading && platforms.length === 0 && !initialData
+
+  const { project } = useProject(projectId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
+  const noCreatePermission = !canCreatePlatform(access, features)
 
   const filteredPlatforms = useMemo(() => {
     if (!searchValue.trim()) return platforms
@@ -73,6 +89,11 @@ export function View({ initialData }: ViewProps = {}) {
     setConnectDialogOpen(true)
   }
 
+  const handlePlatformClick = (platform: Models.Platform) => {
+    setSelectedPlatform(platform)
+    setPlatformDrawerOpen(true)
+  }
+
   return (
     <div className="flex flex-col">
       <ServiceHeader
@@ -82,6 +103,12 @@ export function View({ initialData }: ViewProps = {}) {
         onSearchChange={setSearchValue}
         createLabel="Add app"
         onCreate={handleAddApp}
+        createDisabled={noCreatePermission}
+        createDisabledTooltip={
+          noCreatePermission
+            ? "You don't have permission to add apps."
+            : undefined
+        }
         showFilters={false}
         fullWidthBorder
       />
@@ -169,7 +196,8 @@ export function View({ initialData }: ViewProps = {}) {
                 <button
                   key={platform.$id}
                   type="button"
-                  className="group flex items-center gap-4 rounded-xl border border-border bg-card/50 p-4 text-left transition-colors hover:border-border hover:bg-card"
+                  onClick={() => handlePlatformClick(platform)}
+                  className="group flex cursor-pointer items-center gap-4 rounded-xl border border-border bg-card/50 p-4 text-left transition-colors hover:border-border hover:bg-card"
                 >
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground transition-colors group-hover:bg-accent group-hover:text-foreground">
                     <PlatformIcon
@@ -200,6 +228,16 @@ export function View({ initialData }: ViewProps = {}) {
         onOpenChange={setConnectDialogOpen}
         projectId={projectId ?? ''}
         initialSdk={connectInitialSdk}
+      />
+
+      <PlatformDrawer
+        open={platformDrawerOpen}
+        onOpenChange={(open) => {
+          setPlatformDrawerOpen(open)
+          if (!open) setSelectedPlatform(null)
+        }}
+        projectId={projectId ?? ''}
+        platform={selectedPlatform}
       />
     </div>
   )

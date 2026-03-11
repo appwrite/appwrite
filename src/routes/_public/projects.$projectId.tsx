@@ -10,8 +10,10 @@ import { GlobalUploadProgress } from '@/components/global/shared/GlobalUploadPro
 import {
   fetchProject,
   organizationPlanQueryOptions,
+  organizationScopesQueryOptions,
   useProject,
 } from '@/lib/react-query/hooks'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { consoleVariablesQueryOptions } from '@/lib/react-query/hooks/console-variables'
 import { ErrorComponent } from '@/components/error/Component'
 
@@ -43,6 +45,13 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
             .catch(() => {
               // Ignore errors for optional prefetch - plan might not be available
             })
+          if (getActiveProfileFeatures().orgRoles) {
+            await queryClient
+              .ensureQueryData(
+                organizationScopesQueryOptions(projectData.teamId),
+              )
+              .catch(() => {})
+          }
         }
 
         // Prefetch console variables (CNAME, A, AAAA, nameservers, CAA) for domain verification.

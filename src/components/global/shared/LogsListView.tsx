@@ -2,6 +2,7 @@ import { useState, useLayoutEffect, useRef } from 'react'
 import { useNavigate, useLocation } from '@tanstack/react-router'
 import { Zap, Clock, Copy, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
@@ -69,7 +70,13 @@ interface LogsListViewProps {
   func?: Models.Function | null
   emptyStateTitle?: string
   emptyStateDescription?: string
+  /** Optional action (e.g. "Clear filters" button) shown below empty state description */
+  emptyStateAction?: React.ReactNode
+  /** When true, use filter-empty messaging (defaults from EmptyState) */
+  hasFilters?: boolean
   itemLabel?: string
+  /** When true, do not show full loading state (parent is showing previous data while refetching) */
+  isFetching?: boolean
 }
 
 export function LogsListView({
@@ -86,7 +93,10 @@ export function LogsListView({
   func = null,
   emptyStateTitle = 'No executions yet',
   emptyStateDescription = 'Executions will appear here when your function runs.',
+  emptyStateAction,
+  hasFilters = false,
   itemLabel = 'executions',
+  isFetching = false,
 }: LogsListViewProps) {
   const navigate = useNavigate()
   const location = useLocation()
@@ -145,8 +155,8 @@ export function LogsListView({
     }
   }
 
-  // Only show full loading state on initial load when there's no data
-  if (isLoading && executions.length === 0) {
+  // Only show full loading state on initial load when there's no data (not while refetching filters)
+  if (isLoading && executions.length === 0 && !isFetching) {
     return (
       <div className="flex-1">
         <div className="flex h-full items-center justify-center py-16">
@@ -371,18 +381,19 @@ export function LogsListView({
           </div>
         </>
       ) : (
-        <div className="flex h-full items-center justify-center py-16">
-          <div className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-              <Zap className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <p className="mb-1 text-[14px] font-medium text-foreground">
-              {emptyStateTitle}
-            </p>
-            <p className="text-[13px] text-muted-foreground">
-              {emptyStateDescription}
-            </p>
-          </div>
+        <div className="flex h-full flex-col items-center justify-center py-16">
+          <EmptyState
+            icon={Zap}
+            title={emptyStateTitle}
+            description={emptyStateDescription}
+            isEmpty={!hasFilters}
+            hasFilters={hasFilters}
+            variant="centered"
+            iconSize="md"
+          />
+          {emptyStateAction && (
+            <div className="mt-4 flex justify-center">{emptyStateAction}</div>
+          )}
         </div>
       )}
 

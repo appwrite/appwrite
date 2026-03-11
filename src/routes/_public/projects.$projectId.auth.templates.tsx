@@ -1,6 +1,7 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/auth/View'
 import { fetchEmailTemplate, fetchLocaleCodes } from '@/lib/react-query/hooks'
+import { canAccessAuthSecuritySettings } from '@/lib/console-rbac-loader'
 import { EmailTemplateType, EmailTemplateLocale } from '@appwrite.io/console'
 import { pageTitle } from '@/lib/utils/page-title'
 
@@ -29,6 +30,17 @@ export const Route = createFileRoute(
     const { queryClient } = context
 
     if (projectId) {
+      const canAccess = await canAccessAuthSecuritySettings(
+        queryClient,
+        projectId,
+      )
+      if (!canAccess) {
+        throw redirect({
+          to: '/projects/$projectId/auth',
+          params: { projectId },
+          replace: true,
+        })
+      }
       // Fetch critical data before rendering to prevent layout shifts
       await Promise.all([
         // Fetch locale codes - blocks navigation until ready

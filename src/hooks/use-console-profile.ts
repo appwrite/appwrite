@@ -10,13 +10,17 @@ import {
 
 /**
  * Hook to access the current console profile and feature flags.
- * Re-renders when the profile changes (e.g. via debug menu override).
+ * Re-renders when the profile or any feature override changes (e.g. via debug menu).
  */
 export function useConsoleProfile() {
   const [profileId, setProfileId] = useState<ConsoleProfileId>(getActiveProfileId)
+  const [, setProfileVersion] = useState(0)
 
   useEffect(() => {
-    return subscribeToProfileChange(setProfileId)
+    return subscribeToProfileChange(() => {
+      setProfileId(getActiveProfileId())
+      setProfileVersion((v) => v + 1)
+    })
   }, [])
 
   const profile = getActiveProfile()

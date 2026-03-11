@@ -28,7 +28,8 @@ import { useAuth } from '@/components/global/auth/RequireAuth'
 import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/ProjectSelector'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { useNavigate } from '@tanstack/react-router'
-import { useProject } from '@/lib/react-query/hooks'
+import { useProject, useOrganizationScopes } from '@/lib/react-query/hooks'
+import { canShowConnectSection } from '@/lib/console-access-checks'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,6 +52,7 @@ import { useAIChat } from '@/components/global/providers/AIChat'
 import { Button } from '@/components/ui/button'
 import { useOrganizationPlan } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useDebugOverrides } from '@/lib/debug-overrides'
 
 interface ConsoleHeaderProps {
   onMenuClick?: () => void
@@ -86,14 +88,20 @@ export function ConsoleHeader({
 
   // Fetch current project to get teamId when in project context
   const { project } = useProject(projectId)
+  const { features } = useConsoleProfile()
+  const overrides = useDebugOverrides()
+  const { access } = useOrganizationScopes(project?.teamId)
+  const showAIAssistant = overrides.showAIAssistant
+  const showConnectAndCreate = canShowConnectSection(access, features)
 
-  // Get organization ID for upgrade button
-  const orgId =
-    project?.teamId || (account?.prefs?.organization as string | undefined)
+  // Get organization ID for upgrade button. When on a project page, use only the
+  // project's org so we don't fetch plan for a different org (e.g. account prefs).
+  const orgId = projectId
+    ? (project?.teamId ?? undefined)
+    : (account?.prefs?.organization as string | undefined)
 
   // Fetch organization plan to check if upgrade button should be shown
   const { plan: organizationPlan } = useOrganizationPlan(orgId)
-  const { features } = useConsoleProfile()
 
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text)
@@ -199,34 +207,25 @@ export function ConsoleHeader({
           {/* Project Selector - only show when in project context */}
           {!isOrgOverview && (
             <>
-              <div className="hidden w-2 shrink-0 lg:block" />
               {/* Project Selector */}
               <div className="hidden min-w-0 @[700px]:block">
                 <ProjectSelector projectId={projectId} />
               </div>
 
-              {/* Connect button - show when project has never received a ping */}
-              {project &&
+              {/* Connect button - only owners/developers; show when project has never received a ping */}
+              {showConnectAndCreate &&
+                project &&
                 (project.pingCount === 0 || !project.pingedAt) &&
                 projectId && (
                   <>
-                    <TooltipProvider delayDuration={0}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            type="button"
-                            className="flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer hidden @[700px]:flex text-[13px]"
-                            onClick={() => setConnectDialogOpen(true)}
-                          >
-                            <Plug2 className="h-4 w-4" />
-                            Connect
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom">
-                          <p>Connect your app to this project</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    <button
+                      type="button"
+                      className="flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer hidden @[700px]:flex text-[13px]"
+                      onClick={() => setConnectDialogOpen(true)}
+                    >
+                      <Plug2 className="h-4 w-4" />
+                      Connect
+                    </button>
                     <ConnectProject
                       open={connectDialogOpen}
                       onOpenChange={setConnectDialogOpen}
@@ -235,9 +234,10 @@ export function ConsoleHeader({
                   </>
                 )}
 
-              {/* Create Button */}
-              <div className="hidden @[700px]:block shrink-0">
-                <DropdownMenu>
+              {/* Create Button - only owners and developers */}
+              {showConnectAndCreate && (
+                <div className="hidden @[700px]:block shrink-0">
+                  <DropdownMenu>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <DropdownMenuTrigger asChild>
@@ -409,6 +409,7 @@ export function ConsoleHeader({
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
+              )}
             </>
           )}
         </div>
@@ -451,16 +452,11 @@ export function ConsoleHeader({
 
           {/* Support - hidden on small containers */}
           <div className="hidden @[900px]:flex shrink-0">
-            <SupportPopover
-              orgId={
-                project?.teamId ||
-                (account?.prefs?.organization as string | undefined)
-              }
-            />
+            <SupportPopover orgId={orgId} />
           </div>
 
-          {/* Help/Assistant - hidden on small containers, cloud only */}
-          {features.aiAssistant && (
+          {/* Help/Assistant - hidden on small containers; enabled by profile or experimental override */}
+          {showAIAssistant && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <button

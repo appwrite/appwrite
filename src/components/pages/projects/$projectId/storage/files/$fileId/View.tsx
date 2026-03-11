@@ -3,7 +3,15 @@ import { useParams, useNavigate, useLocation } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
-import { useFile, useBucket, Dependencies } from '@/lib/react-query/hooks'
+import {
+  useFile,
+  useBucket,
+  useProject,
+  useOrganizationScopes,
+  Dependencies,
+} from '@/lib/react-query/hooks'
+import { canShowBucketSecuritySettings } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -51,6 +59,10 @@ export function View() {
 
   // Fetch bucket data to check file level security
   const { data: bucket } = useBucket(projectId, bucketId)
+  const { project } = useProject(projectId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
+  const showSecurityTab = canShowBucketSecuritySettings(access, features)
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
@@ -78,8 +90,8 @@ export function View() {
     return 'overview'
   }, [location.pathname, fileId])
 
-  const tabs: Tab[] = useMemo(
-    () => [
+  const tabs: Tab[] = useMemo(() => {
+    const base: Tab[] = [
       {
         id: 'overview',
         label: 'Overview',
@@ -90,19 +102,35 @@ export function View() {
           fileId: fileId as string,
         },
       },
-      {
-        id: 'security',
-        label: 'Security',
-        to: '/projects/$projectId/storage/$bucketId/files/$fileId/security',
-        params: {
-          projectId: projectId as string,
-          bucketId: bucketId as string,
-          fileId: fileId as string,
-        },
-      },
-    ],
-    [projectId, bucketId, fileId],
-  )
+      ...(showSecurityTab
+        ? [
+            {
+              id: 'security' as const,
+              label: 'Security',
+              to: '/projects/$projectId/storage/$bucketId/files/$fileId/security',
+              params: {
+                projectId: projectId as string,
+                bucketId: bucketId as string,
+                fileId: fileId as string,
+              },
+            },
+          ]
+        : []),
+    ]
+    return base
+  }, [projectId, bucketId, fileId, showSecurityTab])
+
+  // Redirect from security when user lacks permission
+  useEffect(() => {
+    if (showSecurityTab || !projectId || !bucketId || !fileId) return
+    if (activeTab === 'security') {
+      navigate({
+        to: '/projects/$projectId/storage/$bucketId/files/$fileId',
+        params: { projectId, bucketId, fileId },
+        replace: true,
+      })
+    }
+  }, [showSecurityTab, activeTab, projectId, bucketId, fileId, navigate])
 
   // Delete file mutation
   const deleteFileMutation = useMutation({

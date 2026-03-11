@@ -50,8 +50,12 @@ interface ServiceHeaderProps {
   createTo?: string
   createParams?: Record<string, string>
   createDisabled?: boolean
+  /** Tooltip when create is disabled (e.g. plan limit or missing permission) */
+  createDisabledTooltip?: string
   showFilters?: boolean
   onFilterClick?: () => void
+  /** When provided, renders this instead of the default Filters button (e.g. a Popover trigger + content) */
+  filterTrigger?: React.ReactNode
   /** When true, the tabs border extends full-width while tabs content stays constrained */
   fullWidthBorder?: boolean
   /** When true, removes max-width constraints to allow full-width layout */
@@ -104,8 +108,10 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
       createTo,
       createParams,
       createDisabled = false,
+      createDisabledTooltip,
       showFilters = false,
       onFilterClick,
+      filterTrigger,
       fullWidthBorder = false,
       fullWidth = false,
       rightContent,
@@ -348,14 +354,14 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
         {hasToolbar && (
           <div
             className={cn(
-              'flex items-center gap-3 px-4 py-4 sm:px-6',
+              'flex min-w-0 flex-nowrap items-center gap-3 px-4 py-4 sm:px-6',
               fullWidthBorder && !fullWidth && 'mx-auto w-full max-w-7xl',
               isCollapsed && 'border-b border-border',
             )}
           >
             {/* Search */}
             {onSearchChange && (
-              <div className="relative w-64">
+              <div className="relative w-64 shrink-0">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <input
                   ref={searchInputRef}
@@ -369,17 +375,18 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
             )}
 
             {/* Filters */}
-            {showFilters && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onFilterClick}
-                className="h-9 gap-2 border-border bg-transparent text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground"
-              >
-                <Filter className="h-3.5 w-3.5" />
-                Filters
-              </Button>
-            )}
+            {showFilters &&
+              (filterTrigger ?? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onFilterClick}
+                  className="h-9 gap-2 border-border bg-transparent text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground"
+                >
+                  <Filter className="h-3.5 w-3.5" />
+                  Filters
+                </Button>
+              ))}
 
             {/* Right Content (e.g., view toggle) */}
             {rightContent}
@@ -458,53 +465,68 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
 
               {/* Create Button */}
               {createLabel && (onCreate || (createTo && createParams)) && (
-                <TooltipProvider delayDuration={0}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div>
-                        {createTo && createParams ? (
-                          <Link
-                            to={createTo as unknown}
-                            params={createParams}
-                            className={cn(
-                              'inline-flex h-9 items-center justify-center gap-2 rounded-md px-4 text-[13px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed',
-                              createDisabled && 'pointer-events-none opacity-50',
+                <>
+                  {createDisabled ? (
+                    <TooltipProvider delayDuration={0}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div>
+                            {createTo && createParams ? (
+                              <span
+                                className="inline-flex h-9 cursor-not-allowed items-center justify-center gap-2 rounded-md px-4 text-[13px] font-medium text-white opacity-50"
+                                style={{ backgroundColor: '#f02e65' }}
+                              >
+                                <Plus className="h-4 w-4" />
+                                {createLabel}
+                              </span>
+                            ) : (
+                              <Button
+                                size="sm"
+                                onClick={onCreate}
+                                disabled
+                                className="h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                                style={{ backgroundColor: '#f02e65' }}
+                              >
+                                <Plus className="h-4 w-4" />
+                                {createLabel}
+                              </Button>
                             )}
-                            style={{
-                              backgroundColor: createDisabled
-                                ? undefined
-                                : '#f02e65',
-                            }}
-                          >
-                            <Plus className="h-4 w-4" />
-                            {createLabel}
-                          </Link>
-                        ) : (
-                          <Button
-                            size="sm"
-                            onClick={onCreate}
-                            disabled={createDisabled}
-                            className="h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                            style={{ backgroundColor: '#f02e65' }}
-                          >
-                            <Plus className="h-4 w-4" />
-                            {createLabel}
-                          </Button>
-                        )}
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      {createDisabled ? (
-                        <p>
-                          You've reached the limit for this resource on your
-                          plan
-                        </p>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                          <p>
+                            {createDisabledTooltip ??
+                              "You've reached the limit for this resource on your plan"}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ) : (
+                    <>
+                      {createTo && createParams ? (
+                        <Link
+                          to={createTo as unknown}
+                          params={createParams}
+                          className="inline-flex h-9 items-center justify-center gap-2 rounded-md px-4 text-[13px] font-medium text-white transition-opacity hover:opacity-90"
+                          style={{ backgroundColor: '#f02e65' }}
+                        >
+                          <Plus className="h-4 w-4" />
+                          {createLabel}
+                        </Link>
                       ) : (
-                        createLabel
+                        <Button
+                          size="sm"
+                          onClick={onCreate}
+                          className="h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                          style={{ backgroundColor: '#f02e65' }}
+                        >
+                          <Plus className="h-4 w-4" />
+                          {createLabel}
+                        </Button>
                       )}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                    </>
+                  )}
+                </>
               )}
 
               {/* Collapse Toggle Button */}

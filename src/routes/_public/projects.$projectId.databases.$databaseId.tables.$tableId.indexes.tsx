@@ -1,6 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { TableView } from '@/components/pages/projects/$projectId/databases/View'
 import {
+  getLimit,
+  getPage,
+  getQueryParam,
+  listSearchSchema,
+  queryParamToMap,
+} from '@/lib/table-filters'
+import {
+  COLUMNS_INDEXES_DEFAULT_PAGE_SIZE,
   projectQueryOptions,
   tablesQueryOptions,
   databaseQueryOptions,
@@ -22,7 +30,9 @@ export const Route = createFileRoute(
       },
     ],
   }),
-  loader: async ({ params, context }) => {
+  validateSearch: listSearchSchema,
+  // @ts-expect-error - route tree may infer loader as never; loader returns { database } on client
+  loader: async ({ params, context, location }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
       return
@@ -35,10 +45,20 @@ export const Route = createFileRoute(
       return
     }
 
+    const url = new URL(location.pathname + location.search, 'http://localhost')
+    const queryParam = getQueryParam(url)
+    const filterMap = queryParamToMap(queryParam)
+    const indexesFilterQueries =
+      filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
+    const page = getPage(url, 1)
+    const limit = getLimit(url, COLUMNS_INDEXES_DEFAULT_PAGE_SIZE)
+    const pageIndexed = Math.max(0, page - 1)
+
     // Fetch project first so setProjectRegion runs and project-scoped calls use the correct regional endpoint
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
 
-    // Fetch critical data before rendering to prevent layout shifts
+    // Fetch critical data before rendering to prevent layout shifts.
+    // Prefetch indexes with same filterQueries/page/limit as the View so one request and UI shows filtered list.
     await Promise.all([
       // Fetch tables list - blocks navigation until ready
       queryClient.ensureQueryData(
@@ -50,9 +70,16 @@ export const Route = createFileRoute(
       queryClient.ensureQueryData(
         tableColumnsQueryOptions(projectId, databaseId, tableId),
       ),
-      // Fetch indexes (critical for indexes tab) - blocks navigation until ready
+      // Fetch indexes with URL filters/page/limit so component uses same query key (single request, filtered list)
       queryClient.ensureQueryData(
-        tableIndexesQueryOptions(projectId, databaseId, tableId),
+        tableIndexesQueryOptions(
+          projectId,
+          databaseId,
+          tableId,
+          indexesFilterQueries,
+          pageIndexed,
+          limit,
+        ),
       ),
       // Fetch table - blocks navigation until ready
       queryClient.ensureQueryData(

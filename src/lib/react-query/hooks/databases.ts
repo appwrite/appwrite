@@ -15,7 +15,11 @@ import { Query, ID } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import type { Database, Collection } from '@/lib/utils/mock-data'
 import { sdk } from '@/lib/appwrite/sdk'
-import { DEFAULT_STALE_TIME, DEFAULT_PAGE_SIZE } from './constants'
+import {
+  DEFAULT_STALE_TIME,
+  DEFAULT_PAGE_SIZE,
+  COLUMNS_INDEXES_DEFAULT_PAGE_SIZE,
+} from './constants'
 
 // ============================================================================
 // QUERY FUNCTIONS
@@ -37,6 +41,7 @@ export async function fetchProjectDatabases(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   if (!projectId) {
     return { databases: [], total: 0 }
@@ -44,6 +49,7 @@ export async function fetchProjectDatabases(
 
   const projectSdk = sdk.forProject(projectId)
   const queries = [
+    ...(filterQueries ?? []),
     Query.orderDesc('$createdAt'),
     Query.limit(limit),
     Query.offset(page * limit),
@@ -460,6 +466,7 @@ export async function fetchProjectTableRows(
   search?: string,
   order: 'asc' | 'desc' = 'desc',
   sortBy: RowsSortBy = '$createdAt',
+  filterQueries?: string[],
 ) {
   if (!projectId || !databaseId || !tableId) {
     return { rows: [], total: 0 }
@@ -467,6 +474,7 @@ export async function fetchProjectTableRows(
 
   const projectSdk = sdk.forProject(projectId)
   const queries = [
+    ...(filterQueries ?? []),
     order === 'asc' ? Query.orderAsc(sortBy) : Query.orderDesc(sortBy),
     Query.limit(limit),
     Query.offset(page * limit),
@@ -529,89 +537,98 @@ export async function fetchProjectTableRow(
 }
 
 /**
- * Query function to fetch columns (attributes) for a table
+ * Query function to fetch columns (attributes) for a table via listColumns.
  *
  * This is extracted so it can be reused in both hooks and route loaders.
  *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
- * @returns Columns data
+ * @param filterQueries - Optional list of Appwrite Query condition strings (from table filters)
+ * @param page - Page number (0-indexed)
+ * @param limit - Number of items per page
+ * @returns Columns data with total count
  */
 export async function fetchProjectTableColumns(
   projectId: string,
   databaseId: string,
   tableId: string,
+  filterQueries?: string[],
+  page: number = 0,
+  limit: number = COLUMNS_INDEXES_DEFAULT_PAGE_SIZE,
 ) {
   if (!projectId || !databaseId || !tableId) {
-    return { columns: [] }
+    return { columns: [], total: 0 }
   }
 
   const projectSdk = sdk.forProject(projectId)
+  const queries = [
+    ...(filterQueries ?? []),
+    Query.orderAsc('$createdAt'),
+    Query.limit(limit),
+    Query.offset(page * limit),
+  ]
 
-  // Use TablesDB API to get table details which includes attributes/columns
-  let response: unknown
   try {
-    if (typeof projectSdk.tablesDB.getTable === 'function') {
-      response = await projectSdk.tablesDB.getTable({ databaseId, tableId })
-    } else if (
-      typeof (projectSdk.tablesDB as unknown).getCollection === 'function'
-    ) {
-      response = await (projectSdk.tablesDB as unknown).getCollection({
-        databaseId,
-        tableId,
-      })
-    } else {
-      response = { attributes: [] }
+    const response = await projectSdk.tablesDB.listColumns({
+      databaseId,
+      tableId,
+      queries,
+      total: true,
+    })
+    return {
+      columns: response.columns ?? [],
+      total: response.total ?? 0,
     }
   } catch {
-    response = { attributes: [] }
-  }
-
-  return {
-    columns: response.attributes || response.columns || [],
+    return { columns: [], total: 0 }
   }
 }
 
 /**
- * Query function to fetch indexes for a table
+ * Query function to fetch indexes for a table via listIndexes.
  *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
- * @returns Indexes data
+ * @param filterQueries - Optional list of Appwrite Query condition strings (from table filters)
+ * @param page - Page number (0-indexed)
+ * @param limit - Number of items per page
+ * @returns Indexes data with total count
  */
 export async function fetchProjectTableIndexes(
   projectId: string,
   databaseId: string,
   tableId: string,
+  filterQueries?: string[],
+  page: number = 0,
+  limit: number = COLUMNS_INDEXES_DEFAULT_PAGE_SIZE,
 ) {
   if (!projectId || !databaseId || !tableId) {
-    return { indexes: [] }
+    return { indexes: [], total: 0 }
   }
 
   const projectSdk = sdk.forProject(projectId)
+  const queries = [
+    ...(filterQueries ?? []),
+    Query.orderAsc('$createdAt'),
+    Query.limit(limit),
+    Query.offset(page * limit),
+  ]
 
-  let response: unknown
   try {
-    if (typeof projectSdk.tablesDB.getTable === 'function') {
-      response = await projectSdk.tablesDB.getTable({ databaseId, tableId })
-    } else if (
-      typeof (projectSdk.tablesDB as unknown).getCollection === 'function'
-    ) {
-      response = await (projectSdk.tablesDB as unknown).getCollection({
-        databaseId,
-        tableId,
-      })
-    } else {
-      response = { indexes: [] }
+    const response = await projectSdk.tablesDB.listIndexes({
+      databaseId,
+      tableId,
+      queries,
+      total: true,
+    })
+    return {
+      indexes: response.indexes ?? [],
+      total: response.total ?? 0,
     }
   } catch {
-    response = { indexes: [] }
-  }
-
-  return {
-    indexes: response.indexes || [],
+    return { indexes: [], total: 0 }
   }
 }
 
@@ -906,6 +923,7 @@ export async function createProjectTableColumn(
   }
 
   const projectSdk = sdk.forProject(projectId)
+  const data = columnData as Record<string, unknown>
   const {
     key,
     type,
@@ -916,10 +934,11 @@ export async function createProjectTableColumn(
     min,
     max,
     elements,
-    encrypt,
-  } = columnData
+  } = data
+  // TablesDB create methods only add encrypt to payload when typeof encrypt !== 'undefined'. Always pass explicit boolean for text types.
+  const encrypt = data.encrypt === true
 
-  // Call the appropriate method based on column type
+  // Call the appropriate method based on column type (TablesDB: createXColumn with databaseId, tableId, key, ...)
   switch (type) {
     case 'varchar':
       return await projectSdk.tablesDB.createVarcharColumn({
@@ -930,6 +949,7 @@ export async function createProjectTableColumn(
         required,
         xdefault,
         array,
+        encrypt,
       })
     case 'text':
       return await projectSdk.tablesDB.createTextColumn({
@@ -939,6 +959,7 @@ export async function createProjectTableColumn(
         required,
         xdefault,
         array,
+        encrypt,
       })
     case 'mediumtext':
       return await projectSdk.tablesDB.createMediumtextColumn({
@@ -948,6 +969,7 @@ export async function createProjectTableColumn(
         required,
         xdefault,
         array,
+        encrypt,
       })
     case 'longtext':
       return await projectSdk.tablesDB.createLongtextColumn({
@@ -957,6 +979,7 @@ export async function createProjectTableColumn(
         required,
         xdefault,
         array,
+        encrypt,
       })
     case 'string':
       return await projectSdk.tablesDB.createStringColumn({
@@ -1079,6 +1102,7 @@ export async function updateProjectTableColumn(
   }
 
   const projectSdk = sdk.forProject(projectId)
+  const data = columnData as Record<string, unknown>
   const {
     type,
     required = false,
@@ -1088,7 +1112,10 @@ export async function updateProjectTableColumn(
     max,
     elements,
     newKey,
-  } = columnData
+  } = data
+  // Explicit boolean so API receives true/false, not undefined
+  const encrypt =
+    typeof data.encrypt === 'boolean' ? data.encrypt : false
 
   // Call the appropriate update method based on column type
   switch (type) {
@@ -1101,6 +1128,7 @@ export async function updateProjectTableColumn(
         xdefault,
         size,
         newKey,
+        encrypt,
       })
     case 'text':
       return await projectSdk.tablesDB.updateTextColumn({
@@ -1110,6 +1138,7 @@ export async function updateProjectTableColumn(
         required,
         xdefault,
         newKey,
+        encrypt,
       })
     case 'mediumtext':
       return await projectSdk.tablesDB.updateMediumtextColumn({
@@ -1119,6 +1148,7 @@ export async function updateProjectTableColumn(
         required,
         xdefault,
         newKey,
+        encrypt,
       })
     case 'longtext':
       return await projectSdk.tablesDB.updateLongtextColumn({
@@ -1128,6 +1158,7 @@ export async function updateProjectTableColumn(
         required,
         xdefault,
         newKey,
+        encrypt,
       })
     case 'string':
       return await projectSdk.tablesDB.updateStringColumn({
@@ -1138,6 +1169,7 @@ export async function updateProjectTableColumn(
         xdefault,
         size,
         newKey,
+        encrypt,
       })
     case 'integer':
       return await projectSdk.tablesDB.updateIntegerColumn({
@@ -1451,10 +1483,11 @@ export function databasesQueryOptions(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   return queryOptions({
-    queryKey: ['databases', 'project', projectId, page, limit, search],
-    queryFn: () => fetchProjectDatabases(projectId!, page, limit, search),
+    queryKey: ['databases', 'project', projectId, page, limit, search, filterQueries],
+    queryFn: () => fetchProjectDatabases(projectId!, page, limit, search, filterQueries),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false, // Don't retry on error
@@ -1530,8 +1563,8 @@ export function tableRowsQueryOptions(
   search?: string,
   order: 'asc' | 'desc' = 'desc',
   sortBy: RowsSortBy = '$createdAt',
+  filterQueries?: string[],
 ) {
-  // Normalize search to undefined if empty string for consistent query keys
   const normalizedSearch = search?.trim() || undefined
 
   return queryOptions({
@@ -1546,6 +1579,7 @@ export function tableRowsQueryOptions(
       normalizedSearch,
       order,
       sortBy,
+      filterQueries,
     ],
     queryFn: () =>
       fetchProjectTableRows(
@@ -1557,6 +1591,7 @@ export function tableRowsQueryOptions(
         normalizedSearch,
         order,
         sortBy,
+        filterQueries,
       ),
     enabled: !!projectId && !!databaseId && !!tableId,
     staleTime: DEFAULT_STALE_TIME,
@@ -1596,22 +1631,47 @@ export function databaseQueryOptions(
  * Query options for fetching columns (attributes) for a table
  *
  * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ *
+ * @param filterQueries - Optional list of Appwrite Query condition strings (from table filters)
+ * @param page - Page number (0-indexed)
+ * @param limit - Number of items per page
  */
 export function tableColumnsQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
   tableId: string | null | undefined,
+  filterQueries?: string[],
+  page: number = 0,
+  limit: number = COLUMNS_INDEXES_DEFAULT_PAGE_SIZE,
 ) {
+  const hasFilters =
+    filterQueries !== undefined && filterQueries.length > 0
   return queryOptions({
-    queryKey: ['columns', 'project', projectId, databaseId, tableId],
-    queryFn: () => fetchProjectTableColumns(projectId!, databaseId!, tableId!),
+    queryKey: [
+      'columns',
+      'project',
+      projectId,
+      databaseId,
+      tableId,
+      ...(hasFilters ? [filterQueries] : []),
+      page,
+      limit,
+    ],
+    queryFn: () =>
+      fetchProjectTableColumns(
+        projectId!,
+        databaseId!,
+        tableId!,
+        filterQueries,
+        page,
+        limit,
+      ),
     enabled: !!projectId && !!databaseId && !!tableId,
     staleTime: DEFAULT_STALE_TIME,
-    retry: false, // Don't retry on error
-    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
-    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
-    refetchOnReconnect: false, // Prevent refetch on network reconnect
-    // Don't keep disabled queries in cache
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     gcTime: projectId && databaseId && tableId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -1644,15 +1704,41 @@ export function tableQueryOptions(
  * Query options for fetching indexes for a table
  *
  * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ *
+ * @param filterQueries - Optional list of Appwrite Query condition strings (from table filters)
+ * @param page - Page number (0-indexed)
+ * @param limit - Number of items per page
  */
 export function tableIndexesQueryOptions(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
   tableId: string | null | undefined,
+  filterQueries?: string[],
+  page: number = 0,
+  limit: number = COLUMNS_INDEXES_DEFAULT_PAGE_SIZE,
 ) {
+  const hasFilters =
+    filterQueries !== undefined && filterQueries.length > 0
   return queryOptions({
-    queryKey: ['indexes', 'project', projectId, databaseId, tableId],
-    queryFn: () => fetchProjectTableIndexes(projectId!, databaseId!, tableId!),
+    queryKey: [
+      'indexes',
+      'project',
+      projectId,
+      databaseId,
+      tableId,
+      ...(hasFilters ? [filterQueries] : []),
+      page,
+      limit,
+    ],
+    queryFn: () =>
+      fetchProjectTableIndexes(
+        projectId!,
+        databaseId!,
+        tableId!,
+        filterQueries,
+        page,
+        limit,
+      ),
     enabled: !!projectId && !!databaseId && !!tableId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -1705,14 +1791,16 @@ export function useProjectDatabases(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   const {
     data: databasesData,
     isLoading,
     isFetching,
+    isFetched,
     error,
     refetch,
-  } = useQuery(databasesQueryOptions(projectId, page, limit, search))
+  } = useQuery(databasesQueryOptions(projectId, page, limit, search, filterQueries))
 
   // Map databases to our Database type
   const databases = useMemo(() => {
@@ -1772,6 +1860,7 @@ export function useProjectDatabases(
     totalPages,
     isLoading,
     isFetching,
+    isFetched,
     error,
     refetch,
   }
@@ -1928,8 +2017,8 @@ export function useProjectTableRows(
   search?: string,
   order: 'asc' | 'desc' = 'desc',
   sortBy: RowsSortBy = '$createdAt',
+  filterQueries?: string[],
 ) {
-  // Normalize search to undefined if empty string for consistent query keys
   const normalizedSearch = search?.trim() || undefined
 
   const {
@@ -1948,6 +2037,7 @@ export function useProjectTableRows(
       normalizedSearch,
       order,
       sortBy,
+      filterQueries,
     ),
   )
 
@@ -1968,56 +2058,92 @@ export function useProjectTableRows(
 }
 
 /**
- * Hook to fetch columns (attributes) for a table
+ * Hook to fetch columns (attributes) for a table via listColumns
  *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
- * @returns Columns with loading state
+ * @param filterQueries - Optional list of Appwrite Query condition strings (from table filters)
+ * @param page - Page number (0-indexed)
+ * @param limit - Number of items per page
+ * @returns Columns with loading state and total count
  */
 export function useProjectTableColumns(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
   tableId: string | null | undefined,
+  filterQueries?: string[],
+  page: number = 0,
+  limit: number = COLUMNS_INDEXES_DEFAULT_PAGE_SIZE,
 ) {
   const {
     data: columnsData,
     isLoading,
+    isFetching,
     error,
     refetch,
-  } = useQuery(tableColumnsQueryOptions(projectId, databaseId, tableId))
+  } = useQuery(
+    tableColumnsQueryOptions(
+      projectId,
+      databaseId,
+      tableId,
+      filterQueries,
+      page,
+      limit,
+    ),
+  )
 
   return {
     columns: columnsData?.columns || [],
+    total: columnsData?.total ?? 0,
     isLoading,
+    isFetching,
     error,
     refetch,
   }
 }
 
 /**
- * Hook to fetch indexes for a table
+ * Hook to fetch indexes for a table via listIndexes
  *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
- * @returns Indexes with loading state
+ * @param filterQueries - Optional list of Appwrite Query condition strings (from table filters)
+ * @param page - Page number (0-indexed)
+ * @param limit - Number of items per page
+ * @returns Indexes with loading state and total count
  */
 export function useProjectTableIndexes(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
   tableId: string | null | undefined,
+  filterQueries?: string[],
+  page: number = 0,
+  limit: number = COLUMNS_INDEXES_DEFAULT_PAGE_SIZE,
 ) {
   const {
     data: indexesData,
     isLoading,
+    isFetching,
     error,
     refetch,
-  } = useQuery(tableIndexesQueryOptions(projectId, databaseId, tableId))
+  } = useQuery(
+    tableIndexesQueryOptions(
+      projectId,
+      databaseId,
+      tableId,
+      filterQueries,
+      page,
+      limit,
+    ),
+  )
 
   return {
     indexes: indexesData?.indexes || [],
+    total: indexesData?.total ?? 0,
     isLoading,
+    isFetching,
     error,
     refetch,
   }

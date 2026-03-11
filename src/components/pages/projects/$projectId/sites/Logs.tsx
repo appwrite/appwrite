@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from '@tanstack/react-router'
 import { useProjectSite, useSiteLogs } from '@/lib/react-query/hooks'
 import { LogsListView } from '@/components/global/shared/LogsListView'
 import { Route } from '@/routes/_public/projects.$projectId.sites.$siteId.logs'
 import { useRefreshOptional } from '@/components/global/shared/RefreshContext'
+import { queryParamToMap } from '@/lib/table-filters'
 
 const LOGS_PER_PAGE = 25
 
@@ -12,8 +13,14 @@ export function View() {
   const navigate = useNavigate()
   const location = useLocation()
   const search = Route.useSearch()
-  const urlPage = search.page || 1 // 1-indexed from URL
+  const urlPage = search.page ?? 1
   const urlExecutionId = search.executionId
+  const filterMap = useMemo(
+    () => queryParamToMap(search.query ?? null),
+    [search.query],
+  )
+  const filterQueries =
+    filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
 
   // Initialize displayed page from URL (0-indexed)
   const [displayedPage, setDisplayedPage] = useState(urlPage - 1)
@@ -41,7 +48,7 @@ export function View() {
     isLoading: logsLoading,
     isFetching: logsFetching,
     refetch,
-  } = useSiteLogs(projectId, siteId, requestedPage, pageSize)
+  } = useSiteLogs(projectId, siteId, requestedPage, pageSize, filterQueries)
 
   // Fetch data for the displayed page (this is what we show)
   const { logs: displayedLogs, total: displayedTotal } = useSiteLogs(
@@ -49,6 +56,7 @@ export function View() {
     siteId,
     displayedPage,
     pageSize,
+    filterQueries,
   )
 
   // Update displayed page only when requested page data is ready (not fetching)
@@ -59,8 +67,17 @@ export function View() {
     }
   }, [logsFetching, logsLoading, requestedPage, displayedPage])
 
-  // Use displayed logs for rendering (stays on current page until new data is ready)
-  const logs = displayedLogs
+  // Keep showing previous results while fetching new filter results (no empty state flash)
+  const lastLogsRef = useRef<typeof displayedLogs>([])
+  useEffect(() => {
+    if (!logsFetching && displayedLogs.length > 0) {
+      lastLogsRef.current = displayedLogs
+    }
+  }, [logsFetching, displayedLogs])
+  const logs =
+    logsFetching && lastLogsRef.current.length > 0
+      ? lastLogsRef.current
+      : displayedLogs
 
   // Register refetch function with the context for the layout's refresh button
   useEffect(() => {
@@ -128,22 +145,32 @@ export function View() {
     setSelectedExecutionId(null)
   }
 
+  const hasFilters = filterMap.size > 0
+
   return (
-    <LogsListView
-      executions={logs}
-      total={displayedTotal ?? total}
-      isLoading={siteLoading || logsLoading}
-      currentPage={displayedPage + 1}
-      pageSize={pageSize}
-      onPageChange={handlePageChange}
-      onPageSizeChange={handlePageSizeChange}
-      selectedExecutionId={selectedExecutionId}
-      onExecutionSelect={handleExecutionSelect}
-      onExecutionDeselect={handleExecutionDeselect}
-      func={null}
-      emptyStateTitle="No executions yet"
-      emptyStateDescription="Executions will appear here when your site runs."
-      itemLabel="logs"
-    />
+    <div className="flex flex-1 flex-col">
+      <LogsListView
+        executions={logs}
+        total={displayedTotal ?? total}
+        isLoading={siteLoading || logsLoading}
+        isFetching={logsFetching}
+        currentPage={displayedPage + 1}
+        pageSize={pageSize}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+        selectedExecutionId={selectedExecutionId}
+        onExecutionSelect={handleExecutionSelect}
+        onExecutionDeselect={handleExecutionDeselect}
+        func={null}
+        emptyStateTitle={hasFilters ? undefined : 'No logs yet'}
+        emptyStateDescription={
+          hasFilters
+            ? undefined
+            : 'Logs will appear here when your site runs.'
+        }
+        hasFilters={hasFilters}
+        itemLabel="logs"
+      />
+    </div>
   )
 }

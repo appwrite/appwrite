@@ -44,6 +44,9 @@ export interface TableSelectorProps {
   triggerClassName?: string
   /** When true, show "No tables" and disable the selector, only show create button */
   empty?: boolean
+  /** When true, the create (plus) button is disabled with tooltip */
+  createDisabled?: boolean
+  createDisabledTooltip?: string
 }
 
 export function TableSelector({
@@ -57,6 +60,8 @@ export function TableSelector({
   limit = DEFAULT_LIMIT,
   triggerClassName,
   empty = false,
+  createDisabled = false,
+  createDisabledTooltip = "You don't have permission to create tables.",
 }: TableSelectorProps) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
@@ -98,16 +103,21 @@ export function TableSelector({
         <span className="text-[13px] text-muted-foreground">No tables</span>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8 shrink-0"
-              onClick={onCreateClick}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
+            <span className="inline-flex">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                onClick={onCreateClick}
+                disabled={createDisabled}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </span>
           </TooltipTrigger>
-          <TooltipContent side="bottom">Create table</TooltipContent>
+          <TooltipContent side="bottom">
+            {createDisabled ? createDisabledTooltip : 'Create table'}
+          </TooltipContent>
         </Tooltip>
       </div>
     )
@@ -182,16 +192,21 @@ export function TableSelector({
       </Popover>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8 shrink-0"
-            onClick={onCreateClick}
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
+          <span className="inline-flex">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 shrink-0"
+              onClick={onCreateClick}
+              disabled={createDisabled}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </span>
         </TooltipTrigger>
-        <TooltipContent side="bottom">Create table</TooltipContent>
+        <TooltipContent side="bottom">
+          {createDisabled ? createDisabledTooltip : 'Create table'}
+        </TooltipContent>
       </Tooltip>
     </div>
   )

@@ -85,18 +85,18 @@ function FunctionLayoutContent() {
         },
       },
       {
-        id: 'executions',
-        label: 'Executions',
-        to: '/projects/$projectId/functions/$functionId/executions',
+        id: 'domains',
+        label: 'Domains',
+        to: '/projects/$projectId/functions/$functionId/domains',
         params: {
           projectId: projectId as string,
           functionId: functionId as string,
         },
       },
       {
-        id: 'domains',
-        label: 'Domains',
-        to: '/projects/$projectId/functions/$functionId/domains',
+        id: 'executions',
+        label: 'Executions',
+        to: '/projects/$projectId/functions/$functionId/executions',
         params: {
           projectId: projectId as string,
           functionId: functionId as string,

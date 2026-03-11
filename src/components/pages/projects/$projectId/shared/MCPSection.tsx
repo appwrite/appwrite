@@ -1,6 +1,7 @@
 import { Code, FileText } from 'lucide-react'
 import { useMemo } from 'react'
 import { getMCPIDEs } from '@/lib/config/ide'
+import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { Button } from '@/components/ui/button'
 
 export interface MCPSectionProps {
@@ -15,22 +16,24 @@ export interface MCPSectionProps {
 export function MCPSection({ compact = false }: MCPSectionProps) {
   const mcpIntegrations = useMemo(() => getMCPIDEs(), [])
 
-  const content = (
-    <>
-      <p className="text-[13px] text-muted-foreground mb-4">
-        Appwrite offers two MCP servers that allow LLMs to interact with
-        Appwrite's API and documentation. Deploy with a single click or view the{' '}
-        <a
-          href="https://appwrite.io/docs/tooling/mcp"
-          target="_blank"
-          rel="noreferrer"
-          className="text-foreground underline hover:no-underline"
-        >
-          docs
-        </a>{' '}
-        for instructions.
-      </p>
+  const description = (
+    <p className="text-[13px] text-muted-foreground">
+      Appwrite offers two MCP servers that allow LLMs to interact with
+      Appwrite's API and documentation. Deploy with a single click or view the{' '}
+      <a
+        href="https://appwrite.io/docs/tooling/mcp"
+        target="_blank"
+        rel="noreferrer"
+        className="text-foreground underline hover:no-underline"
+      >
+        docs
+      </a>{' '}
+      for instructions.
+    </p>
+  )
 
+  const mainContent = (
+    <>
       {/* MCP Server Types */}
       <div className="grid gap-3 sm:grid-cols-2 mb-4">
         <a
@@ -80,7 +83,7 @@ export function MCPSection({ compact = false }: MCPSectionProps) {
       <div className="mt-4">
         <div className="my-6 flex w-full items-center gap-3 text-[12px] text-muted-foreground">
           <div className="h-px flex-1 bg-border" />
-          <span className="font-medium text-foreground/80">Apps</span>
+          <span className="font-medium text-foreground/80">IDEs</span>
           <div className="h-px flex-1 bg-border" />
         </div>
         <div className="flex flex-wrap items-center justify-center gap-2">
@@ -98,7 +101,7 @@ export function MCPSection({ compact = false }: MCPSectionProps) {
                   <img
                     src={ide.iconPath}
                     alt=""
-                    className="mr-1.5 h-4 w-4 brightness-0 dark:brightness-100"
+                    className={`mr-1.5 h-4 w-4 ${PUBLIC_ICON_MUTED_CLASSES}`}
                   />
                   {ide.name}
                 </a>
@@ -111,7 +114,12 @@ export function MCPSection({ compact = false }: MCPSectionProps) {
   )
 
   if (compact) {
-    return <div className="pt-4">{content}</div>
+    return (
+      <div className="pt-4">
+        {description}
+        {mainContent}
+      </div>
+    )
   }
 
   return (
@@ -122,7 +130,12 @@ export function MCPSection({ compact = false }: MCPSectionProps) {
         </h3>
       </div>
       <div className="border-t border-border" />
-      <div className="px-6 py-4">{content}</div>
+      <div className="px-6 py-4 @container">
+        <div className="flex gap-6 @[600px]:flex-row flex-col">
+          <div className="@[600px]:w-64 shrink-0">{description}</div>
+          <div className="flex-1 min-w-0">{mainContent}</div>
+        </div>
+      </div>
     </div>
   )
 }

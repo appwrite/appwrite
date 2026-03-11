@@ -12,7 +12,11 @@ import { Label } from '@/components/ui/label'
 import { IdInput } from '@/components/ui/id-input'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Info, Globe } from 'lucide-react'
-import { useCreateProject, useRegions } from '@/lib/react-query/hooks'
+import {
+  useCreateProject,
+  useRegions,
+  useOrganizationPlan,
+} from '@/lib/react-query/hooks'
 import { useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -38,7 +42,7 @@ export function CreateProjectDialog({
   open,
   onOpenChange,
   teamId,
-  organizationPlan,
+  organizationPlan: organizationPlanProp,
   currentProjectsCount = 0,
 }: CreateProjectDialogProps) {
   const navigate = useNavigate()
@@ -46,6 +50,12 @@ export function CreateProjectDialog({
   const [name, setName] = useState('')
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
+
+  // Fetch plan when dialog is open and not provided by parent (e.g. from ProjectSelector)
+  const { plan: organizationPlanFromHook } = useOrganizationPlan(
+    open && !organizationPlanProp ? teamId : null,
+  )
+  const organizationPlan = organizationPlanProp ?? organizationPlanFromHook
 
   const createProjectMutation = useCreateProject(teamId)
   const {

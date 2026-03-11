@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { cn } from '@/lib/utils'
-import { ChevronDown, Check, Plus, Search, Star, X } from 'lucide-react'
+import { ChevronDown, Check, Pin, Plus, Search, X } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import {
   type Project,
@@ -13,16 +13,23 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { Badge } from '@/components/ui/badge'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import {
   useTeams,
   useProject,
   useProjectsForTeamInfinite,
-  useOrganizationPlan,
-  useProjectsForTeam,
+  useConsoleTeam,
   fetchActiveProjects,
+  pinnedProjectsQueryOptions,
+  consoleTeamQueryOptions,
 } from '@/lib/react-query/hooks'
-import { useQueryClient } from '@tanstack/react-query'
+import { parsePinnedProjectIds } from '@/lib/team-prefs-keys'
+import {
+  useQuery,
+  useQueryClient,
+  keepPreviousData,
+} from '@tanstack/react-query'
 import { getPlanBadgeColor } from '@/lib/utils/plan-badge'
 import { CreateProjectDialog } from '@/components/pages/organizations/$orgId/overview/CreateProjectDialog'
 
@@ -98,75 +105,95 @@ export function ProjectSelector({
     setProjectSearch('')
   }, [selectedTeam?.$id])
 
-  // Fetch projects for selected team with infinite scroll
+  // Pinned projects for selected team (from team prefs)
+  const { data: consoleTeam } = useConsoleTeam(selectedTeam?.$id)
+  const pinnedIds = useMemo(
+    () => parsePinnedProjectIds(consoleTeam?.prefs),
+    [consoleTeam?.prefs],
+  )
+  const {
+    data: pinnedProjectsData,
+    isPlaceholderData: isPinnedPlaceholder,
+  } = useQuery({
+    ...pinnedProjectsQueryOptions(selectedTeam?.$id ?? null, pinnedIds),
+    placeholderData: keepPreviousData,
+  })
+
+  // Fetch projects for selected team with infinite scroll (excluding pinned)
   const {
     projects: paginatedProjects,
+    total: infiniteTotal,
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
+    isPlaceholderData: isInfinitePlaceholder,
   } = useProjectsForTeamInfinite(
     selectedTeam?.$id,
     projectsPageSize,
     projectSearch,
+    pinnedIds,
   )
 
-  // Query client for prefetching
   const queryClient = useQueryClient()
 
-  // Prefetch projects for a team on hover
-  const handlePrefetchTeamProjects = useCallback(
-    (teamId: string) => {
-      // Only prefetch if not already the selected team
-      if (teamId === selectedTeam?.$id) return
-
-      // Prefetch the first page of projects for this team
-      queryClient.prefetchInfiniteQuery({
-        queryKey: [
-          'projects',
-          'team',
-          'infinite',
-          teamId,
-          projectsPageSize,
-          '',
-        ],
-        queryFn: ({ pageParam = 0 }) =>
-          fetchActiveProjects(teamId, pageParam, projectsPageSize, ''),
-        initialPageParam: 0,
-        staleTime: 5 * 60 * 1000, // 5 minutes
-      })
-    },
-    [queryClient, selectedTeam?.$id, projectsPageSize],
-  )
-
-  // Handle team selection - ensure data is ready before switching
+  // Handle team selection - ensure data is ready before switching (loads team once, then pinned + unpinned in parallel)
   const handleSelectTeam = useCallback(
     async (team: Team) => {
-      // If same team, do nothing
       if (team.$id === selectedTeam?.$id) return
 
-      // Check if we already have cached data for this team
-      const queryKey = [
+      let excludeIds: string[] = []
+      try {
+        const teamData = await queryClient.ensureQueryData({
+          ...consoleTeamQueryOptions(team.$id),
+          staleTime: 5 * 60 * 1000,
+        })
+        excludeIds = parsePinnedProjectIds(
+          (teamData as { prefs?: Record<string, unknown> })?.prefs,
+        )
+      } catch {
+        // use empty exclude if team prefs fail
+      }
+      const excludeKey =
+        excludeIds.length > 0 ? excludeIds.slice().sort().join(',') : ''
+      const infiniteQueryKey = [
         'projects',
         'team',
         'infinite',
         team.$id,
         projectsPageSize,
         '',
+        excludeKey,
       ]
-      const cachedData = queryClient.getQueryData(queryKey)
+      const pinnedOptions = pinnedProjectsQueryOptions(team.$id, excludeIds)
+      const hasInfiniteCache = queryClient.getQueryData(infiniteQueryKey)
+      const hasPinnedCache = queryClient.getQueryData(pinnedOptions.queryKey)
 
-      if (cachedData) {
-        // Data is already cached, switch immediately
+      if (hasInfiniteCache && hasPinnedCache) {
         setSelectedTeam(team)
       } else {
-        // Data not cached, fetch it first then switch
-        await queryClient.fetchInfiniteQuery({
-          queryKey,
-          queryFn: ({ pageParam = 0 }) =>
-            fetchActiveProjects(team.$id, pageParam, projectsPageSize, ''),
-          initialPageParam: 0,
-          staleTime: 5 * 60 * 1000,
-        })
+        await Promise.all([
+          hasPinnedCache
+            ? Promise.resolve()
+            : queryClient.fetchQuery({
+                ...pinnedOptions,
+                staleTime: 5 * 60 * 1000,
+              }),
+          hasInfiniteCache
+            ? Promise.resolve()
+            : queryClient.fetchInfiniteQuery({
+                queryKey: infiniteQueryKey,
+                queryFn: ({ pageParam = 0 }) =>
+                  fetchActiveProjects(
+                    team.$id,
+                    pageParam,
+                    projectsPageSize,
+                    '',
+                    excludeIds,
+                  ),
+                initialPageParam: 0,
+                staleTime: 5 * 60 * 1000,
+              }),
+        ])
         setSelectedTeam(team)
       }
     },
@@ -187,20 +214,15 @@ export function ProjectSelector({
     )
   }, [currentProjectTeam, organizations])
 
-  // Get organization plan and project count for selected team
-  // These hooks must be called before any early returns to follow Rules of Hooks
+  // Organization for selected team (for display); plan is fetched in CreateProjectDialog when open
   const selectedTeamOrg = useMemo(() => {
     if (!selectedTeam) return null
     return organizations.find((org) => org.$id === selectedTeam.orgId) || null
   }, [selectedTeam, organizations])
 
-  const { plan: organizationPlan } = useOrganizationPlan(selectedTeamOrg?.$id)
-  const { total: projectsCount } = useProjectsForTeam(
-    selectedTeam?.$id,
-    0,
-    1,
-    '',
-  )
+  // Total project count = pinned + unpinned (from infinite query); no separate list call
+  const projectsCount =
+    pinnedIds.length + (infiniteTotal ?? 0)
 
   const filteredTeams = useMemo(() => {
     if (!teams.length) return []
@@ -210,19 +232,71 @@ export function ProjectSelector({
     )
   }, [teamSearch, teams])
 
-  // Combine current project (at top) with paginated projects, excluding current project from list
+  // Pinned projects in Project shape (order from pinnedIds), filtered by search
+  const pinnedProjects = useMemo(() => {
+    if (!pinnedProjectsData?.projects?.length || !selectedTeam) return []
+    const raw = pinnedProjectsData.projects as Array<{
+      $id: string
+      name: string
+      teamId: string
+      region?: string
+      $createdAt?: string
+      status?: string
+    }>
+    const byId = new Map(raw.map((p) => [p.$id, p]))
+    const list = pinnedIds
+      .map((id) => byId.get(id))
+      .filter((p): p is NonNullable<typeof p> => p != null)
+      .map((p) => ({
+        $id: p.$id,
+        name: p.name,
+        teamId: p.teamId,
+        region: p.region || 'unknown',
+        createdAt: p.$createdAt || new Date().toISOString(),
+        icon: p.name.charAt(0).toUpperCase(),
+        archived: p.status === 'archived',
+      })) as Project[]
+    if (!projectSearch.trim()) return list
+    const q = projectSearch.toLowerCase()
+    return list.filter((p) => p.name?.toLowerCase().includes(q))
+  }, [pinnedProjectsData, pinnedIds, selectedTeam, projectSearch])
+
+  // Combine: current (if same team), then pinned, then paginated (excluding current and pinned)
   const displayProjects = useMemo(() => {
     if (!selectedTeam) return []
 
     const otherProjects = paginatedProjects.filter((p) => p.$id !== projectId)
+    const pinnedFiltered = pinnedProjects.filter((p) => p.$id !== projectId)
 
-    // If we have a current project and it belongs to the selected team, show it at top
     if (currentProject && currentProject.teamId === selectedTeam.$id) {
-      return [currentProject, ...otherProjects]
+      return [currentProject, ...pinnedFiltered, ...otherProjects]
     }
+    return [...pinnedFiltered, ...otherProjects]
+  }, [
+    currentProject,
+    pinnedProjects,
+    paginatedProjects,
+    projectId,
+    selectedTeam,
+  ])
 
-    return otherProjects
-  }, [currentProject, paginatedProjects, projectId, selectedTeam])
+  // Show list only when both pinned and unpinned have real data (not placeholder).
+  // Keep showing the previous combined list until both finish loading after org switch.
+  const lastStableDisplayRef = useRef<Project[]>([])
+  const lastStablePinnedIdsRef = useRef<string[]>([])
+  const bothQueriesReady = !isPinnedPlaceholder && !isInfinitePlaceholder
+  const stableDisplayProjects =
+    bothQueriesReady && selectedTeam
+      ? (() => {
+          lastStableDisplayRef.current = displayProjects
+          lastStablePinnedIdsRef.current = pinnedIds
+          return displayProjects
+        })()
+      : lastStableDisplayRef.current
+  const stablePinnedIds =
+    bothQueriesReady && selectedTeam
+      ? pinnedIds
+      : lastStablePinnedIdsRef.current
 
   const handleSelectProject = (project: Project, event?: React.MouseEvent) => {
     // Only update state if it's a regular click (not Ctrl/Cmd click for new tab)
@@ -281,33 +355,32 @@ export function ProjectSelector({
             sideOffset={12}
             className="w-[520px] border-border bg-popover p-0"
           >
-            <ProjectSelectorContent
-              selectedTeam={selectedTeam}
-              onSelectTeam={handleSelectTeam}
-              selectedProject={selectedProject}
-              handleSelectProject={handleSelectProject}
-              teamSearch={teamSearch}
-              setTeamSearch={setTeamSearch}
-              projectSearch={projectSearch}
-              setProjectSearch={setProjectSearch}
-              filteredTeams={filteredTeams}
-              displayProjects={displayProjects}
-              isFetchingNextPage={isFetchingNextPage}
-              hasNextPage={hasNextPage}
-              fetchNextPage={fetchNextPage}
-              organizations={organizations}
-              currentProjectId={projectId}
-              onCreateProject={() => setCreateProjectDialogOpen(true)}
-              onPrefetchTeamProjects={handlePrefetchTeamProjects}
-            />
-          </PopoverContent>
-        </Popover>
+          <ProjectSelectorContent
+            selectedTeam={selectedTeam}
+            onSelectTeam={handleSelectTeam}
+            selectedProject={selectedProject}
+            handleSelectProject={handleSelectProject}
+            teamSearch={teamSearch}
+            setTeamSearch={setTeamSearch}
+            projectSearch={projectSearch}
+            setProjectSearch={setProjectSearch}
+            filteredTeams={filteredTeams}
+            displayProjects={stableDisplayProjects}
+            pinnedProjectIds={stablePinnedIds}
+            isFetchingNextPage={isFetchingNextPage}
+            hasNextPage={hasNextPage}
+            fetchNextPage={fetchNextPage}
+            organizations={organizations}
+            currentProjectId={projectId}
+            onCreateProject={() => setCreateProjectDialogOpen(true)}
+          />
+        </PopoverContent>
+      </Popover>
 
         <CreateProjectDialog
           open={createProjectDialogOpen}
           onOpenChange={setCreateProjectDialogOpen}
           teamId={selectedTeam?.$id}
-          organizationPlan={organizationPlan}
           currentProjectsCount={projectsCount}
         />
       </>
@@ -380,14 +453,13 @@ export function ProjectSelector({
               projectSearch={projectSearch}
               setProjectSearch={setProjectSearch}
               filteredTeams={filteredTeams}
-              displayProjects={displayProjects}
+              displayProjects={stableDisplayProjects}
               isFetchingNextPage={isFetchingNextPage}
               hasNextPage={hasNextPage}
               fetchNextPage={fetchNextPage}
               organizations={organizations}
               currentProjectId={projectId}
               onCreateProject={() => setCreateProjectDialogOpen(true)}
-              onPrefetchTeamProjects={handlePrefetchTeamProjects}
             />
           </DialogContent>
         </Dialog>
@@ -396,7 +468,6 @@ export function ProjectSelector({
           open={createProjectDialogOpen}
           onOpenChange={setCreateProjectDialogOpen}
           teamId={selectedTeam?.$id}
-          organizationPlan={organizationPlan}
           currentProjectsCount={projectsCount}
         />
       </>
@@ -452,14 +523,14 @@ export function ProjectSelector({
             projectSearch={projectSearch}
             setProjectSearch={setProjectSearch}
             filteredTeams={filteredTeams}
-            displayProjects={displayProjects}
+            displayProjects={stableDisplayProjects}
+            pinnedProjectIds={stablePinnedIds}
             isFetchingNextPage={isFetchingNextPage}
             hasNextPage={hasNextPage}
             fetchNextPage={fetchNextPage}
             organizations={organizations}
             currentProjectId={projectId}
             onCreateProject={() => setCreateProjectDialogOpen(true)}
-            onPrefetchTeamProjects={handlePrefetchTeamProjects}
           />
         </PopoverContent>
       </Popover>
@@ -469,7 +540,6 @@ export function ProjectSelector({
         open={createProjectDialogOpen}
         onOpenChange={setCreateProjectDialogOpen}
         teamId={selectedTeam?.$id}
-        organizationPlan={organizationPlan}
         currentProjectsCount={projectsCount}
       />
     </>
@@ -487,13 +557,13 @@ interface ProjectSelectorContentProps {
   setProjectSearch: (search: string) => void
   filteredTeams: Team[]
   displayProjects: Project[]
+  pinnedProjectIds: string[]
   isFetchingNextPage: boolean
   hasNextPage: boolean
   fetchNextPage: () => void
   organizations: Organization[]
   currentProjectId?: string
   onCreateProject: () => void
-  onPrefetchTeamProjects: (teamId: string) => void
 }
 
 function ProjectSelectorContent({
@@ -507,14 +577,18 @@ function ProjectSelectorContent({
   setProjectSearch,
   filteredTeams,
   displayProjects,
+  pinnedProjectIds,
   isFetchingNextPage,
   hasNextPage,
   fetchNextPage,
   organizations,
   currentProjectId,
   onCreateProject,
-  onPrefetchTeamProjects,
 }: ProjectSelectorContentProps) {
+  const pinnedSet = useMemo(
+    () => new Set(pinnedProjectIds),
+    [pinnedProjectIds],
+  )
   // Ref for the scrollable container
   const projectsScrollRef = useRef<HTMLDivElement>(null)
   // Ref for the sentinel element that triggers loading
@@ -590,7 +664,6 @@ function ProjectSelectorContent({
                   <button
                     key={team.$id}
                     onClick={() => onSelectTeam(team)}
-                    onMouseEnter={() => onPrefetchTeamProjects(team.$id)}
                     className={cn(
                       'flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors',
                       selectedTeam.$id === team.$id
@@ -666,6 +739,7 @@ function ProjectSelectorContent({
               <>
                 {displayProjects.map((project) => {
                   const isCurrentProject = project.$id === currentProjectId
+                  const isPinned = pinnedSet.has(project.$id)
                   return (
                     <Link
                       key={project.$id}
@@ -677,19 +751,26 @@ function ProjectSelectorContent({
                         selectedProject?.$id === project.$id
                           ? 'bg-accent'
                           : 'hover:bg-accent/50',
-                        isCurrentProject && 'bg-primary/10 hover:bg-primary/20',
+                        isCurrentProject &&
+                          selectedProject?.$id !== project.$id &&
+                          'bg-primary/10 hover:bg-primary/20',
                       )}
                     >
                       <InitialsAvatar name={project.name} size="sm" />
                       <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground">
                         {project.name}
                         {isCurrentProject && (
-                          <span className="ml-1.5 text-[10px] text-primary">
-                            (current)
-                          </span>
+                          <Badge
+                            variant="outline"
+                            className="ml-1.5 shrink-0 text-[10px] font-normal text-muted-foreground"
+                          >
+                            Current
+                          </Badge>
                         )}
                       </span>
-                      <Star className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50 opacity-0 transition-opacity group-hover:opacity-100" />
+                      {isPinned && (
+                        <Pin className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      )}
                     </Link>
                   )
                 })}
@@ -735,15 +816,19 @@ function MobileProjectSelectorContent({
   setProjectSearch,
   filteredTeams,
   displayProjects,
+  pinnedProjectIds,
   isFetchingNextPage,
   hasNextPage,
   fetchNextPage,
   organizations,
   currentProjectId,
   onCreateProject,
-  onPrefetchTeamProjects,
 }: ProjectSelectorContentProps) {
   const [activeTab, setActiveTab] = useState<'teams' | 'projects'>('projects')
+  const pinnedSet = useMemo(
+    () => new Set(pinnedProjectIds),
+    [pinnedProjectIds],
+  )
 
   // Ref for the scrollable container
   const projectsScrollRef = useRef<HTMLDivElement>(null)
@@ -853,7 +938,6 @@ function MobileProjectSelectorContent({
                         await onSelectTeam(team)
                         setActiveTab('projects')
                       }}
-                      onMouseEnter={() => onPrefetchTeamProjects(team.$id)}
                       className={cn(
                         'flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors',
                         selectedTeam.$id === team.$id
@@ -939,6 +1023,7 @@ function MobileProjectSelectorContent({
                 <>
                   {displayProjects.map((project) => {
                     const isCurrentProject = project.$id === currentProjectId
+                    const isPinned = pinnedSet.has(project.$id)
                     return (
                       <Link
                         key={project.$id}
@@ -951,6 +1036,7 @@ function MobileProjectSelectorContent({
                             ? 'bg-accent'
                             : 'hover:bg-accent/50',
                           isCurrentProject &&
+                            selectedProject?.$id !== project.$id &&
                             'bg-primary/10 hover:bg-primary/20',
                         )}
                       >
@@ -958,11 +1044,17 @@ function MobileProjectSelectorContent({
                         <span className="min-w-0 flex-1 truncate text-[14px] font-medium text-foreground">
                           {project.name}
                           {isCurrentProject && (
-                            <span className="ml-1.5 text-[10px] text-primary">
-                              (current)
-                            </span>
+                            <Badge
+                              variant="outline"
+                              className="ml-1.5 shrink-0 text-[10px] font-normal text-muted-foreground"
+                            >
+                              Current
+                            </Badge>
                           )}
                         </span>
+                        {isPinned && (
+                          <Pin className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        )}
                         {selectedProject?.$id === project.$id && (
                           <Check className="h-4 w-4 shrink-0 text-foreground" />
                         )}

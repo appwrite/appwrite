@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback } from 'react'
 import { useRef, useEffect } from 'react'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useDebugOverrides } from '@/lib/debug-overrides'
 import {
   X,
   Send,
@@ -96,9 +96,10 @@ const DEFAULT_WIDTH = 400
 const STORAGE_KEY = 'ai-chat-panel-width'
 
 export function AIChatPanel() {
-  const { features } = useConsoleProfile()
+  const overrides = useDebugOverrides()
   const { isOpen, closeChat, messages, isLoading, setMessages, setIsLoading } =
     useAIChat()
+  const showPanel = overrides.showAIAssistant
   const [input, setInput] = useState('')
   const [width, setWidth] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -173,7 +174,7 @@ export function AIChatPanel() {
     }
   }, [isResizing])
 
-  if (!features.aiAssistant) return null
+  if (!showPanel) return null
 
   const handleSend = async (content: string = input) => {
     if (!content.trim() || isLoading) return

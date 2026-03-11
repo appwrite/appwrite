@@ -50,7 +50,7 @@ export const Route = createFileRoute(
             25,
             '',
           ],
-          queryFn: () => fetchUserIdentities(projectId, userId, 0, 25, ''),
+          queryFn: () => fetchUserIdentities(projectId, userId, 0, 10, ''),
           staleTime: 30 * 1000,
         }),
         queryClient.fetchQuery({

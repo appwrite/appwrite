@@ -56,7 +56,9 @@ limit: number = DEFAULT_PAGE_SIZE
 
 ## Page Sizes
 
-- **`DEFAULT_PAGE_SIZE`** (25) - Standard pagination
+- **`DEFAULT_PAGE_SIZE`** (10) - Default for list pagination (sites, functions, storage, auth, etc.)
+- **`ROWS_DEFAULT_PAGE_SIZE`** (25) - Default for database rows, indexes, and columns
+- **`ACTIVITY_DEFAULT_PAGE_SIZE`** (25) - Default for activity logs
 - **`SMALL_PAGE_SIZE`** (10) - For smaller lists (variables, API keys)
 - **`TINY_PAGE_SIZE`** (6) - For very small lists (backup archives)
 

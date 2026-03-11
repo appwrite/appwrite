@@ -4,9 +4,8 @@ import {
   projectFunctionQueryOptions,
   functionDomainsQueryOptions,
 } from '@/lib/react-query/hooks'
+import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { pageTitle } from '@/lib/utils/page-title'
-
-const DOMAINS_PER_PAGE = 25
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/functions/$functionId/domains',
@@ -41,7 +40,7 @@ export const Route = createFileRoute(
           projectId,
           functionId,
           0,
-          DOMAINS_PER_PAGE,
+          DOMAINS_DEFAULT_PAGE_SIZE,
           '',
         ),
       ),

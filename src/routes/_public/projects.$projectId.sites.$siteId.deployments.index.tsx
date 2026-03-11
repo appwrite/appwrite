@@ -1,5 +1,4 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { z } from 'zod'
 import { View } from '@/components/pages/projects/$projectId/sites/Deployments'
 import {
   siteQueryOptions,
@@ -11,10 +10,28 @@ import { fetchVcsInstallations } from '@/lib/react-query/hooks/vcs'
 import { Query } from '@appwrite.io/console'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { pageTitle } from '@/lib/utils/page-title'
+import { listSearchSchema } from '@/lib/table-filters'
 
-const searchSchema = z.object({
-  page: z.coerce.number().int().min(1).optional().catch(undefined),
-})
+const DEPLOYMENTS_SELECT = [
+  Query.select([
+    'buildSize',
+    'sourceSize',
+    'totalSize',
+    'buildDuration',
+    'status',
+    'type',
+    'resourceId',
+    'providerRepositoryUrl',
+    'providerRepositoryOwner',
+    'providerRepositoryName',
+    'providerBranchUrl',
+    'providerBranch',
+    'providerCommitMessage',
+    'providerCommitHash',
+    'providerCommitUrl',
+    '$createdAt',
+  ]),
+]
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/$siteId/deployments/',
@@ -29,7 +46,7 @@ export const Route = createFileRoute(
       },
     ],
   }),
-  validateSearch: searchSchema,
+  validateSearch: listSearchSchema,
   loader: async ({ params, context, location }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
@@ -47,42 +64,29 @@ export const Route = createFileRoute(
     const pageParam = urlParams.get('page')
     const page = pageParam ? Math.max(1, parseInt(pageParam, 10)) : 1
     const pageIndex = page - 1
+    const hasFilterQuery = !!urlParams.get('query')
 
     // Fetch site - blocks navigation until ready
     const site = await queryClient.ensureQueryData(
       siteQueryOptions(projectId, siteId),
     )
 
+    // Prefetch deployments only when no filters (avoids duplicate request when filters applied)
+    const deploymentsPromise = hasFilterQuery
+      ? Promise.resolve(undefined)
+      : queryClient.ensureQueryData(
+          siteDeploymentsQueryOptions(
+            projectId,
+            siteId,
+            pageIndex,
+            DEFAULT_PAGE_SIZE,
+            DEPLOYMENTS_SELECT,
+          ),
+        )
+
     // Fetch critical data before rendering to prevent layout shifts
     await Promise.all([
-      // Fetch deployments for the requested page - blocks navigation until ready
-      queryClient.ensureQueryData(
-        siteDeploymentsQueryOptions(
-          projectId,
-          siteId,
-          pageIndex,
-          DEFAULT_PAGE_SIZE,
-          [
-            Query.select([
-              'buildSize',
-              'sourceSize',
-              'totalSize',
-              'buildDuration',
-              'status',
-              'type',
-              'resourceId',
-              'providerRepositoryUrl',
-              'providerRepositoryOwner',
-              'providerRepositoryName',
-              'providerBranchUrl',
-              'providerBranch',
-              'providerCommitMessage',
-              'providerCommitHash',
-              'providerCommitUrl',
-            ]),
-          ],
-        ),
-      ),
+      deploymentsPromise,
       // Fetch active deployment if available
       site.deploymentId
         ? queryClient.ensureQueryData(
@@ -91,8 +95,8 @@ export const Route = createFileRoute(
         : Promise.resolve(),
       // Fetch VCS installations (for deployment actions)
       queryClient.ensureQueryData({
-        queryKey: ['vcs', 'installations', projectId, 0, 25],
-        queryFn: () => fetchVcsInstallations(projectId, 0, 25),
+        queryKey: ['vcs', 'installations', projectId, 0, 10],
+        queryFn: () => fetchVcsInstallations(projectId, 0, 10),
         staleTime: 5 * 60 * 1000,
       }),
     ])

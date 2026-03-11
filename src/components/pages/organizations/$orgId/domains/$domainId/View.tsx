@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useMutation } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
 import {
   Globe,
@@ -68,9 +69,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import { useNavigate, useParams, useLocation } from '@tanstack/react-router'
+import {
+  useNavigate,
+  useParams,
+  useLocation,
+  useSearch,
+} from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -84,6 +91,7 @@ import {
   useCreateDnsRecord,
   useUpdateDnsRecord,
   useDeleteDnsRecord,
+  deleteDnsRecord,
   useUpdateDomainZone,
   useRetryDomainVerification,
   usePresetRecords,
@@ -92,6 +100,14 @@ import {
   useOrganizations,
 } from '@/lib/react-query/hooks'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
+import {
+  getQueryParam,
+  queryParamToMap,
+  mapToQueryParam,
+  dnsRecordsFilterColumns,
+} from '@/lib/table-filters'
+import type { CompactFilterKey } from '@/lib/table-filters'
+import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 
 export type DomainDetailInitialData = {
   domain: Models.Domain
@@ -133,6 +149,31 @@ export function View({ initialData }: ViewProps = {}) {
   const [transferDialogOpen, setTransferDialogOpen] = useState(false)
   const [deleteConfirmation, setDeleteConfirmation] = useState('')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [selectedRecords, setSelectedRecords] = useState<Set<string>>(new Set())
+  const [bulkDeleteRecordsDialogOpen, setBulkDeleteRecordsDialogOpen] =
+    useState(false)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+
+  const search = useSearch({ strict: false }) as Record<string, unknown> | undefined
+  const isRecordsIndex = useMemo(
+    () =>
+      location.pathname.replace(/\/$/, '') ===
+      `/organizations/${orgId}/domains/${domainId}`,
+    [location.pathname, orgId, domainId],
+  )
+  const recordsFilterMap = useMemo(() => {
+    if (!isRecordsIndex || typeof search !== 'object' || !search)
+      return new Map()
+    const url = new URL(
+      location.pathname + location.search,
+      window.location.origin,
+    )
+    return queryParamToMap(
+      getQueryParam(url) ?? (search.query as string | undefined) ?? null,
+    )
+  }, [isRecordsIndex, location.pathname, location.search, search?.query])
+  const filterQueries =
+    recordsFilterMap.size > 0 ? Array.from(recordsFilterMap.values()) : undefined
 
   // Convert 1-indexed page to 0-indexed for API
   const pageIndexed = currentPage - 1
@@ -141,18 +182,21 @@ export function View({ initialData }: ViewProps = {}) {
   const { data: domainFromHook, isLoading: domainLoading } = useDomain(domainId)
   const domain = domainFromHook ?? initialData?.domain
 
-  // Fetch DNS records (use initialData for first page so no loading placeholder on first paint)
+  // Fetch DNS records (use initialData only when no filters so we don't show unfiltered data when filtered)
+  const hasRecordFilters = (filterQueries?.length ?? 0) > 0
   const {
     dnsRecords: recordsFromHook,
     total: recordsTotalFromHook,
-    isLoading: recordsLoading,
-  } = useDomainRecords(domainId, pageIndexed, pageSize)
+  } = useDomainRecords(domainId, pageIndexed, pageSize, filterQueries)
   const isFirstPage = currentPage === 1
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const rawRecords =
-    isFirstPage && initialData?.records && !recordsFromHook?.length
-      ? initialData.records.dnsRecords
-      : (recordsFromHook ?? [])
+  const canUseInitialRecords =
+    isFirstPage &&
+    initialData?.records &&
+    !hasRecordFilters &&
+    !recordsFromHook?.length
+  const rawRecords = canUseInitialRecords
+    ? initialData!.records.dnsRecords
+    : (recordsFromHook ?? [])
   const dnsRecords = useMemo(() => {
     if (!rawRecords.length) return []
     return [...rawRecords].sort((a, b) => {
@@ -162,7 +206,7 @@ export function View({ initialData }: ViewProps = {}) {
     })
   }, [rawRecords])
   const recordsTotal =
-    isFirstPage && initialData?.records
+    isFirstPage && initialData?.records && !hasRecordFilters
       ? (recordsTotalFromHook ?? initialData.records.total)
       : (recordsTotalFromHook ?? 0)
 
@@ -314,6 +358,65 @@ export function View({ initialData }: ViewProps = {}) {
         toast.error(getErrorMessage(error))
       },
     })
+  }
+
+  // Deletable records (non-locked) on current page for bulk actions
+  const deletableRecords = useMemo(
+    () => dnsRecords.filter((r) => !r.lock),
+    [dnsRecords],
+  )
+
+  const bulkDeleteRecordsMutation = useMutation({
+    mutationFn: async (recordIds: string[]) => {
+      if (!domainId) throw new Error('Domain ID is required')
+      await Promise.all(
+        recordIds.map((recordId) => deleteDnsRecord(domainId, recordId)),
+      )
+    },
+    onSuccess: async (_, recordIds) => {
+      await queryClient.refetchQueries({
+        queryKey: ['dns-records', 'domain', domainId],
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['domain', domainId],
+      })
+      toast.success(
+        `Deleted ${recordIds.length} DNS record${recordIds.length > 1 ? 's' : ''}`,
+      )
+      setSelectedRecords(new Set())
+      setBulkDeleteRecordsDialogOpen(false)
+    },
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error))
+    },
+  })
+
+  const handleBulkDeleteRecords = () => {
+    if (selectedRecords.size === 0) return
+    setBulkDeleteRecordsDialogOpen(true)
+  }
+
+  const confirmBulkDeleteRecords = () => {
+    if (selectedRecords.size === 0) return
+    bulkDeleteRecordsMutation.mutate(Array.from(selectedRecords))
+  }
+
+  const toggleRecord = (recordId: string, locked: boolean) => {
+    if (locked) return
+    setSelectedRecords((prev) => {
+      const next = new Set(prev)
+      if (next.has(recordId)) next.delete(recordId)
+      else next.add(recordId)
+      return next
+    })
+  }
+
+  const toggleAllRecords = () => {
+    if (selectedRecords.size === deletableRecords.length) {
+      setSelectedRecords(new Set())
+    } else {
+      setSelectedRecords(new Set(deletableRecords.map((r) => r.$id)))
+    }
   }
 
   // Import zone mutation
@@ -470,11 +573,70 @@ export function View({ initialData }: ViewProps = {}) {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
+    setSelectedRecords(new Set())
   }
 
   const handlePageSizeChange = (newPageSize: number) => {
     setPageSize(newPageSize)
     setCurrentPage(1)
+    setSelectedRecords(new Set())
+  }
+
+  const recordsRouteTo = '/organizations/$orgId/domains/$domainId' as const
+  const applyFilter = (compactKey: CompactFilterKey, queryStr: string) => {
+    const next = new Map(recordsFilterMap)
+    next.set(compactKey, queryStr)
+    setCurrentPage(1)
+    setSelectedRecords(new Set())
+    navigate({
+      to: recordsRouteTo,
+      params: { orgId: orgId!, domainId: domainId! },
+      search: (prev: Record<string, unknown>) => ({
+        ...(typeof prev === 'object' && prev !== null ? prev : {}),
+        query: mapToQueryParam(next) || undefined,
+      }),
+      replace: true,
+    })
+  }
+  const removeFilter = (compactKey: CompactFilterKey) => {
+    const next = new Map(recordsFilterMap)
+    next.delete(compactKey)
+    setCurrentPage(1)
+    setSelectedRecords(new Set())
+    setFiltersOpen(false)
+    navigate({
+      to: recordsRouteTo,
+      params: { orgId: orgId!, domainId: domainId! },
+      search: (prev: Record<string, unknown>) => {
+        const nextSearch = {
+          ...(typeof prev === 'object' && prev !== null ? prev : {}),
+        }
+        if (next.size > 0) {
+          ;(nextSearch as Record<string, unknown>).query = mapToQueryParam(next)
+        } else {
+          delete (nextSearch as Record<string, unknown>).query
+        }
+        return nextSearch
+      },
+      replace: true,
+    })
+  }
+  const clearAllFilters = () => {
+    setCurrentPage(1)
+    setSelectedRecords(new Set())
+    setFiltersOpen(false)
+    navigate({
+      to: recordsRouteTo,
+      params: { orgId: orgId!, domainId: domainId! },
+      search: (prev: Record<string, unknown>) => {
+        const nextSearch = {
+          ...(typeof prev === 'object' && prev !== null ? prev : {}),
+        }
+        delete (nextSearch as Record<string, unknown>).query
+        return nextSearch
+      },
+      replace: true,
+    })
   }
 
   const handleBack = () => {
@@ -632,7 +794,7 @@ export function View({ initialData }: ViewProps = {}) {
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-              <span>{domain.domain}</span>
+              <span>{domain?.domain}</span>
             </div>
           }
           tabs={tabs}
@@ -775,7 +937,30 @@ export function View({ initialData }: ViewProps = {}) {
                 </div>
               )}
 
-              <div className="mb-4 flex items-center gap-2 sm:gap-3">
+              <div className="mb-4 flex flex-wrap items-center gap-2 sm:gap-3">
+                <FiltersPopover
+                  open={filtersOpen}
+                  onOpenChange={setFiltersOpen}
+                  columns={dnsRecordsFilterColumns}
+                  filterMap={recordsFilterMap}
+                  onRemoveFilter={removeFilter}
+                  onClearAll={clearAllFilters}
+                  onApplyFilter={applyFilter}
+                  resourceLabel="DNS records"
+                  filterScope="organizations.domains.records"
+                  onApplyQuery={(queryParam) => {
+                    navigate({
+                      to: recordsRouteTo,
+                      params: { orgId: orgId!, domainId: domainId! },
+                      search: (prev: Record<string, unknown>) => ({
+                        ...(typeof prev === 'object' && prev !== null ? prev : {}),
+                        query: queryParam ?? undefined,
+                      }),
+                      replace: true,
+                    })
+                  }}
+                  teamId={orgId}
+                />
                 {/* Desktop: individual buttons */}
                 <div className="hidden sm:flex sm:items-center sm:gap-2">
                   <Button
@@ -847,7 +1032,7 @@ export function View({ initialData }: ViewProps = {}) {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
-                {/* Mobile: single line with More + Create Record */}
+                {/* Mobile: More dropdown */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -928,19 +1113,24 @@ export function View({ initialData }: ViewProps = {}) {
                 </div>
               </div>
 
-              {/* Only show loading when we have no data (loader prefetches first page) */}
-              {recordsLoading && dnsRecords.length === 0 ? (
-                <div className="rounded-lg border border-border bg-card py-12 text-center">
-                  <p className="text-[13px] text-muted-foreground">
-                    Loading DNS records...
-                  </p>
-                </div>
-              ) : dnsRecords.length > 0 ? (
+              {/* No loading state: keep previous results until new data is ready (see AGENTS.md → Filters) */}
+              {dnsRecords.length > 0 ? (
                 <>
                   <div className="rounded-lg border border-border bg-card overflow-x-auto overflow-y-visible">
                     <Table>
                       <TableHeader>
                         <TableRow className="hover:bg-transparent border-b border-border">
+                          <TableHead className="w-[40px] px-4 py-3">
+                            {deletableRecords.length > 0 ? (
+                              <Checkbox
+                                checked={
+                                  deletableRecords.length > 0 &&
+                                  selectedRecords.size === deletableRecords.length
+                                }
+                                onCheckedChange={toggleAllRecords}
+                              />
+                            ) : null}
+                          </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
                             Name
                           </TableHead>
@@ -965,9 +1155,6 @@ export function View({ initialData }: ViewProps = {}) {
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
                             Comment
                           </TableHead>
-                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[120px]">
-                            Created
-                          </TableHead>
                           <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[100px] pr-4"></TableHead>
                         </TableRow>
                       </TableHeader>
@@ -986,6 +1173,16 @@ export function View({ initialData }: ViewProps = {}) {
 
                           return (
                             <TableRow key={record.$id}>
+                              <TableCell className="w-[40px] px-4 py-3">
+                                {record.lock ? null : (
+                                  <Checkbox
+                                    checked={selectedRecords.has(record.$id)}
+                                    onCheckedChange={() =>
+                                      toggleRecord(record.$id, !!record.lock)
+                                    }
+                                  />
+                                )}
+                              </TableCell>
                               <TableCell className="px-4 py-3">
                                 <div className="flex items-center gap-2 group/name">
                                   <code className="text-[12px] font-mono text-foreground bg-muted/50 px-1.5 py-0.5 rounded">
@@ -1022,7 +1219,7 @@ export function View({ initialData }: ViewProps = {}) {
                                 </Badge>
                               </TableCell>
                               <TableCell className="px-4 py-3">
-                                <div className="flex items-center gap-2 max-w-[400px] group/value">
+                                <div className="flex items-center gap-2 max-w-[280px] group/value">
                                   {isAppwriteManaged ? (
                                     <Badge
                                       variant="outline"
@@ -1038,11 +1235,11 @@ export function View({ initialData }: ViewProps = {}) {
                                     </Badge>
                                   ) : (
                                     <>
-                                      {value && value.length > 50 ? (
+                                      {value && value.length > 28 ? (
                                         <TooltipProvider delayDuration={0}>
                                           <Tooltip>
                                             <TooltipTrigger asChild>
-                                              <code className="text-[12px] font-mono text-foreground cursor-pointer truncate max-w-[350px] block">
+                                              <code className="text-[12px] font-mono text-foreground cursor-pointer truncate max-w-[220px] block">
                                                 {value}
                                               </code>
                                             </TooltipTrigger>
@@ -1057,7 +1254,7 @@ export function View({ initialData }: ViewProps = {}) {
                                           </Tooltip>
                                         </TooltipProvider>
                                       ) : (
-                                        <code className="text-[12px] font-mono text-foreground break-all">
+                                        <code className="text-[12px] font-mono text-foreground truncate max-w-[220px] block">
                                           {value}
                                         </code>
                                       )}
@@ -1134,12 +1331,6 @@ export function View({ initialData }: ViewProps = {}) {
                                   </span>
                                 )}
                               </TableCell>
-                              <TableCell className="px-4 py-3">
-                                <DateTooltip
-                                  date={record.$createdAt}
-                                  className="text-[12px] font-medium text-muted-foreground"
-                                />
-                              </TableCell>
                               <TableCell className="px-4 py-3 text-right pr-4">
                                 {record.lock ? (
                                   <div className="flex justify-end">
@@ -1204,7 +1395,82 @@ export function View({ initialData }: ViewProps = {}) {
                     onPageSizeChange={handlePageSizeChange}
                     itemLabel="records"
                   />
+
+                  {/* Bulk Delete DNS Records Action Bar */}
+                  {selectedRecords.size > 0 && (
+                    <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
+                      <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
+                        <Badge variant="secondary" className="h-6 px-2.5">
+                          {selectedRecords.size} record
+                          {selectedRecords.size > 1 ? 's' : ''} selected
+                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedRecords(new Set())}
+                            className="h-8 text-xs"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={handleBulkDeleteRecords}
+                            disabled={bulkDeleteRecordsMutation.isPending}
+                            className="h-8 gap-2"
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Bulk Delete DNS Records Confirmation Dialog */}
+                  <Dialog
+                    open={bulkDeleteRecordsDialogOpen}
+                    onOpenChange={setBulkDeleteRecordsDialogOpen}
+                  >
+                    <DialogContent className="sm:max-w-md p-0">
+                      <DialogHeader className="px-6 pt-6 text-left">
+                        <DialogTitle>Delete DNS records</DialogTitle>
+                        <DialogDescription className="text-[13px] mt-2">
+                          Are you sure you want to delete{' '}
+                          {selectedRecords.size} DNS record
+                          {selectedRecords.size > 1 ? 's' : ''}? This action
+                          cannot be undone.
+                        </DialogDescription>
+                      </DialogHeader>
+
+                      <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                        <Button
+                          variant="outline"
+                          onClick={() =>
+                            setBulkDeleteRecordsDialogOpen(false)
+                          }
+                          disabled={bulkDeleteRecordsMutation.isPending}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          onClick={confirmBulkDeleteRecords}
+                          disabled={bulkDeleteRecordsMutation.isPending}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </>
+              ) : hasRecordFilters ? (
+                <EmptyState
+                  icon={Globe}
+                  title="No records match your filters"
+                  description="Try adjusting or clearing filters to see more records"
+                  variant="card"
+                />
               ) : (
                 <EmptyState
                   icon={Globe}

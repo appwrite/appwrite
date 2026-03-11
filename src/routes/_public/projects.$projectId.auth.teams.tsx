@@ -1,36 +1,66 @@
 import { createFileRoute, Outlet, useMatches } from '@tanstack/react-router'
+import { z } from 'zod'
 import { View } from '@/components/pages/projects/$projectId/auth/View'
 import {
-  fetchProjectTeams,
   projectQueryOptions,
+  teamsQueryOptions,
 } from '@/lib/react-query/hooks'
+import {
+  listSearchSchema,
+  queryParamToMap,
+} from '@/lib/table-filters'
+import { TEAMS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { pageTitle } from '@/lib/utils/page-title'
 
-const TEAMS_PER_PAGE = 25
+const DEFAULT_PAGE = 1
+
+const authTeamsSearchSchema = listSearchSchema.extend({
+  teamsSearch: z.string().optional().catch(undefined),
+  teamsQuery: z.string().optional().catch(undefined),
+  teamsPage: z.coerce.number().int().min(1).optional().catch(undefined),
+  teamsLimit: z.coerce.number().int().min(1).max(100).optional().catch(undefined),
+})
 
 export const Route = createFileRoute('/_public/projects/$projectId/auth/teams')(
   {
     head: () => ({ meta: [{ title: pageTitle('Teams', 'Auth') }] }),
-    loader: async ({ params, context }) => {
-      // Only run on client side (SDK requires browser environment)
-      if (typeof window === 'undefined') {
-        return
-      }
+    validateSearch: authTeamsSearchSchema,
+    loader: async ({ params, context, location }) => {
+      if (typeof window === 'undefined') return
 
       const { projectId } = params
       const { queryClient } = context
+      if (!projectId) return
 
-      if (projectId) {
-        // Fetch project first so setProjectRegion runs and project-scoped calls use the correct regional endpoint
-        await queryClient.ensureQueryData(projectQueryOptions(projectId))
-        // Fetch teams for the project (initial page, no search)
-        // Fetch first page of teams - blocks navigation until ready
-        await queryClient.fetchQuery({
-          queryKey: ['teams', 'project', projectId, 0, TEAMS_PER_PAGE, ''],
-          queryFn: () => fetchProjectTeams(projectId, 0, TEAMS_PER_PAGE, ''),
-          staleTime: 30 * 1000, // 30 seconds
-        })
-      }
+      const url = new URL(location.pathname + location.search, 'http://localhost')
+      const teamsSearch = url.searchParams.get('teamsSearch')?.trim() || undefined
+      const teamsPage = (() => {
+        const p = url.searchParams.get('teamsPage')
+        if (p == null || p === '') return DEFAULT_PAGE
+        const n = Number(p)
+        return Number.isInteger(n) && n >= 1 ? n : DEFAULT_PAGE
+      })()
+      const teamsLimit = (() => {
+        const p = url.searchParams.get('teamsLimit')
+        if (p == null || p === '') return TEAMS_DEFAULT_PAGE_SIZE
+        const n = Number(p)
+        return Number.isInteger(n) && n >= 1 ? n : TEAMS_DEFAULT_PAGE_SIZE
+      })()
+      const teamsQueryParam = url.searchParams.get('teamsQuery')
+      const teamsFilterMap = queryParamToMap(teamsQueryParam)
+      const teamsFilterQueries =
+        teamsFilterMap.size > 0 ? Array.from(teamsFilterMap.values()) : undefined
+
+      await queryClient.ensureQueryData(projectQueryOptions(projectId))
+      await queryClient.ensureQueryData(
+        teamsQueryOptions(
+          projectId,
+          teamsPage - 1,
+          teamsLimit,
+          teamsSearch,
+          teamsFilterQueries,
+        ),
+      )
     },
     component: AuthTeamsPage,
   },

@@ -1,13 +1,30 @@
 import { useMemo, useState } from 'react'
 import { useParams, useLocation } from '@tanstack/react-router'
+import {
+  useProject,
+  useOrganizationScopes,
+} from '@/lib/react-query/hooks'
+import {
+  canWriteDomains,
+  canWriteWebhooks,
+  canCreateMigration,
+} from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { ProjectSettingsOverview } from './Overview'
 import { Domains } from './Domains'
 import { Webhooks } from './Webhooks'
 import { Migrations } from './Migrations'
 import { SMTP } from './SMTP'
+import { Variables } from './Variables'
+import type { Models } from '@appwrite.io/console'
 
-export function View() {
+export interface SettingsViewProps {
+  /** Prefetched migrations from route loader; avoids loading spinner on first paint */
+  initialMigrationsData?: { migrations: Models.Migration[]; total: number }
+}
+
+export function View({ initialMigrationsData }: SettingsViewProps = {}) {
   const params = useParams({ strict: false })
   const location = useLocation()
   const projectId = params.projectId as string
@@ -25,7 +42,9 @@ export function View() {
       if (pathParts[settingsIndex + 1]) {
         const tabFromPath = pathParts[settingsIndex + 1]
         if (
-          ['domains', 'webhooks', 'migrations', 'smtp'].includes(tabFromPath)
+          ['domains', 'webhooks', 'migrations', 'smtp', 'variables'].includes(
+            tabFromPath,
+          )
         ) {
           return tabFromPath
         }
@@ -52,6 +71,12 @@ export function View() {
         params: { projectId: projectId as string },
       },
       {
+        id: 'variables',
+        label: 'Variables',
+        to: '/projects/$projectId/settings/variables',
+        params: { projectId: projectId as string },
+      },
+      {
         id: 'webhooks',
         label: 'Webhooks',
         to: '/projects/$projectId/settings/webhooks',
@@ -73,19 +98,47 @@ export function View() {
     [projectId],
   )
 
+  const { project } = useProject(projectId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
+  const noDomainsPermission = !canWriteDomains(access, features)
+  const noWebhooksPermission = !canWriteWebhooks(access, features)
+  const noMigrationsPermission = !canCreateMigration(access, features)
+  const createDisabled =
+    (activeTab === 'domains' && noDomainsPermission) ||
+    (activeTab === 'webhooks' && noWebhooksPermission) ||
+    (activeTab === 'migrations' && noMigrationsPermission)
+  const createDisabledTooltip =
+    activeTab === 'domains' && noDomainsPermission
+      ? "You don't have permission to add domains."
+      : activeTab === 'webhooks' && noWebhooksPermission
+        ? "You don't have permission to create webhooks."
+        : activeTab === 'migrations' && noMigrationsPermission
+          ? "You don't have permission to create migrations."
+          : undefined
+
   // Determine search and create props based on active tab
-  const hasSearch = activeTab !== 'overview' && activeTab !== 'smtp'
+  const hasSearch =
+    activeTab !== 'overview' && activeTab !== 'smtp' && activeTab !== 'variables'
   const searchPlaceholder = hasSearch ? `Search ${activeTab}...` : undefined
   const createLabel =
     activeTab === 'domains'
       ? 'Add domain'
       : activeTab === 'webhooks'
         ? 'Create webhook'
-        : undefined
+        : activeTab === 'migrations'
+          ? 'Import data'
+          : undefined
   const createTo =
-    activeTab === 'domains' ? '/projects/$projectId/settings/domains/add' : undefined
+    activeTab === 'domains'
+      ? '/projects/$projectId/settings/domains/add'
+      : activeTab === 'migrations'
+        ? '/projects/$projectId/settings/migrations/import'
+        : undefined
   const createParams =
-    activeTab === 'domains' ? { projectId } : undefined
+    activeTab === 'domains' || activeTab === 'migrations'
+      ? { projectId }
+      : undefined
   const handleCreate = useMemo(() => {
     if (activeTab === 'webhooks') {
       return () => {
@@ -113,6 +166,8 @@ export function View() {
         createTo={createTo}
         createParams={createParams}
         onCreate={handleCreate}
+        createDisabled={createDisabled}
+        createDisabledTooltip={createDisabledTooltip}
       />
 
       <div className="flex-1">
@@ -125,8 +180,14 @@ export function View() {
         {activeTab === 'webhooks' && (
           <Webhooks projectId={projectId} searchValue={searchValue} />
         )}
-        {activeTab === 'migrations' && <Migrations projectId={projectId} />}
+        {activeTab === 'migrations' && (
+          <Migrations
+            projectId={projectId}
+            initialData={initialMigrationsData}
+          />
+        )}
         {activeTab === 'smtp' && <SMTP projectId={projectId} />}
+        {activeTab === 'variables' && <Variables />}
       </div>
     </div>
   )

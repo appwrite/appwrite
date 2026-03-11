@@ -37,6 +37,14 @@ export type ConsoleProfileFeatures = {
   databaseBackups: boolean
   /** Database analytics and insights */
   databaseInsights: boolean
+  /** Global: dedicated DBs support (wizard + specs). When true, use fullscreen create wizard and show spec upgrade for supported DB types. */
+  dedicatedDbsSupport: boolean
+  /** Dedicated DBs support for Tables DB: show spec selector in wizard and "Upgrade database specs" in rows view. */
+  dedicatedDbsTablesDB: boolean
+  /** Dedicated DBs support for Documents DB. */
+  dedicatedDbsDocumentsDB: boolean
+  /** Dedicated DBs support for Vectors DB. */
+  dedicatedDbsVectorsDB: boolean
 }
 
 export type ConsoleProfile = {
@@ -66,6 +74,10 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       aiAssistant: true,
       databaseBackups: true,
       databaseInsights: true,
+      dedicatedDbsSupport: true,
+      dedicatedDbsTablesDB: true,
+      dedicatedDbsDocumentsDB: false,
+      dedicatedDbsVectorsDB: false,
     },
   },
   'self-hosted': {
@@ -87,6 +99,10 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       aiAssistant: false,
       databaseBackups: false,
       databaseInsights: false,
+      dedicatedDbsSupport: false,
+      dedicatedDbsTablesDB: false,
+      dedicatedDbsDocumentsDB: false,
+      dedicatedDbsVectorsDB: false,
     },
   },
 }
@@ -105,32 +121,56 @@ function getProfileFromEnv(): ConsoleProfileId {
   return 'cloud'
 }
 
+/** Store the full profile object (actual value), not just the id. */
 const DEBUG_PROFILE_KEY = 'debug:consoleProfile'
 
-function getDebugProfileOverride(): ConsoleProfileId | null {
+function getStoredProfile(): ConsoleProfile | null {
   if (typeof window === 'undefined') return null
   const stored = localStorage.getItem(DEBUG_PROFILE_KEY)
-  if (stored && VALID_PROFILE_IDS.includes(stored as ConsoleProfileId)) {
-    return stored as ConsoleProfileId
+  if (!stored?.trim()) return null
+  try {
+    const parsed = JSON.parse(stored) as unknown
+    if (
+      parsed &&
+      typeof parsed === 'object' &&
+      'id' in parsed &&
+      VALID_PROFILE_IDS.includes((parsed as ConsoleProfile).id) &&
+      'features' in parsed &&
+      typeof (parsed as ConsoleProfile).features === 'object'
+    ) {
+      return parsed as ConsoleProfile
+    }
+  } catch {
+    // ignore
+  }
+  // Legacy: stored value was just the id string
+  if (VALID_PROFILE_IDS.includes(stored as ConsoleProfileId)) {
+    return CONSOLE_PROFILES[stored as ConsoleProfileId]
   }
   return null
 }
 
 /**
  * Returns the currently active console profile ID.
- * In debug mode, localStorage override takes precedence over env var.
+ * In debug mode, localStorage override (stored profile value) takes precedence over env var.
  */
 export function getActiveProfileId(): ConsoleProfileId {
-  const override = getDebugProfileOverride()
-  if (override) return override
+  const stored = getStoredProfile()
+  if (stored) return stored.id
   return getProfileFromEnv()
 }
 
 /**
- * Returns the currently active console profile.
+ * Returns the currently active console profile (stored value when set, else from env).
+ * Stored profile features are merged with the canonical profile for that id so new
+ * feature keys added later get correct defaults (e.g. after localStorage was set).
  */
 export function getActiveProfile(): ConsoleProfile {
-  return CONSOLE_PROFILES[getActiveProfileId()]
+  const stored = getStoredProfile()
+  if (!stored) return CONSOLE_PROFILES[getProfileFromEnv()]
+  const canonical = CONSOLE_PROFILES[stored.id]
+  const mergedFeatures = { ...canonical.features, ...stored.features } as ConsoleProfileFeatures
+  return { ...stored, features: mergedFeatures }
 }
 
 /**
@@ -154,15 +194,44 @@ export const CONSOLE_PROFILE_CHANGE_EVENT = 'consoleProfileChange'
 
 /**
  * Set the profile override (debug mode only).
+ * Stores the full profile object (actual value) in localStorage.
  * Dispatches CONSOLE_PROFILE_CHANGE_EVENT so UI can re-render.
  */
 export function setDebugProfileOverride(profileId: ConsoleProfileId | null) {
   if (typeof window === 'undefined') return
   if (profileId) {
-    localStorage.setItem(DEBUG_PROFILE_KEY, profileId)
+    const profile = CONSOLE_PROFILES[profileId]
+    localStorage.setItem(DEBUG_PROFILE_KEY, JSON.stringify(profile))
   } else {
     localStorage.removeItem(DEBUG_PROFILE_KEY)
   }
+  window.dispatchEvent(new CustomEvent(CONSOLE_PROFILE_CHANGE_EVENT))
+}
+
+/**
+ * Override a single feature flag for the current profile (debug mode only).
+ * Creates or updates the stored profile so the override is persisted.
+ * Stored profile only keeps override keys in features; getActiveProfile merges with canonical.
+ * Dispatches CONSOLE_PROFILE_CHANGE_EVENT so UI re-renders.
+ */
+export function setDebugProfileFeatureOverride<K extends keyof ConsoleProfileFeatures>(
+  key: K,
+  value: ConsoleProfileFeatures[K],
+) {
+  if (typeof window === 'undefined') return
+  const stored = getStoredProfile()
+  const profileId = stored?.id ?? getProfileFromEnv()
+  const canonical = CONSOLE_PROFILES[profileId]
+  const nextOverrideFeatures = {
+    ...(stored?.features ?? {}),
+    [key]: value,
+  } as Partial<ConsoleProfileFeatures>
+  const nextStored = {
+    ...canonical,
+    id: profileId,
+    features: nextOverrideFeatures,
+  }
+  localStorage.setItem(DEBUG_PROFILE_KEY, JSON.stringify(nextStored))
   window.dispatchEvent(new CustomEvent(CONSOLE_PROFILE_CHANGE_EVENT))
 }
 

@@ -6,6 +6,7 @@ import {
   fetchOrganizations,
 } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
+import { listSearchSchema } from '@/lib/table-filters'
 
 const RECORDS_PER_PAGE = 25
 const STALE_TIME = 30 * 1000
@@ -13,6 +14,7 @@ const STALE_TIME = 30 * 1000
 export const Route = createFileRoute(
   '/_public/organizations/$orgId/domains/$domainId/',
 )({
+  validateSearch: listSearchSchema,
   head: ({ loaderData }) => ({
     meta: [
       {
@@ -20,7 +22,7 @@ export const Route = createFileRoute(
       },
     ],
   }),
-  loader: async ({ params, context }) => {
+  loader: async ({ params, context, location }) => {
     if (typeof window === 'undefined') return undefined
 
     const { domainId } = params
@@ -28,7 +30,10 @@ export const Route = createFileRoute(
 
     if (!domainId) return undefined
 
-    // Fetch and populate cache (same keys as hooks). Return data so View can use it for first paint (no flash).
+    // Only prefetch unfiltered records when URL has no filter query (avoids duplicate no-filter + filtered requests).
+    const url = new URL(location.pathname + location.search, 'http://localhost')
+    const hasFilterQuery = !!url.searchParams.get('query')
+
     const [domain, organizations, records] = await Promise.all([
       queryClient.fetchQuery({
         queryKey: ['domain', domainId],
@@ -40,14 +45,20 @@ export const Route = createFileRoute(
         queryFn: fetchOrganizations,
         staleTime: STALE_TIME,
       }),
-      queryClient.fetchQuery({
-        queryKey: ['dns-records', 'domain', domainId, 0, RECORDS_PER_PAGE],
-        queryFn: () => fetchDomainRecords(domainId, 0, RECORDS_PER_PAGE),
-        staleTime: STALE_TIME,
-      }),
+      hasFilterQuery
+        ? Promise.resolve(undefined)
+        : queryClient.fetchQuery({
+            queryKey: ['dns-records', 'domain', domainId, 0, RECORDS_PER_PAGE],
+            queryFn: () => fetchDomainRecords(domainId, 0, RECORDS_PER_PAGE),
+            staleTime: STALE_TIME,
+          }),
     ])
 
-    return { domain, organizations, records }
+    return {
+      domain,
+      organizations,
+      records: records ?? { dnsRecords: [], total: 0 },
+    }
   },
   component: DomainDetailPage,
 })

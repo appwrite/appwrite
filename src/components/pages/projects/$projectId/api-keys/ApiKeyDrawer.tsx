@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Copy, Check, Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -9,6 +10,7 @@ import {
   getAllAvailableScopes,
 } from '@/components/global/shared/ScopeEditor'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 
 interface ApiKeyDrawerProps {
@@ -17,6 +19,15 @@ interface ApiKeyDrawerProps {
   onSubmit: (data: { name: string; scopes?: string[]; expire?: string }) => void
   isLoading?: boolean
   apiKey?: Models.Key | null
+  /** When set (e.g. after create), show the key once with copy; drawer stays open until user dismisses */
+  createdKeySecret?: string | null
+  onCopy?: (text: string, field: string) => void
+  copiedField?: string | null
+}
+
+function maskKey(key: string) {
+  if (key.length <= 15) return '•'.repeat(12)
+  return key.slice(0, 7) + '•'.repeat(24) + key.slice(-4)
 }
 
 export function ApiKeyDrawer({
@@ -25,14 +36,24 @@ export function ApiKeyDrawer({
   onSubmit,
   isLoading = false,
   apiKey,
+  createdKeySecret,
+  onCopy,
+  copiedField,
 }: ApiKeyDrawerProps) {
   const [name, setName] = useState('')
   const [expire, setExpire] = useState('')
   const [scopes, setScopes] = useState<string[]>([])
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [expiryOption, setExpiryOption] = useState<string>('never')
+  const [keyRevealed, setKeyRevealed] = useState(false)
 
   const isEditing = !!apiKey
+  const showCreatedKey = !!createdKeySecret
+  const secretToShow =
+    createdKeySecret ?? (apiKey?.secret && apiKey.secret.trim() ? apiKey.secret : null)
+  const canCopyKey = !!secretToShow
+  const copyFieldId = createdKeySecret ? 'apiKeyDrawer-created' : `apiKeyDrawer-${apiKey?.$id ?? 'edit'}`
+  const isCopied = copiedField === copyFieldId
 
   // Predefined expiry options
   const expiryOptions = [
@@ -86,6 +107,16 @@ export function ApiKeyDrawer({
     return 'custom'
   }
 
+  const handleCopyKey = () => {
+    if (!secretToShow) return
+    navigator.clipboard.writeText(secretToShow)
+    if (onCopy) {
+      onCopy(secretToShow, copyFieldId)
+    } else {
+      toast.success('Copied to clipboard')
+    }
+  }
+
   // Reset form when dialog closes or when apiKey changes
   useEffect(() => {
     if (!open) {
@@ -94,6 +125,7 @@ export function ApiKeyDrawer({
       setScopes([])
       setErrors({})
       setExpiryOption('never')
+      setKeyRevealed(false)
     } else if (apiKey) {
       // Update mode: use existing scopes
       setName(apiKey.name || '')
@@ -174,7 +206,13 @@ export function ApiKeyDrawer({
     <BaseDrawer
       open={open}
       onOpenChange={handleOpenChange}
-      title={isEditing ? 'Update API key' : 'Create API key'}
+      title={
+        showCreatedKey
+          ? 'API key created'
+          : isEditing
+            ? 'Update API key'
+            : 'Create API key'
+      }
       maxWidth="sm:max-w-lg"
     >
       <>
@@ -183,6 +221,41 @@ export function ApiKeyDrawer({
         <form onSubmit={handleSubmit} className="flex flex-1 flex-col min-h-0">
           <div className="flex-1 overflow-y-auto">
             <div className="px-6 py-6">
+              {/* Show created key one-time */}
+              {showCreatedKey && secretToShow && (
+                <div className="mb-6 rounded-xl border border-primary/30 bg-primary/5 p-4">
+                  <p className="text-[13px] font-medium text-foreground mb-1">
+                    Your new API key
+                  </p>
+                  <p className="text-[12px] text-muted-foreground mb-3">
+                    Copy it now. We won&apos;t show it again.
+                  </p>
+                  <div className="flex gap-2">
+                    <textarea
+                      readOnly
+                      value={secretToShow}
+                      rows={3}
+                      className="flex-1 rounded-md border border-border bg-muted px-3 py-2 font-mono text-[12px] text-foreground focus:outline-none focus:ring-2 focus:ring-ring select-all"
+                      onClick={(e) => (e.target as HTMLTextAreaElement).select()}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-9 shrink-0"
+                      onClick={handleCopyKey}
+                    >
+                      {isCopied ? (
+                        <Check className="h-4 w-4 text-emerald-500" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {!showCreatedKey && (
               <div className="space-y-5">
                 <div className="space-y-2">
                   <Label htmlFor="name">
@@ -208,6 +281,56 @@ export function ApiKeyDrawer({
                     </p>
                   )}
                 </div>
+
+                {/* View/copy key in edit mode when secret is available */}
+                {isEditing && (
+                  <div className="space-y-2">
+                    <Label className="text-[12px] font-medium">API key</Label>
+                    {canCopyKey ? (
+                      <div className="flex gap-2">
+                        <Input
+                          readOnly
+                          type={keyRevealed ? 'text' : 'password'}
+                          value={keyRevealed ? secretToShow : maskKey(secretToShow!)}
+                          className="font-mono text-[12px]"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="h-9 w-9 shrink-0"
+                          onClick={() => setKeyRevealed((v) => !v)}
+                          title={keyRevealed ? 'Hide key' : 'Show key'}
+                        >
+                          {keyRevealed ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="h-9 w-9 shrink-0"
+                          onClick={handleCopyKey}
+                          title="Copy key"
+                        >
+                          {isCopied ? (
+                            <Check className="h-4 w-4 text-emerald-500" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                    ) : (
+                      <p className="text-[12px] text-muted-foreground">
+                        The key secret is only shown when the key is first created.
+                        It can&apos;t be viewed or copied again from here.
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <Label>Expiration date</Label>
@@ -309,21 +432,33 @@ export function ApiKeyDrawer({
                   </p>
                 </div>
               </div>
+              )}
             </div>
           </div>
 
           <div className="flex-shrink-0 flex items-center justify-start gap-2 border-t border-border bg-muted/30 px-6 py-4">
-            <Button type="submit" disabled={isLoading}>
-              {isEditing ? 'Update API key' : 'Create API key'}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => handleOpenChange(false)}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
+            {showCreatedKey ? (
+              <Button
+                type="button"
+                onClick={() => handleOpenChange(false)}
+              >
+                Done
+              </Button>
+            ) : (
+              <>
+                <Button type="submit" disabled={isLoading}>
+                  {isEditing ? 'Update API key' : 'Create API key'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleOpenChange(false)}
+                  disabled={isLoading}
+                >
+                  Cancel
+                </Button>
+              </>
+            )}
           </div>
         </form>
       </>

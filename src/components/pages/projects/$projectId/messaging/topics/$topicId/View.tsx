@@ -5,7 +5,12 @@ import {
   useTopic,
   useTopicSubscribers,
   fetchUser,
+  useProject,
+  useOrganizationScopes,
 } from '@/lib/react-query/hooks'
+import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { canShowTopicSettingsTab } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ServiceHeader, type Tab } from '../../../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
@@ -37,10 +42,14 @@ export function View() {
 
   // Fetch topic
   const { data: topic, isLoading: topicLoading } = useTopic(projectId, topicId)
+  const { project } = useProject(projectId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
+  const showSettingsTab = canShowTopicSettingsTab(access, features)
 
   const [searchValue, setSearchValue] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(25)
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
 
   // Convert 1-indexed page to 0-indexed for API
   const pageIndexed = currentPage - 1
@@ -160,18 +169,34 @@ export function View() {
           topicId: topicId as string,
         },
       },
-      {
-        id: 'settings',
-        label: 'Settings',
-        to: '/projects/$projectId/messaging/topics/$topicId/settings',
-        params: {
-          projectId: projectId as string,
-          topicId: topicId as string,
-        },
-      },
+      ...(showSettingsTab
+        ? [
+            {
+              id: 'settings' as const,
+              label: 'Settings',
+              to: '/projects/$projectId/messaging/topics/$topicId/settings',
+              params: {
+                projectId: projectId as string,
+                topicId: topicId as string,
+              },
+            },
+          ]
+        : []),
     ],
-    [projectId, topicId],
+    [projectId, topicId, showSettingsTab],
   )
+
+  // Redirect from settings when user lacks permission
+  useEffect(() => {
+    if (showSettingsTab || !projectId || !topicId) return
+    if (activeTab === 'settings') {
+      navigate({
+        to: '/projects/$projectId/messaging/topics/$topicId',
+        params: { projectId, topicId },
+        replace: true,
+      })
+    }
+  }, [showSettingsTab, activeTab, projectId, topicId, navigate])
 
   const getTypeIcon = (type: string) => {
     if (type === 'email') return Mail

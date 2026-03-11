@@ -51,7 +51,23 @@ import {
   useProjectBuckets,
   useProjectFunctions,
   useProjectSites,
+  useProject,
+  useOrganizationScopes,
 } from '@/lib/react-query/hooks'
+import {
+  canShowProjectSettings,
+  canShowConnectSection,
+  canShowOrgDomainsTab,
+  canShowOrgBillingNav,
+  canShowOrgComplianceNav,
+  canCreateProject,
+  canCreateDatabase,
+  canCreateBucket,
+  canCreateFunction,
+  canCreateSite,
+  canCreateUser,
+  canCreateTeam,
+} from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 // Command types
@@ -136,13 +152,29 @@ export function CommandCenter({
   const currentPage = pages[pages.length - 1]
   const isMobile = useIsMobile()
   const { features } = useConsoleProfile()
+  const isOrgContext = context === 'org'
+  const isProjectContext = context === 'project'
+
+  // RBAC: resolve org/team for scopes (project context → project.teamId, org context → orgId)
+  const { project } = useProject(isProjectContext ? projectId ?? undefined : undefined)
+  const scopesOrgId = isOrgContext ? (orgId ?? undefined) : project?.teamId
+  const { access } = useOrganizationScopes(scopesOrgId)
+
+  const showProjectSettings = canShowProjectSettings(access, features)
+  const showConnect = canShowConnectSection(access, features)
+  const showOrgDomains = canShowOrgDomainsTab(access, features)
+  const canCreateProjectFlag = canCreateProject(access, features)
+  const canCreateDatabaseFlag = canCreateDatabase(access, features)
+  const canCreateBucketFlag = canCreateBucket(access, features)
+  const canCreateFunctionFlag = canCreateFunction(access, features)
+  const canCreateSiteFlag = canCreateSite(access, features)
+  const canCreateUserFlag = canCreateUser(access, features)
+  const canCreateTeamFlag = canCreateTeam(access, features)
 
   // Fetch resources based on context - only when there's a search query or scope
   const hasSearch = search.trim().length > 0
   const hasScope = searchScope !== null
   const shouldFetch = hasSearch || hasScope
-  const isOrgContext = context === 'org'
-  const isProjectContext = context === 'project'
 
   // Org context: fetch projects (only if searching for projects)
   const { projects: orgProjects, isLoading: orgProjectsLoading } =
@@ -291,7 +323,7 @@ export function CommandCenter({
           onOpenChange(false)
         },
       },
-      ...(features.domains
+      ...(showOrgDomains
         ? [
             {
               id: 'nav-domains',
@@ -321,10 +353,10 @@ export function CommandCenter({
           onOpenChange(false)
         },
       },
-      ...(features.billing
+      ...(canShowOrgBillingNav(access, features)
         ? [
             {
-              id: 'nav-billing',
+              id: 'nav-billing' as const,
               label: 'Go to Billing',
               description: 'Billing and subscription',
               icon: CreditCard,
@@ -338,10 +370,10 @@ export function CommandCenter({
             },
           ]
         : []),
-      ...(features.compliance
+      ...(canShowOrgComplianceNav(access, features)
         ? [
             {
-              id: 'nav-compliance',
+              id: 'nav-compliance' as const,
               label: 'Go to Compliance',
               description: 'DPA, BAA, SOC 2',
               icon: ShieldCheck,
@@ -356,23 +388,32 @@ export function CommandCenter({
           ]
         : []),
     ],
-    [onOrgNavigate, onOpenChange, features.domains, features.billing, features.compliance],
+    [
+      onOrgNavigate,
+      onOpenChange,
+      showOrgDomains,
+      access,
+      features,
+    ],
   )
 
-  // Organization create commands
-  const orgCreateCommands: CommandItemType[] = useMemo(
-    () => [
+  // Organization create commands (Invite Member only when onInviteMember provided, e.g. for owners)
+  const orgCreateCommands: CommandItemType[] = useMemo(() => {
+    const commands: CommandItemType[] = [
       {
         id: 'create-project',
         label: 'Create Project',
-        description: 'Create a new project',
+        description: canCreateProjectFlag
+          ? 'Create a new project'
+          : "You don't have permission to create projects.",
         icon: Plus,
         type: 'create',
         shortcut: 'C P',
         keywords: ['new', 'add'],
         action: () => {
-          onOpenChange(false)
+          if (canCreateProjectFlag) onOpenChange(false)
         },
+        disabled: !canCreateProjectFlag,
       },
       {
         id: 'create-team',
@@ -386,7 +427,9 @@ export function CommandCenter({
           onOpenChange(false)
         },
       },
-      {
+    ]
+    if (onInviteMember) {
+      commands.push({
         id: 'invite-member',
         label: 'Invite Member',
         description: 'Invite an organization member',
@@ -396,12 +439,12 @@ export function CommandCenter({
         keywords: ['new', 'add', 'user'],
         action: () => {
           onOpenChange(false)
-          onInviteMember?.()
+          onInviteMember()
         },
-      },
-    ],
-    [onOpenChange, onInviteMember],
-  )
+      })
+    }
+    return commands
+  }, [onOpenChange, onInviteMember, canCreateProjectFlag])
 
   // Organization resource search
   const orgResourceCommands: CommandItemType[] = useMemo(() => {
@@ -444,30 +487,34 @@ export function CommandCenter({
           onOpenChange(false)
         },
       },
-      {
-        id: 'nav-apps',
-        label: 'Go to Apps',
-        description: 'Apps and platforms',
-        icon: Plug,
-        type: 'navigation',
-        keywords: ['connect', 'apps', 'platforms'],
-        action: () => {
-          onNavigate?.('apps')
-          onOpenChange(false)
-        },
-      },
-      {
-        id: 'nav-api-keys',
-        label: 'Go to API Keys',
-        description: 'Manage API keys',
-        icon: Key,
-        type: 'navigation',
-        keywords: ['keys', 'tokens', 'secrets'],
-        action: () => {
-          onNavigate?.('api-keys')
-          onOpenChange(false)
-        },
-      },
+      ...(showConnect
+        ? [
+            {
+              id: 'nav-apps' as const,
+              label: 'Go to Apps',
+              description: 'Apps and platforms',
+              icon: Plug,
+              type: 'navigation' as const,
+              keywords: ['connect', 'apps', 'platforms'],
+              action: () => {
+                onNavigate?.('apps')
+                onOpenChange(false)
+              },
+            },
+            {
+              id: 'nav-api-keys' as const,
+              label: 'Go to API Keys',
+              description: 'Manage API keys',
+              icon: Key,
+              type: 'navigation' as const,
+              keywords: ['keys', 'tokens', 'secrets'],
+              action: () => {
+                onNavigate?.('api-keys')
+                onOpenChange(false)
+              },
+            },
+          ]
+        : []),
       {
         id: 'nav-auth',
         label: 'Go to Auth',
@@ -602,35 +649,49 @@ export function CommandCenter({
           onOpenChange(false)
         },
       },
-      {
-        id: 'nav-settings',
-        label: 'Go to Settings',
-        description: 'Project settings',
-        icon: Settings,
-        type: 'navigation',
-        shortcut: 'G ,',
-        keywords: ['config', 'preferences', 'options'],
-        action: () => {
-          onNavigate?.('settings')
-          onOpenChange(false)
-        },
-      },
+      ...(showProjectSettings
+        ? [
+            {
+              id: 'nav-settings' as const,
+              label: 'Go to Settings',
+              description: 'Project settings',
+              icon: Settings,
+              type: 'navigation' as const,
+              shortcut: 'G ,',
+              keywords: ['config', 'preferences', 'options'],
+              action: () => {
+                onNavigate?.('settings')
+                onOpenChange(false)
+              },
+            },
+          ]
+        : []),
     ],
-    [onNavigate, onOpenChange, features.activity, features.usageStats],
+    [
+      onNavigate,
+      onOpenChange,
+      features.activity,
+      features.usageStats,
+      showConnect,
+      showProjectSettings,
+    ],
   )
 
-  // Create commands - use onCreateResource to open modal/wizard, fallback to onNavigate
+  // Create commands - use onCreateResource to open modal/wizard, fallback to onNavigate; disabled by RBAC when no write scope
   const createCommands: CommandItemType[] = useMemo(
     () => [
       {
         id: 'create-database',
         label: 'Create Database',
-        description: 'Create a new database',
+        description: canCreateDatabaseFlag
+          ? 'Create a new database'
+          : "You don't have permission to create databases.",
         icon: Database,
         type: 'create',
         shortcut: 'C D',
         keywords: ['new', 'add'],
         action: () => {
+          if (!canCreateDatabaseFlag) return
           if (onCreateResource) {
             onCreateResource('database')
           } else {
@@ -638,16 +699,20 @@ export function CommandCenter({
           }
           onOpenChange(false)
         },
+        disabled: !canCreateDatabaseFlag,
       },
       {
         id: 'create-bucket',
         label: 'Create Bucket',
-        description: 'Create a new storage bucket',
+        description: canCreateBucketFlag
+          ? 'Create a new storage bucket'
+          : "You don't have permission to create buckets.",
         icon: Folder,
         type: 'create',
         shortcut: 'C B',
         keywords: ['new', 'add', 'storage'],
         action: () => {
+          if (!canCreateBucketFlag) return
           if (onCreateResource) {
             onCreateResource('bucket')
           } else {
@@ -655,16 +720,20 @@ export function CommandCenter({
           }
           onOpenChange(false)
         },
+        disabled: !canCreateBucketFlag,
       },
       {
         id: 'create-function',
         label: 'Create Function',
-        description: 'Create a new serverless function',
+        description: canCreateFunctionFlag
+          ? 'Create a new serverless function'
+          : "You don't have permission to create functions.",
         icon: Zap,
         type: 'create',
         shortcut: 'C F',
         keywords: ['new', 'add', 'serverless'],
         action: () => {
+          if (!canCreateFunctionFlag) return
           if (onCreateResource) {
             onCreateResource('function')
           } else {
@@ -672,16 +741,20 @@ export function CommandCenter({
           }
           onOpenChange(false)
         },
+        disabled: !canCreateFunctionFlag,
       },
       {
         id: 'create-site',
         label: 'Create Site',
-        description: 'Create a new site',
+        description: canCreateSiteFlag
+          ? 'Create a new site'
+          : "You don't have permission to create sites.",
         icon: Globe,
         type: 'create',
         shortcut: 'C S',
         keywords: ['new', 'add', 'hosting', 'deploy'],
         action: () => {
+          if (!canCreateSiteFlag) return
           if (onCreateResource) {
             onCreateResource('site')
           } else {
@@ -689,16 +762,20 @@ export function CommandCenter({
           }
           onOpenChange(false)
         },
+        disabled: !canCreateSiteFlag,
       },
       {
         id: 'create-user',
         label: 'Create User',
-        description: 'Create a new user',
+        description: canCreateUserFlag
+          ? 'Create a new user'
+          : "You don't have permission to create users.",
         icon: UserPlus,
         type: 'create',
         shortcut: 'C U',
         keywords: ['new', 'add', 'account'],
         action: () => {
+          if (!canCreateUserFlag) return
           if (onCreateResource) {
             onCreateResource('user')
           } else {
@@ -706,16 +783,20 @@ export function CommandCenter({
           }
           onOpenChange(false)
         },
+        disabled: !canCreateUserFlag,
       },
       {
         id: 'create-team',
         label: 'Create Team',
-        description: 'Create a new team',
+        description: canCreateTeamFlag
+          ? 'Create a new team'
+          : "You don't have permission to create teams.",
         icon: Building2,
         type: 'create',
         shortcut: 'C T',
         keywords: ['new', 'add', 'group'],
         action: () => {
+          if (!canCreateTeamFlag) return
           if (onCreateResource) {
             onCreateResource('team')
           } else {
@@ -723,9 +804,20 @@ export function CommandCenter({
           }
           onOpenChange(false)
         },
+        disabled: !canCreateTeamFlag,
       },
     ],
-    [onCreateResource, onNavigate, onOpenChange],
+    [
+      onCreateResource,
+      onNavigate,
+      onOpenChange,
+      canCreateDatabase,
+      canCreateBucket,
+      canCreateFunction,
+      canCreateSite,
+      canCreateUser,
+      canCreateTeam,
+    ],
   )
 
   // Quick actions
@@ -1158,76 +1250,121 @@ export function CommandCenter({
     return items
   }, [orgProjects, onOrgNavigate, onOpenChange])
 
-  // Keyboard shortcuts reference
-  const shortcutGroups =
-    context === 'org'
-      ? [
-          {
-            label: 'Navigation',
-            shortcuts: [
-              { keys: ['G', 'P'], description: 'Go to Projects' },
-              { keys: ['G', 'S'], description: 'Go to Settings' },
-              { keys: ['G', 'D'], description: 'Go to Domains' },
-              { keys: ['G', 'M'], description: 'Go to Members' },
-              { keys: ['G', 'B'], description: 'Go to Billing' },
-              { keys: ['G', 'C'], description: 'Go to Compliance' },
-            ],
-          },
-          {
-            label: 'Create',
-            shortcuts: [
-              { keys: ['C', 'P'], description: 'Create Project' },
-              { keys: ['C', 'T'], description: 'Create Organization' },
-              { keys: ['C', 'M'], description: 'Invite Member' },
-            ],
-          },
-          {
-            label: 'Actions',
-            shortcuts: [
-              { keys: ['⌘', 'K'], description: 'Open Command Center' },
-              { keys: ['?'], description: 'Show Keyboard Shortcuts' },
-              { keys: ['Esc'], description: 'Close / Go Back' },
-              { keys: ['/'], description: 'Focus Search' },
-            ],
-          },
-        ]
-      : [
-          {
-            label: 'Navigation',
-            shortcuts: [
-              { keys: ['G', 'O'], description: 'Go to Overview' },
-              { keys: ['G', 'D'], description: 'Go to Databases' },
-              { keys: ['G', 'A'], description: 'Go to Auth' },
-              { keys: ['G', 'S'], description: 'Go to Storage' },
-              { keys: ['G', 'F'], description: 'Go to Functions' },
-              { keys: ['G', 'M'], description: 'Go to Messaging' },
-              { keys: ['G', 'W'], description: 'Go to Sites' },
-              { keys: ['G', 'U'], description: 'Go to Usage' },
-              { keys: ['G', ','], description: 'Go to Settings' },
-            ],
-          },
-          {
-            label: 'Create',
-            shortcuts: [
-              { keys: ['C', 'D'], description: 'Create Database' },
-              { keys: ['C', 'B'], description: 'Create Bucket' },
-              { keys: ['C', 'F'], description: 'Create Function' },
-              { keys: ['C', 'S'], description: 'Create Site' },
-              { keys: ['C', 'U'], description: 'Create User' },
-              { keys: ['C', 'T'], description: 'Create Team' },
-            ],
-          },
-          {
-            label: 'Actions',
-            shortcuts: [
-              { keys: ['⌘', 'K'], description: 'Open Command Center' },
-              { keys: ['?'], description: 'Show Keyboard Shortcuts' },
-              { keys: ['L'], description: 'View Logs' },
-              { keys: ['Esc'], description: 'Close / Go Back' },
-              { keys: ['/'], description: 'Focus Search' },
-            ],
-          },
-        ]
+  // Keyboard shortcuts reference (filtered by RBAC)
+  const shortcutGroups = useMemo(
+    () =>
+      context === 'org'
+        ? [
+            {
+              label: 'Navigation',
+              shortcuts: [
+                { keys: ['G', 'P'], description: 'Go to Projects' },
+                { keys: ['G', 'S'], description: 'Go to Settings' },
+                ...(showOrgDomains
+                  ? [{ keys: ['G', 'D'], description: 'Go to Domains' }]
+                  : []),
+                { keys: ['G', 'M'], description: 'Go to Members' },
+                ...(canShowOrgBillingNav(access, features)
+                  ? [{ keys: ['G', 'B'], description: 'Go to Billing' }]
+                  : []),
+                ...(canShowOrgComplianceNav(access, features)
+                  ? [{ keys: ['G', 'C'], description: 'Go to Compliance' }]
+                  : []),
+              ],
+            },
+            {
+              label: 'Create',
+              shortcuts: [
+                ...(canCreateProjectFlag
+                  ? [{ keys: ['C', 'P'], description: 'Create Project' }]
+                  : []),
+                { keys: ['C', 'T'], description: 'Create Organization' },
+                ...(onInviteMember
+                  ? [{ keys: ['C', 'M'], description: 'Invite Member' }]
+                  : []),
+              ],
+            },
+            {
+              label: 'Actions',
+              shortcuts: [
+                { keys: ['⌘', 'K'], description: 'Open Command Center' },
+                { keys: ['?'], description: 'Show Keyboard Shortcuts' },
+                { keys: ['Esc'], description: 'Close / Go Back' },
+                { keys: ['/'], description: 'Focus Search' },
+              ],
+            },
+          ]
+        : [
+            {
+              label: 'Navigation',
+              shortcuts: [
+                { keys: ['G', 'O'], description: 'Go to Overview' },
+                { keys: ['G', 'A'], description: 'Go to Auth' },
+                { keys: ['G', 'D'], description: 'Go to Databases' },
+                { keys: ['G', 'S'], description: 'Go to Storage' },
+                { keys: ['G', 'F'], description: 'Go to Functions' },
+                { keys: ['G', 'M'], description: 'Go to Messaging' },
+                { keys: ['G', 'W'], description: 'Go to Sites' },
+                ...(features.usageStats
+                  ? [{ keys: ['G', 'U'], description: 'Go to Usage' }]
+                  : []),
+                ...(showProjectSettings
+                  ? [{ keys: ['G', ','], description: 'Go to Settings' }]
+                  : []),
+              ],
+            },
+            {
+              label: 'Create',
+              shortcuts: [
+                ...(canCreateDatabaseFlag
+                  ? [{ keys: ['C', 'D'], description: 'Create Database' }]
+                  : []),
+                ...(canCreateBucketFlag
+                  ? [{ keys: ['C', 'B'], description: 'Create Bucket' }]
+                  : []),
+                ...(canCreateFunctionFlag
+                  ? [{ keys: ['C', 'F'], description: 'Create Function' }]
+                  : []),
+                ...(canCreateSiteFlag
+                  ? [{ keys: ['C', 'S'], description: 'Create Site' }]
+                  : []),
+                ...(canCreateUserFlag
+                  ? [{ keys: ['C', 'U'], description: 'Create User' }]
+                  : []),
+                ...(canCreateTeamFlag
+                  ? [{ keys: ['C', 'T'], description: 'Create Team' }]
+                  : []),
+              ],
+            },
+            {
+              label: 'Actions',
+              shortcuts: [
+                { keys: ['⌘', 'K'], description: 'Open Command Center' },
+                { keys: ['?'], description: 'Show Keyboard Shortcuts' },
+                ...(features.activity
+                  ? [{ keys: ['L'], description: 'View Logs' }]
+                  : []),
+                { keys: ['Esc'], description: 'Close / Go Back' },
+                { keys: ['/'], description: 'Focus Search' },
+              ],
+            },
+          ],
+    [
+      context,
+      showOrgDomains,
+      features,
+      access,
+      canCreateProjectFlag,
+      canCreateDatabaseFlag,
+      canCreateBucketFlag,
+      canCreateFunctionFlag,
+      canCreateSiteFlag,
+      canCreateUserFlag,
+      canCreateTeamFlag,
+      showProjectSettings,
+      onInviteMember,
+    ],
+  )
 
   // Filter commands based on search and context
   const filteredGroups = useMemo(() => {

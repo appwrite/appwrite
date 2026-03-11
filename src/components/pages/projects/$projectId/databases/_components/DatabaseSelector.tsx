@@ -41,6 +41,9 @@ export interface DatabaseSelectorProps {
   placeholder?: string
   limit?: number
   triggerClassName?: string
+  /** When true, the create (plus) button is disabled with tooltip */
+  createDisabled?: boolean
+  createDisabledTooltip?: string
 }
 
 export function DatabaseSelector({
@@ -52,6 +55,8 @@ export function DatabaseSelector({
   placeholder = 'Select database',
   limit = DEFAULT_LIMIT,
   triggerClassName,
+  createDisabled = false,
+  createDisabledTooltip = "You don't have permission to create databases.",
 }: DatabaseSelectorProps) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
@@ -145,16 +150,21 @@ export function DatabaseSelector({
       </Popover>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8 shrink-0"
-            onClick={onCreateClick}
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
+          <span className="inline-flex">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 shrink-0"
+              onClick={onCreateClick}
+              disabled={createDisabled}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </span>
         </TooltipTrigger>
-        <TooltipContent side="bottom">Create database</TooltipContent>
+        <TooltipContent side="bottom">
+          {createDisabled ? createDisabledTooltip : 'Create database'}
+        </TooltipContent>
       </Tooltip>
     </div>
   )

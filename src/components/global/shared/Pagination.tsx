@@ -222,10 +222,8 @@ export function Pagination({
 
   const handlePageSizeChange = (value: string) => {
     const newPageSize = parseInt(value, 10)
+    // Parent is responsible for navigating with new limit and resetting to page 1 (single navigation)
     onPageSizeChange(newPageSize)
-    // Reset to page 1 when changing page size
-    isUserInitiatedRef.current = true
-    onPageChange(1)
     scrollToTop()
   }
 

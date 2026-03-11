@@ -2,12 +2,11 @@ import { useState, useMemo, useEffect } from 'react'
 import {
   TrendingUp,
   TrendingDown,
-  Key,
   Plus,
-  Link,
   Plug2,
   Check,
   Copy,
+  Key,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { RequestsChart } from './RequestsChart'
@@ -33,8 +32,9 @@ import { PlatformIcon } from '@/components/global/shared/Icon'
 import { LanguageIcon } from '@/components/global/shared/LanguageIcon'
 import { getPlatformDisplayName } from '@/lib/utils/platform'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ApiKeysList } from '../shared/ApiKeysList'
+import { ApiKeysList, type ApiKey } from '../shared/ApiKeysList'
 import { ApiKeyDrawer } from '../api-keys/ApiKeyDrawer'
+import { PlatformDrawer } from '../apps/_components/PlatformDrawer'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
@@ -96,6 +96,7 @@ interface Integration {
   identifier: string // hostname for web, app ID for apps
   icon: React.ReactNode
   docsUrl: string
+  platform: Models.Platform
 }
 
 const supportedPlatforms = [
@@ -123,11 +124,21 @@ const supportedLanguages = [
   { id: 'dotnet', name: '.NET' },
 ] as const
 
-interface ViewProps {
-  projectId: string
+export interface OverviewInitialData {
+  apiKeys: ApiKey[]
+  /** Raw listKeys response from loader; passed to useApiKeys to avoid duplicate fetch */
+  apiKeysRaw?: { keys?: unknown[] } | null
+  /** Prefetched platforms from project; avoids empty-state flash in Apps section */
+  platforms?: unknown[]
 }
 
-export function View({ projectId }: ViewProps) {
+interface ViewProps {
+  projectId: string
+  /** Prefetched data from route loader; avoids loading spinner for API keys on first paint */
+  initialData?: OverviewInitialData
+}
+
+export function View({ projectId, initialData }: ViewProps) {
   const [activeTab, setActiveTab] = useState('bandwidth')
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false)
@@ -136,6 +147,9 @@ export function View({ projectId }: ViewProps) {
   const [selectedKeyId, setSelectedKeyId] = useState<string | null>(null)
   const [connectDialogOpen, setConnectDialogOpen] = useState(false)
   const [connectInitialSdk, setConnectInitialSdk] = useState<string>('web')
+  const [platformDrawerOpen, setPlatformDrawerOpen] = useState(false)
+  const [selectedPlatform, setSelectedPlatform] =
+    useState<Models.Platform | null>(null)
   const { features } = useConsoleProfile()
   const handleConnectPlatform = (platform?: string) => {
     const sdkMap: Record<string, string> = {
@@ -178,8 +192,13 @@ export function View({ projectId }: ViewProps) {
   // Fetch real project data from console SDK
   const { project: currentProject } = useProject(projectId)
 
-  // Fetch API keys using the hook
-  const { apiKeys, isLoading: isLoadingKeys } = useApiKeys(projectId)
+  // Fetch API keys using the hook; pass loader prefetch as initialData to avoid duplicate fetch
+  const { apiKeys, isLoading: isLoadingKeys } = useApiKeys(projectId, {
+    initialData: initialData?.apiKeysRaw,
+  })
+  const effectiveApiKeys =
+    apiKeys.length > 0 ? apiKeys : (initialData?.apiKeys ?? [])
+  const showLoadingKeys = isLoadingKeys && !initialData
 
   // Create mutation
   const createMutation = useCreateApiKey(projectId)
@@ -190,13 +209,13 @@ export function View({ projectId }: ViewProps) {
   // Delete mutation
   const deleteMutation = useDeleteApiKey(projectId)
 
-  // Build integrations list from project platforms/clients data
+  // Build integrations list from project platforms; use initialData for first paint to avoid empty-state flash
+  const platformsForIntegrations =
+    currentProject?.platforms ?? initialData?.platforms ?? []
   const integrations = useMemo(() => {
-    if (!currentProject?.platforms) return []
+    if (platformsForIntegrations.length === 0) return []
 
-    const platforms = currentProject.platforms || []
-
-    return platforms.map((platform: Record<string, unknown>) => {
+    return platformsForIntegrations.map((platform: Record<string, unknown>) => {
       const platformType = (platform.type ??
         platform.platform ??
         'web') as string
@@ -228,10 +247,11 @@ export function View({ projectId }: ViewProps) {
             initialIcon={initialIcon}
           />
         ),
-        docsUrl: '#', // Could be constructed from platform data if available
+        docsUrl: '#',
+        platform: platform as Models.Platform,
       } as Integration
     })
-  }, [currentProject?.platforms])
+  }, [platformsForIntegrations])
 
   // Get endpoint from project region (centralized in SDK)
   const projectEndpoint = useMemo(
@@ -320,7 +340,7 @@ export function View({ projectId }: ViewProps) {
   }
 
   const selectedKey = selectedKeyId
-    ? apiKeys.find((key) => key.id === selectedKeyId)
+    ? effectiveApiKeys.find((key) => key.id === selectedKeyId)
     : null
 
   // Get the full key data for update (we need to fetch it from the API)
@@ -394,7 +414,6 @@ export function View({ projectId }: ViewProps) {
                       }
                       className="flex min-w-0 cursor-pointer items-center gap-1.5 rounded-md bg-muted/50 px-2.5 py-1.5 text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                     >
-                      <Link className="h-3.5 w-3.5 shrink-0" />
                       <span className="truncate max-w-[100px] sm:max-w-[160px] font-mono">
                         {endpointDisplay}
                       </span>
@@ -654,7 +673,12 @@ export function View({ projectId }: ViewProps) {
               {integrations.map((integration) => (
                 <button
                   key={integration.id}
-                  className="group flex items-center gap-4 rounded-xl border border-border bg-card/50 p-4 text-left transition-colors hover:border-border hover:bg-card"
+                  type="button"
+                  onClick={() => {
+                    setSelectedPlatform(integration.platform)
+                    setPlatformDrawerOpen(true)
+                  }}
+                  className="group flex cursor-pointer items-center gap-4 rounded-xl border border-border bg-card/50 p-4 text-left transition-colors hover:border-border hover:bg-card"
                 >
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground transition-colors group-hover:bg-accent group-hover:text-foreground">
                     {integration.icon}
@@ -691,7 +715,7 @@ export function View({ projectId }: ViewProps) {
               Add API key
             </Button>
           </div>
-          {isLoadingKeys ? (
+          {showLoadingKeys ? (
             <div className="rounded-xl border border-border bg-card/50">
               <div className="divide-y divide-border">
                 {Array.from({ length: 2 }).map((_, i) => (
@@ -717,7 +741,7 @@ export function View({ projectId }: ViewProps) {
                 ))}
               </div>
             </div>
-          ) : apiKeys.length === 0 ? (
+          ) : effectiveApiKeys.length === 0 ? (
             <EmptyState icon={Key} variant="card" isEmpty={true}>
               <div className="flex flex-col items-center text-center">
                 <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
@@ -757,7 +781,7 @@ export function View({ projectId }: ViewProps) {
             </EmptyState>
           ) : (
             <ApiKeysList
-              apiKeys={apiKeys}
+              apiKeys={effectiveApiKeys}
               isLoading={false}
               onUpdate={handleUpdate}
               onDelete={handleDelete}
@@ -827,6 +851,16 @@ export function View({ projectId }: ViewProps) {
         onOpenChange={setConnectDialogOpen}
         projectId={projectId}
         initialSdk={connectInitialSdk}
+      />
+
+      <PlatformDrawer
+        open={platformDrawerOpen}
+        onOpenChange={(open) => {
+          setPlatformDrawerOpen(open)
+          if (!open) setSelectedPlatform(null)
+        }}
+        projectId={projectId}
+        platform={selectedPlatform}
       />
     </div>
   )

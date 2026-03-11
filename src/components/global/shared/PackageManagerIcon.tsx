@@ -1,4 +1,5 @@
 import { Package } from 'lucide-react'
+import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
 
 const PACKAGE_MANAGER_ICON_MAP: Record<string, string> = {
@@ -40,7 +41,7 @@ export function PackageManagerIcon({
       <img
         src={`/icons/${iconFile}`}
         alt={packageManager}
-        className={cn(sizeClass, 'brightness-0 dark:brightness-100', className)}
+        className={cn(sizeClass, PUBLIC_ICON_MUTED_CLASSES, className)}
       />
     )
   }

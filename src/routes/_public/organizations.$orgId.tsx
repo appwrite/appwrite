@@ -4,9 +4,11 @@ import { RequireAuth } from '@/components/global/auth/RequireAuth'
 import {
   organizationsQueryOptions,
   organizationPlanQueryOptions,
+  organizationScopesQueryOptions,
   activeProjectsQueryOptions,
   organizationMembershipsQueryOptions,
 } from '@/lib/react-query/hooks'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { z } from 'zod'
 
@@ -38,35 +40,66 @@ export const Route = createFileRoute('/_public/organizations/$orgId')({
           )
         })
 
-        await Promise.race([
-          Promise.all([
-            queryClient.ensureQueryData(organizationPlanQueryOptions(orgId)),
-            queryClient.ensureQueryData(organizationsQueryOptions()),
-            queryClient.ensureQueryData(
-              activeProjectsQueryOptions(orgId, 0, DEFAULT_PAGE_SIZE, ''),
+        const loaders: Promise<unknown>[] = [
+          queryClient.ensureQueryData(organizationPlanQueryOptions(orgId)),
+          queryClient.ensureQueryData(organizationsQueryOptions()),
+          queryClient.ensureQueryData(
+            activeProjectsQueryOptions(orgId, 0, DEFAULT_PAGE_SIZE, ''),
+          ),
+          queryClient.ensureQueryData(
+            organizationMembershipsQueryOptions(
+              orgId,
+              0,
+              DEFAULT_PAGE_SIZE,
+              '',
             ),
+          ),
+        ]
+        if (getActiveProfileFeatures().orgRoles) {
+          loaders.push(
             queryClient.ensureQueryData(
-              organizationMembershipsQueryOptions(
-                orgId,
-                0,
-                DEFAULT_PAGE_SIZE,
-                '',
-              ),
-            ),
-          ]),
-          timeoutPromise,
-        ])
+              organizationScopesQueryOptions(orgId),
+            ).catch(() => {}),
+          )
+        }
+        await Promise.race([Promise.all(loaders), timeoutPromise])
+
+        // Return prefetched data so OrgOverview can use it as initialData and avoid layout shift
+        return {
+          organizationsData: queryClient.getQueryData(
+            organizationsQueryOptions().queryKey,
+          ),
+          organizationPlan: queryClient.getQueryData(
+            organizationPlanQueryOptions(orgId).queryKey,
+          ),
+          membershipsData: queryClient.getQueryData(
+            organizationMembershipsQueryOptions(
+              orgId,
+              0,
+              DEFAULT_PAGE_SIZE,
+              '',
+            ).queryKey,
+          ),
+          scopesData: getActiveProfileFeatures().orgRoles
+            ? queryClient.getQueryData(
+                organizationScopesQueryOptions(orgId).queryKey,
+              )
+            : undefined,
+        }
       } catch (error) {
         // Don't block navigation if fetch fails or times out - component will handle
         console.warn('Failed to fetch organization data in loader:', error)
+        return undefined
       }
     }
+    return undefined
   },
   component: OrganizationLayout,
 })
 
 function OrganizationLayout() {
   const matches = useMatches()
+  const loaderData = Route.useLoaderData()
 
   // Check if we're on a domain detail route (should not have org header/tabs)
   const isDomainDetailRoute = matches.some(
@@ -111,7 +144,7 @@ function OrganizationLayout() {
         <Outlet />
       ) : (
         // For other routes, render OrgOverview which provides header/tabs
-        <OrgOverview>
+        <OrgOverview initialData={loaderData}>
           <Outlet />
         </OrgOverview>
       )}

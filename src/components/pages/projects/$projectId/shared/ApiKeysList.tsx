@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { cn } from '@/lib/utils'
 
 export interface ApiKey {
   id: string
@@ -108,14 +109,33 @@ export function ApiKeysList({
 
   return (
     <>
-      <div className="rounded-xl border border-border bg-card/50">
+      <div className="overflow-hidden rounded-xl border border-border bg-card/50">
         <div className="divide-y divide-border">
           {apiKeys.map((apiKey) => {
             const expirationStatus = getExpirationStatus(apiKey.expire)
             return (
               <div
                 key={apiKey.id}
-                className="flex items-center justify-between gap-3 p-4 overflow-hidden"
+                role={onUpdate ? 'button' : undefined}
+                tabIndex={onUpdate ? 0 : undefined}
+                onClick={
+                  onUpdate ? () => onUpdate(apiKey.id) : undefined
+                }
+                onKeyDown={
+                  onUpdate
+                    ? (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          onUpdate(apiKey.id)
+                        }
+                      }
+                    : undefined
+                }
+                className={cn(
+                  'flex items-center justify-between gap-3 p-4 overflow-hidden',
+                  onUpdate &&
+                    'cursor-pointer transition-colors hover:bg-muted/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
+                )}
               >
                 <div className="min-w-0 flex-1 overflow-hidden">
                   <div className="flex items-center gap-2 min-w-0">
@@ -143,16 +163,24 @@ export function ApiKeysList({
                       {maskKey(apiKey.key)}
                     </code>
                     <button
-                      onClick={() => handleView(apiKey.id)}
+                      type="button"
+                      data-api-key-action
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleView(apiKey.id)
+                      }}
                       className="cursor-pointer rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground shrink-0"
                       title="View key"
                     >
                       <Eye className="h-3.5 w-3.5" />
                     </button>
                     <button
-                      onClick={() =>
+                      type="button"
+                      data-api-key-action
+                      onClick={(e) => {
+                        e.stopPropagation()
                         handleCopy(apiKey.key, `apiKey-${apiKey.id}`)
-                      }
+                      }}
                       className="cursor-pointer rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground shrink-0"
                       title="Copy key"
                     >
@@ -189,12 +217,16 @@ export function ApiKeysList({
                   </div>
                 </div>
                 {showActions && (onUpdate || onDelete) && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="cursor-pointer rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground shrink-0">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </button>
-                    </DropdownMenuTrigger>
+                  <div data-api-key-action onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          className="cursor-pointer rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground shrink-0"
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </button>
+                      </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       {onUpdate && (
                         <DropdownMenuItem onClick={() => onUpdate(apiKey.id)}>
@@ -211,6 +243,7 @@ export function ApiKeysList({
                       )}
                     </DropdownMenuContent>
                   </DropdownMenu>
+                  </div>
                 )}
               </div>
             )

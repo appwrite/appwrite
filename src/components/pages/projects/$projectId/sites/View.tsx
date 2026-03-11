@@ -1,8 +1,9 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import {
   useParams,
   useNavigate,
   useLocation,
+  useSearch,
   Link,
 } from '@tanstack/react-router'
 import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query'
@@ -36,8 +37,12 @@ import {
   Dependencies,
   useProject,
   useOrganizationPlan,
+  useOrganizationScopes,
   fetchProjectSites,
 } from '@/lib/react-query/hooks'
+import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { canCreateSite } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { sdk } from '@/lib/appwrite/sdk'
 import { formatDistanceToNow } from 'date-fns'
 import { toast } from 'sonner'
@@ -45,26 +50,173 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
 import type { Models } from '@appwrite.io/console'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
+import {
+  getSearch,
+  getPage,
+  getLimit,
+  getQueryParam,
+  queryParamToMap,
+  mapToQueryParam,
+  buildListSearchParams,
+  MIN_SEARCH_LENGTH,
+  sitesFilterColumns,
+} from '@/lib/table-filters'
+import type { CompactFilterKey } from '@/lib/table-filters'
+import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 
-const SITES_PER_PAGE = 25
+type SitesListSearch = {
+  search?: string
+  query?: string
+  page?: number
+  limit?: number
+}
 const SCREENSHOTS_BUCKET_ID = 'screenshots'
 
 export function View() {
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const location = useLocation()
+  const search = useSearch({ strict: false })
   const queryClient = useQueryClient()
   const { theme, resolvedTheme } = useTheme()
-  const [searchValue, setSearchValue] = useState('')
+
+  const isSitesIndex =
+    location.pathname.replace(/\/$/, '') === `/projects/${projectId}/sites`
+  const sitesListParams = useMemo(() => {
+    if (!isSitesIndex || typeof search !== 'object') return null
+    const url = new URL(location.pathname + location.search, window.location.origin)
+    return {
+      search: getSearch(url) ?? (search.search as string | undefined),
+      page: getPage(url, 1),
+      limit: getLimit(url, ROWS_DEFAULT_PAGE_SIZE),
+      filterMap: queryParamToMap(getQueryParam(url) ?? (search.query as string | undefined) ?? null),
+    }
+  }, [isSitesIndex, search, location.pathname, location.search, projectId])
+
+  const urlPage = sitesListParams?.page ?? 1
+  const urlLimit = sitesListParams?.limit ?? ROWS_DEFAULT_PAGE_SIZE
+  const urlSearch = sitesListParams?.search
+  const filterMap = sitesListParams?.filterMap ?? new Map()
+  const filterQueries =
+    filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
+  const filterQueryString = filterMap.size > 0 ? mapToQueryParam(filterMap) : ''
+
+  const [searchInput, setSearchInput] = useState('')
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid')
   const [requestedPage, setRequestedPage] = useState(1)
   const [displayedPage, setDisplayedPage] = useState(1)
-  const [pageSize, setPageSize] = useState(SITES_PER_PAGE)
+  const [displayedSearch, setDisplayedSearch] = useState<string | undefined>(
+    undefined,
+  )
+  const [displayedFilterQueryString, setDisplayedFilterQueryString] =
+    useState('')
+  const displayedFilterQueries = useMemo(() => {
+    if (!displayedFilterQueryString) return undefined
+    const map = queryParamToMap(displayedFilterQueryString)
+    return map.size > 0 ? Array.from(map.values()) : undefined
+  }, [displayedFilterQueryString])
+  const hasInitedDisplayedRef = useRef(false)
   const [selectedSites, setSelectedSites] = useState<Set<string>>(new Set())
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const [loadedScreenshots, setLoadedScreenshots] = useState<Set<string>>(
     new Set(),
   )
+
+  useEffect(() => {
+    setSearchInput(urlSearch ?? '')
+  }, [urlSearch])
+
+  useEffect(() => {
+    if (!isSitesIndex) return
+    setRequestedPage((p) => (p === urlPage ? p : urlPage))
+  }, [isSitesIndex, urlPage])
+
+  useEffect(() => {
+    if (!isSitesIndex || !sitesListParams) return
+    if (!hasInitedDisplayedRef.current) {
+      setDisplayedPage(urlPage)
+      setDisplayedSearch(urlSearch ?? undefined)
+      setDisplayedFilterQueryString(filterQueryString)
+      hasInitedDisplayedRef.current = true
+    }
+  }, [isSitesIndex, sitesListParams, urlPage, urlSearch, filterQueryString])
+
+  useEffect(() => {
+    if (!isSitesIndex) return
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    searchDebounceRef.current = setTimeout(() => {
+      const trimmed = searchInput.trim()
+      if (trimmed === (urlSearch ?? '')) return
+      // Only update URL (and trigger API) when cleared or at least MIN_SEARCH_LENGTH chars
+      if (trimmed.length > 0 && trimmed.length < MIN_SEARCH_LENGTH) return
+      navigateToSitesList({
+        search: trimmed || undefined,
+        query: filterQueryString || undefined,
+        page: 1,
+        limit: urlLimit,
+      })
+    }, 300)
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    }
+  }, [searchInput, urlSearch, urlLimit, filterQueryString, isSitesIndex, navigate, projectId])
+
+  const navigateToSitesList = (params: SitesListSearch) => {
+    const hasQueryKey = 'query' in params
+    const hasSearchKey = 'search' in params
+    navigate({
+      to: '/projects/$projectId/sites',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => {
+        const built = buildListSearchParams({
+          search: hasSearchKey ? params.search : (urlSearch ?? undefined),
+          query: hasQueryKey ? params.query : (filterQueryString || undefined),
+          page: params.page ?? 1,
+          limit: params.limit ?? urlLimit,
+        })
+        const next = { ...prev, ...built }
+        if (hasQueryKey && params.query === undefined) delete next.query
+        if (hasSearchKey && (params.search === undefined || params.search === ''))
+          delete next.search
+        return next
+      },
+      replace: true,
+    })
+  }
+
+  const applyFilter = (compactKey: CompactFilterKey, queryStr: string) => {
+    const next = new Map(filterMap)
+    next.set(compactKey, queryStr)
+    navigateToSitesList({
+      search: urlSearch ?? undefined,
+      query: mapToQueryParam(next) || undefined,
+      page: 1,
+      limit: urlLimit,
+    })
+  }
+
+  const removeFilter = (compactKey: CompactFilterKey) => {
+    const next = new Map(filterMap)
+    next.delete(compactKey)
+    navigateToSitesList({
+      search: urlSearch ?? undefined,
+      query: next.size > 0 ? mapToQueryParam(next) : undefined,
+      page: 1,
+      limit: urlLimit,
+    })
+  }
+
+  const clearAllFilters = () => {
+    navigateToSitesList({
+      search: urlSearch ?? undefined,
+      query: undefined,
+      page: 1,
+      limit: urlLimit,
+    })
+    setFiltersOpen(false)
+  }
 
   // Get theme for screenshot selection
   const isDark = useMemo(() => {
@@ -96,34 +248,61 @@ export function View() {
     })
   }
 
-  // Fetch data for the requested page (triggers load when user changes page)
   const {
     total: sitesTotal,
     isLoading: sitesLoading,
     isFetching: sitesFetching,
-  } = useProjectSites(projectId, requestedPage - 1, pageSize, searchValue)
+    isFetched: sitesFetched,
+  } = useProjectSites(
+    projectId,
+    requestedPage - 1,
+    urlLimit,
+    urlSearch ?? undefined,
+    filterQueries,
+  )
 
-  // Fetch data for the displayed page (what we show - stays until new page is ready)
   const {
     sites: apiSites,
     total: displayedTotal,
     isLoading: displayedLoading,
-  } = useProjectSites(projectId, displayedPage - 1, pageSize, searchValue)
+  } = useProjectSites(
+    projectId,
+    displayedPage - 1,
+    urlLimit,
+    displayedSearch ?? undefined,
+    displayedFilterQueries,
+  )
 
-  // Update displayed page only when requested page data is ready (no flash)
   useEffect(() => {
-    if (!sitesFetching && requestedPage !== displayedPage && !sitesLoading) {
-      setDisplayedPage(requestedPage)
+    if (!isSitesIndex || sitesFetching || sitesLoading || !sitesFetched) return
+    const match =
+      urlPage === displayedPage &&
+      (urlSearch ?? '') === (displayedSearch ?? '') &&
+      filterQueryString === displayedFilterQueryString
+    if (!match) {
+      setDisplayedPage(urlPage)
+      setDisplayedSearch(urlSearch ?? undefined)
+      setDisplayedFilterQueryString(filterQueryString)
     }
-  }, [sitesFetching, sitesLoading, requestedPage, displayedPage])
+  }, [
+    isSitesIndex,
+    sitesFetching,
+    sitesLoading,
+    sitesFetched,
+    urlPage,
+    urlSearch,
+    filterQueryString,
+    displayedPage,
+    displayedSearch,
+    displayedFilterQueryString,
+  ])
 
   // Only show full loading when we have no data to display (initial load)
   const showLoading = displayedLoading && apiSites.length === 0
 
-  // Get total count from the first page query (no search) - already fetched in route loader
   const { data: totalSitesData } = useQuery({
-    queryKey: ['sites', 'project', projectId, 0, pageSize, ''],
-    queryFn: () => fetchProjectSites(projectId!, 0, pageSize, ''),
+    queryKey: ['sites', 'project', projectId, 0, urlLimit, undefined, undefined],
+    queryFn: () => fetchProjectSites(projectId!, 0, urlLimit, undefined, undefined),
     enabled: !!projectId,
     staleTime: 30 * 1000,
     refetchOnMount: false,
@@ -136,25 +315,30 @@ export function View() {
 
   // Get organization plan to check limits
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
 
   // Total count of all sites (without search) - for limit checking
   const totalSitesCount = totalSitesData?.total || 0
 
-  // Check if create button should be disabled
+  // Check if create button should be disabled (plan limit or missing write scope)
+  const noCreatePermission = !canCreateSite(access, features)
   const sitesLimit = organizationPlan?.sites ?? 0
-  const isCreateDisabled = sitesLimit > 0 && totalSitesCount >= sitesLimit
+  const isCreateDisabled =
+    noCreatePermission ||
+    (sitesLimit > 0 && totalSitesCount >= sitesLimit)
 
-  // Clear selection when navigating or when search changes
   useEffect(() => {
     setSelectedSites(new Set())
     setDeleteDialogOpen(false)
-  }, [location.pathname, projectId, searchValue])
+  }, [location.pathname, projectId, urlSearch])
 
   const handleSearchChange = (value: string) => {
-    setSearchValue(value)
+    setSearchInput(value)
     setRequestedPage(1)
     setDisplayedPage(1)
     setSelectedSites(new Set())
+    // URL is updated by the debounced effect so we don't fetch on every keystroke
   }
 
   // Bulk delete mutation
@@ -218,13 +402,24 @@ export function View() {
   const handlePageChange = (page: number) => {
     setRequestedPage(page)
     setSelectedSites(new Set())
+    navigateToSitesList({
+      search: urlSearch ?? undefined,
+      query: filterQueryString || undefined,
+      page,
+      limit: urlLimit,
+    })
   }
 
   const handlePageSizeChange = (newPageSize: number) => {
-    setPageSize(newPageSize)
     setRequestedPage(1)
     setDisplayedPage(1)
     setSelectedSites(new Set())
+    navigateToSitesList({
+      search: urlSearch ?? undefined,
+      query: filterQueryString || undefined,
+      page: 1,
+      limit: newPageSize,
+    })
   }
 
   const ViewToggle = () => (
@@ -259,7 +454,7 @@ export function View() {
       <ServiceHeader
         title="Sites"
         searchPlaceholder="Search sites..."
-        searchValue={searchValue}
+        searchValue={searchInput}
         onSearchChange={handleSearchChange}
         createLabel="Create site"
         onCreate={() => {
@@ -269,7 +464,34 @@ export function View() {
           })
         }}
         createDisabled={isCreateDisabled}
-        showFilters={false}
+        createDisabledTooltip={
+          noCreatePermission
+            ? "You don't have permission to create sites."
+            : undefined
+        }
+        showFilters={true}
+        filterTrigger={
+          <FiltersPopover
+            open={filtersOpen}
+            onOpenChange={setFiltersOpen}
+            columns={sitesFilterColumns}
+            filterMap={filterMap}
+            onRemoveFilter={removeFilter}
+            onClearAll={clearAllFilters}
+            onApplyFilter={applyFilter}
+            resourceLabel="sites"
+            filterScope="sites"
+            onApplyQuery={(queryParam) =>
+              navigateToSitesList({
+                search: urlSearch ?? undefined,
+                query: queryParam ?? undefined,
+                page: 1,
+                limit: urlLimit,
+              })
+            }
+            teamId={project?.teamId}
+          />
+        }
         fullWidthBorder
         rightContent={<ViewToggle />}
         contentAfterBorder={
@@ -502,7 +724,7 @@ export function View() {
               <Pagination
                 currentPage={displayedPage}
                 totalItems={displayedTotal ?? sitesTotal}
-                pageSize={pageSize}
+                pageSize={urlLimit}
                 pageSizeOptions={[10, 25, 50, 100]}
                 onPageChange={handlePageChange}
                 onPageSizeChange={handlePageSizeChange}
@@ -514,8 +736,8 @@ export function View() {
               icon={Globe}
               title="No sites yet"
               description="Create your first site to start deploying static sites"
-              isEmpty={!searchValue}
-              hasFilters={!!searchValue}
+              isEmpty={!(urlSearch && urlSearch.length > 0) && filterMap.size === 0}
+              hasFilters={(urlSearch && urlSearch.length > 0) || filterMap.size > 0}
               variant="card"
             />
           )
@@ -616,8 +838,8 @@ export function View() {
                 icon={Globe}
                 title="No sites yet"
                 description="Create your first site to start deploying static sites"
-                isEmpty={!searchValue}
-                hasFilters={!!searchValue}
+                isEmpty={!(urlSearch || filterMap.size > 0)}
+                hasFilters={!!(urlSearch || filterMap.size > 0)}
                 variant="card"
               />
             )}
@@ -625,7 +847,7 @@ export function View() {
               <Pagination
                 currentPage={displayedPage}
                 totalItems={displayedTotal ?? sitesTotal}
-                pageSize={pageSize}
+                pageSize={urlLimit}
                 pageSizeOptions={[10, 25, 50, 100]}
                 onPageChange={handlePageChange}
                 onPageSizeChange={handlePageSizeChange}

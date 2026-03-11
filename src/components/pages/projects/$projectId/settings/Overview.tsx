@@ -78,14 +78,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Pagination } from '@/components/global/shared/Pagination'
-import { VariablesSettingsCard } from '@/components/global/shared/VariablesSettingsCard'
-import {
-  useProjectVariables,
-  useCreateProjectVariable,
-  useUpdateProjectVariable,
-  useDeleteProjectVariable,
-} from '@/lib/react-query/hooks'
 import { GitConfigurationCard } from './GitConfigurationCard'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 
@@ -179,10 +171,6 @@ export function ProjectSettingsOverview({
     new Set(),
   )
   const [services, setServices] = useState<Record<string, boolean>>({})
-
-  // State for variables
-  const [variablesPage, setVariablesPage] = useState(0)
-  const variablesLimit = 10
 
   // State for git installations
   const [installationsPage, setInstallationsPage] = useState(0)
@@ -634,6 +622,59 @@ export function ProjectSettingsOverview({
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-4 sm:px-6">
+      {/* Update Name Section - only if canWriteProjects */}
+      {canWriteProjects && (
+        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+          <div className="px-6 py-4">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              Name
+            </h3>
+          </div>
+          <div className="border-t border-border" />
+          <div className="px-6 py-4">
+            <Label
+              htmlFor="name"
+              className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5 block"
+            >
+              Name
+            </Label>
+            <Input
+              id="name"
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
+              placeholder="Enter name"
+              className="mt-2 h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+            />
+          </div>
+          <div className="px-6 py-4 border-t border-border bg-muted/30">
+            <Button
+              size="sm"
+              className="h-9 text-[13px]"
+              disabled={
+                projectName === project.name ||
+                !projectName.trim() ||
+                projectName.trim().length < 1 ||
+                projectName.trim().length > 128 ||
+                updateNameMutation.isPending
+              }
+              onClick={() => {
+                const trimmedName = projectName.trim()
+                if (
+                  trimmedName &&
+                  trimmedName !== project.name &&
+                  trimmedName.length >= 1 &&
+                  trimmedName.length <= 128
+                ) {
+                  updateNameMutation.mutate(trimmedName)
+                }
+              }}
+            >
+              Update
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* API Credentials Section - Always visible */}
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
@@ -642,23 +683,29 @@ export function ProjectSettingsOverview({
           </h3>
         </div>
         <div className="border-t border-border" />
-        <div className="px-6 py-4">
-          <p className="text-[13px] text-muted-foreground mb-4">
-            Access Appwrite services using this project's API Endpoint and
-            Project ID.
-          </p>
-          <div className="space-y-4">
-            <div>
-              <Label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5 block">
-                Project ID
-              </Label>
-              <CopyableInput value={project.$id} label="Project ID" />
+        <div className="px-6 py-4 @container">
+          <div className="flex gap-6 @[600px]:flex-row flex-col">
+            <div className="@[600px]:w-64 shrink-0">
+              <p className="text-[13px] text-muted-foreground">
+                Access Appwrite services using this project's API Endpoint and
+                Project ID.
+              </p>
             </div>
-            <div>
-              <Label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5 block">
-                API Endpoint
-              </Label>
-              <CopyableInput value={projectEndpoint} label="API Endpoint" />
+            <div className="flex-1 min-w-0">
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5 block">
+                    Project ID
+                  </Label>
+                  <CopyableInput value={project.$id} label="Project ID" />
+                </div>
+                <div>
+                  <Label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5 block">
+                    API Endpoint
+                  </Label>
+                  <CopyableInput value={projectEndpoint} label="API Endpoint" />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -677,57 +724,6 @@ export function ProjectSettingsOverview({
       {/* Conditional sections - only if canWriteProjects */}
       {canWriteProjects && (
         <>
-          {/* Update Name Section */}
-          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-            <div className="px-6 py-4">
-              <h3 className="text-[15px] font-semibold text-foreground">
-                Name
-              </h3>
-            </div>
-            <div className="border-t border-border" />
-            <div className="px-6 py-4">
-              <Label
-                htmlFor="name"
-                className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5 block"
-              >
-                Name
-              </Label>
-              <Input
-                id="name"
-                value={projectName}
-                onChange={(e) => setProjectName(e.target.value)}
-                placeholder="Enter name"
-                className="mt-2 h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-              />
-            </div>
-            <div className="px-6 py-4 border-t border-border bg-muted/30">
-              <Button
-                size="sm"
-                className="h-9 text-[13px]"
-                disabled={
-                  projectName === project.name ||
-                  !projectName.trim() ||
-                  projectName.trim().length < 1 ||
-                  projectName.trim().length > 128 ||
-                  updateNameMutation.isPending
-                }
-                onClick={() => {
-                  const trimmedName = projectName.trim()
-                  if (
-                    trimmedName &&
-                    trimmedName !== project.name &&
-                    trimmedName.length >= 1 &&
-                    trimmedName.length <= 128
-                  ) {
-                    updateNameMutation.mutate(trimmedName)
-                  }
-                }}
-              >
-                Update
-              </Button>
-            </div>
-          </div>
-
           {/* Update Services Section */}
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
             <div className="px-6 py-4">
@@ -736,15 +732,18 @@ export function ProjectSettingsOverview({
               </h3>
             </div>
             <div className="border-t border-border" />
-            <div className="px-6 py-4">
-              <p className="text-[13px] text-muted-foreground mb-4">
-                Choose services you wish to enable or disable for the client
-                API. When disabled, the services are not accessible to client
-                SDKs but remain accessible to server SDKs.
-              </p>
-
-              {/* Bulk Actions */}
-              <div className="flex items-center gap-2 mb-4">
+            <div className="px-6 py-4 @container">
+              <div className="flex gap-6 @[600px]:flex-row flex-col">
+                <div className="@[600px]:w-64 shrink-0">
+                  <p className="text-[13px] text-muted-foreground">
+                    Choose services you wish to enable or disable for the client
+                    API. When disabled, the services are not accessible to client
+                    SDKs but remain accessible to server SDKs.
+                  </p>
+                </div>
+                <div className="flex-1 min-w-0">
+                  {/* Bulk Actions */}
+                  <div className="flex items-center gap-2 mb-4">
                 <Button
                   variant="outline"
                   size="sm"
@@ -854,6 +853,8 @@ export function ProjectSettingsOverview({
                     )
                   })}
               </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -870,15 +871,6 @@ export function ProjectSettingsOverview({
 
           {/* MCP Server Section */}
           <MCPSection />
-
-          {/* Global Variables Section */}
-          <GlobalVariablesSection
-            projectId={projectId}
-            page={variablesPage}
-            limit={variablesLimit}
-            onPageChange={setVariablesPage}
-            projectName={project?.name}
-          />
 
           {/* Change Organization Section */}
           <ChangeOrganizationSection
@@ -902,50 +894,6 @@ export function ProjectSettingsOverview({
         </>
       )}
     </div>
-  )
-}
-
-// Global Variables Section Component
-interface GlobalVariablesSectionProps {
-  projectId: string
-  page: number
-  limit: number
-  onPageChange: (page: number) => void
-  projectName?: string
-}
-
-function GlobalVariablesSection({
-  projectId,
-  page,
-  limit,
-  onPageChange,
-  projectName,
-}: GlobalVariablesSectionProps) {
-  const { variables, total, isLoading } = useProjectVariables(
-    projectId,
-    page,
-    limit,
-  )
-  const createMutation = useCreateProjectVariable(projectId)
-  const updateMutation = useUpdateProjectVariable(projectId)
-  const deleteMutation = useDeleteProjectVariable(projectId)
-
-  return (
-    <VariablesSettingsCard
-      title="Global variables"
-      description="Set the environment variables or secret keys that will be passed to all Functions and Sites within your project."
-      variables={variables}
-      total={total}
-      isLoading={isLoading}
-      createMutation={createMutation}
-      updateMutation={updateMutation}
-      deleteMutation={deleteMutation}
-      scopeLabel={`${projectName || 'Project'} global`}
-      page={page}
-      limit={limit}
-      onPageChange={onPageChange}
-      itemLabel="variables"
-    />
   )
 }
 
@@ -1038,29 +986,39 @@ function ChangeOrganizationSection({
           </Select>
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/30">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="inline-block">
-                  <Button
-                    size="sm"
-                    className="h-9 text-[13px]"
-                    disabled={isMoveDisabled}
-                    onClick={() => setTransferDialogOpen(true)}
-                  >
-                    Transfer project
-                  </Button>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>
-                {hasNoTargetOrgs
-                  ? 'You do not have any organizations you can transfer this project to.'
-                  : !selectedOrgId || selectedOrgId === project.teamId
-                    ? 'Select a different organization to transfer to.'
-                    : 'Transfer this project to the selected organization'}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          {isMoveDisabled ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-block">
+                    <Button
+                      size="sm"
+                      className="h-9 text-[13px]"
+                      disabled
+                      onClick={() => setTransferDialogOpen(true)}
+                    >
+                      Transfer project
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {hasNoTargetOrgs
+                    ? 'You do not have any organizations you can transfer this project to.'
+                    : !selectedOrgId || selectedOrgId === project.teamId
+                      ? 'Select a different organization to transfer to.'
+                      : 'Transfer this project to the selected organization'}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            <Button
+              size="sm"
+              className="h-9 text-[13px]"
+              onClick={() => setTransferDialogOpen(true)}
+            >
+              Transfer project
+            </Button>
+          )}
         </div>
       </div>
 

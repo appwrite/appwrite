@@ -5,7 +5,11 @@ import {
   useTopic,
   useTopicSubscribers,
   fetchUser,
+  useProject,
+  useOrganizationScopes,
 } from '@/lib/react-query/hooks'
+import { canShowTopicSettingsTab } from '@/lib/console-access-checks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
@@ -37,6 +41,10 @@ export function TopicDetailView() {
 
   // Fetch topic
   const { data: topic, isLoading: topicLoading } = useTopic(projectId, topicId)
+  const { project } = useProject(projectId)
+  const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(project?.teamId)
+  const showSettingsTab = canShowTopicSettingsTab(access, features)
 
   const [searchValue, setSearchValue] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -159,17 +167,21 @@ export function TopicDetailView() {
           topicId: topicId as string,
         },
       },
-      {
-        id: 'settings',
-        label: 'Settings',
-        to: '/projects/$projectId/messaging/topics/$topicId/settings',
-        params: {
-          projectId: projectId as string,
-          topicId: topicId as string,
-        },
-      },
+      ...(showSettingsTab
+        ? [
+            {
+              id: 'settings' as const,
+              label: 'Settings',
+              to: '/projects/$projectId/messaging/topics/$topicId/settings',
+              params: {
+                projectId: projectId as string,
+                topicId: topicId as string,
+              },
+            },
+          ]
+        : []),
     ],
-    [projectId, topicId],
+    [projectId, topicId, showSettingsTab],
   )
 
   const getTypeIcon = (type: string) => {

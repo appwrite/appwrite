@@ -9,6 +9,7 @@ import {
   useMutation,
   useQueryClient,
   queryOptions,
+  keepPreviousData,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { Query, ID } from '@appwrite.io/console'
@@ -41,6 +42,7 @@ export async function fetchProjectSites(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   if (!projectId) {
     return { sites: [], total: 0 }
@@ -48,6 +50,7 @@ export async function fetchProjectSites(
 
   const projectSdk = sdk.forProject(projectId)
   const queries = [
+    ...(filterQueries ?? []),
     Query.orderDesc('$createdAt'),
     Query.limit(limit),
     Query.offset(page * limit),
@@ -125,25 +128,23 @@ export async function fetchSiteDeployments(
   siteId: string,
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
-  queries?: string[],
+  filterQueries?: string[],
 ) {
   if (!projectId || !siteId) {
     return { deployments: [], total: 0 }
   }
 
   const projectSdk = sdk.forProject(projectId)
-  const defaultQueries = [
+  const queries = [
+    ...(filterQueries ?? []),
     Query.orderDesc('$createdAt'),
     Query.limit(limit),
     Query.offset(page * limit),
   ]
-  const finalQueries = queries
-    ? [...defaultQueries, ...queries]
-    : defaultQueries
 
   const response = await projectSdk.sites.listDeployments({
     siteId,
-    queries: finalQueries,
+    queries,
   })
 
   return {
@@ -176,25 +177,23 @@ export async function fetchSiteLogs(
   siteId: string,
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
-  queries?: string[],
+  filterQueries?: string[],
 ) {
   if (!projectId || !siteId) {
     return { logs: [], total: 0 }
   }
 
   const projectSdk = sdk.forProject(projectId)
-  const defaultQueries = [
+  const queries = [
+    ...(filterQueries ?? []),
     Query.orderDesc('$createdAt'),
     Query.limit(limit),
     Query.offset(page * limit),
   ]
-  const finalQueries = queries
-    ? [...defaultQueries, ...queries]
-    : defaultQueries
 
   const response = await projectSdk.sites.listLogs({
     siteId,
-    queries: finalQueries,
+    queries,
   })
 
   // The API returns executions, not logs
@@ -303,24 +302,26 @@ export async function fetchSiteDomains(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   if (!projectId || !siteId) {
     return { rules: [], total: 0 }
   }
 
   const projectSdk = sdk.forProject(projectId)
-  const defaultQueries = [
+  const fixedQueries = [
     Query.equal('type', ['deployment', 'redirect']),
     Query.equal('deploymentResourceType', 'site'),
     Query.equal('deploymentResourceId', siteId),
     Query.equal('trigger', 'manual'),
+    ...(filterQueries ?? []),
     Query.orderDesc('$createdAt'),
     Query.limit(limit),
     Query.offset(page * limit),
   ]
 
   const response = await projectSdk.proxy.listRules({
-    queries: defaultQueries,
+    queries: fixedQueries,
     search: search?.trim() || undefined,
   })
 
@@ -388,10 +389,11 @@ export function sitesQueryOptions(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   return queryOptions({
-    queryKey: ['sites', 'project', projectId, page, limit, search],
-    queryFn: () => fetchProjectSites(projectId!, page, limit, search),
+    queryKey: ['sites', 'project', projectId, page, limit, search, filterQueries],
+    queryFn: () => fetchProjectSites(projectId!, page, limit, search, filterQueries),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -430,12 +432,22 @@ export function siteDeploymentsQueryOptions(
   siteId: string | null | undefined,
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
-  queries?: string[],
+  filterQueries?: string[],
 ) {
+  const hasFilters =
+    filterQueries !== undefined && filterQueries.length > 0
   return queryOptions({
-    queryKey: ['deployments', 'site', projectId, siteId, page, limit, queries],
+    queryKey: [
+      'deployments',
+      'site',
+      projectId,
+      siteId,
+      page,
+      limit,
+      ...(hasFilters ? [filterQueries] : []),
+    ],
     queryFn: () =>
-      fetchSiteDeployments(projectId!, siteId!, page, limit, queries),
+      fetchSiteDeployments(projectId!, siteId!, page, limit, filterQueries),
     enabled: !!projectId && !!siteId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -443,6 +455,7 @@ export function siteDeploymentsQueryOptions(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     gcTime: projectId && siteId ? 5 * 60 * 1000 : 0,
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -476,10 +489,30 @@ export function siteDomainsQueryOptions(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
+  const hasFilters =
+    filterQueries !== undefined && filterQueries.length > 0
   return queryOptions({
-    queryKey: ['proxy-rules', 'site', projectId, siteId, page, limit, search],
-    queryFn: () => fetchSiteDomains(projectId!, siteId!, page, limit, search),
+    queryKey: [
+      'proxy-rules',
+      'site',
+      projectId,
+      siteId,
+      page,
+      limit,
+      search,
+      ...(hasFilters ? [filterQueries] : []),
+    ],
+    queryFn: () =>
+      fetchSiteDomains(
+        projectId!,
+        siteId!,
+        page,
+        limit,
+        search,
+        filterQueries,
+      ),
     enabled: !!projectId && !!siteId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -487,6 +520,7 @@ export function siteDomainsQueryOptions(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     gcTime: projectId && siteId ? 5 * 60 * 1000 : 0,
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -520,11 +554,22 @@ export function siteLogsQueryOptions(
   siteId: string | null | undefined,
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
-  queries?: string[],
+  filterQueries?: string[],
 ) {
+  const hasFilters =
+    filterQueries !== undefined && filterQueries.length > 0
   return queryOptions({
-    queryKey: ['logs', 'site', projectId, siteId, page, limit, queries],
-    queryFn: () => fetchSiteLogs(projectId!, siteId!, page, limit, queries),
+    queryKey: [
+      'logs',
+      'site',
+      projectId,
+      siteId,
+      page,
+      limit,
+      ...(hasFilters ? [filterQueries] : []),
+    ],
+    queryFn: () =>
+      fetchSiteLogs(projectId!, siteId!, page, limit, filterQueries),
     enabled: !!projectId && !!siteId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -532,6 +577,7 @@ export function siteLogsQueryOptions(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     gcTime: projectId && siteId ? 5 * 60 * 1000 : 0,
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -674,14 +720,16 @@ export function useProjectSites(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   const {
     data: sitesData,
     isLoading,
     isFetching,
+    isFetched,
     error,
     refetch,
-  } = useQuery(sitesQueryOptions(projectId, page, limit, search))
+  } = useQuery(sitesQueryOptions(projectId, page, limit, search, filterQueries))
 
   const sites = useMemo(() => {
     if (!sitesData?.sites) return []
@@ -699,6 +747,7 @@ export function useProjectSites(
     totalPages,
     isLoading,
     isFetching,
+    isFetched,
     error,
     refetch,
   }
@@ -722,10 +771,16 @@ export function useSiteDeployments(
   siteId: string | null | undefined,
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
-  queries?: string[],
+  filterQueries?: string[],
 ) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(
-    siteDeploymentsQueryOptions(projectId, siteId, page, limit, queries),
+    siteDeploymentsQueryOptions(
+      projectId,
+      siteId,
+      page,
+      limit,
+      filterQueries,
+    ),
   )
 
   return {
@@ -757,10 +812,10 @@ export function useSiteLogs(
   siteId: string | null | undefined,
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
-  queries?: string[],
+  filterQueries?: string[],
 ) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(
-    siteLogsQueryOptions(projectId, siteId, page, limit, queries),
+    siteLogsQueryOptions(projectId, siteId, page, limit, filterQueries),
   )
 
   return {
@@ -837,9 +892,17 @@ export function useSiteDomains(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  filterQueries?: string[],
 ) {
   const { data, isLoading, error, refetch } = useQuery(
-    siteDomainsQueryOptions(projectId, siteId, page, limit, search),
+    siteDomainsQueryOptions(
+      projectId,
+      siteId,
+      page,
+      limit,
+      search,
+      filterQueries,
+    ),
   )
 
   return {
@@ -885,6 +948,29 @@ export function useDeploymentProxyRules(
 // ============================================================================
 // MUTATIONS
 // ============================================================================
+
+/**
+ * Cancel a site deployment build (stops the build, deployment remains with status canceled).
+ *
+ * @param projectId - The project ID
+ * @param siteId - The site ID
+ * @param deploymentId - The deployment ID
+ */
+export async function cancelSiteDeployment(
+  projectId: string,
+  siteId: string,
+  deploymentId: string,
+) {
+  if (!projectId || !siteId || !deploymentId) {
+    throw new Error('Project ID, Site ID, and Deployment ID are required')
+  }
+
+  const projectSdk = sdk.forProject(projectId)
+  return await projectSdk.sites.updateDeploymentStatus({
+    siteId,
+    deploymentId,
+  })
+}
 
 /**
  * Query function to delete a site deployment

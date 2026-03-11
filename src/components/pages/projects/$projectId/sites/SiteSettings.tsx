@@ -4,7 +4,6 @@ import { NameCard } from './settings/NameCard'
 import { GitRepositoryCard } from './settings/GitRepositoryCard'
 import { BuildSettingsCard } from './settings/BuildSettingsCard'
 import { RuntimeSettingsCard } from './settings/RuntimeSettingsCard'
-import { SiteVariablesCard } from './settings/SiteVariablesCard'
 import { ResourceLimitsCard } from './settings/ResourceLimitsCard'
 import { TimeoutCard } from './settings/TimeoutCard'
 import { LoggingCard } from './settings/LoggingCard'
@@ -75,10 +74,7 @@ export function SiteSettingsView() {
             />
           )}
 
-          {/* 5. Environment Variables */}
-          <SiteVariablesCard projectId={projectId} siteId={siteId} />
-
-          {/* 6. Resource Limits (conditional - Cloud only) */}
+          {/* 5. Resource Limits (conditional - Cloud only) */}
           {site && (
             <ResourceLimitsCard
               projectId={projectId}
@@ -88,17 +84,17 @@ export function SiteSettingsView() {
             />
           )}
 
-          {/* 7. Timeout */}
+          {/* 6. Timeout */}
           {site && (
             <TimeoutCard projectId={projectId} siteId={siteId} site={site} />
           )}
 
-          {/* 8. Logging */}
+          {/* 7. Logging */}
           {site && (
             <LoggingCard projectId={projectId} siteId={siteId} site={site} />
           )}
 
-          {/* 9. Danger Zone */}
+          {/* 8. Danger Zone */}
           {site && (
             <DangerZoneCard
               projectId={projectId}

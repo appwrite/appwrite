@@ -39,15 +39,14 @@ import { DeleteDomainDialog } from '@/components/pages/projects/$projectId/setti
 import { VerifyDomain } from './_components/VerifyDomain'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
-
-const DOMAINS_PER_PAGE = 25
+import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 
 export function SiteDomainsView() {
   const { projectId, siteId } = useParams({ strict: false })
   const navigate = useNavigate()
   const { project } = useProject(projectId)
   const [currentPage, setCurrentPage] = useState(0)
-  const [pageSize, setPageSize] = useState(DOMAINS_PER_PAGE)
+  const [pageSize, setPageSize] = useState(DOMAINS_DEFAULT_PAGE_SIZE)
   const [verifyOpen, setVerifyOpen] = useState(false)
   const [viewLogsOpen, setViewLogsOpen] = useState(false)
   const [deleteDomainOpen, setDeleteDomainOpen] = useState(false)

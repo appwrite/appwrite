@@ -367,6 +367,25 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
     return (match ?? template.frameworks[0]) as Models.TemplateFramework
   }, [template, framework])
 
+  // GitHub URL to the template's code (repo root or root directory when set)
+  const templateSourceUrl = useMemo(() => {
+    if (!template?.providerOwner || !template?.providerRepositoryId) return null
+    const base = `https://github.com/${template.providerOwner}/${template.providerRepositoryId}`
+    const ref = 'main'
+    const rootDir =
+      templateFramework?.providerRootDirectory?.trim() ??
+      template.providerRootDirectory?.trim() ??
+      ''
+    const path = rootDir.replace(/^\.\/?/, '').replace(/\/+$/, '')
+    if (!path) return `${base}/tree/${ref}`
+    return `${base}/tree/${ref}/${path}`
+  }, [
+    template?.providerOwner,
+    template?.providerRepositoryId,
+    template?.providerRootDirectory,
+    templateFramework?.providerRootDirectory,
+  ])
+
   const sidebarContent = template ? (
     <div className="rounded-xl border border-border bg-gradient-to-b from-card/80 to-card/40 backdrop-blur-sm overflow-hidden">
       {/* Header with template info */}
@@ -459,7 +478,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
       {/* CTA buttons */}
       {(template.providerRepositoryId || template.demoUrl) && (
         <div className="px-5 py-4 border-t border-border/50 flex gap-2">
-          {template.providerRepositoryId && (
+          {templateSourceUrl && (
             <Button
               variant="outline"
               size="sm"
@@ -467,7 +486,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
               asChild
             >
               <a
-                href={`https://github.com/${template.providerOwner}/${template.providerRepositoryId}`}
+                href={templateSourceUrl}
                 target="_blank"
                 rel="noopener noreferrer"
               >

@@ -1,29 +1,42 @@
+import { useState, useEffect } from 'react'
+
 const DEBUG_OVERRIDE_EVENT = 'debugOverridesChange'
 
 export const DEBUG_OVERRIDE_KEYS = {
-  disableInitialLoader: 'debug:disableInitialLoader',
   showNativeAppBar: 'debug:showNativeAppBar',
+  showAIAssistant: 'debug:showAIAssistant',
+  showSuccessTeamCard: 'debug:showSuccessTeamCard',
 } as const
 
 export type DebugOverrides = {
-  disableInitialLoader: boolean
   showNativeAppBar: boolean
+  /** When true, the AI assistant is shown regardless of profile (experimental). Default false. */
+  showAIAssistant: boolean
+  /** When true, the success team card is shown on organization overview (custom plans). Default false. */
+  showSuccessTeamCard: boolean
 }
 
 const isBrowser = typeof window !== 'undefined'
 
-function readBooleanFromStorage(key: string) {
-  if (!isBrowser) return false
-  return localStorage.getItem(key) === 'true'
+function readBooleanFromStorage(key: string, defaultValue = false) {
+  if (!isBrowser) return defaultValue
+  const raw = localStorage.getItem(key)
+  if (raw === null) return defaultValue
+  return raw === 'true'
 }
 
 export function loadDebugOverrides(): DebugOverrides {
   return {
-    disableInitialLoader: readBooleanFromStorage(
-      DEBUG_OVERRIDE_KEYS.disableInitialLoader,
-    ),
     showNativeAppBar: readBooleanFromStorage(
       DEBUG_OVERRIDE_KEYS.showNativeAppBar,
+    ),
+    showAIAssistant: readBooleanFromStorage(
+      DEBUG_OVERRIDE_KEYS.showAIAssistant,
+      false,
+    ),
+    showSuccessTeamCard: readBooleanFromStorage(
+      DEBUG_OVERRIDE_KEYS.showSuccessTeamCard,
+      false,
     ),
   }
 }
@@ -34,7 +47,9 @@ export function setDebugOverride<K extends keyof DebugOverrides>(
 ) {
   if (!isBrowser) return
   const storageKey = DEBUG_OVERRIDE_KEYS[key]
-  if (value) {
+  if (typeof value === 'boolean') {
+    localStorage.setItem(storageKey, value ? 'true' : 'false')
+  } else if (value) {
     localStorage.setItem(storageKey, 'true')
   } else {
     localStorage.removeItem(storageKey)
@@ -64,4 +79,12 @@ export function subscribeToDebugOverrides(
     window.removeEventListener(DEBUG_OVERRIDE_EVENT, handler as EventListener)
     window.removeEventListener('storage', handler)
   }
+}
+
+export function useDebugOverrides(): DebugOverrides {
+  const [overrides, setOverrides] = useState(loadDebugOverrides)
+  useEffect(() => {
+    return subscribeToDebugOverrides(setOverrides)
+  }, [])
+  return overrides
 }

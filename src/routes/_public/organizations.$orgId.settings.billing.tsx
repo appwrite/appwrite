@@ -12,10 +12,10 @@ import {
   paymentMethodQueryOptions,
   billingAddressQueryOptions,
 } from '@/lib/react-query/hooks'
+import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 
 const INVOICES_PER_PAGE = 5
 const CREDITS_PER_PAGE = 5
-const PROJECTS_PER_PAGE = 10
 
 export const Route = createFileRoute(
   '/_public/organizations/$orgId/settings/billing',
@@ -58,7 +58,7 @@ export const Route = createFileRoute(
           organizationBillingAggregationQueryOptions(
             orgId,
             orgData.billingAggregationId,
-            PROJECTS_PER_PAGE,
+            DEFAULT_PAGE_SIZE,
             0,
           ),
         )

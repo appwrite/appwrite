@@ -3,9 +3,11 @@
 /// <reference path="../../../prismjs-components.d.ts" />
 
 /**
- * Reusable code block with syntax highlighting for all supported SDK/languages.
- * Uses prism-react-renderer; extra languages (dart, swift, kotlin) are loaded on mount.
- * Uses built-in Prism themes for reliable highlighting; background matches page (--background).
+ * Reusable code block with syntax highlighting for all Appwrite SDK and runtime languages.
+ * Supports: JavaScript, TypeScript, Node/Deno/Bun, Python, PHP, Ruby, Dart, Swift, Kotlin, Java,
+ * Go, C#/.NET, JSON, Bash, PowerShell, markup, plaintext, and .env (dotenv).
+ * Uses prism-react-renderer; extra languages are loaded on demand. Built-in Prism themes;
+ * background matches page (--background).
  */
 
 import { useEffect, useRef, useState } from 'react'
@@ -21,13 +23,31 @@ if (typeof globalThis !== 'undefined') {
   ;(globalThis as unknown as { Prism: typeof Prism }).Prism = Prism
 }
 
-/** Languages we support for syntax highlighting (Prism language ids) */
+// Register .env / dotenv syntax (KEY=value, # comments, quoted values)
+if (typeof Prism !== 'undefined' && !Prism.languages.env) {
+  Prism.languages.env = {
+    comment: /#.*/,
+    'attr-name': /^[A-Za-z_][A-Za-z0-9_]*/m,
+    operator: /=/,
+    string: [
+      { pattern: /"(?:[^"\\]|\\.)*"/, greedy: true },
+      { pattern: /'(?:[^'\\]|\\.)*'/, greedy: true },
+    ],
+  }
+}
+
+/**
+ * Languages we support for syntax highlighting.
+ * Includes Prism language ids and Appwrite SDK/runtime identifiers (node, deno, bun, dotnet, java).
+ */
 export type CodeBlockLanguage =
   | 'javascript'
   | 'typescript'
+  | 'json'
   | 'dart'
   | 'swift'
   | 'kotlin'
+  | 'java'
   | 'bash'
   | 'powershell'
   | 'php'
@@ -37,11 +57,31 @@ export type CodeBlockLanguage =
   | 'csharp'
   | 'markup'
   | 'plaintext'
+  | 'env'
+  // Appwrite runtime keys (map to Prism languages below)
+  | 'node'
+  | 'deno'
+  | 'bun'
+  | 'dotnet'
 
-const EXTRA_LANGUAGES: CodeBlockLanguage[] = [
+/** Map Appwrite runtime keys to Prism language ids for highlighting */
+const RUNTIME_TO_PRISM: Record<string, string> = {
+  node: 'javascript',
+  deno: 'javascript',
+  bun: 'javascript',
+  dotnet: 'csharp',
+}
+
+function getPrismLanguage(lang: CodeBlockLanguage): string {
+  return RUNTIME_TO_PRISM[lang] ?? lang
+}
+
+const EXTRA_LANGUAGES: string[] = [
+  'json',
   'dart',
   'swift',
   'kotlin',
+  'java',
   'bash',
   'powershell',
   'php',
@@ -53,9 +93,11 @@ const EXTRA_LANGUAGES: CodeBlockLanguage[] = [
 ]
 
 const PRISM_LOADERS: Record<string, () => Promise<unknown>> = {
+  json: () => import('prismjs/components/prism-json'),
   dart: () => import('prismjs/components/prism-dart'),
   swift: () => import('prismjs/components/prism-swift'),
   kotlin: () => import('prismjs/components/prism-kotlin'),
+  java: () => import('prismjs/components/prism-java'),
   bash: () => import('prismjs/components/prism-bash'),
   powershell: () => import('prismjs/components/prism-powershell'),
   markup: () => import('prismjs/components/prism-markup'),
@@ -109,7 +151,8 @@ export function CodeBlock({
 }: CodeBlockProps) {
   const [copied, setCopied] = useState(false)
   const preRef = useRef<HTMLPreElement>(null)
-  const needsExtra = EXTRA_LANGUAGES.includes(language)
+  const prismLanguage = getPrismLanguage(language)
+  const needsExtra = EXTRA_LANGUAGES.includes(prismLanguage)
   const [extrasReady, setExtrasReady] = useState(!needsExtra)
   const { resolvedTheme } = useTheme()
 
@@ -142,8 +185,8 @@ export function CodeBlock({
 
   useEffect(() => {
     if (!needsExtra) return
-    loadLanguage(language).then(() => setExtrasReady(true))
-  }, [language, needsExtra])
+    loadLanguage(prismLanguage).then(() => setExtrasReady(true))
+  }, [prismLanguage, needsExtra])
 
   const handleCopy = () => {
     navigator.clipboard.writeText(code)
@@ -152,7 +195,7 @@ export function CodeBlock({
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const effectiveLanguage = extrasReady ? language : 'plaintext'
+  const effectiveLanguage = extrasReady ? prismLanguage : 'plaintext'
   const prismTheme = resolvedTheme === 'dark' ? themes.vsDark : themes.vsLight
 
   const copyButton = showCopy ? (

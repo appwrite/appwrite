@@ -36,6 +36,8 @@ import {
   Info,
   ExternalLink,
   ChevronRight,
+  Pin,
+  PinOff,
 } from '@/lib/icons'
 import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
 import { RegionFlag } from '@/components/global/shared/RegionFlag'
@@ -47,11 +49,34 @@ import {
   useOrganizationMemberships,
   organizationsQueryOptions,
   activeProjectsQueryOptions,
+  useConsoleTeam,
+  useUpdateConsoleTeamPrefs,
+  pinnedProjectsQueryOptions,
   useOrganizationPlan,
+  useOrganizationScopes,
   useResendMembershipInvite,
   useUpdateMembershipRole,
   useRemoveTeamMember,
 } from '@/lib/react-query/hooks'
+import {
+  parsePinnedProjectIds,
+  buildPinnedProjectIdsPrefs,
+  MAX_PINNED_PROJECTS,
+} from '@/lib/team-prefs-keys'
+import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import {
+  canSeeProjects,
+  canShowOrgDomainsTab,
+  canShowOrgSettingsTab,
+  canAccessOrgSettingsOverview,
+  canAccessOrgSettingsMembers,
+  canAccessOrgSettingsBilling,
+  canAccessOrgSettingsCompliance,
+  canAccessOrgSettingsOAuthOrApiKeys,
+  getFirstAllowedOrgSettingsPath,
+  canInviteOrgMember,
+  canCreateProject,
+} from '@/lib/console-access-checks'
 
 import {
   Popover,
@@ -89,7 +114,12 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+} from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useAuth } from '@/components/global/auth/RequireAuth'
@@ -111,6 +141,7 @@ import { CreateOrganizationDialog } from './CreateOrganization'
 import { CreateProjectDialog } from './CreateProjectDialog'
 import { useCreateOrganization } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useDebugOverrides } from '@/lib/debug-overrides'
 import {
   Table,
   TableBody,
@@ -130,10 +161,6 @@ const CONTACT_SALES_URL =
   import.meta.env.VITE_CONTACT_SALES_URL ||
   'https://appwrite.io/contact-us/enterprise'
 const LEGAL_EMAIL = import.meta.env.VITE_LEGAL_EMAIL || 'legal@appwrite.io'
-
-// Pagination constants
-const PROJECTS_PER_PAGE = 25
-const MEMBERSHIPS_PER_PAGE = 25
 
 // Role options with descriptions (matching InviteMembersDialog)
 const ROLE_OPTIONS = [
@@ -182,8 +209,8 @@ function ProjectCardFooter({
       {/* Platforms Label */}
       {platformsCount > 0 ? (
         <Badge
-          variant="secondary"
-          className="h-6 gap-1.5 px-2 text-[11px] font-medium border-0"
+          variant="info"
+          className="gap-1.5 text-[10px] shrink-0"
         >
           <Globe className="h-3 w-3" />
           {platformsCount} app{platformsCount !== 1 ? 's' : ''}
@@ -191,7 +218,7 @@ function ProjectCardFooter({
       ) : (
         <Badge
           variant="warning"
-          className="h-6 gap-1.5 px-2 text-[11px] font-medium border-0"
+          className="gap-1.5 text-[10px] shrink-0"
         >
           <AlertTriangle className="h-3 w-3" />
           No apps
@@ -201,8 +228,8 @@ function ProjectCardFooter({
       {/* API Keys Label */}
       {apiKeysCount > 0 ? (
         <Badge
-          variant="secondary"
-          className="h-6 gap-1.5 px-2 text-[11px] font-medium border-0"
+          variant="info"
+          className="gap-1.5 text-[10px] shrink-0"
         >
           <Key className="h-3 w-3" />
           {apiKeysCount} API key{apiKeysCount !== 1 ? 's' : ''}
@@ -210,7 +237,7 @@ function ProjectCardFooter({
       ) : (
         <Badge
           variant="warning"
-          className="h-6 gap-1.5 px-2 text-[11px] font-medium border-0"
+          className="gap-1.5 text-[10px] shrink-0"
         >
           <AlertTriangle className="h-3 w-3" />
           No API keys
@@ -222,12 +249,26 @@ function ProjectCardFooter({
 
 import { ProjectSelector } from '@/components/global/shared/ProjectSelector'
 
+/** Data from org layout loader to avoid layout shift on first paint */
+export type OrgOverviewInitialData = {
+  organizationsData?: { teams?: unknown[] }
+  organizationPlan?: unknown
+  membershipsData?: { memberships: unknown[]; total: number }
+  scopesData?: { roles: string[]; scopes: string[] }
+}
+
 interface OrgOverviewProps {
   tab?: 'projects' | 'domains' | 'settings'
   children?: React.ReactNode
+  /** Prefetched data from route loader so org selector, tabs, and avatars render without layout shift */
+  initialData?: OrgOverviewInitialData
 }
 
-export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
+export function OrgOverview({
+  tab: tabProp,
+  children,
+  initialData,
+}: OrgOverviewProps) {
   const { account } = useAuth()
   const queryClient = useQueryClient()
   const { orgId } = useParams({ from: '/_public/organizations/$orgId' })
@@ -237,6 +278,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const matches = useMatches()
   const [searchQuery, setSearchQuery] = useState('')
   const { features } = useConsoleProfile()
+  const { access } = useOrganizationScopes(orgId, initialData?.scopesData)
+  const { showSuccessTeamCard: debugShowSuccessTeamCard } = useDebugOverrides()
 
   // Check if we're on a domain detail route using route matches and pathname (for navigation transitions)
   const isDomainDetailRoute = useMemo(() => {
@@ -362,7 +405,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const [deleteOrgDialogOpen, setDeleteOrgDialogOpen] = useState(false)
   const [deleteOrgConfirmation, setDeleteOrgConfirmation] = useState('')
 
-  // Redirect from disabled settings sub-tabs
+  // Redirect from disabled settings sub-tabs (feature flags or role-based)
   useEffect(() => {
     if (settingsSubTab === 'billing' && !features.billing) {
       navigate({
@@ -370,7 +413,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         params: { orgId: orgId! },
         replace: true,
       })
-    } else if (
+      return
+    }
+    if (
       (settingsSubTab === 'compliance' && !features.compliance) ||
       (settingsSubTab === 'oauth-apps' && !features.oauthApps) ||
       (settingsSubTab === 'api-keys' && !features.orgApiKeys)
@@ -380,13 +425,34 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         params: { orgId: orgId! },
         replace: true,
       })
+      return
+    }
+    if (features.orgRoles && activeTab === 'settings') {
+      const allowed =
+        (settingsSubTab === 'members' && canAccessOrgSettingsMembers(access)) ||
+        (settingsSubTab === 'billing' && canAccessOrgSettingsBilling(access)) ||
+        (settingsSubTab === 'overview' && canAccessOrgSettingsOverview(access)) ||
+        (settingsSubTab === 'compliance' && canAccessOrgSettingsCompliance(access)) ||
+        (settingsSubTab === 'oauth-apps' && canAccessOrgSettingsOAuthOrApiKeys(access)) ||
+        (settingsSubTab === 'api-keys' && canAccessOrgSettingsOAuthOrApiKeys(access))
+      if (!allowed) {
+        const firstAllowed = getFirstAllowedOrgSettingsPath(
+          access,
+          features,
+          '/organizations/$orgId/settings',
+        )
+        navigate({
+          to: firstAllowed as '/organizations/$orgId/settings',
+          params: { orgId: orgId! },
+          replace: true,
+        })
+      }
     }
   }, [
+    activeTab,
     settingsSubTab,
-    features.billing,
-    features.compliance,
-    features.oauthApps,
-    features.orgApiKeys,
+    features,
+    access,
     orgId,
     navigate,
   ])
@@ -416,9 +482,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const [settingsNavSearch, setSettingsNavSearch] = useState('')
 
   // Fetch organizations from Console SDK (prefetched by route loader)
-  const { data: organizationsData, isLoading: organizationsLoading } = useQuery(
-    organizationsQueryOptions(),
-  )
+  const { data: organizationsData, isLoading: organizationsLoading } = useQuery({
+    ...organizationsQueryOptions(),
+    initialData: initialData?.organizationsData,
+    initialDataUpdatedAt: initialData?.organizationsData ? 1 : 0,
+  })
 
   // Get organizations list and map to our Organization type
   // Note: The API returns "teams" but they are actually organizations
@@ -629,30 +697,49 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   // In Appwrite, organizations ARE teams, so we use the organization ID directly as the team ID
   const orgTeamId = orgId || null
 
-  // Fetch data for the requested page (triggers load when user changes page)
+  // Pinned projects: stored in team prefs, excluded from main list
+  const { data: consoleTeam } = useConsoleTeam(orgTeamId)
+  const teamPrefs = (consoleTeam as { prefs?: Record<string, unknown> } | null)
+    ?.prefs
+  const pinnedIds = useMemo(
+    () => parsePinnedProjectIds(teamPrefs),
+    [teamPrefs],
+  )
+  const updateTeamPrefsMutation = useUpdateConsoleTeamPrefs(orgTeamId)
+
+  const { data: pinnedProjectsData } = useQuery({
+    ...pinnedProjectsQueryOptions(orgTeamId, pinnedIds),
+    placeholderData: keepPreviousData,
+  })
+
+  // Fetch data for the requested page (triggers load when user changes page); exclude pinned
   const {
     isLoading: activeProjectsLoading,
     isFetching: activeProjectsFetching,
     error: activeProjectsError,
-  } = useQuery(
-    activeProjectsQueryOptions(
+  } = useQuery({
+    ...activeProjectsQueryOptions(
       orgTeamId,
       requestedPage - 1,
-      PROJECTS_PER_PAGE,
+      DEFAULT_PAGE_SIZE,
       searchQuery,
+      pinnedIds,
     ),
-  )
+    placeholderData: keepPreviousData,
+  })
 
-  // Fetch data for the displayed page (what we show - stays until new page is ready)
+  // Fetch data for the displayed page (what we show - stays until new page is ready); exclude pinned
   const { data: activeProjectsData, isLoading: displayedProjectsLoading } =
-    useQuery(
-      activeProjectsQueryOptions(
+    useQuery({
+      ...activeProjectsQueryOptions(
         orgTeamId,
         displayedPage - 1,
-        PROJECTS_PER_PAGE,
+        DEFAULT_PAGE_SIZE,
         searchQuery,
+        pinnedIds,
       ),
-    )
+      placeholderData: keepPreviousData,
+    })
 
   // Only show full loading when we have no data to display (initial load)
   const displayedProjects = activeProjectsData?.projects ?? []
@@ -675,10 +762,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     displayedPage,
   ])
 
-  // Get total count from the first page query (no search) - already fetched in route loader
-  // This is used for limit checking and doesn't change when searching
+  // Total count without search, without exclude - for plan limit checking (all org projects)
   const { data: totalProjectsData } = useQuery(
-    activeProjectsQueryOptions(orgTeamId, 0, PROJECTS_PER_PAGE, ''),
+    activeProjectsQueryOptions(orgTeamId, 0, DEFAULT_PAGE_SIZE, ''),
   )
 
   // Reset pagination when search query changes
@@ -742,22 +828,73 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     orgId,
   ])
 
-  // Get active projects from API (already filtered by team server-side)
-  // Extract platforms and API keys count from raw project data
+  // Pinned projects in display shape (order preserved from pinnedIds)
+  const pinnedProjects = useMemo(() => {
+    if (!pinnedProjectsData?.projects?.length) return []
+    const raw = pinnedProjectsData.projects as Models.Project[]
+    const byId = new Map(raw.map((p) => [p.$id, p]))
+    return pinnedIds
+      .map((id) => byId.get(id))
+      .filter((p): p is Models.Project => p != null)
+      .map((project) => {
+        const platforms = project.platforms || []
+        const keys = project.keys || []
+        return {
+          $id: project.$id,
+          name: project.name,
+          teamId: project.teamId,
+          region: project.region || 'unknown',
+          createdAt: project.$createdAt || new Date().toISOString(),
+          icon: project.name.charAt(0).toUpperCase(),
+          archived: project.status === 'archived',
+          platformsCount: Array.isArray(platforms) ? platforms.length : 0,
+          apiKeysCount: Array.isArray(keys) ? keys.length : 0,
+        }
+      })
+  }, [pinnedProjectsData, pinnedIds])
+
+  // Filter pinned by search (independent from main list filter)
+  const pinnedFiltered = useMemo(() => {
+    if (!searchQuery.trim()) return pinnedProjects
+    const q = searchQuery.toLowerCase()
+    return pinnedProjects.filter((p) =>
+      p.name?.toLowerCase().includes(q),
+    )
+  }, [pinnedProjects, searchQuery])
+
+  const handlePinProject = (projectId: string) => {
+    if (
+      pinnedIds.length >= MAX_PINNED_PROJECTS &&
+      !pinnedIds.includes(projectId)
+    ) {
+      toast.error(`You can pin up to ${MAX_PINNED_PROJECTS} projects`)
+      return
+    }
+    const next = pinnedIds.includes(projectId)
+      ? pinnedIds.filter((id) => id !== projectId)
+      : [...pinnedIds, projectId].slice(0, MAX_PINNED_PROJECTS)
+    const prefs = {
+      ...(teamPrefs || {}),
+      ...buildPinnedProjectIdsPrefs(next),
+    }
+    updateTeamPrefsMutation.mutate(prefs as Record<string, unknown>, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['projects'] })
+        toast.success(
+          next.includes(projectId) ? 'Project pinned' : 'Project unpinned',
+        )
+      },
+      onError: () => toast.error('Failed to update pinned projects'),
+    })
+  }
+
+  // Get active projects from API (already filtered by team server-side, excludes pinned)
   const activeProjects = useMemo(() => {
     if (!activeProjectsData?.projects) return []
 
     return activeProjectsData.projects.map((project: Models.Project) => {
-      // Extract platforms count from raw project data
-      // platforms is an array in the project document
       const platforms = project.platforms || []
-      const platformsCount = Array.isArray(platforms) ? platforms.length : 0
-
-      // Extract API keys count from raw project data
-      // keys is an array in the project document
       const keys = project.keys || []
-      const apiKeysCount = Array.isArray(keys) ? keys.length : 0
-
       return {
         $id: project.$id,
         name: project.name,
@@ -766,14 +903,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         createdAt: project.$createdAt || new Date().toISOString(),
         icon: project.name.charAt(0).toUpperCase(),
         archived: project.status === 'archived',
-        platformsCount,
-        apiKeysCount,
+        platformsCount: Array.isArray(platforms) ? platforms.length : 0,
+        apiKeysCount: Array.isArray(keys) ? keys.length : 0,
       }
     })
   }, [activeProjectsData])
 
-  // Group active projects by team
-  // Since organizations are teams in Appwrite, we group all projects under the organization
+  // Group active projects by team (non-pinned only)
   const projectsByTeam = useMemo(() => {
     if (!selectedOrg || activeProjects.length === 0) return []
 
@@ -806,7 +942,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const totalProjectsCount = totalProjectsData?.total || 0
 
   // Fetch organization plan to check if additional members are supported
-  const { plan: organizationPlan } = useOrganizationPlan(orgId)
+  const { plan: organizationPlan } = useOrganizationPlan(
+    orgId,
+    initialData?.organizationPlan,
+  )
 
   // Check if the plan supports additional members
   // Only disable if seats addon is explicitly disabled with supported = false
@@ -862,8 +1001,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   } = useOrganizationMemberships(
     orgId,
     activeMembershipsPage,
-    MEMBERSHIPS_PER_PAGE,
+    DEFAULT_PAGE_SIZE,
     membershipsSearchQuery,
+    activeMembershipsPage === 0 && !membershipsSearchQuery
+      ? initialData?.membershipsData
+      : undefined,
   )
 
   // Resend invitation mutation
@@ -880,24 +1022,30 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     setActiveMembershipsPage(0)
   }, [membershipsSearchQuery])
 
-  // Org tabs (billing is under settings)
+  // Org tabs (billing is under settings). When profile supports roles, gate by access.
   const orgTabs = useMemo(() => {
     if (!selectedOrg) return []
 
-    const tabs = [
-      { id: 'projects', label: 'Projects', to: '/organizations/$orgId' },
-      ...(features.domains
-        ? [{ id: 'domains' as const, label: 'Domains', to: '/organizations/$orgId/domains/' as const }]
-        : []),
-      {
+    const tabs: { id: string; label: string; to: string }[] = []
+    if (canSeeProjects(access, features)) {
+      tabs.push({ id: 'projects', label: 'Projects', to: '/organizations/$orgId' })
+    }
+    if (canShowOrgDomainsTab(access, features)) {
+      tabs.push({
+        id: 'domains',
+        label: 'Domains',
+        to: '/organizations/$orgId/domains/',
+      })
+    }
+    if (canShowOrgSettingsTab(access)) {
+      tabs.push({
         id: 'settings',
         label: 'Settings',
         to: '/organizations/$orgId/settings',
-      },
-    ]
+      })
+    }
     return tabs
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedOrg, orgId, features.domains])
+  }, [selectedOrg, access, features])
 
   const filteredProjectsByTeam = projectsByTeam
     .map(({ team, projects }) => ({
@@ -907,6 +1055,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       ),
     }))
     .filter(({ projects }) => projects.length > 0)
+
+  // While search is fetching, show current results (no client-side filter) to avoid empty state flash
+  const displayedProjectsByTeam =
+    activeProjectsFetching && searchQuery.trim()
+      ? projectsByTeam
+      : filteredProjectsByTeam
 
   const handleOrgNavigate = (tab: string) => {
     const tabRoutes: Record<string, string> = {
@@ -1150,8 +1304,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 </div>
               )}
 
-              {/* Invite Button */}
-              {supportsAdditionalMembers ? (
+              {/* Invite: only owners when roles enabled; hidden for non-owners */}
+              {supportsAdditionalMembers && canInviteOrgMember(access, features) && (
                 <Button
                   size="sm"
                   variant="outline"
@@ -1161,28 +1315,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   <UserPlus className="h-3.5 w-3.5" />
                   Invite
                 </Button>
-              ) : (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled
-                        className="h-8 gap-2 border-border text-[13px] text-muted-foreground cursor-not-allowed opacity-50"
-                      >
-                        <UserPlus className="h-3.5 w-3.5" />
-                        Invite
-                      </Button>
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-xs">
-                      Your current plan does not support additional members.
-                      Upgrade your plan to invite organization members.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
               )}
             </div>
           </div>
@@ -1439,7 +1571,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                           <div className="relative w-64">
                             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
-                              placeholder="Search by name or ID..."
+                              placeholder="Search projects..."
                               value={searchQuery}
                               onChange={(e) => setSearchQuery(e.target.value)}
                               className="h-9 border-border bg-accent/50 pl-10 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
@@ -1447,6 +1579,29 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                           </div>
 
                           {(() => {
+                            if (!canCreateProject(access, features)) {
+                              return (
+                                <TooltipProvider delayDuration={0}>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="ml-auto">
+                                        <Button
+                                          className="h-9 gap-2 text-[13px] font-medium text-white opacity-50 cursor-not-allowed"
+                                          style={{ backgroundColor: '#f02e65' }}
+                                          disabled
+                                        >
+                                          <Plus className="h-4 w-4" />
+                                          Create project
+                                        </Button>
+                                      </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>You don&apos;t have permission to create projects.</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )
+                            }
                             if (!organizationPlan) {
                               return (
                                 <Button
@@ -1516,49 +1671,153 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                           </div>
                         ) : (
                           <>
-                            {/* Projects by Team */}
+                            {/* Pinned projects (keeps previous data visible while refetching) */}
+                            {pinnedFiltered.length > 0 && (
+                              <div className="mb-8">
+                                <h2 className="mb-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider">
+                                  Pinned
+                                </h2>
+                                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                  {pinnedFiltered.map((project) => (
+                                    <div
+                                      key={project.$id}
+                                      className="group relative rounded-xl border border-border bg-card/50 p-4 transition-all hover:border-border hover:bg-card"
+                                      data-project-card
+                                    >
+                                      <Link
+                                        to="/projects/$projectId"
+                                        params={{ projectId: project.$id }}
+                                        className="block"
+                                      >
+                                        <div>
+                                          <h3 className="text-[14px] font-medium text-foreground group-hover:text-foreground">
+                                            {project.name}
+                                          </h3>
+                                          {project.region && (
+                                            <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                                              <RegionFlag
+                                                region={project.region}
+                                              />
+                                              {project.region}
+                                            </div>
+                                          )}
+                                        </div>
+                                        <ProjectCardFooter
+                                          platformsCount={
+                                            project.platformsCount || 0
+                                          }
+                                          apiKeysCount={
+                                            project.apiKeysCount || 0
+                                          }
+                                        />
+                                      </Link>
+                                      <TooltipProvider delayDuration={0}>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Button
+                                              variant="ghost"
+                                              size="icon"
+                                              className="absolute right-2 top-2 h-8 w-8 rounded-md opacity-0 transition-opacity group-hover:opacity-100"
+                                              onClick={(e) => {
+                                                e.preventDefault()
+                                                handlePinProject(project.$id)
+                                              }}
+                                              disabled={
+                                                updateTeamPrefsMutation.isPending
+                                              }
+                                            >
+                                              <PinOff className="h-4 w-4" />
+                                            </Button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p>Unpin project</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Projects by Team (non-pinned, paginated) */}
                             <div
                               className="space-y-8"
                               ref={projectsContainerRef}
                             >
-                              {filteredProjectsByTeam.map(
+                              {displayedProjectsByTeam.map(
                                 ({ team, projects }) => (
                                   <div key={team.$id}>
-                                    {/* Project Cards Grid */}
+                                    {pinnedFiltered.length > 0 && (
+                                      <h2 className="mb-3 text-[13px] font-semibold text-muted-foreground uppercase tracking-wider">
+                                        All projects
+                                      </h2>
+                                    )}
                                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                                       {projects.map((project) => {
+                                        const canPin =
+                                          pinnedIds.length < MAX_PINNED_PROJECTS
                                         return (
-                                          <Link
+                                          <div
                                             key={project.$id}
-                                            to="/projects/$projectId"
-                                            params={{ projectId: project.$id }}
-                                            data-project-card
                                             className="group relative rounded-xl border border-border bg-card/50 p-4 transition-all hover:border-border hover:bg-card"
+                                            data-project-card
                                           >
-                                            <div>
-                                              <h3 className="text-[14px] font-medium text-foreground group-hover:text-foreground">
-                                                {project.name}
-                                              </h3>
-                                              {project.region && (
-                                                <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
-                                                  <RegionFlag
-                                                    region={project.region}
-                                                  />
-                                                  {project.region}
-                                                </div>
-                                              )}
-                                            </div>
-
-                                            {/* Platforms and API Keys */}
-                                            <ProjectCardFooter
-                                              platformsCount={
-                                                project.platformsCount || 0
-                                              }
-                                              apiKeysCount={
-                                                project.apiKeysCount || 0
-                                              }
-                                            />
-                                          </Link>
+                                            <Link
+                                              to="/projects/$projectId"
+                                              params={{ projectId: project.$id }}
+                                              className="block"
+                                            >
+                                              <div>
+                                                <h3 className="text-[14px] font-medium text-foreground group-hover:text-foreground">
+                                                  {project.name}
+                                                </h3>
+                                                {project.region && (
+                                                  <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                                                    <RegionFlag
+                                                      region={project.region}
+                                                    />
+                                                    {project.region}
+                                                  </div>
+                                                )}
+                                              </div>
+                                              <ProjectCardFooter
+                                                platformsCount={
+                                                  project.platformsCount || 0
+                                                }
+                                                apiKeysCount={
+                                                  project.apiKeysCount || 0
+                                                }
+                                              />
+                                            </Link>
+                                            {canPin && (
+                                              <TooltipProvider delayDuration={0}>
+                                                <Tooltip>
+                                                  <TooltipTrigger asChild>
+                                                    <Button
+                                                      variant="ghost"
+                                                      size="icon"
+                                                      className="absolute right-2 top-2 h-8 w-8 rounded-md opacity-0 transition-opacity group-hover:opacity-100"
+                                                      onClick={(e) => {
+                                                        e.preventDefault()
+                                                        handlePinProject(
+                                                          project.$id,
+                                                        )
+                                                      }}
+                                                      disabled={
+                                                        updateTeamPrefsMutation.isPending
+                                                      }
+                                                    >
+                                                      <Pin className="h-4 w-4" />
+                                                    </Button>
+                                                  </TooltipTrigger>
+                                                  <TooltipContent>
+                                                    <p>Pin project</p>
+                                                  </TooltipContent>
+                                                </Tooltip>
+                                              </TooltipProvider>
+                                            )}
+                                          </div>
                                         )
                                       })}
                                     </div>
@@ -1567,29 +1826,30 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               )}
                             </div>
 
-                            {/* Empty State */}
-                            {filteredProjectsByTeam.length === 0 && (
-                              <EmptyState
-                                icon={Search}
-                                title="No projects found"
-                                description={
-                                  searchQuery
-                                    ? undefined
-                                    : 'Create your first project to get started'
-                                }
-                                isEmpty={!searchQuery}
-                                hasFilters={!!searchQuery}
-                                variant="centered"
-                                iconSize="md"
-                              />
-                            )}
+                            {/* Empty State: no pinned and no other projects (not shown while search is fetching) */}
+                            {pinnedFiltered.length === 0 &&
+                              displayedProjectsByTeam.length === 0 && (
+                                <EmptyState
+                                  icon={Search}
+                                  title="No projects found"
+                                  description={
+                                    searchQuery
+                                      ? undefined
+                                      : 'Create your first project to get started'
+                                  }
+                                  isEmpty={!searchQuery}
+                                  hasFilters={!!searchQuery}
+                                  variant="centered"
+                                  iconSize="md"
+                                />
+                              )}
 
                             {/* Pagination for Active Projects */}
-                            {activeProjectsTotal > PROJECTS_PER_PAGE && (
+                            {activeProjectsTotal > DEFAULT_PAGE_SIZE && (
                               <Pagination
                                 currentPage={activeProjectsPage}
                                 totalItems={activeProjectsTotal}
-                                pageSize={PROJECTS_PER_PAGE}
+                                pageSize={DEFAULT_PAGE_SIZE}
                                 onPageChange={(page: number) =>
                                   setRequestedPage(page)
                                 }
@@ -1598,8 +1858,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               />
                             )}
 
-                            {/* Enterprise Success Manager - Only show if plan supports it */}
-                            {supportsSuccessTeam && (
+                            {/* Enterprise Success Manager - Only show if plan supports it and debug option enabled */}
+                            {supportsSuccessTeam && debugShowSuccessTeamCard && (
                               <EnterpriseSuccessManager />
                             )}
                           </>
@@ -1694,7 +1954,17 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                             ]
                           : []),
                       ]
-                      const navItems = allNavItems
+                      const navItems = features.orgRoles
+                        ? allNavItems.filter((item) => {
+                            if (item.id === 'overview') return canAccessOrgSettingsOverview(access)
+                            if (item.id === 'members') return canAccessOrgSettingsMembers(access)
+                            if (item.id === 'billing') return canAccessOrgSettingsBilling(access)
+                            if (item.id === 'compliance') return canAccessOrgSettingsCompliance(access)
+                            if (['oauth-apps', 'api-keys'].includes(item.id))
+                              return canAccessOrgSettingsOAuthOrApiKeys(access)
+                            return true
+                          })
+                        : allNavItems
 
                       return (
                         <>
@@ -1963,7 +2233,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                           {/* Members Content */}
                           {!membershipsError && (
                             <>
-                              {/* Toolbar: Search + Invite */}
+                              {/* Toolbar: Search + Invite (Invite only for owners when roles enabled) */}
                               <div className="mb-4 flex items-center gap-3">
                                 <div className="relative w-64">
                                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -1977,7 +2247,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                   />
                                 </div>
 
-                                {supportsAdditionalMembers ? (
+                                {supportsAdditionalMembers && canInviteOrgMember(access, features) ? (
                                   <Button
                                     className="ml-auto h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90"
                                     style={{ backgroundColor: '#f02e65' }}
@@ -1986,7 +2256,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                     <Plus className="h-4 w-4" />
                                     Invite
                                   </Button>
-                                ) : (
+                                ) : supportsAdditionalMembers ? null : (
                                   <Tooltip>
                                     <TooltipTrigger asChild>
                                       <span>
@@ -2245,7 +2515,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                       align="end"
                                                       className="w-48"
                                                     >
-                                                      {features.orgRoles && (
+                                                      {canInviteOrgMember(access, features) && (
                                                         <>
                                                           <DropdownMenuItem
                                                             onClick={() => {
@@ -2271,20 +2541,22 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                           <DropdownMenuSeparator />
                                                         </>
                                                       )}
-                                                      <DropdownMenuItem
-                                                        onClick={() => {
-                                                          setSelectedMember(
-                                                            member,
-                                                          )
-                                                          setRemoveMemberDialogOpen(
-                                                            true,
-                                                          )
-                                                        }}
-                                                        className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
-                                                      >
-                                                        <Trash2 className="mr-2 h-4 w-4" />
-                                                        Remove from team
-                                                      </DropdownMenuItem>
+                                                      {canInviteOrgMember(access, features) && (
+                                                        <DropdownMenuItem
+                                                          onClick={() => {
+                                                            setSelectedMember(
+                                                              member,
+                                                            )
+                                                            setRemoveMemberDialogOpen(
+                                                              true,
+                                                            )
+                                                          }}
+                                                          className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
+                                                        >
+                                                          <Trash2 className="mr-2 h-4 w-4" />
+                                                          Remove from team
+                                                        </DropdownMenuItem>
+                                                      )}
                                                     </DropdownMenuContent>
                                                   </DropdownMenu>
                                                 )}
@@ -2296,13 +2568,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                     </Table>
                                   </div>
 
-                                  {membershipsTotal > MEMBERSHIPS_PER_PAGE && (
+                                  {membershipsTotal > DEFAULT_PAGE_SIZE && (
                                     <Pagination
                                       currentPage={
                                         activeMembershipsPage + 1
                                       }
                                       totalItems={membershipsTotal}
-                                      pageSize={MEMBERSHIPS_PER_PAGE}
+                                      pageSize={DEFAULT_PAGE_SIZE}
                                       onPageChange={(page: number) =>
                                         setActiveMembershipsPage(page - 1)
                                       }
@@ -2626,7 +2898,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         onOpenChange={setCommandCenterOpen}
         context="org"
         onOrgNavigate={handleOrgNavigate}
-        onInviteMember={() => setInviteDialogOpen(true)}
+        onInviteMember={
+          canInviteOrgMember(access, features) && supportsAdditionalMembers
+            ? () => setInviteDialogOpen(true)
+            : undefined
+        }
         orgId={orgId}
       />
 

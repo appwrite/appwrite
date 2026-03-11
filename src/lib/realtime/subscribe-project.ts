@@ -173,6 +173,31 @@ function handleRealtimeEvent(
     })
   }
 
+  // Migration events: always process (merge by $id only updates if in current project's list)
+  if (hasEvent(events, REALTIME_EVENTS.MIGRATIONS_ANY)) {
+    const payload = response.payload
+    if (
+      payload != null &&
+      typeof payload === 'object' &&
+      payload !== null &&
+      '$id' in payload
+    ) {
+      mergeMigrationPayloadIntoCache(
+        queryClient,
+        projectId,
+        payload as Record<string, unknown>,
+      )
+      onMigrationEvent?.(payload)
+    } else {
+      queryClient.invalidateQueries({
+        queryKey: ['migrations', 'project', projectId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['migration', 'project', projectId],
+      })
+    }
+  }
+
   // Project-scoped events: only invalidate if the event is for this project
   if (!isForThisProject) return
 
@@ -216,32 +241,6 @@ function handleRealtimeEvent(
     queryClient.invalidateQueries({
       queryKey: ['backup-policies', 'project', projectId],
     })
-  }
-
-  if (hasEvent(events, REALTIME_EVENTS.MIGRATIONS_ANY)) {
-    const payload = response.payload
-    if (
-      payload != null &&
-      typeof payload === 'object' &&
-      payload !== null &&
-      '$id' in payload
-    ) {
-      // Merge update into cache so progress boxes and list update without refetching
-      mergeMigrationPayloadIntoCache(
-        queryClient,
-        projectId,
-        payload as Record<string, unknown>,
-      )
-      onMigrationEvent?.(payload)
-    } else {
-      // No payload (e.g. delete) – invalidate so lists refetch
-      queryClient.invalidateQueries({
-        queryKey: ['migrations', 'project', projectId],
-      })
-      queryClient.invalidateQueries({
-        queryKey: ['migration', 'project', projectId],
-      })
-    }
   }
 
   if (events.includes(`projects.${projectId}.ping`)) {

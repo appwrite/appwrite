@@ -1,5 +1,5 @@
 import { useTheme } from 'next-themes'
-import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useMemo, useRef, useContext } from 'react'
 import {
   useParams,
   Link,
@@ -11,6 +11,7 @@ import {
   MoreHorizontal,
   Clock,
   Trash2,
+  XCircle,
   GitBranch,
   GitCommit,
   Shield,
@@ -30,6 +31,7 @@ import {
 } from 'lucide-react'
 import {
   getDeploymentStatusBadge,
+  isDeploymentCompleted,
   isDeploymentInProgress,
   isDeploymentTimeout,
 } from '@/lib/utils/deployment-status'
@@ -81,7 +83,9 @@ import {
   useSiteDeployment,
   useSiteDomains,
   deleteSiteDeployment,
+  cancelSiteDeployment,
   Dependencies,
+  DEFAULT_PAGE_SIZE,
 } from '@/lib/react-query/hooks'
 import { sdk } from '@/lib/appwrite/sdk'
 import { DeploymentDownloadType } from '@appwrite.io/console'
@@ -90,8 +94,33 @@ import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { useCreateDeployment } from '../shared/CreateDeploymentContext'
 import { CreateDeploymentDropdown } from '../shared/CreateDeploymentDropdown'
+import { DeploymentsToolbarContext } from './Layout'
+import {
+  getQueryParam,
+  queryParamToMap,
+  getPage,
+} from '@/lib/table-filters'
 
-const DEPLOYMENTS_PER_PAGE = 25
+const DEPLOYMENTS_SELECT = [
+  Query.select([
+    'buildSize',
+    'sourceSize',
+    'totalSize',
+    'buildDuration',
+    'status',
+    'type',
+    'resourceId',
+    'providerRepositoryUrl',
+    'providerRepositoryOwner',
+    'providerRepositoryName',
+    'providerBranchUrl',
+    'providerBranch',
+    'providerCommitMessage',
+    'providerCommitHash',
+    'providerCommitUrl',
+    '$createdAt',
+  ]),
+]
 const SCREENSHOTS_BUCKET_ID = 'screenshots'
 /** Preview dimensions for deployment screenshot (16:9), 2x for retina. */
 const SCREENSHOT_PREVIEW_WIDTH = 1280
@@ -196,9 +225,44 @@ export function View() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  // Parse page from URL: use validated search object when available (TanStack Router),
-  // otherwise fall back to URL search string
+  // Deployments list is shown on site index (.../sites/sid or .../sites/sid/) or deployments index (.../sites/sid/deployments)
+  const isDeploymentsListPage = useMemo(() => {
+    const path = location.pathname.replace(/\/$/, '')
+    const base = `/projects/${projectId}/sites/${siteId}`
+    return path === base || path === `${base}/deployments`
+  }, [location.pathname, projectId, siteId])
+
+  const deploymentsListParams = useMemo(() => {
+    if (!isDeploymentsListPage) return null
+    const locSearch = location.search
+    // Derive query from location so we use the same source as the Layout (handles TanStack Router parsed search object)
+    const queryParam =
+      typeof locSearch === 'object' &&
+      locSearch !== null &&
+      'query' in locSearch
+        ? (locSearch as { query?: string }).query ?? null
+        : getQueryParam(
+            new URL(
+              location.pathname +
+                (typeof locSearch === 'string' ? locSearch || '' : ''),
+              typeof window !== 'undefined'
+                ? window.location.origin
+                : 'http://dummy',
+            ),
+          )
+    const url = new URL(
+      location.pathname +
+        (typeof locSearch === 'string' ? locSearch || '' : ''),
+      typeof window !== 'undefined' ? window.location.origin : 'http://dummy',
+    )
+    return {
+      page: getPage(url, 1),
+      filterMap: queryParamToMap(queryParam),
+    }
+  }, [isDeploymentsListPage, location.pathname, location.search])
+
   const urlPage = useMemo(() => {
+    if (deploymentsListParams?.page != null) return deploymentsListParams.page
     const search = location.search
     if (search && typeof search === 'object' && 'page' in search) {
       const p = (search as { page?: number }).page
@@ -209,17 +273,30 @@ export function View() {
     )
     const pageParam = searchParams.get('page')
     return pageParam ? Math.max(1, parseInt(pageParam, 10)) : 1
-  }, [location.search])
+  }, [deploymentsListParams?.page, location.search])
+
+  const deploymentsFilterMap = deploymentsListParams?.filterMap ?? new Map()
+  const deploymentsFilterQueries =
+    deploymentsFilterMap.size > 0
+      ? Array.from(deploymentsFilterMap.values())
+      : undefined
+  const deploymentsQueries = useMemo(
+    () => [...(deploymentsFilterQueries ?? []), ...DEPLOYMENTS_SELECT],
+    [deploymentsFilterQueries],
+  )
 
   // Initialize displayed page from URL (0-indexed)
   const [displayedPage, setDisplayedPage] = useState(urlPage - 1)
   const [requestedPage, setRequestedPage] = useState(urlPage - 1)
-  const [pageSize, setPageSize] = useState(DEPLOYMENTS_PER_PAGE)
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
   const [selectedDeployments, setSelectedDeployments] = useState<Set<string>>(
     new Set(),
   )
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteActiveDialogOpen, setDeleteActiveDialogOpen] = useState(false)
+  const [cancelBuildDialogOpen, setCancelBuildDialogOpen] = useState(false)
+  const [cancelTargetDeploymentId, setCancelTargetDeploymentId] =
+    useState<string | null>(null)
   const [redeployDialogOpen, setRedeployDialogOpen] = useState(false)
   const [activateDialogOpen, setActivateDialogOpen] = useState(false)
   const [screenshotLoaded, setScreenshotLoaded] = useState(false)
@@ -227,6 +304,7 @@ export function View() {
     'dark' | 'light' | null
   >(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const deploymentsToolbar = useContext(DeploymentsToolbarContext)
 
   const { theme, resolvedTheme } = useTheme()
   const isDark = useMemo(
@@ -256,49 +334,23 @@ export function View() {
     total,
     isLoading: deploymentsLoading,
     isFetching: deploymentsFetching,
-  } = useSiteDeployments(projectId, siteId, requestedPage, pageSize, [
-    Query.select([
-      'buildSize',
-      'sourceSize',
-      'totalSize',
-      'buildDuration',
-      'status',
-      'type',
-      'resourceId',
-      'providerRepositoryUrl',
-      'providerRepositoryOwner',
-      'providerRepositoryName',
-      'providerBranchUrl',
-      'providerBranch',
-      'providerCommitMessage',
-      'providerCommitHash',
-      'providerCommitUrl',
-      '$createdAt',
-    ]),
-  ])
+  } = useSiteDeployments(
+    projectId,
+    siteId,
+    requestedPage,
+    pageSize,
+    deploymentsQueries,
+  )
 
   // Fetch data for the displayed page (this is what we show)
   const { deployments: displayedDeployments, total: displayedTotal } =
-    useSiteDeployments(projectId, siteId, displayedPage, pageSize, [
-      Query.select([
-        'buildSize',
-        'sourceSize',
-        'totalSize',
-        'buildDuration',
-        'status',
-        'type',
-        'resourceId',
-        'providerRepositoryUrl',
-        'providerRepositoryOwner',
-        'providerRepositoryName',
-        'providerBranchUrl',
-        'providerBranch',
-        'providerCommitMessage',
-        'providerCommitHash',
-        'providerCommitUrl',
-        '$createdAt',
-      ]),
-    ])
+    useSiteDeployments(
+      projectId,
+      siteId,
+      displayedPage,
+      pageSize,
+      deploymentsQueries,
+    )
 
   // Update displayed page only when requested page data is ready (not fetching)
   useEffect(() => {
@@ -311,8 +363,17 @@ export function View() {
     }
   }, [deploymentsFetching, deploymentsLoading, requestedPage, displayedPage])
 
-  // Use displayed deployments for rendering (stays on current page until new data is ready)
-  const deployments = displayedDeployments
+  // Keep showing previous results while fetching new filter results (no empty state flash)
+  const lastDeploymentsRef = useRef<typeof displayedDeployments>([])
+  useEffect(() => {
+    if (!deploymentsFetching && displayedDeployments.length > 0) {
+      lastDeploymentsRef.current = displayedDeployments
+    }
+  }, [deploymentsFetching, displayedDeployments])
+  const deployments =
+    deploymentsFetching && lastDeploymentsRef.current.length > 0
+      ? lastDeploymentsRef.current
+      : displayedDeployments
 
   // Scroll to top when page changes and data is ready
   useLayoutEffect(() => {
@@ -520,6 +581,34 @@ export function View() {
     },
   })
 
+  // Cancel build mutation (stop the build, deployment remains with status canceled)
+  const cancelBuildMutation = useMutation({
+    mutationFn: async (deploymentIdToCancel: string) => {
+      if (!projectId || !siteId) {
+        throw new Error('Project ID and Site ID are required')
+      }
+      return await cancelSiteDeployment(
+        projectId,
+        siteId,
+        deploymentIdToCancel,
+      )
+    },
+    onSuccess: async () => {
+      setCancelBuildDialogOpen(false)
+      setCancelTargetDeploymentId(null)
+      await queryClient.refetchQueries({
+        queryKey: Dependencies.DEPLOYMENTS,
+      })
+      await queryClient.refetchQueries({
+        queryKey: ['site', 'project', projectId, siteId],
+      })
+      toast.success('Build cancelled')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to cancel build')
+    },
+  })
+
   // Delete mutation for active deployment
   const deleteActiveMutation = useMutation({
     mutationFn: async () => {
@@ -647,6 +736,18 @@ export function View() {
     setSelectedDeployments(new Set()) // Clear selection on page size change
   }
 
+  const clearAllDeploymentsFilters = () => {
+    navigate({
+      to: location.pathname,
+      search: (prev) => ({
+        ...prev,
+        query: undefined,
+      }),
+      replace: true,
+    })
+    setSelectedDeployments(new Set())
+  }
+
   const createDeployment = useCreateDeployment()
 
   // Only show full loading state on initial load when there's no data
@@ -662,7 +763,7 @@ export function View() {
 
   return (
     <div ref={scrollContainerRef} className="flex-1">
-      <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6">
+      <div className="mx-auto w-full max-w-7xl px-4 pt-6 pb-4 sm:px-6 sm:pt-6 sm:pb-6">
         <div className="space-y-6">
           {/* Active Deployment Card - show for both ready and building so it stays the same; realtime updates when status becomes ready */}
           {activeDeploymentResolved &&
@@ -671,14 +772,32 @@ export function View() {
                 activeDeploymentForCard ?? activeDeploymentResolved
               return (
                 <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                  <div className="px-6 py-4 flex items-center gap-2">
-                    <h3 className="text-[15px] font-semibold text-foreground">
-                      Active deployment
-                    </h3>
+                  <div className="px-6 py-4 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-[15px] font-semibold text-foreground">
+                        Active deployment
+                      </h3>
+                      {isBuilding && (
+                        <Badge variant="warning" className="text-[10px] shrink-0">
+                          Building
+                        </Badge>
+                      )}
+                    </div>
                     {isBuilding && (
-                      <Badge variant="warning" className="text-[10px] shrink-0">
-                        Building
-                      </Badge>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="shrink-0 h-8 text-[12px]"
+                        onClick={() => {
+                          setCancelTargetDeploymentId(
+                            activeDeploymentResolved?.$id ?? null,
+                          )
+                          setCancelBuildDialogOpen(true)
+                        }}
+                        disabled={cancelBuildMutation.isPending}
+                      >
+                        Cancel build
+                      </Button>
                     )}
                   </div>
                   <div className="border-t border-border" />
@@ -1113,7 +1232,19 @@ export function View() {
                           <FileCode className="mr-2 h-4 w-4" />
                           Source code
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={handleDownloadBuild}>
+                        <DropdownMenuItem
+                          onClick={handleDownloadBuild}
+                          disabled={!isDeploymentCompleted(
+                            activeDeploymentResolved?.status,
+                          )}
+                          title={
+                            !isDeploymentCompleted(
+                              activeDeploymentResolved?.status,
+                            )
+                              ? 'Build output is available after the deployment has completed.'
+                              : undefined
+                          }
+                        >
                           <Package className="mr-2 h-4 w-4" />
                           Build output
                         </DropdownMenuItem>
@@ -1230,6 +1361,13 @@ export function View() {
             </div>
           )}
         </div>
+
+        {/* Deployments filter + create (below active deployment card) */}
+        {deploymentsToolbar ? (
+          <div className="flex flex-wrap items-center justify-between gap-4 mt-6">
+            {deploymentsToolbar}
+          </div>
+        ) : null}
 
         {/* Deployments Table */}
         <div className="mt-6">
@@ -1626,7 +1764,10 @@ export function View() {
                                   <RefreshCw className="mr-2 h-4 w-4" />
                                   Redeploy
                                 </DropdownMenuItem>
-                                {!isActive && (
+                                {!isActive &&
+                                  !isDeploymentInProgress(
+                                    deploymentData.status,
+                                  ) && (
                                   <DropdownMenuItem
                                     onClick={async (e) => {
                                       e.stopPropagation()
@@ -1660,10 +1801,25 @@ export function View() {
                                         )
                                       }
                                     }}
-                                    className="text-destructive focus:text-destructive"
                                   >
                                     <Trash2 className="mr-2 h-4 w-4" />
                                     Delete
+                                  </DropdownMenuItem>
+                                )}
+                                {isDeploymentInProgress(
+                                  deploymentData.status,
+                                ) && (
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      setCancelTargetDeploymentId(
+                                        deploymentData.$id,
+                                      )
+                                      setCancelBuildDialogOpen(true)
+                                    }}
+                                  >
+                                    <XCircle className="mr-2 h-4 w-4" />
+                                    Cancel
                                   </DropdownMenuItem>
                                 )}
                               </DropdownMenuContent>
@@ -1689,13 +1845,20 @@ export function View() {
           ) : (
             <EmptyState
               icon={Clock}
-              title="No deployments yet"
-              description="Create your first deployment to get started"
-              isEmpty={true}
+              title={
+                deploymentsFilterMap.size > 0 ? undefined : 'No deployments yet'
+              }
+              description={
+                deploymentsFilterMap.size > 0
+                  ? undefined
+                  : 'Create your first deployment to get started'
+              }
+              isEmpty={deploymentsFilterMap.size === 0}
+              hasFilters={deploymentsFilterMap.size > 0}
               variant="card"
               iconSize="md"
               children={
-                createDeployment ? (
+                deploymentsFilterMap.size === 0 && createDeployment ? (
                   <div className="flex flex-col items-center text-center mt-4">
                     <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
                       <Clock className="h-6 w-6 text-muted-foreground" />
@@ -1839,6 +2002,64 @@ export function View() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Cancel build confirmation */}
+      <Dialog
+        open={cancelBuildDialogOpen}
+        onOpenChange={(open) => {
+          setCancelBuildDialogOpen(open)
+          if (!open) setCancelTargetDeploymentId(null)
+        }}
+      >
+        <DialogContent className="sm:max-w-md p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+            <DialogTitle>Cancel build</DialogTitle>
+            <DialogDescription className="text-[13px] mt-2">
+              Stop the current deployment? You can deploy again later.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="border-t border-border" />
+          <div className="px-6 pb-4 pt-4">
+            {(displayedDeployments?.find(
+              (d) => d.$id === cancelTargetDeploymentId,
+            ) ?? (cancelTargetDeploymentId === activeDeploymentResolved?.$id
+              ? activeDeploymentResolved
+              : null)) && (
+              <DeploymentInfo
+                deployment={
+                  displayedDeployments?.find(
+                    (d) => d.$id === cancelTargetDeploymentId,
+                  ) ?? activeDeploymentResolved!
+                }
+                showStatus={true}
+              />
+            )}
+          </div>
+          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCancelBuildDialogOpen(false)
+                setCancelTargetDeploymentId(null)
+              }}
+              className="h-9 text-[13px]"
+            >
+              Keep building
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() =>
+                cancelTargetDeploymentId &&
+                cancelBuildMutation.mutate(cancelTargetDeploymentId)
+              }
+              disabled={cancelBuildMutation.isPending || !cancelTargetDeploymentId}
+              className="h-9 text-[13px]"
+            >
+              Cancel build
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Redeploy Confirmation Dialog for Active Deployment */}
       {activeDeploymentResolved && (
