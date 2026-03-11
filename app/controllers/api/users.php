@@ -1548,14 +1548,15 @@ App::patch('/v1/users/:userId/phone')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $oldPhone = $user->getAttribute('phone');
+        $oldPhone = $user->getAttribute('phone') ?? '';
+        $number = $number === '' ? null : $number;
 
         $user
             ->setAttribute('phone', $number)
             ->setAttribute('phoneVerification', false)
         ;
 
-        if (\strlen($number) !== 0) {
+        if (!\is_null($number)) {
             $target = $dbForProject->findOne('targets', [
                 Query::equal('identifier', [$number]),
             ]);
@@ -1573,13 +1574,13 @@ App::patch('/v1/users/:userId/phone')
             $oldTarget = $user->find('identifier', $oldPhone, 'targets');
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
-                if (\strlen($number) !== 0) {
+                if (!\is_null($number)) {
                     $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $number));
                 } else {
                     $dbForProject->deleteDocument('targets', $oldTarget->getId());
                 }
             } else {
-                if (\strlen($number) !== 0) {
+                if (!\is_null($number)) {
                     $target = $dbForProject->createDocument('targets', new Document([
                         '$permissions' => [
                             Permission::read(Role::user($user->getId())),
