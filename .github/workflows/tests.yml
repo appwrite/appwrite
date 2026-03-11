@@ -262,6 +262,8 @@ jobs:
         timeout-minutes: 3
         env:
           _APP_BROWSER_HOST: http://invalid-browser/v1
+          _APP_DATABASE_SHARED_TABLES: ""
+          _APP_DATABASE_SHARED_TABLES_V1: ""
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
@@ -282,7 +284,6 @@ jobs:
       - name: Run ${{ matrix.service }} tests with Project table mode
         timeout-minutes: 20
         run: |
-            echo "Using project tables"
             SERVICE_PATH="/usr/src/code/tests/e2e/Services/${{ matrix.service }}"
 
             # Services that rely on sequential test method execution (shared static state)
@@ -291,14 +292,7 @@ jobs:
               Databases|Functions|Realtime) FUNCTIONAL_FLAG="" ;;
             esac
 
-            echo "Running with paratest (parallel) for: ${{ matrix.service }} ${FUNCTIONAL_FLAG:+(functional)}"
             docker compose exec -T \
-              -e _APP_DATABASE_SHARED_TABLES="" \
-              -e _APP_DATABASE_SHARED_TABLES_V1="" \
-              -e _APP_DB_ADAPTER="${{ env._APP_DB_ADAPTER }}" \
-              -e _APP_DB_HOST="${{ env._APP_DB_HOST }}" \
-              -e _APP_DB_PORT="${{ env._APP_DB_PORT }}" \
-              -e _APP_DB_SCHEMA=appwrite \
               -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
               appwrite vendor/bin/paratest --processes $(nproc) $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --exclude-group ciIgnore --log-junit tests/e2e/Services/${{ matrix.service }}/junit.xml
 
@@ -366,6 +360,9 @@ jobs:
 
       - name: Load and Start Appwrite
         timeout-minutes: 3
+        env:
+          _APP_DATABASE_SHARED_TABLES: database_db_main
+          _APP_DATABASE_SHARED_TABLES_V1: ${{ matrix.tables-mode == 'Shared V1' && 'database_db_main' || '' }}
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
@@ -385,9 +382,6 @@ jobs:
 
       - name: Run ${{ matrix.service }} tests with ${{ matrix.tables-mode }} table mode
         timeout-minutes: 20
-        env:
-          _APP_DATABASE_SHARED_TABLES: database_db_main
-          _APP_DATABASE_SHARED_TABLES_V1: ${{ matrix.tables-mode == 'Shared V1' && 'database_db_main' || '' }}
         run: |
             SERVICE_PATH="/usr/src/code/tests/e2e/Services/${{ matrix.service }}"
 
@@ -398,8 +392,6 @@ jobs:
             esac
 
             docker compose exec -T \
-              -e _APP_DATABASE_SHARED_TABLES \
-              -e _APP_DATABASE_SHARED_TABLES_V1 \
               -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
               appwrite vendor/bin/paratest --processes $(nproc) $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --exclude-group ciIgnore --log-junit tests/e2e/Services/${{ matrix.service }}/junit.xml
 
@@ -438,6 +430,8 @@ jobs:
         timeout-minutes: 3
         env:
           _APP_OPTIONS_ABUSE: enabled
+          _APP_DATABASE_SHARED_TABLES: ""
+          _APP_DATABASE_SHARED_TABLES_V1: ""
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
@@ -449,13 +443,8 @@ jobs:
 
       - name: Run Projects tests in dedicated table mode
         timeout-minutes: 15
-        env:
-          _APP_DATABASE_SHARED_TABLES: ""
-          _APP_DATABASE_SHARED_TABLES_V1: ""
         run: >-
           docker compose exec -T
-          -e _APP_DATABASE_SHARED_TABLES
-          -e _APP_DATABASE_SHARED_TABLES_V1
           -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
           appwrite test /usr/src/code/tests/e2e/Services/Projects --debug --group=abuseEnabled
 
@@ -502,6 +491,8 @@ jobs:
         timeout-minutes: 3
         env:
           _APP_OPTIONS_ABUSE: enabled
+          _APP_DATABASE_SHARED_TABLES: database_db_main
+          _APP_DATABASE_SHARED_TABLES_V1: ${{ matrix.tables-mode == 'Shared V1' && 'database_db_main' || '' }}
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
@@ -513,13 +504,8 @@ jobs:
 
       - name: Run Projects tests in ${{ matrix.tables-mode }} table mode
         timeout-minutes: 15
-        env:
-          _APP_DATABASE_SHARED_TABLES: database_db_main
-          _APP_DATABASE_SHARED_TABLES_V1: ${{ matrix.tables-mode == 'Shared V1' && 'database_db_main' || '' }}
         run: >-
           docker compose exec -T
-          -e _APP_DATABASE_SHARED_TABLES
-          -e _APP_DATABASE_SHARED_TABLES_V1
           -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
           appwrite test /usr/src/code/tests/e2e/Services/Projects --debug --group=abuseEnabled
 
@@ -558,6 +544,8 @@ jobs:
         timeout-minutes: 3
         env:
           _APP_OPTIONS_ABUSE: enabled
+          _APP_DATABASE_SHARED_TABLES: ""
+          _APP_DATABASE_SHARED_TABLES_V1: ""
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
@@ -577,13 +565,8 @@ jobs:
 
       - name: Run Site tests with browser connected in dedicated table mode
         timeout-minutes: 15
-        env:
-          _APP_DATABASE_SHARED_TABLES: ""
-          _APP_DATABASE_SHARED_TABLES_V1: ""
         run: >-
           docker compose exec -T
-          -e _APP_DATABASE_SHARED_TABLES
-          -e _APP_DATABASE_SHARED_TABLES_V1
           -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
           appwrite test /usr/src/code/tests/e2e/Services/Sites --debug --group=screenshots
 
@@ -630,6 +613,8 @@ jobs:
         timeout-minutes: 3
         env:
           _APP_OPTIONS_ABUSE: enabled
+          _APP_DATABASE_SHARED_TABLES: database_db_main
+          _APP_DATABASE_SHARED_TABLES_V1: ${{ matrix.tables-mode == 'Shared V1' && 'database_db_main' || '' }}
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
@@ -649,13 +634,8 @@ jobs:
 
       - name: Run Site tests with browser connected in ${{ matrix.tables-mode }} table mode
         timeout-minutes: 15
-        env:
-          _APP_DATABASE_SHARED_TABLES: database_db_main
-          _APP_DATABASE_SHARED_TABLES_V1: ${{ matrix.tables-mode == 'Shared V1' && 'database_db_main' || '' }}
         run: >-
           docker compose exec -T
-          -e _APP_DATABASE_SHARED_TABLES
-          -e _APP_DATABASE_SHARED_TABLES_V1
           -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
           appwrite test /usr/src/code/tests/e2e/Services/Sites --debug --group=screenshots
 
