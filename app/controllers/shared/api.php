@@ -94,7 +94,7 @@ Http::init()
     ->inject('apiKey')
     ->inject('authorization')
     ->action(function (Http $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, Audit $queueForAudits, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization) {
-        $route = $utopia->match($request, fresh: true);
+        $route = $utopia->getRoute();
 
         /**
          * Handle user authentication and session validation.
@@ -468,7 +468,8 @@ Http::init()
     ->inject('platform')
     ->inject('authorization')
     ->action(function (Http $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Mail $queueForMails, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform, Authorization $authorization) {
-        $route = $utopia->match($request, fresh: true);
+
+        $route = $utopia->getRoute();
 
         if (
             array_key_exists('rest', $project->getAttribute('apis', []))
@@ -703,11 +704,12 @@ Http::init()
  */
 Http::shutdown()
     ->groups(['session'])
+    ->inject('utopia')
     ->inject('request')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
-    ->action(function (Request $request, Response $response, Document $project, Database $dbForProject) {
+    ->action(function (Http $utopia, Request $request, Response $response, Document $project, Database $dbForProject) {
         $sessionLimit = $project->getAttribute('auths', [])['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT;
         $session = $response->getPayload();
         $userId = $session['userId'] ?? '';
@@ -806,7 +808,7 @@ Http::shutdown()
             }
         }
 
-        $route = $utopia->match($request, fresh: true);
+        $route = $utopia->getRoute();
         $requestParams = $route->getParamsValues();
 
         /**
