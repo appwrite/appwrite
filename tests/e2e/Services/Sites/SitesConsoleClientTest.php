@@ -180,7 +180,7 @@ class SitesConsoleClientTest extends Scope
 
         $stdout = '';
         $stderr = '';
-        $code = Console::execute("docker exec appwrite-task-maintenance time-travel --projectId={$this->getProject()['$id']} --resourceType=deployment --resourceId={$deploymentIdInactiveOld} --createdAt=2020-01-01T00:00:00Z", '', $stdout, $stderr);
+        $code = Console::execute("docker exec appwrite-task-maintenance task-time-travel --projectId={$this->getProject()['$id']} --resourceType=deployment --resourceId={$deploymentIdInactiveOld} --createdAt=2020-01-01T00:00:00Z", '', $stdout, $stderr);
         $this->assertSame(0, $code, "Time-travel command failed with code $code: $stderr ($stdout)");
 
         $stdout = '';
