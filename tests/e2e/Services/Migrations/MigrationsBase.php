@@ -2698,19 +2698,22 @@ trait MigrationsBase
             $this->assertEquals(201, $database['headers']['status-code']);
             $databaseId = $database['body']['$id'];
 
-            $collection = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections', [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey'],
-            ], [
-                'collectionId' => ID::unique(),
-                'name' => 'Vector CSV Export Collection',
-                'dimension' => 3,
-                'documentSecurity' => true,
-            ]);
+            $collectionId = null;
+            $this->assertEventually(function () use ($databaseId, &$collectionId) {
+                $collection = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections', [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ], [
+                    'collectionId' => ID::unique(),
+                    'name' => 'Vector CSV Export Collection',
+                    'dimension' => 3,
+                    'documentSecurity' => true,
+                ]);
 
-            $this->assertEquals(201, $collection['headers']['status-code']);
-            $collectionId = $collection['body']['$id'];
+                $this->assertEquals(201, $collection['headers']['status-code']);
+                $collectionId = $collection['body']['$id'];
+            });
 
             $documentsPayload = [
                 [

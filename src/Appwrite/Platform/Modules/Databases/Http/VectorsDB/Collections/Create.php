@@ -116,7 +116,6 @@ class Create extends CollectionAction
         }
         /** @var Database $dbForDatabases */
         $dbForDatabases = $getDatabasesDB($database);
-        var_dump($database->getArrayCopy());
 
         $attributes = [];
         $indexes = [];
