@@ -1337,17 +1337,14 @@ services:
     command: "postgres"
 
   ollama:
-    build: 
-      context: https://github.com/appwrite/docker-ollama.git#feat-dockerfile
-      args:
-        MODELS: ${_APP_EMBEDDING_MODELS:-embeddinggemma}
-        # duration to keep model in memory
-        OLLAMA_KEEP_ALIVE: -1
+    image: appwrite/ollama:0.1.1
     container_name: ollama
     ports:
       - "11434:11434"
     restart: unless-stopped
-    # persistent for caching models across restarts and preloading
+    environment:
+      MODELS: ${_APP_EMBEDDING_MODELS:-embeddinggemma}
+      OLLAMA_KEEP_ALIVE: 24h
     volumes:
       - appwrite-models:/root/.ollama
     networks:
