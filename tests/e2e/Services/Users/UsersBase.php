@@ -1596,7 +1596,7 @@ trait UsersBase
         ]);
 
         $this->assertEquals($user['headers']['status-code'], 200);
-        $this->assertEquals($user['body']['phone'], $updatedNumber);
+        $this->assertEmpty($user['body']['phone'] ?? '');
 
         $user = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'], array_merge([
             'content-type' => 'application/json',
@@ -1604,7 +1604,7 @@ trait UsersBase
         ], $this->getHeaders()));
 
         $this->assertEquals($user['headers']['status-code'], 200);
-        $this->assertEquals($user['body']['phone'], $updatedNumber);
+        $this->assertEmpty($user['body']['phone'] ?? '');
 
         $updatedNumber = "+910000000000"; //dummy number
         $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/phone', array_merge([
@@ -1646,6 +1646,58 @@ trait UsersBase
 
         // Mark phone as updated for search tests
         static::$userNumberUpdated = true;
+    }
+
+    public function testUpdateTwoUsersPhoneToEmpty(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        // Create two users with distinct valid phone numbers
+        $user1 = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => ID::unique(),
+            'email' => 'user1-phone-empty-test@appwrite.io',
+            'password' => 'password',
+            'name' => 'User One',
+            'phone' => '+16175551201',
+        ]);
+        $this->assertEquals(201, $user1['headers']['status-code']);
+        $this->assertEquals('+16175551201', $user1['body']['phone']);
+
+        $user2 = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => ID::unique(),
+            'email' => 'user2-phone-empty-test@appwrite.io',
+            'password' => 'password',
+            'name' => 'User Two',
+            'phone' => '+16175551202',
+        ]);
+        $this->assertEquals(201, $user2['headers']['status-code']);
+        $this->assertEquals('+16175551202', $user2['body']['phone']);
+
+        // Update first user's phone to empty - must succeed
+        $response1 = $this->client->call(Client::METHOD_PATCH, '/users/' . $user1['body']['$id'] . '/phone', $headers, [
+            'number' => '',
+        ]);
+        $this->assertEquals(200, $response1['headers']['status-code'], 'First user phone should update to empty');
+        $this->assertEmpty($response1['body']['phone'] ?? '');
+
+        // Update second user's phone to empty - must succeed (would fail with duplicate if empty was stored as '')
+        $response2 = $this->client->call(Client::METHOD_PATCH, '/users/' . $user2['body']['$id'] . '/phone', $headers, [
+            'number' => '',
+        ]);
+        $this->assertEquals(200, $response2['headers']['status-code'], 'Second user phone should update to empty without duplicate error');
+        $this->assertEmpty($response2['body']['phone'] ?? '');
+
+        // Verify both users have empty phone via GET
+        $get1 = $this->client->call(Client::METHOD_GET, '/users/' . $user1['body']['$id'], $headers);
+        $get2 = $this->client->call(Client::METHOD_GET, '/users/' . $user2['body']['$id'], $headers);
+        $this->assertEquals(200, $get1['headers']['status-code']);
+        $this->assertEquals(200, $get2['headers']['status-code']);
+        $this->assertEmpty($get1['body']['phone'] ?? '');
+        $this->assertEmpty($get2['body']['phone'] ?? '');
     }
 
     public function testUpdateUserNumberSearch(): void
