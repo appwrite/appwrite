@@ -10,6 +10,15 @@ x-logging: &x-logging
       max-file: "5"
       max-size: "10m"
 
+x-build: &x-build
+  build:
+    context: .
+    target: development
+    args:
+      DEBUG: false
+      TESTING: true
+      VERSION: dev
+
 services:
   traefik:
     image: traefik:3.6
@@ -50,15 +59,8 @@ services:
 
   appwrite:
     container_name: appwrite
-    <<: *x-logging
+    <<: [*x-logging, *x-build]
     image: appwrite-dev
-    build:
-      context: .
-      target: development
-      args:
-        DEBUG: false
-        TESTING: true
-        VERSION: dev
     ports:
       - 9501:80
     networks:
@@ -260,7 +262,7 @@ services:
 
   appwrite-realtime:
     entrypoint: realtime
-    <<: *x-logging
+    <<: [*x-logging, *x-build]
     container_name: appwrite-realtime
     image: appwrite-dev
     restart: unless-stopped
@@ -312,7 +314,7 @@ services:
 
   appwrite-worker-audits:
     entrypoint: worker-audits
-    <<: *x-logging
+    <<: [*x-logging, *x-build]
     container_name: appwrite-worker-audits
     image: appwrite-dev
     networks:
@@ -343,7 +345,7 @@ services:
 
   appwrite-worker-webhooks:
     entrypoint: worker-webhooks
-    <<: *x-logging
+    <<: [*x-logging, *x-build]
     container_name: appwrite-worker-webhooks
     image: appwrite-dev
     networks:
@@ -378,7 +380,7 @@ services:
 
   appwrite-worker-deletes:
     entrypoint: worker-deletes
-    <<: *x-logging
+    <<: [*x-logging, *x-build]
     container_name: appwrite-worker-deletes
     image: appwrite-dev
     networks:
@@ -443,7 +445,7 @@ services:
 
   appwrite-worker-databases:
     entrypoint: worker-databases
-    <<: *x-logging
+    <<: [*x-logging, *x-build]
     container_name: appwrite-worker-databases
     image: appwrite-dev
     networks:
@@ -476,7 +478,7 @@ services:
 
   appwrite-worker-builds:
     entrypoint: worker-builds
-    <<: *x-logging
+    <<: [*x-logging, *x-build]
     container_name: appwrite-worker-builds
     image: appwrite-dev
     networks:
@@ -551,7 +553,7 @@ services:
 
   appwrite-worker-screenshots:
     entrypoint: worker-screenshots
-    <<: *x-logging
+    <<: [*x-logging, *x-build]
     container_name: appwrite-worker-screenshots
     image: appwrite-dev
     networks:
@@ -614,7 +616,7 @@ services:
 
   appwrite-worker-certificates:
     entrypoint: worker-certificates
-    <<: *x-logging
+    <<: [*x-logging, *x-build]
     container_name: appwrite-worker-certificates
     image: appwrite-dev
     networks:
@@ -656,7 +658,7 @@ services:
 
   appwrite-worker-executions:
     entrypoint: worker-executions
-    <<: *x-logging
+    <<: [*x-logging, *x-build]
     container_name: appwrite-worker-executions
     image: appwrite-dev
     networks:
@@ -686,7 +688,7 @@ services:
 
   appwrite-worker-functions:
     entrypoint: worker-functions
-    <<: *x-logging
+    <<: [*x-logging, *x-build]
     container_name: appwrite-worker-functions
     image: appwrite-dev
     networks:
@@ -730,7 +732,7 @@ services:
 
   appwrite-worker-mails:
     entrypoint: worker-mails
-    <<: *x-logging
+    <<: [*x-logging, *x-build]
     container_name: appwrite-worker-mails
     image: appwrite-dev
     networks:
@@ -772,7 +774,7 @@ services:
 
   appwrite-worker-messaging:
     entrypoint: worker-messaging
-    <<: *x-logging
+    <<: [*x-logging, *x-build]
     container_name: appwrite-worker-messaging
     restart: unless-stopped
     image: appwrite-dev
@@ -829,7 +831,7 @@ services:
 
   appwrite-worker-migrations:
     entrypoint: worker-migrations
-    <<: *x-logging
+    <<: [*x-logging, *x-build]
     container_name: appwrite-worker-migrations
     restart: unless-stopped
     image: appwrite-dev
@@ -874,7 +876,7 @@ services:
 
   appwrite-task-maintenance:
     entrypoint: maintenance
-    <<: *x-logging
+    <<: [*x-logging, *x-build]
     container_name: appwrite-task-maintenance
     image: appwrite-dev
     networks:
@@ -920,7 +922,7 @@ services:
 
   appwrite-task-interval:
     entrypoint: interval
-    <<: *x-logging
+    <<: [*x-logging, *x-build]
     container_name: appwrite-task-interval
     image: appwrite-dev
     networks:
@@ -961,7 +963,7 @@ services:
   appwrite-task-stats-resources:
     container_name: appwrite-task-stats-resources
     entrypoint: stats-resources
-    <<: *x-logging
+    <<: [*x-logging, *x-build]
     image: appwrite-dev
     networks:
       - appwrite
@@ -993,7 +995,7 @@ services:
 
   appwrite-worker-stats-resources:
     entrypoint: worker-stats-resources
-    <<: *x-logging
+    <<: [*x-logging, *x-build]
     container_name: appwrite-worker-stats-resources
     image: appwrite-dev
     networks:
@@ -1026,7 +1028,7 @@ services:
 
   appwrite-worker-stats-usage:
     entrypoint: worker-stats-usage
-    <<: *x-logging
+    <<: [*x-logging, *x-build]
     container_name: appwrite-worker-stats-usage
     image: appwrite-dev
     networks:
@@ -1059,7 +1061,7 @@ services:
 
   appwrite-task-scheduler-functions:
     entrypoint: schedule-functions
-    <<: *x-logging
+    <<: [*x-logging, *x-build]
     container_name: appwrite-task-scheduler-functions
     image: appwrite-dev
     networks:
@@ -1089,7 +1091,7 @@ services:
 
   appwrite-task-scheduler-executions:
     entrypoint: schedule-executions
-    <<: *x-logging
+    <<: [*x-logging, *x-build]
     container_name: appwrite-task-scheduler-executions
     image: appwrite-dev
     networks:
@@ -1118,7 +1120,7 @@ services:
 
   appwrite-task-scheduler-messages:
     entrypoint: schedule-messages
-    <<: *x-logging
+    <<: [*x-logging, *x-build]
     container_name: appwrite-task-scheduler-messages
     image: appwrite-dev
     networks:
