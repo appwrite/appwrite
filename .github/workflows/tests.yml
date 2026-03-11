@@ -113,7 +113,7 @@ jobs:
         timeout-minutes: 3
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
-          docker compose pull --quiet
+          docker compose pull --quiet --ignore-buildable
           docker compose up -d
           until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
             echo "Waiting for Appwrite to be ready..."
@@ -165,7 +165,7 @@ jobs:
         timeout-minutes: 3
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
-          docker compose pull --quiet
+          docker compose pull --quiet --ignore-buildable
           docker compose up -d
           until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
             echo "Waiting for Appwrite to be ready..."
@@ -281,7 +281,7 @@ jobs:
           _APP_BROWSER_HOST: http://invalid-browser/v1
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
-          docker compose pull --quiet
+          docker compose pull --quiet --ignore-buildable
           docker compose up -d
           until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
             echo "Waiting for Appwrite to be ready..."
@@ -393,7 +393,7 @@ jobs:
         timeout-minutes: 3
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
-          docker compose pull --quiet
+          docker compose pull --quiet --ignore-buildable
           docker compose up -d
           until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
             echo "Waiting for Appwrite to be ready..."
@@ -480,7 +480,7 @@ jobs:
           _APP_OPTIONS_ABUSE: enabled
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
-          docker compose pull --quiet
+          docker compose pull --quiet --ignore-buildable
           docker compose up -d
           until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
             echo "Waiting for Appwrite to be ready..."
@@ -553,7 +553,7 @@ jobs:
           _APP_OPTIONS_ABUSE: enabled
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
-          docker compose pull --quiet
+          docker compose pull --quiet --ignore-buildable
           docker compose up -d
           until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
             echo "Waiting for Appwrite to be ready..."
@@ -624,7 +624,7 @@ jobs:
           _APP_OPTIONS_ABUSE: enabled
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
-          docker compose pull --quiet
+          docker compose pull --quiet --ignore-buildable
           docker compose up -d
           until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
             echo "Waiting for Appwrite to be ready..."
@@ -706,7 +706,7 @@ jobs:
           _APP_OPTIONS_ABUSE: enabled
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
-          docker compose pull --quiet
+          docker compose pull --quiet --ignore-buildable
           docker compose up -d
           until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
             echo "Waiting for Appwrite to be ready..."
