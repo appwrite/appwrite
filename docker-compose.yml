@@ -108,10 +108,10 @@ services:
       - ./dev:/usr/src/code/dev
 
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
-      - redis
-      - coredns
-      # - clamav
+      redis:
+        condition: service_healthy
+      coredns:
+        condition: service_started
     entrypoint:
       - php
       - -e
@@ -1244,6 +1244,11 @@ services:
       - MYSQL_PASSWORD=${_APP_DB_PASS}
       - MARIADB_AUTO_UPGRADE=1
     command: "mysqld --innodb-flush-method=fsync"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
 
   mongodb:
     profiles: ["mongodb"]
@@ -1303,6 +1308,11 @@ services:
       - POSTGRES_USER=${_APP_DB_USER}
       - POSTGRES_PASSWORD=${_APP_DB_PASS}
     command: "postgres"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${_APP_DB_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
 
   redis:
     image: redis:7.4.7-alpine
@@ -1319,6 +1329,11 @@ services:
       - appwrite
     volumes:
       - appwrite-redis:/data:rw
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
 
   coredns: # DNS server for testing purposes (Proxy APIs)
     image: coredns/coredns:1.12.4
