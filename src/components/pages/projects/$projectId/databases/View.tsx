@@ -4985,8 +4985,10 @@ function RowEditDrawer({
   const handleAddArrayItem = (key: string) => {
     const currentArray = (formData[key] as unknown[]) || []
     const newIndex = currentArray.length
-    handleFieldChange(key, [...currentArray, ''])
-    // Track the newly added item to focus it after render
+    const col = getColumnInfo(key) as { type?: string } | undefined
+    const defaultItem =
+      col?.type === 'boolean' || col?.type === 'bool' ? false : ''
+    handleFieldChange(key, [...currentArray, defaultItem])
     setNewlyAddedItem({ key, index: newIndex })
   }
 
@@ -5033,11 +5035,14 @@ function RowEditDrawer({
     columnInfo?: unknown,
   ): string => {
     if (key === '$createdAt' || key === '$updatedAt') return 'datetime'
-    // Use column type from metadata if available
-    if (columnInfo?.type) {
-      return columnInfo.type
-    }
-    // Fallback to value-based inference
+    const col = columnInfo as { array?: boolean; type?: string } | undefined
+    // Array columns always use the array UI (add/remove items per element)
+    if (col?.array) return 'array'
+    if (col?.type === 'array' || (typeof col?.type === 'string' && col.type.endsWith('[]')))
+      return 'array'
+    // Use column type from metadata if available (element type for arrays)
+    if (col?.type) return col.type
+    // Fallback to value-based inference (e.g. API returned actual array)
     if (Array.isArray(value)) return 'array'
     if (typeof value === 'boolean') return 'boolean'
     if (typeof value === 'number') return 'number'
@@ -5348,8 +5353,11 @@ function RowEditDrawer({
                                       (item, index) => {
                                         const columnInfo = getColumnInfo(key)
                                         const size = columnInfo?.size || null
-                                        const colType =
-                                          (columnInfo?.type || 'string') as string
+                                        const rawType =
+                                          ((columnInfo as { type?: string })?.type || 'string') as string
+                                        const colType = rawType.endsWith('[]')
+                                          ? rawType.slice(0, -2)
+                                          : rawType
                                         const isRequired =
                                           columnInfo?.required === true ||
                                           columnInfo?.required === 'true' ||
@@ -5369,12 +5377,19 @@ function RowEditDrawer({
                                           size > 0
                                         const isRTLContent = isRTL(stringValue)
                                         const showNullCheckbox = !isRequired
-                                        const setRef = (el: HTMLElement | null) => {
+                                        const setRef = (
+                                          el:
+                                            | HTMLInputElement
+                                            | HTMLSelectElement
+                                            | HTMLButtonElement
+                                            | HTMLTextAreaElement
+                                            | null,
+                                        ) => {
                                           const itemKey = `${key}-${index}`
                                           if (el) {
-                                            fieldRefs.current[itemKey] = el as HTMLInputElement & HTMLSelectElement & HTMLTextAreaElement
+                                            fieldRefs.current[itemKey] = el
                                             if (index === 0)
-                                              fieldRefs.current[key] = el as HTMLInputElement & HTMLSelectElement & HTMLTextAreaElement
+                                              fieldRefs.current[key] = el
                                           } else {
                                             delete fieldRefs.current[itemKey]
                                             if (index === 0)
@@ -5460,9 +5475,6 @@ function RowEditDrawer({
                                                         checked,
                                                       )
                                                     }
-                                                    ref={(el) =>
-                                                      el && setRef(el as unknown as HTMLElement)
-                                                    }
                                                   />
                                                   <span className="text-[12px] text-muted-foreground">
                                                     {item === true
@@ -5489,7 +5501,7 @@ function RowEditDrawer({
                                                 >
                                                   <SelectTrigger
                                                     className="h-9 text-[13px] border-0 bg-transparent px-0"
-                                                    ref={(el) => setRef(el as unknown as HTMLElement)}
+                                                    ref={(el) => setRef(el)}
                                                   >
                                                     <SelectValue
                                                       placeholder={
@@ -6297,15 +6309,15 @@ function RowsSpreadsheet({
 
   // Map API rows to RowData format (normalize array columns: comma-separated string → array)
   const rows: RowData[] = apiRows.map((row: unknown, index: number) => {
+    const rowObj = row as Record<string, unknown>
     const data: Record<string, string | number | boolean | unknown[] | null> =
       {}
-    Object.keys(row).forEach((key) => {
+    Object.keys(rowObj).forEach((key) => {
       if (!key.startsWith('$')) {
-        const value = (row as Record<string, unknown>)[key]
+        const value = rowObj[key]
         const col = apiColumns.find(
-          (c: unknown) =>
-            (c.key || c.name || c.$id) === key ||
-            (c as { attribute?: string }).attribute === key,
+          (c: Record<string, unknown>) =>
+            c.key === key || c.name === key || c.$id === key || c.attribute === key,
         )
         data[key] = normalizeValueForColumn(value, col) as
           | string
@@ -6317,15 +6329,15 @@ function RowsSpreadsheet({
     })
 
     return {
-      $id: row.$id,
-      $sequence: row.$sequence,
+      $id: rowObj.$id,
+      $sequence: rowObj.$sequence,
       rowNumber:
         (displayedRowsTotal ?? rowsTotal) -
         (currentPageIndexed * effectivePageSize + index),
       data,
-      $createdAt: row.$createdAt,
-      $updatedAt: row.$updatedAt,
-      $permissions: row.$permissions || [],
+      $createdAt: rowObj.$createdAt,
+      $updatedAt: rowObj.$updatedAt,
+      $permissions: (rowObj.$permissions as string[]) || [],
     }
   })
 
@@ -6460,11 +6472,11 @@ function RowsSpreadsheet({
             if (!key.startsWith('$')) {
               const value = rowObj[key]
               const col = columnsForNormalize.find(
-                (c: unknown) =>
-                  (c as { key?: string }).key === key ||
-                  (c as { name?: string }).name === key ||
-                  (c as { $id?: string }).$id === key ||
-                  (c as { attribute?: string }).attribute === key,
+                (c: Record<string, unknown>) =>
+                  c.key === key ||
+                  c.name === key ||
+                  c.$id === key ||
+                  c.attribute === key,
               )
               data[key] = normalizeValueForColumn(value, col) as
                 | string
@@ -6704,14 +6716,18 @@ function RowsSpreadsheet({
       | string
       | number
       | boolean
+      | unknown[]
       | Record<string, unknown>
       | null
       | undefined,
   ) => {
     if (value === null || value === undefined)
       return { full: 'null', display: 'null', isNull: true }
-    const stringValue =
-      typeof value === 'object' ? JSON.stringify(value) : String(value)
+    const stringValue = Array.isArray(value)
+      ? value.map((v) => (v === null ? 'null' : String(v))).join(', ')
+      : typeof value === 'object'
+        ? JSON.stringify(value)
+        : String(value)
     const trimmed =
       stringValue.length > 80 ? `${stringValue.slice(0, 77)}…` : stringValue
     return { full: stringValue, display: trimmed, isNull: false }
@@ -7284,6 +7300,7 @@ function RowsSpreadsheet({
                             | string
                             | number
                             | boolean
+                            | unknown[]
                             | Record<string, unknown>
                             | null
                             | undefined,
