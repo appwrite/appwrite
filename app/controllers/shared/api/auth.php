@@ -9,7 +9,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Http\Http;
-use Utopia\Http\Route;
 use Utopia\System\System;
 
 Http::init()
@@ -33,12 +32,12 @@ Http::init()
 
 Http::init()
     ->groups(['auth'])
-    ->inject('route')
+    ->inject('utopia')
     ->inject('request')
     ->inject('project')
     ->inject('geodb')
     ->inject('authorization')
-    ->action(function (Route $route, Request $request, Document $project, Reader $geodb, Authorization $authorization) {
+    ->action(function (Http $utopia, Request $request, Document $project, Reader $geodb, Authorization $authorization) {
         $denylist = System::getEnv('_APP_CONSOLE_COUNTRIES_DENYLIST', '');
         if (!empty($denylist && $project->getId() === 'console')) {
             $countries = explode(',', $denylist);
@@ -48,6 +47,8 @@ Http::init()
                 throw new Exception(Exception::GENERAL_REGION_ACCESS_DENIED);
             }
         }
+
+        $route = $utopia->match($request, fresh: true);
 
         $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
         $isAppUser = User::isApp($authorization->getRoles());
