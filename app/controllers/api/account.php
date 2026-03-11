@@ -3353,11 +3353,12 @@ App::patch('/v1/account/phone')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
+    ->inject('queueForDeletes')
     ->inject('project')
     ->inject('hooks')
     ->inject('proofForPassword')
     ->inject('authorization')
-    ->action(function (string $phone, string $password, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, ProofsPassword $proofForPassword, Authorization $authorization) {
+    ->action(function (string $phone, string $password, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Delete $queueForDeletes, Document $project, Hooks $hooks, ProofsPassword $proofForPassword, Authorization $authorization) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
 
@@ -3411,6 +3412,9 @@ App::patch('/v1/account/phone')
                     $authorization->skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone)));
                 } else {
                     $authorization->skip(fn () => $dbForProject->deleteDocument('targets', $oldTarget->getId()));
+                    $queueForDeletes
+                        ->setType(DELETE_TYPE_TARGET)
+                        ->setDocument($oldTarget);
                 }
             } else {
                 if (!\is_null($phone)) {

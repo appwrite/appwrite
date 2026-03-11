@@ -2682,7 +2682,17 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEmpty($response['body']['phone']);
+        $this->assertSame('', $response['body']['phone']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSame('', $response['body']['phone']);
 
         /**
          * Test for SUCCESS (re-set phone after unset)
