@@ -327,6 +327,8 @@ class Migrations extends Action
                 'messages.write',
                 'targets.read',
                 'targets.write',
+                'policies.read',
+                'policies.write',
             ]
         ]);
 
