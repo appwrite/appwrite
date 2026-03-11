@@ -63,6 +63,7 @@ import {
   updateProjectTableRow,
   fetchProjectTableRow,
   createProjectTableColumn,
+  generateDefaultColumnsForSampleData,
   updateProjectTableColumn,
   deleteProjectTableColumn,
   useProjectTables as useTablesForColumns,
@@ -6641,44 +6642,55 @@ function RowsSpreadsheet({
     },
   })
 
-  // Sample data generation mutation
+  // Sample data generation mutation (matches old Appwrite Console: scaffold columns if empty, then generate rows)
   const sampleDataMutation = useMutation({
     mutationFn: async (rowCount: number) => {
-      // Filter out system columns (those starting with $) and map API columns to Column type
-      const columns: Column[] = apiColumns
-        .filter((col: unknown) => {
-          const colKey = col.key || col.name || col.$id
-          // Exclude system columns (starting with $)
-          return colKey && !colKey.startsWith('$')
-        })
-        .map((col: unknown) => ({
-          key: col.key || col.name || col.$id,
-          type: col.type || 'string',
-          size: col.size || null,
-          required: col.required || false,
-          array: col.array || false,
-          default: col.default || null,
-          format: col.format || null,
-          elements: col.elements || null,
-          min: col.min ?? null,
-          max: col.max ?? null,
-          status: col.status || 'available',
-        }))
+      const mapApiColumnsToColumn = (cols: unknown[]): Column[] =>
+        cols
+          .filter((col: unknown) => {
+            const colKey = (col as Record<string, unknown>).key || (col as Record<string, unknown>).name || (col as Record<string, unknown>).$id
+            return colKey && !String(colKey).startsWith('$')
+          })
+          .map((col: unknown) => {
+            const c = col as Record<string, unknown>
+            return {
+              key: c.key || c.name || c.$id,
+              type: c.type || 'string',
+              size: c.size ?? null,
+              required: c.required || false,
+              array: c.array || false,
+              default: c.default ?? null,
+              format: c.format ?? null,
+              elements: c.elements ?? null,
+              min: c.min ?? null,
+              max: c.max ?? null,
+              status: (c.status as string) || 'available',
+            }
+          }) as Column[]
 
-      let sampleRows: Record<string, unknown>[]
+      let columns: Column[] = mapApiColumnsToColumn(apiColumns)
+      const dataProducingColumns = columns.filter(
+        (c) => c.type !== 'relationship' && (!c.status || c.status === 'available'),
+      )
 
-      // If no custom columns, generate rows with just custom IDs
-      if (columns.length === 0) {
-        const { ID } = await import('@appwrite.io/console')
-        sampleRows = Array.from({ length: rowCount }, () => ({
-          $id: ID.unique(),
-        }))
-      } else {
-        // Generate sample rows with data for custom columns
-        sampleRows = generateSampleRows(columns, rowCount)
+      // Empty table or only relationship columns: scaffold default columns first (old Console behavior).
+      // Use only the columns that were successfully created so we never send unknown attributes.
+      if (dataProducingColumns.length === 0) {
+        const scaffolded = await generateDefaultColumnsForSampleData(
+          projectId,
+          databaseId,
+          tableId,
+        )
+        if (scaffolded.length === 0) {
+          throw new Error(
+            'Could not create any columns for sample data. Please add at least one column to this table.',
+          )
+        }
+        columns = scaffolded as Column[]
       }
 
-      // Insert rows
+      const sampleRows = generateSampleRows(columns, rowCount)
+
       const result = await createProjectTableRows(
         projectId,
         databaseId,
@@ -6690,9 +6702,14 @@ function RowsSpreadsheet({
       return result
     },
     onSuccess: (result) => {
-      // Invalidate and refetch rows
       queryClient.invalidateQueries({
         queryKey: ['rows', 'project', projectId, databaseId, tableId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['columns', 'project', projectId, databaseId, tableId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['tables', 'project', projectId, databaseId],
       })
       toast.success(
         `Sample data added successfully. ${result.created} row${result.created !== 1 ? 's' : ''} created.`,
@@ -6700,7 +6717,12 @@ function RowsSpreadsheet({
       setSampleDataModalOpen(false)
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to generate sample data')
+      const isCanceled =
+        error?.name === 'CanceledError' ||
+        (typeof error?.message === 'string' && error.message.toLowerCase().includes('cancel'))
+      if (!isCanceled) {
+        toast.error(error.message || 'Failed to generate sample data')
+      }
     },
   })
 
