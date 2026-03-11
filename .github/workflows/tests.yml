@@ -109,15 +109,11 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Load and Start Appwrite
-        timeout-minutes: 10
+        timeout-minutes: 3
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
-          docker compose up -d
-          until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
-            echo "Waiting for Appwrite to be ready..."
-            sleep 2
-          done
+          docker compose up -d --quiet-pull --wait
 
       - name: Environment Variables
         run: docker compose exec -T appwrite vars
@@ -153,15 +149,11 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Load and Start Appwrite
-        timeout-minutes: 10
+        timeout-minutes: 3
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
-          docker compose up -d
-          until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
-            echo "Waiting for Appwrite to be ready..."
-            sleep 2
-          done
+          docker compose up -d --quiet-pull --wait
 
       - name: Wait for Open Runtimes
         timeout-minutes: 3
@@ -259,7 +251,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Load and Start Appwrite
-        timeout-minutes: 10
+        timeout-minutes: 3
         env:
           _APP_BROWSER_HOST: http://invalid-browser/v1
           _APP_DATABASE_SHARED_TABLES: ""
@@ -267,11 +259,7 @@ jobs:
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
-          docker compose up -d
-          until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
-            echo "Waiting for Appwrite to be ready..."
-            sleep 2
-          done
+          docker compose up -d --quiet-pull --wait
 
       - name: Wait for Open Runtimes
         timeout-minutes: 3
@@ -359,18 +347,14 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Load and Start Appwrite
-        timeout-minutes: 10
+        timeout-minutes: 3
         env:
           _APP_DATABASE_SHARED_TABLES: database_db_main
           _APP_DATABASE_SHARED_TABLES_V1: ${{ matrix.tables-mode == 'Shared V1' && 'database_db_main' || '' }}
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
-          docker compose up -d
-          until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
-            echo "Waiting for Appwrite to be ready..."
-            sleep 2
-          done
+          docker compose up -d --quiet-pull --wait
 
       - name: Wait for Open Runtimes
         timeout-minutes: 3
@@ -427,7 +411,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Load and Start Appwrite
-        timeout-minutes: 10
+        timeout-minutes: 3
         env:
           _APP_OPTIONS_ABUSE: enabled
           _APP_DATABASE_SHARED_TABLES: ""
@@ -435,11 +419,7 @@ jobs:
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
-          docker compose up -d
-          until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
-            echo "Waiting for Appwrite to be ready..."
-            sleep 2
-          done
+          docker compose up -d --quiet-pull --wait
 
       - name: Run Projects tests in dedicated table mode
         timeout-minutes: 15
@@ -488,7 +468,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Load and Start Appwrite
-        timeout-minutes: 10
+        timeout-minutes: 3
         env:
           _APP_OPTIONS_ABUSE: enabled
           _APP_DATABASE_SHARED_TABLES: database_db_main
@@ -496,11 +476,7 @@ jobs:
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
-          docker compose up -d
-          until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
-            echo "Waiting for Appwrite to be ready..."
-            sleep 2
-          done
+          docker compose up -d --quiet-pull --wait
 
       - name: Run Projects tests in ${{ matrix.tables-mode }} table mode
         timeout-minutes: 15
@@ -541,18 +517,14 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Load and Start Appwrite
-        timeout-minutes: 10
+        timeout-minutes: 3
         env:
           _APP_DATABASE_SHARED_TABLES: ""
           _APP_DATABASE_SHARED_TABLES_V1: ""
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
-          docker compose up -d
-          until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
-            echo "Waiting for Appwrite to be ready..."
-            sleep 2
-          done
+          docker compose up -d --quiet-pull --wait
 
       - name: Wait for Open Runtimes
         timeout-minutes: 3
@@ -609,18 +581,14 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Load and Start Appwrite
-        timeout-minutes: 10
+        timeout-minutes: 3
         env:
           _APP_DATABASE_SHARED_TABLES: database_db_main
           _APP_DATABASE_SHARED_TABLES_V1: ${{ matrix.tables-mode == 'Shared V1' && 'database_db_main' || '' }}
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
-          docker compose up -d
-          until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
-            echo "Waiting for Appwrite to be ready..."
-            sleep 2
-          done
+          docker compose up -d --quiet-pull --wait
 
       - name: Wait for Open Runtimes
         timeout-minutes: 3

@@ -61,6 +61,11 @@ services:
     container_name: appwrite
     <<: [*x-logging, *x-build]
     image: appwrite-dev
+    healthcheck:
+      test: ["CMD", "doctor"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
     ports:
       - 9501:80
     networks:
