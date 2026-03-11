@@ -385,17 +385,10 @@ jobs:
 
       - name: Run ${{ matrix.service }} tests with ${{ matrix.tables-mode }} table mode
         timeout-minutes: 20
+        env:
+          _APP_DATABASE_SHARED_TABLES: database_db_main
+          _APP_DATABASE_SHARED_TABLES_V1: ${{ matrix.tables-mode == 'Shared V1' && 'database_db_main' || '' }}
         run: |
-            if [ "${{ matrix.tables-mode }}" == "Shared V1" ]; then
-              echo "Using shared tables V1"
-              export _APP_DATABASE_SHARED_TABLES=database_db_main
-              export _APP_DATABASE_SHARED_TABLES_V1=database_db_main
-            elif [ "${{ matrix.tables-mode }}" == "Shared V2" ]; then
-              echo "Using shared tables V2"
-              export _APP_DATABASE_SHARED_TABLES=database_db_main
-              export _APP_DATABASE_SHARED_TABLES_V1=
-            fi
-
             SERVICE_PATH="/usr/src/code/tests/e2e/Services/${{ matrix.service }}"
 
             # Services that rely on sequential test method execution (shared static state)
@@ -456,16 +449,15 @@ jobs:
 
       - name: Run Projects tests in dedicated table mode
         timeout-minutes: 15
-        run: |
-            echo "Using project tables"
-            export _APP_DATABASE_SHARED_TABLES=
-            export _APP_DATABASE_SHARED_TABLES_V1=
-
-            docker compose exec -T \
-              -e _APP_DATABASE_SHARED_TABLES \
-              -e _APP_DATABASE_SHARED_TABLES_V1 \
-              -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
-              appwrite test /usr/src/code/tests/e2e/Services/Projects --debug --group=abuseEnabled
+        env:
+          _APP_DATABASE_SHARED_TABLES: ""
+          _APP_DATABASE_SHARED_TABLES_V1: ""
+        run: >-
+          docker compose exec -T
+          -e _APP_DATABASE_SHARED_TABLES
+          -e _APP_DATABASE_SHARED_TABLES_V1
+          -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
+          appwrite test /usr/src/code/tests/e2e/Services/Projects --debug --group=abuseEnabled
 
       - name: Failure Logs
         if: failure()
@@ -521,22 +513,15 @@ jobs:
 
       - name: Run Projects tests in ${{ matrix.tables-mode }} table mode
         timeout-minutes: 15
-        run: |
-            if [ "${{ matrix.tables-mode }}" == "Shared V1" ]; then
-              echo "Using shared tables V1"
-              export _APP_DATABASE_SHARED_TABLES=database_db_main
-              export _APP_DATABASE_SHARED_TABLES_V1=database_db_main
-            elif [ "${{ matrix.tables-mode }}" == "Shared V2" ]; then
-              echo "Using shared tables V2"
-              export _APP_DATABASE_SHARED_TABLES=database_db_main
-              export _APP_DATABASE_SHARED_TABLES_V1=
-            fi
-
-            docker compose exec -T \
-              -e _APP_DATABASE_SHARED_TABLES \
-              -e _APP_DATABASE_SHARED_TABLES_V1 \
-              -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
-              appwrite test /usr/src/code/tests/e2e/Services/Projects --debug --group=abuseEnabled
+        env:
+          _APP_DATABASE_SHARED_TABLES: database_db_main
+          _APP_DATABASE_SHARED_TABLES_V1: ${{ matrix.tables-mode == 'Shared V1' && 'database_db_main' || '' }}
+        run: >-
+          docker compose exec -T
+          -e _APP_DATABASE_SHARED_TABLES
+          -e _APP_DATABASE_SHARED_TABLES_V1
+          -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
+          appwrite test /usr/src/code/tests/e2e/Services/Projects --debug --group=abuseEnabled
 
       - name: Failure Logs
         if: failure()
@@ -592,17 +577,15 @@ jobs:
 
       - name: Run Site tests with browser connected in dedicated table mode
         timeout-minutes: 15
-        run: |
-            echo "Keeping original value of _APP_BROWSER_HOST"
-            echo "Using project tables"
-            export _APP_DATABASE_SHARED_TABLES=
-            export _APP_DATABASE_SHARED_TABLES_V1=
-
-            docker compose exec -T \
-              -e _APP_DATABASE_SHARED_TABLES \
-              -e _APP_DATABASE_SHARED_TABLES_V1 \
-              -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
-              appwrite test /usr/src/code/tests/e2e/Services/Sites --debug --group=screenshots
+        env:
+          _APP_DATABASE_SHARED_TABLES: ""
+          _APP_DATABASE_SHARED_TABLES_V1: ""
+        run: >-
+          docker compose exec -T
+          -e _APP_DATABASE_SHARED_TABLES
+          -e _APP_DATABASE_SHARED_TABLES_V1
+          -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
+          appwrite test /usr/src/code/tests/e2e/Services/Sites --debug --group=screenshots
 
       - name: Failure Logs
         if: failure()
@@ -666,23 +649,15 @@ jobs:
 
       - name: Run Site tests with browser connected in ${{ matrix.tables-mode }} table mode
         timeout-minutes: 15
-        run: |
-            echo "Keeping original value of _APP_BROWSER_HOST"
-            if [ "${{ matrix.tables-mode }}" == "Shared V1" ]; then
-              echo "Using shared tables V1"
-              export _APP_DATABASE_SHARED_TABLES=database_db_main
-              export _APP_DATABASE_SHARED_TABLES_V1=database_db_main
-            elif [ "${{ matrix.tables-mode }}" == "Shared V2" ]; then
-              echo "Using shared tables V2"
-              export _APP_DATABASE_SHARED_TABLES=database_db_main
-              export _APP_DATABASE_SHARED_TABLES_V1=
-            fi
-
-            docker compose exec -T \
-              -e _APP_DATABASE_SHARED_TABLES \
-              -e _APP_DATABASE_SHARED_TABLES_V1 \
-              -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
-              appwrite test /usr/src/code/tests/e2e/Services/Sites --debug --group=screenshots
+        env:
+          _APP_DATABASE_SHARED_TABLES: database_db_main
+          _APP_DATABASE_SHARED_TABLES_V1: ${{ matrix.tables-mode == 'Shared V1' && 'database_db_main' || '' }}
+        run: >-
+          docker compose exec -T
+          -e _APP_DATABASE_SHARED_TABLES
+          -e _APP_DATABASE_SHARED_TABLES_V1
+          -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
+          appwrite test /usr/src/code/tests/e2e/Services/Sites --debug --group=screenshots
 
       - name: Failure Logs
         if: failure()
