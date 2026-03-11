@@ -90,7 +90,6 @@ jobs:
     needs: setup
     permissions:
       contents: read
-      pull-requests: write
 
     steps:
       - name: checkout
@@ -124,18 +123,11 @@ jobs:
         run: docker compose exec -T appwrite vars
 
       - name: Run Unit Tests
-        uses: itznotabug/php-retry@v3
-        with:
-          max_attempts: 2
-          retry_wait_seconds: 300
-          timeout_minutes: 15
-          job_id: ${{ job.check_run_id }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          test_dir: tests/unit
-          command: >-
-            docker compose exec
-            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-            appwrite test /usr/src/code/tests/unit
+        timeout-minutes: 15
+        run: >-
+          docker compose exec
+          -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
+          appwrite test /usr/src/code/tests/unit
 
   e2e_general_test:
     name: E2E General Test
@@ -143,7 +135,6 @@ jobs:
     needs: setup
     permissions:
       contents: read
-      pull-requests: write
     steps:
       - name: checkout
         uses: actions/checkout@v6
@@ -181,18 +172,11 @@ jobs:
           done
 
       - name: Run General Tests
-        uses: itznotabug/php-retry@v3
-        with:
-          max_attempts: 2
-          retry_wait_seconds: 300
-          timeout_minutes: 15
-          job_id: ${{ job.check_run_id }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          test_dir: tests/e2e/General
-          command: >-
-            docker compose exec -T
-            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-            appwrite test /usr/src/code/tests/e2e/General --debug
+        timeout-minutes: 15
+        run: >-
+          docker compose exec -T
+          -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
+          appwrite test /usr/src/code/tests/e2e/General --debug
 
       - name: Failure Logs
         if: failure()
@@ -206,7 +190,6 @@ jobs:
     needs: setup
     permissions:
       contents: read
-      pull-requests: write
     strategy:
       fail-fast: false
       matrix:
@@ -297,15 +280,8 @@ jobs:
           done
 
       - name: Run ${{ matrix.service }} tests with Project table mode
-        uses: itznotabug/php-retry@v3
-        with:
-          max_attempts: 2
-          retry_wait_seconds: 300
-          timeout_minutes: 20
-          job_id: ${{ job.check_run_id }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          test_dir: tests/e2e/Services/${{ matrix.service }}
-          command: |
+        timeout-minutes: 20
+        run: |
             echo "Using project tables"
             SERVICE_PATH="/usr/src/code/tests/e2e/Services/${{ matrix.service }}"
 
@@ -339,7 +315,6 @@ jobs:
     if: needs.check_database_changes.outputs.database_changed == 'true'
     permissions:
       contents: read
-      pull-requests: write
     strategy:
       fail-fast: false
       matrix:
@@ -409,15 +384,8 @@ jobs:
           done
 
       - name: Run ${{ matrix.service }} tests with ${{ matrix.tables-mode }} table mode
-        uses: itznotabug/php-retry@v3
-        with:
-          max_attempts: 2
-          retry_wait_seconds: 300
-          timeout_minutes: 20
-          job_id: ${{ job.check_run_id }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          test_dir: tests/e2e/Services/${{ matrix.service }}
-          command: |
+        timeout-minutes: 20
+        run: |
             if [ "${{ matrix.tables-mode }}" == "Shared V1" ]; then
               echo "Using shared tables V1"
               export _APP_DATABASE_SHARED_TABLES=database_db_main
@@ -456,7 +424,6 @@ jobs:
     needs: setup
     permissions:
       contents: read
-      pull-requests: write
     steps:
       - name: checkout
         uses: actions/checkout@v6
@@ -488,15 +455,8 @@ jobs:
           done
 
       - name: Run Projects tests in dedicated table mode
-        uses: itznotabug/php-retry@v3
-        with:
-          max_attempts: 2
-          retry_wait_seconds: 300
-          timeout_minutes: 15
-          job_id: ${{ job.check_run_id }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          test_dir: tests/e2e/Services/Projects
-          command: |
+        timeout-minutes: 15
+        run: |
             echo "Using project tables"
             export _APP_DATABASE_SHARED_TABLES=
             export _APP_DATABASE_SHARED_TABLES_V1=
@@ -522,7 +482,6 @@ jobs:
     if: needs.check_database_changes.outputs.database_changed == 'true'
     permissions:
       contents: read
-      pull-requests: write
     strategy:
       fail-fast: false
       matrix:
@@ -561,15 +520,8 @@ jobs:
           done
 
       - name: Run Projects tests in ${{ matrix.tables-mode }} table mode
-        uses: itznotabug/php-retry@v3
-        with:
-          max_attempts: 2
-          retry_wait_seconds: 300
-          timeout_minutes: 15
-          job_id: ${{ job.check_run_id }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          test_dir: tests/e2e/Services/Projects
-          command: |
+        timeout-minutes: 15
+        run: |
             if [ "${{ matrix.tables-mode }}" == "Shared V1" ]; then
               echo "Using shared tables V1"
               export _APP_DATABASE_SHARED_TABLES=database_db_main
@@ -600,7 +552,6 @@ jobs:
     needs: setup
     permissions:
       contents: read
-      pull-requests: write
     steps:
       - name: checkout
         uses: actions/checkout@v6
@@ -640,15 +591,8 @@ jobs:
           done
 
       - name: Run Site tests with browser connected in dedicated table mode
-        uses: itznotabug/php-retry@v3
-        with:
-          max_attempts: 2
-          retry_wait_seconds: 300
-          timeout_minutes: 15
-          job_id: ${{ job.check_run_id }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          test_dir: tests/e2e/Services/Sites
-          command: |
+        timeout-minutes: 15
+        run: |
             echo "Keeping original value of _APP_BROWSER_HOST"
             echo "Using project tables"
             export _APP_DATABASE_SHARED_TABLES=
@@ -675,7 +619,6 @@ jobs:
     if: needs.check_database_changes.outputs.database_changed == 'true'
     permissions:
       contents: read
-      pull-requests: write
     strategy:
       fail-fast: false
       matrix:
@@ -722,15 +665,8 @@ jobs:
           done
 
       - name: Run Site tests with browser connected in ${{ matrix.tables-mode }} table mode
-        uses: itznotabug/php-retry@v3
-        with:
-          max_attempts: 2
-          retry_wait_seconds: 300
-          timeout_minutes: 15
-          job_id: ${{ job.check_run_id }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          test_dir: tests/e2e/Services/Sites
-          command: |
+        timeout-minutes: 15
+        run: |
             echo "Keeping original value of _APP_BROWSER_HOST"
             if [ "${{ matrix.tables-mode }}" == "Shared V1" ]; then
               echo "Using shared tables V1"
