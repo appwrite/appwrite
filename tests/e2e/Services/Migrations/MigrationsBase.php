@@ -1694,4 +1694,842 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]);
     }
+
+    /**
+     * Messaging
+     */
+    public function testAppwriteMigrationMessagingProvider(): void
+    {
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/sendgrid', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => ID::unique(),
+            'name' => 'Migration Sendgrid',
+            'apiKey' => 'my-apikey',
+            'from' => 'migration@test.com',
+        ]);
+
+        $this->assertEquals(201, $provider['headers']['status-code']);
+        $this->assertNotEmpty($provider['body']['$id']);
+
+        $providerId = $provider['body']['$id'];
+
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_PROVIDER,
+            ],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals('completed', $result['status']);
+        $this->assertEquals([Resource::TYPE_PROVIDER], $result['resources']);
+        $this->assertArrayHasKey(Resource::TYPE_PROVIDER, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROVIDER]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROVIDER]['pending']);
+        $this->assertGreaterThanOrEqual(1, $result['statusCounters'][Resource::TYPE_PROVIDER]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROVIDER]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROVIDER]['warning']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/providers/' . $providerId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($providerId, $response['body']['$id']);
+        $this->assertEquals('Migration Sendgrid', $response['body']['name']);
+        $this->assertEquals('email', $response['body']['type']);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/messaging/providers/' . $providerId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/messaging/providers/' . $providerId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+    }
+
+    public function testAppwriteMigrationMessagingProviderSMTP(): void
+    {
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/smtp', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => ID::unique(),
+            'name' => 'Migration SMTP',
+            'host' => 'smtp.test.com',
+            'port' => 587,
+            'from' => 'migration-smtp@test.com',
+        ]);
+
+        $this->assertEquals(201, $provider['headers']['status-code']);
+        $providerId = $provider['body']['$id'];
+
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_PROVIDER,
+            ],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals('completed', $result['status']);
+        $this->assertArrayHasKey(Resource::TYPE_PROVIDER, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROVIDER]['error']);
+        $this->assertGreaterThanOrEqual(1, $result['statusCounters'][Resource::TYPE_PROVIDER]['success']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/providers/' . $providerId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($providerId, $response['body']['$id']);
+        $this->assertEquals('Migration SMTP', $response['body']['name']);
+        $this->assertEquals('email', $response['body']['type']);
+        $this->assertEquals('smtp', $response['body']['provider']);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/messaging/providers/' . $providerId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/messaging/providers/' . $providerId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+    }
+
+    public function testAppwriteMigrationMessagingProviderTwilio(): void
+    {
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/twilio', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => ID::unique(),
+            'name' => 'Migration Twilio',
+            'from' => '+15551234567',
+            'accountSid' => 'test-account-sid',
+            'authToken' => 'test-auth-token',
+        ]);
+
+        $this->assertEquals(201, $provider['headers']['status-code']);
+        $providerId = $provider['body']['$id'];
+
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_PROVIDER,
+            ],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals('completed', $result['status']);
+        $this->assertArrayHasKey(Resource::TYPE_PROVIDER, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROVIDER]['error']);
+        $this->assertGreaterThanOrEqual(1, $result['statusCounters'][Resource::TYPE_PROVIDER]['success']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/providers/' . $providerId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($providerId, $response['body']['$id']);
+        $this->assertEquals('Migration Twilio', $response['body']['name']);
+        $this->assertEquals('sms', $response['body']['type']);
+        $this->assertEquals('twilio', $response['body']['provider']);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/messaging/providers/' . $providerId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/messaging/providers/' . $providerId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+    }
+
+    public function testAppwriteMigrationMessagingTopic(): void
+    {
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/sendgrid', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => ID::unique(),
+            'name' => 'Migration Sendgrid Topic',
+            'apiKey' => 'my-apikey',
+            'from' => 'migration-topic@test.com',
+        ]);
+
+        $this->assertEquals(201, $provider['headers']['status-code']);
+        $providerId = $provider['body']['$id'];
+
+        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'topicId' => ID::unique(),
+            'name' => 'Migration Topic',
+        ]);
+
+        $this->assertEquals(201, $topic['headers']['status-code']);
+        $this->assertNotEmpty($topic['body']['$id']);
+
+        $topicId = $topic['body']['$id'];
+
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_PROVIDER,
+                Resource::TYPE_TOPIC,
+            ],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals('completed', $result['status']);
+        $this->assertArrayHasKey(Resource::TYPE_TOPIC, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_TOPIC]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_TOPIC]['pending']);
+        $this->assertGreaterThanOrEqual(1, $result['statusCounters'][Resource::TYPE_TOPIC]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_TOPIC]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_TOPIC]['warning']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topicId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($topicId, $response['body']['$id']);
+        $this->assertEquals('Migration Topic', $response['body']['name']);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/messaging/topics/' . $topicId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/messaging/topics/' . $topicId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/messaging/providers/' . $providerId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/messaging/providers/' . $providerId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+    }
+
+    public function testAppwriteMigrationMessagingSubscriber(): void
+    {
+        $user = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'userId' => ID::unique(),
+            'email' => uniqid() . '-migration-sub@test.com',
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+        $this->assertEquals(1, \count($user['body']['targets']));
+        $targetId = $user['body']['targets'][0]['$id'];
+
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/sendgrid', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => ID::unique(),
+            'name' => 'Migration Sendgrid Subscriber',
+            'apiKey' => 'my-apikey',
+            'from' => uniqid() . '-migration-sub@test.com',
+        ]);
+
+        $this->assertEquals(201, $provider['headers']['status-code']);
+        $providerId = $provider['body']['$id'];
+
+        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'topicId' => ID::unique(),
+            'name' => 'Migration Subscriber Topic',
+        ]);
+
+        $this->assertEquals(201, $topic['headers']['status-code']);
+        $topicId = $topic['body']['$id'];
+
+        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topicId . '/subscribers', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'subscriberId' => ID::unique(),
+            'targetId' => $targetId,
+        ]);
+
+        $this->assertEquals(201, $subscriber['headers']['status-code']);
+
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_USER,
+                Resource::TYPE_PROVIDER,
+                Resource::TYPE_TOPIC,
+                Resource::TYPE_SUBSCRIBER,
+            ],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals('completed', $result['status']);
+        $this->assertArrayHasKey(Resource::TYPE_SUBSCRIBER, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_SUBSCRIBER]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_SUBSCRIBER]['pending']);
+        $this->assertGreaterThanOrEqual(1, $result['statusCounters'][Resource::TYPE_SUBSCRIBER]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_SUBSCRIBER]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_SUBSCRIBER]['warning']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topicId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($topicId, $response['body']['$id']);
+        $this->assertGreaterThanOrEqual(1, $response['body']['emailTotal']);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/messaging/topics/' . $topicId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/messaging/topics/' . $topicId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/messaging/providers/' . $providerId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/messaging/providers/' . $providerId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+    }
+
+    public function testAppwriteMigrationMessagingMessage(): void
+    {
+        $this->getDestinationProject(true);
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'userId' => ID::unique(),
+            'email' => uniqid() . '-migration-msg@test.com',
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+        $this->assertEquals(1, \count($user['body']['targets']));
+        $targetId = $user['body']['targets'][0]['$id'];
+
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/sendgrid', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => ID::unique(),
+            'name' => 'Migration Sendgrid Message',
+            'apiKey' => 'my-apikey',
+            'from' => 'migration-msg@test.com',
+        ]);
+
+        $this->assertEquals(201, $provider['headers']['status-code']);
+        $providerId = $provider['body']['$id'];
+
+        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'topicId' => ID::unique(),
+            'name' => 'Migration Message Topic',
+        ]);
+
+        $this->assertEquals(201, $topic['headers']['status-code']);
+        $topicId = $topic['body']['$id'];
+
+        $message = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => ID::unique(),
+            'targets' => [$targetId],
+            'topics' => [$topicId],
+            'subject' => 'Migration Test Email',
+            'content' => 'This is a migration test email',
+            'draft' => true,
+        ]);
+
+        $this->assertEquals(201, $message['headers']['status-code']);
+        $this->assertNotEmpty($message['body']['$id']);
+
+        $messageId = $message['body']['$id'];
+
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_USER,
+                Resource::TYPE_PROVIDER,
+                Resource::TYPE_TOPIC,
+                Resource::TYPE_SUBSCRIBER,
+                Resource::TYPE_MESSAGE,
+            ],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals('completed', $result['status']);
+        $this->assertArrayHasKey(Resource::TYPE_MESSAGE, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_MESSAGE]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_MESSAGE]['pending']);
+        $this->assertGreaterThanOrEqual(1, $result['statusCounters'][Resource::TYPE_MESSAGE]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_MESSAGE]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_MESSAGE]['warning']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($messageId, $response['body']['$id']);
+        $this->assertEquals('draft', $response['body']['status']);
+        $this->assertEquals('Migration Test Email', $response['body']['data']['subject']);
+        $this->assertEquals('This is a migration test email', $response['body']['data']['content']);
+        $this->assertContains($topicId, $response['body']['topics']);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/messaging/messages/' . $messageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/messaging/messages/' . $messageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/messaging/topics/' . $topicId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/messaging/topics/' . $topicId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/messaging/providers/' . $providerId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/messaging/providers/' . $providerId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+    }
+
+    public function testAppwriteMigrationMessagingSmsMessage(): void
+    {
+        $this->getDestinationProject(true);
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'userId' => ID::unique(),
+            'email' => uniqid() . '-migration-sms@test.com',
+            'phone' => '+1' . str_pad((string) rand(200000000, 999999999), 10, '0', STR_PAD_LEFT),
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+        $this->assertGreaterThanOrEqual(1, \count($user['body']['targets']));
+
+        $smsTarget = null;
+        foreach ($user['body']['targets'] as $target) {
+            if ($target['providerType'] === 'sms') {
+                $smsTarget = $target;
+                break;
+            }
+        }
+        $this->assertNotNull($smsTarget);
+        $targetId = $smsTarget['$id'];
+
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/twilio', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => ID::unique(),
+            'name' => 'Migration Twilio SMS Msg',
+            'from' => '+15559876543',
+            'accountSid' => 'test-account-sid',
+            'authToken' => 'test-auth-token',
+        ]);
+
+        $this->assertEquals(201, $provider['headers']['status-code']);
+        $providerId = $provider['body']['$id'];
+
+        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'topicId' => ID::unique(),
+            'name' => 'Migration SMS Topic',
+        ]);
+
+        $this->assertEquals(201, $topic['headers']['status-code']);
+        $topicId = $topic['body']['$id'];
+
+        $message = $this->client->call(Client::METHOD_POST, '/messaging/messages/sms', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => ID::unique(),
+            'targets' => [$targetId],
+            'topics' => [$topicId],
+            'content' => 'Migration SMS test content',
+            'draft' => true,
+        ]);
+
+        $this->assertEquals(201, $message['headers']['status-code']);
+        $messageId = $message['body']['$id'];
+
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_USER,
+                Resource::TYPE_PROVIDER,
+                Resource::TYPE_TOPIC,
+                Resource::TYPE_SUBSCRIBER,
+                Resource::TYPE_MESSAGE,
+            ],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals('completed', $result['status']);
+        $this->assertArrayHasKey(Resource::TYPE_MESSAGE, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_MESSAGE]['error']);
+        $this->assertGreaterThanOrEqual(1, $result['statusCounters'][Resource::TYPE_MESSAGE]['success']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($messageId, $response['body']['$id']);
+        $this->assertEquals('draft', $response['body']['status']);
+        $this->assertEquals('Migration SMS test content', $response['body']['data']['content']);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/messaging/messages/' . $messageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/messaging/messages/' . $messageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/messaging/topics/' . $topicId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/messaging/topics/' . $topicId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/messaging/providers/' . $providerId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/messaging/providers/' . $providerId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+    }
+
+    public function testAppwriteMigrationMessagingScheduledMessage(): void
+    {
+        $this->getDestinationProject(true);
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'userId' => ID::unique(),
+            'email' => uniqid() . '-migration-sched@test.com',
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+        $targetId = $user['body']['targets'][0]['$id'];
+
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/sendgrid', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => ID::unique(),
+            'name' => 'Migration Sendgrid Scheduled',
+            'apiKey' => 'my-apikey',
+            'from' => 'migration-sched@test.com',
+        ]);
+
+        $this->assertEquals(201, $provider['headers']['status-code']);
+        $providerId = $provider['body']['$id'];
+
+        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'topicId' => ID::unique(),
+            'name' => 'Migration Scheduled Topic',
+        ]);
+
+        $this->assertEquals(201, $topic['headers']['status-code']);
+        $topicId = $topic['body']['$id'];
+
+        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topicId . '/subscribers', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'subscriberId' => ID::unique(),
+            'targetId' => $targetId,
+        ]);
+
+        $this->assertEquals(201, $subscriber['headers']['status-code']);
+
+        // Create a scheduled message with a future date using topics only
+        // Direct targets use source IDs which won't resolve in the destination via API
+        $futureDate = (new \DateTime('+1 year'))->format(\DateTime::ATOM);
+        $message = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => ID::unique(),
+            'topics' => [$topicId],
+            'subject' => 'Migration Scheduled Email',
+            'content' => 'This is a scheduled migration test email',
+            'scheduledAt' => $futureDate,
+        ]);
+
+        $this->assertEquals(201, $message['headers']['status-code']);
+        $messageId = $message['body']['$id'];
+        $this->assertEquals('scheduled', $message['body']['status']);
+
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_USER,
+                Resource::TYPE_PROVIDER,
+                Resource::TYPE_TOPIC,
+                Resource::TYPE_SUBSCRIBER,
+                Resource::TYPE_MESSAGE,
+            ],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals('completed', $result['status']);
+        $this->assertArrayHasKey(Resource::TYPE_MESSAGE, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_MESSAGE]['error']);
+        $this->assertGreaterThanOrEqual(1, $result['statusCounters'][Resource::TYPE_MESSAGE]['success']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($messageId, $response['body']['$id']);
+        $this->assertEquals('scheduled', $response['body']['status']);
+        $this->assertEquals('Migration Scheduled Email', $response['body']['data']['subject']);
+        $this->assertEquals(
+            (new \DateTime($futureDate))->getTimestamp(),
+            (new \DateTime($response['body']['scheduledAt']))->getTimestamp(),
+        );
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/messaging/messages/' . $messageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/messaging/messages/' . $messageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/messaging/topics/' . $topicId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/messaging/topics/' . $topicId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/messaging/providers/' . $providerId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/messaging/providers/' . $providerId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+    }
 }
