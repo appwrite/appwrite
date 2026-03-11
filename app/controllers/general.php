@@ -1189,7 +1189,8 @@ Http::error()
     ->inject('bus')
     ->inject('devKey')
     ->inject('authorization')
-    ->action(function (Throwable $error, Request $request, Route $route, Response $response, Document $project, ?Logger $logger, Log $log, Bus $bus, Document $devKey, Authorization $authorization) {
+    ->inject('user')
+    ->action(function (Throwable $error, Request $request, Route $route, Response $response, Document $project, ?Logger $logger, Log $log, Bus $bus, Document $devKey, Authorization $authorization, Document $user) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $class = \get_class($error);
         $code = $error->getCode();
@@ -1270,7 +1271,11 @@ Http::error()
         }
 
         if ($logger && $publish) {
-            $log->setUser(new User('guest-' . hash('sha256', $request->getIP())));
+            if (!$user->isEmpty()) {
+                $log->setUser(new User($user->getId()));
+            } else {
+                $log->setUser(new User('guest-' . hash('sha256', $request->getIP())));
+            }
 
             try {
                 $dsn = new DSN($project->getAttribute('database', 'console'));
