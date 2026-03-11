@@ -1338,7 +1338,7 @@ services:
 
   ollama:
     build: 
-      context: https://github.com/appwrite/docker-ollama.git#main
+      context: https://github.com/appwrite/docker-ollama.git#feat-dockerfile
       args:
         MODELS: ${_APP_EMBEDDING_MODELS:-embeddinggemma}
         # duration to keep model in memory
