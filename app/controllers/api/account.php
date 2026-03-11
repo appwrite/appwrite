@@ -3347,7 +3347,7 @@ App::patch('/v1/account/phone')
         ],
         contentType: ContentType::JSON
     ))
-    ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
+    ->param('phone', '', new Phone(allowEmpty: true), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
     ->inject('response')
     ->inject('user')
@@ -3355,8 +3355,8 @@ App::patch('/v1/account/phone')
     ->inject('queueForEvents')
     ->inject('project')
     ->inject('hooks')
-                ->inject('proofForPassword')
-->inject('authorization')
+    ->inject('proofForPassword')
+    ->inject('authorization')
     ->action(function (string $phone, string $password, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, ProofsPassword $proofForPassword, Authorization $authorization) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
@@ -3372,15 +3372,19 @@ App::patch('/v1/account/phone')
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
 
-        $target = $authorization->skip(fn () => $dbForProject->findOne('targets', [
-            Query::equal('identifier', [$phone]),
-        ]));
+        $phone = $phone === '' ? null : $phone;
 
-        if (!$target->isEmpty()) {
-            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        if (!\is_null($phone)) {
+            $target = $authorization->skip(fn () => $dbForProject->findOne('targets', [
+                Query::equal('identifier', [$phone]),
+            ]));
+
+            if (!$target->isEmpty()) {
+                throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+            }
         }
 
-        $oldPhone = $user->getAttribute('phone');
+        $oldPhone = $user->getAttribute('phone') ?? '';
 
         $user
             ->setAttribute('phone', $phone)
@@ -3403,7 +3407,26 @@ App::patch('/v1/account/phone')
             $oldTarget = $user->find('identifier', $oldPhone, 'targets');
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
-                $authorization->skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone)));
+                if (!\is_null($phone)) {
+                    $authorization->skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone)));
+                } else {
+                    $authorization->skip(fn () => $dbForProject->deleteDocument('targets', $oldTarget->getId()));
+                }
+            } else {
+                if (!\is_null($phone)) {
+                    $target = $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([
+                        '$permissions' => [
+                            Permission::read(Role::user($user->getId())),
+                            Permission::update(Role::user($user->getId())),
+                            Permission::delete(Role::user($user->getId())),
+                        ],
+                        'userId' => $user->getId(),
+                        'userInternalId' => $user->getSequence(),
+                        'providerType' => MESSAGE_TYPE_SMS,
+                        'identifier' => $phone,
+                    ])));
+                    $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
+                }
             }
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {

@@ -2669,6 +2669,38 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($response['body']['phone'], $newPhone);
 
         /**
+         * Test for SUCCESS (unset phone)
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'phone' => '',
+            'password' => 'new-password'
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEmpty($response['body']['phone']);
+
+        /**
+         * Test for SUCCESS (re-set phone after unset)
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'phone' => $newPhone,
+            'password' => 'new-password'
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($response['body']['phone'], $newPhone);
+
+        /**
          * Test for FAILURE
          */
         $response = $this->client->call(Client::METHOD_PATCH, '/account/phone', array_merge([
