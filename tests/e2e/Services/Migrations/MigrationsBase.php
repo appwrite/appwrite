@@ -1651,9 +1651,9 @@ trait MigrationsBase
         }, 30_000, 500);
 
         // Check that email was sent with download link
-        $lastEmail = $this->getLastEmail();
-        $this->assertNotEmpty($lastEmail);
-        $this->assertEquals('Your CSV export is ready', $lastEmail['subject']);
+        $lastEmail = $this->getLastEmail(probe: function ($email) {
+            $this->assertEquals('Your CSV export is ready', $email['subject']);
+        });
         $this->assertStringContainsStringIgnoringCase('Your data export has been completed successfully', $lastEmail['text']);
 
         // Extract download URL from email HTML
