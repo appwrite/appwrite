@@ -53,6 +53,12 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -97,10 +103,17 @@ jobs:
           path: /tmp/${{ env.IMAGE }}.tar
           fail-on-cache-miss: true
 
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+
       - name: Load and Start Appwrite
         timeout-minutes: 3
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
+          docker compose pull --quiet
           docker compose up -d
           until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
             echo "Waiting for Appwrite to be ready..."
@@ -142,10 +155,17 @@ jobs:
           path: /tmp/${{ env.IMAGE }}.tar
           fail-on-cache-miss: true
 
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+
       - name: Load and Start Appwrite
         timeout-minutes: 3
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
+          docker compose pull --quiet
           docker compose up -d
           until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
             echo "Waiting for Appwrite to be ready..."
@@ -249,12 +269,19 @@ jobs:
             echo "_APP_DB_PORT=5432" >> $GITHUB_ENV
           fi
 
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+
       - name: Load and Start Appwrite
         timeout-minutes: 3
         env:
           _APP_BROWSER_HOST: http://invalid-browser/v1
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
+          docker compose pull --quiet
           docker compose up -d
           until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
             echo "Waiting for Appwrite to be ready..."
@@ -356,10 +383,17 @@ jobs:
           path: /tmp/${{ env.IMAGE }}.tar
           fail-on-cache-miss: true
 
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+
       - name: Load and Start Appwrite
         timeout-minutes: 3
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
+          docker compose pull --quiet
           docker compose up -d
           until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
             echo "Waiting for Appwrite to be ready..."
@@ -434,11 +468,19 @@ jobs:
           path: /tmp/${{ env.IMAGE }}.tar
           fail-on-cache-miss: true
 
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+
       - name: Load and Start Appwrite
         timeout-minutes: 3
+        env:
+          _APP_OPTIONS_ABUSE: enabled
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
-          sed -i 's/_APP_OPTIONS_ABUSE=disabled/_APP_OPTIONS_ABUSE=enabled/' .env
+          docker compose pull --quiet
           docker compose up -d
           until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
             echo "Waiting for Appwrite to be ready..."
@@ -499,11 +541,19 @@ jobs:
           path: /tmp/${{ env.IMAGE }}.tar
           fail-on-cache-miss: true
 
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+
       - name: Load and Start Appwrite
         timeout-minutes: 3
+        env:
+          _APP_OPTIONS_ABUSE: enabled
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
-          sed -i 's/_APP_OPTIONS_ABUSE=disabled/_APP_OPTIONS_ABUSE=enabled/' .env
+          docker compose pull --quiet
           docker compose up -d
           until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
             echo "Waiting for Appwrite to be ready..."
@@ -562,11 +612,19 @@ jobs:
           path: /tmp/${{ env.IMAGE }}.tar
           fail-on-cache-miss: true
 
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+
       - name: Load and Start Appwrite
         timeout-minutes: 3
+        env:
+          _APP_OPTIONS_ABUSE: enabled
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
-          sed -i 's/_APP_OPTIONS_ABUSE=disabled/_APP_OPTIONS_ABUSE=enabled/' .env
+          docker compose pull --quiet
           docker compose up -d
           until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
             echo "Waiting for Appwrite to be ready..."
@@ -636,11 +694,19 @@ jobs:
           path: /tmp/${{ env.IMAGE }}.tar
           fail-on-cache-miss: true
 
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+
       - name: Load and Start Appwrite
         timeout-minutes: 3
+        env:
+          _APP_OPTIONS_ABUSE: enabled
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
-          sed -i 's/_APP_OPTIONS_ABUSE=disabled/_APP_OPTIONS_ABUSE=enabled/' .env
+          docker compose pull --quiet
           docker compose up -d
           until docker compose exec -T appwrite doctor > /dev/null 2>&1; do
             echo "Waiting for Appwrite to be ready..."
