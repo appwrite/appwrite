@@ -420,6 +420,7 @@ $register->set('smtp', function () {
     $mail->Password = $password;
     $mail->SMTPSecure = System::getEnv('_APP_SMTP_SECURE', '');
     $mail->SMTPAutoTLS = false;
+    $mail->SMTPKeepAlive = true;
     $mail->CharSet = 'UTF-8';
     $mail->Timeout = 10; /* Connection timeout */
     $mail->getSMTPInstance()->Timelimit = 30; /* Timeout for each individual SMTP command (e.g. HELO, EHLO, etc.) */
