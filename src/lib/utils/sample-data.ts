@@ -1,6 +1,20 @@
 import { faker } from '@faker-js/faker'
 import { ID } from '@appwrite.io/console'
 
+/**
+ * Normalize a value that may be number or bigint (e.g. from API) to a safe number.
+ * JSON and faker expect Number; BigInt causes "can't convert big int value to number".
+ */
+function toSafeNumber(value: number | bigint | null | undefined): number {
+  if (value === null || value === undefined) return 0
+  if (typeof value === 'bigint') {
+    const n = Number(value)
+    if (!Number.isFinite(n)) return 0
+    return Math.max(-Number.MAX_SAFE_INTEGER, Math.min(Number.MAX_SAFE_INTEGER, n))
+  }
+  return Number(value)
+}
+
 export interface Column {
   key: string
   type: string
@@ -68,7 +82,7 @@ function generateStringValue(column: Column): string {
 
   // Default: random words
   const words = faker.lorem.words({ min: 1, max: 5 })
-  const maxSize = column.size ? Math.min(column.size, 1000) : 1000
+  const maxSize = column.size != null ? Math.min(toSafeNumber(column.size), 1000) : 1000
   return words.length > maxSize ? words.slice(0, maxSize) : words
 }
 
@@ -76,8 +90,8 @@ function generateStringValue(column: Column): string {
  * Generate a value for an integer column
  */
 function generateIntegerValue(column: Column): number {
-  let min = column.min ?? 0
-  let max = column.max ?? min + 100
+  let min = toSafeNumber(column.min ?? 0)
+  let max = toSafeNumber(column.max ?? min + 100)
 
   // If no max specified, use a reasonable default
   if (column.max === null || column.max === undefined) {
@@ -95,8 +109,8 @@ function generateIntegerValue(column: Column): number {
  * Generate a value for a double/float column
  */
 function generateDoubleValue(column: Column): number {
-  let min = column.min ?? 0
-  let max = column.max ?? min + 100
+  let min = toSafeNumber(column.min ?? 0)
+  let max = toSafeNumber(column.max ?? min + 100)
 
   // If no max specified, use a reasonable default
   if (column.max === null || column.max === undefined) {
@@ -233,8 +247,8 @@ export function generateSampleRow(columns: Column[]): Record<string, unknown> {
         case 'enum':
           value = generateStringValue(column)
           // Truncate to column size limit (varchar/string use size; cap at 1000 for faker sanity)
-          if (column.size && typeof value === 'string') {
-            const maxSize = Math.min(column.size, 1000)
+          if (column.size != null && typeof value === 'string') {
+            const maxSize = Math.min(toSafeNumber(column.size), 1000)
             value = value.slice(0, maxSize)
           }
           break
@@ -272,8 +286,8 @@ export function generateSampleRow(columns: Column[]): Record<string, unknown> {
         default:
           // Default to string for unknown types (e.g. new text types)
           value = generateStringValue(column)
-          if (column.size && typeof value === 'string') {
-            const maxSize = Math.min(column.size, 1000)
+          if (column.size != null && typeof value === 'string') {
+            const maxSize = Math.min(toSafeNumber(column.size), 1000)
             value = value.slice(0, maxSize)
           } else if (typeof value === 'string' && value.length > 1000) {
             value = value.slice(0, 1000)
