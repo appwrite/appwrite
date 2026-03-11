@@ -10,6 +10,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
+use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
@@ -187,6 +188,18 @@ class Databases extends Action
             }
 
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
+        } catch (DuplicateException) {
+            // Attribute/relationship already exists (e.g. queue retry), treat as success
+            Console::warning('Attribute already exists, marking as available');
+
+            $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
+
+            if ($type === Database::VAR_RELATIONSHIP && $options['twoWay'] && !$relatedCollection->isEmpty()) {
+                $relatedAttribute = $dbForProject->getDocument('attributes', $database->getSequence() . '_' . $relatedCollection->getSequence() . '_' . $options['twoWayKey']);
+                if (!$relatedAttribute->isEmpty()) {
+                    $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'available'));
+                }
+            }
         } catch (\Throwable $e) {
             Console::error($e->getMessage());
 
