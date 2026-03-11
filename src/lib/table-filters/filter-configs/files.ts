@@ -14,6 +14,6 @@ export const filesFilterColumns: FilterColumn[] = [
     type: 'integer',
     format: 'size',
   },
-  { id: '$createdAt', title: 'Created', type: 'datetime' },
-  { id: '$updatedAt', title: 'Updated', type: 'datetime' },
+  { id: '$createdAt', title: '$createdAt', type: 'datetime' },
+  { id: '$updatedAt', title: '$updatedAt', type: 'datetime' },
 ]

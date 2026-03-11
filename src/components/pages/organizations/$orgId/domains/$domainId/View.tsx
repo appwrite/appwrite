@@ -588,7 +588,6 @@ export function View({ initialData }: ViewProps = {}) {
     next.set(compactKey, queryStr)
     setCurrentPage(1)
     setSelectedRecords(new Set())
-    setFiltersOpen(false)
     navigate({
       to: recordsRouteTo,
       params: { orgId: orgId!, domainId: domainId! },
@@ -948,6 +947,19 @@ export function View({ initialData }: ViewProps = {}) {
                   onClearAll={clearAllFilters}
                   onApplyFilter={applyFilter}
                   resourceLabel="DNS records"
+                  filterScope="organizations.domains.records"
+                  onApplyQuery={(queryParam) => {
+                    navigate({
+                      to: recordsRouteTo,
+                      params: { orgId: orgId!, domainId: domainId! },
+                      search: (prev: Record<string, unknown>) => ({
+                        ...(typeof prev === 'object' && prev !== null ? prev : {}),
+                        query: queryParam ?? undefined,
+                      }),
+                      replace: true,
+                    })
+                  }}
+                  teamId={orgId}
                 />
                 {/* Desktop: individual buttons */}
                 <div className="hidden sm:flex sm:items-center sm:gap-2">

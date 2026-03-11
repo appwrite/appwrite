@@ -11,6 +11,6 @@ export const bucketsFilterColumns: FilterColumn[] = [
     title: 'Status',
     type: 'boolean',
   },
-  { id: '$createdAt', title: 'Created', type: 'datetime' },
-  { id: '$updatedAt', title: 'Updated', type: 'datetime' },
+  { id: '$createdAt', title: '$createdAt', type: 'datetime' },
+  { id: '$updatedAt', title: '$updatedAt', type: 'datetime' },
 ]

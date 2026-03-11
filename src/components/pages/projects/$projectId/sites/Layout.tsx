@@ -295,6 +295,19 @@ function SiteLayoutContent() {
                 resourceLabel={
                   activeTab === 'logs' ? 'logs' : 'domains'
                 }
+                filterScope={`sites.${activeTab}`}
+                onApplyQuery={(queryParam) => {
+                  navigate({
+                    to: location.pathname,
+                    search: (prev) => ({
+                      ...(typeof prev === 'object' && prev !== null ? prev : {}),
+                      query: queryParam ?? undefined,
+                      page: 1,
+                    }),
+                    replace: true,
+                  })
+                }}
+                teamId={project?.teamId}
               />
             ) : undefined
           }
@@ -355,6 +368,19 @@ function SiteLayoutContent() {
                     onClearAll={clearAllSiteFilters}
                     onApplyFilter={applySiteFilter}
                     resourceLabel="deployments"
+                    filterScope="sites.deployments"
+                    onApplyQuery={(queryParam) => {
+                      navigate({
+                        to: location.pathname,
+                        search: (prev) => ({
+                          ...(typeof prev === 'object' && prev !== null ? prev : {}),
+                          query: queryParam ?? undefined,
+                          page: 1,
+                        }),
+                        replace: true,
+                      })
+                    }}
+                    teamId={project?.teamId}
                   />
                   <CreateDeploymentDropdown
                     onSelectGit={() => setGitDeployOpen(true)}

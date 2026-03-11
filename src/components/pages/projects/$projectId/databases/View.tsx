@@ -537,7 +537,6 @@ export function View() {
       }),
       replace: true,
     })
-    setFiltersOpen(false)
   }
 
   const removeFilter = (key: CompactFilterKey) => {
@@ -768,6 +767,24 @@ export function View() {
             onClearAll={clearAllFilters}
             onApplyFilter={applyFilter}
             resourceLabel="databases"
+            filterScope="databases"
+            onApplyQuery={(queryParam) => {
+              navigate({
+                to: '/projects/$projectId/databases/',
+                params: { projectId: projectId! },
+                search: (prev: Record<string, unknown>) => ({
+                  ...prev,
+                  ...buildListSearchParams({
+                    search: urlSearch,
+                    query: queryParam ?? undefined,
+                    page: 1,
+                    limit: urlLimit,
+                  }),
+                }),
+                replace: true,
+              })
+            }}
+            teamId={project?.teamId}
           />
         }
         fullWidthBorder
@@ -1897,7 +1914,6 @@ export function TableView({
       page: 1,
       limit: rowsUrlLimit,
     })
-    setRowsFiltersOpen(false)
   }
 
   const rowsRemoveFilter = (compactKey: CompactFilterKey) => {
@@ -2193,7 +2209,7 @@ export function TableView({
                 Loading…
               </div>
             ) : (
-              <div className="space-y-0.5 px-2.5 py-1">
+              <div className="space-y-0.5 px-2.5 py-2.5">
                 {displayedSidebarTables.map((table) => {
                   const isTableSelected =
                     selectedTable?.$id === table.$id && !databaseTab
@@ -2512,6 +2528,16 @@ export function TableView({
                 onClearAll={rowsClearAllFilters}
                 onApplyFilter={rowsApplyFilter}
                 resourceLabel="rows"
+                filterScope={`databases.rows.${databaseId}.${tableId}`}
+                onApplyQuery={(queryParam) =>
+                  navigateToRowsList({
+                    search: rowsUrlSearch ?? undefined,
+                    query: queryParam ?? undefined,
+                    page: 1,
+                    limit: rowsUrlLimit,
+                  })
+                }
+                teamId={project?.teamId}
               />
             ) : !isDatabaseLevelView && activeTab === 'columns' ? (
               <FiltersPopover
@@ -2523,6 +2549,13 @@ export function TableView({
                 onClearAll={columnsClearAllFilters}
                 onApplyFilter={columnsApplyFilter}
                 resourceLabel="columns"
+                filterScope={`databases.columns.${databaseId}.${tableId}`}
+                onApplyQuery={(queryParam) =>
+                  navigateTableDetailSearch({
+                    query: queryParam ?? undefined,
+                  })
+                }
+                teamId={project?.teamId}
               />
             ) : !isDatabaseLevelView && activeTab === 'indexes' ? (
               <FiltersPopover
@@ -2534,6 +2567,13 @@ export function TableView({
                 onClearAll={indexesClearAllFilters}
                 onApplyFilter={indexesApplyFilter}
                 resourceLabel="indexes"
+                filterScope={`databases.indexes.${databaseId}.${tableId}`}
+                onApplyQuery={(queryParam) =>
+                  navigateTableDetailSearch({
+                    query: queryParam ?? undefined,
+                  })
+                }
+                teamId={project?.teamId}
               />
             ) : undefined
           }
@@ -4666,7 +4706,7 @@ interface RowData {
   /** Server-provided sequence (stable); fallback to computed rowNumber when absent */
   $sequence?: number
   rowNumber: number
-  data: Record<string, string | number | boolean>
+  data: Record<string, string | number | boolean | unknown[] | null>
   $createdAt?: string
   $updatedAt?: string
   $permissions?: string[]
@@ -4696,6 +4736,43 @@ interface RowEditDrawerProps {
 function formatDateTimeLocalForInput(d: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+/** Parse a comma-separated string into an array, with optional type coercion per element. */
+function parseCommaSeparatedToArray(
+  value: string,
+  columnType?: string,
+): unknown[] {
+  if (typeof value !== 'string' || value.trim() === '') return []
+  const parts = value.split(',').map((s) => s.trim())
+  const type = (columnType || 'string').toLowerCase()
+  if (type === 'integer' || type === 'int') {
+    return parts.map((p) => (p === '' || p === 'null' ? null : parseInt(p, 10)))
+  }
+  if (type === 'double' || type === 'float' || type === 'number') {
+    return parts.map((p) => (p === '' || p === 'null' ? null : parseFloat(p)))
+  }
+  if (type === 'boolean' || type === 'bool') {
+    return parts.map((p) =>
+      p === '' || p === 'null' ? null : /^(true|1|yes)$/i.test(p),
+    )
+  }
+  return parts.map((p) => (p === '' || p === 'null' ? null : p))
+}
+
+/** Normalize a value for a column: e.g. comma-separated string → array when column is array type. */
+function normalizeValueForColumn(
+  value: unknown,
+  columnInfo?: unknown,
+): string | number | boolean | unknown[] | null {
+  if (value === null || value === undefined) return null
+  const col = columnInfo as { array?: boolean; type?: string } | undefined
+  if (!col?.array) return value as string | number | boolean | null
+  if (Array.isArray(value)) return value
+  if (typeof value === 'string') {
+    return parseCommaSeparatedToArray(value, col.type)
+  }
+  return value as unknown[]
 }
 
 function RowEditDrawer({
@@ -4755,14 +4832,22 @@ function RowEditDrawer({
   // Update form data when row changes - only when row actually changes
   useEffect(() => {
     if (row) {
-      // Preserve null values explicitly - ensure null is not converted to undefined
+      // Preserve null values explicitly; normalize array columns (e.g. comma-separated string → array)
       const initialData: Record<
         string,
         string | number | boolean | unknown[] | null
       > = {}
       Object.entries(row.data).forEach(([key, value]) => {
-        // Explicitly preserve null values
-        initialData[key] = value === null || value === undefined ? null : value
+        const columnInfo = getColumnInfo(key)
+        initialData[key] =
+          value === null || value === undefined
+            ? null
+            : (normalizeValueForColumn(value, columnInfo) as
+                | string
+                | number
+                | boolean
+                | unknown[]
+                | null)
       })
       initialData['$createdAt'] = row.$createdAt ?? null
       initialData['$updatedAt'] = row.$updatedAt ?? null
@@ -5264,8 +5349,7 @@ function RowEditDrawer({
                                         const columnInfo = getColumnInfo(key)
                                         const size = columnInfo?.size || null
                                         const colType =
-                                          columnInfo?.type || 'string'
-                                        // Check multiple possible properties for required status
+                                          (columnInfo?.type || 'string') as string
                                         const isRequired =
                                           columnInfo?.required === true ||
                                           columnInfo?.required === 'true' ||
@@ -5276,7 +5360,7 @@ function RowEditDrawer({
                                         const isNull = item === null
                                         const stringValue = isNull
                                           ? ''
-                                          : String(item || '')
+                                          : String(item ?? '')
                                         const charCount = stringValue.length
                                         const hasLimit =
                                           (colType === 'string' ||
@@ -5285,140 +5369,270 @@ function RowEditDrawer({
                                           size > 0
                                         const isRTLContent = isRTL(stringValue)
                                         const showNullCheckbox = !isRequired
+                                        const setRef = (el: HTMLElement | null) => {
+                                          const itemKey = `${key}-${index}`
+                                          if (el) {
+                                            fieldRefs.current[itemKey] = el as HTMLInputElement & HTMLSelectElement & HTMLTextAreaElement
+                                            if (index === 0)
+                                              fieldRefs.current[key] = el as HTMLInputElement & HTMLSelectElement & HTMLTextAreaElement
+                                          } else {
+                                            delete fieldRefs.current[itemKey]
+                                            if (index === 0)
+                                              delete fieldRefs.current[key]
+                                          }
+                                        }
+                                        const focusGuard = () => {
+                                          const scrollContainer =
+                                            scrollContainerRef.current
+                                          if (scrollContainer) {
+                                            const scrollTop =
+                                              scrollContainer.scrollTop
+                                            const scrollLeft =
+                                              scrollContainer.scrollLeft
+                                            requestAnimationFrame(() => {
+                                              scrollContainer.scrollTop = scrollTop
+                                              scrollContainer.scrollLeft = scrollLeft
+                                            })
+                                          }
+                                        }
+
+                                        const isNumericType =
+                                          colType === 'integer' ||
+                                          colType === 'int' ||
+                                          colType === 'double' ||
+                                          colType === 'float' ||
+                                          colType === 'number'
+                                        const isBoolType =
+                                          colType === 'boolean' || colType === 'bool'
+                                        const isEnumType = colType === 'enum'
+                                        const isDateTimeType =
+                                          colType === 'datetime' || colType === 'date'
 
                                         return (
                                           <div
                                             key={index}
                                             className="flex items-start gap-2 rounded-md border border-border bg-background px-2 py-1.5"
                                           >
-                                            <div className="relative flex-1">
-                                              <Textarea
-                                                value={stringValue}
-                                                onChange={(e) => {
-                                                  e.stopPropagation()
-                                                  const newValue =
-                                                    e.target.value
-                                                  // Don't auto-convert empty to null - only checkbox sets null
-                                                  handleArrayItemChange(
-                                                    key,
-                                                    index,
-                                                    newValue,
-                                                  )
-                                                }}
-                                                onFocus={() => {
-                                                  // Prevent browser from auto-scrolling focused element into view
-                                                  const scrollContainer =
-                                                    scrollContainerRef.current
-                                                  if (scrollContainer) {
-                                                    const scrollTop =
-                                                      scrollContainer.scrollTop
-                                                    const scrollLeft =
-                                                      scrollContainer.scrollLeft
-
-                                                    // Temporarily prevent scroll
-                                                    requestAnimationFrame(
-                                                      () => {
-                                                        scrollContainer.scrollTop =
-                                                          scrollTop
-                                                        scrollContainer.scrollLeft =
-                                                          scrollLeft
-                                                      },
+                                            <div className="relative flex-1 min-w-0">
+                                              {isNumericType ? (
+                                                <Input
+                                                  type="number"
+                                                  value={
+                                                    isNull
+                                                      ? ''
+                                                      : String(item ?? '')
+                                                  }
+                                                  ref={(el) => setRef(el)}
+                                                  autoFocus={
+                                                    shouldFocus && index === 0
+                                                  }
+                                                  disabled={isNull}
+                                                  onFocus={focusGuard}
+                                                  onChange={(e) => {
+                                                    const v = e.target.value
+                                                    handleArrayItemChange(
+                                                      key,
+                                                      index,
+                                                      v === ''
+                                                        ? null
+                                                        : colType === 'integer' || colType === 'int'
+                                                          ? parseInt(v, 10)
+                                                          : parseFloat(v),
+                                                    )
+                                                  }}
+                                                  step={
+                                                    colType === 'double' ||
+                                                    colType === 'float'
+                                                      ? 0.1
+                                                      : 1
+                                                  }
+                                                  placeholder={`Item ${index + 1}`}
+                                                  className="h-9 text-[13px] border-0 bg-transparent px-0"
+                                                />
+                                              ) : isBoolType ? (
+                                                <div className="flex items-center gap-2 py-1">
+                                                  <Switch
+                                                    checked={item === true}
+                                                    onCheckedChange={(checked) =>
+                                                      handleArrayItemChange(
+                                                        key,
+                                                        index,
+                                                        checked,
+                                                      )
+                                                    }
+                                                    ref={(el) =>
+                                                      el && setRef(el as unknown as HTMLElement)
+                                                    }
+                                                  />
+                                                  <span className="text-[12px] text-muted-foreground">
+                                                    {item === true
+                                                      ? 'True'
+                                                      : 'False'}
+                                                  </span>
+                                                </div>
+                                              ) : isEnumType ? (
+                                                <Select
+                                                  value={
+                                                    isNull
+                                                      ? 'null'
+                                                      : String(item ?? '')
+                                                  }
+                                                  onValueChange={(val) =>
+                                                    handleArrayItemChange(
+                                                      key,
+                                                      index,
+                                                      val === 'null'
+                                                        ? null
+                                                        : val,
                                                     )
                                                   }
-                                                }}
-                                                ref={(el) => {
-                                                  if (el) {
-                                                    // Register ref for this specific array item
-                                                    const itemKey = `${key}-${index}`
-                                                    fieldRefs.current[itemKey] =
-                                                      el
-
-                                                    // Also register first textarea for auto-focus on drawer open
-                                                    if (index === 0) {
-                                                      fieldRefs.current[key] =
-                                                        el
-                                                    }
-                                                  } else {
-                                                    // Clear ref when unmounted
-                                                    const itemKey = `${key}-${index}`
-                                                    delete fieldRefs.current[
-                                                      itemKey
-                                                    ]
-                                                    if (index === 0) {
-                                                      delete fieldRefs.current[
-                                                        key
-                                                      ]
-                                                    }
-                                                  }
-                                                }}
-                                                autoFocus={
-                                                  shouldFocus && index === 0
-                                                }
-                                                disabled={isNull}
-                                                dir={
-                                                  isRTLContent ? 'rtl' : 'ltr'
-                                                }
-                                                maxLength={
-                                                  hasLimit ? size : undefined
-                                                }
-                                                className={cn(
-                                                  'min-h-[32px] max-h-[600px] text-[13px] flex-1 border-0 bg-transparent px-0 py-1.5 resize-none focus-visible:ring-0 focus-visible:ring-offset-0',
-                                                  isNull &&
-                                                    'opacity-50 cursor-not-allowed',
-                                                  showNullCheckbox
-                                                    ? 'pb-7'
-                                                    : 'pb-1',
-                                                )}
-                                                placeholder={`Item ${index + 1}`}
-                                                rows={1}
-                                              />
-                                              <div className="absolute bottom-1 right-1 flex items-center gap-1.5 pointer-events-none">
-                                                {hasLimit && (
-                                                  <span
-                                                    className={cn(
-                                                      'text-[10px] px-1 py-0.5 rounded pointer-events-auto whitespace-nowrap',
-                                                      charCount > size
-                                                        ? 'text-destructive bg-destructive/10'
-                                                        : 'text-muted-foreground bg-muted/80',
-                                                    )}
+                                                >
+                                                  <SelectTrigger
+                                                    className="h-9 text-[13px] border-0 bg-transparent px-0"
+                                                    ref={(el) => setRef(el as unknown as HTMLElement)}
                                                   >
-                                                    {charCount}/{size}
-                                                  </span>
-                                                )}
-                                                {showNullCheckbox && (
-                                                  <div className="pointer-events-auto flex items-center gap-1">
-                                                    <Checkbox
-                                                      id={`${key}-${index}-null`}
-                                                      checked={isNull}
-                                                      onCheckedChange={(
-                                                        checked,
-                                                      ) => {
-                                                        const newArray = [
-                                                          ...((currentValue as unknown[]) ||
-                                                            []),
-                                                        ]
-                                                        newArray[index] =
-                                                          checked ? null : ''
-                                                        handleFieldChange(
-                                                          key,
-                                                          newArray,
-                                                        )
-                                                      }}
-                                                      onClick={(e) =>
-                                                        e.stopPropagation()
+                                                    <SelectValue
+                                                      placeholder={
+                                                        isRequired
+                                                          ? undefined
+                                                          : 'NULL'
                                                       }
-                                                      className="h-3.5 w-3.5"
-                                                      disabled={false}
                                                     />
-                                                    <label
-                                                      htmlFor={`${key}-${index}-null`}
-                                                      className="text-[10px] text-muted-foreground cursor-pointer select-none"
+                                                  </SelectTrigger>
+                                                  <SelectContent>
+                                                    {!isRequired && (
+                                                      <SelectItem value="null">
+                                                        NULL
+                                                      </SelectItem>
+                                                    )}
+                                                    {getEnumOptions(
+                                                      columnInfo,
+                                                    ).map((option) => (
+                                                      <SelectItem
+                                                        key={option}
+                                                        value={option}
+                                                      >
+                                                        {option}
+                                                      </SelectItem>
+                                                    ))}
+                                                  </SelectContent>
+                                                </Select>
+                                              ) : isDateTimeType ? (
+                                                <Input
+                                                  type="datetime-local"
+                                                  value={
+                                                    isNull || !item
+                                                      ? ''
+                                                      : formatDateTimeLocalForInput(
+                                                          new Date(
+                                                            item as string,
+                                                          ),
+                                                        )
+                                                  }
+                                                  ref={(el) => setRef(el)}
+                                                  autoFocus={
+                                                    shouldFocus && index === 0
+                                                  }
+                                                  disabled={isNull}
+                                                  onFocus={focusGuard}
+                                                  onChange={(e) =>
+                                                    handleArrayItemChange(
+                                                      key,
+                                                      index,
+                                                      e.target.value
+                                                        ? new Date(
+                                                            e.target.value,
+                                                          ).toISOString()
+                                                        : null,
+                                                    )
+                                                  }
+                                                  placeholder={`Item ${index + 1}`}
+                                                  className="h-9 text-[13px] border-0 bg-transparent px-0"
+                                                />
+                                              ) : (
+                                                <Textarea
+                                                  value={stringValue}
+                                                  onChange={(e) => {
+                                                    e.stopPropagation()
+                                                    handleArrayItemChange(
+                                                      key,
+                                                      index,
+                                                      e.target.value,
+                                                    )
+                                                  }}
+                                                  onFocus={focusGuard}
+                                                  ref={(el) => setRef(el)}
+                                                  autoFocus={
+                                                    shouldFocus && index === 0
+                                                  }
+                                                  disabled={isNull}
+                                                  dir={
+                                                    isRTLContent ? 'rtl' : 'ltr'
+                                                  }
+                                                  maxLength={
+                                                    hasLimit ? size : undefined
+                                                  }
+                                                  className={cn(
+                                                    'min-h-[32px] max-h-[600px] text-[13px] flex-1 border-0 bg-transparent px-0 py-1.5 resize-none focus-visible:ring-0 focus-visible:ring-offset-0',
+                                                    isNull &&
+                                                      'opacity-50 cursor-not-allowed',
+                                                    showNullCheckbox
+                                                      ? 'pb-7'
+                                                      : 'pb-1',
+                                                  )}
+                                                  placeholder={`Item ${index + 1}`}
+                                                  rows={1}
+                                                />
+                                              )}
+                                              {!isBoolType && !isEnumType && (
+                                                <div className="absolute bottom-1 right-1 flex items-center gap-1.5 pointer-events-none">
+                                                  {hasLimit && (
+                                                    <span
+                                                      className={cn(
+                                                        'text-[10px] px-1 py-0.5 rounded pointer-events-auto whitespace-nowrap',
+                                                        charCount > size
+                                                          ? 'text-destructive bg-destructive/10'
+                                                          : 'text-muted-foreground bg-muted/80',
+                                                      )}
                                                     >
-                                                      Null
-                                                    </label>
-                                                  </div>
-                                                )}
-                                              </div>
+                                                      {charCount}/{size}
+                                                    </span>
+                                                  )}
+                                                  {showNullCheckbox && (
+                                                    <div className="pointer-events-auto flex items-center gap-1">
+                                                      <Checkbox
+                                                        id={`${key}-${index}-null`}
+                                                        checked={isNull}
+                                                        onCheckedChange={(
+                                                          checked,
+                                                        ) => {
+                                                          const newArray = [
+                                                            ...((currentValue as unknown[]) ||
+                                                              []),
+                                                          ]
+                                                          newArray[index] =
+                                                            checked ? null : ''
+                                                          handleFieldChange(
+                                                            key,
+                                                            newArray,
+                                                          )
+                                                        }}
+                                                        onClick={(e) =>
+                                                          e.stopPropagation()
+                                                        }
+                                                        className="h-3.5 w-3.5"
+                                                        disabled={false}
+                                                      />
+                                                      <label
+                                                        htmlFor={`${key}-${index}-null`}
+                                                        className="text-[10px] text-muted-foreground cursor-pointer select-none"
+                                                      >
+                                                        Null
+                                                      </label>
+                                                    </div>
+                                                  )}
+                                                </div>
+                                              )}
                                             </div>
                                             <Button
                                               type="button"
@@ -6081,13 +6295,24 @@ function RowsSpreadsheet({
     (col: unknown) => col.type === 'relationship',
   )
 
-  // Map API rows to RowData format
+  // Map API rows to RowData format (normalize array columns: comma-separated string → array)
   const rows: RowData[] = apiRows.map((row: unknown, index: number) => {
-    // Extract data from row, excluding system fields
-    const data: Record<string, string | number | boolean> = {}
+    const data: Record<string, string | number | boolean | unknown[] | null> =
+      {}
     Object.keys(row).forEach((key) => {
       if (!key.startsWith('$')) {
-        data[key] = row[key]
+        const value = (row as Record<string, unknown>)[key]
+        const col = apiColumns.find(
+          (c: unknown) =>
+            (c.key || c.name || c.$id) === key ||
+            (c as { attribute?: string }).attribute === key,
+        )
+        data[key] = normalizeValueForColumn(value, col) as
+          | string
+          | number
+          | boolean
+          | unknown[]
+          | null
       }
     })
 
@@ -6198,7 +6423,11 @@ function RowsSpreadsheet({
   // Use window.location.hash and hashchange so it works on new-tab load and when hash is set after load.
   const lastProcessedHashRef = useRef<string | null>(null)
   const openRowDrawerFromHash = useCallback(
-    (hash: string, currentRows: RowData[]) => {
+    (
+      hash: string,
+      currentRows: RowData[],
+      columnsForNormalize: unknown[] = [],
+    ) => {
       const rawHash = hash.replace(/^#/, '')
       const match = rawHash.match(/^row-(.+?)(-permissions)?$/)
       if (!match || !projectId || !databaseId || !tableId) {
@@ -6223,10 +6452,27 @@ function RowsSpreadsheet({
         (apiRow: unknown) => {
           if (!apiRow || typeof apiRow !== 'object') return
           const rowObj = apiRow as Record<string, unknown>
-          const data: Record<string, string | number | boolean> = {}
+          const data: Record<
+            string,
+            string | number | boolean | unknown[] | null
+          > = {}
           Object.keys(rowObj).forEach((key) => {
-            if (!key.startsWith('$'))
-              data[key] = rowObj[key] as string | number | boolean
+            if (!key.startsWith('$')) {
+              const value = rowObj[key]
+              const col = columnsForNormalize.find(
+                (c: unknown) =>
+                  (c as { key?: string }).key === key ||
+                  (c as { name?: string }).name === key ||
+                  (c as { $id?: string }).$id === key ||
+                  (c as { attribute?: string }).attribute === key,
+              )
+              data[key] = normalizeValueForColumn(value, col) as
+                | string
+                | number
+                | boolean
+                | unknown[]
+                | null
+            }
           })
           const rowData: RowData = {
             $id: (rowObj.$id as string) ?? rowId,
@@ -6249,7 +6495,7 @@ function RowsSpreadsheet({
 
   useEffect(() => {
     const hash = window.location.hash
-    if (hash) openRowDrawerFromHash(hash, rows)
+    if (hash) openRowDrawerFromHash(hash, rows, apiColumns)
   }, [rows, openRowDrawerFromHash])
 
   useEffect(() => {
@@ -6259,7 +6505,7 @@ function RowsSpreadsheet({
         lastProcessedHashRef.current = null
         return
       }
-      openRowDrawerFromHash(hash, rows)
+      openRowDrawerFromHash(hash, rows, apiColumns)
     }
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)

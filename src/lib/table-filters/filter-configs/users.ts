@@ -19,6 +19,6 @@ export const usersFilterColumns: FilterColumn[] = [
     ],
     optional: false, // User status is always set
   },
-  { id: '$createdAt', title: 'Created', type: 'datetime' },
-  { id: '$updatedAt', title: 'Updated', type: 'datetime' },
+  { id: '$createdAt', title: '$createdAt', type: 'datetime' },
+  { id: '$updatedAt', title: '$updatedAt', type: 'datetime' },
 ]

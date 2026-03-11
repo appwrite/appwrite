@@ -47,9 +47,9 @@ function mapAttributeTypeToFilterType(type?: string): FilterColumnType {
 
 /** System fields always available on rows */
 const ROWS_SYSTEM_COLUMNS: FilterColumn[] = [
-  { id: '$id', title: 'Row ID', type: 'string' },
-  { id: '$createdAt', title: 'Created', type: 'datetime' },
-  { id: '$updatedAt', title: 'Updated', type: 'datetime' },
+  { id: '$id', title: '$id', type: 'string' },
+  { id: '$createdAt', title: '$createdAt', type: 'datetime' },
+  { id: '$updatedAt', title: '$updatedAt', type: 'datetime' },
 ]
 
 /**

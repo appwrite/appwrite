@@ -396,7 +396,6 @@ export function View() {
       },
       replace: true,
     })
-    setFiltersOpen(false)
   }
 
   const removeFilter = (key: CompactFilterKey) => {
@@ -610,6 +609,24 @@ export function View() {
               onClearAll={clearAllFilters}
               onApplyFilter={applyFilter}
               resourceLabel="files"
+              filterScope="storage.files"
+              onApplyQuery={(queryParam) => {
+                navigate({
+                  to: '/projects/$projectId/storage/$bucketId/',
+                  params: { projectId: projectId!, bucketId: bucketId! },
+                  search: (prev: Record<string, unknown>) => {
+                    const next = { ...prev } as Record<string, unknown>
+                    next.search = urlSearch ?? undefined
+                    next.query = queryParam ?? undefined
+                    next.page = 1
+                    next.limit = urlLimit
+                    if (!next.search) delete next.search
+                    return next
+                  },
+                  replace: true,
+                })
+              }}
+              teamId={project?.teamId}
             />
           ) : undefined
         }

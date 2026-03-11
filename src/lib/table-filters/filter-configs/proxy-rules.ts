@@ -22,5 +22,5 @@ export const proxyRulesFilterColumns: FilterColumn[] = [
     optional: false,
   },
   { id: 'type', title: 'Type', type: 'string' },
-  { id: '$createdAt', title: 'Created', type: 'datetime' },
+  { id: '$createdAt', title: '$createdAt', type: 'datetime' },
 ]

@@ -29,5 +29,5 @@ export const dnsRecordsFilterColumns: FilterColumn[] = [
   },
   { id: 'value', title: 'Value', type: 'string' },
   { id: 'ttl', title: 'TTL', type: 'integer' },
-  { id: '$createdAt', title: 'Created', type: 'datetime' },
+  { id: '$createdAt', title: '$createdAt', type: 'datetime' },
 ]

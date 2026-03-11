@@ -22,5 +22,5 @@ export const deploymentsFilterColumns: FilterColumn[] = [
     elements: DEPLOYMENT_STATUS_ELEMENTS,
     optional: false,
   },
-  { id: '$createdAt', title: 'Created', type: 'datetime' },
+  { id: '$createdAt', title: '$createdAt', type: 'datetime' },
 ]

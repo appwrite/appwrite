@@ -195,7 +195,6 @@ export function View() {
       page: 1,
       limit: urlLimit,
     })
-    setFiltersOpen(false)
   }
 
   const removeFilter = (compactKey: CompactFilterKey) => {
@@ -481,6 +480,16 @@ export function View() {
             onClearAll={clearAllFilters}
             onApplyFilter={applyFilter}
             resourceLabel="sites"
+            filterScope="sites"
+            onApplyQuery={(queryParam) =>
+              navigateToSitesList({
+                search: urlSearch ?? undefined,
+                query: queryParam ?? undefined,
+                page: 1,
+                limit: urlLimit,
+              })
+            }
+            teamId={project?.teamId}
           />
         }
         fullWidthBorder

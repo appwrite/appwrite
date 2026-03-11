@@ -23,6 +23,15 @@ export interface FiltersPopoverProps {
   onApplyFilter: (key: CompactFilterKey, queryStr: string) => void
   /** e.g. "buckets", "files" – used in description. */
   resourceLabel?: string
+  /**
+   * Unique scope for saved filter presets (e.g. "sites", "storage.buckets").
+   * When set with onApplyQuery, shows saved filters list and "Save current".
+   */
+  filterScope?: string
+  /** Apply a saved filter's query param (or undefined to clear). Called when user selects a saved filter. */
+  onApplyQuery?: (queryParam: string | undefined) => void
+  /** Team/org ID for team-level saved filters (project.teamId or orgId). When set, users can save filters for the team. */
+  teamId?: string | null
 }
 
 export function FiltersPopover({
@@ -34,6 +43,9 @@ export function FiltersPopover({
   onClearAll,
   onApplyFilter,
   resourceLabel = 'items',
+  filterScope,
+  onApplyQuery,
+  teamId,
 }: FiltersPopoverProps) {
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
@@ -41,22 +53,22 @@ export function FiltersPopover({
         <Button
           variant="outline"
           size="sm"
-          className="h-9 shrink-0 gap-2 text-[13px]"
+          className="h-9 shrink-0 gap-1.5 text-[13px]"
         >
-          <Filter className="h-3.5 w-3.5" />
+          <Filter className="h-3.5 w-3.5 shrink-0" />
           Filters
           {filterMap.size > 0 && (
-            <span className="ml-1 flex size-5 items-center justify-center rounded-full bg-primary/20 text-[11px] font-medium text-primary">
+            <span className="flex size-5 items-center justify-center rounded-full bg-primary/15 text-[11px] font-semibold tabular-nums text-primary">
               {filterMap.size}
             </span>
           )}
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="z-[200] w-96 p-0"
+        className="z-[200] max-h-[calc(100dvh-4rem)] w-[380px] overflow-hidden rounded-xl border-border p-0 shadow-lg"
         align="start"
         side="bottom"
-        sideOffset={6}
+        sideOffset={8}
       >
         <FiltersPopoverContent
           columns={columns}
@@ -66,6 +78,9 @@ export function FiltersPopover({
           onApplyFilter={onApplyFilter}
           onClose={() => onOpenChange(false)}
           resourceLabel={resourceLabel}
+          filterScope={filterScope}
+          onApplyQuery={onApplyQuery}
+          teamId={teamId ?? undefined}
         />
       </PopoverContent>
     </Popover>

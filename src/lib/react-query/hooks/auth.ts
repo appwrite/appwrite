@@ -12,7 +12,17 @@ import {
   queryOptions,
 } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
+import {
+  buildSavedFiltersPrefs,
+  parseSavedFilters,
+  MAX_SAVED_FILTER_NAME_LENGTH,
+} from '@/lib/user-prefs-keys'
+import type { SavedFilter } from '@/lib/user-prefs-keys'
 import { DEFAULT_STALE_TIME } from './constants'
+import {
+  useConsoleTeam,
+  useUpdateConsoleTeamPrefs,
+} from './teams'
 
 // ============================================================================
 // AUTH SECURITY FEATURES
@@ -652,4 +662,318 @@ export function useSidebarCollapsed(account: { prefs?: Record<string, unknown> }
   )
 
   return { collapsed, setCollapsed }
+}
+
+// ============================================================================
+// SAVED FILTERS (USER AND TEAM PREFERENCES)
+// ============================================================================
+
+export type SavedFilterLevel = 'user' | 'team'
+
+/**
+ * Hook to read and update saved filter presets for a view scope.
+ * User filters: account prefs (console.savedFilters.<scope>).
+ * Team filters: team/org prefs (same key), when teamId is provided.
+ *
+ * Must be used within RequireAuth (account required).
+ */
+export function useSavedFilters(
+  scope: string | null | undefined,
+  account: { prefs?: Record<string, unknown> } | undefined,
+  teamId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+  const { data: team } = useConsoleTeam(teamId)
+  const updateTeamPrefs = useUpdateConsoleTeamPrefs(teamId)
+
+  const userSavedFilters: SavedFilter[] =
+    scope && account?.prefs
+      ? parseSavedFilters(account.prefs, scope)
+      : []
+
+  const teamSavedFilters: SavedFilter[] =
+    scope && team?.prefs && teamId
+      ? parseSavedFilters(team.prefs as Record<string, unknown>, scope)
+      : []
+
+  const addUserMutation = useMutation({
+    mutationFn: async ({
+      name,
+      query,
+    }: {
+      name: string
+      query: string
+    }) => {
+      const currentAccount = queryClient.getQueryData<{
+        prefs?: Record<string, unknown>
+      }>(['account', 'console'])
+      if (!currentAccount || !scope) {
+        throw new Error('Account or filter scope not available')
+      }
+      const current = parseSavedFilters(currentAccount.prefs, scope)
+      const trimmedName = name.trim().slice(0, MAX_SAVED_FILTER_NAME_LENGTH)
+      if (!trimmedName) throw new Error('Name is required')
+      const newFilter: SavedFilter = {
+        id: crypto.randomUUID(),
+        name: trimmedName,
+        query,
+      }
+      const next = [newFilter, ...current]
+      return await updateAccountPrefs({
+        ...currentAccount.prefs,
+        ...buildSavedFiltersPrefs(scope, next),
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    },
+  })
+
+  const addTeamMutation = useMutation({
+    mutationFn: async ({
+      name,
+      query,
+    }: {
+      name: string
+      query: string
+    }) => {
+      const currentTeam = queryClient.getQueryData<{
+        prefs?: Record<string, unknown>
+      }>(['team', 'console', teamId])
+      if (!currentTeam || !scope || !teamId) {
+        throw new Error('Team or filter scope not available')
+      }
+      const current = parseSavedFilters(
+        currentTeam.prefs as Record<string, unknown>,
+        scope,
+      )
+      const trimmedName = name.trim().slice(0, MAX_SAVED_FILTER_NAME_LENGTH)
+      if (!trimmedName) throw new Error('Name is required')
+      const newFilter: SavedFilter = {
+        id: crypto.randomUUID(),
+        name: trimmedName,
+        query,
+      }
+      const next = [newFilter, ...current]
+      await updateTeamPrefs.mutateAsync({
+        ...(currentTeam.prefs as Record<string, unknown>),
+        ...buildSavedFiltersPrefs(scope, next),
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['team', 'console', teamId],
+      })
+    },
+  })
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const currentAccount = queryClient.getQueryData<{
+        prefs?: Record<string, unknown>
+      }>(['account', 'console'])
+      if (!currentAccount || !scope) {
+        throw new Error('Account or filter scope not available')
+      }
+      const current = parseSavedFilters(currentAccount.prefs, scope)
+      const next = current.filter((f) => f.id !== id)
+      return await updateAccountPrefs({
+        ...currentAccount.prefs,
+        ...buildSavedFiltersPrefs(scope, next),
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    },
+  })
+
+  const deleteTeamMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const currentTeam = queryClient.getQueryData<{
+        prefs?: Record<string, unknown>
+      }>(['team', 'console', teamId])
+      if (!currentTeam || !scope || !teamId) {
+        throw new Error('Team or filter scope not available')
+      }
+      const current = parseSavedFilters(
+        currentTeam.prefs as Record<string, unknown>,
+        scope,
+      )
+      const next = current.filter((f) => f.id !== id)
+      await updateTeamPrefs.mutateAsync({
+        ...(currentTeam.prefs as Record<string, unknown>),
+        ...buildSavedFiltersPrefs(scope, next),
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['team', 'console', teamId],
+      })
+    },
+  })
+
+  const reorderUserMutation = useMutation({
+    mutationFn: async (orderedFilters: SavedFilter[]) => {
+      const currentAccount = queryClient.getQueryData<{
+        prefs?: Record<string, unknown>
+      }>(['account', 'console'])
+      if (!currentAccount || !scope) {
+        throw new Error('Account or filter scope not available')
+      }
+      return await updateAccountPrefs({
+        ...currentAccount.prefs,
+        ...buildSavedFiltersPrefs(scope, orderedFilters),
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    },
+  })
+
+  const reorderTeamMutation = useMutation({
+    mutationFn: async (orderedFilters: SavedFilter[]) => {
+      const currentTeam = queryClient.getQueryData<{
+        prefs?: Record<string, unknown>
+      }>(['team', 'console', teamId])
+      if (!currentTeam || !scope || !teamId) {
+        throw new Error('Team or filter scope not available')
+      }
+      await updateTeamPrefs.mutateAsync({
+        ...(currentTeam.prefs as Record<string, unknown>),
+        ...buildSavedFiltersPrefs(scope, orderedFilters),
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['team', 'console', teamId],
+      })
+    },
+  })
+
+  const addSavedFilter = async (
+    args: { name: string; query: string; level?: SavedFilterLevel },
+  ) => {
+    const level = args.level ?? 'user'
+    if (level === 'team' && teamId) {
+      return addTeamMutation.mutateAsync({
+        name: args.name,
+        query: args.query,
+      })
+    }
+    return addUserMutation.mutateAsync({
+      name: args.name,
+      query: args.query,
+    })
+  }
+
+  const deleteSavedFilter = async (
+    id: string,
+    level: SavedFilterLevel,
+  ) => {
+    if (level === 'team' && teamId) {
+      return deleteTeamMutation.mutateAsync(id)
+    }
+    return deleteUserMutation.mutateAsync(id)
+  }
+
+  const reorderSavedFilters = async (
+    orderedFilters: SavedFilter[],
+    level: SavedFilterLevel,
+  ) => {
+    if (level === 'team' && teamId) {
+      return reorderTeamMutation.mutateAsync(orderedFilters)
+    }
+    return reorderUserMutation.mutateAsync(orderedFilters)
+  }
+
+  const updateUserFilterMutation = useMutation({
+    mutationFn: async ({
+      id,
+      name,
+    }: {
+      id: string
+      name: string
+    }) => {
+      const currentAccount = queryClient.getQueryData<{
+        prefs?: Record<string, unknown>
+      }>(['account', 'console'])
+      if (!currentAccount || !scope) {
+        throw new Error('Account or filter scope not available')
+      }
+      const current = parseSavedFilters(currentAccount.prefs, scope)
+      const trimmedName = name.trim().slice(0, MAX_SAVED_FILTER_NAME_LENGTH)
+      if (!trimmedName) throw new Error('Name is required')
+      const next = current.map((f) =>
+        f.id === id ? { ...f, name: trimmedName } : f,
+      )
+      return await updateAccountPrefs({
+        ...currentAccount.prefs,
+        ...buildSavedFiltersPrefs(scope, next),
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    },
+  })
+
+  const updateTeamFilterMutation = useMutation({
+    mutationFn: async ({
+      id,
+      name,
+    }: {
+      id: string
+      name: string
+    }) => {
+      const currentTeam = queryClient.getQueryData<{
+        prefs?: Record<string, unknown>
+      }>(['team', 'console', teamId])
+      if (!currentTeam || !scope || !teamId) {
+        throw new Error('Team or filter scope not available')
+      }
+      const current = parseSavedFilters(
+        currentTeam.prefs as Record<string, unknown>,
+        scope,
+      )
+      const trimmedName = name.trim().slice(0, MAX_SAVED_FILTER_NAME_LENGTH)
+      if (!trimmedName) throw new Error('Name is required')
+      const next = current.map((f) =>
+        f.id === id ? { ...f, name: trimmedName } : f,
+      )
+      await updateTeamPrefs.mutateAsync({
+        ...(currentTeam.prefs as Record<string, unknown>),
+        ...buildSavedFiltersPrefs(scope, next),
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['team', 'console', teamId],
+      })
+    },
+  })
+
+  const updateSavedFilterName = async (
+    id: string,
+    level: SavedFilterLevel,
+    name: string,
+  ) => {
+    if (level === 'team' && teamId) {
+      return updateTeamFilterMutation.mutateAsync({ id, name })
+    }
+    return updateUserFilterMutation.mutateAsync({ id, name })
+  }
+
+  return {
+    userSavedFilters,
+    teamSavedFilters,
+    /** All filters for backward compatibility; user first, then team. */
+    savedFilters: [...userSavedFilters, ...teamSavedFilters],
+    addSavedFilter,
+    deleteSavedFilter,
+    reorderSavedFilters,
+    updateSavedFilterName,
+    isAdding: addUserMutation.isPending || addTeamMutation.isPending,
+    isDeleting:
+      deleteUserMutation.isPending || deleteTeamMutation.isPending,
+    hasTeamLevel: !!teamId,
+  }
 }

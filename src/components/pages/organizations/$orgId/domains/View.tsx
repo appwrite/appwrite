@@ -188,7 +188,6 @@ export function View() {
       page: 1,
       limit: urlLimit,
     })
-    setFiltersOpen(false)
   }
 
   const removeFilter = (compactKey: CompactFilterKey) => {
@@ -442,6 +441,16 @@ export function View() {
             onClearAll={clearAllFilters}
             onApplyFilter={applyFilter}
             resourceLabel="domains"
+            filterScope="organizations.domains"
+            onApplyQuery={(queryParam) =>
+              navigateToDomainsList({
+                search: urlSearch ?? undefined,
+                query: queryParam ?? undefined,
+                page: 1,
+                limit: urlLimit,
+              })
+            }
+            teamId={orgId}
           />
         </div>
         <div className="ml-auto flex items-center gap-2">

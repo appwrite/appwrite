@@ -547,7 +547,6 @@ export function View({
       }),
       replace: true,
     })
-    setUsersFiltersOpen(false)
   }
 
   const removeUsersFilter = (key: CompactFilterKey) => {
@@ -613,7 +612,6 @@ export function View({
       },
       replace: true,
     })
-    setTeamsFiltersOpen(false)
   }
 
   const removeTeamsFilter = (key: CompactFilterKey) => {
@@ -1169,6 +1167,24 @@ export function View({
               onClearAll={clearAllUsersFilters}
               onApplyFilter={applyUsersFilter}
               resourceLabel="users"
+              filterScope="auth.users"
+              onApplyQuery={(queryParam) => {
+                navigate({
+                  to: '/projects/$projectId/auth/',
+                  params: { projectId: projectId! },
+                  search: (prev: Record<string, unknown>) => ({
+                    ...prev,
+                    ...buildListSearchParams({
+                      search: urlSearch,
+                      query: queryParam ?? undefined,
+                      page: 1,
+                      limit: urlLimit,
+                    }),
+                  }),
+                  replace: true,
+                })
+              }}
+              teamId={project?.teamId}
             />
           ) : activeTab === 'teams' ? (
             <FiltersPopover
@@ -1180,6 +1196,24 @@ export function View({
               onClearAll={clearAllTeamsFilters}
               onApplyFilter={applyTeamsFilter}
               resourceLabel="teams"
+              filterScope="auth.teams"
+              onApplyQuery={(queryParam) => {
+                navigate({
+                  to: '/projects/$projectId/auth/teams',
+                  params: { projectId: projectId! },
+                  search: (prev: Record<string, unknown>) => {
+                    const next = { ...prev } as Record<string, unknown>
+                    next.teamsSearch = teamsUrlSearch ?? undefined
+                    next.teamsQuery = queryParam ?? undefined
+                    next.teamsPage = 1
+                    next.teamsLimit = teamsUrlLimit
+                    if (!next.teamsSearch) delete next.teamsSearch
+                    return next
+                  },
+                  replace: true,
+                })
+              }}
+              teamId={project?.teamId}
             />
           ) : undefined
         }

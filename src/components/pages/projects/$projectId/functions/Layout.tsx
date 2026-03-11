@@ -439,6 +439,19 @@ function FunctionLayoutContent() {
                 resourceLabel={
                   activeTab === 'executions' ? 'executions' : 'domains'
                 }
+                filterScope={`functions.${activeTab}`}
+                onApplyQuery={(queryParam) => {
+                  navigate({
+                    to: location.pathname,
+                    search: (prev) => ({
+                      ...(typeof prev === 'object' && prev !== null ? prev : {}),
+                      query: queryParam ?? undefined,
+                      page: 1,
+                    }),
+                    replace: true,
+                  })
+                }}
+                teamId={project?.teamId}
               />
             ) : undefined
           }
@@ -488,6 +501,19 @@ function FunctionLayoutContent() {
                     onClearAll={clearAllFunctionFilters}
                     onApplyFilter={applyFunctionFilter}
                     resourceLabel="deployments"
+                    filterScope="functions.deployments"
+                    onApplyQuery={(queryParam) => {
+                      navigate({
+                        to: location.pathname,
+                        search: (prev) => ({
+                          ...(typeof prev === 'object' && prev !== null ? prev : {}),
+                          query: queryParam ?? undefined,
+                          page: 1,
+                        }),
+                        replace: true,
+                      })
+                    }}
+                    teamId={project?.teamId}
                   />
                   <CreateDeploymentDropdown
                     onSelectGit={() => setGitDeployOpen(true)}

@@ -297,7 +297,6 @@ export function View() {
       }),
       replace: true,
     })
-    setFiltersOpen(false)
   }
 
   const removeFilter = (key: CompactFilterKey) => {
@@ -522,6 +521,24 @@ export function View() {
             onClearAll={clearAllFilters}
             onApplyFilter={applyFilter}
             resourceLabel="buckets"
+            filterScope="storage.buckets"
+            onApplyQuery={(queryParam) => {
+              navigate({
+                to: '/projects/$projectId/storage/',
+                params: { projectId: projectId! },
+                search: (prev: Record<string, unknown>) => ({
+                  ...prev,
+                  ...buildListSearchParams({
+                    search: urlSearch,
+                    query: queryParam ?? undefined,
+                    page: 1,
+                    limit: urlLimit,
+                  }),
+                }),
+                replace: true,
+              })
+            }}
+            teamId={project?.teamId}
           />
         }
         fullWidthBorder

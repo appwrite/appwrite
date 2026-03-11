@@ -1149,6 +1149,20 @@ Console uses **team** (organization) and **user** (account) preferences to store
 2. Provide `parse*` / `build*` helpers that read from `prefs[key]` and return a merged `prefs` object for updates.
 3. Document the key in this section if it is a shared convention (e.g. `console.pinnedProjectIds`).
 
+### User prefs: saved filter presets
+
+- **Key**: `console.savedFilters.<scope>` (e.g. `console.savedFilters.sites`, `console.savedFilters.storage.files.<bucketId>`). Scope identifies the list view and, when the list structure is unique per resource, includes resource type and id.
+- **Value**: JSON string of `SavedFilter[]` (`{ id, name, query }`). `query` is the same encoded format as the URL `query` param (compact filter keys).
+- **Storage**: Account (user) prefs via `sdk.forConsole.account.updatePrefs`. See `src/lib/user-prefs-keys.ts` and `useSavedFilters` in `src/lib/react-query/hooks/auth.ts`.
+
+**Scope convention:**
+
+- **Shared** (same structure for all items in the view): use a fixed scope so filters are shared across the list.
+  - Examples: `sites`, `auth.users`, `auth.teams`, `storage.buckets`, `functions`, `databases`, `organizations.domains`, `organizations.domains.records`, `sites.deployments`, `sites.logs`, `sites.domains`, `functions.deployments`, `functions.executions`, `functions.domains`.
+- **Per resource** (unique structure per resource): include resource type and id in the scope so each resource has its own saved filters.
+  - Examples: `databases.rows.<databaseId>.<tableId>`, `databases.columns.<databaseId>.<tableId>`, `databases.indexes.<databaseId>.<tableId>` (each table has its own columns/attributes).
+  - Files use shared scope `storage.files` (same filter structure across buckets).
+
 ---
 
 ## Environment

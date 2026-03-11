@@ -233,7 +233,6 @@ export function View() {
       page: 1,
       limit: urlLimit,
     })
-    setFiltersOpen(false)
   }
 
   const removeFilter = (compactKey: CompactFilterKey) => {
@@ -426,6 +425,16 @@ export function View() {
                 onClearAll={clearAllFilters}
                 onApplyFilter={applyFilter}
                 resourceLabel="functions"
+                filterScope="functions"
+                onApplyQuery={(queryParam) =>
+                  navigateToFunctionsList({
+                    search: urlSearch ?? undefined,
+                    query: queryParam ?? undefined,
+                    page: 1,
+                    limit: urlLimit,
+                  })
+                }
+                teamId={project?.teamId}
               />
             ) : undefined
           }
@@ -520,6 +529,16 @@ export function View() {
               onClearAll={clearAllFilters}
               onApplyFilter={applyFilter}
               resourceLabel="functions"
+              filterScope="functions"
+              onApplyQuery={(queryParam) =>
+                navigateToFunctionsList({
+                  search: urlSearch ?? undefined,
+                  query: queryParam ?? undefined,
+                  page: 1,
+                  limit: urlLimit,
+                })
+              }
+              teamId={project?.teamId}
             />
           ) : undefined
         }
