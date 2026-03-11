@@ -7232,10 +7232,6 @@ function RowsSpreadsheet({
                 tableId={tableId}
                 row={row}
                 contextColumnKey={contextCellColumnKey}
-                onUpdateRow={(r) => handleRowClick(r as RowData)}
-                onUpdatePermissions={(r) =>
-                  handleOpenPermissionsRow(r as RowData)
-                }
                 queryKey={['rows', 'project', projectId, databaseId, tableId]}
               >
                 <tr

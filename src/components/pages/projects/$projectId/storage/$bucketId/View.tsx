@@ -56,6 +56,7 @@ import { BucketSettings } from '../_components/BucketSettings'
 import { BucketSecurity } from '../_components/BucketSecurity'
 import { useUploadQueue } from '@/lib/upload-queue/use-upload-queue'
 import type { Models } from '@appwrite.io/console'
+import { FileContextMenu } from '../_components/FileContextMenu'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
   getSearch,
@@ -91,6 +92,7 @@ export function View() {
   const navigate = useNavigate()
   const location = useLocation()
   const search = useSearch({ strict: false }) as {
+    create?: string
     search?: string
     query?: string
     page?: number
@@ -164,6 +166,21 @@ export function View() {
   const [uploadFileDialogOpen, setUploadFileDialogOpen] = useState(false)
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+
+  useEffect(() => {
+    if (search?.create !== 'file' || uploadFileDialogOpen) return
+    setUploadFileDialogOpen(true)
+    navigate({
+      to: location.pathname,
+      search: (prev: Record<string, unknown>) => {
+        if (!prev || typeof prev !== 'object') return {}
+        const next = { ...prev }
+        delete next.create
+        return Object.keys(next).length === 0 ? {} : next
+      },
+      replace: true,
+    })
+  }, [search?.create, uploadFileDialogOpen, navigate, location.pathname])
 
   const [filtersOpen, setFiltersOpen] = useState(false)
   const filterQueryString = filterMap.size > 0 ? mapToQueryParam(filterMap) : ''
@@ -724,205 +741,215 @@ export function View() {
                               fileId: file.$id,
                             }
                             return (
-                              <TableRow
+                              <FileContextMenu
                                 key={file.$id}
-                                className={cn(
-                                  pending
-                                    ? ''
-                                    : 'cursor-pointer transition-colors border-b border-border/50',
-                                  !pending && 'hover:bg-muted/30',
-                                  selectedFiles.has(file.$id) &&
-                                    'bg-muted',
-                                )}
-                                onClick={(e) => {
-                                  if (pending) return
-                                  // Don't navigate if clicking on checkbox, link, or their containers
-                                  const target = e.target as HTMLElement
-                                  if (
-                                    target.closest('button') ||
-                                    target.closest('[role="checkbox"]') ||
-                                    target.closest('a')
-                                  ) {
-                                    return
-                                  }
-                                  navigate({
-                                    to: '/projects/$projectId/storage/$bucketId/files/$fileId',
-                                    params: fileLinkParams,
-                                  })
+                                projectId={projectId!}
+                                bucketId={bucketId!}
+                                file={{
+                                  id: file.$id,
+                                  name: file.name,
+                                  pending,
                                 }}
                               >
-                                <TableCell
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="px-4 py-3"
+                                <TableRow
+                                  className={cn(
+                                    pending
+                                      ? ''
+                                      : 'cursor-pointer transition-colors border-b border-border/50',
+                                    !pending && 'hover:bg-muted/30',
+                                    selectedFiles.has(file.$id) &&
+                                    'bg-sky-100 dark:bg-sky-950',
+                                  )}
+                                  onClick={(e) => {
+                                    if (pending) return
+                                    // Don't navigate if clicking on checkbox, link, or their containers
+                                    const target = e.target as HTMLElement
+                                    if (
+                                      target.closest('button') ||
+                                      target.closest('[role="checkbox"]') ||
+                                      target.closest('a')
+                                    ) {
+                                      return
+                                    }
+                                    navigate({
+                                      to: '/projects/$projectId/storage/$bucketId/files/$fileId',
+                                      params: fileLinkParams,
+                                    })
+                                  }}
                                 >
-                                  {!pending && (
-                                    <Checkbox
-                                      checked={selectedFiles.has(file.$id)}
-                                      onCheckedChange={() =>
-                                        toggleFile(file.$id)
-                                      }
-                                    />
-                                  )}
-                                </TableCell>
-                                <TableCell className="px-4 py-3">
-                                  {pending ? (
-                                    <>
-                                      {file.mimeType?.startsWith('image/') &&
-                                      projectId &&
-                                      bucketId ? (
-                                        <img
-                                          src={
-                                            sdk
-                                              .forProject(projectId)
-                                              .storage.getFilePreview({
-                                                bucketId,
-                                                fileId: file.$id,
-                                                width: 80,
-                                              }) + '&mode=admin'
-                                          }
-                                          alt={file.name}
-                                          className="h-10 w-10 rounded-md object-cover border border-border"
-                                        />
-                                      ) : (
-                                        <div
-                                          className={cn(
-                                            'flex h-10 w-10 items-center justify-center rounded-md',
-                                            iconColorClass,
-                                          )}
-                                        >
-                                          <FileIcon className="h-5 w-5" />
-                                        </div>
-                                      )}
-                                    </>
-                                  ) : (
-                                    <Link
-                                      to="/projects/$projectId/storage/$bucketId/files/$fileId"
-                                      params={fileLinkParams}
-                                      className="block"
-                                    >
-                                      {file.mimeType?.startsWith('image/') &&
-                                      projectId &&
-                                      bucketId ? (
-                                        <img
-                                          src={
-                                            sdk
-                                              .forProject(projectId)
-                                              .storage.getFilePreview({
-                                                bucketId,
-                                                fileId: file.$id,
-                                                width: 80,
-                                              }) + '&mode=admin'
-                                          }
-                                          alt={file.name}
-                                          className="h-10 w-10 rounded-md object-cover border border-border"
-                                        />
-                                      ) : (
-                                        <div
-                                          className={cn(
-                                            'flex h-10 w-10 items-center justify-center rounded-md',
-                                            iconColorClass,
-                                          )}
-                                        >
-                                          <FileIcon className="h-5 w-5" />
-                                        </div>
-                                      )}
-                                    </Link>
-                                  )}
-                                </TableCell>
-                                <TableCell className="px-4 py-3">
-                                  {pending ? (
-                                    <div className="flex items-center gap-3 min-w-0">
-                                      <div className="flex-1 min-w-0">
-                                        <p className="truncate text-[13px] font-medium text-foreground">
-                                          {file.name}
-                                        </p>
-                                        <div className="mt-0.5">
-                                          <CopyableId id={file.$id} size="xs" />
-                                        </div>
-                                      </div>
-                                      <Badge
-                                        variant="secondary"
-                                        className="text-[11px] font-medium border px-2 py-0.5 shrink-0"
+                                  <TableCell
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="px-4 py-3"
+                                  >
+                                    {!pending && (
+                                      <Checkbox
+                                        checked={selectedFiles.has(file.$id)}
+                                        onCheckedChange={() =>
+                                          toggleFile(file.$id)
+                                        }
+                                      />
+                                    )}
+                                  </TableCell>
+                                  <TableCell className="px-4 py-3">
+                                    {pending ? (
+                                      <>
+                                        {file.mimeType?.startsWith('image/') &&
+                                          projectId &&
+                                          bucketId ? (
+                                          <img
+                                            src={
+                                              sdk
+                                                .forProject(projectId)
+                                                .storage.getFilePreview({
+                                                  bucketId,
+                                                  fileId: file.$id,
+                                                  width: 80,
+                                                }) + '&mode=admin'
+                                            }
+                                            alt={file.name}
+                                            className="h-10 w-10 rounded-md object-cover border border-border"
+                                          />
+                                        ) : (
+                                          <div
+                                            className={cn(
+                                              'flex h-10 w-10 items-center justify-center rounded-md',
+                                              iconColorClass,
+                                            )}
+                                          >
+                                            <FileIcon className="h-5 w-5" />
+                                          </div>
+                                        )}
+                                      </>
+                                    ) : (
+                                      <Link
+                                        to="/projects/$projectId/storage/$bucketId/files/$fileId"
+                                        params={fileLinkParams}
+                                        className="block"
                                       >
-                                        Pending
-                                      </Badge>
-                                    </div>
-                                  ) : (
-                                    <Link
-                                      to="/projects/$projectId/storage/$bucketId/files/$fileId"
-                                      params={fileLinkParams}
-                                      className="block group"
-                                    >
+                                        {file.mimeType?.startsWith('image/') &&
+                                          projectId &&
+                                          bucketId ? (
+                                          <img
+                                            src={
+                                              sdk
+                                                .forProject(projectId)
+                                                .storage.getFilePreview({
+                                                  bucketId,
+                                                  fileId: file.$id,
+                                                  width: 80,
+                                                }) + '&mode=admin'
+                                            }
+                                            alt={file.name}
+                                            className="h-10 w-10 rounded-md object-cover border border-border"
+                                          />
+                                        ) : (
+                                          <div
+                                            className={cn(
+                                              'flex h-10 w-10 items-center justify-center rounded-md',
+                                              iconColorClass,
+                                            )}
+                                          >
+                                            <FileIcon className="h-5 w-5" />
+                                          </div>
+                                        )}
+                                      </Link>
+                                    )}
+                                  </TableCell>
+                                  <TableCell className="px-4 py-3">
+                                    {pending ? (
                                       <div className="flex items-center gap-3 min-w-0">
                                         <div className="flex-1 min-w-0">
-                                          <p className="truncate text-[13px] font-medium text-foreground group-hover:text-primary transition-colors">
+                                          <p className="truncate text-[13px] font-medium text-foreground">
                                             {file.name}
                                           </p>
                                           <div className="mt-0.5">
-                                            <CopyableId
-                                              id={file.$id}
-                                              size="xs"
-                                            />
+                                            <CopyableId id={file.$id} size="xs" />
                                           </div>
                                         </div>
+                                        <Badge
+                                          variant="secondary"
+                                          className="text-[11px] font-medium border px-2 py-0.5 shrink-0"
+                                        >
+                                          Pending
+                                        </Badge>
                                       </div>
-                                    </Link>
-                                  )}
-                                </TableCell>
-                                <TableCell className="px-4 py-3">
-                                  {pending ? (
-                                    <span className="text-[12px] text-muted-foreground font-mono">
-                                      {file.mimeType || '-'}
-                                    </span>
-                                  ) : (
-                                    <Link
-                                      to="/projects/$projectId/storage/$bucketId/files/$fileId"
-                                      params={fileLinkParams}
-                                      className="block"
-                                    >
+                                    ) : (
+                                      <Link
+                                        to="/projects/$projectId/storage/$bucketId/files/$fileId"
+                                        params={fileLinkParams}
+                                        className="block group"
+                                      >
+                                        <div className="flex items-center gap-3 min-w-0">
+                                          <div className="flex-1 min-w-0">
+                                            <p className="truncate text-[13px] font-medium text-foreground group-hover:text-primary transition-colors">
+                                              {file.name}
+                                            </p>
+                                            <div className="mt-0.5">
+                                              <CopyableId
+                                                id={file.$id}
+                                                size="xs"
+                                              />
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </Link>
+                                    )}
+                                  </TableCell>
+                                  <TableCell className="px-4 py-3">
+                                    {pending ? (
                                       <span className="text-[12px] text-muted-foreground font-mono">
                                         {file.mimeType || '-'}
                                       </span>
-                                    </Link>
-                                  )}
-                                </TableCell>
-                                <TableCell className="px-4 py-3">
-                                  {pending ? (
-                                    <span className="text-[12px] text-muted-foreground font-mono text-right block">
-                                      {formatBytes(file.sizeOriginal)}
-                                    </span>
-                                  ) : (
-                                    <Link
-                                      to="/projects/$projectId/storage/$bucketId/files/$fileId"
-                                      params={fileLinkParams}
-                                      className="block text-right"
-                                    >
-                                      <span className="text-[12px] text-muted-foreground font-mono">
+                                    ) : (
+                                      <Link
+                                        to="/projects/$projectId/storage/$bucketId/files/$fileId"
+                                        params={fileLinkParams}
+                                        className="block"
+                                      >
+                                        <span className="text-[12px] text-muted-foreground font-mono">
+                                          {file.mimeType || '-'}
+                                        </span>
+                                      </Link>
+                                    )}
+                                  </TableCell>
+                                  <TableCell className="px-4 py-3">
+                                    {pending ? (
+                                      <span className="text-[12px] text-muted-foreground font-mono text-right block">
                                         {formatBytes(file.sizeOriginal)}
                                       </span>
-                                    </Link>
-                                  )}
-                                </TableCell>
-                                <TableCell className="px-4 py-3">
-                                  {pending ? (
-                                    <DateTooltip
-                                      date={new Date(file.$createdAt)}
-                                      className="text-[12px] text-muted-foreground font-mono text-right block"
-                                    />
-                                  ) : (
-                                    <Link
-                                      to="/projects/$projectId/storage/$bucketId/files/$fileId"
-                                      params={fileLinkParams}
-                                      className="block text-right"
-                                    >
+                                    ) : (
+                                      <Link
+                                        to="/projects/$projectId/storage/$bucketId/files/$fileId"
+                                        params={fileLinkParams}
+                                        className="block text-right"
+                                      >
+                                        <span className="text-[12px] text-muted-foreground font-mono">
+                                          {formatBytes(file.sizeOriginal)}
+                                        </span>
+                                      </Link>
+                                    )}
+                                  </TableCell>
+                                  <TableCell className="px-4 py-3">
+                                    {pending ? (
                                       <DateTooltip
                                         date={new Date(file.$createdAt)}
-                                        className="text-[12px] text-muted-foreground font-mono"
+                                        className="text-[12px] text-muted-foreground font-mono text-right block"
                                       />
-                                    </Link>
-                                  )}
-                                </TableCell>
-                              </TableRow>
+                                    ) : (
+                                      <Link
+                                        to="/projects/$projectId/storage/$bucketId/files/$fileId"
+                                        params={fileLinkParams}
+                                        className="block text-right"
+                                      >
+                                        <DateTooltip
+                                          date={new Date(file.$createdAt)}
+                                          className="text-[12px] text-muted-foreground font-mono"
+                                        />
+                                      </Link>
+                                    )}
+                                  </TableCell>
+                                </TableRow>
+                              </FileContextMenu>
                             )
                           })}
                         </TableBody>
@@ -961,83 +988,89 @@ export function View() {
                         const iconColorClass = getFileIconColor(file.mimeType)
                         const pending = isFilePending(file)
                         return (
-                          <div
+                          <FileContextMenu
                             key={file.$id}
-                            className={cn(
-                              'group cursor-pointer overflow-hidden rounded-lg border border-border bg-card transition-all hover:border-primary/30',
-                              pending && 'opacity-75',
-                            )}
-                            onClick={() => {
-                              if (!pending) {
-                                navigate({
-                                  to: '/projects/$projectId/storage/$bucketId/files/$fileId',
-                                  params: {
-                                    projectId: projectId!,
-                                    bucketId: bucketId!,
-                                    fileId: file.$id,
-                                  },
-                                })
-                              }
-                            }}
+                            projectId={projectId!}
+                            bucketId={bucketId!}
+                            file={{ id: file.$id, name: file.name, pending }}
                           >
-                            {/* Preview */}
-                            {!pending &&
-                            file.mimeType?.startsWith('image/') &&
-                            projectId &&
-                            bucketId ? (
-                              <div className="h-32 w-full overflow-hidden border-b border-border">
-                                <img
-                                  src={
-                                    sdk
-                                      .forProject(projectId)
-                                      .storage.getFilePreview({
-                                        bucketId,
-                                        fileId: file.$id,
-                                        width: 400,
-                                      }) + '&mode=admin'
-                                  }
-                                  alt={file.name}
-                                  className="h-full w-full object-cover"
-                                />
-                              </div>
-                            ) : (
-                              <div
-                                className={cn(
-                                  'flex h-32 items-center justify-center border-b border-border',
-                                  iconColorClass,
-                                )}
-                              >
-                                <FileIcon className="h-12 w-12" />
-                              </div>
-                            )}
-                            {/* File info */}
-                            <div className="p-3">
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="min-w-0 flex-1">
-                                  <p className="truncate text-[13px] font-medium text-foreground">
-                                    {file.name}
-                                  </p>
-                                  <p className="text-[12px] text-muted-foreground">
-                                    {file.mimeType}
-                                  </p>
+                            <div
+                              className={cn(
+                                'group cursor-pointer overflow-hidden rounded-lg border border-border bg-card transition-all hover:border-primary/30',
+                                pending && 'opacity-75',
+                              )}
+                              onClick={() => {
+                                if (!pending) {
+                                  navigate({
+                                    to: '/projects/$projectId/storage/$bucketId/files/$fileId',
+                                    params: {
+                                      projectId: projectId!,
+                                      bucketId: bucketId!,
+                                      fileId: file.$id,
+                                    },
+                                  })
+                                }
+                              }}
+                            >
+                              {/* Preview */}
+                              {!pending &&
+                                file.mimeType?.startsWith('image/') &&
+                                projectId &&
+                                bucketId ? (
+                                <div className="h-32 w-full overflow-hidden border-b border-border">
+                                  <img
+                                    src={
+                                      sdk
+                                        .forProject(projectId)
+                                        .storage.getFilePreview({
+                                          bucketId,
+                                          fileId: file.$id,
+                                          width: 400,
+                                        }) + '&mode=admin'
+                                    }
+                                    alt={file.name}
+                                    className="h-full w-full object-cover"
+                                  />
+                                </div>
+                              ) : (
+                                <div
+                                  className={cn(
+                                    'flex h-32 items-center justify-center border-b border-border',
+                                    iconColorClass,
+                                  )}
+                                >
+                                  <FileIcon className="h-12 w-12" />
+                                </div>
+                              )}
+                              {/* File info */}
+                              <div className="p-3">
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="min-w-0 flex-1">
+                                    <p className="truncate text-[13px] font-medium text-foreground">
+                                      {file.name}
+                                    </p>
+                                    <p className="text-[12px] text-muted-foreground">
+                                      {file.mimeType}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="mt-2 flex items-center gap-3 text-[12px] text-muted-foreground">
+                                  <span>{formatBytes(file.sizeOriginal)}</span>
+                                  {pending && (
+                                    <>
+                                      <span>•</span>
+                                      <Badge
+                                        variant="secondary"
+                                        className="text-[10px]"
+                                      >
+                                        Pending
+                                      </Badge>
+                                    </>
+                                  )}
                                 </div>
                               </div>
-                              <div className="mt-2 flex items-center gap-3 text-[12px] text-muted-foreground">
-                                <span>{formatBytes(file.sizeOriginal)}</span>
-                                {pending && (
-                                  <>
-                                    <span>•</span>
-                                    <Badge
-                                      variant="secondary"
-                                      className="text-[10px]"
-                                    >
-                                      Pending
-                                    </Badge>
-                                  </>
-                                )}
-                              </div>
                             </div>
-                          </div>
+                          </FileContextMenu>
                         )
                       })}
                     </div>

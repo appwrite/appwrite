@@ -21,11 +21,9 @@ import { Button } from '@/components/ui/button'
 import {
   Copy,
   FileJson,
-  Pencil,
   CopyPlus,
   Trash2,
   Link2,
-  Lock,
   ExternalLink,
   Square,
 } from 'lucide-react'
@@ -51,8 +49,6 @@ interface RowContextMenuProps {
   row: RowContextMenuRow
   /** When set, right-click was on a cell; show "Copy value" in Copy submenu for this column */
   contextColumnKey?: string | null
-  onUpdateRow: (row: RowContextMenuRow) => void
-  onUpdatePermissions?: (row: RowContextMenuRow) => void
   children: React.ReactNode
   queryKey: readonly unknown[]
 }
@@ -95,8 +91,6 @@ export function RowContextMenu({
   tableId,
   row,
   contextColumnKey,
-  onUpdateRow,
-  onUpdatePermissions,
   children,
   queryKey,
 }: RowContextMenuProps) {
@@ -177,10 +171,6 @@ export function RowContextMenu({
     }
   }
 
-  const handleUpdateRow = () => {
-    onUpdateRow(row)
-  }
-
   const rowHref = rowsPath(projectId, databaseId, tableId, row.$id)
 
   const handleCopyLink = async () => {
@@ -190,10 +180,6 @@ export function RowContextMenu({
     } catch {
       toast.error('Failed to copy')
     }
-  }
-
-  const handleUpdatePermissions = () => {
-    onUpdatePermissions?.(row)
   }
 
   const handleDuplicate = () => {
@@ -209,21 +195,6 @@ export function RowContextMenu({
       <ContextMenu>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
         <ContextMenuContent className="w-52">
-          <ContextMenuItem onSelect={handleUpdateRow}>
-            <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-              <Pencil className="size-4" />
-            </span>
-            Update row
-          </ContextMenuItem>
-          {onUpdatePermissions && (
-            <ContextMenuItem onSelect={handleUpdatePermissions}>
-              <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-                <Lock className="size-4" />
-              </span>
-              Update permissions
-            </ContextMenuItem>
-          )}
-          <ContextMenuSeparator />
           <ContextMenuSub>
             <ContextMenuSubTrigger>
               <span className="flex h-4 w-4 shrink-0 items-center justify-center">
@@ -270,7 +241,9 @@ export function RowContextMenu({
             Duplicate
           </ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem onSelect={handleOpenInNewTab}>
+          <ContextMenuItem
+            onSelect={handleOpenInNewTab}
+          >
             <span className="flex h-4 w-4 shrink-0 items-center justify-center">
               <ExternalLink className="size-4" />
             </span>
@@ -319,6 +292,7 @@ export function RowContextMenu({
           </div>
         </DialogContent>
       </Dialog>
+
     </>
   )
 }

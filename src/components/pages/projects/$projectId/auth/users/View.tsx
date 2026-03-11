@@ -102,6 +102,7 @@ import { useProject } from '@/lib/react-query/hooks'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { Browser } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { useHashScroll } from '@/lib/hooks/useHashScroll'
 
 // Browser Icon Component with Device Badge
 function BrowserIcon({
@@ -235,6 +236,8 @@ export function View() {
 
     return 'overview'
   }, [location.pathname, userId])
+
+  useHashScroll(activeTab === 'overview' && !userLoading, location.hash)
 
   const tabs: Tab[] = useMemo(
     () => [
@@ -543,16 +546,20 @@ function OverviewTab({
         userId={userId}
         displayName={displayName}
       />
-      <UpdateNameSection user={user} projectId={projectId} userId={userId} />
+      <div id="user-details">
+        <UpdateNameSection user={user} projectId={projectId} userId={userId} />
+      </div>
       <UpdateEmailSection user={user} projectId={projectId} userId={userId} />
       <UpdatePhoneSection user={user} projectId={projectId} userId={userId} />
       <UpdatePasswordSection projectId={projectId} userId={userId} />
       <UpdateLabelsSection user={user} projectId={projectId} userId={userId} />
-      <UpdatePreferencesSection
-        user={user}
-        projectId={projectId}
-        userId={userId}
-      />
+      <div id="user-preferences">
+        <UpdatePreferencesSection
+          user={user}
+          projectId={projectId}
+          userId={userId}
+        />
+      </div>
       <UpdateMFASection
         user={user}
         mfaFactors={mfaFactors}

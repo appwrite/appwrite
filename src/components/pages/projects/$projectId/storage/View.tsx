@@ -52,6 +52,7 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { CreateBucket } from './_components/CreateBucket'
 import type { Models } from '@appwrite.io/console'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
+import { BucketContextMenu } from './_components/BucketContextMenu'
 import {
   getSearch,
   getPage,
@@ -601,127 +602,132 @@ export function View() {
                       const bucketData = bucket as Models.Bucket
                       const isDisabled = !bucketData.enabled
                       return (
-                        <TableRow
+                        <BucketContextMenu
                           key={bucketData.$id}
-                          className={cn(
-                            'cursor-pointer transition-colors border-b border-border/50',
-                            selectedBuckets.has(bucketData.$id)
-                              ? 'bg-muted'
-                              : 'hover:bg-muted/30',
-                          )}
-                          onClick={(e) => {
-                            // Don't navigate if clicking on checkbox, link, or their containers
-                            const target = e.target as HTMLElement
-                            if (
-                              target.closest('button') ||
-                              target.closest('[role="checkbox"]') ||
-                              target.closest('a')
-                            ) {
-                              return
-                            }
-                            navigate({
-                              to: '/projects/$projectId/storage/$bucketId/',
-                              params: {
-                                projectId: projectId!,
-                                bucketId: bucketData.$id,
-                              },
-                            })
-                          }}
+                          projectId={projectId!}
+                          bucket={{ id: bucketData.$id, name: bucketData.name }}
                         >
-                          <TableCell
-                            onClick={(e) => e.stopPropagation()}
-                            className="px-4 py-3"
-                          >
-                            <Checkbox
-                              checked={selectedBuckets.has(bucketData.$id)}
-                              onCheckedChange={() =>
-                                toggleBucket(bucketData.$id)
+                          <TableRow
+                            className={cn(
+                              'cursor-pointer transition-colors border-b border-border/50',
+                              selectedBuckets.has(bucketData.$id)
+                                ? 'bg-sky-100 dark:bg-sky-950'
+                                : 'hover:bg-muted/30',
+                            )}
+                            onClick={(e) => {
+                              // Don't navigate if clicking on checkbox, link, or their containers
+                              const target = e.target as HTMLElement
+                              if (
+                                target.closest('button') ||
+                                target.closest('[role="checkbox"]') ||
+                                target.closest('a')
+                              ) {
+                                return
                               }
-                            />
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <Link
-                              to="/projects/$projectId/storage/$bucketId/"
-                              params={{
-                                projectId: projectId!,
-                                bucketId: bucketData.$id,
-                              }}
-                              className="block group"
+                              navigate({
+                                to: '/projects/$projectId/storage/$bucketId/',
+                                params: {
+                                  projectId: projectId!,
+                                  bucketId: bucketData.$id,
+                                },
+                              })
+                            }}
+                          >
+                            <TableCell
+                              onClick={(e) => e.stopPropagation()}
+                              className="px-4 py-3"
                             >
-                              <div className="flex items-center gap-3 min-w-0">
-                                <div className="flex-1 min-w-0">
-                                  <p className="truncate text-[13px] font-medium text-foreground group-hover:text-primary transition-colors">
-                                    {bucketData.name}
-                                  </p>
-                                  <div className="mt-0.5">
-                                    <CopyableId id={bucketData.$id} size="xs" />
+                              <Checkbox
+                                checked={selectedBuckets.has(bucketData.$id)}
+                                onCheckedChange={() =>
+                                  toggleBucket(bucketData.$id)
+                                }
+                              />
+                            </TableCell>
+                            <TableCell className="px-4 py-3">
+                              <Link
+                                to="/projects/$projectId/storage/$bucketId/"
+                                params={{
+                                  projectId: projectId!,
+                                  bucketId: bucketData.$id,
+                                }}
+                                className="block group"
+                              >
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div className="flex-1 min-w-0">
+                                    <p className="truncate text-[13px] font-medium text-foreground group-hover:text-primary transition-colors">
+                                      {bucketData.name}
+                                    </p>
+                                    <div className="mt-0.5">
+                                      <CopyableId id={bucketData.$id} size="xs" />
+                                    </div>
                                   </div>
                                 </div>
+                              </Link>
+                            </TableCell>
+                            <TableCell className="px-4 py-3">
+                              <div className="flex items-center justify-center">
+                                {isDisabled ? (
+                                  <Badge
+                                    variant="error"
+                                    className="text-[11px] font-medium border px-2 py-0.5"
+                                  >
+                                    Disabled
+                                  </Badge>
+                                ) : (
+                                  <Badge
+                                    variant="success"
+                                    className="text-[11px] font-medium border px-2 py-0.5"
+                                  >
+                                    Enabled
+                                  </Badge>
+                                )}
                               </div>
-                            </Link>
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <div className="flex items-center justify-center">
-                              {isDisabled ? (
-                                <Badge
-                                  variant="error"
-                                  className="text-[11px] font-medium border px-2 py-0.5"
-                                >
-                                  Disabled
-                                </Badge>
-                              ) : (
-                                <Badge
-                                  variant="success"
-                                  className="text-[11px] font-medium border px-2 py-0.5"
-                                >
-                                  Enabled
-                                </Badge>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <Link
-                              to="/projects/$projectId/storage/$bucketId/"
-                              params={{
-                                projectId: projectId!,
-                                bucketId: bucketData.$id,
-                              }}
-                              className="block text-right"
-                            >
-                              {bucketData.$createdAt ? (
-                                <DateTooltip
-                                  date={bucketData.$createdAt}
-                                  className="text-[12px] text-muted-foreground font-mono"
-                                />
-                              ) : (
-                                <span className="text-[12px] text-muted-foreground/50 italic">
-                                  N/A
-                                </span>
-                              )}
-                            </Link>
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <Link
-                              to="/projects/$projectId/storage/$bucketId/"
-                              params={{
-                                projectId: projectId!,
-                                bucketId: bucketData.$id,
-                              }}
-                              className="block text-right"
-                            >
-                              {bucketData.$updatedAt ? (
-                                <DateTooltip
-                                  date={bucketData.$updatedAt}
-                                  className="text-[12px] text-muted-foreground font-mono"
-                                />
-                              ) : (
-                                <span className="text-[12px] text-muted-foreground/50 italic">
-                                  N/A
-                                </span>
-                              )}
-                            </Link>
-                          </TableCell>
-                        </TableRow>
+                            </TableCell>
+                            <TableCell className="px-4 py-3">
+                              <Link
+                                to="/projects/$projectId/storage/$bucketId/"
+                                params={{
+                                  projectId: projectId!,
+                                  bucketId: bucketData.$id,
+                                }}
+                                className="block text-right"
+                              >
+                                {bucketData.$createdAt ? (
+                                  <DateTooltip
+                                    date={bucketData.$createdAt}
+                                    className="text-[12px] text-muted-foreground font-mono"
+                                  />
+                                ) : (
+                                  <span className="text-[12px] text-muted-foreground/50 italic">
+                                    N/A
+                                  </span>
+                                )}
+                              </Link>
+                            </TableCell>
+                            <TableCell className="px-4 py-3">
+                              <Link
+                                to="/projects/$projectId/storage/$bucketId/"
+                                params={{
+                                  projectId: projectId!,
+                                  bucketId: bucketData.$id,
+                                }}
+                                className="block text-right"
+                              >
+                                {bucketData.$updatedAt ? (
+                                  <DateTooltip
+                                    date={bucketData.$updatedAt}
+                                    className="text-[12px] text-muted-foreground font-mono"
+                                  />
+                                ) : (
+                                  <span className="text-[12px] text-muted-foreground/50 italic">
+                                    N/A
+                                  </span>
+                                )}
+                              </Link>
+                            </TableCell>
+                          </TableRow>
+                        </BucketContextMenu>
                       )
                     })}
                   </TableBody>
@@ -765,22 +771,26 @@ export function View() {
                   const bucketData = bucket as Models.Bucket
                   const isDisabled = !bucketData.enabled
                   return (
-                    <Link
+                    <BucketContextMenu
                       key={bucketData.$id}
-                      to="/projects/$projectId/storage/$bucketId/"
-                      params={{ projectId, bucketId: bucketData.$id }}
+                      projectId={projectId!}
+                      bucket={{ id: bucketData.$id, name: bucketData.name }}
                     >
-                      <ResourceCard
-                        title={bucketData.name}
-                        resourceId={bucketData.$id}
-                        icon={Folder}
-                        iconColor="bg-muted text-muted-foreground"
-                        status={isDisabled ? 'error' : undefined}
-                        statusLabel={isDisabled ? 'Disabled' : undefined}
-                        metadata={[
-                          ...(bucketData.compression &&
-                          bucketData.compression !== 'none'
-                            ? [
+                      <Link
+                        to="/projects/$projectId/storage/$bucketId/"
+                        params={{ projectId, bucketId: bucketData.$id }}
+                      >
+                        <ResourceCard
+                          title={bucketData.name}
+                          resourceId={bucketData.$id}
+                          icon={Folder}
+                          iconColor="bg-muted text-muted-foreground"
+                          status={isDisabled ? 'error' : undefined}
+                          statusLabel={isDisabled ? 'Disabled' : undefined}
+                          metadata={[
+                            ...(bucketData.compression &&
+                              bucketData.compression !== 'none'
+                              ? [
                                 {
                                   label: 'Compression',
                                   value:
@@ -791,10 +801,10 @@ export function View() {
                                         : bucketData.compression,
                                 },
                               ]
-                            : []),
-                          ...(bucketData.maximumFileSize &&
-                          bucketData.maximumFileSize > 0
-                            ? [
+                              : []),
+                            ...(bucketData.maximumFileSize &&
+                              bucketData.maximumFileSize > 0
+                              ? [
                                 {
                                   label: 'Max size',
                                   value: formatBytes(
@@ -802,28 +812,29 @@ export function View() {
                                   ),
                                 },
                               ]
-                            : []),
-                          ...(bucketData.allowedFileExtensions &&
-                          bucketData.allowedFileExtensions.length > 0
-                            ? [
+                              : []),
+                            ...(bucketData.allowedFileExtensions &&
+                              bucketData.allowedFileExtensions.length > 0
+                              ? [
                                 {
                                   label: 'Extensions',
                                   value: `${bucketData.allowedFileExtensions.length} ${bucketData.allowedFileExtensions.length === 1 ? 'type' : 'types'}`,
                                 },
                               ]
-                            : []),
-                          {
-                            label: 'Encrypted',
-                            value: bucketData.encryption ? (
-                              <Lock className="h-3.5 w-3.5 text-muted-foreground" />
-                            ) : null,
-                          },
-                        ].filter(
-                          (item) =>
-                            item.value !== null && item.value !== undefined,
-                        )}
-                      />
-                    </Link>
+                              : []),
+                            {
+                              label: 'Encrypted',
+                              value: bucketData.encryption ? (
+                                <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+                              ) : null,
+                            },
+                          ].filter(
+                            (item) =>
+                              item.value !== null && item.value !== undefined,
+                          )}
+                        />
+                      </Link>
+                    </BucketContextMenu>
                   )
                 })}
               </div>
