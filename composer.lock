@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "09f5b42e8589d72026a0b3731fc4f2af",
+    "content-hash": "b99693284208ff3d006260a089a4f7b9",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3850,16 +3850,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-fix-preserve-dates-datetime-format",
+            "version": "5.3.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "49aa3181862c1370c17c2156a3b3228dca48df1e"
+                "reference": "4920bb60afb98d4bd81f4d331765716ae1d40255"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/49aa3181862c1370c17c2156a3b3228dca48df1e",
-                "reference": "49aa3181862c1370c17c2156a3b3228dca48df1e",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/4920bb60afb98d4bd81f4d331765716ae1d40255",
+                "reference": "4920bb60afb98d4bd81f4d331765716ae1d40255",
                 "shasum": ""
             },
             "require": {
@@ -3902,9 +3902,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/fix-preserve-dates-datetime-format"
+                "source": "https://github.com/utopia-php/database/tree/5.3.8"
             },
-            "time": "2026-03-10T12:28:50+00:00"
+            "time": "2026-03-11T01:03:34+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -9105,18 +9105,9 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-fix-preserve-dates-datetime-format",
-            "alias": "5.3.7",
-            "alias_normalized": "5.3.7.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "utopia-php/database": 20
-    },
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
@@ -9140,5 +9131,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }
