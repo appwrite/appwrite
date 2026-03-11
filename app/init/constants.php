@@ -362,6 +362,12 @@ const METRIC_AVATARS_SCREENSHOTS_GENERATED = 'avatars.screenshotsGenerated';
 const METRIC_FUNCTIONS_RUNTIME = 'functions.runtimes.{runtime}';
 const METRIC_SITES_FRAMEWORK = 'sites.frameworks.{framework}';
 
+// Realtime metrics
+const METRIC_REALTIME_CONNECTIONS = 'realtime.connections';
+const METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT = 'realtime.messages.sent';
+const METRIC_REALTIME_INBOUND = 'realtime.inbound';
+const METRIC_REALTIME_OUTBOUND = 'realtime.outbound';
+
 // Resource types
 const RESOURCE_TYPE_PROJECTS = 'projects';
 const RESOURCE_TYPE_FUNCTIONS = 'functions';
