@@ -86,7 +86,7 @@ const EMAIL_TEMPLATE_TYPES = [
     ],
   },
   {
-    type: EmailTemplateType.Magicsession,
+    type: EmailTemplateType.MagicSession,
     label: 'Magic URL',
     description: 'Send an email to users that sign in with a magic URL.',
     variables: [
@@ -99,7 +99,7 @@ const EMAIL_TEMPLATE_TYPES = [
     ],
   },
   {
-    type: EmailTemplateType.Otpsession,
+    type: EmailTemplateType.OtpSession,
     label: 'OTP Session',
     description: 'Send an email to users that sign in with an email OTP.',
     variables: [
@@ -133,7 +133,7 @@ const EMAIL_TEMPLATE_TYPES = [
     ],
   },
   {
-    type: EmailTemplateType.Mfachallenge,
+    type: EmailTemplateType.MfaChallenge,
     label: '2FA Verification',
     description: 'Send a two-factor authentication email to a user.',
     variables: [
@@ -146,7 +146,7 @@ const EMAIL_TEMPLATE_TYPES = [
     ],
   },
   {
-    type: EmailTemplateType.Sessionalert,
+    type: EmailTemplateType.SessionAlert,
     label: 'Session Alert',
     description: 'Send an email to users when a new session is created.',
     variables: [

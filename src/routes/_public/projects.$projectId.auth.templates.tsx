@@ -8,12 +8,12 @@ import { pageTitle } from '@/lib/utils/page-title'
 // All email template types that need to be prefetched
 const EMAIL_TEMPLATE_TYPES = [
   EmailTemplateType.Verification,
-  EmailTemplateType.Magicsession,
-  EmailTemplateType.Otpsession,
+  EmailTemplateType.MagicSession,
+  EmailTemplateType.OtpSession,
   EmailTemplateType.Recovery,
   EmailTemplateType.Invitation,
-  EmailTemplateType.Mfachallenge,
-  EmailTemplateType.Sessionalert,
+  EmailTemplateType.MfaChallenge,
+  EmailTemplateType.SessionAlert,
 ]
 
 export const Route = createFileRoute(
