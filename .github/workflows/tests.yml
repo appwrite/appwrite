@@ -109,7 +109,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Load and Start Appwrite
-        timeout-minutes: 3
+        timeout-minutes: 5
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
@@ -149,7 +149,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Load and Start Appwrite
-        timeout-minutes: 3
+        timeout-minutes: 5
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
