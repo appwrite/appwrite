@@ -160,7 +160,7 @@ class StatsUsage extends Action
         }
 
         $this->stats[$projectId]['project'] = $project;
-        $this->stats[$projectId]['receivedAt'] = DateTime::now();
+        $this->stats[$projectId]['receivedAt'] = DateTime::format(new \DateTime('@' . $message->getTimestamp()));
         foreach ($payload['metrics'] ?? [] as $metric) {
             $this->keys++;
             if (!isset($this->stats[$projectId]['keys'][$metric['key']])) {
