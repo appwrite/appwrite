@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Platform\Modules\Installer;
 
+use Appwrite\Platform\Installer\Http\Installer\Cleanup;
 use Appwrite\Platform\Installer\Http\Installer\Complete;
 use Appwrite\Platform\Installer\Http\Installer\Error;
 use Appwrite\Platform\Installer\Http\Installer\Install;
@@ -41,10 +42,11 @@ class ModuleTest extends TestCase
         $service = reset($services);
         $actions = $service->getActions();
 
-        $this->assertCount(6, $actions);
+        $this->assertCount(7, $actions);
         $this->assertArrayHasKey('installerView', $actions);
         $this->assertArrayHasKey('installerStatus', $actions);
         $this->assertArrayHasKey('installerValidate', $actions);
+        $this->assertArrayHasKey('installerCleanup', $actions);
         $this->assertArrayHasKey('installerComplete', $actions);
         $this->assertArrayHasKey('installerShutdown', $actions);
         $this->assertArrayHasKey('installerInstall', $actions);
@@ -95,6 +97,17 @@ class ModuleTest extends TestCase
         $this->assertEquals(Action::TYPE_DEFAULT, $action->getType());
         $this->assertActionParams($action, ['installId', 'sessionId', 'sessionSecret', 'sessionExpire']);
         $this->assertActionInjects($action, ['request', 'response', 'installerState']);
+    }
+
+    public function testCleanupAction(): void
+    {
+        $action = $this->getAction('installerCleanup');
+
+        $this->assertEquals('installerCleanup', Cleanup::getName());
+        $this->assertEquals(Action::HTTP_REQUEST_METHOD_POST, $action->getHttpMethod());
+        $this->assertEquals('/install/cleanup', $action->getHttpPath());
+        $this->assertEquals(Action::TYPE_DEFAULT, $action->getType());
+        $this->assertActionInjects($action, ['request', 'response']);
     }
 
     public function testShutdownAction(): void
