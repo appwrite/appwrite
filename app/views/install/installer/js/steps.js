@@ -8,7 +8,8 @@
 
     const {
         INSTALLATION_STEPS,
-        clampStep
+        clampStep,
+        isUpgradeMode
     } = Context;
 
     const {
@@ -194,7 +195,7 @@
         applyLockPayload?.();
         applyBodyDefaults?.();
         hydrateStep2State(root);
-        if (!formState.opensslKey || !formState.opensslKey.trim()) {
+        if (!isUpgradeMode?.() && (!formState.opensslKey || !formState.opensslKey.trim())) {
             formState.opensslKey = generateSecretKey?.();
             dispatchStateChange?.('opensslKey');
         }

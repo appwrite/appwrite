@@ -51,6 +51,15 @@ class Status extends Action
                 $data['payload']['assistantOpenAIKeyHash'],
             );
         }
+        // Strip sensitive data from step details
+        if (is_array($data) && isset($data['details']) && is_array($data['details'])) {
+            foreach ($data['details'] as $stepKey => &$stepDetails) {
+                if (is_array($stepDetails)) {
+                    unset($stepDetails['sessionSecret'], $stepDetails['trace']);
+                }
+            }
+            unset($stepDetails);
+        }
         $response->json(['success' => true, 'progress' => $data]);
     }
 }

@@ -10,8 +10,6 @@ class V21 extends Filter
 {
     public function parse(array $content, string $model): array
     {
-        $parsedResponse = $content;
-
         return match ($model) {
             Response::MODEL_SITE => $this->parseSite($content),
             Response::MODEL_SITE_LIST => $this->handleList(
@@ -25,7 +23,7 @@ class V21 extends Filter
                 "functions",
                 fn ($item) => $this->parseFunction($item),
             ),
-            default => $parsedResponse,
+            default => $content,
         };
     }
 

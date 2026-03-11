@@ -3,6 +3,7 @@
         INSTALLATION_STEPS,
         TIMINGS,
         getBodyDataset,
+        isUpgradeMode,
         STEP_IDS,
         STATUS,
         SSE_EVENTS
@@ -310,7 +311,7 @@
 
     const buildInstallPayload = (installId) => {
         const normalizedSecret = (formState?.opensslKey || '').trim();
-        if (!normalizedSecret && generateSecretKey) {
+        if (!normalizedSecret && generateSecretKey && !isUpgradeMode?.()) {
             formState.opensslKey = generateSecretKey();
         }
         const normalizedDomain = (formState?.appDomain || '').trim() || 'localhost';

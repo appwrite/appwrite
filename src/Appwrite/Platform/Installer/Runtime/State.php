@@ -309,7 +309,7 @@ class State
 
         $data['updatedAt'] = $payload['updatedAt'] ?? time();
 
-        file_put_contents($this->progressFilePath($installId), json_encode($data));
+        file_put_contents($this->progressFilePath($installId), json_encode($data), LOCK_EX);
     }
 
     private function parseEnvFile(string $contents): array

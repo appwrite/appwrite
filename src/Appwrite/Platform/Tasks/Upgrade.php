@@ -80,7 +80,7 @@ class Upgrade extends Install
         }
 
         if ($database === null) {
-            throw new \Exception('Database type not found, can not updgrade. Ensure `_APP_DB_ADAPTER` is set in your environment.');
+            throw new \Exception('Database type not found, can not upgrade. Ensure `_APP_DB_ADAPTER` is set in your environment.');
         }
 
         $this->lockedDatabase = $database;

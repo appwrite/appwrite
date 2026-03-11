@@ -253,7 +253,7 @@ class Install extends Action
             }
 
             if ($var['name'] === '_APP_DB_ADAPTER' && $data !== false) {
-                $input[$var['name']] = $database;
+                $userInput[$var['name']] = $database;
                 continue;
             }
 
@@ -271,16 +271,16 @@ class Install extends Action
                 Console::warning("\nUse 'AAAA' if you're using an IPv6 address and 'A' if you're using an IPv4 address.\n");
             }
         }
-        $database = $input['_APP_DB_ADAPTER'];
+        $database = $userInput['_APP_DB_ADAPTER'] ?? $database;
         if ($database === 'postgresql') {
-            $input['_APP_DB_HOST'] = 'postgresql';
-            $input['_APP_DB_PORT'] = 5432;
+            $userInput['_APP_DB_HOST'] = 'postgresql';
+            $userInput['_APP_DB_PORT'] = 5432;
         } elseif ($database === 'mongodb') {
-            $input['_APP_DB_HOST'] = 'mongodb';
-            $input['_APP_DB_PORT'] = 27017;
+            $userInput['_APP_DB_HOST'] = 'mongodb';
+            $userInput['_APP_DB_PORT'] = 27017;
         } elseif ($database === 'mariadb') {
-            $input['_APP_DB_HOST'] = 'mariadb';
-            $input['_APP_DB_PORT'] = 3306;
+            $userInput['_APP_DB_HOST'] = 'mariadb';
+            $userInput['_APP_DB_PORT'] = 3306;
         }
 
         $shouldGenerateSecrets = !$existingInstallation && !$isUpgrade;
@@ -593,9 +593,7 @@ class Install extends Action
             }
         } catch (\Throwable $e) {
             if ($currentStep) {
-                $details = [
-                    'trace' => $e->getTraceAsString()
-                ];
+                $details = [];
                 $previous = $e->getPrevious();
                 if ($previous instanceof \Throwable && $previous->getMessage() !== '') {
                     $details['output'] = $previous->getMessage();
@@ -1076,7 +1074,9 @@ class Install extends Action
 
     private function isInstallationComplete(int $port): bool
     {
-        while (true) {
+        $maxAttempts = 7200; // 2 hours maximum
+        $attempt = 0;
+        while ($attempt < $maxAttempts) {
             if (file_exists(InstallerServer::INSTALLER_COMPLETE_FILE)) {
                 return true;
             }
@@ -1086,7 +1086,9 @@ class Install extends Action
             }
             \fclose($handle);
             \sleep(1);
+            $attempt++;
         }
+        return false;
     }
 
     private function waitForWebServer(int $port): bool

@@ -65,9 +65,15 @@
     };
 
     const setInstallLock = (installId, payload) => {
+        const sanitizedPayload = payload ? { ...payload } : null;
+        if (sanitizedPayload) {
+            delete sanitizedPayload.opensslKey;
+            delete sanitizedPayload.accountPassword;
+            delete sanitizedPayload.assistantOpenAIKey;
+        }
         const lock = {
             installId,
-            payload: payload || null,
+            payload: sanitizedPayload,
             startedAt: Date.now()
         };
         try {
@@ -110,10 +116,7 @@
         setStateIfEmpty('httpPort', payload.httpPort);
         setStateIfEmpty('httpsPort', payload.httpsPort);
         setStateIfEmpty('emailCertificates', payload.emailCertificates);
-        setStateIfEmpty('opensslKey', payload.opensslKey);
-        setStateIfEmpty('assistantOpenAIKey', payload.assistantOpenAIKey);
         setStateIfEmpty('accountEmail', payload.accountEmail);
-        setStateIfEmpty('accountPassword', payload.accountPassword);
     };
 
     const getStoredInstallId = () => {

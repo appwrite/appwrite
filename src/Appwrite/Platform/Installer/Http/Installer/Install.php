@@ -36,7 +36,7 @@ class Install extends Action
             ->param('httpPort', 80, new Range(1, 65535), 'HTTP port')
             ->param('httpsPort', 443, new Range(1, 65535), 'HTTPS port')
             ->param('emailCertificates', '', new Email(), 'Email for SSL certificates')
-            ->param('opensslKey', '', new Text(64, 1), 'Secret API key')
+            ->param('opensslKey', '', new Text(64, 0), 'Secret API key', true)
             ->param('assistantOpenAIKey', '', new Text(256, 0), 'OpenAI API key for assistant', true)
             ->param('accountEmail', '', new Email(allowEmpty: true), 'Account email address', true)
             ->param('accountPassword', '', new Password(allowEmpty: true), 'Account password', true)
@@ -92,6 +92,11 @@ class Install extends Action
         $emailCertificates = trim($emailCertificates);
         $opensslKey = trim($opensslKey);
         $assistantOpenAIKey = trim($assistantOpenAIKey);
+
+        if ($opensslKey === '' && !$config->isUpgrade()) {
+            $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Secret key is required');
+            return;
+        }
 
         $account = [];
         if (!$config->isUpgrade()) {
