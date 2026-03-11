@@ -19,7 +19,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
-import { cn } from '@/lib/utils'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Table,
   TableBody,
@@ -415,41 +415,34 @@ export function ExecutionDetailsDrawer({
                 </AccordionTrigger>
                 <AccordionContent className="pt-4 overflow-visible">
                   <div className="-mx-1.5 px-1.5">
-                    <div className="mb-4">
-                      <div className="flex items-center rounded-md border border-border bg-muted/30 p-1">
-                        <button
-                          type="button"
-                          onClick={() => setRequestTab('parameters')}
-                          className={cn(
-                            'flex flex-1 items-center justify-center gap-1.5 rounded px-2.5 py-1 text-[12px] font-medium transition-all cursor-pointer',
-                            requestTab === 'parameters'
-                              ? 'bg-background text-foreground'
-                              : 'text-muted-foreground hover:text-foreground',
+                    <Tabs
+                      value={requestTab}
+                      onValueChange={(v) =>
+                        setRequestTab(v as 'parameters' | 'headers')
+                      }
+                      className="w-full"
+                    >
+                      <TabsList className="w-full grid grid-cols-2 h-9 mb-4">
+                        <TabsTrigger value="parameters" className="text-[13px]">
+                          Parameters
+                          {queryParams.length > 0 && (
+                            <span className="ml-1.5 text-muted-foreground">
+                              ({queryParams.length})
+                            </span>
                           )}
-                        >
-                          Parameters{' '}
-                          {queryParams.length > 0 && `(${queryParams.length})`}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setRequestTab('headers')}
-                          className={cn(
-                            'flex flex-1 items-center justify-center gap-1.5 rounded px-2.5 py-1 text-[12px] font-medium transition-all cursor-pointer',
-                            requestTab === 'headers'
-                              ? 'bg-background text-foreground'
-                              : 'text-muted-foreground hover:text-foreground',
-                          )}
-                        >
-                          Headers{' '}
+                        </TabsTrigger>
+                        <TabsTrigger value="headers" className="text-[13px]">
+                          Headers
                           {execution.requestHeaders &&
-                          execution.requestHeaders.length > 0
-                            ? `(${execution.requestHeaders.length})`
-                            : ''}
-                        </button>
-                      </div>
-                    </div>
+                            execution.requestHeaders.length > 0 && (
+                              <span className="ml-1.5 text-muted-foreground">
+                                ({execution.requestHeaders.length})
+                              </span>
+                            )}
+                        </TabsTrigger>
+                      </TabsList>
 
-                    {requestTab === 'parameters' && (
+                      <TabsContent value="parameters" className="mt-0">
                       <div className="mt-4">
                         {queryParams.length > 0 ? (
                           <div className="rounded-lg border border-border overflow-hidden">
@@ -486,9 +479,9 @@ export function ExecutionDetailsDrawer({
                           </div>
                         )}
                       </div>
-                    )}
+                      </TabsContent>
 
-                    {requestTab === 'headers' && (
+                      <TabsContent value="headers" className="mt-0">
                       <div className="mt-4">
                         {execution.requestHeaders &&
                         execution.requestHeaders.length > 0 ? (
@@ -542,7 +535,8 @@ export function ExecutionDetailsDrawer({
                           </div>
                         )}
                       </div>
-                    )}
+                      </TabsContent>
+                    </Tabs>
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -554,64 +548,37 @@ export function ExecutionDetailsDrawer({
                 </AccordionTrigger>
                 <AccordionContent className="pt-4 overflow-visible">
                   <div className="-mx-1.5 px-1.5">
-                    <div className="mb-4">
-                      <div className="flex items-center rounded-md border border-border bg-muted/30 p-1">
-                        <button
-                          type="button"
-                          onClick={() => setResponseTab('logs')}
-                          className={cn(
-                            'flex flex-1 items-center justify-center gap-1.5 rounded px-2.5 py-1 text-[12px] font-medium transition-all cursor-pointer',
-                            responseTab === 'logs'
-                              ? 'bg-background text-foreground'
-                              : 'text-muted-foreground hover:text-foreground',
-                          )}
-                        >
+                    <Tabs
+                      value={responseTab}
+                      onValueChange={(v) =>
+                        setResponseTab(
+                          v as 'logs' | 'errors' | 'headers' | 'body',
+                        )
+                      }
+                      className="w-full"
+                    >
+                      <TabsList className="w-full grid grid-cols-4 h-9 mb-4">
+                        <TabsTrigger value="logs" className="text-[13px]">
                           Logs
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setResponseTab('errors')}
-                          className={cn(
-                            'flex flex-1 items-center justify-center gap-1.5 rounded px-2.5 py-1 text-[12px] font-medium transition-all cursor-pointer',
-                            responseTab === 'errors'
-                              ? 'bg-background text-foreground'
-                              : 'text-muted-foreground hover:text-foreground',
-                          )}
-                        >
+                        </TabsTrigger>
+                        <TabsTrigger value="errors" className="text-[13px]">
                           Errors
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setResponseTab('headers')}
-                          className={cn(
-                            'flex flex-1 items-center justify-center gap-1.5 rounded px-2.5 py-1 text-[12px] font-medium transition-all cursor-pointer',
-                            responseTab === 'headers'
-                              ? 'bg-background text-foreground'
-                              : 'text-muted-foreground hover:text-foreground',
-                          )}
-                        >
-                          Headers{' '}
+                        </TabsTrigger>
+                        <TabsTrigger value="headers" className="text-[13px]">
+                          Headers
                           {execution.responseHeaders &&
-                          execution.responseHeaders.length > 0
-                            ? `(${execution.responseHeaders.length})`
-                            : ''}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setResponseTab('body')}
-                          className={cn(
-                            'flex flex-1 items-center justify-center gap-1.5 rounded px-2.5 py-1 text-[12px] font-medium transition-all cursor-pointer',
-                            responseTab === 'body'
-                              ? 'bg-background text-foreground'
-                              : 'text-muted-foreground hover:text-foreground',
-                          )}
-                        >
+                            execution.responseHeaders.length > 0 && (
+                              <span className="ml-1.5 text-muted-foreground">
+                                ({execution.responseHeaders.length})
+                              </span>
+                            )}
+                        </TabsTrigger>
+                        <TabsTrigger value="body" className="text-[13px]">
                           Body
-                        </button>
-                      </div>
-                    </div>
+                        </TabsTrigger>
+                      </TabsList>
 
-                    {responseTab === 'logs' && (
+                      <TabsContent value="logs" className="mt-0">
                       <div className="mt-4">
                         {func?.logging === false ? (
                           <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4">
@@ -685,9 +652,9 @@ export function ExecutionDetailsDrawer({
                           </div>
                         )}
                       </div>
-                    )}
+                      </TabsContent>
 
-                    {responseTab === 'errors' && (
+                      <TabsContent value="errors" className="mt-0">
                       <div className="mt-4">
                         {func?.logging === false ? (
                           <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4">
@@ -759,9 +726,9 @@ export function ExecutionDetailsDrawer({
                           </div>
                         )}
                       </div>
-                    )}
+                      </TabsContent>
 
-                    {responseTab === 'headers' && (
+                      <TabsContent value="headers" className="mt-0">
                       <div className="mt-4">
                         {execution.responseHeaders &&
                         execution.responseHeaders.length > 0 ? (
@@ -815,9 +782,9 @@ export function ExecutionDetailsDrawer({
                           </div>
                         )}
                       </div>
-                    )}
+                      </TabsContent>
 
-                    {responseTab === 'body' && (
+                      <TabsContent value="body" className="mt-0">
                       <div className="mt-4">
                         {execution.responseBody ? (
                           <div className="space-y-3">
@@ -882,7 +849,8 @@ export function ExecutionDetailsDrawer({
                           </div>
                         )}
                       </div>
-                    )}
+                      </TabsContent>
+                    </Tabs>
                   </div>
                 </AccordionContent>
               </AccordionItem>

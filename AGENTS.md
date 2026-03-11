@@ -993,8 +993,8 @@ Follow the modal structure pattern above. For no-content modals, skip content se
 Profiles control which features are available based on deployment type (cloud vs self-hosted).
 
 **Profiles:**
-- **Cloud** (default): Full feature set – billing, domains, usage stats, activity, org roles, system status, account MFA, account identities
-- **Self-hosted**: Cloud-only features disabled
+- **Cloud** (default): Full feature set – billing, domains, usage stats, activity, org roles, system status, account MFA, account identities, **user verification** (redirect to verify-email page after signup)
+- **Self-hosted**: Cloud-only features disabled (user verification off; signup redirects directly to console)
 
 **Env var:** `VITE_CONSOLE_PROFILE=cloud` or `VITE_CONSOLE_PROFILE=self-hosted`
 

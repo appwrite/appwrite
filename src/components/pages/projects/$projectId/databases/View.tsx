@@ -271,6 +271,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 // Reusable table styles for spreadsheet views
 const stickyTheadClass = 'sticky top-0 z-20 bg-background'
@@ -5097,52 +5098,30 @@ function RowEditDrawer({
       <>
         <div className="border-t border-border shrink-0" />
 
-        <div className="flex flex-col flex-1 min-h-0">
-          <div
-            className="flex gap-0 overflow-x-auto border-b border-border px-6 pt-4"
-            role="tablist"
-          >
-            <button
-              role="tab"
-              aria-selected={activeTab === 'data'}
-              onClick={() => setActiveTab('data')}
-              className={cn(
-                'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors cursor-pointer',
-                'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
-                activeTab === 'data'
-                  ? 'text-foreground'
-                  : 'text-muted-foreground hover:text-foreground/80',
-              )}
-            >
-              Data
-              {activeTab === 'data' && (
-                <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground" />
-              )}
-            </button>
-            <button
-              role="tab"
-              aria-selected={activeTab === 'permissions'}
-              onClick={() => setActiveTab('permissions')}
-              className={cn(
-                'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors cursor-pointer',
-                'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
-                activeTab === 'permissions'
-                  ? 'text-foreground'
-                  : 'text-muted-foreground hover:text-foreground/80',
-              )}
-            >
-              Permissions
-              {activeTab === 'permissions' && (
-                <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground" />
-              )}
-            </button>
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as 'data' | 'permissions')}
+          className="flex flex-col flex-1 min-h-0"
+        >
+          <div className="shrink-0 px-6 pt-4">
+            <TabsList className="w-full grid grid-cols-2 h-9">
+              <TabsTrigger value="data" className="text-[13px]">
+                Data
+              </TabsTrigger>
+              <TabsTrigger value="permissions" className="text-[13px]">
+                Permissions
+              </TabsTrigger>
+            </TabsList>
           </div>
 
           <div
             ref={scrollContainerRef}
             className="flex-1 overflow-y-auto min-h-0"
           >
-            {activeTab === 'data' && (
+            <TabsContent
+              value="data"
+              className="mt-0 flex-1 outline-none data-[state=inactive]:hidden"
+            >
               <div className="px-6 py-6">
                 <div className="space-y-5">
                   {/* System fields (read-only) - only when updating a row */}
@@ -5962,9 +5941,12 @@ function RowEditDrawer({
                   </div>
                 </div>
               </div>
-            )}
+            </TabsContent>
 
-            {activeTab === 'permissions' && (
+            <TabsContent
+              value="permissions"
+              className="mt-0 flex-1 outline-none data-[state=inactive]:hidden"
+            >
               <div className="px-6 py-6">
                 <div className="space-y-5">
                   <div className="space-y-3">
@@ -5986,9 +5968,9 @@ function RowEditDrawer({
                   />
                 </div>
               </div>
-            )}
+            </TabsContent>
           </div>
-        </div>
+        </Tabs>
 
         {/* Footer with actions */}
         <div className="flex-shrink-0 flex items-center justify-start gap-2 border-t border-border bg-muted/30 px-6 py-4">

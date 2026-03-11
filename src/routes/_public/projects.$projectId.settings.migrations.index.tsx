@@ -21,12 +21,10 @@ export const Route = createFileRoute(
       .ensureQueryData(projectQueryOptions(projectId))
       .catch(() => null)
 
+    // Use same region as useProject() so query key matches: region is (project.region || 'unknown') when project exists
+    const region = project ? (project.region || 'unknown') : undefined
     const migrationsData = await queryClient
-      .ensureQueryData(
-        project?.region !== undefined
-          ? projectMigrationsQueryOptions(projectId, project.region)
-          : projectMigrationsQueryOptions(projectId),
-      )
+      .ensureQueryData(projectMigrationsQueryOptions(projectId, region))
       .catch(() => undefined)
 
     return {

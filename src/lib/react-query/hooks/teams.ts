@@ -233,6 +233,7 @@ export function useUpdateConsoleTeamPrefs(
  * @param limit - Number of items per page
  * @param search - Optional search query
  * @param initialData - Optional data from route loader to avoid layout shift on first paint
+ * @param options - Optional query options (e.g. placeholderData for no-flash pagination)
  * @returns Paginated memberships with loading state
  */
 export function useOrganizationMemberships(
@@ -243,6 +244,7 @@ export function useOrganizationMemberships(
   initialData?: Awaited<
     ReturnType<typeof fetchOrganizationMemberships>
   >,
+  options?: { placeholderData?: unknown },
 ) {
   const {
     data: membershipsData,
@@ -259,6 +261,9 @@ export function useOrganizationMemberships(
     ),
     initialData,
     initialDataUpdatedAt: initialData ? 1 : 0,
+    ...(options?.placeholderData !== undefined && {
+      placeholderData: options.placeholderData,
+    }),
   })
 
   // Map memberships to our TeamMember type

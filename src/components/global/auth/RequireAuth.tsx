@@ -2,7 +2,7 @@ import { useLoaderData, useNavigate, useLocation } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
 import { AppwriteException } from '@appwrite.io/console'
-import { ReactNode } from 'react'
+import { ReactNode, useEffect } from 'react'
 
 // Helper function to check if we're on an auth page
 function isAuthPage(pathname: string): boolean {
@@ -12,7 +12,8 @@ function isAuthPage(pathname: string): boolean {
     pathname === '/recovery' ||
     pathname === '/reset' ||
     pathname === '/join' ||
-    pathname === '/mfa'
+    pathname === '/mfa' ||
+    pathname === '/verify-email'
   )
 }
 
@@ -262,6 +263,21 @@ export function RequireAuth({
     isAuthenticated,
     signOut: () => signOut(navigate),
   }
+
+  // Redirect to sign-in when we observe 401 (e.g. from shared cache when our queryFn didn't run)
+  const is401 =
+    error &&
+    ((error as { code?: number }).code === 401 ||
+      (error as { status?: number }).status === 401)
+  useEffect(() => {
+    if (!is401 || isAuthPage(location.pathname)) return
+    const redirectUrl = getRelativeRedirectUrl(location as unknown)
+    if (redirectUrl && isValidRelativeRedirect(redirectUrl)) {
+      navigate({ to: '/sign-in', search: { redirect: redirectUrl } })
+    } else {
+      navigate({ to: '/sign-in' })
+    }
+  }, [is401, location.pathname, location, navigate])
 
   // Show loading state while checking auth
   if (isLoading) {

@@ -15,8 +15,11 @@ import {
 import type { CompactFilterKey, FilterColumn, FilterMap } from '@/lib/table-filters'
 import { mapToQueryParam } from '@/lib/table-filters'
 import { useAuth } from '@/components/global/auth/RequireAuth'
+import { canSaveTeamFilters } from '@/lib/console-access-checks'
 import { useSavedFilters } from '@/lib/react-query/hooks/auth'
+import { useOrganizationScopes } from '@/lib/react-query/hooks'
 import type { SavedFilter } from '@/lib/user-prefs-keys'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
@@ -88,6 +91,10 @@ export function FiltersPopoverContent({
     account as { prefs?: Record<string, unknown> } | undefined,
     teamId ?? null,
   )
+
+  const { access } = useOrganizationScopes(teamId ?? undefined)
+  const { features } = useConsoleProfile()
+  const canSaveTeamFiltersResult = !teamId || canSaveTeamFilters(access, features)
 
   const [saveName, setSaveName] = useState('')
   const [saveLevel, setSaveLevel] = useState<'user' | 'team'>('user')
@@ -602,9 +609,11 @@ export function FiltersPopoverContent({
                   <ToggleGroup
                     type="single"
                     value={saveLevel}
-                    onValueChange={(v) =>
-                      v && setSaveLevel(v as 'user' | 'team')
-                    }
+                    onValueChange={(v) => {
+                      if (!v) return
+                      if (v === 'team' && !canSaveTeamFiltersResult) return
+                      setSaveLevel(v as 'user' | 'team')
+                    }}
                     variant="outline"
                     size="sm"
                     className="h-9 shrink-0 [&_[data-slot=toggle-group-item]]:h-9"
@@ -612,9 +621,22 @@ export function FiltersPopoverContent({
                     <ToggleGroupItem value="user" className="text-[12px] px-2.5">
                       For me
                     </ToggleGroupItem>
-                    <ToggleGroupItem value="team" className="text-[12px] px-2.5">
-                      For team
-                    </ToggleGroupItem>
+                    <Tooltip className="contents">
+                      <TooltipTrigger asChild>
+                        <ToggleGroupItem
+                          value="team"
+                          className="text-[12px] px-2.5"
+                          disabled={!canSaveTeamFiltersResult}
+                        >
+                          For team
+                        </ToggleGroupItem>
+                      </TooltipTrigger>
+                      {!canSaveTeamFiltersResult && (
+                        <TooltipContent side="top" sideOffset={4}>
+                          Only owners and developers can save team-level filters.
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
                   </ToggleGroup>
                 )}
                 <Input
@@ -624,37 +646,53 @@ export function FiltersPopoverContent({
                   className="h-9 min-w-0 flex-1 text-[13px]"
                   maxLength={64}
                 />
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="secondary"
-                  className="h-9 w-9 shrink-0"
-                  title="Save filter"
-                  aria-label="Save filter"
-                  disabled={
-                    !saveName.trim() ||
-                    isAdding ||
-                    savingId !== null
-                  }
-                  onClick={() => {
-                    const name = saveName.trim()
-                    if (!name) return
-                    setSavingId('current')
-                    addSavedFilter({
-                      name,
-                      query: currentQueryParam,
-                      level: hasTeamLevel ? saveLevel : 'user',
-                    })
-                      .then(() => setSaveName(''))
-                      .finally(() => setSavingId(null))
-                  }}
-                >
-                  {isAdding && savingId === 'current' ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Plus className="h-4 w-4" />
-                  )}
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex">
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="secondary"
+                        className="h-9 w-9 shrink-0"
+                        title="Save filter"
+                        aria-label="Save filter"
+                        disabled={
+                          !saveName.trim() ||
+                          isAdding ||
+                          savingId !== null ||
+                          (hasTeamLevel &&
+                            saveLevel === 'team' &&
+                            !canSaveTeamFiltersResult)
+                        }
+                        onClick={() => {
+                          const name = saveName.trim()
+                          if (!name) return
+                          setSavingId('current')
+                          addSavedFilter({
+                            name,
+                            query: currentQueryParam,
+                            level: hasTeamLevel ? saveLevel : 'user',
+                          })
+                            .then(() => setSaveName(''))
+                            .finally(() => setSavingId(null))
+                        }}
+                      >
+                        {isAdding && savingId === 'current' ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Plus className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  {hasTeamLevel &&
+                    saveLevel === 'team' &&
+                    !canSaveTeamFiltersResult && (
+                      <TooltipContent side="top" sideOffset={4}>
+                        Only owners and developers can save team-level filters.
+                      </TooltipContent>
+                    )}
+                </Tooltip>
               </div>
             </div>
           )}
@@ -729,6 +767,9 @@ export function FiltersPopoverContent({
     setEditingFilterKey(null)
   }
 
+  const canEditTeamFilter = (l: 'user' | 'team') =>
+    l === 'user' || canSaveTeamFiltersResult
+
   const renderSavedFilterItem = (
     item: { id: string; name: string; query: string },
     level: 'user' | 'team',
@@ -737,25 +778,43 @@ export function FiltersPopoverContent({
     const key = rowDropKey(level, index)
     const isDragOver = dragOverKey === key
     const isEditing = editingFilterKey === editKeyFor(level, item.id)
+    const canEdit = canEditTeamFilter(level)
     return (
       <div
         key={`${level}-${item.id}`}
-        draggable={!isEditing}
-        onDragStart={isEditing ? undefined : (e) => handleSavedFilterDragStart(e, level, index)}
+        draggable={canEdit && !isEditing}
+        onDragStart={
+          canEdit && !isEditing
+            ? (e) => handleSavedFilterDragStart(e, level, index)
+            : undefined
+        }
         onDragOver={(e) => {
-          if (isEditing) return
+          if (!canEdit || isEditing) return
           e.preventDefault()
           e.dataTransfer.dropEffect = 'move'
           setDragOverKey(key)
         }}
         onDragLeave={() => setDragOverKey(null)}
-        onDrop={(e) => handleSavedFilterDrop(e, level, index)}
+        onDrop={(e) => {
+          e.preventDefault()
+          if (canEdit) handleSavedFilterDrop(e, level, index)
+        }}
         className={`flex items-center gap-2 rounded-lg border px-2 py-1.5 group transition-colors ${
-          isEditing ? 'cursor-default border-border bg-muted/20' : 'cursor-grab active:cursor-grabbing'
-        } ${isDragOver && !isEditing ? 'border-primary bg-primary/10' : 'border-border bg-muted/20'}`}
-        aria-label={isEditing ? undefined : `${item.name}, drag to reorder`}
+          isEditing
+            ? 'cursor-default border-border bg-muted/20'
+            : canEdit
+              ? 'cursor-grab active:cursor-grabbing'
+              : ''
+        } ${isDragOver && canEdit && !isEditing ? 'border-primary bg-primary/10' : 'border-border bg-muted/20'}`}
+        aria-label={
+          isEditing ? undefined : canEdit ? `${item.name}, drag to reorder` : item.name
+        }
       >
-        <GripVertical className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+        {canEdit ? (
+          <GripVertical className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+        ) : (
+          <span className="h-3.5 w-3.5 shrink-0" aria-hidden />
+        )}
         {isEditing ? (
           <Input
             autoFocus
@@ -777,22 +836,28 @@ export function FiltersPopoverContent({
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
-          <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>
-              <span
-                className="flex-1 min-w-0 truncate text-[13px] text-foreground cursor-pointer"
-                onDoubleClick={(e) => {
-                  e.stopPropagation()
-                  handleStartEdit(level, item)
-                }}
-              >
-                {item.name}
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="top" sideOffset={4}>
-              Double-click to rename
-            </TooltipContent>
-          </Tooltip>
+          canEdit ? (
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <span
+                  className="flex-1 min-w-0 truncate text-[13px] text-foreground cursor-pointer"
+                  onDoubleClick={(e) => {
+                    e.stopPropagation()
+                    handleStartEdit(level, item)
+                  }}
+                >
+                  {item.name}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top" sideOffset={4}>
+                Double-click to rename
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <span className="flex-1 min-w-0 truncate text-[13px] text-foreground">
+              {item.name}
+            </span>
+          )
         )}
         <Button
           type="button"
@@ -806,25 +871,27 @@ export function FiltersPopoverContent({
         >
           Apply
         </Button>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            setDeletingId(item.id)
-            deleteSavedFilter(item.id, level).finally(() =>
-              setDeletingId(null),
-            )
-          }}
-          disabled={deletingId !== null}
-          className="shrink-0 rounded p-1 text-muted-foreground hover:bg-muted hover:text-destructive transition-colors disabled:opacity-50"
-          aria-label="Delete saved filter"
-        >
-          {deletingId === item.id ? (
-            <Loader2 className="h-3 w-3 animate-spin" />
-          ) : (
-            <Trash2 className="h-3 w-3" />
-          )}
-        </button>
+        {canEdit && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              setDeletingId(item.id)
+              deleteSavedFilter(item.id, level).finally(() =>
+                setDeletingId(null),
+              )
+            }}
+            disabled={deletingId !== null}
+            className="shrink-0 rounded p-1 text-muted-foreground hover:bg-muted hover:text-destructive transition-colors disabled:opacity-50"
+            aria-label="Delete saved filter"
+          >
+            {deletingId === item.id ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <Trash2 className="h-3 w-3" />
+            )}
+          </button>
+        )}
       </div>
     )
   }
@@ -887,9 +954,11 @@ export function FiltersPopoverContent({
               <ToggleGroup
                 type="single"
                 value={saveLevel}
-                onValueChange={(v) =>
-                  v && setSaveLevel(v as 'user' | 'team')
-                }
+                onValueChange={(v) => {
+                  if (!v) return
+                  if (v === 'team' && !canSaveTeamFiltersResult) return
+                  setSaveLevel(v as 'user' | 'team')
+                }}
                 variant="outline"
                 size="sm"
                 className="h-9 shrink-0 [&_[data-slot=toggle-group-item]]:h-9"
@@ -897,9 +966,22 @@ export function FiltersPopoverContent({
                 <ToggleGroupItem value="user" className="text-[12px] px-2.5">
                   For me
                 </ToggleGroupItem>
-                <ToggleGroupItem value="team" className="text-[12px] px-2.5">
-                  For team
-                </ToggleGroupItem>
+                <Tooltip className="contents">
+                  <TooltipTrigger asChild>
+                    <ToggleGroupItem
+                      value="team"
+                      className="text-[12px] px-2.5"
+                      disabled={!canSaveTeamFiltersResult}
+                    >
+                      For team
+                    </ToggleGroupItem>
+                  </TooltipTrigger>
+                  {!canSaveTeamFiltersResult && (
+                    <TooltipContent side="top" sideOffset={4}>
+                      Only owners and developers can save team-level filters.
+                    </TooltipContent>
+                  )}
+                </Tooltip>
               </ToggleGroup>
             )}
             <Input
@@ -909,37 +991,53 @@ export function FiltersPopoverContent({
               className="h-9 min-w-0 flex-1 text-[13px]"
               maxLength={64}
             />
-            <Button
-              type="button"
-              size="icon"
-              variant="secondary"
-              className="h-9 w-9 shrink-0"
-              title="Save filter"
-              aria-label="Save filter"
-              disabled={
-                !saveName.trim() ||
-                isAdding ||
-                savingId !== null
-              }
-              onClick={() => {
-                const name = saveName.trim()
-                if (!name) return
-                setSavingId('current')
-                addSavedFilter({
-                  name,
-                  query: mapToQueryParam(filterMap),
-                  level: hasTeamLevel ? saveLevel : 'user',
-                })
-                  .then(() => setSaveName(''))
-                  .finally(() => setSavingId(null))
-              }}
-            >
-              {isAdding && savingId === 'current' ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Plus className="h-4 w-4" />
-              )}
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex">
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="secondary"
+                    className="h-9 w-9 shrink-0"
+                    title="Save filter"
+                    aria-label="Save filter"
+                    disabled={
+                      !saveName.trim() ||
+                      isAdding ||
+                      savingId !== null ||
+                      (hasTeamLevel &&
+                        saveLevel === 'team' &&
+                        !canSaveTeamFiltersResult)
+                    }
+                    onClick={() => {
+                      const name = saveName.trim()
+                      if (!name) return
+                      setSavingId('current')
+                      addSavedFilter({
+                        name,
+                        query: mapToQueryParam(filterMap),
+                        level: hasTeamLevel ? saveLevel : 'user',
+                      })
+                        .then(() => setSaveName(''))
+                        .finally(() => setSavingId(null))
+                    }}
+                  >
+                    {isAdding && savingId === 'current' ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Plus className="h-4 w-4" />
+                    )}
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              {hasTeamLevel &&
+                saveLevel === 'team' &&
+                !canSaveTeamFiltersResult && (
+                  <TooltipContent side="top" sideOffset={4}>
+                    Only owners and developers can save team-level filters.
+                  </TooltipContent>
+                )}
+            </Tooltip>
           </div>
           </div>
         </div>

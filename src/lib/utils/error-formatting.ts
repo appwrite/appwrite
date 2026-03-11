@@ -64,7 +64,9 @@ export function formatError(
       }
     }
 
-    // Check for permission/authorization errors
+    // Check for permission/authorization errors (401)
+    // For auth failures (e.g. login with wrong credentials), the API often returns a specific message
+    // like "Invalid credentials" — use it when present and user-friendly; otherwise use generic message.
     if (
       error.name === 'UnauthorizedError' ||
       code === 401 ||
@@ -72,10 +74,18 @@ export function formatError(
       lowerMessage.includes('permission denied') ||
       lowerMessage.includes('access denied')
     ) {
+      const isUserFriendlyMessage =
+        message.length > 0 &&
+        message.length <= 200 &&
+        !message.includes(' at ') &&
+        !message.includes('Error:') &&
+        !message.includes('TypeError')
+      const messageToShow = isUserFriendlyMessage
+        ? message
+        : 'You do not have permission to perform this action. Please contact your administrator if you believe this is an error.'
       return {
         title: 'Access Denied',
-        message:
-          'You do not have permission to perform this action. Please contact your administrator if you believe this is an error.',
+        message: messageToShow,
         isUserFriendly: true,
       }
     }

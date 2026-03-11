@@ -45,6 +45,8 @@ export type ConsoleProfileFeatures = {
   dedicatedDbsDocumentsDB: boolean
   /** Dedicated DBs support for Vectors DB. */
   dedicatedDbsVectorsDB: boolean
+  /** Require console user email verification after signup (cloud: redirect to verify-email page; self-hosted: skip). */
+  userVerification: boolean
 }
 
 export type ConsoleProfile = {
@@ -78,6 +80,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       dedicatedDbsTablesDB: true,
       dedicatedDbsDocumentsDB: false,
       dedicatedDbsVectorsDB: false,
+      userVerification: true,
     },
   },
   'self-hosted': {
@@ -103,6 +106,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       dedicatedDbsTablesDB: false,
       dedicatedDbsDocumentsDB: false,
       dedicatedDbsVectorsDB: false,
+      userVerification: false,
     },
   },
 }

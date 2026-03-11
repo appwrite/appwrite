@@ -14,10 +14,10 @@ import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as PublicIndexRouteImport } from './routes/_public/index'
 import { Route as PublicResetRouteImport } from './routes/_public/reset'
-import { Route as PublicOnboardingRouteImport } from './routes/_public/onboarding'
 import { Route as PublicCompsRouteImport } from './routes/_public/comps'
 import { Route as PublicAccountRouteImport } from './routes/_public/account'
 import { Route as ProtectedExampleProtectedRouteRouteImport } from './routes/_protected/example-protected-route'
+import { Route as AuthVerifyEmailRouteImport } from './routes/_auth/verify-email'
 import { Route as AuthSignUpRouteImport } from './routes/_auth/sign-up'
 import { Route as AuthSignOutRouteImport } from './routes/_auth/sign-out'
 import { Route as AuthSignInRouteImport } from './routes/_auth/sign-in'
@@ -203,11 +203,6 @@ const PublicResetRoute = PublicResetRouteImport.update({
   path: '/reset',
   getParentRoute: () => PublicRoute,
 } as any)
-const PublicOnboardingRoute = PublicOnboardingRouteImport.update({
-  id: '/onboarding',
-  path: '/onboarding',
-  getParentRoute: () => PublicRoute,
-} as any)
 const PublicCompsRoute = PublicCompsRouteImport.update({
   id: '/comps',
   path: '/comps',
@@ -224,6 +219,11 @@ const ProtectedExampleProtectedRouteRoute =
     path: '/example-protected-route',
     getParentRoute: () => ProtectedRoute,
   } as any)
+const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => AuthRoute,
+} as any)
 const AuthSignUpRoute = AuthSignUpRouteImport.update({
   id: '/sign-up',
   path: '/sign-up',
@@ -1243,10 +1243,10 @@ export interface FileRoutesByFullPath {
   '/sign-in': typeof AuthSignInRoute
   '/sign-out': typeof AuthSignOutRoute
   '/sign-up': typeof AuthSignUpRoute
+  '/verify-email': typeof AuthVerifyEmailRoute
   '/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
   '/account': typeof PublicAccountRouteWithChildren
   '/comps': typeof PublicCompsRoute
-  '/onboarding': typeof PublicOnboardingRoute
   '/reset': typeof PublicResetRoute
   '/': typeof PublicIndexRoute
   '/account/$tab': typeof PublicAccountTabRoute
@@ -1413,10 +1413,10 @@ export interface FileRoutesByTo {
   '/sign-in': typeof AuthSignInRoute
   '/sign-out': typeof AuthSignOutRoute
   '/sign-up': typeof AuthSignUpRoute
+  '/verify-email': typeof AuthVerifyEmailRoute
   '/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
   '/account': typeof PublicAccountRouteWithChildren
   '/comps': typeof PublicCompsRoute
-  '/onboarding': typeof PublicOnboardingRoute
   '/reset': typeof PublicResetRoute
   '/': typeof PublicIndexRoute
   '/account/$tab': typeof PublicAccountTabRoute
@@ -1560,10 +1560,10 @@ export interface FileRoutesById {
   '/_auth/sign-in': typeof AuthSignInRoute
   '/_auth/sign-out': typeof AuthSignOutRoute
   '/_auth/sign-up': typeof AuthSignUpRoute
+  '/_auth/verify-email': typeof AuthVerifyEmailRoute
   '/_protected/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
   '/_public/account': typeof PublicAccountRouteWithChildren
   '/_public/comps': typeof PublicCompsRoute
-  '/_public/onboarding': typeof PublicOnboardingRoute
   '/_public/reset': typeof PublicResetRoute
   '/_public/': typeof PublicIndexRoute
   '/_public/account/$tab': typeof PublicAccountTabRoute
@@ -1732,10 +1732,10 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-out'
     | '/sign-up'
+    | '/verify-email'
     | '/example-protected-route'
     | '/account'
     | '/comps'
-    | '/onboarding'
     | '/reset'
     | '/'
     | '/account/$tab'
@@ -1902,10 +1902,10 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-out'
     | '/sign-up'
+    | '/verify-email'
     | '/example-protected-route'
     | '/account'
     | '/comps'
-    | '/onboarding'
     | '/reset'
     | '/'
     | '/account/$tab'
@@ -2048,10 +2048,10 @@ export interface FileRouteTypes {
     | '/_auth/sign-in'
     | '/_auth/sign-out'
     | '/_auth/sign-up'
+    | '/_auth/verify-email'
     | '/_protected/example-protected-route'
     | '/_public/account'
     | '/_public/comps'
-    | '/_public/onboarding'
     | '/_public/reset'
     | '/_public/'
     | '/_public/account/$tab'
@@ -2255,13 +2255,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicResetRouteImport
       parentRoute: typeof PublicRoute
     }
-    '/_public/onboarding': {
-      id: '/_public/onboarding'
-      path: '/onboarding'
-      fullPath: '/onboarding'
-      preLoaderRoute: typeof PublicOnboardingRouteImport
-      parentRoute: typeof PublicRoute
-    }
     '/_public/comps': {
       id: '/_public/comps'
       path: '/comps'
@@ -2282,6 +2275,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/example-protected-route'
       preLoaderRoute: typeof ProtectedExampleProtectedRouteRouteImport
       parentRoute: typeof ProtectedRoute
+    }
+    '/_auth/verify-email': {
+      id: '/_auth/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof AuthVerifyEmailRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/_auth/sign-up': {
       id: '/_auth/sign-up'
@@ -3427,6 +3427,7 @@ interface AuthRouteChildren {
   AuthSignInRoute: typeof AuthSignInRoute
   AuthSignOutRoute: typeof AuthSignOutRoute
   AuthSignUpRoute: typeof AuthSignUpRoute
+  AuthVerifyEmailRoute: typeof AuthVerifyEmailRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
@@ -3436,6 +3437,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthSignInRoute: AuthSignInRoute,
   AuthSignOutRoute: AuthSignOutRoute,
   AuthSignUpRoute: AuthSignUpRoute,
+  AuthVerifyEmailRoute: AuthVerifyEmailRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
@@ -4315,7 +4317,6 @@ const PublicProjectsProjectIdRouteWithChildren =
 interface PublicRouteChildren {
   PublicAccountRoute: typeof PublicAccountRouteWithChildren
   PublicCompsRoute: typeof PublicCompsRoute
-  PublicOnboardingRoute: typeof PublicOnboardingRoute
   PublicResetRoute: typeof PublicResetRoute
   PublicIndexRoute: typeof PublicIndexRoute
   PublicDebugErrorPreviewRoute: typeof PublicDebugErrorPreviewRoute
@@ -4326,7 +4327,6 @@ interface PublicRouteChildren {
 const PublicRouteChildren: PublicRouteChildren = {
   PublicAccountRoute: PublicAccountRouteWithChildren,
   PublicCompsRoute: PublicCompsRoute,
-  PublicOnboardingRoute: PublicOnboardingRoute,
   PublicResetRoute: PublicResetRoute,
   PublicIndexRoute: PublicIndexRoute,
   PublicDebugErrorPreviewRoute: PublicDebugErrorPreviewRoute,

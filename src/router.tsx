@@ -40,6 +40,16 @@ export const getRouter = () => {
       dsn: import.meta.env.VITE_SENTRY_DSN,
       // Disable PII collection - we don't want to collect IP addresses or other personal data
       sendDefaultPii: false,
+      // Don't send 401 Unauthorized to Sentry - we catch these and redirect to login
+      beforeSend(event, hint) {
+        const err = hint.originalException
+        if (err && typeof err === 'object') {
+          const code = (err as { code?: number }).code
+          const status = (err as { status?: number }).status
+          if (code === 401 || status === 401) return null
+        }
+        return event
+      },
     })
   }
 

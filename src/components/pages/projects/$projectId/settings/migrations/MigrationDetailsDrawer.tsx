@@ -249,11 +249,11 @@ export function MigrationDetailsDrawer({
                 onValueChange={(v) => setActiveTab(v as 'details' | 'logs')}
                 className="w-full"
               >
-                <TabsList className="w-full">
-                  <TabsTrigger value="details" className="flex-1">
+                <TabsList className="w-full grid grid-cols-2 h-9">
+                  <TabsTrigger value="details" className="text-[13px]">
                     Details
                   </TabsTrigger>
-                  <TabsTrigger value="logs" className="flex-1">
+                  <TabsTrigger value="logs" className="text-[13px]">
                     Logs
                   </TabsTrigger>
                 </TabsList>

@@ -33,7 +33,7 @@ const config = defineConfig({
         // Filter out routes that require search params or are dynamic
         filter: ({ path }) => {
           // Exclude routes that require search params (they'll be handled client-side)
-          if (path === '/reset') return false
+          if (path === '/reset' || path === '/verify-email') return false
           // Exclude authentication routes - they handle redirects client-side and cause infinite loops
           if (
             path.startsWith('/sign-in') ||

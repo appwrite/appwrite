@@ -1,6 +1,0 @@
-export { DeploySitePath } from './DeploySitePath'
-export { AddAuthPath } from './AddAuthPath'
-export { CreateDatabasePath } from './CreateDatabasePath'
-export { ManageFilesPath } from './ManageFilesPath'
-export { RunFunctionsPath } from './RunFunctionsPath'
-export { ExplorePath } from './ExplorePath'

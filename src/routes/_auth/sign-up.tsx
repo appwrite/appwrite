@@ -15,6 +15,8 @@ import { toast } from 'sonner'
 import { setLastLoginMethod } from '@/lib/utils/auth-storage'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { pageTitle } from '@/lib/utils/page-title'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { ensurePersonalOrgAndFirstProject } from '@/lib/ensure-personal-org'
 
 // Helper function to validate that a redirect URL is relative (prevents redirect hijacking)
 function isValidRelativeRedirect(url: string): boolean {
@@ -107,12 +109,43 @@ function SignUpPage() {
       }
     },
     onSuccess: async () => {
-      // Store email as last login method
       setLastLoginMethod('email')
       await router.invalidate()
-      if (search.redirect && isValidRelativeRedirect(search.redirect)) {
-        navigate({ to: search.redirect })
-      } else {
+
+      const features = getActiveProfileFeatures()
+      if (features.userVerification) {
+        try {
+          const verifyUrl = `${window.location.origin}/verify-email${search.redirect ? `?redirect=${encodeURIComponent(search.redirect)}` : ''}`
+          await sdk.forConsole.account.createEmailVerification({ url: verifyUrl })
+        } catch (err) {
+          console.error('Failed to send verification email:', err)
+          toast.error(
+            getErrorMessage(err, 'Account created but verification email could not be sent'),
+          )
+        }
+        navigate({
+          to: '/verify-email',
+          search: search.redirect
+            ? { redirect: search.redirect }
+            : undefined,
+        })
+        return
+      }
+
+      // No verification: ensure personal org + first project, then redirect to org
+      try {
+        const orgId = await ensurePersonalOrgAndFirstProject()
+        await router.invalidate()
+        if (search.redirect && isValidRelativeRedirect(search.redirect)) {
+          navigate({ to: search.redirect })
+        } else {
+          navigate({
+            to: '/organizations/$orgId',
+            params: { orgId },
+            replace: true,
+          })
+        }
+      } catch {
         navigate({ to: '/' })
       }
     },

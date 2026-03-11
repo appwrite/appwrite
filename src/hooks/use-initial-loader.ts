@@ -21,7 +21,8 @@ export function useInitialLoader() {
       location.pathname === '/recovery' ||
       location.pathname === '/mfa' ||
       location.pathname === '/join' ||
-      location.pathname === '/sign-out',
+      location.pathname === '/sign-out' ||
+      location.pathname === '/verify-email',
     [location.pathname],
   )
 

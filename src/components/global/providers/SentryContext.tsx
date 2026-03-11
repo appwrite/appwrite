@@ -52,13 +52,17 @@ export function SentryContextProvider({
 }) {
   const location = useLocation()
 
-  // Use same query key as RequireAuth/useAuth so we share cache (one account fetch)
+  // Use same query key as RequireAuth/useAuth so we share cache (one account fetch).
+  // Do not swallow 401: rethrow so the shared cache has error state and RequireAuth can redirect.
   const { data: account } = useQuery({
     queryKey: ['account', 'console'],
     queryFn: async () => {
       try {
         return await sdk.forConsole.account.get()
-      } catch {
+      } catch (err) {
+        const code = (err as { code?: number })?.code
+        const status = (err as { status?: number })?.status
+        if (code === 401 || status === 401) throw err
         return null
       }
     },

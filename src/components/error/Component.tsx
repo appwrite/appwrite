@@ -117,7 +117,8 @@ export function ErrorComponent({
   const isProjectRoute = location.pathname.startsWith('/projects/')
   const errorMessage = error.message || ''
   const lowerMessage = errorMessage.toLowerCase()
-  const errorCode = (error as unknown).code
+  const errorWithCode = error as unknown as { code?: number; status?: number; type?: string }
+  const errorCode = errorWithCode.code
 
   const isProjectNotFound =
     isProjectRoute &&
@@ -180,16 +181,18 @@ export function ErrorComponent({
   const routeContext = extractRouteContext(location.pathname)
 
   // Capture error in Sentry with full context (no-op when VITE_SENTRY_DSN is not set; skipped in preview)
+  // Skip 401 Unauthorized - we redirect to login and don't want these in Sentry
+  const isUnauthorized = errorCode === 401 || errorWithCode.status === 401
   useEffect(() => {
-    if (preview) return
+    if (preview || isUnauthorized) return
     captureExceptionWithContext(error, {
       // Route-based context
       ...routeContext,
       // Error metadata
       errorId: randomErrorId.current,
       errorName: error.name,
-      errorCode: (error as unknown).code,
-      errorType: (error as unknown).type,
+      errorCode: errorWithCode.code,
+      errorType: errorWithCode.type,
       // Component stack trace
       componentStack: info?.componentStack,
       // URL information
@@ -215,6 +218,7 @@ export function ErrorComponent({
     })
   }, [
     preview,
+    isUnauthorized,
     error,
     info,
     location.href,

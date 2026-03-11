@@ -1,6 +1,5 @@
 /**
  * Default getting started Appwrite function template.
- * Matches the structure used in onboarding (RunFunctionsPath).
  */
 export const GETTING_STARTED_MAIN_JS = `export default async ({ req, res, log, error }) => {
   // Log incoming request

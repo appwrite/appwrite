@@ -18,12 +18,18 @@ function TooltipProvider({
   )
 }
 
-function Tooltip({
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Root>) {
+export type TooltipProps = React.ComponentProps<
+  typeof TooltipPrimitive.Root
+> & { className?: string }
+
+const Tooltip: React.FC<TooltipProps> = ({ className, ...props }) => {
   return (
     <TooltipProvider>
-      <TooltipPrimitive.Root data-slot="tooltip" {...props} />
+      <TooltipPrimitive.Root
+        data-slot="tooltip"
+        className={cn(className)}
+        {...props}
+      />
     </TooltipProvider>
   )
 }
@@ -58,4 +64,10 @@ function TooltipContent({
   )
 }
 
-export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
+export {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+  type TooltipProps,
+}

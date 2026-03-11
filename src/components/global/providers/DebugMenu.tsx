@@ -302,6 +302,15 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                   setTimeout(() => setDebugProfileFeatureOverride('dedicatedDbsVectorsDB', checked), 0)
                 },
               },
+              {
+                label: 'Console user verification',
+                description: 'Require email verification after signup; redirect to verify-email page on cloud.',
+                variant: 'switch' as const,
+                switchValue: features.userVerification,
+                switchOnChange: (checked: boolean) => {
+                  setTimeout(() => setDebugProfileFeatureOverride('userVerification', checked), 0)
+                },
+              },
             ],
           },
           (() => {

@@ -31,6 +31,11 @@ export function canShowGetStartedSection(access: ConsoleAccess, features: Access
   return canShowConnectSection(access, features)
 }
 
+/** Team-level saved filters: owners and developers only. */
+export function canSaveTeamFilters(access: ConsoleAccess, features: AccessCheckFeatures): boolean {
+  return whenOrgRoles(access, features, access.isOwner || access.isDeveloper)
+}
+
 // ─── Project: create permissions ──────────────────────────────────────────────
 
 export function canCreateProject(access: ConsoleAccess, features: AccessCheckFeatures): boolean {

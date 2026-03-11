@@ -70,7 +70,7 @@ test('authenticate once and persist storage state', async ({
       (url) => {
         const pathname = new URL(url).pathname
         return (
-          pathname === '/onboarding' ||
+          pathname === '/account' ||
           pathname.startsWith('/organizations/')
         )
       },

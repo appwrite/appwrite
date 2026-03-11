@@ -475,9 +475,10 @@ export function OrgOverview({
   // Pagination state (1-indexed for projects, like storage view)
   const [requestedPage, setRequestedPage] = useState(1)
   const [displayedPage, setDisplayedPage] = useState(1)
-  // Alias for projects current page (used in pagination UI; matches activeMembershipsPage pattern)
+  // Alias for projects current page (used in pagination UI; matches memberships pattern)
   const activeProjectsPage = displayedPage
-  const [activeMembershipsPage, setActiveMembershipsPage] = useState(0)
+  const [requestedMembershipsPage, setRequestedMembershipsPage] = useState(1)
+  const [displayedMembershipsPage, setDisplayedMembershipsPage] = useState(1)
   const [membershipsSearchQuery, setMembershipsSearchQuery] = useState('')
   const [settingsNavSearch, setSettingsNavSearch] = useState('')
 
@@ -535,7 +536,8 @@ export function OrgOverview({
       // Reset pagination when org changes
       setRequestedPage(1)
       setDisplayedPage(1)
-      setActiveMembershipsPage(0)
+      setRequestedMembershipsPage(1)
+      setDisplayedMembershipsPage(1)
       setMembershipsSearchQuery('')
     }
   }, [selectedOrg])
@@ -714,6 +716,7 @@ export function OrgOverview({
 
   // Fetch data for the requested page (triggers load when user changes page); exclude pinned
   const {
+    data: requestedProjectsData,
     isLoading: activeProjectsLoading,
     isFetching: activeProjectsFetching,
     error: activeProjectsError,
@@ -749,17 +752,17 @@ export function OrgOverview({
   // Update displayed page only when requested page data is ready (no flash)
   useEffect(() => {
     if (
-      !activeProjectsFetching &&
       requestedPage !== displayedPage &&
-      !activeProjectsLoading
+      !activeProjectsFetching &&
+      requestedProjectsData != null
     ) {
       setDisplayedPage(requestedPage)
     }
   }, [
-    activeProjectsFetching,
-    activeProjectsLoading,
     requestedPage,
     displayedPage,
+    activeProjectsFetching,
+    requestedProjectsData,
   ])
 
   // Total count without search, without exclude - for plan limit checking (all org projects)
@@ -992,7 +995,17 @@ export function OrgOverview({
     return planName === 'custom' || selectedOrg?.plan === 'custom'
   }, [organizationPlan, selectedOrg])
 
-  // Fetch memberships for the selected organization
+  // Fetch requested memberships page (drives load when user changes page)
+  const { isFetching: membershipsRequestedFetching } = useOrganizationMemberships(
+    orgId,
+    requestedMembershipsPage - 1,
+    DEFAULT_PAGE_SIZE,
+    membershipsSearchQuery,
+    undefined,
+    { placeholderData: keepPreviousData },
+  )
+
+  // Fetch displayed memberships page (what we show - stays until new page is ready)
   const {
     memberships,
     total: membershipsTotal,
@@ -1000,13 +1013,28 @@ export function OrgOverview({
     error: membershipsError,
   } = useOrganizationMemberships(
     orgId,
-    activeMembershipsPage,
+    displayedMembershipsPage - 1,
     DEFAULT_PAGE_SIZE,
     membershipsSearchQuery,
-    activeMembershipsPage === 0 && !membershipsSearchQuery
+    displayedMembershipsPage === 1 && !membershipsSearchQuery
       ? initialData?.membershipsData
       : undefined,
+    { placeholderData: keepPreviousData },
   )
+
+  // Update displayed memberships page only when requested page data is ready (no flash)
+  useEffect(() => {
+    if (
+      !membershipsRequestedFetching &&
+      requestedMembershipsPage !== displayedMembershipsPage
+    ) {
+      setDisplayedMembershipsPage(requestedMembershipsPage)
+    }
+  }, [
+    membershipsRequestedFetching,
+    requestedMembershipsPage,
+    displayedMembershipsPage,
+  ])
 
   // Resend invitation mutation
   const resendInviteMutation = useResendMembershipInvite(orgId)
@@ -1019,7 +1047,8 @@ export function OrgOverview({
 
   // Reset memberships pagination when search query changes
   useEffect(() => {
-    setActiveMembershipsPage(0)
+    setRequestedMembershipsPage(1)
+    setDisplayedMembershipsPage(1)
   }, [membershipsSearchQuery])
 
   // Org tabs (billing is under settings). When profile supports roles, gate by access.
@@ -1056,9 +1085,10 @@ export function OrgOverview({
     }))
     .filter(({ projects }) => projects.length > 0)
 
-  // While search is fetching, show current results (no client-side filter) to avoid empty state flash
+  // Keep current results until new data is ready: when search is fetching or pagination in flight
   const displayedProjectsByTeam =
-    activeProjectsFetching && searchQuery.trim()
+    (activeProjectsFetching && searchQuery.trim()) ||
+    (requestedPage !== displayedPage)
       ? projectsByTeam
       : filteredProjectsByTeam
 
@@ -1455,17 +1485,12 @@ export function OrgOverview({
             const limit = isNaN(limitNum) ? null : limitNum
             const planName = organizationPlan?.name || 'plan'
 
-            // Only show if limit exists and is greater than 0
+            // Only show if limit exists, is greater than 0, and user has reached it
             if (limit !== null && limit > 0) {
               const isAtLimit = totalProjectsCount >= limit
-              const isApproachingLimit = totalProjectsCount >= limit * 0.5 // Show alert when at 50% of limit
-
-              // Only show alert if at limit or approaching limit (50%+)
-              if (!isAtLimit && !isApproachingLimit) {
+              if (!isAtLimit) {
                 return null
               }
-
-              const remaining = Math.max(0, limit - totalProjectsCount)
 
               return (
                 <div className="border-b border-border bg-amber-500/5">
@@ -1478,40 +1503,22 @@ export function OrgOverview({
                       <div className="flex flex-1 items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
                           <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-                            {isAtLimit
-                              ? `You've reached the limit of ${limit} project${limit !== 1 ? 's' : ''}`
-                              : `Approaching project limit`}
+                            {`You've reached the limit of ${limit} project${limit !== 1 ? 's' : ''}`}
                           </AlertTitle>
                           <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
                             <span className="inline">
-                              {isAtLimit ? (
-                                <>
-                                  Your {planName} plan includes up to {limit}{' '}
-                                  project{limit !== 1 ? 's' : ''}.{' '}
-                                  <Link
-                                    to="/organizations/$orgId/change-plan"
-                                    params={{ orgId: orgId! } as unknown}
-                                    className="font-medium underline hover:no-underline"
-                                  >
-                                    Upgrade
-                                  </Link>{' '}
-                                  to unlock more capacity.
-                                </>
-                              ) : (
-                                <>
-                                  Your {planName} plan includes up to {limit}{' '}
-                                  project{limit !== 1 ? 's' : ''}. You have{' '}
-                                  {remaining} remaining.{' '}
-                                  <Link
-                                    to="/organizations/$orgId/change-plan"
-                                    params={{ orgId: orgId! } as unknown}
-                                    className="font-medium underline hover:no-underline"
-                                  >
-                                    Upgrade
-                                  </Link>{' '}
-                                  to unlock more capacity.
-                                </>
-                              )}
+                              <>
+                                Your {planName} plan includes up to {limit}{' '}
+                                project{limit !== 1 ? 's' : ''}.{' '}
+                                <Link
+                                  to="/organizations/$orgId/change-plan"
+                                  params={{ orgId: orgId! } as unknown}
+                                  className="font-medium underline hover:no-underline"
+                                >
+                                  Upgrade
+                                </Link>{' '}
+                                to unlock more capacity.
+                              </>
                             </span>
                           </AlertDescription>
                         </div>
@@ -2570,13 +2577,11 @@ export function OrgOverview({
 
                                   {membershipsTotal > DEFAULT_PAGE_SIZE && (
                                     <Pagination
-                                      currentPage={
-                                        activeMembershipsPage + 1
-                                      }
+                                      currentPage={displayedMembershipsPage}
                                       totalItems={membershipsTotal}
                                       pageSize={DEFAULT_PAGE_SIZE}
                                       onPageChange={(page: number) =>
-                                        setActiveMembershipsPage(page - 1)
+                                        setRequestedMembershipsPage(page)
                                       }
                                       onPageSizeChange={() => {}}
                                       itemLabel="members"
