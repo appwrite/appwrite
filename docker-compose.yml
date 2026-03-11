@@ -1334,6 +1334,12 @@ services:
       - POSTGRES_DB=${_APP_DB_SCHEMA}
       - POSTGRES_USER=${_APP_DB_USER}
       - POSTGRES_PASSWORD=${_APP_DB_PASS}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${_APP_DB_USER} -d ${_APP_DB_SCHEMA}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     command: "postgres"
 
   ollama:
