@@ -23,8 +23,9 @@ class Yahoo extends OAuth2
      * @var array
      */
     protected array $scopes = [
-        'sdct-r',
-        'sdpp-w',
+        'openid',
+        'profile',
+        'email',
     ];
 
     /**
