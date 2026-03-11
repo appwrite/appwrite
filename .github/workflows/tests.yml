@@ -425,7 +425,7 @@ jobs:
         run: >-
           docker compose exec -T
           -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-          appwrite test /usr/src/code/tests/e2e/Services/Projects --debug --group=abuseEnabled
+          appwrite test /usr/src/code/tests/e2e/Services/Projects --group=abuseEnabled
 
       - name: Failure Logs
         if: failure()
@@ -482,7 +482,7 @@ jobs:
         run: >-
           docker compose exec -T
           -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-          appwrite test /usr/src/code/tests/e2e/Services/Projects --debug --group=abuseEnabled
+          appwrite test /usr/src/code/tests/e2e/Services/Projects --group=abuseEnabled
 
       - name: Failure Logs
         if: failure()
@@ -538,7 +538,7 @@ jobs:
         run: >-
           docker compose exec -T
           -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-          appwrite test /usr/src/code/tests/e2e/Services/Sites --debug --group=screenshots
+          appwrite test /usr/src/code/tests/e2e/Services/Sites --group=screenshots
 
       - name: Failure Logs
         if: failure()
@@ -602,7 +602,7 @@ jobs:
         run: >-
           docker compose exec -T
           -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-          appwrite test /usr/src/code/tests/e2e/Services/Sites --debug --group=screenshots
+          appwrite test /usr/src/code/tests/e2e/Services/Sites --group=screenshots
 
       - name: Failure Logs
         if: failure()
