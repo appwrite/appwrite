@@ -70,19 +70,19 @@ jobs:
           severity: 'CRITICAL,HIGH'
           skip-setup-trivy: true
 
-      - name: Check for SARIF files
-        id: sarif-check
-        if: always()
-        run: |
-          if ls *.sarif 1>/dev/null 2>&1; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Upload Trivy scan results to GitHub Security tab
+      - name: Upload image scan results
         uses: github/codeql-action/upload-sarif@v4
-        if: always() && steps.sarif-check.outputs.exists == 'true'
+        if: always() && hashFiles('trivy-image-results.sarif') != ''
         with:
-          sarif_file: '.'
+          sarif_file: 'trivy-image-results.sarif'
+          category: 'trivy-image'
+
+      - name: Upload source code scan results
+        uses: github/codeql-action/upload-sarif@v4
+        if: always() && hashFiles('trivy-fs-results.sarif') != ''
+        with:
+          sarif_file: 'trivy-fs-results.sarif'
+          category: 'trivy-source'
 
   format:
     name: Checks / Format
