@@ -599,8 +599,9 @@
             });
             if (!allDone) return;
             const accountState = progressState.get(STEP_IDS.ACCOUNT_SETUP);
+            const sessionDetails = accountState?.details;
             finalizeInstall();
-            notifyInstallComplete(activeInstall?.installId, accountState?.details).finally(() => {
+            notifyInstallComplete(activeInstall?.installId, sessionDetails).finally(() => {
                 setTimeout(() => redirectToApp(), TIMINGS?.redirectDelay ?? 0);
             });
         };
@@ -725,21 +726,7 @@
                         renderProgress();
 
                         const accountState = progressState.get(STEP_IDS.ACCOUNT_SETUP);
-                        const accountRequired = INSTALLATION_STEPS.some((step) => step.id === STEP_IDS.ACCOUNT_SETUP);
-                        if (accountRequired && accountState?.status === STATUS.ERROR) {
-                            finalizeInstall();
-                            return;
-                        }
                         const sessionDetails = accountState?.details;
-                        if (accountRequired && !(sessionDetails?.sessionSecret || sessionDetails?.secret)) {
-                            handleProgress({
-                                step: STEP_IDS.ACCOUNT_SETUP,
-                                status: STATUS.ERROR,
-                                message: 'Account creation did not complete. Please retry.'
-                            });
-                            finalizeInstall();
-                            return;
-                        }
                         finalizeInstall();
                         notifyInstallComplete(activeInstall?.installId, sessionDetails).finally(() => {
                             setTimeout(() => redirectToApp(), TIMINGS?.redirectDelay ?? 0);
