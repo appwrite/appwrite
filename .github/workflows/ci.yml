@@ -1,7 +1,7 @@
-name: "Tests"
+name: CI
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -20,8 +20,111 @@ on:
         default: ''
 
 jobs:
+  dependencies:
+    name: Checks / Dependencies
+    if: github.event_name == 'pull_request'
+    permissions:
+      actions: read
+      security-events: write
+      contents: read
+    uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@v2.3.3"
+
+  security:
+    name: Checks / Image
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: 'recursive'
+
+      - name: Build the Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: pr_image:${{ github.sha }}
+          target: production
+
+      - name: Run Trivy vulnerability scanner on image
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          image-ref: 'pr_image:${{ github.sha }}'
+          format: 'sarif'
+          output: 'trivy-image-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Run Trivy vulnerability scanner on source code
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-fs-results.sarif'
+          severity: 'CRITICAL,HIGH'
+          skip-setup-trivy: true
+
+      - name: Upload image scan results
+        uses: github/codeql-action/upload-sarif@v4
+        if: always() && hashFiles('trivy-image-results.sarif') != ''
+        with:
+          sarif_file: 'trivy-image-results.sarif'
+          category: 'trivy-image'
+
+      - name: Upload source code scan results
+        uses: github/codeql-action/upload-sarif@v4
+        if: always() && hashFiles('trivy-fs-results.sarif') != ''
+        with:
+          sarif_file: 'trivy-fs-results.sarif'
+          category: 'trivy-source'
+
+  format:
+    name: Checks / Format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+
+      - run: git checkout HEAD^2
+        if: github.event_name == 'pull_request'
+
+      - name: Validate composer.json and composer.lock
+        run: |
+          docker run --rm -v $PWD:/app composer:2.8 sh -c \
+          "composer validate"
+
+      - name: Run Linter
+        run: |
+          docker run --rm -v $PWD:/app composer:2.8 sh -c \
+          "composer install --profile --ignore-platform-reqs && composer lint"
+
+  analyze:
+    name: Checks / Analyze
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v6
+
+      - name: Run PHPStan
+        run: |
+          docker run --rm -v $PWD:/app composer:2.8 sh -c \
+          "composer install --profile --ignore-platform-reqs && composer check"
+
+      - name: Run Locale check
+        run: |
+          docker run --rm -v $PWD:/app node:24-alpine sh -c \
+          "cd /app/.github/workflows/static-analysis/locale && node index.js"
+
   matrix:
-    name: Generate test matrix
+    name: Tests / Matrix
     runs-on: ubuntu-latest
     outputs:
       databases: ${{ steps.generate.outputs.databases }}
@@ -29,7 +132,7 @@ jobs:
     steps:
       - name: Generate matrix
         id: generate
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const allDatabases = ['MariaDB', 'PostgreSQL', 'MongoDB'];
@@ -57,8 +160,8 @@ jobs:
             core.setOutput('databases', JSON.stringify(databaseChanged ? allDatabases : defaultDatabases));
             core.setOutput('modes', JSON.stringify(databaseChanged ? allModes : defaultModes));
 
-  setup:
-    name: Setup & Build Appwrite Image
+  build:
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -97,14 +200,13 @@ jobs:
           key: ${{ env.CACHE_KEY }}
           path: /tmp/${{ env.IMAGE }}.tar
 
-  unit_test:
-    name: Unit Test
+  unit:
+    name: Tests / Unit
     runs-on: ubuntu-latest
-    needs: setup
+    needs: build
     permissions:
       contents: read
       pull-requests: write
-
     steps:
       - name: checkout
         uses: actions/checkout@v6
@@ -146,10 +248,10 @@ jobs:
             -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
             appwrite test /usr/src/code/tests/unit
 
-  e2e_general_test:
-    name: E2E General Test
+  e2e_general:
+    name: Tests / E2E / General
     runs-on: ubuntu-latest
-    needs: setup
+    needs: build
     permissions:
       contents: read
       pull-requests: write
@@ -205,10 +307,10 @@ jobs:
           echo "=== Appwrite Logs ==="
           docker compose logs
 
-  e2e_service_test:
-    name: E2E / ${{ matrix.database }} (${{ matrix.mode }}) / ${{ matrix.service }}
+  e2e_service:
+    name: Tests / E2E / ${{ matrix.database }} (${{ matrix.mode }}) / ${{ matrix.service }}
     runs-on: ubuntu-latest
-    needs: [setup, matrix]
+    needs: [build, matrix]
     permissions:
       contents: read
       pull-requests: write
@@ -323,10 +425,10 @@ jobs:
           echo "=== Appwrite Logs ==="
           docker compose logs
 
-  e2e_abuse_enabled:
-    name: E2E / Abuse (${{ matrix.mode }})
+  e2e_abuse:
+    name: Tests / E2E / Abuse (${{ matrix.mode }})
     runs-on: ubuntu-latest
-    needs: [setup, matrix]
+    needs: [build, matrix]
     permissions:
       contents: read
       pull-requests: write
@@ -383,9 +485,9 @@ jobs:
           docker compose logs
 
   e2e_screenshots:
-    name: E2E / Screenshots (${{ matrix.mode }})
+    name: Tests / E2E / Screenshots (${{ matrix.mode }})
     runs-on: ubuntu-latest
-    needs: [setup, matrix]
+    needs: [build, matrix]
     permissions:
       contents: read
       pull-requests: write
@@ -447,3 +549,103 @@ jobs:
         run: |
           echo "=== Appwrite Logs ==="
           docker compose logs
+
+  benchmark:
+    name: Benchmark
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Load Cache
+        uses: actions/cache@v5
+        with:
+          key: ${{ env.CACHE_KEY }}
+          path: /tmp/${{ env.IMAGE }}.tar
+          fail-on-cache-miss: true
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Load and Start Appwrite
+        run: |
+          sed -i 's/traefik/localhost/g' .env
+          docker load --input /tmp/${{ env.IMAGE }}.tar
+          docker compose up -d
+          sleep 10
+
+      - name: Install Oha
+        run: |
+          echo "deb [signed-by=/usr/share/keyrings/azlux-archive-keyring.gpg] http://packages.azlux.fr/debian/ stable main" | sudo tee /etc/apt/sources.list.d/azlux.list
+          sudo wget -O /usr/share/keyrings/azlux-archive-keyring.gpg https://azlux.fr/repo.gpg
+          sudo apt update
+          sudo apt install oha
+          oha --version
+
+      - name: Benchmark PR
+        run: 'oha -z 180s http://localhost/v1/health/version --output-format json > benchmark.json'
+
+      - name: Cleaning
+        run: docker compose down -v
+
+      - name: Installing latest version
+        run: |
+          rm docker-compose.yml
+          rm .env
+          curl https://appwrite.io/install/compose -o docker-compose.yml
+          curl https://appwrite.io/install/env -o .env
+          sed -i 's/_APP_OPTIONS_ABUSE=enabled/_APP_OPTIONS_ABUSE=disabled/g' .env
+          docker compose up -d
+          sleep 10
+
+      - name: Benchmark Latest
+        run: oha -z 180s http://localhost/v1/health/version --output-format json > benchmark-latest.json
+
+      - name: Prepare comment
+        run: |
+          echo '## :sparkles: Benchmark results' > benchmark.txt
+          echo ' ' >> benchmark.txt
+          echo "- Requests per second: $(jq -r '.summary.requestsPerSec|tonumber?|floor|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark.json)" >> benchmark.txt
+          echo "- Requests with 200 status code: $(jq -r '.statusCodeDistribution."200"|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark.json)" >> benchmark.txt
+          echo "- P99 latency: $(jq -r '.latencyPercentiles.p99' benchmark.json )" >> benchmark.txt
+          echo " " >> benchmark.txt
+          echo " " >> benchmark.txt
+          echo "## :zap:  Benchmark Comparison" >> benchmark.txt
+          echo " " >> benchmark.txt
+          echo "| Metric | This PR | Latest version | "  >> benchmark.txt
+          echo "| --- | --- | --- | "  >> benchmark.txt
+          echo "| RPS | $(jq -r '.summary.requestsPerSec|tonumber?|floor|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark.json) | $(jq -r '.summary.requestsPerSec|tonumber|floor|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark-latest.json) | "  >> benchmark.txt
+          echo "| 200 | $(jq -r '.statusCodeDistribution."200"|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark.json) | $(jq -r '.statusCodeDistribution."200"|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark-latest.json) | "  >> benchmark.txt
+          echo "| P99 | $(jq -r '.latencyPercentiles.p99' benchmark.json ) | $(jq -r '.latencyPercentiles.p99' benchmark-latest.json ) | "  >> benchmark.txt
+
+      - name: Save results
+        uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: benchmark.json
+          path: benchmark.json
+          retention-days: 7
+
+      - name: Find Comment
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        uses: peter-evans/find-comment@v3
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: Benchmark results
+
+      - name: Comment on PR
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body-path: benchmark.txt
+          edit-mode: replace
