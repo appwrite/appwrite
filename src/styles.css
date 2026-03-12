@@ -256,6 +256,7 @@ code {
      See: https://stackoverflow.com/questions/52848856/100vh-height-when-address-bar-is-shown-chrome-mobile */
   html {
     height: 100%;
+    min-height: 100%;
     min-height: -webkit-fill-available;
     overscroll-behavior: none;
   }
@@ -263,6 +264,7 @@ code {
   /* Ensure body uses proper height and prevents scrolling */
   body {
     height: 100%;
+    min-height: 100%;
     min-height: -webkit-fill-available;
     overflow: hidden;
     overscroll-behavior: none;
@@ -276,10 +278,13 @@ code {
   }
 
   /* Root container: use 100% height (visible viewport) not vh.
-     Combined with html/body height:100%, this avoids bottom trim when address bar is visible. */
+     Combined with html/body height:100%, this avoids bottom trim when address bar is visible.
+     min-height: 100svh ensures fill on devices where the percentage chain fails (small viewport = no reflow). */
   .root-container {
     height: 100%;
+    min-height: 100%;
     min-height: -webkit-fill-available;
+    min-height: 100svh;
   }
 
   /* Safe area insets for iPad/iPhone - prevent content from being trimmed by home indicator */

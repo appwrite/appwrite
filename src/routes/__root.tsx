@@ -181,7 +181,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
               <DebugModeProvider>
                 <AIChatProvider>
                   <PromoBannerProvider>
-                    <div className="flex w-screen overflow-hidden root-container">
+                    <div className="flex w-full min-w-0 overflow-hidden root-container">
                       <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
                         {children}
                       </div>

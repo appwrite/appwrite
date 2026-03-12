@@ -1,4 +1,5 @@
 import { ReactNode, useEffect, useCallback, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { Button } from '@/components/ui/button'
 import { X, ArrowLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -169,7 +170,7 @@ export function WizardLayout({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [handleClose])
   const containerClasses = fullscreen
-    ? 'fixed inset-0 z-[100] flex h-screen w-screen flex-col bg-background'
+    ? 'fixed inset-0 z-[9998] flex h-screen w-screen flex-col bg-background'
     : 'flex h-full flex-col'
 
   const headerClasses = fullscreen
@@ -184,7 +185,7 @@ export function WizardLayout({
     ? 'shrink-0 border-t border-border/30 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80'
     : 'border-t border-border/30 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 px-4 py-4 sm:px-6'
 
-  return (
+  const wizardContent = (
     <div className={containerClasses}>
       {/* Header */}
       <div className={headerClasses}>
@@ -342,4 +343,9 @@ export function WizardLayout({
       )}
     </div>
   )
+
+  if (fullscreen && typeof document !== 'undefined') {
+    return createPortal(wizardContent, document.body)
+  }
+  return wizardContent
 }

@@ -29,7 +29,16 @@ import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/P
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { useNavigate } from '@tanstack/react-router'
 import { useProject, useOrganizationScopes } from '@/lib/react-query/hooks'
-import { canShowConnectSection } from '@/lib/console-access-checks'
+import {
+  canShowConnectSection,
+  canCreateProject,
+  canCreateDatabase,
+  canCreateUser,
+  canCreateBucket,
+  canCreateFunction,
+  canCreateSite,
+  canWriteTopics,
+} from '@/lib/console-access-checks'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -93,6 +102,13 @@ export function ConsoleHeader({
   const { access } = useOrganizationScopes(project?.teamId)
   const showAIAssistant = overrides.showAIAssistant
   const showConnectAndCreate = canShowConnectSection(access, features)
+  const canCreateProjectFlag = canCreateProject(access, features)
+  const canCreateDatabaseFlag = canCreateDatabase(access, features)
+  const canCreateUserFlag = canCreateUser(access, features)
+  const canCreateBucketFlag = canCreateBucket(access, features)
+  const canCreateFunctionFlag = canCreateFunction(access, features)
+  const canCreateSiteFlag = canCreateSite(access, features)
+  const canCreateTopicFlag = canWriteTopics(access, features)
 
   // Get organization ID for upgrade button. When on a project page, use only the
   // project's org so we don't fetch plan for a different org (e.g. account prefs).
@@ -251,27 +267,46 @@ export function ConsoleHeader({
                       </TooltipContent>
                     </Tooltip>
                     <DropdownMenuContent align="start" className="w-56">
-                      <DropdownMenuItem
-                        onClick={() => {
-                          const orgId =
-                            project?.teamId ||
-                            (account?.prefs?.organization as string | undefined)
-                          if (orgId) {
-                            navigate({
-                              to: '/organizations/$orgId',
-                              params: { orgId },
-                              search: { create: 'project' } as Record<
-                                string,
-                                unknown
-                              >,
-                            })
-                          }
-                        }}
-                        className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
-                      >
-                        <FolderPlus className="h-4 w-4" />
-                        <span>New Project</span>
-                      </DropdownMenuItem>
+                      {!canCreateProjectFlag ? (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="block">
+                              <DropdownMenuItem
+                                disabled
+                                className="flex cursor-default items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground"
+                              >
+                                <FolderPlus className="h-4 w-4" />
+                                <span>New Project</span>
+                              </DropdownMenuItem>
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>You don&apos;t have permission to create projects.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      ) : (
+                        <DropdownMenuItem
+                          onClick={() => {
+                            const orgId =
+                              project?.teamId ||
+                              (account?.prefs?.organization as string | undefined)
+                            if (orgId) {
+                              navigate({
+                                to: '/organizations/$orgId',
+                                params: { orgId },
+                                search: { create: 'project' } as Record<
+                                  string,
+                                  unknown
+                                >,
+                              })
+                            }
+                          }}
+                          className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+                        >
+                          <FolderPlus className="h-4 w-4" />
+                          <span>New Project</span>
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem
                         onClick={() => {
                           if (onCreateOrganization) {
@@ -312,100 +347,214 @@ export function ConsoleHeader({
                           <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                             Build
                           </DropdownMenuLabel>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              navigate({
-                                to: '/projects/$projectId/databases',
-                                params: { projectId },
-                                search: { create: 'database' } as Record<
-                                  string,
-                                  unknown
-                                >,
-                              })
-                            }}
-                            className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
-                          >
-                            <Database className="h-4 w-4" />
-                            <span>New Database</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              navigate({
-                                to: '/projects/$projectId/auth',
-                                params: { projectId },
-                                search: { create: 'user' } as Record<
-                                  string,
-                                  unknown
-                                >,
-                              })
-                            }}
-                            className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
-                          >
-                            <Users className="h-4 w-4" />
-                            <span>New User</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              navigate({
-                                to: '/projects/$projectId/storage',
-                                params: { projectId },
-                                search: { create: 'bucket' } as Record<
-                                  string,
-                                  unknown
-                                >,
-                              })
-                            }}
-                            className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
-                          >
-                            <Folder className="h-4 w-4" />
-                            <span>New Bucket</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              navigate({
-                                to: '/projects/$projectId/functions/create',
-                                params: { projectId },
-                              })
-                            }}
-                            className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
-                          >
-                            <Zap className="h-4 w-4" />
-                            <span>New Function</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              navigate({
-                                to: '/projects/$projectId/messaging',
-                                params: { projectId },
-                                search: { create: 'topic' } as Record<
-                                  string,
-                                  unknown
-                                >,
-                              })
-                            }}
-                            className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
-                          >
-                            <MessageSquare className="h-4 w-4" />
-                            <span>New Message</span>
-                          </DropdownMenuItem>
+                          {!canCreateDatabaseFlag ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="block">
+                                  <DropdownMenuItem
+                                    disabled
+                                    className="flex cursor-default items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground"
+                                  >
+                                    <Database className="h-4 w-4" />
+                                    <span>New Database</span>
+                                  </DropdownMenuItem>
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>You don&apos;t have permission to create databases.</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <DropdownMenuItem
+                              onClick={() => {
+                                navigate({
+                                  to: '/projects/$projectId/databases',
+                                  params: { projectId },
+                                  search: { create: 'database' } as Record<
+                                    string,
+                                    unknown
+                                  >,
+                                })
+                              }}
+                              className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+                            >
+                              <Database className="h-4 w-4" />
+                              <span>New Database</span>
+                            </DropdownMenuItem>
+                          )}
+                          {!canCreateUserFlag ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="block">
+                                  <DropdownMenuItem
+                                    disabled
+                                    className="flex cursor-default items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground"
+                                  >
+                                    <Users className="h-4 w-4" />
+                                    <span>New User</span>
+                                  </DropdownMenuItem>
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>You don&apos;t have permission to create users.</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <DropdownMenuItem
+                              onClick={() => {
+                                navigate({
+                                  to: '/projects/$projectId/auth',
+                                  params: { projectId },
+                                  search: { create: 'user' } as Record<
+                                    string,
+                                    unknown
+                                  >,
+                                })
+                              }}
+                              className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+                            >
+                              <Users className="h-4 w-4" />
+                              <span>New User</span>
+                            </DropdownMenuItem>
+                          )}
+                          {!canCreateBucketFlag ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="block">
+                                  <DropdownMenuItem
+                                    disabled
+                                    className="flex cursor-default items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground"
+                                  >
+                                    <Folder className="h-4 w-4" />
+                                    <span>New Bucket</span>
+                                  </DropdownMenuItem>
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>You don&apos;t have permission to create buckets.</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <DropdownMenuItem
+                              onClick={() => {
+                                navigate({
+                                  to: '/projects/$projectId/storage',
+                                  params: { projectId },
+                                  search: { create: 'bucket' } as Record<
+                                    string,
+                                    unknown
+                                  >,
+                                })
+                              }}
+                              className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+                            >
+                              <Folder className="h-4 w-4" />
+                              <span>New Bucket</span>
+                            </DropdownMenuItem>
+                          )}
+                          {!canCreateFunctionFlag ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="block">
+                                  <DropdownMenuItem
+                                    disabled
+                                    className="flex cursor-default items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground"
+                                  >
+                                    <Zap className="h-4 w-4" />
+                                    <span>New Function</span>
+                                  </DropdownMenuItem>
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>You don&apos;t have permission to create functions.</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <DropdownMenuItem
+                              onClick={() => {
+                                navigate({
+                                  to: '/projects/$projectId/functions/create',
+                                  params: { projectId },
+                                })
+                              }}
+                              className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+                            >
+                              <Zap className="h-4 w-4" />
+                              <span>New Function</span>
+                            </DropdownMenuItem>
+                          )}
+                          {!canCreateTopicFlag ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="block">
+                                  <DropdownMenuItem
+                                    disabled
+                                    className="flex cursor-default items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground"
+                                  >
+                                    <MessageSquare className="h-4 w-4" />
+                                    <span>New Message</span>
+                                  </DropdownMenuItem>
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>You don&apos;t have permission to create messaging topics.</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <DropdownMenuItem
+                              onClick={() => {
+                                navigate({
+                                  to: '/projects/$projectId/messaging',
+                                  params: { projectId },
+                                  search: { create: 'topic' } as Record<
+                                    string,
+                                    unknown
+                                  >,
+                                })
+                              }}
+                              className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+                            >
+                              <MessageSquare className="h-4 w-4" />
+                              <span>New Message</span>
+                            </DropdownMenuItem>
+                          )}
 
                           <DropdownMenuSeparator />
                           {/* Deploy Category */}
                           <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                             Deploy
                           </DropdownMenuLabel>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              navigate({
-                                to: '/projects/$projectId/sites/create',
-                                params: { projectId },
-                              })
-                            }}
-                            className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
-                          >
-                            <Globe className="h-4 w-4" />
-                            <span>New Site</span>
-                          </DropdownMenuItem>
+                          {!canCreateSiteFlag ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="block">
+                                  <DropdownMenuItem
+                                    disabled
+                                    className="flex cursor-default items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground"
+                                  >
+                                    <Globe className="h-4 w-4" />
+                                    <span>New Site</span>
+                                  </DropdownMenuItem>
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>You don&apos;t have permission to create sites.</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <DropdownMenuItem
+                              onClick={() => {
+                                navigate({
+                                  to: '/projects/$projectId/sites/create',
+                                  params: { projectId },
+                                })
+                              }}
+                              className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+                            >
+                              <Globe className="h-4 w-4" />
+                              <span>New Site</span>
+                            </DropdownMenuItem>
+                          )}
                         </>
                       )}
                     </DropdownMenuContent>
