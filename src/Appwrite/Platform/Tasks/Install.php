@@ -490,7 +490,7 @@ class Install extends Action
 
         $database = $input['_APP_DB_ADAPTER'] ?? 'mongodb';
 
-        $version = \defined('APP_VERSION_STABLE') ? APP_VERSION_STABLE : 'latest';
+        $version = \getenv('_APP_VERSION') ?: (\defined('APP_VERSION_STABLE') ? APP_VERSION_STABLE : 'latest');
         if ($isLocalInstall) {
             $version = 'local';
         }
@@ -622,13 +622,21 @@ class Install extends Action
                 messageOverride: 'Creating Appwrite account'
             );
 
-            // API is already confirmed healthy — just create the account
-            $userId = $this->makeApiCall('/v1/account', [
-                'userId' => 'unique()',
-                'email' => $email,
-                'password' => $password,
-                'name' => $name
-            ], false, $apiUrl, $domain);
+            // Create the account — tolerate "already exists" so we can still
+            // create a session (common when re-running the installer).
+            $userId = null;
+            try {
+                $userId = $this->makeApiCall('/v1/account', [
+                    'userId' => 'unique()',
+                    'email' => $email,
+                    'password' => $password,
+                    'name' => $name
+                ], false, $apiUrl, $domain);
+            } catch (\Throwable $e) {
+                if (\stripos($e->getMessage(), 'already exists') === false) {
+                    throw $e;
+                }
+            }
 
             $session = $this->makeApiCall('/v1/account/sessions/email', [
                 'email' => $email,
@@ -640,7 +648,7 @@ class Install extends Action
                 InstallerServer::STEP_ACCOUNT_SETUP,
                 InstallerServer::STATUS_COMPLETED,
                 details: [
-                    'userId' => $userId,
+                    'userId' => $userId ?? $session['id'],
                     'sessionId' => $session['id'],
                     'sessionSecret' => $session['secret'],
                     'sessionExpire' => $session['expire'] ?? null
@@ -850,7 +858,7 @@ class Install extends Action
 
             return [
                 'id' => $data['$id'],
-                'secret' => $matches[1],
+                'secret' => urldecode($matches[1]),
                 'expire' => $data['expire'] ?? null
             ];
         }
