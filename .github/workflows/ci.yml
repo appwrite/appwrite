@@ -70,9 +70,17 @@ jobs:
           severity: 'CRITICAL,HIGH'
           skip-setup-trivy: true
 
+      - name: Check for SARIF files
+        id: sarif-check
+        if: always()
+        run: |
+          if ls *.sarif 1>/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          fi
+
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v4
-        if: always()
+        if: always() && steps.sarif-check.outputs.exists == 'true'
         with:
           sarif_file: '.'
 
