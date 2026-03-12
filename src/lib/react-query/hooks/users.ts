@@ -21,6 +21,10 @@ import { DEFAULT_STALE_TIME, DEFAULT_PAGE_SIZE } from './constants'
 // QUERY FUNCTIONS
 // ============================================================================
 
+/** Default sort for users list. */
+export const USERS_DEFAULT_SORT_BY = '$createdAt'
+export const USERS_DEFAULT_SORT_ORDER = 'desc' as const
+
 /**
  * Query function to fetch paginated users for a project
  *
@@ -30,6 +34,9 @@ import { DEFAULT_STALE_TIME, DEFAULT_PAGE_SIZE } from './constants'
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
  * @param search - Optional search query
+ * @param filterQueries - Optional filter query strings
+ * @param sortBy - Sort attribute (e.g. $createdAt, name, email)
+ * @param sortOrder - asc or desc
  * @returns Paginated users with total count
  */
 export async function fetchProjectUsers(
@@ -38,16 +45,21 @@ export async function fetchProjectUsers(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
   filterQueries?: string[],
+  sortBy: string = USERS_DEFAULT_SORT_BY,
+  sortOrder: 'asc' | 'desc' = USERS_DEFAULT_SORT_ORDER,
 ) {
   if (!projectId) {
     return { users: [], total: 0 }
   }
 
   const projectSdk = sdk.forProject(projectId)
-  // Filter conditions first, then sort and pagination (order can matter for some backends)
+  const orderQuery =
+    sortOrder === 'asc'
+      ? Query.orderAsc(sortBy)
+      : Query.orderDesc(sortBy)
   const queries = [
     ...(filterQueries ?? []),
-    Query.orderDesc('$createdAt'),
+    orderQuery,
     Query.limit(limit),
     Query.offset(page * limit),
   ]
@@ -226,11 +238,13 @@ export function usersQueryOptions(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
   filterQueries?: string[],
+  sortBy: string = USERS_DEFAULT_SORT_BY,
+  sortOrder: 'asc' | 'desc' = USERS_DEFAULT_SORT_ORDER,
 ) {
   return queryOptions({
-    queryKey: ['users', 'project', projectId, page, limit, search, filterQueries],
+    queryKey: ['users', 'project', projectId, page, limit, search, filterQueries, sortBy, sortOrder],
     queryFn: () =>
-      fetchProjectUsers(projectId!, page, limit, search, filterQueries),
+      fetchProjectUsers(projectId!, page, limit, search, filterQueries, sortBy, sortOrder),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false, // Don't retry on error
@@ -284,6 +298,8 @@ export function teamsQueryOptions(
  * @param limit - Number of items per page
  * @param search - Optional search query
  * @param filterQueries - Optional list of Appwrite Query condition strings (from table filters)
+ * @param sortBy - Sort attribute (default $createdAt)
+ * @param sortOrder - asc or desc (default desc)
  * @returns Paginated users with loading state
  */
 export function useProjectUsers(
@@ -292,6 +308,8 @@ export function useProjectUsers(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
   filterQueries?: string[],
+  sortBy: string = USERS_DEFAULT_SORT_BY,
+  sortOrder: 'asc' | 'desc' = USERS_DEFAULT_SORT_ORDER,
 ) {
   const {
     data: usersData,
@@ -301,7 +319,7 @@ export function useProjectUsers(
     error,
     refetch,
   } = useQuery(
-    usersQueryOptions(projectId, page, limit, search, filterQueries),
+    usersQueryOptions(projectId, page, limit, search, filterQueries, sortBy, sortOrder),
   )
 
   // Map users to our User type

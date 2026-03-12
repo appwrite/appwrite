@@ -4,16 +4,18 @@
  */
 
 import { useEffect, useState } from 'react'
-import { GripVertical, Loader2, Plus, Trash2, X } from 'lucide-react'
+import { ArrowDown, ArrowUp, GripVertical, Loader2, Plus, Trash2, X } from 'lucide-react'
 import {
   buildFilterQueryString,
   buildFilterTagFromCompactKey,
+  encodeSort,
   getOperatorsForType,
   SIZE_FILTER_UNITS,
   sizeFilterToBytes,
 } from '@/lib/table-filters'
 import type { CompactFilterKey, FilterColumn, FilterMap } from '@/lib/table-filters'
 import { mapToQueryParam } from '@/lib/table-filters'
+import { cn } from '@/lib/utils'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { canSaveTeamFilters } from '@/lib/console-access-checks'
 import { useSavedFilters } from '@/lib/react-query/hooks/auth'
@@ -29,7 +31,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 function toDatetimeLocal(iso: string): string {
   if (!iso?.trim()) return ''
   const d = new Date(iso)
@@ -57,10 +58,20 @@ export interface FiltersPopoverContentProps {
   resourceLabel?: string
   /** Scope for saved filter presets (e.g. "sites", "storage.buckets"). Enables saved filters section. */
   filterScope?: string
-  /** Apply a saved filter's query param. Required when filterScope is set. */
-  onApplyQuery?: (queryParam: string | undefined) => void
+  /** Apply a saved filter (query and optional sort). When sort is supported, pass (queryParam, sortParam). */
+  onApplyQuery?: (queryParam: string | undefined, sortParam?: string) => void
   /** Team/org ID for team-level saved filters. When set, users can save filters for the team. */
   teamId?: string | null
+  /** Current sort field (e.g. $createdAt). When set with sortOrder and onSortChange, shows "Sort by" using columns. */
+  sortBy?: string
+  /** Current sort direction. */
+  sortOrder?: 'asc' | 'desc'
+  /** Called when user changes sort. */
+  onSortChange?: (sortBy: string, sortOrder: 'asc' | 'desc') => void
+  /** Encoded default sort (e.g. $createdAt_desc) for matching saved state. Omit when no sort UI. */
+  defaultSortParam?: string
+  /** Called when user clicks Reset. Omit to hide the reset control. */
+  onReset?: () => void
 }
 
 export function FiltersPopoverContent({
@@ -74,7 +85,16 @@ export function FiltersPopoverContent({
   filterScope,
   onApplyQuery,
   teamId,
+  sortBy,
+  sortOrder,
+  onSortChange,
+  defaultSortParam,
+  onReset,
 }: FiltersPopoverContentProps) {
+  const sortEnabled = sortBy != null && sortOrder != null && !!onSortChange
+  const sortOptionsFromColumns = sortEnabled
+    ? columns.map((c) => ({ id: c.id, label: c.title }))
+    : []
   const { account } = useAuth()
   const {
     userSavedFilters,
@@ -448,12 +468,98 @@ export function FiltersPopoverContent({
 
   const hasSavedFiltersFeature = !!(filterScope && onApplyQuery)
   const currentQueryParam = mapToQueryParam(filterMap)
-  const matchingSavedFilter = hasSavedFiltersFeature && currentQueryParam
-    ? savedFilters.find((s) => s.query === currentQueryParam)
+  const currentSortParam =
+    sortEnabled ? encodeSort(sortBy!, sortOrder!) : undefined
+  const matchingSavedFilter = hasSavedFiltersFeature
+    ? savedFilters.find(
+        (s) =>
+          s.query === currentQueryParam &&
+          (!sortEnabled ||
+            (s.sort ?? defaultSortParam) === (currentSortParam ?? defaultSortParam)),
+      )
     : null
+  const hasNonDefaultSort =
+    sortEnabled &&
+    defaultSortParam != null &&
+    (currentSortParam ?? defaultSortParam) !== defaultSortParam
+  const canSaveCurrent =
+    filterMap.size > 0 || (sortEnabled && hasNonDefaultSort)
 
   const filtersTabContent = (
     <>
+      {/* Sort by – when list supports sort; options from table columns; saved with filter presets */}
+      {sortEnabled && sortOptionsFromColumns.length > 0 && (
+        <>
+          <div className="px-4 pt-3 pb-2">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider">
+                Sort by
+              </p>
+              {onReset && (hasNonDefaultSort || filterMap.size > 0) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onReset()
+                    onClose?.()
+                  }}
+                  className="cursor-pointer text-[12px] text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <SearchableSelect
+                value={sortBy}
+                onValueChange={(field) => {
+                  const nextOrder =
+                    field === sortBy && sortOrder === 'desc' ? 'asc' : 'desc'
+                  onSortChange!(field, nextOrder)
+                }}
+                items={sortOptionsFromColumns.map((o) => ({ value: o.id, label: o.label }))}
+                placeholder="Column"
+                searchPlaceholder="Search columns…"
+                emptyMessage="No columns"
+                triggerClassName="h-9 min-w-0 flex-1 text-[13px]"
+              />
+              <div className="flex shrink-0 rounded-md border border-border overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => onSortChange!(sortBy, 'asc')}
+                  className={cn(
+                    'flex h-9 cursor-pointer items-center gap-1 px-2 text-[12px] transition-colors',
+                    sortOrder === 'asc'
+                      ? 'bg-muted text-foreground'
+                      : 'text-muted-foreground hover:bg-muted/60',
+                  )}
+                  aria-pressed={sortOrder === 'asc'}
+                  title="Ascending"
+                >
+                  <ArrowUp className="h-3.5 w-3.5" />
+                  Asc
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onSortChange!(sortBy, 'desc')}
+                  className={cn(
+                    'flex h-9 cursor-pointer items-center gap-1 px-2 text-[12px] transition-colors border-l border-border',
+                    sortOrder === 'desc'
+                      ? 'bg-muted text-foreground'
+                      : 'text-muted-foreground hover:bg-muted/60',
+                  )}
+                  aria-pressed={sortOrder === 'desc'}
+                  title="Descending"
+                >
+                  <ArrowDown className="h-3.5 w-3.5" />
+                  Desc
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="border-t border-border" />
+        </>
+      )}
+
       <form
         onSubmit={(e) => {
           e.preventDefault()
@@ -579,7 +685,7 @@ export function FiltersPopoverContent({
                     <button
                       type="button"
                       onClick={() => onRemoveFilter(key)}
-                      className="shrink-0 rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                      className="cursor-pointer shrink-0 rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                       aria-label="Remove filter"
                     >
                       <X className="h-3 w-3" />
@@ -592,8 +698,8 @@ export function FiltersPopoverContent({
         </>
       )}
 
-      {/* Save current on Filters tab (when saved filters feature is on and there are active filters) */}
-      {hasSavedFiltersFeature && filterMap.size > 0 && (
+      {/* Save current on Filters tab (when saved filters feature is on and there are filters and/or non-default sort) */}
+      {hasSavedFiltersFeature && canSaveCurrent && (
         <div className="border-t border-border px-4 py-2">
           {matchingSavedFilter ? (
             <p className="text-[12px] text-muted-foreground">
@@ -606,43 +712,71 @@ export function FiltersPopoverContent({
               </p>
               <div className="flex flex-nowrap items-center gap-2">
                 {hasTeamLevel && (
-                  <ToggleGroup
-                    type="single"
-                    value={saveLevel}
-                    onValueChange={(v) => {
-                      if (!v) return
-                      if (v === 'team' && !canSaveTeamFiltersResult) return
-                      setSaveLevel(v as 'user' | 'team')
-                    }}
-                    variant="outline"
-                    size="sm"
-                    className="h-9 shrink-0 [&_[data-slot=toggle-group-item]]:h-9"
-                  >
-                    <ToggleGroupItem value="user" className="text-[12px] px-2.5">
+                  <div className="flex shrink-0 rounded-md border border-border overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setSaveLevel('user')}
+                      className={cn(
+                        'flex h-9 cursor-pointer items-center gap-1 px-2 text-[12px] transition-colors',
+                        saveLevel === 'user'
+                          ? 'bg-muted text-foreground'
+                          : 'text-muted-foreground hover:bg-muted/60',
+                      )}
+                      aria-pressed={saveLevel === 'user'}
+                    >
                       For me
-                    </ToggleGroupItem>
-                    <Tooltip className="contents">
+                    </button>
+                    <Tooltip>
                       <TooltipTrigger asChild>
-                        <ToggleGroupItem
-                          value="team"
-                          className="text-[12px] px-2.5"
+                        <button
+                          type="button"
+                          onClick={() =>
+                            canSaveTeamFiltersResult && setSaveLevel('team')
+                          }
                           disabled={!canSaveTeamFiltersResult}
+                          className={cn(
+                            'flex h-9 cursor-pointer items-center gap-1 px-2 text-[12px] transition-colors border-l border-border',
+                            saveLevel === 'team'
+                              ? 'bg-muted text-foreground'
+                              : 'text-muted-foreground hover:bg-muted/60 disabled:opacity-50',
+                          )}
+                          aria-pressed={saveLevel === 'team'}
                         >
                           For team
-                        </ToggleGroupItem>
+                        </button>
                       </TooltipTrigger>
                       {!canSaveTeamFiltersResult && (
-                        <TooltipContent side="top" sideOffset={4}>
+                        <TooltipContent
+                          side="top"
+                          sideOffset={4}
+                          className="z-[250]"
+                        >
                           Only owners and developers can save team-level filters.
                         </TooltipContent>
                       )}
                     </Tooltip>
-                  </ToggleGroup>
+                  </div>
                 )}
                 <Input
                   placeholder="Filter name"
                   value={saveName}
                   onChange={(e) => setSaveName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key !== 'Enter') return
+                    e.preventDefault()
+                    const name = saveName.trim()
+                    if (!name || isAdding || savingId !== null) return
+                    if (hasTeamLevel && saveLevel === 'team' && !canSaveTeamFiltersResult) return
+                    setSavingId('current')
+                    addSavedFilter({
+                      name,
+                      query: currentQueryParam,
+                      level: hasTeamLevel ? saveLevel : 'user',
+                      ...(currentSortParam != null ? { sort: currentSortParam } : {}),
+                    })
+                      .then(() => setSaveName(''))
+                      .finally(() => setSavingId(null))
+                  }}
                   className="h-9 min-w-0 flex-1 text-[13px]"
                   maxLength={64}
                 />
@@ -672,6 +806,7 @@ export function FiltersPopoverContent({
                             name,
                             query: currentQueryParam,
                             level: hasTeamLevel ? saveLevel : 'user',
+                            ...(currentSortParam != null ? { sort: currentSortParam } : {}),
                           })
                             .then(() => setSaveName(''))
                             .finally(() => setSavingId(null))
@@ -688,7 +823,11 @@ export function FiltersPopoverContent({
                   {hasTeamLevel &&
                     saveLevel === 'team' &&
                     !canSaveTeamFiltersResult && (
-                      <TooltipContent side="top" sideOffset={4}>
+                      <TooltipContent
+                        side="top"
+                        sideOffset={4}
+                        className="z-[250]"
+                      >
                         Only owners and developers can save team-level filters.
                       </TooltipContent>
                     )}
@@ -771,7 +910,7 @@ export function FiltersPopoverContent({
     l === 'user' || canSaveTeamFiltersResult
 
   const renderSavedFilterItem = (
-    item: { id: string; name: string; query: string },
+    item: { id: string; name: string; query: string; sort?: string },
     level: 'user' | 'team',
     index: number,
   ) => {
@@ -864,10 +1003,10 @@ export function FiltersPopoverContent({
           variant="ghost"
           size="sm"
           className="h-7 text-[12px] shrink-0"
-          onClick={(e) => {
-            e.stopPropagation()
-            onApplyQuery!(item.query || undefined)
-          }}
+            onClick={(e) => {
+              e.stopPropagation()
+              onApplyQuery!(item.query || undefined, item.sort)
+            }}
         >
           Apply
         </Button>
@@ -882,7 +1021,7 @@ export function FiltersPopoverContent({
               )
             }}
             disabled={deletingId !== null}
-            className="shrink-0 rounded p-1 text-muted-foreground hover:bg-muted hover:text-destructive transition-colors disabled:opacity-50"
+            className="cursor-pointer shrink-0 rounded p-1 text-muted-foreground hover:bg-muted hover:text-destructive transition-colors disabled:opacity-50"
             aria-label="Delete saved filter"
           >
             {deletingId === item.id ? (
@@ -951,43 +1090,71 @@ export function FiltersPopoverContent({
             </p>
           <div className="flex flex-nowrap items-center gap-2">
             {hasTeamLevel && (
-              <ToggleGroup
-                type="single"
-                value={saveLevel}
-                onValueChange={(v) => {
-                  if (!v) return
-                  if (v === 'team' && !canSaveTeamFiltersResult) return
-                  setSaveLevel(v as 'user' | 'team')
-                }}
-                variant="outline"
-                size="sm"
-                className="h-9 shrink-0 [&_[data-slot=toggle-group-item]]:h-9"
-              >
-                <ToggleGroupItem value="user" className="text-[12px] px-2.5">
+              <div className="flex shrink-0 rounded-md border border-border overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setSaveLevel('user')}
+                  className={cn(
+                    'flex h-9 cursor-pointer items-center gap-1 px-2 text-[12px] transition-colors',
+                    saveLevel === 'user'
+                      ? 'bg-muted text-foreground'
+                      : 'text-muted-foreground hover:bg-muted/60',
+                  )}
+                  aria-pressed={saveLevel === 'user'}
+                >
                   For me
-                </ToggleGroupItem>
-                <Tooltip className="contents">
+                </button>
+                <Tooltip>
                   <TooltipTrigger asChild>
-                    <ToggleGroupItem
-                      value="team"
-                      className="text-[12px] px-2.5"
+                    <button
+                      type="button"
+                      onClick={() =>
+                        canSaveTeamFiltersResult && setSaveLevel('team')
+                      }
                       disabled={!canSaveTeamFiltersResult}
+                      className={cn(
+                        'flex h-9 cursor-pointer items-center gap-1 px-2 text-[12px] transition-colors border-l border-border',
+                        saveLevel === 'team'
+                          ? 'bg-muted text-foreground'
+                          : 'text-muted-foreground hover:bg-muted/60 disabled:opacity-50',
+                      )}
+                      aria-pressed={saveLevel === 'team'}
                     >
                       For team
-                    </ToggleGroupItem>
+                    </button>
                   </TooltipTrigger>
                   {!canSaveTeamFiltersResult && (
-                    <TooltipContent side="top" sideOffset={4}>
+                    <TooltipContent
+                      side="top"
+                      sideOffset={4}
+                      className="z-[250]"
+                    >
                       Only owners and developers can save team-level filters.
                     </TooltipContent>
                   )}
                 </Tooltip>
-              </ToggleGroup>
+              </div>
             )}
             <Input
               placeholder="Filter name"
               value={saveName}
               onChange={(e) => setSaveName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key !== 'Enter') return
+                e.preventDefault()
+                const name = saveName.trim()
+                if (!name || isAdding || savingId !== null) return
+                if (hasTeamLevel && saveLevel === 'team' && !canSaveTeamFiltersResult) return
+                setSavingId('current')
+                addSavedFilter({
+                  name,
+                  query: mapToQueryParam(filterMap),
+                  level: hasTeamLevel ? saveLevel : 'user',
+                  ...(currentSortParam != null ? { sort: currentSortParam } : {}),
+                })
+                  .then(() => setSaveName(''))
+                  .finally(() => setSavingId(null))
+              }}
               className="h-9 min-w-0 flex-1 text-[13px]"
               maxLength={64}
             />
@@ -1017,6 +1184,7 @@ export function FiltersPopoverContent({
                         name,
                         query: mapToQueryParam(filterMap),
                         level: hasTeamLevel ? saveLevel : 'user',
+                        ...(currentSortParam != null ? { sort: currentSortParam } : {}),
                       })
                         .then(() => setSaveName(''))
                         .finally(() => setSavingId(null))
@@ -1033,7 +1201,11 @@ export function FiltersPopoverContent({
               {hasTeamLevel &&
                 saveLevel === 'team' &&
                 !canSaveTeamFiltersResult && (
-                  <TooltipContent side="top" sideOffset={4}>
+                  <TooltipContent
+                    side="top"
+                    sideOffset={4}
+                    className="z-[250]"
+                  >
                     Only owners and developers can save team-level filters.
                   </TooltipContent>
                 )}

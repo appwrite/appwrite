@@ -6,12 +6,13 @@
 
 import { z } from 'zod'
 
-/** Schema for list view URL search params (search, filters, pagination). */
+/** Schema for list view URL search params (search, filters, pagination, sort). */
 export const listSearchSchema = z.object({
   search: z.string().optional().catch(undefined),
   query: z.string().optional().catch(undefined),
   page: z.coerce.number().int().min(1).optional().catch(undefined),
   limit: z.coerce.number().int().min(1).max(100).optional().catch(undefined),
+  sort: z.string().optional().catch(undefined),
 })
 
 export type ListSearch = z.infer<typeof listSearchSchema>

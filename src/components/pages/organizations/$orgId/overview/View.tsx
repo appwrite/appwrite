@@ -76,6 +76,7 @@ import {
   getFirstAllowedOrgSettingsPath,
   canInviteOrgMember,
   canCreateProject,
+  canPinProjects,
 } from '@/lib/console-access-checks'
 
 import {
@@ -865,7 +866,10 @@ export function OrgOverview({
     )
   }, [pinnedProjects, searchQuery])
 
+  const canPinProjectsResult = canPinProjects(access, features)
+
   const handlePinProject = (projectId: string) => {
+    if (!canPinProjectsResult) return
     if (
       pinnedIds.length >= MAX_PINNED_PROJECTS &&
       !pinnedIds.includes(projectId)
@@ -1718,29 +1722,31 @@ export function OrgOverview({
                                           }
                                         />
                                       </Link>
-                                      <TooltipProvider delayDuration={0}>
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <Button
-                                              variant="ghost"
-                                              size="icon"
-                                              className="absolute right-2 top-2 h-8 w-8 rounded-md opacity-0 transition-opacity group-hover:opacity-100"
-                                              onClick={(e) => {
-                                                e.preventDefault()
-                                                handlePinProject(project.$id)
-                                              }}
-                                              disabled={
-                                                updateTeamPrefsMutation.isPending
-                                              }
-                                            >
-                                              <PinOff className="h-4 w-4" />
-                                            </Button>
-                                          </TooltipTrigger>
-                                          <TooltipContent>
-                                            <p>Unpin project</p>
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      </TooltipProvider>
+                                      {canPinProjectsResult && (
+                                        <TooltipProvider delayDuration={0}>
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="absolute right-2 top-2 h-8 w-8 rounded-md opacity-0 transition-opacity group-hover:opacity-100"
+                                                onClick={(e) => {
+                                                  e.preventDefault()
+                                                  handlePinProject(project.$id)
+                                                }}
+                                                disabled={
+                                                  updateTeamPrefsMutation.isPending
+                                                }
+                                              >
+                                                <PinOff className="h-4 w-4" />
+                                              </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                              <p>Unpin project</p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        </TooltipProvider>
+                                      )}
                                     </div>
                                   ))}
                                 </div>
@@ -1797,7 +1803,7 @@ export function OrgOverview({
                                                 }
                                               />
                                             </Link>
-                                            {canPin && (
+                                            {canPin && canPinProjectsResult && (
                                               <TooltipProvider delayDuration={0}>
                                                 <Tooltip>
                                                   <TooltipTrigger asChild>

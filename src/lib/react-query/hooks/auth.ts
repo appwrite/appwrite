@@ -700,9 +700,11 @@ export function useSavedFilters(
     mutationFn: async ({
       name,
       query,
+      sort,
     }: {
       name: string
       query: string
+      sort?: string
     }) => {
       const currentAccount = queryClient.getQueryData<{
         prefs?: Record<string, unknown>
@@ -717,6 +719,7 @@ export function useSavedFilters(
         id: crypto.randomUUID(),
         name: trimmedName,
         query,
+        ...(sort ? { sort } : {}),
       }
       const next = [newFilter, ...current]
       return await updateAccountPrefs({
@@ -733,9 +736,11 @@ export function useSavedFilters(
     mutationFn: async ({
       name,
       query,
+      sort,
     }: {
       name: string
       query: string
+      sort?: string
     }) => {
       const currentTeam = queryClient.getQueryData<{
         prefs?: Record<string, unknown>
@@ -753,6 +758,7 @@ export function useSavedFilters(
         id: crypto.randomUUID(),
         name: trimmedName,
         query,
+        ...(sort ? { sort } : {}),
       }
       const next = [newFilter, ...current]
       await updateTeamPrefs.mutateAsync({
@@ -851,18 +857,25 @@ export function useSavedFilters(
   })
 
   const addSavedFilter = async (
-    args: { name: string; query: string; level?: SavedFilterLevel },
+    args: {
+      name: string
+      query: string
+      level?: SavedFilterLevel
+      sort?: string
+    },
   ) => {
     const level = args.level ?? 'user'
     if (level === 'team' && teamId) {
       return addTeamMutation.mutateAsync({
         name: args.name,
         query: args.query,
+        sort: args.sort,
       })
     }
     return addUserMutation.mutateAsync({
       name: args.name,
       query: args.query,
+      sort: args.sort,
     })
   }
 

@@ -10,8 +10,13 @@ import {
   getPage,
   getLimit,
   getQueryParam,
+  getSort,
   queryParamToMap,
 } from '@/lib/table-filters'
+import {
+  USERS_DEFAULT_SORT_BY,
+  USERS_DEFAULT_SORT_ORDER,
+} from '@/lib/react-query/hooks/users'
 
 const DEFAULT_PAGE = 1
 
@@ -44,6 +49,9 @@ export const Route = createFileRoute('/_public/projects/$projectId/auth/')({
     const queryParam = getQueryParam(url)
     const filterMap = queryParamToMap(queryParam)
     const filterQueries = filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
+    const sort = getSort(url)
+    const sortBy = sort?.sortBy ?? USERS_DEFAULT_SORT_BY
+    const sortOrder = sort?.sortOrder ?? USERS_DEFAULT_SORT_ORDER
 
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
     // Prefetch users with exact URL params so the View reads from cache (no loading flash)
@@ -54,6 +62,8 @@ export const Route = createFileRoute('/_public/projects/$projectId/auth/')({
         limit,
         search ?? undefined,
         filterQueries,
+        sortBy,
+        sortOrder,
       ),
     )
   },
@@ -68,7 +78,7 @@ function AuthIndexPage() {
       key={`auth-${projectId}-users-index`}
       usersListSearch={
         search && typeof search === 'object'
-          ? (search as { search?: string; query?: string; page?: number; limit?: number })
+          ? (search as { search?: string; query?: string; page?: number; limit?: number; sort?: string })
           : undefined
       }
     />

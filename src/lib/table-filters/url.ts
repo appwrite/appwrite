@@ -12,6 +12,7 @@ const PARAM_SEARCH = 'search'
 const PARAM_QUERY = 'query'
 const PARAM_PAGE = 'page'
 const PARAM_LIMIT = 'limit'
+const PARAM_SORT = 'sort'
 
 /** Read search from URL (query string). Returns undefined if missing or empty after trim. */
 export function getSearch(url: URL): string | undefined {
@@ -65,8 +66,36 @@ export function mapToQueryParam(map: Map<CompactFilterKey, string>): string {
   return encodeURIComponent(JSON.stringify(keys))
 }
 
+/** Parsed sort from URL (e.g. sort=name_asc → { sortBy: 'name', sortOrder: 'asc' }). */
+export interface ListSortParams {
+  sortBy: string
+  sortOrder: 'asc' | 'desc'
+}
+
+/** Parse sort param: "field_asc" or "field_desc". Returns undefined if missing/invalid. */
+export function parseSort(param: string | null | undefined): ListSortParams | undefined {
+  const v = param?.trim()
+  if (!v) return undefined
+  const lastUnderscore = v.lastIndexOf('_')
+  if (lastUnderscore <= 0 || lastUnderscore === v.length - 1) return undefined
+  const sortBy = v.slice(0, lastUnderscore)
+  const order = v.slice(lastUnderscore + 1).toLowerCase()
+  if (order !== 'asc' && order !== 'desc') return undefined
+  return { sortBy, sortOrder: order as 'asc' | 'desc' }
+}
+
+/** Encode sort to URL value: "field_asc" or "field_desc". */
+export function encodeSort(sortBy: string, sortOrder: 'asc' | 'desc'): string {
+  return `${sortBy}_${sortOrder}`
+}
+
+/** Read sort from URL. Returns undefined if missing or invalid. */
+export function getSort(url: URL): ListSortParams | undefined {
+  return parseSort(url.searchParams.get(PARAM_SORT))
+}
+
 /**
- * Build URL search params for list view: search, query, page, limit.
+ * Build URL search params for list view: search, query, page, limit, sort.
  * Omit keys when value is default (e.g. no search, page 1) so URLs stay clean.
  */
 export interface ListSearchParams {
@@ -74,6 +103,7 @@ export interface ListSearchParams {
   query?: string
   page?: number
   limit?: number
+  sort?: string
 }
 
 /** Minimum number of characters before search is applied (avoids API calls for 1–2 chars). */
@@ -87,7 +117,8 @@ export function buildListSearchParams(params: ListSearchParams): Record<string, 
   if (params.query) out[PARAM_QUERY] = params.query
   if (params.page != null && params.page > 1) out[PARAM_PAGE] = params.page
   if (params.limit != null && params.limit > 0) out[PARAM_LIMIT] = params.limit
+  if (params.sort) out[PARAM_SORT] = params.sort
   return out
 }
 
-export { PARAM_SEARCH, PARAM_QUERY, PARAM_PAGE, PARAM_LIMIT }
+export { PARAM_SEARCH, PARAM_QUERY, PARAM_PAGE, PARAM_LIMIT, PARAM_SORT }

@@ -21,4 +21,5 @@ export const usersFilterColumns: FilterColumn[] = [
   },
   { id: '$createdAt', title: '$createdAt', type: 'datetime' },
   { id: '$updatedAt', title: '$updatedAt', type: 'datetime' },
+  { id: 'accessedAt', title: 'Last activity', type: 'datetime' },
 ]

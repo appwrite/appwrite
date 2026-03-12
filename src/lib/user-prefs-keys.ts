@@ -25,6 +25,8 @@ export interface SavedFilter {
   name: string
   /** Encoded query param (same format as URL query param: encoded JSON array of CompactFilterKey). */
   query: string
+  /** Optional sort (e.g. "name_asc", "$createdAt_desc"). When absent, list uses default sort. */
+  sort?: string
 }
 
 export function getSavedFiltersKey(scope: string): string {
@@ -52,11 +54,15 @@ export function parseSavedFilters(
           typeof (item as SavedFilter).name === 'string' &&
           typeof (item as SavedFilter).query === 'string',
       )
-      .map((item) => ({
-        id: (item as SavedFilter).id,
-        name: String((item as SavedFilter).name).slice(0, MAX_SAVED_FILTER_NAME_LENGTH),
-        query: (item as SavedFilter).query,
-      }))
+      .map((item) => {
+        const s = item as SavedFilter
+        return {
+          id: s.id,
+          name: String(s.name).slice(0, MAX_SAVED_FILTER_NAME_LENGTH),
+          query: s.query,
+          ...(typeof s.sort === 'string' ? { sort: s.sort } : {}),
+        }
+      })
       .slice(0, MAX_SAVED_FILTERS_PER_SCOPE)
   } catch {
     return []

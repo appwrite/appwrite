@@ -36,6 +36,11 @@ export function canSaveTeamFilters(access: ConsoleAccess, features: AccessCheckF
   return whenOrgRoles(access, features, access.isOwner || access.isDeveloper)
 }
 
+/** Pin/unpin projects in organization: owners and developers only. */
+export function canPinProjects(access: ConsoleAccess, features: AccessCheckFeatures): boolean {
+  return whenOrgRoles(access, features, access.isOwner || access.isDeveloper)
+}
+
 // ─── Project: create permissions ──────────────────────────────────────────────
 
 export function canCreateProject(access: ConsoleAccess, features: AccessCheckFeatures): boolean {

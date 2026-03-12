@@ -15,6 +15,9 @@ import {
   getPage,
   getLimit,
   getQueryParam,
+  getSort,
+  parseSort,
+  encodeSort,
   queryParamToMap,
   mapToQueryParam,
   buildListSearchParams,
@@ -42,6 +45,10 @@ import {
   useProject,
   useOrganizationScopes,
 } from '@/lib/react-query/hooks'
+import {
+  USERS_DEFAULT_SORT_BY,
+  USERS_DEFAULT_SORT_ORDER,
+} from '@/lib/react-query/hooks/users'
 import { canShowAuthSecuritySettings, canCreateUser, canCreateTeam } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -97,6 +104,7 @@ export type UsersListSearch = {
   query?: string
   page?: number
   limit?: number
+  sort?: string
 }
 
 export function View({
@@ -129,20 +137,30 @@ export function View({
   const usersListParams = useMemo(() => {
     if (!isAuthUsersIndex) return null
     if (typeof window === 'undefined') return null
+    const defaultSort = {
+      sortBy: USERS_DEFAULT_SORT_BY,
+      sortOrder: USERS_DEFAULT_SORT_ORDER as 'asc' | 'desc',
+    }
     if (usersListSearch) {
+      const parsed = parseSort(usersListSearch.sort) ?? defaultSort
       return {
         search: usersListSearch.search,
         page: usersListSearch.page ?? 1,
         limit: usersListSearch.limit ?? DEFAULT_PAGE_SIZE,
         filterMap: queryParamToMap(usersListSearch.query ?? null),
+        sortBy: parsed.sortBy,
+        sortOrder: parsed.sortOrder,
       }
     }
     const url = new URL(location.pathname + location.search, window.location.origin)
+    const parsed = getSort(url) ?? defaultSort
     return {
       search: getSearch(url),
       page: getPage(url, 1),
       limit: getLimit(url, DEFAULT_PAGE_SIZE),
       filterMap: queryParamToMap(getQueryParam(url)),
+      sortBy: parsed.sortBy,
+      sortOrder: parsed.sortOrder,
     }
   }, [isAuthUsersIndex, usersListSearch, location.pathname, location.search, projectId])
 
@@ -214,9 +232,15 @@ export function View({
   const urlPage = usersListParams?.page ?? 1
   const urlLimit = usersListParams?.limit ?? DEFAULT_PAGE_SIZE
   const urlSearch = usersListParams?.search
+  const urlSortBy = usersListParams?.sortBy ?? USERS_DEFAULT_SORT_BY
+  const urlSortOrder = usersListParams?.sortOrder ?? USERS_DEFAULT_SORT_ORDER
   const usersFilterMap = usersListParams?.filterMap ?? new Map()
   const usersFilterQueries =
     usersFilterMap.size > 0 ? Array.from(usersFilterMap.values()) : undefined
+  const usersSortParam =
+    urlSortBy !== USERS_DEFAULT_SORT_BY || urlSortOrder !== USERS_DEFAULT_SORT_ORDER
+      ? encodeSort(urlSortBy, urlSortOrder)
+      : undefined
 
   const teamsUrlPage = teamsListParams?.page ?? 1
   const teamsUrlLimit = teamsListParams?.limit ?? TEAMS_DEFAULT_PAGE_SIZE
@@ -299,6 +323,7 @@ export function View({
               query: usersFilterQueryString || undefined,
               page: 1,
               limit: urlLimit,
+              sort: usersSortParam,
             }),
           }
           // Remove search param when cleared so URL and results update
@@ -318,6 +343,7 @@ export function View({
     urlLimit,
     urlSearch,
     usersFilterQueryString,
+    usersSortParam,
   ])
 
   const [usersDisplayedPage, setUsersDisplayedPage] = useState(urlPage)
@@ -326,6 +352,9 @@ export function View({
   >(undefined)
   const [usersDisplayedFilterQueryString, setUsersDisplayedFilterQueryString] =
     useState('')
+  const [usersDisplayedSortBy, setUsersDisplayedSortBy] = useState(urlSortBy)
+  const [usersDisplayedSortOrder, setUsersDisplayedSortOrder] =
+    useState<'asc' | 'desc'>(urlSortOrder)
   const usersDisplayedFilterQueries = useMemo(() => {
     if (!usersDisplayedFilterQueryString) return undefined
     const map = queryParamToMap(usersDisplayedFilterQueryString)
@@ -364,7 +393,7 @@ export function View({
   }, [teamsDisplayedFilterQueryString])
   const hasInitedTeamsDisplayedRef = useRef(false)
 
-  // Fetch users for the requested page (URL page - triggers load when user changes page)
+  // Fetch users for the requested page (URL page - triggers load when user changes page/sort)
   const {
     total: usersTotal,
     isLoading: usersLoading,
@@ -376,6 +405,8 @@ export function View({
     urlLimit,
     urlSearch ?? undefined,
     usersFilterQueries,
+    urlSortBy,
+    urlSortOrder,
   )
 
   useEffect(() => {
@@ -384,9 +415,11 @@ export function View({
       setUsersDisplayedPage(urlPage)
       setUsersDisplayedSearch(urlSearch ?? undefined)
       setUsersDisplayedFilterQueryString(usersFilterQueryString)
+      setUsersDisplayedSortBy(urlSortBy)
+      setUsersDisplayedSortOrder(urlSortOrder)
       hasInitedUsersDisplayedRef.current = true
     }
-  }, [isAuthUsersIndex, usersListParams, urlPage, urlSearch, usersFilterQueryString])
+  }, [isAuthUsersIndex, usersListParams, urlPage, urlSearch, usersFilterQueryString, urlSortBy, urlSortOrder])
 
   // Fetch users for the displayed page (what we show - stays until new page is ready)
   const {
@@ -399,6 +432,8 @@ export function View({
     urlLimit,
     usersDisplayedSearch ?? undefined,
     usersDisplayedFilterQueries,
+    usersDisplayedSortBy,
+    usersDisplayedSortOrder,
   )
 
   useEffect(() => {
@@ -406,11 +441,15 @@ export function View({
     const match =
       urlPage === usersDisplayedPage &&
       (urlSearch ?? '') === (usersDisplayedSearch ?? '') &&
-      usersFilterQueryString === usersDisplayedFilterQueryString
+      usersFilterQueryString === usersDisplayedFilterQueryString &&
+      urlSortBy === usersDisplayedSortBy &&
+      urlSortOrder === usersDisplayedSortOrder
     if (!match) {
       setUsersDisplayedPage(urlPage)
       setUsersDisplayedSearch(urlSearch ?? undefined)
       setUsersDisplayedFilterQueryString(usersFilterQueryString)
+      setUsersDisplayedSortBy(urlSortBy)
+      setUsersDisplayedSortOrder(urlSortOrder)
     }
   }, [
     isAuthUsersIndex,
@@ -420,9 +459,13 @@ export function View({
     urlPage,
     urlSearch,
     usersFilterQueryString,
+    urlSortBy,
+    urlSortOrder,
     usersDisplayedPage,
     usersDisplayedSearch,
     usersDisplayedFilterQueryString,
+    usersDisplayedSortBy,
+    usersDisplayedSortOrder,
   ])
 
   const showUsersLoading = usersDisplayedLoading && apiUsers.length === 0
@@ -545,6 +588,7 @@ export function View({
           query: queryEncoded,
           page: 1,
           limit: urlLimit,
+          sort: usersSortParam,
         }),
       }),
       replace: true,
@@ -565,6 +609,7 @@ export function View({
             query: newMap.size > 0 ? mapToQueryParam(newMap) : undefined,
             page: 1,
             limit: urlLimit,
+            sort: usersSortParam,
           }),
         }
         if (newMap.size === 0) delete next.query
@@ -585,6 +630,7 @@ export function View({
             search: urlSearch,
             page: 1,
             limit: urlLimit,
+            sort: usersSortParam,
           }),
         }
         delete next.query
@@ -593,6 +639,25 @@ export function View({
       replace: true,
     })
     setUsersFiltersOpen(false)
+  }
+
+  const handleUsersSortChange = (sortBy: string, sortOrder: 'asc' | 'desc') => {
+    const sortParam = encodeSort(sortBy, sortOrder)
+    navigate({
+      to: '/projects/$projectId/auth/',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => ({
+        ...prev,
+        ...buildListSearchParams({
+          search: urlSearch,
+          query: usersFilterQueryString || undefined,
+          page: 1,
+          limit: urlLimit,
+          sort: sortParam,
+        }),
+      }),
+      replace: true,
+    })
   }
 
   const applyTeamsFilter = (compactKey: CompactFilterKey, queryStr: string) => {
@@ -723,6 +788,7 @@ export function View({
               usersFilterMap.size > 0 ? mapToQueryParam(usersFilterMap) : undefined,
             page,
             limit: urlLimit,
+            sort: usersSortParam,
           }),
         }
         // When going to page 1, buildListSearchParams omits page so prev.page would persist; remove it explicitly
@@ -747,6 +813,7 @@ export function View({
               usersFilterMap.size > 0 ? mapToQueryParam(usersFilterMap) : undefined,
             page: 1,
             limit: newPageSize,
+            sort: usersSortParam,
           }),
         }
         // Reset to page 1 when changing size; buildListSearchParams omits page when 1 so remove it
@@ -1170,7 +1237,7 @@ export function View({
               onApplyFilter={applyUsersFilter}
               resourceLabel="users"
               filterScope="auth.users"
-              onApplyQuery={(queryParam) => {
+              onApplyQuery={(queryParam, sortParam) => {
                 navigate({
                   to: '/projects/$projectId/auth/',
                   params: { projectId: projectId! },
@@ -1181,12 +1248,25 @@ export function View({
                       query: queryParam ?? undefined,
                       page: 1,
                       limit: urlLimit,
+                      sort: sortParam,
                     }),
                   }),
                   replace: true,
                 })
               }}
               teamId={project?.teamId}
+              sortBy={urlSortBy}
+              sortOrder={urlSortOrder}
+              onSortChange={handleUsersSortChange}
+              defaultSortParam={encodeSort(USERS_DEFAULT_SORT_BY, USERS_DEFAULT_SORT_ORDER)}
+              onReset={() => {
+                navigate({
+                  to: '/projects/$projectId/auth/',
+                  params: { projectId: projectId! },
+                  search: { page: 1, limit: urlLimit },
+                  replace: true,
+                })
+              }}
             />
           ) : activeTab === 'teams' ? (
             <FiltersPopover

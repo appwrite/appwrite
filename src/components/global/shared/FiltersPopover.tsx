@@ -28,10 +28,18 @@ export interface FiltersPopoverProps {
    * When set with onApplyQuery, shows saved filters list and "Save current".
    */
   filterScope?: string
-  /** Apply a saved filter's query param (or undefined to clear). Called when user selects a saved filter. */
-  onApplyQuery?: (queryParam: string | undefined) => void
+  /** Apply a saved filter (query and optional sort). Signature: (queryParam?, sortParam?). */
+  onApplyQuery?: (queryParam: string | undefined, sortParam?: string) => void
   /** Team/org ID for team-level saved filters (project.teamId or orgId). When set, users can save filters for the team. */
   teamId?: string | null
+  /** When set, show "Sort by" inside the popover (options come from columns); sort is saved with filter presets. */
+  sortBy?: string
+  sortOrder?: 'asc' | 'desc'
+  onSortChange?: (sortBy: string, sortOrder: 'asc' | 'desc') => void
+  /** Encoded default sort for matching (e.g. $createdAt_desc). Omit when no sort UI. */
+  defaultSortParam?: string
+  /** Called when user clicks Reset. Omit to hide the reset control. */
+  onReset?: () => void
 }
 
 export function FiltersPopover({
@@ -46,6 +54,11 @@ export function FiltersPopover({
   filterScope,
   onApplyQuery,
   teamId,
+  sortBy,
+  sortOrder,
+  onSortChange,
+  defaultSortParam,
+  onReset,
 }: FiltersPopoverProps) {
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
@@ -81,6 +94,11 @@ export function FiltersPopover({
           filterScope={filterScope}
           onApplyQuery={onApplyQuery}
           teamId={teamId ?? undefined}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSortChange={onSortChange}
+          defaultSortParam={defaultSortParam}
+          onReset={onReset}
         />
       </PopoverContent>
     </Popover>
