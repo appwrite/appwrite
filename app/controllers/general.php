@@ -378,10 +378,18 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 try {
                     $payload = $jwt->decode($userJwt);
                 } catch (JWTException $error) {
+                    // isExecutionAllowed remains false
                 }
 
                 $userId = $payload['userId'] ?? '';
-                $isExecutionAllowed = \in_array("user:{$userId}", $permissions);
+                if (!empty($userId)) {
+                    /** @var \Appwrite\Utopia\Database\Documents\User */
+                    $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
+                    if (!$user->isEmpty() && $user->getAttribute('status', false)) {
+                        $roles = $user->getRoles($authorization);
+                        $isExecutionAllowed = !empty(array_intersect($permissions, $roles));
+                    }
+                }
             }
 
             if (!$isExecutionAllowed) {
