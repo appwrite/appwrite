@@ -126,8 +126,8 @@ export function ConsoleLayout({
         />
       )}
 
-      {/* Sidebar + Content below header */}
-      <div className="flex flex-1 min-h-0 overflow-hidden">
+      {/* Sidebar + Content below header - overflow-x-visible so sidebar collapse toggle isn't clipped */}
+      <div className="flex flex-1 min-h-0 overflow-x-visible overflow-y-hidden">
         {/* Sidebar - only render if sidebar config provided */}
         {sidebar && (
           <ConsoleSidebar
