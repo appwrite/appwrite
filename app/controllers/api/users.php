@@ -1560,12 +1560,15 @@ Http::patch('/v1/users/:userId/phone')
 
         $oldPhone = $user->getAttribute('phone');
 
+        // Store null instead of empty string so unique constraint allows multiple users without phone
+        $phoneValue = $number !== '' ? $number : null;
+
         $user
-            ->setAttribute('phone', $number)
+            ->setAttribute('phone', $phoneValue)
             ->setAttribute('phoneVerification', false)
         ;
 
-        if (\strlen($number) !== 0) {
+        if ($number !== '') {
             $target = $dbForProject->findOne('targets', [
                 Query::equal('identifier', [$number]),
             ]);
@@ -1577,7 +1580,7 @@ Http::patch('/v1/users/:userId/phone')
 
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
-                'phone' => $user->getAttribute('phone'),
+                'phone' => $phoneValue,
                 'phoneVerification' => $user->getAttribute('phoneVerification'),
             ]));
             /**
@@ -1586,14 +1589,14 @@ Http::patch('/v1/users/:userId/phone')
             $oldTarget = $user->find('identifier', $oldPhone, 'targets');
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
-                if (\strlen($number) !== 0) {
+                if ($number !== '') {
                     $dbForProject->updateDocument('targets', $oldTarget->getId(), new Document(['identifier' => $number]));
                     $oldTarget->setAttribute('identifier', $number);
                 } else {
                     $dbForProject->deleteDocument('targets', $oldTarget->getId());
                 }
             } else {
-                if (\strlen($number) !== 0) {
+                if ($number !== '') {
                     $target = $dbForProject->createDocument('targets', new Document([
                         '$permissions' => [
                             Permission::read(Role::user($user->getId())),
