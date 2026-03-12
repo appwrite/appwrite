@@ -302,18 +302,6 @@ export function generateSampleRow(columns: Column[]): Record<string, unknown> {
 }
 
 /**
- * Default columns created when scaffolding an empty table for sample data.
- * Must match generateDefaultColumnsForSampleData() in databases.ts.
- * Used locally after scaffold to avoid a refetch that can be canceled (CanceledError).
- */
-export const DEFAULT_SCAFFOLD_COLUMNS: Column[] = [
-  { key: 'name', type: 'string', size: 255, required: false, status: 'available' },
-  { key: 'email', type: 'email', required: false, status: 'available' },
-  { key: 'age', type: 'integer', required: false, min: 18, max: 80, status: 'available' },
-  { key: 'city', type: 'string', size: 100, required: false, status: 'available' },
-]
-
-/**
  * Generate multiple rows of sample data
  */
 export function generateSampleRows(

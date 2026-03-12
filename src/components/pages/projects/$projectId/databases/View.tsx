@@ -63,7 +63,6 @@ import {
   updateProjectTableRow,
   fetchProjectTableRow,
   createProjectTableColumn,
-  generateDefaultColumnsForSampleData,
   updateProjectTableColumn,
   deleteProjectTableColumn,
   useProjectTables as useTablesForColumns,
@@ -6642,55 +6641,39 @@ function RowsSpreadsheet({
     },
   })
 
-  // Sample data generation mutation (matches old Appwrite Console: scaffold columns if empty, then generate rows)
+  // Sample data generation mutation (requires at least one non-relationship column; no auto-scaffold)
   const sampleDataMutation = useMutation({
     mutationFn: async (rowCount: number) => {
-      const mapApiColumnsToColumn = (cols: unknown[]): Column[] =>
-        cols
-          .filter((col: unknown) => {
-            const colKey = (col as Record<string, unknown>).key || (col as Record<string, unknown>).name || (col as Record<string, unknown>).$id
-            return colKey && !String(colKey).startsWith('$')
-          })
-          .map((col: unknown) => {
-            const c = col as Record<string, unknown>
-            return {
-              key: c.key || c.name || c.$id,
-              type: c.type || 'string',
-              size: c.size ?? null,
-              required: c.required || false,
-              array: c.array || false,
-              default: c.default ?? null,
-              format: c.format ?? null,
-              elements: c.elements ?? null,
-              min: c.min ?? null,
-              max: c.max ?? null,
-              status: (c.status as string) || 'available',
-            }
-          }) as Column[]
+      const columns: Column[] = apiColumns
+        .filter((col: unknown) => {
+          const colKey = (col as Record<string, unknown>).key || (col as Record<string, unknown>).name || (col as Record<string, unknown>).$id
+          return colKey && !String(colKey).startsWith('$')
+        })
+        .map((col: unknown) => {
+          const c = col as Record<string, unknown>
+          return {
+            key: c.key || c.name || c.$id,
+            type: c.type || 'string',
+            size: c.size ?? null,
+            required: c.required || false,
+            array: c.array || false,
+            default: c.default ?? null,
+            format: c.format ?? null,
+            elements: c.elements ?? null,
+            min: c.min ?? null,
+            max: c.max ?? null,
+            status: (c.status as string) || 'available',
+          }
+        }) as Column[]
 
-      let columns: Column[] = mapApiColumnsToColumn(apiColumns)
       const dataProducingColumns = columns.filter(
         (c) => c.type !== 'relationship' && (!c.status || c.status === 'available'),
       )
-
-      // Empty table or only relationship columns: scaffold default columns first (old Console behavior).
-      // Use only the columns that were successfully created so we never send unknown attributes.
       if (dataProducingColumns.length === 0) {
-        const scaffolded = await generateDefaultColumnsForSampleData(
-          projectId,
-          databaseId,
-          tableId,
-        )
-        if (scaffolded.length === 0) {
-          throw new Error(
-            'Could not create any columns for sample data. Please add at least one column to this table.',
-          )
-        }
-        columns = scaffolded as Column[]
+        throw new Error('Add at least one column to generate sample data.')
       }
 
       const sampleRows = generateSampleRows(columns, rowCount)
-
       const result = await createProjectTableRows(
         projectId,
         databaseId,
@@ -6778,12 +6761,26 @@ function RowsSpreadsheet({
 
   // Check if table has custom columns (non-system columns)
   const hasCustomColumns = apiColumns.some((col: unknown) => {
-    const colKey = col.key || col.name || col.$id
-    return colKey && !colKey.startsWith('$')
+    const colKey = (col as Record<string, unknown>).key || (col as Record<string, unknown>).name || (col as Record<string, unknown>).$id
+    return colKey && !String(colKey).startsWith('$')
   })
 
   // Check if table has any columns at all
   const hasColumns = apiColumns.length > 0
+
+  // Sample data requires at least one non-relationship column (API rejects empty row data)
+  const hasDataProducingColumns = apiColumns.some((col: unknown) => {
+    const c = col as Record<string, unknown>
+    const colKey = c.key || c.name || c.$id
+    const type = (c.type as string) || 'string'
+    const status = (c.status as string) || 'available'
+    return (
+      colKey &&
+      !String(colKey).startsWith('$') &&
+      type !== 'relationship' &&
+      (status === 'available' || !status)
+    )
+  })
 
   // Show empty state outside the table when there are no rows
   if (paginatedRows.length === 0) {
@@ -6813,7 +6810,11 @@ function RowsSpreadsheet({
     }
 
     const handleOpenSampleDataModal = () => {
-      if (!sampleDataMutation.isPending && !columnsLoading) {
+      if (
+        !sampleDataMutation.isPending &&
+        !columnsLoading &&
+        hasDataProducingColumns
+      ) {
         setSampleDataModalOpen(true)
       }
     }
@@ -6968,29 +6969,52 @@ function RowsSpreadsheet({
                 </Card>
               )}
               {/* Row 2 */}
-              <Card
-                onClick={handleOpenSampleDataModal}
-                className={cn(
-                  'transition-colors p-0 gap-0 shadow-none',
-                  sampleDataMutation.isPending || columnsLoading
-                    ? 'opacity-50 cursor-not-allowed'
-                    : 'cursor-pointer hover:bg-accent/50',
-                )}
-              >
-                <div className="flex items-start gap-3 p-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-                    <BarChart3 className="h-5 w-5 text-muted-foreground" />
+              {!hasDataProducingColumns ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Card className="cursor-not-allowed opacity-60 p-0 gap-0 shadow-none">
+                      <div className="flex items-start gap-3 p-4">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                          <BarChart3 className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-sm font-medium text-foreground">
+                            Generate sample data
+                          </h3>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Generate data for testing
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                  </TooltipTrigger>
+                  <TooltipContent>Create columns first</TooltipContent>
+                </Tooltip>
+              ) : (
+                <Card
+                  onClick={handleOpenSampleDataModal}
+                  className={cn(
+                    'transition-colors p-0 gap-0 shadow-none',
+                    sampleDataMutation.isPending || columnsLoading
+                      ? 'opacity-50 cursor-not-allowed'
+                      : 'cursor-pointer hover:bg-accent/50',
+                  )}
+                >
+                  <div className="flex items-start gap-3 p-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                      <BarChart3 className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-sm font-medium text-foreground">
+                        Generate sample data
+                      </h3>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Generate data for testing
+                      </p>
+                    </div>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="text-sm font-medium text-foreground">
-                      Generate sample data
-                    </h3>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Generate data for testing
-                    </p>
-                  </div>
-                </div>
-              </Card>
+                </Card>
+              )}
               <Card
                 onClick={handleDocumentation}
                 className="cursor-pointer transition-colors hover:bg-accent/50 p-0 gap-0 shadow-none"
@@ -7486,17 +7510,37 @@ function RowsSpreadsheet({
             />
           </div>
           <div className="flex-shrink-0">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setSampleDataModalOpen(true)}
-              disabled={sampleDataMutation.isPending || columnsLoading}
-              className="h-8 gap-2 text-[12px] font-medium"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              <span className="hidden @[500px]:inline">Sample data</span>
-              <span className="@[500px]:hidden">Sample</span>
-            </Button>
+            {!hasDataProducingColumns ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-block">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled
+                      className="h-8 gap-2 text-[12px] font-medium"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      <span className="hidden @[500px]:inline">Sample data</span>
+                      <span className="@[500px]:hidden">Sample</span>
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>Create columns first</TooltipContent>
+              </Tooltip>
+            ) : (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setSampleDataModalOpen(true)}
+                disabled={sampleDataMutation.isPending || columnsLoading}
+                className="h-8 gap-2 text-[12px] font-medium"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span className="hidden @[500px]:inline">Sample data</span>
+                <span className="@[500px]:hidden">Sample</span>
+              </Button>
+            )}
           </div>
         </div>
       </div>
