@@ -1,0 +1,144 @@
+# Dev tools for local development only.
+# This file is automatically loaded by `docker compose` alongside docker-compose.yml.
+# CI sets COMPOSE_FILE=docker-compose.yml explicitly, so these services are excluded from test runs.
+
+services:
+  appwrite-mongo-express:
+    profiles: ["mongodb"]
+    image: mongo-express
+    container_name: appwrite-mongo-express
+    networks:
+      - appwrite
+    ports:
+      - "8082:8081"
+    environment:
+      ME_CONFIG_MONGODB_URL: "mongodb://root:${_APP_DB_ROOT_PASS}@appwrite-mongodb:27017/?replicaSet=rs0&directConnection=true"
+      ME_CONFIG_BASICAUTH_USERNAME: ${_APP_DB_USER}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${_APP_DB_PASS}
+    depends_on:
+      - mongodb
+
+  adminer:
+    image: adminer
+    container_name: appwrite-adminer
+    restart: always
+    ports:
+      - 9506:8080
+    networks:
+      - appwrite
+      - gateway
+    environment:
+      - ADMINER_DESIGN=pepa-linha
+      - ADMINER_DEFAULT_SERVER=mariadb
+      - ADMINER_DEFAULT_USERNAME=root
+      - ADMINER_DEFAULT_PASSWORD=rootsecretpassword
+      - ADMINER_DEFAULT_DB=appwrite
+    configs:
+      - source: adminer-index.php
+        target: /var/www/html/index.php
+        mode: 0755
+    labels:
+      - "traefik.enable=true"
+      - "traefik.constraint-label-stack=appwrite"
+      - "traefik.docker.network=gateway"
+      - "traefik.http.services.appwrite_adminer.loadbalancer.server.port=8080"
+      - "traefik.http.routers.appwrite_adminer_http.entrypoints=appwrite_web"
+      - "traefik.http.routers.appwrite_adminer_http.rule=Host(`mysql.localhost`)"
+      - "traefik.http.routers.appwrite_adminer_http.service=appwrite_adminer"
+      - "traefik.http.routers.appwrite_adminer_https.entrypoints=appwrite_websecure"
+      - "traefik.http.routers.appwrite_adminer_https.rule=Host(`mysql.localhost`)"
+      - "traefik.http.routers.appwrite_adminer_https.service=appwrite_adminer"
+      - "traefik.http.routers.appwrite_adminer_https.tls=true"
+
+  redis-insight:
+    image: redis/redisinsight:latest
+    restart: unless-stopped
+    networks:
+      - appwrite
+      - gateway
+    environment:
+      - RI_PRE_SETUP_DATABASES_PATH=/mnt/connections.json
+    configs:
+      - source: redisinsight-connections.json
+        target: /mnt/connections.json
+        mode: 0755
+    labels:
+      - "traefik.enable=true"
+      - "traefik.constraint-label-stack=appwrite"
+      - "traefik.docker.network=gateway"
+      - "traefik.http.services.appwrite_redisinsight.loadbalancer.server.port=5540"
+      - "traefik.http.routers.appwrite_redisinsight_http.entrypoints=appwrite_web"
+      - "traefik.http.routers.appwrite_redisinsight_http.rule=Host(`redis.localhost`)"
+      - "traefik.http.routers.appwrite_redisinsight_http.service=appwrite_redisinsight"
+      - "traefik.http.routers.appwrite_redisinsight_https.entrypoints=appwrite_websecure"
+      - "traefik.http.routers.appwrite_redisinsight_https.rule=Host(`redis.localhost`)"
+      - "traefik.http.routers.appwrite_redisinsight_https.service=appwrite_redisinsight"
+      - "traefik.http.routers.appwrite_redisinsight_https.tls=true"
+    ports:
+      - "8081:5540"
+
+  graphql-explorer:
+    container_name: appwrite-graphql-explorer
+    image: appwrite/altair:0.3.0
+    restart: unless-stopped
+    networks:
+      - appwrite
+    ports:
+      - "9509:3000"
+    environment:
+      - SERVER_URL=http://localhost/v1/graphql
+
+configs:
+  redisinsight-connections.json:
+    content: |
+      [
+        {
+          "compressor": "NONE",
+          "id": "104dc90a-21ef-4d5e-8912-b30baabb152f",
+          "host": "redis",
+          "port": 6379,
+          "name": "redis:6379",
+          "db": 0,
+          "username": "default",
+          "password": null,
+          "connectionType": "STANDALONE",
+          "nameFromProvider": null,
+          "provider": "REDIS",
+          "lastConnection": "2025-10-16T09:22:02.591Z",
+          "modules": [
+            {
+              "name": "ReJSON",
+              "version": 20808,
+              "semanticVersion": "2.8.8"
+            },
+            {
+              "name": "search",
+              "version": 21015,
+              "semanticVersion": "2.10.15"
+            }
+          ],
+          "tls": false,
+          "tlsServername": null,
+          "verifyServerCert": null,
+          "caCert": null,
+          "clientCert": null,
+          "ssh": false,
+          "sshOptions": null,
+          "forceStandalone": false,
+          "tags": []
+        }
+      ]
+
+  adminer-index.php:
+    content: |
+      <?php
+        if(!count($$_GET)) {
+          $$_POST['auth'] = [
+            'server' => $$_ENV['ADMINER_DEFAULT_SERVER'],
+            'driver' => 'server', /* seems to autodetect the driver from server settings */
+            'username' => $$_ENV['ADMINER_DEFAULT_USERNAME'],
+            'password' => $$_ENV['ADMINER_DEFAULT_PASSWORD'],
+            'db' => $$_ENV['ADMINER_DEFAULT_DB'],
+          ];
+        }
+        include './adminer.php';
