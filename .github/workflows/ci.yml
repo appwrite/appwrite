@@ -24,6 +24,7 @@ jobs:
     name: Checks / Dependencies
     if: github.event_name == 'pull_request'
     permissions:
+      actions: read
       security-events: write
       contents: read
     uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@v2.3.3"
