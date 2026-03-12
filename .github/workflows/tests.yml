@@ -242,16 +242,20 @@ jobs:
 
       - name: Set database environment
         run: |
-          DB_LOWER=$(echo "${{ matrix.database }}" | tr 'A-Z' 'a-z')
-          echo "COMPOSE_PROFILES=${DB_LOWER}" >> $GITHUB_ENV
-          echo "_APP_DB_ADAPTER=${DB_LOWER}" >> $GITHUB_ENV
-          echo "_APP_DB_HOST=${DB_LOWER}" >> $GITHUB_ENV
-
           if [ "${{ matrix.database }}" = "MariaDB" ]; then
+            echo "COMPOSE_PROFILES=mariadb" >> $GITHUB_ENV
+            echo "_APP_DB_ADAPTER=mariadb" >> $GITHUB_ENV
+            echo "_APP_DB_HOST=mariadb" >> $GITHUB_ENV
             echo "_APP_DB_PORT=3306" >> $GITHUB_ENV
           elif [ "${{ matrix.database }}" = "MongoDB" ]; then
+            echo "COMPOSE_PROFILES=mongodb" >> $GITHUB_ENV
+            echo "_APP_DB_ADAPTER=mongodb" >> $GITHUB_ENV
+            echo "_APP_DB_HOST=mongodb" >> $GITHUB_ENV
             echo "_APP_DB_PORT=27017" >> $GITHUB_ENV
           elif [ "${{ matrix.database }}" = "PostgreSQL" ]; then
+            echo "COMPOSE_PROFILES=postgresql" >> $GITHUB_ENV
+            echo "_APP_DB_ADAPTER=postgresql" >> $GITHUB_ENV
+            echo "_APP_DB_HOST=postgresql" >> $GITHUB_ENV
             echo "_APP_DB_PORT=5432" >> $GITHUB_ENV
           fi
 
