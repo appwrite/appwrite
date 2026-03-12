@@ -116,18 +116,21 @@ function SignUpPage() {
       if (features.userVerification) {
         try {
           const verifyUrl = `${window.location.origin}/verify-email${search.redirect ? `?redirect=${encodeURIComponent(search.redirect)}` : ''}`
-          await sdk.forConsole.account.createEmailVerification({ url: verifyUrl })
+          await sdk.forConsole.account.createEmailVerification({
+            url: verifyUrl,
+          })
         } catch (err) {
           console.error('Failed to send verification email:', err)
           toast.error(
-            getErrorMessage(err, 'Account created but verification email could not be sent'),
+            getErrorMessage(
+              err,
+              'Account created but verification email could not be sent',
+            ),
           )
         }
         navigate({
           to: '/verify-email',
-          search: search.redirect
-            ? { redirect: search.redirect }
-            : undefined,
+          search: search.redirect ? { redirect: search.redirect } : undefined,
         })
         return
       }

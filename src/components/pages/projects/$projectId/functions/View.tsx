@@ -20,6 +20,8 @@ import {
   useOrganizationPlan,
   useOrganizationScopes,
   fetchProjectFunctions,
+  FUNCTIONS_DEFAULT_SORT_BY,
+  FUNCTIONS_DEFAULT_SORT_ORDER,
 } from '@/lib/react-query/hooks'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
@@ -27,6 +29,9 @@ import {
   getPage,
   getLimit,
   getQueryParam,
+  getSort,
+  parseSort,
+  encodeSort,
   queryParamToMap,
   mapToQueryParam,
   buildListSearchParams,
@@ -54,6 +59,7 @@ type FunctionsListSearch = {
   query?: string
   page?: number
   limit?: number
+  sort?: string
 }
 
 /**
@@ -99,20 +105,38 @@ export function View() {
   const isFunctionsIndex =
     activeTab === 'functions' &&
     location.pathname.replace(/\/$/, '') === `/projects/${projectId}/functions`
+  const defaultFunctionsSort = {
+    sortBy: FUNCTIONS_DEFAULT_SORT_BY,
+    sortOrder: FUNCTIONS_DEFAULT_SORT_ORDER as 'asc' | 'desc',
+  }
   const functionsListParams = useMemo(() => {
     if (!isFunctionsIndex || typeof search !== 'object') return null
-    const url = new URL(location.pathname + location.search, window.location.origin)
+    const url = new URL(
+      location.pathname + location.search,
+      window.location.origin,
+    )
+    const parsed =
+      parseSort(search.sort as string | undefined) ??
+      getSort(url) ??
+      defaultFunctionsSort
     return {
       search: getSearch(url) ?? (search.search as string | undefined),
       page: getPage(url, 1),
       limit: getLimit(url, DEFAULT_PAGE_SIZE),
-      filterMap: queryParamToMap(getQueryParam(url) ?? (search.query as string | undefined) ?? null),
+      filterMap: queryParamToMap(
+        getQueryParam(url) ?? (search.query as string | undefined) ?? null,
+      ),
+      sortBy: parsed.sortBy,
+      sortOrder: parsed.sortOrder,
     }
   }, [isFunctionsIndex, search, location.pathname, location.search, projectId])
 
   const urlPage = functionsListParams?.page ?? 1
   const urlLimit = functionsListParams?.limit ?? DEFAULT_PAGE_SIZE
   const urlSearch = functionsListParams?.search
+  const urlSortBy = functionsListParams?.sortBy ?? FUNCTIONS_DEFAULT_SORT_BY
+  const urlSortOrder =
+    functionsListParams?.sortOrder ?? FUNCTIONS_DEFAULT_SORT_ORDER
   const filterMap = functionsListParams?.filterMap ?? new Map()
   const filterQueries =
     filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
@@ -124,6 +148,12 @@ export function View() {
   const [displayedPage, setDisplayedPage] = useState(1)
   const [displayedSearch, setDisplayedSearch] = useState<string | undefined>(
     undefined,
+  )
+  const [displayedSortBy, setDisplayedSortBy] = useState(
+    FUNCTIONS_DEFAULT_SORT_BY,
+  )
+  const [displayedSortOrder, setDisplayedSortOrder] = useState<'asc' | 'desc'>(
+    FUNCTIONS_DEFAULT_SORT_ORDER,
   )
   const [displayedFilterQueryString, setDisplayedFilterQueryString] =
     useState('')
@@ -149,10 +179,20 @@ export function View() {
     if (!hasInitedDisplayedRef.current) {
       setDisplayedPage(urlPage)
       setDisplayedSearch(urlSearch ?? undefined)
+      setDisplayedSortBy(urlSortBy)
+      setDisplayedSortOrder(urlSortOrder)
       setDisplayedFilterQueryString(filterQueryString)
       hasInitedDisplayedRef.current = true
     }
-  }, [isFunctionsIndex, functionsListParams, urlPage, urlSearch, filterQueryString])
+  }, [
+    isFunctionsIndex,
+    functionsListParams,
+    urlPage,
+    urlSearch,
+    urlSortBy,
+    urlSortOrder,
+    filterQueryString,
+  ])
 
   useEffect(() => {
     if (!isFunctionsIndex) return
@@ -166,12 +206,27 @@ export function View() {
         query: filterQueryString || undefined,
         page: 1,
         limit: urlLimit,
+        sort:
+          urlSortBy !== FUNCTIONS_DEFAULT_SORT_BY ||
+          urlSortOrder !== FUNCTIONS_DEFAULT_SORT_ORDER
+            ? encodeSort(urlSortBy, urlSortOrder)
+            : undefined,
       })
     }, 300)
     return () => {
       if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
     }
-  }, [searchInput, projectId, navigate, urlSearch, urlLimit, filterQueryString, isFunctionsIndex])
+  }, [
+    searchInput,
+    projectId,
+    navigate,
+    urlSearch,
+    urlLimit,
+    urlSortBy,
+    urlSortOrder,
+    filterQueryString,
+    isFunctionsIndex,
+  ])
 
   // Fetch data for the requested page (triggers load when user changes page)
   const {
@@ -186,6 +241,8 @@ export function View() {
     urlLimit,
     urlSearch ?? undefined,
     filterQueries,
+    urlSortBy,
+    urlSortOrder,
   )
 
   const {
@@ -198,17 +255,29 @@ export function View() {
     urlLimit,
     displayedSearch ?? undefined,
     displayedFilterQueries,
+    displayedSortBy,
+    displayedSortOrder,
   )
 
   useEffect(() => {
-    if (!isFunctionsIndex || functionsFetching || functionsLoading || !functionsFetched) return
+    if (
+      !isFunctionsIndex ||
+      functionsFetching ||
+      functionsLoading ||
+      !functionsFetched
+    )
+      return
     const match =
       urlPage === displayedPage &&
       (urlSearch ?? '') === (displayedSearch ?? '') &&
-      filterQueryString === displayedFilterQueryString
+      filterQueryString === displayedFilterQueryString &&
+      urlSortBy === displayedSortBy &&
+      urlSortOrder === displayedSortOrder
     if (!match) {
       setDisplayedPage(urlPage)
       setDisplayedSearch(urlSearch ?? undefined)
+      setDisplayedSortBy(urlSortBy)
+      setDisplayedSortOrder(urlSortOrder)
       setDisplayedFilterQueryString(filterQueryString)
     }
   }, [
@@ -218,11 +287,32 @@ export function View() {
     functionsFetched,
     urlPage,
     urlSearch,
+    urlSortBy,
+    urlSortOrder,
     filterQueryString,
     displayedPage,
     displayedSearch,
+    displayedSortBy,
+    displayedSortOrder,
     displayedFilterQueryString,
   ])
+
+  const handleFunctionsSortChange = (
+    sortBy: string,
+    sortOrder: 'asc' | 'desc',
+  ) => {
+    navigateToFunctionsList({
+      search: urlSearch ?? undefined,
+      query: filterQueryString || undefined,
+      page: 1,
+      limit: urlLimit,
+      sort:
+        sortBy !== FUNCTIONS_DEFAULT_SORT_BY ||
+        sortOrder !== FUNCTIONS_DEFAULT_SORT_ORDER
+          ? encodeSort(sortBy, sortOrder)
+          : undefined,
+    })
+  }
 
   const applyFilter = (compactKey: CompactFilterKey, queryStr: string) => {
     const next = new Map(filterMap)
@@ -232,6 +322,11 @@ export function View() {
       query: mapToQueryParam(next) || undefined,
       page: 1,
       limit: urlLimit,
+      sort:
+        urlSortBy !== FUNCTIONS_DEFAULT_SORT_BY ||
+        urlSortOrder !== FUNCTIONS_DEFAULT_SORT_ORDER
+          ? encodeSort(urlSortBy, urlSortOrder)
+          : undefined,
     })
   }
 
@@ -243,6 +338,11 @@ export function View() {
       query: next.size > 0 ? mapToQueryParam(next) : undefined,
       page: 1,
       limit: urlLimit,
+      sort:
+        urlSortBy !== FUNCTIONS_DEFAULT_SORT_BY ||
+        urlSortOrder !== FUNCTIONS_DEFAULT_SORT_ORDER
+          ? encodeSort(urlSortBy, urlSortOrder)
+          : undefined,
     })
   }
 
@@ -252,6 +352,11 @@ export function View() {
       query: undefined,
       page: 1,
       limit: urlLimit,
+      sort:
+        urlSortBy !== FUNCTIONS_DEFAULT_SORT_BY ||
+        urlSortOrder !== FUNCTIONS_DEFAULT_SORT_ORDER
+          ? encodeSort(urlSortBy, urlSortOrder)
+          : undefined,
     })
     setFiltersOpen(false)
   }
@@ -259,20 +364,31 @@ export function View() {
   const navigateToFunctionsList = (params: FunctionsListSearch) => {
     const hasQueryKey = 'query' in params
     const hasSearchKey = 'search' in params
+    const hasSortKey = 'sort' in params
     navigate({
       to: '/projects/$projectId/functions',
       params: { projectId: projectId! },
       search: (prev: Record<string, unknown>) => {
         const built = buildListSearchParams({
           search: hasSearchKey ? params.search : (urlSearch ?? undefined),
-          query: hasQueryKey ? params.query : (filterQueryString || undefined),
+          query: hasQueryKey ? params.query : filterQueryString || undefined,
           page: params.page ?? 1,
           limit: params.limit ?? urlLimit,
+          sort: hasSortKey
+            ? params.sort
+            : urlSortBy !== FUNCTIONS_DEFAULT_SORT_BY ||
+                urlSortOrder !== FUNCTIONS_DEFAULT_SORT_ORDER
+              ? encodeSort(urlSortBy, urlSortOrder)
+              : undefined,
         })
         const next = { ...prev, ...built }
         if (hasQueryKey && params.query === undefined) delete next.query
-        if (hasSearchKey && (params.search === undefined || params.search === ''))
+        if (
+          hasSearchKey &&
+          (params.search === undefined || params.search === '')
+        )
           delete next.search
+        if (hasSortKey && params.sort === undefined) delete next.sort
         return next
       },
       replace: true,
@@ -282,8 +398,27 @@ export function View() {
   const showLoading = displayedLoading && functions.length === 0
 
   const { data: totalFunctionsData } = useQuery({
-    queryKey: ['functions', 'project', projectId, 0, urlLimit, undefined, undefined],
-    queryFn: () => fetchProjectFunctions(projectId!, 0, urlLimit, undefined, undefined),
+    queryKey: [
+      'functions',
+      'project',
+      projectId,
+      0,
+      urlLimit,
+      undefined,
+      undefined,
+      FUNCTIONS_DEFAULT_SORT_BY,
+      FUNCTIONS_DEFAULT_SORT_ORDER,
+    ],
+    queryFn: () =>
+      fetchProjectFunctions(
+        projectId!,
+        0,
+        urlLimit,
+        undefined,
+        undefined,
+        FUNCTIONS_DEFAULT_SORT_BY,
+        FUNCTIONS_DEFAULT_SORT_ORDER,
+      ),
     enabled: !!projectId,
     staleTime: 30 * 1000,
     refetchOnMount: false,
@@ -426,14 +561,30 @@ export function View() {
                 onApplyFilter={applyFilter}
                 resourceLabel="functions"
                 filterScope="functions"
-                onApplyQuery={(queryParam) =>
+                onApplyQuery={(queryParam, sortParam) =>
                   navigateToFunctionsList({
                     search: urlSearch ?? undefined,
                     query: queryParam ?? undefined,
                     page: 1,
                     limit: urlLimit,
+                    sort: sortParam ?? undefined,
                   })
                 }
+                sortBy={urlSortBy}
+                sortOrder={urlSortOrder}
+                onSortChange={handleFunctionsSortChange}
+                defaultSortParam={encodeSort(
+                  FUNCTIONS_DEFAULT_SORT_BY,
+                  FUNCTIONS_DEFAULT_SORT_ORDER,
+                )}
+                onReset={() => {
+                  navigate({
+                    to: '/projects/$projectId/functions',
+                    params: { projectId: projectId! },
+                    search: { page: 1, limit: urlLimit },
+                    replace: true,
+                  })
+                }}
                 teamId={project?.teamId}
               />
             ) : undefined
@@ -530,14 +681,30 @@ export function View() {
               onApplyFilter={applyFilter}
               resourceLabel="functions"
               filterScope="functions"
-              onApplyQuery={(queryParam) =>
+              onApplyQuery={(queryParam, sortParam) =>
                 navigateToFunctionsList({
                   search: urlSearch ?? undefined,
                   query: queryParam ?? undefined,
                   page: 1,
                   limit: urlLimit,
+                  sort: sortParam ?? undefined,
                 })
               }
+              sortBy={urlSortBy}
+              sortOrder={urlSortOrder}
+              onSortChange={handleFunctionsSortChange}
+              defaultSortParam={encodeSort(
+                FUNCTIONS_DEFAULT_SORT_BY,
+                FUNCTIONS_DEFAULT_SORT_ORDER,
+              )}
+              onReset={() => {
+                navigate({
+                  to: '/projects/$projectId/functions',
+                  params: { projectId: projectId! },
+                  search: { page: 1, limit: urlLimit },
+                  replace: true,
+                })
+              }}
               teamId={project?.teamId}
             />
           ) : undefined
@@ -674,6 +841,11 @@ export function View() {
                       query: filterQueryString || undefined,
                       page,
                       limit: urlLimit,
+                      sort:
+                        urlSortBy !== FUNCTIONS_DEFAULT_SORT_BY ||
+                        urlSortOrder !== FUNCTIONS_DEFAULT_SORT_ORDER
+                          ? encodeSort(urlSortBy, urlSortOrder)
+                          : undefined,
                     })
                   }}
                   onPageSizeChange={(size) => {
@@ -684,6 +856,11 @@ export function View() {
                       query: filterQueryString || undefined,
                       page: 1,
                       limit: size,
+                      sort:
+                        urlSortBy !== FUNCTIONS_DEFAULT_SORT_BY ||
+                        urlSortOrder !== FUNCTIONS_DEFAULT_SORT_ORDER
+                          ? encodeSort(urlSortBy, urlSortOrder)
+                          : undefined,
                     })
                   }}
                   itemLabel="functions"

@@ -221,7 +221,11 @@ export function BuyDomainWizard() {
 
   // Normalized search (for exact match comparison)
   const normalizedSearch = useMemo(
-    () => searchValue.trim().toLowerCase().replace(/[^a-z0-9.-]/g, ''),
+    () =>
+      searchValue
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9.-]/g, ''),
     [searchValue],
   )
 
@@ -250,7 +254,8 @@ export function BuyDomainWizard() {
 
   // Allow single-char base when user typed a full domain (e.g. "x.net" → show x.com, x.net, …)
   const showSuggestions =
-    baseName.length >= 2 || (baseName.length === 1 && normalizedSearch.includes('.'))
+    baseName.length >= 2 ||
+    (baseName.length === 1 && normalizedSearch.includes('.'))
 
   // Only fetch prices when we show suggestions (avoids fetching for bare "x" without a TLD)
   const { pricesByDomain, error } = useDomainPrices(
@@ -345,10 +350,7 @@ export function BuyDomainWizard() {
       useSidebar={false}
       footer={
         <div className="flex gap-2 justify-end w-full">
-          <Button
-            variant="outline"
-            onClick={() => navigate({ to: '..' })}
-          >
+          <Button variant="outline" onClick={() => navigate({ to: '..' })}>
             Cancel
           </Button>
         </div>
@@ -424,8 +426,16 @@ function DomainCard({
   onSelect: (full: string) => void
   onVisible?: () => void
 }) {
-  const { full, tld, priceLoaded, price, periodYears = 1, taken, premium, isPerfectMatch } =
-    suggestion
+  const {
+    full,
+    tld,
+    priceLoaded,
+    price,
+    periodYears = 1,
+    taken,
+    premium,
+    isPerfectMatch,
+  } = suggestion
   const cardRef = useRef<HTMLDivElement>(null)
   const hasReportedVisible = useRef(false)
 
@@ -495,7 +505,11 @@ function DomainCard({
               </span>
             ) : price != null && price > 0 ? (
               <span className="truncate font-mono text-[13px] font-semibold tabular-nums text-foreground animate-in fade-in-0 slide-in-from-bottom-1 duration-200">
-                ${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                $
+                {price.toLocaleString('en-US', {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
                 <span className="font-normal text-[11px] text-muted-foreground">
                   {formatPricePeriod(periodYears)}
                 </span>

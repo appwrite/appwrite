@@ -45,7 +45,9 @@ export function getQueryParam(url: URL): string | null {
  * Decode `query` param to FilterMap (compact keys → query strings).
  * Rebuilds query strings from keys; no tag stored in URL.
  */
-export function queryParamToMap(param: string | null | undefined): Map<CompactFilterKey, string> {
+export function queryParamToMap(
+  param: string | null | undefined,
+): Map<CompactFilterKey, string> {
   if (param == null || param === '') return new Map()
   try {
     const decoded = decodeURIComponent(param)
@@ -73,7 +75,9 @@ export interface ListSortParams {
 }
 
 /** Parse sort param: "field_asc" or "field_desc". Returns undefined if missing/invalid. */
-export function parseSort(param: string | null | undefined): ListSortParams | undefined {
+export function parseSort(
+  param: string | null | undefined,
+): ListSortParams | undefined {
   const v = param?.trim()
   if (!v) return undefined
   const lastUnderscore = v.lastIndexOf('_')
@@ -110,7 +114,9 @@ export interface ListSearchParams {
 export const MIN_SEARCH_LENGTH = 3
 
 /** Returns a minimal object for router navigate(); omit defaults so URLs stay clean. */
-export function buildListSearchParams(params: ListSearchParams): Record<string, string | number> {
+export function buildListSearchParams(
+  params: ListSearchParams,
+): Record<string, string | number> {
   const out: Record<string, string | number> = {}
   const search = params.search?.trim()
   if (search) out[PARAM_SEARCH] = search

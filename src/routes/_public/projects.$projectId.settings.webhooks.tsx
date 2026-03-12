@@ -1,5 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { webhooksQueryOptions, projectQueryOptions } from '@/lib/react-query/hooks'
+import {
+  webhooksQueryOptions,
+  projectQueryOptions,
+} from '@/lib/react-query/hooks'
 import { View } from '@/components/pages/projects/$projectId/settings/View'
 import { pageTitle } from '@/lib/utils/page-title'
 

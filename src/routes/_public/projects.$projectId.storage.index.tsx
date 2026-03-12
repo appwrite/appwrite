@@ -13,8 +13,13 @@ import {
   getPage,
   getLimit,
   getQueryParam,
+  getSort,
   queryParamToMap,
 } from '@/lib/table-filters'
+import {
+  BUCKETS_DEFAULT_SORT_BY,
+  BUCKETS_DEFAULT_SORT_ORDER,
+} from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
 
 const DEFAULT_PAGE = 1
@@ -41,6 +46,9 @@ export const Route = createFileRoute('/_public/projects/$projectId/storage/')({
     const filterMap = queryParamToMap(queryParam)
     const filterQueries =
       filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
+    const sort = getSort(url)
+    const sortBy = sort?.sortBy ?? BUCKETS_DEFAULT_SORT_BY
+    const sortOrder = sort?.sortOrder ?? BUCKETS_DEFAULT_SORT_ORDER
 
     const projectData = await queryClient.ensureQueryData({
       queryKey: ['project', projectId],
@@ -50,7 +58,15 @@ export const Route = createFileRoute('/_public/projects/$projectId/storage/')({
 
     await Promise.all([
       queryClient.ensureQueryData(
-        bucketsQueryOptions(projectId, page - 1, limit, search ?? undefined, filterQueries),
+        bucketsQueryOptions(
+          projectId,
+          page - 1,
+          limit,
+          search ?? undefined,
+          filterQueries,
+          sortBy,
+          sortOrder,
+        ),
       ),
       projectData?.teamId
         ? queryClient.ensureQueryData(

@@ -238,47 +238,21 @@ export function ConsoleHeader({
               {showConnectAndCreate && (
                 <div className="hidden @[700px]:block shrink-0">
                   <DropdownMenu>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <DropdownMenuTrigger asChild>
-                        <button className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer">
-                          <Plus className="h-4 w-4" />
-                        </button>
-                      </DropdownMenuTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Create</p>
-                    </TooltipContent>
-                  </Tooltip>
-                  <DropdownMenuContent align="start" className="w-56">
-                    <DropdownMenuItem
-                      onClick={() => {
-                        const orgId =
-                          project?.teamId ||
-                          (account?.prefs?.organization as string | undefined)
-                        if (orgId) {
-                          navigate({
-                            to: '/organizations/$orgId',
-                            params: { orgId },
-                            search: { create: 'project' } as Record<
-                              string,
-                              unknown
-                            >,
-                          })
-                        }
-                      }}
-                      className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
-                    >
-                      <FolderPlus className="h-4 w-4" />
-                      <span>New Project</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        if (onCreateOrganization) {
-                          // If callback is provided (we're on org page), use it
-                          onCreateOrganization()
-                        } else {
-                          // Otherwise, navigate to org overview with createOrg param
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <DropdownMenuTrigger asChild>
+                          <button className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer">
+                            <Plus className="h-4 w-4" />
+                          </button>
+                        </DropdownMenuTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Create</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <DropdownMenuContent align="start" className="w-56">
+                      <DropdownMenuItem
+                        onClick={() => {
                           const orgId =
                             project?.teamId ||
                             (account?.prefs?.organization as string | undefined)
@@ -286,129 +260,157 @@ export function ConsoleHeader({
                             navigate({
                               to: '/organizations/$orgId',
                               params: { orgId },
-                              search: { createOrg: true },
-                            })
-                          } else {
-                            // No org yet, navigate to root which will handle it
-                            navigate({
-                              to: '/',
-                              search: { createOrg: true },
+                              search: { create: 'project' } as Record<
+                                string,
+                                unknown
+                              >,
                             })
                           }
-                        }
-                      }}
-                      className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
-                    >
-                      <Building2 className="h-4 w-4" />
-                      <span>New Organization</span>
-                    </DropdownMenuItem>
+                        }}
+                        className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+                      >
+                        <FolderPlus className="h-4 w-4" />
+                        <span>New Project</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          if (onCreateOrganization) {
+                            // If callback is provided (we're on org page), use it
+                            onCreateOrganization()
+                          } else {
+                            // Otherwise, navigate to org overview with createOrg param
+                            const orgId =
+                              project?.teamId ||
+                              (account?.prefs?.organization as
+                                | string
+                                | undefined)
+                            if (orgId) {
+                              navigate({
+                                to: '/organizations/$orgId',
+                                params: { orgId },
+                                search: { createOrg: true },
+                              })
+                            } else {
+                              // No org yet, navigate to root which will handle it
+                              navigate({
+                                to: '/',
+                                search: { createOrg: true },
+                              })
+                            }
+                          }
+                        }}
+                        className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+                      >
+                        <Building2 className="h-4 w-4" />
+                        <span>New Organization</span>
+                      </DropdownMenuItem>
 
-                    {projectId && (
-                      <>
-                        <DropdownMenuSeparator />
-                        {/* Resources Category */}
-                        <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                          Build
-                        </DropdownMenuLabel>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            navigate({
-                              to: '/projects/$projectId/databases',
-                              params: { projectId },
-                              search: { create: 'database' } as Record<
-                                string,
-                                unknown
-                              >,
-                            })
-                          }}
-                          className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
-                        >
-                          <Database className="h-4 w-4" />
-                          <span>New Database</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            navigate({
-                              to: '/projects/$projectId/auth',
-                              params: { projectId },
-                              search: { create: 'user' } as Record<
-                                string,
-                                unknown
-                              >,
-                            })
-                          }}
-                          className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
-                        >
-                          <Users className="h-4 w-4" />
-                          <span>New User</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            navigate({
-                              to: '/projects/$projectId/storage',
-                              params: { projectId },
-                              search: { create: 'bucket' } as Record<
-                                string,
-                                unknown
-                              >,
-                            })
-                          }}
-                          className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
-                        >
-                          <Folder className="h-4 w-4" />
-                          <span>New Bucket</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            navigate({
-                              to: '/projects/$projectId/functions/create',
-                              params: { projectId },
-                            })
-                          }}
-                          className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
-                        >
-                          <Zap className="h-4 w-4" />
-                          <span>New Function</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            navigate({
-                              to: '/projects/$projectId/messaging',
-                              params: { projectId },
-                              search: { create: 'topic' } as Record<
-                                string,
-                                unknown
-                              >,
-                            })
-                          }}
-                          className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
-                        >
-                          <MessageSquare className="h-4 w-4" />
-                          <span>New Message</span>
-                        </DropdownMenuItem>
+                      {projectId && (
+                        <>
+                          <DropdownMenuSeparator />
+                          {/* Resources Category */}
+                          <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                            Build
+                          </DropdownMenuLabel>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              navigate({
+                                to: '/projects/$projectId/databases',
+                                params: { projectId },
+                                search: { create: 'database' } as Record<
+                                  string,
+                                  unknown
+                                >,
+                              })
+                            }}
+                            className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+                          >
+                            <Database className="h-4 w-4" />
+                            <span>New Database</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              navigate({
+                                to: '/projects/$projectId/auth',
+                                params: { projectId },
+                                search: { create: 'user' } as Record<
+                                  string,
+                                  unknown
+                                >,
+                              })
+                            }}
+                            className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+                          >
+                            <Users className="h-4 w-4" />
+                            <span>New User</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              navigate({
+                                to: '/projects/$projectId/storage',
+                                params: { projectId },
+                                search: { create: 'bucket' } as Record<
+                                  string,
+                                  unknown
+                                >,
+                              })
+                            }}
+                            className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+                          >
+                            <Folder className="h-4 w-4" />
+                            <span>New Bucket</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              navigate({
+                                to: '/projects/$projectId/functions/create',
+                                params: { projectId },
+                              })
+                            }}
+                            className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+                          >
+                            <Zap className="h-4 w-4" />
+                            <span>New Function</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              navigate({
+                                to: '/projects/$projectId/messaging',
+                                params: { projectId },
+                                search: { create: 'topic' } as Record<
+                                  string,
+                                  unknown
+                                >,
+                              })
+                            }}
+                            className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+                          >
+                            <MessageSquare className="h-4 w-4" />
+                            <span>New Message</span>
+                          </DropdownMenuItem>
 
-                        <DropdownMenuSeparator />
-                        {/* Deploy Category */}
-                        <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                          Deploy
-                        </DropdownMenuLabel>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            navigate({
-                              to: '/projects/$projectId/sites/create',
-                              params: { projectId },
-                            })
-                          }}
-                          className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
-                        >
-                          <Globe className="h-4 w-4" />
-                          <span>New Site</span>
-                        </DropdownMenuItem>
-                      </>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+                          <DropdownMenuSeparator />
+                          {/* Deploy Category */}
+                          <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                            Deploy
+                          </DropdownMenuLabel>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              navigate({
+                                to: '/projects/$projectId/sites/create',
+                                params: { projectId },
+                              })
+                            }}
+                            className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+                          >
+                            <Globe className="h-4 w-4" />
+                            <span>New Site</span>
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               )}
             </>
           )}
@@ -567,19 +569,19 @@ export function ConsoleHeader({
                       2FA
                     </p>
                     <div className="flex items-center gap-2">
-                        {is2FAEnabled ? (
-                          <>
-                            <Shield className="h-3.5 w-3.5 text-emerald-500" />
-                            <p className="text-[14px] text-foreground">Enabled</p>
-                          </>
-                        ) : (
-                          <>
-                            <Shield className="h-3.5 w-3.5 text-muted-foreground" />
-                            <p className="text-[14px] text-muted-foreground">
-                              Disabled
-                            </p>
-                          </>
-                        )}
+                      {is2FAEnabled ? (
+                        <>
+                          <Shield className="h-3.5 w-3.5 text-emerald-500" />
+                          <p className="text-[14px] text-foreground">Enabled</p>
+                        </>
+                      ) : (
+                        <>
+                          <Shield className="h-3.5 w-3.5 text-muted-foreground" />
+                          <p className="text-[14px] text-muted-foreground">
+                            Disabled
+                          </p>
+                        </>
+                      )}
                     </div>
                   </div>
                 )}

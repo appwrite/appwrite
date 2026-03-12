@@ -588,10 +588,7 @@ function CreateMembershipDialog({
           >
             Cancel
           </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={!email.trim() || isLoading}
-          >
+          <Button onClick={handleSubmit} disabled={!email.trim() || isLoading}>
             Create
           </Button>
         </div>

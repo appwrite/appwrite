@@ -14,9 +14,7 @@ import type { Models } from '@appwrite.io/console'
 export async function fetchConsoleVariables(
   region?: string,
 ): Promise<Models.ConsoleVariables> {
-  const consoleSdk = region
-    ? sdk.forConsoleIn(region)
-    : sdk.forConsole
+  const consoleSdk = region ? sdk.forConsoleIn(region) : sdk.forConsole
   return await consoleSdk.console.variables()
 }
 
@@ -41,9 +39,13 @@ export function useConsoleVariables(region?: string) {
     cname: vars?._APP_DOMAIN_TARGET_CNAME,
     a: vars?._APP_DOMAIN_TARGET_A,
     aaaa: vars?._APP_DOMAIN_TARGET_AAAA,
-    caa: (vars as unknown as Record<string, string | undefined>)?._APP_DOMAIN_TARGET_CAA,
+    caa: (vars as unknown as Record<string, string | undefined>)
+      ?._APP_DOMAIN_TARGET_CAA,
     nameservers: vars?._APP_DOMAINS_NAMESERVERS
-      ? vars._APP_DOMAINS_NAMESERVERS.split(',').map((s) => s.trim()).filter(Boolean)
-      : [] as string[],
+      ? vars._APP_DOMAINS_NAMESERVERS
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : ([] as string[]),
   }
 }

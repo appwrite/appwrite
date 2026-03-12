@@ -4,7 +4,11 @@
  */
 
 import { Filter } from 'lucide-react'
-import type { CompactFilterKey, FilterColumn, FilterMap } from '@/lib/table-filters'
+import type {
+  CompactFilterKey,
+  FilterColumn,
+  FilterMap,
+} from '@/lib/table-filters'
 import {
   Popover,
   PopoverContent,

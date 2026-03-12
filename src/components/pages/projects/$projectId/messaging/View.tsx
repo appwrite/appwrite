@@ -18,7 +18,11 @@ import {
   useOrganizationScopes,
 } from '@/lib/react-query/hooks'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
-import { canWriteMessages, canWriteTopics, canWriteProviders } from '@/lib/console-access-checks'
+import {
+  canWriteMessages,
+  canWriteTopics,
+  canWriteProviders,
+} from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'

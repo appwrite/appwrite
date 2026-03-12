@@ -79,7 +79,10 @@ export function DatabaseSelector({
 
   const databases = useMemo(() => data?.databases ?? [], [data?.databases])
 
-  const displayValue = selectedName || (value ? databases.find((d) => d.$id === value)?.name : null) || placeholder
+  const displayValue =
+    selectedName ||
+    (value ? databases.find((d) => d.$id === value)?.name : null) ||
+    placeholder
 
   return (
     <div className="flex min-w-0 flex-1 items-center gap-2">

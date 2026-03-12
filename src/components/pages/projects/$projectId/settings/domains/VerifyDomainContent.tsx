@@ -16,7 +16,8 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { toast } from 'sonner'
 
-const DNS_PROVIDERS_LINK = 'https://appwrite.io/docs/advanced/platform/custom-domains'
+const DNS_PROVIDERS_LINK =
+  'https://appwrite.io/docs/advanced/platform/custom-domains'
 
 interface VerifyDomainContentProps {
   rule: Models.ProxyRule
@@ -33,7 +34,12 @@ interface VerifyDomainContentProps {
   verificationError?: string | null
 }
 
-type DnsRecord = { type: string; name: string; value: string; ttl: number | null }
+type DnsRecord = {
+  type: string
+  name: string
+  value: string
+  ttl: number | null
+}
 
 function DnsRecordsTable({
   records,
@@ -70,11 +76,19 @@ function DnsRecordsTable({
       <TableBody>
         {records.map((r, i) => (
           <TableRow key={`${r.type}-${i}`}>
-            <TableCell className="px-4 py-3 font-mono text-[12px]">{r.type}</TableCell>
-            <TableCell className="px-4 py-3 font-mono text-[12px] truncate max-w-[180px]" title={r.name || '—'}>
+            <TableCell className="px-4 py-3 font-mono text-[12px]">
+              {r.type}
+            </TableCell>
+            <TableCell
+              className="px-4 py-3 font-mono text-[12px] truncate max-w-[180px]"
+              title={r.name || '—'}
+            >
               {r.name || '—'}
             </TableCell>
-            <TableCell className="px-4 py-3 font-mono text-[12px] truncate max-w-[200px]" title={r.value}>
+            <TableCell
+              className="px-4 py-3 font-mono text-[12px] truncate max-w-[200px]"
+              title={r.value}
+            >
               {r.value}
             </TableCell>
             {showTtl && (
@@ -115,7 +129,8 @@ export function VerifyDomainContent({
   verificationError,
 }: VerifyDomainContentProps) {
   const [copiedField, setCopiedField] = useState<string | null>(null)
-  const { cname, a, aaaa, caa, nameservers, isLoading, error } = useConsoleVariables(region)
+  const { cname, a, aaaa, caa, nameservers, isLoading, error } =
+    useConsoleVariables(region)
 
   const isCloud = useMemo(() => {
     try {
@@ -140,7 +155,9 @@ export function VerifyDomainContent({
 
   const tabOptions = [
     ...(hasCname ? [{ id: 'cname' as const, label: 'CNAME' }] : []),
-    ...(hasNameservers ? [{ id: 'nameservers' as const, label: 'Nameservers' }] : []),
+    ...(hasNameservers
+      ? [{ id: 'nameservers' as const, label: 'Nameservers' }]
+      : []),
     ...(hasA ? [{ id: 'a' as const, label: 'A' }] : []),
     ...(hasAaaa ? [{ id: 'aaaa' as const, label: 'AAAA' }] : []),
   ]
@@ -173,7 +190,12 @@ export function VerifyDomainContent({
 
   const getCnameRecords = (): DnsRecord[] => {
     const rows: DnsRecord[] = [
-      { type: 'CNAME', name: getCnameRecordName(rule.domain), value: cname!, ttl: 3600 },
+      {
+        type: 'CNAME',
+        name: getCnameRecordName(rule.domain),
+        value: cname!,
+        ttl: 3600,
+      },
     ]
     if (hasCaa) {
       rows.push({ type: 'CAA', name: '@', value: caa!, ttl: 3600 })
@@ -184,7 +206,8 @@ export function VerifyDomainContent({
   const getNameserverRecords = (): DnsRecord[] =>
     nameservers.map((ns) => ({ type: 'NS', name: '', value: ns, ttl: null }))
 
-  const cardClassName = 'rounded-xl border border-border bg-card/50 overflow-hidden'
+  const cardClassName =
+    'rounded-xl border border-border bg-card/50 overflow-hidden'
   const padX = compact ? 'px-4' : 'px-6'
   const padY = compact ? 'py-3' : 'py-4'
 
@@ -193,7 +216,9 @@ export function VerifyDomainContent({
       {!noCard && (
         <>
           <div className={`${padX} ${padY}`}>
-            <h3 className="text-[15px] font-semibold text-foreground">Verification</h3>
+            <h3 className="text-[15px] font-semibold text-foreground">
+              Verification
+            </h3>
             <p className="text-[13px] text-muted-foreground font-mono mt-2">
               {rule.domain}
             </p>
@@ -225,7 +250,9 @@ export function VerifyDomainContent({
             )}
             {tabOptions[0].id === 'a' && (
               <DnsRecordsTable
-                records={[{ type: 'A', name: rule.domain, value: a!, ttl: 3600 }]}
+                records={[
+                  { type: 'A', name: rule.domain, value: a!, ttl: 3600 },
+                ]}
                 onCopy={handleCopy}
                 copiedField={copiedField}
                 showTtl={true}
@@ -233,7 +260,9 @@ export function VerifyDomainContent({
             )}
             {tabOptions[0].id === 'aaaa' && (
               <DnsRecordsTable
-                records={[{ type: 'AAAA', name: rule.domain, value: aaaa!, ttl: 3600 }]}
+                records={[
+                  { type: 'AAAA', name: rule.domain, value: aaaa!, ttl: 3600 },
+                ]}
                 onCopy={handleCopy}
                 copiedField={copiedField}
                 showTtl={true}
@@ -275,7 +304,9 @@ export function VerifyDomainContent({
                   )}
                   {tab.id === 'a' && (
                     <DnsRecordsTable
-                      records={[{ type: 'A', name: rule.domain, value: a!, ttl: 3600 }]}
+                      records={[
+                        { type: 'A', name: rule.domain, value: a!, ttl: 3600 },
+                      ]}
                       onCopy={handleCopy}
                       copiedField={copiedField}
                       showTtl={true}
@@ -283,7 +314,14 @@ export function VerifyDomainContent({
                   )}
                   {tab.id === 'aaaa' && (
                     <DnsRecordsTable
-                      records={[{ type: 'AAAA', name: rule.domain, value: aaaa!, ttl: 3600 }]}
+                      records={[
+                        {
+                          type: 'AAAA',
+                          name: rule.domain,
+                          value: aaaa!,
+                          ttl: 3600,
+                        },
+                      ]}
                       onCopy={handleCopy}
                       copiedField={copiedField}
                       showTtl={true}
@@ -349,7 +387,11 @@ export function VerifyDomainContent({
               Change
             </Button>
           )}
-          <Button size="sm" onClick={onVerify} disabled={isVerifying || isChanging}>
+          <Button
+            size="sm"
+            onClick={onVerify}
+            disabled={isVerifying || isChanging}
+          >
             Verify
           </Button>
         </div>

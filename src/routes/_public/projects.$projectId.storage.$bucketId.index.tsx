@@ -3,6 +3,8 @@ import { View } from '@/components/pages/projects/$projectId/storage/$bucketId/V
 import {
   fetchBucket,
   bucketFilesQueryOptions,
+  FILES_DEFAULT_SORT_BY,
+  FILES_DEFAULT_SORT_ORDER,
 } from '@/lib/react-query/hooks'
 import {
   listSearchSchema,
@@ -10,6 +12,7 @@ import {
   getPage,
   getLimit,
   getQueryParam,
+  getSort,
   queryParamToMap,
 } from '@/lib/table-filters'
 import { pageTitle } from '@/lib/utils/page-title'
@@ -43,6 +46,9 @@ export const Route = createFileRoute(
     const filterMap = queryParamToMap(queryParam)
     const filterQueries =
       filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
+    const sort = getSort(url)
+    const sortBy = sort?.sortBy ?? FILES_DEFAULT_SORT_BY
+    const sortOrder = sort?.sortOrder ?? FILES_DEFAULT_SORT_ORDER
 
     const [bucket] = await Promise.all([
       queryClient.fetchQuery({
@@ -59,6 +65,8 @@ export const Route = createFileRoute(
           search ?? undefined,
           undefined,
           filterQueries,
+          sortBy,
+          sortOrder,
         ),
       ),
     ])

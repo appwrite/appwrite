@@ -88,9 +88,7 @@ export function OnboardingCard({
         </h3>
         <div className="space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] text-muted-foreground">
-              Progress
-            </span>
+            <span className="text-[11px] text-muted-foreground">Progress</span>
             <span className="text-[11px] font-medium text-muted-foreground">
               {completedSteps}/{totalSteps}
             </span>

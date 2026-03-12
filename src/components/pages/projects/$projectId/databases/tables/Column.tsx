@@ -480,8 +480,11 @@ export function ColumnDrawer({
                 onValueChange={(value) => {
                   const newType = value as ColumnType
                   setFormData((prev) => {
-                    const keepEncrypt = TEXT_TYPES_WITH_ENCRYPT.includes(newType)
-                    const nextEncrypt = keepEncrypt ? prev.encrypt ?? false : false
+                    const keepEncrypt =
+                      TEXT_TYPES_WITH_ENCRYPT.includes(newType)
+                    const nextEncrypt = keepEncrypt
+                      ? (prev.encrypt ?? false)
+                      : false
                     encryptCheckedRef.current = nextEncrypt
                     return {
                       ...prev,
@@ -489,20 +492,20 @@ export function ColumnDrawer({
                       // Reset type-specific fields
                       size: newType === 'varchar' ? 255 : undefined,
                       encrypt: nextEncrypt,
-                    min: undefined,
-                    max: undefined,
-                    elements: undefined,
-                    relatedTableId: undefined,
-                    relationshipType: undefined,
-                    twoWay: false,
-                    twoWayKey: undefined,
-                    onDelete: undefined,
-                    array:
-                      newType === 'point' ||
-                      newType === 'linestring' ||
-                      newType === 'polygon'
-                        ? false
-                        : prev.array,
+                      min: undefined,
+                      max: undefined,
+                      elements: undefined,
+                      relatedTableId: undefined,
+                      relationshipType: undefined,
+                      twoWay: false,
+                      twoWayKey: undefined,
+                      onDelete: undefined,
+                      array:
+                        newType === 'point' ||
+                        newType === 'linestring' ||
+                        newType === 'polygon'
+                          ? false
+                          : prev.array,
                     }
                   })
                   if (value === 'enum') {
@@ -1371,49 +1374,48 @@ export function ColumnDrawer({
               </div>
             )}
 
-            {!isEditMode &&
-              TEXT_TYPES_WITH_ENCRYPT.includes(formData.type) && (
-                <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                  <div className="px-6 py-4">
-                    <h3 className="text-[15px] font-semibold text-foreground">
-                      At-rest encryption
-                    </h3>
-                    <p className="text-[13px] text-muted-foreground mt-2">
-                      {ENCRYPT_DESCRIPTION}
-                    </p>
-                  </div>
-                  <div className="border-t border-border" />
-                  <div className="px-6 py-4">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="column-encrypt"
-                        checked={formData.encrypt || false}
-                        onCheckedChange={(checked) => {
-                          const value = checked === true
-                          encryptCheckedRef.current = value
-                          setFormData((prev) => ({
-                            ...prev,
-                            encrypt: value,
-                            ...((formData.type === 'string' ||
-                              formData.type === 'varchar') &&
-                              value &&
-                              (!prev.size || prev.size < 150)
-                              ? { size: 150 }
-                              : {}),
-                          }))
-                        }}
-                        disabled={isLoading}
-                      />
-                      <Label
-                        htmlFor="column-encrypt"
-                        className="text-[13px] font-medium cursor-pointer"
-                      >
-                        Enable
-                      </Label>
-                    </div>
+            {!isEditMode && TEXT_TYPES_WITH_ENCRYPT.includes(formData.type) && (
+              <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                <div className="px-6 py-4">
+                  <h3 className="text-[15px] font-semibold text-foreground">
+                    At-rest encryption
+                  </h3>
+                  <p className="text-[13px] text-muted-foreground mt-2">
+                    {ENCRYPT_DESCRIPTION}
+                  </p>
+                </div>
+                <div className="border-t border-border" />
+                <div className="px-6 py-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="column-encrypt"
+                      checked={formData.encrypt || false}
+                      onCheckedChange={(checked) => {
+                        const value = checked === true
+                        encryptCheckedRef.current = value
+                        setFormData((prev) => ({
+                          ...prev,
+                          encrypt: value,
+                          ...((formData.type === 'string' ||
+                            formData.type === 'varchar') &&
+                          value &&
+                          (!prev.size || prev.size < 150)
+                            ? { size: 150 }
+                            : {}),
+                        }))
+                      }}
+                      disabled={isLoading}
+                    />
+                    <Label
+                      htmlFor="column-encrypt"
+                      className="text-[13px] font-medium cursor-pointer"
+                    >
+                      Enable
+                    </Label>
                   </div>
                 </div>
-              )}
+              </div>
+            )}
           </div>
 
           <div className="flex-shrink-0 px-6 py-4 border-t border-border bg-muted/30 flex flex-col gap-2 sm:flex-row sm:justify-start">

@@ -93,7 +93,10 @@ export async function ensureApexDomainInOrganization(
     })
   } catch (err: unknown) {
     const e = err as { type?: string; message?: string }
-    if (e?.type === 'domain_already_exists' || e?.message?.includes('already exists')) {
+    if (
+      e?.type === 'domain_already_exists' ||
+      e?.message?.includes('already exists')
+    ) {
       return // Non-fatal
     }
     throw err

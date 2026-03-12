@@ -173,7 +173,10 @@ export function getActiveProfile(): ConsoleProfile {
   const stored = getStoredProfile()
   if (!stored) return CONSOLE_PROFILES[getProfileFromEnv()]
   const canonical = CONSOLE_PROFILES[stored.id]
-  const mergedFeatures = { ...canonical.features, ...stored.features } as ConsoleProfileFeatures
+  const mergedFeatures = {
+    ...canonical.features,
+    ...stored.features,
+  } as ConsoleProfileFeatures
   return { ...stored, features: mergedFeatures }
 }
 
@@ -218,10 +221,9 @@ export function setDebugProfileOverride(profileId: ConsoleProfileId | null) {
  * Stored profile only keeps override keys in features; getActiveProfile merges with canonical.
  * Dispatches CONSOLE_PROFILE_CHANGE_EVENT so UI re-renders.
  */
-export function setDebugProfileFeatureOverride<K extends keyof ConsoleProfileFeatures>(
-  key: K,
-  value: ConsoleProfileFeatures[K],
-) {
+export function setDebugProfileFeatureOverride<
+  K extends keyof ConsoleProfileFeatures,
+>(key: K, value: ConsoleProfileFeatures[K]) {
   if (typeof window === 'undefined') return
   const stored = getStoredProfile()
   const profileId = stored?.id ?? getProfileFromEnv()
@@ -252,7 +254,10 @@ export function subscribeToProfileChange(
     if (e.key === DEBUG_PROFILE_KEY) handler()
   }
 
-  window.addEventListener(CONSOLE_PROFILE_CHANGE_EVENT, handler as EventListener)
+  window.addEventListener(
+    CONSOLE_PROFILE_CHANGE_EVENT,
+    handler as EventListener,
+  )
   window.addEventListener('storage', storageHandler)
 
   return () => {

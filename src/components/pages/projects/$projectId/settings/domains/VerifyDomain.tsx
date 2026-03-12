@@ -32,7 +32,9 @@ export function VerifyDomainDialog({
 }: VerifyDomainDialogProps) {
   const verifyDomainMutation = useVerifyDomain(projectId, region)
   const deleteDomainMutation = useDeleteDomain(projectId, region)
-  const [verificationError, setVerificationError] = useState<string | null>(null)
+  const [verificationError, setVerificationError] = useState<string | null>(
+    null,
+  )
 
   useEffect(() => {
     if (open) setVerificationError(null)
@@ -65,7 +67,8 @@ export function VerifyDomainDialog({
       }
     } catch (error: unknown) {
       setVerificationError(
-        (error instanceof Error ? error.message : null) || 'Failed to verify domain',
+        (error instanceof Error ? error.message : null) ||
+          'Failed to verify domain',
       )
     }
   }
@@ -93,8 +96,7 @@ export function VerifyDomainDialog({
               size="sm"
               onClick={handleChange}
               disabled={
-                verifyDomainMutation.isPending ||
-                deleteDomainMutation.isPending
+                verifyDomainMutation.isPending || deleteDomainMutation.isPending
               }
             >
               Change

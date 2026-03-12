@@ -228,15 +228,15 @@ bun run format:check
 
 ## Environment Variables
 
-| Variable                          | Required | Default                        | Description                          |
-| --------------------------------- | -------- | ------------------------------ | ------------------------------------ |
-| `VITE_APPWRITE_ENDPOINT`          | Yes      | `https://cloud.appwrite.io/v1` | Appwrite API endpoint                |
+| Variable                          | Required | Default                        | Description                                                      |
+| --------------------------------- | -------- | ------------------------------ | ---------------------------------------------------------------- |
+| `VITE_APPWRITE_ENDPOINT`          | Yes      | `https://cloud.appwrite.io/v1` | Appwrite API endpoint                                            |
 | `VITE_CONSOLE_PROFILE`            | No       | `cloud`                        | `cloud` or `self-hosted` – controls which features are available |
-| `VITE_INSTRUMENTATION_SCRIPT_SRC` | No       | -                              | Analytics/instrumentation script URL |
-| `VITE_STRIPE_PUBLISHABLE_KEY`     | No       | -                              | Stripe publishable key for billing   |
-| `VITE_COMPANY_NAME`               | No       | `Appwrite`                     | Company name for branding            |
-| `VITE_CONTACT_SALES_URL`          | No       | -                              | Contact sales page URL               |
-| `VITE_LEGAL_EMAIL`                | No       | `legal@appwrite.io`            | Legal contact email                  |
+| `VITE_INSTRUMENTATION_SCRIPT_SRC` | No       | -                              | Analytics/instrumentation script URL                             |
+| `VITE_STRIPE_PUBLISHABLE_KEY`     | No       | -                              | Stripe publishable key for billing                               |
+| `VITE_COMPANY_NAME`               | No       | `Appwrite`                     | Company name for branding                                        |
+| `VITE_CONTACT_SALES_URL`          | No       | -                              | Contact sales page URL                                           |
+| `VITE_LEGAL_EMAIL`                | No       | `legal@appwrite.io`            | Legal contact email                                              |
 
 ## License
 

@@ -64,9 +64,7 @@ export function DomainTargetCard({
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">
-          Target
-        </h3>
+        <h3 className="text-[15px] font-semibold text-foreground">Target</h3>
       </div>
       <div className="border-t border-border" />
       <div className="px-6 py-4 space-y-4">
@@ -100,8 +98,7 @@ export function DomainTargetCard({
               behaviour === 'branch'
                 ? 'border-foreground bg-primary/5'
                 : 'border-border hover:border-muted-foreground/50',
-              (disabled || branchDisabled) &&
-                'opacity-50 cursor-not-allowed',
+              (disabled || branchDisabled) && 'opacity-50 cursor-not-allowed',
             )}
           >
             <GitBranch className="h-5 w-5 text-muted-foreground mb-2" />
@@ -120,8 +117,7 @@ export function DomainTargetCard({
               behaviour === 'redirect'
                 ? 'border-foreground bg-primary/5'
                 : 'border-border hover:border-muted-foreground/50',
-              (disabled || redirectDisabled) &&
-                'opacity-50 cursor-not-allowed',
+              (disabled || redirectDisabled) && 'opacity-50 cursor-not-allowed',
             )}
           >
             <ArrowRight className="h-5 w-5 text-muted-foreground mb-2" />
@@ -154,42 +150,44 @@ export function DomainTargetCard({
           </div>
         )}
 
-        {behaviour === 'redirect' && onRedirectUrlChange && onStatusCodeChange && (
-          <div className="space-y-3">
-            <div>
-              <Label className="text-[12px]">Redirect URL</Label>
-              <Input
-                placeholder="https://example.com"
-                value={redirectUrl}
-                onChange={(e) => onRedirectUrlChange(e.target.value)}
-                className="font-mono mt-1.5"
-                disabled={disabled}
-              />
+        {behaviour === 'redirect' &&
+          onRedirectUrlChange &&
+          onStatusCodeChange && (
+            <div className="space-y-3">
+              <div>
+                <Label className="text-[12px]">Redirect URL</Label>
+                <Input
+                  placeholder="https://example.com"
+                  value={redirectUrl}
+                  onChange={(e) => onRedirectUrlChange(e.target.value)}
+                  className="font-mono mt-1.5"
+                  disabled={disabled}
+                />
+              </div>
+              <div>
+                <Label className="text-[12px]">Status code</Label>
+                <p className="text-[11px] text-muted-foreground mt-0.5 mb-1.5">
+                  301/308 permanent, 302/307 temporary
+                </p>
+                <Select
+                  value={statusCode}
+                  onValueChange={onStatusCodeChange}
+                  disabled={disabled}
+                >
+                  <SelectTrigger className="mt-1.5 h-9 min-w-[240px] [&_[data-slot=select-value]]:line-clamp-none">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUS_CODES.map((s) => (
+                      <SelectItem key={s.value} value={s.value}>
+                        {s.label} — {s.description}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div>
-              <Label className="text-[12px]">Status code</Label>
-              <p className="text-[11px] text-muted-foreground mt-0.5 mb-1.5">
-                301/308 permanent, 302/307 temporary
-              </p>
-              <Select
-                value={statusCode}
-                onValueChange={onStatusCodeChange}
-                disabled={disabled}
-              >
-                <SelectTrigger className="mt-1.5 h-9 min-w-[240px] [&_[data-slot=select-value]]:line-clamp-none">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {STATUS_CODES.map((s) => (
-                    <SelectItem key={s.value} value={s.value}>
-                      {s.label} — {s.description}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        )}
+          )}
       </div>
     </div>
   )

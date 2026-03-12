@@ -22,6 +22,8 @@ import {
   useDomain,
   useDomainRecords,
   useDomainZone,
+  DNS_RECORDS_DEFAULT_SORT_BY,
+  DNS_RECORDS_DEFAULT_SORT_ORDER,
 } from '@/lib/react-query/hooks'
 import { ServiceHeader } from '@/components/pages/projects/$projectId/shared/ServiceHeader'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -102,8 +104,12 @@ import {
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import {
   getQueryParam,
+  getSort,
+  parseSort,
+  encodeSort,
   queryParamToMap,
   mapToQueryParam,
+  buildListSearchParams,
   dnsRecordsFilterColumns,
 } from '@/lib/table-filters'
 import type { CompactFilterKey } from '@/lib/table-filters'
@@ -154,7 +160,9 @@ export function View({ initialData }: ViewProps = {}) {
     useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
 
-  const search = useSearch({ strict: false }) as Record<string, unknown> | undefined
+  const search = useSearch({ strict: false }) as
+    | Record<string, unknown>
+    | undefined
   const isRecordsIndex = useMemo(
     () =>
       location.pathname.replace(/\/$/, '') ===
@@ -172,8 +180,27 @@ export function View({ initialData }: ViewProps = {}) {
       getQueryParam(url) ?? (search.query as string | undefined) ?? null,
     )
   }, [isRecordsIndex, location.pathname, location.search, search?.query])
+  const recordsSortParams = useMemo(() => {
+    if (!isRecordsIndex || typeof search !== 'object' || !search) return null
+    const url = new URL(
+      location.pathname + location.search,
+      window.location.origin,
+    )
+    const parsed = parseSort(search.sort as string | undefined) ?? getSort(url)
+    return (
+      parsed ?? {
+        sortBy: DNS_RECORDS_DEFAULT_SORT_BY,
+        sortOrder: DNS_RECORDS_DEFAULT_SORT_ORDER as 'asc' | 'desc',
+      }
+    )
+  }, [isRecordsIndex, search?.sort, location.pathname, location.search])
+  const recordsSortBy = recordsSortParams?.sortBy ?? DNS_RECORDS_DEFAULT_SORT_BY
+  const recordsSortOrder =
+    recordsSortParams?.sortOrder ?? DNS_RECORDS_DEFAULT_SORT_ORDER
   const filterQueries =
-    recordsFilterMap.size > 0 ? Array.from(recordsFilterMap.values()) : undefined
+    recordsFilterMap.size > 0
+      ? Array.from(recordsFilterMap.values())
+      : undefined
 
   // Convert 1-indexed page to 0-indexed for API
   const pageIndexed = currentPage - 1
@@ -184,10 +211,15 @@ export function View({ initialData }: ViewProps = {}) {
 
   // Fetch DNS records (use initialData only when no filters so we don't show unfiltered data when filtered)
   const hasRecordFilters = (filterQueries?.length ?? 0) > 0
-  const {
-    dnsRecords: recordsFromHook,
-    total: recordsTotalFromHook,
-  } = useDomainRecords(domainId, pageIndexed, pageSize, filterQueries)
+  const { dnsRecords: recordsFromHook, total: recordsTotalFromHook } =
+    useDomainRecords(
+      domainId,
+      pageIndexed,
+      pageSize,
+      filterQueries,
+      recordsSortBy,
+      recordsSortOrder,
+    )
   const isFirstPage = currentPage === 1
   const canUseInitialRecords =
     isFirstPage &&
@@ -197,14 +229,7 @@ export function View({ initialData }: ViewProps = {}) {
   const rawRecords = canUseInitialRecords
     ? initialData!.records.dnsRecords
     : (recordsFromHook ?? [])
-  const dnsRecords = useMemo(() => {
-    if (!rawRecords.length) return []
-    return [...rawRecords].sort((a, b) => {
-      if (a.lock && !b.lock) return -1
-      if (!a.lock && b.lock) return 1
-      return new Date(a.$createdAt).getTime() - new Date(b.$createdAt).getTime()
-    })
-  }, [rawRecords])
+  const dnsRecords = rawRecords
   const recordsTotal =
     isFirstPage && initialData?.records && !hasRecordFilters
       ? (recordsTotalFromHook ?? initialData.records.total)
@@ -583,18 +608,52 @@ export function View({ initialData }: ViewProps = {}) {
   }
 
   const recordsRouteTo = '/organizations/$orgId/domains/$domainId' as const
+  const recordsSearchWithSort =
+    (queryParam: string | undefined, sortParam: string | undefined) =>
+    (prev: Record<string, unknown>) => ({
+      ...(typeof prev === 'object' && prev !== null ? prev : {}),
+      ...buildListSearchParams({
+        query: queryParam ?? undefined,
+        sort: sortParam ?? undefined,
+      }),
+    })
+  const handleDnsSortChange = (sortBy: string, sortOrder: 'asc' | 'desc') => {
+    setCurrentPage(1)
+    setSelectedRecords(new Set())
+    const sortParam =
+      sortBy !== DNS_RECORDS_DEFAULT_SORT_BY ||
+      sortOrder !== DNS_RECORDS_DEFAULT_SORT_ORDER
+        ? encodeSort(sortBy, sortOrder)
+        : undefined
+    navigate({
+      to: recordsRouteTo,
+      params: { orgId: orgId!, domainId: domainId! },
+      search: recordsSearchWithSort(
+        recordsFilterMap.size > 0
+          ? mapToQueryParam(recordsFilterMap)
+          : undefined,
+        sortParam,
+      ),
+      replace: true,
+    })
+  }
   const applyFilter = (compactKey: CompactFilterKey, queryStr: string) => {
     const next = new Map(recordsFilterMap)
     next.set(compactKey, queryStr)
     setCurrentPage(1)
     setSelectedRecords(new Set())
+    const sortParam =
+      recordsSortBy !== DNS_RECORDS_DEFAULT_SORT_BY ||
+      recordsSortOrder !== DNS_RECORDS_DEFAULT_SORT_ORDER
+        ? encodeSort(recordsSortBy, recordsSortOrder)
+        : undefined
     navigate({
       to: recordsRouteTo,
       params: { orgId: orgId!, domainId: domainId! },
-      search: (prev: Record<string, unknown>) => ({
-        ...(typeof prev === 'object' && prev !== null ? prev : {}),
-        query: mapToQueryParam(next) || undefined,
-      }),
+      search: recordsSearchWithSort(
+        mapToQueryParam(next) || undefined,
+        sortParam,
+      ),
       replace: true,
     })
   }
@@ -604,20 +663,18 @@ export function View({ initialData }: ViewProps = {}) {
     setCurrentPage(1)
     setSelectedRecords(new Set())
     setFiltersOpen(false)
+    const sortParam =
+      recordsSortBy !== DNS_RECORDS_DEFAULT_SORT_BY ||
+      recordsSortOrder !== DNS_RECORDS_DEFAULT_SORT_ORDER
+        ? encodeSort(recordsSortBy, recordsSortOrder)
+        : undefined
     navigate({
       to: recordsRouteTo,
       params: { orgId: orgId!, domainId: domainId! },
-      search: (prev: Record<string, unknown>) => {
-        const nextSearch = {
-          ...(typeof prev === 'object' && prev !== null ? prev : {}),
-        }
-        if (next.size > 0) {
-          ;(nextSearch as Record<string, unknown>).query = mapToQueryParam(next)
-        } else {
-          delete (nextSearch as Record<string, unknown>).query
-        }
-        return nextSearch
-      },
+      search: recordsSearchWithSort(
+        next.size > 0 ? mapToQueryParam(next) : undefined,
+        sortParam,
+      ),
       replace: true,
     })
   }
@@ -625,16 +682,15 @@ export function View({ initialData }: ViewProps = {}) {
     setCurrentPage(1)
     setSelectedRecords(new Set())
     setFiltersOpen(false)
+    const sortParam =
+      recordsSortBy !== DNS_RECORDS_DEFAULT_SORT_BY ||
+      recordsSortOrder !== DNS_RECORDS_DEFAULT_SORT_ORDER
+        ? encodeSort(recordsSortBy, recordsSortOrder)
+        : undefined
     navigate({
       to: recordsRouteTo,
       params: { orgId: orgId!, domainId: domainId! },
-      search: (prev: Record<string, unknown>) => {
-        const nextSearch = {
-          ...(typeof prev === 'object' && prev !== null ? prev : {}),
-        }
-        delete (nextSearch as Record<string, unknown>).query
-        return nextSearch
-      },
+      search: recordsSearchWithSort(undefined, sortParam),
       replace: true,
     })
   }
@@ -948,14 +1004,29 @@ export function View({ initialData }: ViewProps = {}) {
                   onApplyFilter={applyFilter}
                   resourceLabel="DNS records"
                   filterScope="organizations.domains.records"
-                  onApplyQuery={(queryParam) => {
+                  onApplyQuery={(queryParam, sortParam) => {
                     navigate({
                       to: recordsRouteTo,
                       params: { orgId: orgId!, domainId: domainId! },
-                      search: (prev: Record<string, unknown>) => ({
-                        ...(typeof prev === 'object' && prev !== null ? prev : {}),
-                        query: queryParam ?? undefined,
-                      }),
+                      search: recordsSearchWithSort(
+                        queryParam ?? undefined,
+                        sortParam ?? undefined,
+                      ),
+                      replace: true,
+                    })
+                  }}
+                  sortBy={recordsSortBy}
+                  sortOrder={recordsSortOrder}
+                  onSortChange={handleDnsSortChange}
+                  defaultSortParam={encodeSort(
+                    DNS_RECORDS_DEFAULT_SORT_BY,
+                    DNS_RECORDS_DEFAULT_SORT_ORDER,
+                  )}
+                  onReset={() => {
+                    navigate({
+                      to: recordsRouteTo,
+                      params: { orgId: orgId!, domainId: domainId! },
+                      search: {},
                       replace: true,
                     })
                   }}
@@ -1125,7 +1196,8 @@ export function View({ initialData }: ViewProps = {}) {
                               <Checkbox
                                 checked={
                                   deletableRecords.length > 0 &&
-                                  selectedRecords.size === deletableRecords.length
+                                  selectedRecords.size ===
+                                    deletableRecords.length
                                 }
                                 onCheckedChange={toggleAllRecords}
                               />
@@ -1436,8 +1508,8 @@ export function View({ initialData }: ViewProps = {}) {
                       <DialogHeader className="px-6 pt-6 text-left">
                         <DialogTitle>Delete DNS records</DialogTitle>
                         <DialogDescription className="text-[13px] mt-2">
-                          Are you sure you want to delete{' '}
-                          {selectedRecords.size} DNS record
+                          Are you sure you want to delete {selectedRecords.size}{' '}
+                          DNS record
                           {selectedRecords.size > 1 ? 's' : ''}? This action
                           cannot be undone.
                         </DialogDescription>
@@ -1446,9 +1518,7 @@ export function View({ initialData }: ViewProps = {}) {
                       <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                         <Button
                           variant="outline"
-                          onClick={() =>
-                            setBulkDeleteRecordsDialogOpen(false)
-                          }
+                          onClick={() => setBulkDeleteRecordsDialogOpen(false)}
                           disabled={bulkDeleteRecordsMutation.isPending}
                         >
                           Cancel

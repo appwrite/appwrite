@@ -69,9 +69,7 @@ export const Route = createFileRoute(
       queryClient.ensureQueryData(
         organizationInvoicesQueryOptions(orgId, 0, INVOICES_PER_PAGE),
       ),
-      queryClient.ensureQueryData(
-        organizationCreditsQueryOptions(orgId, 0, 1),
-      ),
+      queryClient.ensureQueryData(organizationCreditsQueryOptions(orgId, 0, 1)),
       queryClient.ensureQueryData(
         organizationCreditsQueryOptions(orgId, 0, CREDITS_PER_PAGE),
       ),

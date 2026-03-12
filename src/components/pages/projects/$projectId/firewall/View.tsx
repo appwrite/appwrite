@@ -1,9 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useParams, useLocation } from '@tanstack/react-router'
-import {
-  useProject,
-  useOrganizationScopes,
-} from '@/lib/react-query/hooks'
+import { useProject, useOrganizationScopes } from '@/lib/react-query/hooks'
 import { canWriteRules } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'

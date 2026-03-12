@@ -473,7 +473,9 @@ export function SiteOverviewView() {
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={handleDownloadBuild}
-                      disabled={!isDeploymentCompleted(activeDeployment?.status)}
+                      disabled={
+                        !isDeploymentCompleted(activeDeployment?.status)
+                      }
                       title={
                         !isDeploymentCompleted(activeDeployment?.status)
                           ? 'Build output is available after the deployment has completed.'

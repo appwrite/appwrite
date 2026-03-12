@@ -81,9 +81,7 @@ export function DeployingView({
   }, [deployment])
 
   const isBuilding =
-    status === 'building' ||
-    status === 'processing' ||
-    status === 'waiting'
+    status === 'building' || status === 'processing' || status === 'waiting'
 
   const cancelDeploymentMutation = useMutation({
     mutationFn: async () => {
@@ -218,128 +216,110 @@ export function DeployingView({
 
   return (
     <>
-    <WizardLayout
-      title="Create function"
-      fallbackPath={`/projects/${projectId}/functions`}
-      fullscreen
-      maxWidth="max-w-[1400px]"
-      footerAlign="right"
-      sidebar={sidebarContent}
-      footer={
-        <div className="flex items-center gap-2">
-          {isBuilding && (
+      <WizardLayout
+        title="Create function"
+        fallbackPath={`/projects/${projectId}/functions`}
+        fullscreen
+        maxWidth="max-w-[1400px]"
+        footerAlign="right"
+        sidebar={sidebarContent}
+        footer={
+          <div className="flex items-center gap-2">
+            {isBuilding && (
+              <Button
+                variant="ghost"
+                onClick={handleCancelDeployment}
+                disabled={cancelDeploymentMutation.isPending}
+              >
+                Cancel deployment
+              </Button>
+            )}
             <Button
-              variant="ghost"
-              onClick={handleCancelDeployment}
-              disabled={cancelDeploymentMutation.isPending}
+              variant={status === 'ready' ? 'default' : 'outline'}
+              onClick={handleGoToFunction}
             >
-              Cancel deployment
+              Go to function
             </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          {/* Build logs – show while building; hide when ready (keep for failed to debug) */}
+          {status !== 'ready' && (
+            <BuildLogsCard
+              buildLogs={buildLogs}
+              durationDisplay={buildDurationDisplay}
+              downloadFilename={`build-logs-${actualDeploymentId || 'deployment'}.txt`}
+            />
           )}
-          <Button
-            variant={status === 'ready' ? 'default' : 'outline'}
-            onClick={handleGoToFunction}
-          >
-            Go to function
-          </Button>
-        </div>
-      }
-    >
-      <div className="space-y-4">
-        {/* Build logs – show while building; hide when ready (keep for failed to debug) */}
-        {status !== 'ready' && (
-          <BuildLogsCard
-            buildLogs={buildLogs}
-            durationDisplay={buildDurationDisplay}
-            downloadFilename={`build-logs-${actualDeploymentId || 'deployment'}.txt`}
-          />
-        )}
 
-        {/* Completion content – appears when ready or failed */}
-        {(status === 'ready' || status === 'failed') && func && (
-          <div
-            className="space-y-4 transition-all duration-300 ease-out animate-in fade-in-0 slide-in-from-bottom-4"
-            style={{
-              animationDuration: '400ms',
-              animationFillMode: 'backwards',
-            }}
-          >
-            <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-              <div className="p-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                      <RuntimeIcon runtime={func.runtime} className="h-6 w-6" />
+          {/* Completion content – appears when ready or failed */}
+          {(status === 'ready' || status === 'failed') && func && (
+            <div
+              className="space-y-4 transition-all duration-300 ease-out animate-in fade-in-0 slide-in-from-bottom-4"
+              style={{
+                animationDuration: '400ms',
+                animationFillMode: 'backwards',
+              }}
+            >
+              <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                <div className="p-6">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-4">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                        <RuntimeIcon
+                          runtime={func.runtime}
+                          className="h-6 w-6"
+                        />
+                      </div>
+                      <div>
+                        <h3 className="text-[16px] font-semibold text-foreground">
+                          {func.name}
+                        </h3>
+                        <CopyableId id={func.$id} size="xs" />
+                        {functionUrl && (
+                          <a
+                            href={functionUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-2 flex items-center gap-1 text-[12px] text-primary hover:underline"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                            {primaryDomain || 'Function URL'}
+                          </a>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-[16px] font-semibold text-foreground">
-                        {func.name}
-                      </h3>
-                      <CopyableId id={func.$id} size="xs" />
-                      {functionUrl && (
+                    {functionUrl && (
+                      <Button asChild>
                         <a
                           href={functionUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="mt-2 flex items-center gap-1 text-[12px] text-primary hover:underline"
                         >
-                          <ExternalLink className="h-3.5 w-3.5" />
-                          {primaryDomain || 'Function URL'}
+                          <ExternalLink className="mr-1.5 h-4 w-4" />
+                          Open URL
                         </a>
-                      )}
-                    </div>
+                      </Button>
+                    )}
                   </div>
-                  {functionUrl && (
-                    <Button asChild>
-                      <a
-                        href={functionUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <ExternalLink className="mr-1.5 h-4 w-4" />
-                        Open URL
-                      </a>
-                    </Button>
-                  )}
                 </div>
               </div>
-            </div>
 
-            {/* Next steps */}
-            <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-              <div className="px-6 py-4">
-                <h3 className="text-[15px] font-semibold text-foreground">
-                  Next steps
-                </h3>
-                <p className="text-[13px] text-muted-foreground mt-2">
-                  Run your function or connect a repository for deployments
-                </p>
-              </div>
-              <div className="border-t border-border" />
-              <div className="grid grid-cols-1 sm:grid-cols-2 divide-x divide-y divide-border">
-                <Link
-                  to="/projects/$projectId/functions/$functionId/executions"
-                  params={{
-                    projectId: projectId!,
-                    functionId: actualFunctionId!,
-                  }}
-                  className="flex items-center gap-4 px-6 py-4 hover:bg-muted/20 transition-colors cursor-pointer"
-                >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                    <Play className="h-5 w-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[13px] font-medium text-foreground">
-                      Create execution
-                    </p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      Run your function manually
-                    </p>
-                  </div>
-                </Link>
-                {(!func.installationId || !func.providerRepositoryId) && (
+              {/* Next steps */}
+              <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                <div className="px-6 py-4">
+                  <h3 className="text-[15px] font-semibold text-foreground">
+                    Next steps
+                  </h3>
+                  <p className="text-[13px] text-muted-foreground mt-2">
+                    Run your function or connect a repository for deployments
+                  </p>
+                </div>
+                <div className="border-t border-border" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 divide-x divide-y divide-border">
                   <Link
-                    to="/projects/$projectId/functions/$functionId/settings"
+                    to="/projects/$projectId/functions/$functionId/executions"
                     params={{
                       projectId: projectId!,
                       functionId: actualFunctionId!,
@@ -347,62 +327,83 @@ export function DeployingView({
                     className="flex items-center gap-4 px-6 py-4 hover:bg-muted/20 transition-colors cursor-pointer"
                   >
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                      <GitBranch className="h-5 w-5" />
+                      <Play className="h-5 w-5" />
                     </div>
                     <div className="min-w-0">
                       <p className="text-[13px] font-medium text-foreground">
-                        Connect repository
+                        Create execution
                       </p>
                       <p className="text-[11px] text-muted-foreground mt-0.5">
-                        Link Git for automatic deployments
+                        Run your function manually
                       </p>
                     </div>
                   </Link>
-                )}
+                  {(!func.installationId || !func.providerRepositoryId) && (
+                    <Link
+                      to="/projects/$projectId/functions/$functionId/settings"
+                      params={{
+                        projectId: projectId!,
+                        functionId: actualFunctionId!,
+                      }}
+                      className="flex items-center gap-4 px-6 py-4 hover:bg-muted/20 transition-colors cursor-pointer"
+                    >
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                        <GitBranch className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[13px] font-medium text-foreground">
+                          Connect repository
+                        </p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          Link Git for automatic deployments
+                        </p>
+                      </div>
+                    </Link>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
-    </WizardLayout>
-
-    {/* Cancel build confirmation */}
-    <Dialog
-      open={cancelBuildDialogOpen}
-      onOpenChange={setCancelBuildDialogOpen}
-    >
-      <DialogContent className="sm:max-w-md p-0">
-        <DialogHeader className="px-6 pt-6 pb-4 text-left">
-          <DialogTitle>Cancel build</DialogTitle>
-          <DialogDescription className="text-[13px] mt-2">
-            Stop the current deployment? You can deploy again later.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="border-t border-border" />
-        <div className="px-6 pb-4 pt-4">
-          {deployment && (
-            <DeploymentInfo deployment={deployment} showStatus={true} />
           )}
         </div>
-        <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button
-            variant="outline"
-            onClick={() => setCancelBuildDialogOpen(false)}
-            className="h-9 text-[13px]"
-          >
-            Keep building
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={() => cancelDeploymentMutation.mutate()}
-            disabled={cancelDeploymentMutation.isPending}
-            className="h-9 text-[13px]"
-          >
-            Cancel build
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  </>
+      </WizardLayout>
+
+      {/* Cancel build confirmation */}
+      <Dialog
+        open={cancelBuildDialogOpen}
+        onOpenChange={setCancelBuildDialogOpen}
+      >
+        <DialogContent className="sm:max-w-md p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+            <DialogTitle>Cancel build</DialogTitle>
+            <DialogDescription className="text-[13px] mt-2">
+              Stop the current deployment? You can deploy again later.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="border-t border-border" />
+          <div className="px-6 pb-4 pt-4">
+            {deployment && (
+              <DeploymentInfo deployment={deployment} showStatus={true} />
+            )}
+          </div>
+          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setCancelBuildDialogOpen(false)}
+              className="h-9 text-[13px]"
+            >
+              Keep building
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => cancelDeploymentMutation.mutate()}
+              disabled={cancelDeploymentMutation.isPending}
+              className="h-9 text-[13px]"
+            >
+              Cancel build
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

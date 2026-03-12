@@ -22,7 +22,7 @@ export const Route = createFileRoute(
       .catch(() => null)
 
     // Use same region as useProject() so query key matches: region is (project.region || 'unknown') when project exists
-    const region = project ? (project.region || 'unknown') : undefined
+    const region = project ? project.region || 'unknown' : undefined
     const migrationsData = await queryClient
       .ensureQueryData(projectMigrationsQueryOptions(projectId, region))
       .catch(() => undefined)
@@ -38,9 +38,5 @@ export const Route = createFileRoute(
 
 function SettingsMigrationsPage() {
   const loaderData = Route.useLoaderData()
-  return (
-    <View
-      initialMigrationsData={loaderData?.migrationsData}
-    />
-  )
+  return <View initialMigrationsData={loaderData?.migrationsData} />
 }

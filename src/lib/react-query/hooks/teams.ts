@@ -205,9 +205,7 @@ export function useConsoleTeam(teamId: string | null | undefined) {
  * Hook to update console team preferences.
  * Invalidates the console team query on success.
  */
-export function useUpdateConsoleTeamPrefs(
-  teamId: string | null | undefined,
-) {
+export function useUpdateConsoleTeamPrefs(teamId: string | null | undefined) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (prefs: Record<string, unknown>) =>
@@ -241,9 +239,7 @@ export function useOrganizationMemberships(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
-  initialData?: Awaited<
-    ReturnType<typeof fetchOrganizationMemberships>
-  >,
+  initialData?: Awaited<ReturnType<typeof fetchOrganizationMemberships>>,
   options?: { placeholderData?: unknown },
 ) {
   const {
@@ -253,12 +249,7 @@ export function useOrganizationMemberships(
     error,
     refetch,
   } = useQuery({
-    ...organizationMembershipsQueryOptions(
-      organizationId,
-      page,
-      limit,
-      search,
-    ),
+    ...organizationMembershipsQueryOptions(organizationId, page, limit, search),
     initialData,
     initialDataUpdatedAt: initialData ? 1 : 0,
     ...(options?.placeholderData !== undefined && {

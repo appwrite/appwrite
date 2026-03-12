@@ -29,8 +29,9 @@ export function Webhooks({
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [selectedWebhook, setSelectedWebhook] =
-    useState<Models.Webhook | null>(null)
+  const [selectedWebhook, setSelectedWebhook] = useState<Models.Webhook | null>(
+    null,
+  )
 
   const { webhooks, isLoading } = useProjectWebhooks(projectId)
 
@@ -142,11 +143,17 @@ export function Webhooks({
                     </TableCell>
                     <TableCell className="px-4 py-3">
                       {webhook.enabled ? (
-                        <Badge variant="success" className="text-[10px] shrink-0">
+                        <Badge
+                          variant="success"
+                          className="text-[10px] shrink-0"
+                        >
                           Enabled
                         </Badge>
                       ) : (
-                        <Badge variant="inactive" className="text-[10px] shrink-0">
+                        <Badge
+                          variant="inactive"
+                          className="text-[10px] shrink-0"
+                        >
                           Disabled
                         </Badge>
                       )}

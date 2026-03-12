@@ -24,7 +24,10 @@ export const Route = createFileRoute('/_public/projects/$projectId/')({
           .catch(() => null),
       ])
       const apiKeys = mapApiKeysFromResponse(apiKeysRaw)
-      const project = projectRaw as { platforms?: unknown[]; clients?: unknown[] } | null
+      const project = projectRaw as {
+        platforms?: unknown[]
+        clients?: unknown[]
+      } | null
       const platforms = project?.platforms ?? project?.clients ?? []
       return { apiKeys, apiKeysRaw, platforms }
     } catch (error) {

@@ -6,7 +6,11 @@ import {
   useNavigate,
 } from '@tanstack/react-router'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
-import { useProjectFunction, useProject, useOrganizationScopes } from '@/lib/react-query/hooks'
+import {
+  useProjectFunction,
+  useProject,
+  useOrganizationScopes,
+} from '@/lib/react-query/hooks'
 import { canShowFunctionSecuritySettings } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { ArrowLeft, AlertCircle } from 'lucide-react'
@@ -36,9 +40,8 @@ import { CreateManualDeploymentModal } from '../shared/CreateManualDeploymentMod
 import { CreateDeploymentProvider } from '../shared/CreateDeploymentContext'
 
 /** When provided, Deployments view renders this below the active deployment card (filter + create). */
-export const DeploymentsToolbarContext = React.createContext<React.ReactNode>(
-  null,
-)
+export const DeploymentsToolbarContext =
+  React.createContext<React.ReactNode>(null)
 
 export function Layout() {
   return (
@@ -110,11 +113,14 @@ function FunctionLayoutContent() {
     // TanStack Router may expose search as a parsed object; use it so filter count/active filters show
     const queryParam =
       typeof search === 'object' && search !== null && 'query' in search
-        ? (search as { query?: string }).query ?? null
+        ? ((search as { query?: string }).query ?? null)
         : getQueryParam(
             new URL(
-              location.pathname + (typeof search === 'string' ? search || '' : ''),
-              typeof window !== 'undefined' ? window.location.origin : 'http://dummy',
+              location.pathname +
+                (typeof search === 'string' ? search || '' : ''),
+              typeof window !== 'undefined'
+                ? window.location.origin
+                : 'http://dummy',
             ),
           )
     return queryParamToMap(queryParam)
@@ -230,12 +236,7 @@ function FunctionLayoutContent() {
 
   // Redirect from variables/security/settings when user lacks permission
   useEffect(() => {
-    if (
-      showSecuritySettings ||
-      !projectId ||
-      !functionId
-    )
-      return
+    if (showSecuritySettings || !projectId || !functionId) return
     if (
       activeTab === 'variables' ||
       activeTab === 'security' ||
@@ -423,9 +424,7 @@ function FunctionLayoutContent() {
           onSearchChange={
             activeTab === 'domains' ? handleDomainsSearchChange : undefined
           }
-          showFilters={
-            activeTab === 'executions' || activeTab === 'domains'
-          }
+          showFilters={activeTab === 'executions' || activeTab === 'domains'}
           filterTrigger={
             activeTab === 'executions' || activeTab === 'domains' ? (
               <FiltersPopover
@@ -444,7 +443,9 @@ function FunctionLayoutContent() {
                   navigate({
                     to: location.pathname,
                     search: (prev) => ({
-                      ...(typeof prev === 'object' && prev !== null ? prev : {}),
+                      ...(typeof prev === 'object' && prev !== null
+                        ? prev
+                        : {}),
                       query: queryParam ?? undefined,
                       page: 1,
                     }),
@@ -506,7 +507,9 @@ function FunctionLayoutContent() {
                       navigate({
                         to: location.pathname,
                         search: (prev) => ({
-                          ...(typeof prev === 'object' && prev !== null ? prev : {}),
+                          ...(typeof prev === 'object' && prev !== null
+                            ? prev
+                            : {}),
                           query: queryParam ?? undefined,
                           page: 1,
                         }),

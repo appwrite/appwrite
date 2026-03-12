@@ -49,7 +49,11 @@ import {
   USERS_DEFAULT_SORT_BY,
   USERS_DEFAULT_SORT_ORDER,
 } from '@/lib/react-query/hooks/users'
-import { canShowAuthSecuritySettings, canCreateUser, canCreateTeam } from '@/lib/console-access-checks'
+import {
+  canShowAuthSecuritySettings,
+  canCreateUser,
+  canCreateTeam,
+} from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
@@ -152,7 +156,10 @@ export function View({
         sortOrder: parsed.sortOrder,
       }
     }
-    const url = new URL(location.pathname + location.search, window.location.origin)
+    const url = new URL(
+      location.pathname + location.search,
+      window.location.origin,
+    )
     const parsed = getSort(url) ?? defaultSort
     return {
       search: getSearch(url),
@@ -162,7 +169,13 @@ export function View({
       sortBy: parsed.sortBy,
       sortOrder: parsed.sortOrder,
     }
-  }, [isAuthUsersIndex, usersListSearch, location.pathname, location.search, projectId])
+  }, [
+    isAuthUsersIndex,
+    usersListSearch,
+    location.pathname,
+    location.search,
+    projectId,
+  ])
 
   const isAuthTeamsList =
     location.pathname.includes('/auth/teams') &&
@@ -177,7 +190,13 @@ export function View({
       limit: search.teamsLimit ?? TEAMS_DEFAULT_PAGE_SIZE,
       filterMap: queryParamToMap(search.teamsQuery ?? null),
     }
-  }, [isAuthTeamsList, search?.teamsSearch, search?.teamsQuery, search?.teamsPage, search?.teamsLimit])
+  }, [
+    isAuthTeamsList,
+    search?.teamsSearch,
+    search?.teamsQuery,
+    search?.teamsPage,
+    search?.teamsLimit,
+  ])
 
   // Check if we're on a user detail route - if so, don't render this component
   const isUserDetailRoute = useMemo(() => {
@@ -226,8 +245,7 @@ export function View({
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
-  const showAuthSecuritySettings =
-    canShowAuthSecuritySettings(access, features)
+  const showAuthSecuritySettings = canShowAuthSecuritySettings(access, features)
 
   const urlPage = usersListParams?.page ?? 1
   const urlLimit = usersListParams?.limit ?? DEFAULT_PAGE_SIZE
@@ -238,7 +256,8 @@ export function View({
   const usersFilterQueries =
     usersFilterMap.size > 0 ? Array.from(usersFilterMap.values()) : undefined
   const usersSortParam =
-    urlSortBy !== USERS_DEFAULT_SORT_BY || urlSortOrder !== USERS_DEFAULT_SORT_ORDER
+    urlSortBy !== USERS_DEFAULT_SORT_BY ||
+    urlSortOrder !== USERS_DEFAULT_SORT_ORDER
       ? encodeSort(urlSortBy, urlSortOrder)
       : undefined
 
@@ -250,10 +269,14 @@ export function View({
     teamsFilterMap.size > 0 ? Array.from(teamsFilterMap.values()) : undefined
 
   const [usersSearchInput, setUsersSearchInput] = useState('')
-  const usersSearchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const usersSearchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  )
 
   const [teamsSearchInput, setTeamsSearchInput] = useState('')
-  const teamsSearchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const teamsSearchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  )
   const [usersViewMode, setUsersViewMode] = useState<'list' | 'grid'>('list')
   const [teamsViewMode, setTeamsViewMode] = useState<'list' | 'grid'>('grid')
   const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false)
@@ -307,7 +330,8 @@ export function View({
 
   // Debounced navigate when users search input changes
   useEffect(() => {
-    if (usersSearchDebounceRef.current) clearTimeout(usersSearchDebounceRef.current)
+    if (usersSearchDebounceRef.current)
+      clearTimeout(usersSearchDebounceRef.current)
     usersSearchDebounceRef.current = setTimeout(() => {
       const trimmed = usersSearchInput.trim()
       if (trimmed === (urlSearch ?? '')) return
@@ -334,7 +358,8 @@ export function View({
       })
     }, 300)
     return () => {
-      if (usersSearchDebounceRef.current) clearTimeout(usersSearchDebounceRef.current)
+      if (usersSearchDebounceRef.current)
+        clearTimeout(usersSearchDebounceRef.current)
     }
   }, [
     usersSearchInput,
@@ -353,8 +378,9 @@ export function View({
   const [usersDisplayedFilterQueryString, setUsersDisplayedFilterQueryString] =
     useState('')
   const [usersDisplayedSortBy, setUsersDisplayedSortBy] = useState(urlSortBy)
-  const [usersDisplayedSortOrder, setUsersDisplayedSortOrder] =
-    useState<'asc' | 'desc'>(urlSortOrder)
+  const [usersDisplayedSortOrder, setUsersDisplayedSortOrder] = useState<
+    'asc' | 'desc'
+  >(urlSortOrder)
   const usersDisplayedFilterQueries = useMemo(() => {
     if (!usersDisplayedFilterQueryString) return undefined
     const map = queryParamToMap(usersDisplayedFilterQueryString)
@@ -378,7 +404,14 @@ export function View({
     setDeleteDialogOpen(false)
     setSelectedTeams(new Set())
     setDeleteTeamDialogOpen(false)
-  }, [location.pathname, projectId, urlSearch, teamsUrlSearch, usersFilterMap.size, teamsFilterMap.size])
+  }, [
+    location.pathname,
+    projectId,
+    urlSearch,
+    teamsUrlSearch,
+    usersFilterMap.size,
+    teamsFilterMap.size,
+  ])
 
   const [teamsDisplayedPage, setTeamsDisplayedPage] = useState(1)
   const [teamsDisplayedSearch, setTeamsDisplayedSearch] = useState<
@@ -419,7 +452,15 @@ export function View({
       setUsersDisplayedSortOrder(urlSortOrder)
       hasInitedUsersDisplayedRef.current = true
     }
-  }, [isAuthUsersIndex, usersListParams, urlPage, urlSearch, usersFilterQueryString, urlSortBy, urlSortOrder])
+  }, [
+    isAuthUsersIndex,
+    usersListParams,
+    urlPage,
+    urlSearch,
+    usersFilterQueryString,
+    urlSortBy,
+    urlSortOrder,
+  ])
 
   // Fetch users for the displayed page (what we show - stays until new page is ready)
   const {
@@ -437,7 +478,8 @@ export function View({
   )
 
   useEffect(() => {
-    if (!isAuthUsersIndex || usersFetching || usersLoading || !usersFetched) return
+    if (!isAuthUsersIndex || usersFetching || usersLoading || !usersFetched)
+      return
     const match =
       urlPage === usersDisplayedPage &&
       (urlSearch ?? '') === (usersDisplayedSearch ?? '') &&
@@ -494,7 +536,13 @@ export function View({
       setTeamsDisplayedFilterQueryString(teamsFilterQueryString)
       hasInitedTeamsDisplayedRef.current = true
     }
-  }, [isAuthTeamsList, teamsListParams, teamsUrlPage, teamsUrlSearch, teamsFilterQueryString])
+  }, [
+    isAuthTeamsList,
+    teamsListParams,
+    teamsUrlPage,
+    teamsUrlSearch,
+    teamsFilterQueryString,
+  ])
 
   // Fetch teams for the displayed page (what we show - stays until new page is ready)
   const {
@@ -785,7 +833,9 @@ export function View({
           ...buildListSearchParams({
             search: urlSearch,
             query:
-              usersFilterMap.size > 0 ? mapToQueryParam(usersFilterMap) : undefined,
+              usersFilterMap.size > 0
+                ? mapToQueryParam(usersFilterMap)
+                : undefined,
             page,
             limit: urlLimit,
             sort: usersSortParam,
@@ -810,7 +860,9 @@ export function View({
           ...buildListSearchParams({
             search: urlSearch,
             query:
-              usersFilterMap.size > 0 ? mapToQueryParam(usersFilterMap) : undefined,
+              usersFilterMap.size > 0
+                ? mapToQueryParam(usersFilterMap)
+                : undefined,
             page: 1,
             limit: newPageSize,
             sort: usersSortParam,
@@ -873,7 +925,8 @@ export function View({
   // Debounced navigate when teams search input changes
   useEffect(() => {
     if (activeTab !== 'teams') return
-    if (teamsSearchDebounceRef.current) clearTimeout(teamsSearchDebounceRef.current)
+    if (teamsSearchDebounceRef.current)
+      clearTimeout(teamsSearchDebounceRef.current)
     teamsSearchDebounceRef.current = setTimeout(() => {
       const trimmed = teamsSearchInput.trim()
       if (trimmed === (teamsUrlSearch ?? '')) return
@@ -894,7 +947,8 @@ export function View({
       })
     }, 300)
     return () => {
-      if (teamsSearchDebounceRef.current) clearTimeout(teamsSearchDebounceRef.current)
+      if (teamsSearchDebounceRef.current)
+        clearTimeout(teamsSearchDebounceRef.current)
     }
   }, [
     activeTab,
@@ -1201,8 +1255,8 @@ export function View({
         activeTab={activeTab}
         searchPlaceholder={
           activeTab === 'security' ||
-            activeTab === 'settings' ||
-            activeTab === 'templates'
+          activeTab === 'settings' ||
+          activeTab === 'templates'
             ? undefined
             : `Search ${activeTab}...`
         }
@@ -1258,7 +1312,10 @@ export function View({
               sortBy={urlSortBy}
               sortOrder={urlSortOrder}
               onSortChange={handleUsersSortChange}
-              defaultSortParam={encodeSort(USERS_DEFAULT_SORT_BY, USERS_DEFAULT_SORT_ORDER)}
+              defaultSortParam={encodeSort(
+                USERS_DEFAULT_SORT_BY,
+                USERS_DEFAULT_SORT_ORDER,
+              )}
               onReset={() => {
                 navigate({
                   to: '/projects/$projectId/auth/',
@@ -1322,7 +1379,7 @@ export function View({
           (activeTab === 'security' ||
             activeTab === 'templates' ||
             activeTab === 'settings') &&
-          'pt-4 sm:pt-6',
+            'pt-4 sm:pt-6',
         )}
       >
         {activeTab === 'users' && (
@@ -1591,7 +1648,8 @@ export function View({
                                           </TooltipTrigger>
                                           <TooltipContent>
                                             <p className="text-xs">
-                                              Multi-factor authentication enabled
+                                              Multi-factor authentication
+                                              enabled
                                             </p>
                                           </TooltipContent>
                                         </Tooltip>
@@ -1972,7 +2030,11 @@ export function View({
               ) : (
                 <EmptyState
                   icon={Users}
-                  title={teamsUrlSearch || teamsFilterMap.size > 0 ? undefined : 'No teams yet'}
+                  title={
+                    teamsUrlSearch || teamsFilterMap.size > 0
+                      ? undefined
+                      : 'No teams yet'
+                  }
                   description={
                     teamsUrlSearch || teamsFilterMap.size > 0
                       ? undefined
@@ -2020,7 +2082,11 @@ export function View({
                     <div className="col-span-full">
                       <EmptyState
                         icon={Users}
-                        title={teamsUrlSearch || teamsFilterMap.size > 0 ? undefined : 'No teams yet'}
+                        title={
+                          teamsUrlSearch || teamsFilterMap.size > 0
+                            ? undefined
+                            : 'No teams yet'
+                        }
                         description={
                           teamsUrlSearch || teamsFilterMap.size > 0
                             ? undefined

@@ -46,11 +46,16 @@ export function VerifyEmail({
                       onClick={onResend}
                       disabled={isResendLoading}
                     >
-                      {isResendLoading ? 'Sending…' : 'Resend verification email'}
+                      {isResendLoading
+                        ? 'Sending…'
+                        : 'Resend verification email'}
                     </Button>
                   )}
                   <Link to="/" search={undefined}>
-                    <Button variant={onResend ? 'ghost' : 'default'} className="w-full">
+                    <Button
+                      variant={onResend ? 'ghost' : 'default'}
+                      className="w-full"
+                    >
                       Go to console
                     </Button>
                   </Link>

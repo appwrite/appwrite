@@ -126,9 +126,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
   }, [deployment])
 
   const isBuilding =
-    status === 'building' ||
-    status === 'processing' ||
-    status === 'waiting'
+    status === 'building' || status === 'processing' || status === 'waiting'
 
   const cancelDeploymentMutation = useMutation({
     mutationFn: async () => {
@@ -404,258 +402,258 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
 
   return (
     <>
-    <WizardLayout
-      title="Create site"
-      fallbackPath={`/projects/${projectId}/sites`}
-      fullscreen
-      maxWidth="max-w-[1400px]"
-      footerAlign="right"
-      sidebar={sidebarContent}
-      footer={
-        <div className="flex items-center gap-2">
-          {isBuilding && (
+      <WizardLayout
+        title="Create site"
+        fallbackPath={`/projects/${projectId}/sites`}
+        fullscreen
+        maxWidth="max-w-[1400px]"
+        footerAlign="right"
+        sidebar={sidebarContent}
+        footer={
+          <div className="flex items-center gap-2">
+            {isBuilding && (
+              <Button
+                variant="ghost"
+                onClick={handleCancelDeployment}
+                disabled={cancelDeploymentMutation.isPending}
+              >
+                Cancel deployment
+              </Button>
+            )}
             <Button
-              variant="ghost"
-              onClick={handleCancelDeployment}
-              disabled={cancelDeploymentMutation.isPending}
+              variant={status === 'ready' ? 'default' : 'outline'}
+              onClick={handleGoToDashboard}
             >
-              Cancel deployment
+              Go to dashboard
             </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          {/* Build logs – only while building; hidden when ready */}
+          {status !== 'ready' && (
+            <BuildLogsCard
+              buildLogs={buildLogs}
+              durationDisplay={buildDurationDisplay}
+              downloadFilename={`build-logs-${actualDeploymentId || 'deployment'}.txt`}
+            />
           )}
-          <Button
-            variant={status === 'ready' ? 'default' : 'outline'}
-            onClick={handleGoToDashboard}
-          >
-            Go to dashboard
-          </Button>
-        </div>
-      }
-    >
-      <div className="space-y-4">
-        {/* Build logs – only while building; hidden when ready */}
-        {status !== 'ready' && (
-          <BuildLogsCard
-            buildLogs={buildLogs}
-            durationDisplay={buildDurationDisplay}
-            downloadFilename={`build-logs-${actualDeploymentId || 'deployment'}.txt`}
-          />
-        )}
 
-        {/* Completion content – appears when ready, same view evolves */}
-        {status === 'ready' && site && (
-          <div
-            className="space-y-4 transition-all duration-300 ease-out animate-in fade-in-0 slide-in-from-bottom-4"
-            style={{
-              animationDuration: '400ms',
-              animationFillMode: 'backwards',
-            }}
-          >
-            {/* Site preview card */}
-            <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-              {screenshotUrl ? (
-                <div className="aspect-[21/9] w-full relative overflow-hidden bg-muted">
-                  {!previewImageLoaded && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-muted/50 via-muted/30 to-muted/20">
-                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                      <p className="text-[13px] font-medium text-muted-foreground">
-                        Loading preview…
-                      </p>
+          {/* Completion content – appears when ready, same view evolves */}
+          {status === 'ready' && site && (
+            <div
+              className="space-y-4 transition-all duration-300 ease-out animate-in fade-in-0 slide-in-from-bottom-4"
+              style={{
+                animationDuration: '400ms',
+                animationFillMode: 'backwards',
+              }}
+            >
+              {/* Site preview card */}
+              <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                {screenshotUrl ? (
+                  <div className="aspect-[21/9] w-full relative overflow-hidden bg-muted">
+                    {!previewImageLoaded && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-muted/50 via-muted/30 to-muted/20">
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                        <p className="text-[13px] font-medium text-muted-foreground">
+                          Loading preview…
+                        </p>
+                      </div>
+                    )}
+                    <img
+                      src={screenshotUrl}
+                      alt={`${site.name} preview`}
+                      className="h-full w-full object-cover object-top"
+                      onLoad={() => setPreviewImageLoaded(true)}
+                    />
+                  </div>
+                ) : (
+                  <div className="aspect-[21/9] w-full flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-muted/50 via-muted/30 to-muted/20">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    <p className="text-[13px] font-medium text-muted-foreground">
+                      Generating preview…
+                    </p>
+                    <p className="text-[12px] text-muted-foreground/80">
+                      Screenshot may take a few moments after build completes
+                    </p>
+                    <FrameworkIcon
+                      framework={site.framework}
+                      size="lg"
+                      className="mt-2 opacity-50"
+                    />
+                  </div>
+                )}
+                <div className="p-6">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-4">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                        <FrameworkIcon framework={site.framework} size="md" />
+                      </div>
+                      <div>
+                        <h3 className="text-[16px] font-semibold text-foreground">
+                          {site.name}
+                        </h3>
+                        <CopyableId id={site.$id} size="xs" />
+                        {siteUrl && (
+                          <a
+                            href={siteUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-2 flex items-center gap-1 text-[12px] text-primary hover:underline"
+                          >
+                            <Globe className="h-3.5 w-3.5" />
+                            {primaryDomain}
+                          </a>
+                        )}
+                      </div>
                     </div>
-                  )}
-                  <img
-                    src={screenshotUrl}
-                    alt={`${site.name} preview`}
-                    className="h-full w-full object-cover object-top"
-                    onLoad={() => setPreviewImageLoaded(true)}
-                  />
-                </div>
-              ) : (
-                <div className="aspect-[21/9] w-full flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-muted/50 via-muted/30 to-muted/20">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                  <p className="text-[13px] font-medium text-muted-foreground">
-                    Generating preview…
-                  </p>
-                  <p className="text-[12px] text-muted-foreground/80">
-                    Screenshot may take a few moments after build completes
-                  </p>
-                  <FrameworkIcon
-                    framework={site.framework}
-                    size="lg"
-                    className="mt-2 opacity-50"
-                  />
-                </div>
-              )}
-              <div className="p-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                      <FrameworkIcon framework={site.framework} size="md" />
-                    </div>
-                    <div>
-                      <h3 className="text-[16px] font-semibold text-foreground">
-                        {site.name}
-                      </h3>
-                      <CopyableId id={site.$id} size="xs" />
-                      {siteUrl && (
+                    {siteUrl && (
+                      <Button asChild>
                         <a
                           href={siteUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="mt-2 flex items-center gap-1 text-[12px] text-primary hover:underline"
                         >
-                          <Globe className="h-3.5 w-3.5" />
-                          {primaryDomain}
+                          <ExternalLink className="mr-1.5 h-4 w-4" />
+                          Visit site
                         </a>
-                      )}
-                    </div>
+                      </Button>
+                    )}
                   </div>
-                  {siteUrl && (
-                    <Button asChild>
-                      <a
-                        href={siteUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <ExternalLink className="mr-1.5 h-4 w-4" />
-                        Visit site
-                      </a>
-                    </Button>
-                  )}
                 </div>
               </div>
-            </div>
 
-            {/* Next steps – standard settings card with action row */}
-            <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-              <div className="px-6 py-4">
-                <h3 className="text-[15px] font-semibold text-foreground">
-                  Next steps
-                </h3>
-                <p className="text-[13px] text-muted-foreground mt-2">
-                  Configure your site or share it with others
-                </p>
-              </div>
-              <div className="border-t border-border" />
-              <div className="grid grid-cols-1 sm:grid-cols-2 divide-x divide-y divide-border">
-                {site && !site.installationId && (
+              {/* Next steps – standard settings card with action row */}
+              <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                <div className="px-6 py-4">
+                  <h3 className="text-[15px] font-semibold text-foreground">
+                    Next steps
+                  </h3>
+                  <p className="text-[13px] text-muted-foreground mt-2">
+                    Configure your site or share it with others
+                  </p>
+                </div>
+                <div className="border-t border-border" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 divide-x divide-y divide-border">
+                  {site && !site.installationId && (
+                    <Link
+                      to="/projects/$projectId/sites/$siteId/settings"
+                      params={{ projectId: projectId!, siteId: actualSiteId! }}
+                      className="flex items-center gap-4 px-6 py-4 hover:bg-muted/20 transition-colors cursor-pointer"
+                    >
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                        <GitBranch className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[13px] font-medium text-foreground">
+                          Add repository
+                        </p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          Connect Git for automatic deployments
+                        </p>
+                      </div>
+                    </Link>
+                  )}
                   <Link
-                    to="/projects/$projectId/sites/$siteId/settings"
+                    to="/projects/$projectId/sites/$siteId/domains"
                     params={{ projectId: projectId!, siteId: actualSiteId! }}
                     className="flex items-center gap-4 px-6 py-4 hover:bg-muted/20 transition-colors cursor-pointer"
                   >
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                      <GitBranch className="h-5 w-5" />
+                      <Globe className="h-5 w-5" />
                     </div>
                     <div className="min-w-0">
                       <p className="text-[13px] font-medium text-foreground">
-                        Add repository
+                        Add custom domain
                       </p>
                       <p className="text-[11px] text-muted-foreground mt-0.5">
-                        Connect Git for automatic deployments
+                        Use your own domain name
                       </p>
                     </div>
                   </Link>
-                )}
-                <Link
-                  to="/projects/$projectId/sites/$siteId/domains"
-                  params={{ projectId: projectId!, siteId: actualSiteId! }}
-                  className="flex items-center gap-4 px-6 py-4 hover:bg-muted/20 transition-colors cursor-pointer"
-                >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                    <Globe className="h-5 w-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[13px] font-medium text-foreground">
-                      Add custom domain
-                    </p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      Use your own domain name
-                    </p>
-                  </div>
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (siteUrl) {
-                      navigator.clipboard.writeText(siteUrl)
-                      toast.success('URL copied to clipboard')
-                    }
-                  }}
-                  className="flex items-center gap-4 px-6 py-4 hover:bg-muted/20 transition-colors cursor-pointer text-left w-full"
-                >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                    <Share2 className="h-5 w-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[13px] font-medium text-foreground">
-                      Copy site URL
-                    </p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      Copy URL to clipboard
-                    </p>
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setQrDialogOpen(true)}
-                  className="flex items-center gap-4 px-6 py-4 hover:bg-muted/20 transition-colors cursor-pointer text-left w-full"
-                >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                    <Smartphone className="h-5 w-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[13px] font-medium text-foreground">
-                      Open on mobile
-                    </p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      Scan QR code
-                    </p>
-                  </div>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (siteUrl) {
+                        navigator.clipboard.writeText(siteUrl)
+                        toast.success('URL copied to clipboard')
+                      }
+                    }}
+                    className="flex items-center gap-4 px-6 py-4 hover:bg-muted/20 transition-colors cursor-pointer text-left w-full"
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                      <Share2 className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-medium text-foreground">
+                        Copy site URL
+                      </p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        Copy URL to clipboard
+                      </p>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setQrDialogOpen(true)}
+                    className="flex items-center gap-4 px-6 py-4 hover:bg-muted/20 transition-colors cursor-pointer text-left w-full"
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                      <Smartphone className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-medium text-foreground">
+                        Open on mobile
+                      </p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        Scan QR code
+                      </p>
+                    </div>
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
-    </WizardLayout>
-
-    {/* Cancel build confirmation */}
-    <Dialog
-      open={cancelBuildDialogOpen}
-      onOpenChange={setCancelBuildDialogOpen}
-    >
-      <DialogContent className="sm:max-w-md p-0">
-        <DialogHeader className="px-6 pt-6 pb-4 text-left">
-          <DialogTitle>Cancel build</DialogTitle>
-          <DialogDescription className="text-[13px] mt-2">
-            Stop the current deployment? You can deploy again later.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="border-t border-border" />
-        <div className="px-6 pb-4 pt-4">
-          {deployment && (
-            <DeploymentInfo deployment={deployment} showStatus={true} />
           )}
         </div>
-        <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button
-            variant="outline"
-            onClick={() => setCancelBuildDialogOpen(false)}
-            className="h-9 text-[13px]"
-          >
-            Keep building
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={() => cancelDeploymentMutation.mutate()}
-            disabled={cancelDeploymentMutation.isPending}
-            className="h-9 text-[13px]"
-          >
-            Cancel build
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+      </WizardLayout>
+
+      {/* Cancel build confirmation */}
+      <Dialog
+        open={cancelBuildDialogOpen}
+        onOpenChange={setCancelBuildDialogOpen}
+      >
+        <DialogContent className="sm:max-w-md p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+            <DialogTitle>Cancel build</DialogTitle>
+            <DialogDescription className="text-[13px] mt-2">
+              Stop the current deployment? You can deploy again later.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="border-t border-border" />
+          <div className="px-6 pb-4 pt-4">
+            {deployment && (
+              <DeploymentInfo deployment={deployment} showStatus={true} />
+            )}
+          </div>
+          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setCancelBuildDialogOpen(false)}
+              className="h-9 text-[13px]"
+            >
+              Keep building
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => cancelDeploymentMutation.mutate()}
+              disabled={cancelDeploymentMutation.isPending}
+              className="h-9 text-[13px]"
+            >
+              Cancel build
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

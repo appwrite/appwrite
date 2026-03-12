@@ -46,8 +46,12 @@ export function AddDomainWizard() {
   const deleteMutation = useDeleteDomain(projectId, project?.region)
 
   const [domain, setDomain] = useState('')
-  const [verificationError, setVerificationError] = useState<string | null>(null)
-  const [behaviour, setBehaviour] = useState<'active' | 'branch' | 'redirect'>('active')
+  const [verificationError, setVerificationError] = useState<string | null>(
+    null,
+  )
+  const [behaviour, setBehaviour] = useState<'active' | 'branch' | 'redirect'>(
+    'active',
+  )
   const [branch, setBranch] = useState('')
   const [redirectUrl, setRedirectUrl] = useState('')
   const [statusCode, setStatusCode] = useState('302')
@@ -56,7 +60,9 @@ export function AddDomainWizard() {
 
   const fallbackPath = `/projects/${projectId}/sites/${siteId}/domains`
   const isPending =
-    createMutation.isPending || verifyMutation.isPending || deleteMutation.isPending
+    createMutation.isPending ||
+    verifyMutation.isPending ||
+    deleteMutation.isPending
 
   const hasRepo = !!(site?.installationId && site?.providerRepositoryId)
   const branches = branchesData?.branches ?? []
@@ -88,7 +94,9 @@ export function AddDomainWizard() {
     if (behaviour === 'redirect') {
       try {
         new URL(
-          redirectUrl.startsWith('http') ? redirectUrl : `https://${redirectUrl}`,
+          redirectUrl.startsWith('http')
+            ? redirectUrl
+            : `https://${redirectUrl}`,
         )
       } catch {
         toast.error('Invalid URL')
@@ -159,7 +167,10 @@ export function AddDomainWizard() {
           to: '/projects/$projectId/sites/$siteId/domains',
           params: { projectId: projectId!, siteId: siteId! },
         })
-      } else if (updated.status === 'created' || updated.status === 'unverified') {
+      } else if (
+        updated.status === 'created' ||
+        updated.status === 'unverified'
+      ) {
         setVerificationError('Verification failed. Check DNS and retry.')
       } else {
         await queryClient.refetchQueries({
@@ -242,10 +253,7 @@ export function AddDomainWizard() {
           >
             Cancel
           </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={isPending || !domain.trim()}
-          >
+          <Button onClick={handleSubmit} disabled={isPending || !domain.trim()}>
             Add
           </Button>
         </div>

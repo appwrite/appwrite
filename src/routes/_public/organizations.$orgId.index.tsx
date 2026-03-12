@@ -41,12 +41,7 @@ export const Route = createFileRoute('/_public/organizations/$orgId/')({
           ),
         ),
         queryClient.ensureQueryData(
-          organizationMembershipsQueryOptions(
-            orgId,
-            0,
-            DEFAULT_PAGE_SIZE,
-            '',
-          ),
+          organizationMembershipsQueryOptions(orgId, 0, DEFAULT_PAGE_SIZE, ''),
         ),
         ...(pinnedIds.length > 0
           ? [

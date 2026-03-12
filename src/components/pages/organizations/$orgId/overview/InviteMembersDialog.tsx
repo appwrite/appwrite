@@ -177,7 +177,9 @@ export function InviteMembersDialog({
       })
 
       // Reset and close
-      setInvites([{ email: '', role: features.orgRoles ? 'developer' : 'owner' }])
+      setInvites([
+        { email: '', role: features.orgRoles ? 'developer' : 'owner' },
+      ])
       onOpenChange(false)
     } catch (error) {
       toast.error(
@@ -196,14 +198,19 @@ export function InviteMembersDialog({
       toast.error('Member limit reached')
       return
     }
-    setInvites([...invites, { email: '', role: features.orgRoles ? 'developer' : 'owner' }])
+    setInvites([
+      ...invites,
+      { email: '', role: features.orgRoles ? 'developer' : 'owner' },
+    ])
   }
 
   // Remove invite row
   const handleRemoveInvite = (index: number) => {
     if (invites.length === 1) {
       // Keep at least one row, just clear it
-      setInvites([{ email: '', role: features.orgRoles ? 'developer' : 'owner' }])
+      setInvites([
+        { email: '', role: features.orgRoles ? 'developer' : 'owner' },
+      ])
     } else {
       setInvites(invites.filter((_, i) => i !== index))
     }
@@ -222,7 +229,9 @@ export function InviteMembersDialog({
   // Reset form when dialog closes
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
-      setInvites([{ email: '', role: features.orgRoles ? 'developer' : 'owner' }])
+      setInvites([
+        { email: '', role: features.orgRoles ? 'developer' : 'owner' },
+      ])
       setTouchedFields(new Set())
     }
     onOpenChange(newOpen)
@@ -234,8 +243,8 @@ export function InviteMembersDialog({
         <DialogHeader className="px-6 pt-6 text-left">
           <DialogTitle>Invite Members</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Invite organization members to your organization. They'll receive an email
-            invitation to join.
+            Invite organization members to your organization. They'll receive an
+            email invitation to join.
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -322,48 +331,48 @@ export function InviteMembersDialog({
 
                   {/* Role Select - hidden when orgRoles disabled (all members are owners) */}
                   {features.orgRoles && (
-                  <div className="w-36 shrink-0">
-                    <Select
-                      value={invite.role}
-                      onValueChange={(
-                        value:
-                          | 'owner'
-                          | 'developer'
-                          | 'editor'
-                          | 'analyst'
-                          | 'billing',
-                      ) => handleUpdateInvite(index, { role: value })}
-                    >
-                      <SelectTrigger className="h-9 text-[13px] w-full">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <RoleIcon className="h-3.5 w-3.5 shrink-0" />
-                          <span className="truncate">
-                            {selectedRole?.label || 'Select role'}
-                          </span>
-                        </div>
-                      </SelectTrigger>
-                      <SelectContent className="min-w-[240px]">
-                        {ROLE_OPTIONS.map((role) => {
-                          const Icon = role.icon
-                          return (
-                            <SelectItem key={role.value} value={role.value}>
-                              <div className="flex items-start gap-2 w-full">
-                                <Icon className="h-4 w-4 shrink-0 mt-0.5" />
-                                <div className="flex flex-col min-w-0 flex-1">
-                                  <span className="text-[13px] font-medium">
-                                    {role.label}
-                                  </span>
-                                  <span className="text-[11px] text-muted-foreground leading-tight mt-0.5">
-                                    {role.description}
-                                  </span>
+                    <div className="w-36 shrink-0">
+                      <Select
+                        value={invite.role}
+                        onValueChange={(
+                          value:
+                            | 'owner'
+                            | 'developer'
+                            | 'editor'
+                            | 'analyst'
+                            | 'billing',
+                        ) => handleUpdateInvite(index, { role: value })}
+                      >
+                        <SelectTrigger className="h-9 text-[13px] w-full">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <RoleIcon className="h-3.5 w-3.5 shrink-0" />
+                            <span className="truncate">
+                              {selectedRole?.label || 'Select role'}
+                            </span>
+                          </div>
+                        </SelectTrigger>
+                        <SelectContent className="min-w-[240px]">
+                          {ROLE_OPTIONS.map((role) => {
+                            const Icon = role.icon
+                            return (
+                              <SelectItem key={role.value} value={role.value}>
+                                <div className="flex items-start gap-2 w-full">
+                                  <Icon className="h-4 w-4 shrink-0 mt-0.5" />
+                                  <div className="flex flex-col min-w-0 flex-1">
+                                    <span className="text-[13px] font-medium">
+                                      {role.label}
+                                    </span>
+                                    <span className="text-[11px] text-muted-foreground leading-tight mt-0.5">
+                                      {role.description}
+                                    </span>
+                                  </div>
                                 </div>
-                              </div>
-                            </SelectItem>
-                          )
-                        })}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                              </SelectItem>
+                            )
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   )}
 
                   {/* Remove Button */}

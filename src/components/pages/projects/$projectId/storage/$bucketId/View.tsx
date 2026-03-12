@@ -18,6 +18,8 @@ import {
   useBucket,
   useBucketFiles,
   Dependencies,
+  FILES_DEFAULT_SORT_BY,
+  FILES_DEFAULT_SORT_ORDER,
 } from '@/lib/react-query/hooks'
 import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
@@ -63,8 +65,12 @@ import {
   getPage,
   getLimit,
   getQueryParam,
+  getSort,
+  parseSort,
+  encodeSort,
   queryParamToMap,
   mapToQueryParam,
+  buildListSearchParams,
   MIN_SEARCH_LENGTH,
   filesFilterColumns,
 } from '@/lib/table-filters'
@@ -97,12 +103,12 @@ export function View() {
     query?: string
     page?: number
     limit?: number
+    sort?: string
   }
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
-  const showSecuritySettings =
-    canShowBucketSecuritySettings(access, features)
+  const showSecuritySettings = canShowBucketSecuritySettings(access, features)
 
   // Derive active tab from pathname
   const activeTab = useMemo(() => {
@@ -129,20 +135,43 @@ export function View() {
     location.pathname.replace(/\/$/, '') ===
       `/projects/${projectId}/storage/${bucketId}`
 
+  const defaultFilesSort = {
+    sortBy: FILES_DEFAULT_SORT_BY,
+    sortOrder: FILES_DEFAULT_SORT_ORDER as 'asc' | 'desc',
+  }
   const filesListParams = useMemo(() => {
     if (!isFilesIndex || typeof search !== 'object') return null
-    const url = new URL(location.pathname + location.search, window.location.origin)
+    const url = new URL(
+      location.pathname + location.search,
+      window.location.origin,
+    )
+    const parsed = parseSort(search.sort) ?? getSort(url) ?? defaultFilesSort
     return {
       search: getSearch(url) ?? search.search,
       page: getPage(url, 1),
       limit: getLimit(url, DEFAULT_PAGE_SIZE),
       filterMap: queryParamToMap(getQueryParam(url) ?? search.query ?? null),
+      sortBy: parsed.sortBy,
+      sortOrder: parsed.sortOrder,
     }
-  }, [isFilesIndex, search?.search, search?.query, search?.page, search?.limit, location.pathname, location.search, projectId, bucketId])
+  }, [
+    isFilesIndex,
+    search?.search,
+    search?.query,
+    search?.page,
+    search?.limit,
+    search?.sort,
+    location.pathname,
+    location.search,
+    projectId,
+    bucketId,
+  ])
 
   const urlPage = filesListParams?.page ?? 1
   const urlLimit = filesListParams?.limit ?? DEFAULT_PAGE_SIZE
   const urlSearch = filesListParams?.search
+  const urlSortBy = filesListParams?.sortBy ?? FILES_DEFAULT_SORT_BY
+  const urlSortOrder = filesListParams?.sortOrder ?? FILES_DEFAULT_SORT_ORDER
   const filterMap = filesListParams?.filterMap ?? new Map()
   const filterQueries =
     filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
@@ -154,6 +183,10 @@ export function View() {
   const [displayedPage, setDisplayedPage] = useState(1)
   const [displayedSearch, setDisplayedSearch] = useState<string | undefined>(
     undefined,
+  )
+  const [displayedSortBy, setDisplayedSortBy] = useState(FILES_DEFAULT_SORT_BY)
+  const [displayedSortOrder, setDisplayedSortOrder] = useState<'asc' | 'desc'>(
+    FILES_DEFAULT_SORT_ORDER,
   )
   const [displayedFilterQueryString, setDisplayedFilterQueryString] =
     useState('')
@@ -211,10 +244,20 @@ export function View() {
     if (!hasInitedDisplayedRef.current) {
       setDisplayedPage(urlPage)
       setDisplayedSearch(urlSearch ?? undefined)
+      setDisplayedSortBy(urlSortBy)
+      setDisplayedSortOrder(urlSortOrder)
       setDisplayedFilterQueryString(filterQueryString)
       hasInitedDisplayedRef.current = true
     }
-  }, [isFilesIndex, filesListParams, urlPage, urlSearch, filterQueryString])
+  }, [
+    isFilesIndex,
+    filesListParams,
+    urlPage,
+    urlSearch,
+    urlSortBy,
+    urlSortOrder,
+    filterQueryString,
+  ])
 
   useEffect(() => {
     if (activeTab !== 'files') return
@@ -226,16 +269,20 @@ export function View() {
       navigate({
         to: '/projects/$projectId/storage/$bucketId/',
         params: { projectId: projectId!, bucketId: bucketId! },
-        search: (prev: Record<string, unknown>) => {
-          const next = { ...prev } as Record<string, unknown>
-          next.search = trimmed || undefined
-          next.query = filterQueryString || undefined
-          next.page = 1
-          next.limit = urlLimit
-          if (!trimmed) delete next.search
-          if (next.page === 1) delete next.page
-          return next
-        },
+        search: (prev: Record<string, unknown>) => ({
+          ...prev,
+          ...buildListSearchParams({
+            search: trimmed || undefined,
+            query: filterQueryString || undefined,
+            page: 1,
+            limit: urlLimit,
+            sort:
+              urlSortBy !== FILES_DEFAULT_SORT_BY ||
+              urlSortOrder !== FILES_DEFAULT_SORT_ORDER
+                ? encodeSort(urlSortBy, urlSortOrder)
+                : undefined,
+          }),
+        }),
         replace: true,
       })
     }, 300)
@@ -250,6 +297,8 @@ export function View() {
     navigate,
     urlSearch,
     urlLimit,
+    urlSortBy,
+    urlSortOrder,
     filterQueryString,
   ])
 
@@ -266,6 +315,8 @@ export function View() {
     urlSearch ?? undefined,
     undefined,
     filterQueries,
+    urlSortBy,
+    urlSortOrder,
   )
 
   const { data: displayedFilesData, isLoading: displayedFilesLoading } =
@@ -277,6 +328,8 @@ export function View() {
       displayedSearch ?? undefined,
       undefined,
       displayedFilterQueries,
+      displayedSortBy,
+      displayedSortOrder,
     )
 
   useEffect(() => {
@@ -284,10 +337,14 @@ export function View() {
     const match =
       urlPage === displayedPage &&
       (urlSearch ?? '') === (displayedSearch ?? '') &&
-      filterQueryString === displayedFilterQueryString
+      filterQueryString === displayedFilterQueryString &&
+      urlSortBy === displayedSortBy &&
+      urlSortOrder === displayedSortOrder
     if (!match) {
       setDisplayedPage(urlPage)
       setDisplayedSearch(urlSearch ?? undefined)
+      setDisplayedSortBy(urlSortBy)
+      setDisplayedSortOrder(urlSortOrder)
       setDisplayedFilterQueryString(filterQueryString)
     }
   }, [
@@ -297,9 +354,13 @@ export function View() {
     filesFetched,
     urlPage,
     urlSearch,
+    urlSortBy,
+    urlSortOrder,
     filterQueryString,
     displayedPage,
     displayedSearch,
+    displayedSortBy,
+    displayedSortOrder,
     displayedFilterQueryString,
   ])
 
@@ -395,22 +456,48 @@ export function View() {
     setSelectedFiles(new Set())
   }
 
+  const handleFilesSortChange = (sortBy: string, sortOrder: 'asc' | 'desc') => {
+    navigate({
+      to: '/projects/$projectId/storage/$bucketId/',
+      params: { projectId: projectId!, bucketId: bucketId! },
+      search: (prev: Record<string, unknown>) => ({
+        ...prev,
+        ...buildListSearchParams({
+          search: urlSearch,
+          query: filterQueryString || undefined,
+          page: 1,
+          limit: urlLimit,
+          sort:
+            sortBy !== FILES_DEFAULT_SORT_BY ||
+            sortOrder !== FILES_DEFAULT_SORT_ORDER
+              ? encodeSort(sortBy, sortOrder)
+              : undefined,
+        }),
+      }),
+      replace: true,
+    })
+  }
+
   const applyFilter = (compactKey: CompactFilterKey, queryStr: string) => {
     const newMap = new Map(filterMap)
     newMap.set(compactKey, queryStr)
     navigate({
       to: '/projects/$projectId/storage/$bucketId/',
       params: { projectId: projectId!, bucketId: bucketId! },
-      search: (prev: Record<string, unknown>) => {
-        const next = { ...prev } as Record<string, unknown>
-        next.search = urlSearch ?? undefined
-        next.query = mapToQueryParam(newMap)
-        next.page = 1
-        next.limit = urlLimit
-        if (!next.search) delete next.search
-        delete next.page
-        return next
-      },
+      search: (prev: Record<string, unknown>) => ({
+        ...prev,
+        ...buildListSearchParams({
+          search: urlSearch,
+          query: mapToQueryParam(newMap),
+          page: 1,
+          limit: urlLimit,
+          sort:
+            urlSortBy !== FILES_DEFAULT_SORT_BY ||
+            urlSortOrder !== FILES_DEFAULT_SORT_ORDER
+              ? encodeSort(urlSortBy, urlSortOrder)
+              : undefined,
+        }),
+      }),
       replace: true,
     })
   }
@@ -422,14 +509,21 @@ export function View() {
       to: '/projects/$projectId/storage/$bucketId/',
       params: { projectId: projectId!, bucketId: bucketId! },
       search: (prev: Record<string, unknown>) => {
-        const next = { ...prev } as Record<string, unknown>
-        next.search = urlSearch ?? undefined
-        next.query = newMap.size > 0 ? mapToQueryParam(newMap) : undefined
-        next.page = 1
-        next.limit = urlLimit
-        if (!next.search) delete next.search
+        const next = {
+          ...prev,
+          ...buildListSearchParams({
+            search: urlSearch,
+            query: newMap.size > 0 ? mapToQueryParam(newMap) : undefined,
+            page: 1,
+            limit: urlLimit,
+            sort:
+              urlSortBy !== FILES_DEFAULT_SORT_BY ||
+              urlSortOrder !== FILES_DEFAULT_SORT_ORDER
+                ? encodeSort(urlSortBy, urlSortOrder)
+                : undefined,
+          }),
+        }
         if (newMap.size === 0) delete next.query
-        delete next.page
         return next
       },
       replace: true,
@@ -440,15 +534,19 @@ export function View() {
     navigate({
       to: '/projects/$projectId/storage/$bucketId/',
       params: { projectId: projectId!, bucketId: bucketId! },
-      search: (prev: Record<string, unknown>) => {
-        const next = { ...prev } as Record<string, unknown>
-        next.search = urlSearch ?? undefined
-        next.limit = urlLimit
-        if (!next.search) delete next.search
-        delete next.query
-        delete next.page
-        return next
-      },
+      search: (prev: Record<string, unknown>) => ({
+        ...prev,
+        ...buildListSearchParams({
+          search: urlSearch,
+          page: 1,
+          limit: urlLimit,
+          sort:
+            urlSortBy !== FILES_DEFAULT_SORT_BY ||
+            urlSortOrder !== FILES_DEFAULT_SORT_ORDER
+              ? encodeSort(urlSortBy, urlSortOrder)
+              : undefined,
+        }),
+      }),
       replace: true,
     })
     setFiltersOpen(false)
@@ -627,19 +725,35 @@ export function View() {
               onApplyFilter={applyFilter}
               resourceLabel="files"
               filterScope="storage.files"
-              onApplyQuery={(queryParam) => {
+              onApplyQuery={(queryParam, sortParam) => {
                 navigate({
                   to: '/projects/$projectId/storage/$bucketId/',
                   params: { projectId: projectId!, bucketId: bucketId! },
-                  search: (prev: Record<string, unknown>) => {
-                    const next = { ...prev } as Record<string, unknown>
-                    next.search = urlSearch ?? undefined
-                    next.query = queryParam ?? undefined
-                    next.page = 1
-                    next.limit = urlLimit
-                    if (!next.search) delete next.search
-                    return next
-                  },
+                  search: (prev: Record<string, unknown>) => ({
+                    ...prev,
+                    ...buildListSearchParams({
+                      search: urlSearch,
+                      query: queryParam ?? undefined,
+                      page: 1,
+                      limit: urlLimit,
+                      sort: sortParam ?? undefined,
+                    }),
+                  }),
+                  replace: true,
+                })
+              }}
+              sortBy={urlSortBy}
+              sortOrder={urlSortOrder}
+              onSortChange={handleFilesSortChange}
+              defaultSortParam={encodeSort(
+                FILES_DEFAULT_SORT_BY,
+                FILES_DEFAULT_SORT_ORDER,
+              )}
+              onReset={() => {
+                navigate({
+                  to: '/projects/$projectId/storage/$bucketId/',
+                  params: { projectId: projectId!, bucketId: bucketId! },
+                  search: { page: 1, limit: urlLimit },
                   replace: true,
                 })
               }}
@@ -758,7 +872,7 @@ export function View() {
                                       : 'cursor-pointer transition-colors border-b border-border/50',
                                     !pending && 'hover:bg-muted/30',
                                     selectedFiles.has(file.$id) &&
-                                    'bg-sky-100 dark:bg-sky-950',
+                                      'bg-sky-100 dark:bg-sky-950',
                                   )}
                                   onClick={(e) => {
                                     if (pending) return
@@ -794,8 +908,8 @@ export function View() {
                                     {pending ? (
                                       <>
                                         {file.mimeType?.startsWith('image/') &&
-                                          projectId &&
-                                          bucketId ? (
+                                        projectId &&
+                                        bucketId ? (
                                           <img
                                             src={
                                               sdk
@@ -827,8 +941,8 @@ export function View() {
                                         className="block"
                                       >
                                         {file.mimeType?.startsWith('image/') &&
-                                          projectId &&
-                                          bucketId ? (
+                                        projectId &&
+                                        bucketId ? (
                                           <img
                                             src={
                                               sdk
@@ -863,7 +977,10 @@ export function View() {
                                             {file.name}
                                           </p>
                                           <div className="mt-0.5">
-                                            <CopyableId id={file.$id} size="xs" />
+                                            <CopyableId
+                                              id={file.$id}
+                                              size="xs"
+                                            />
                                           </div>
                                         </div>
                                         <Badge
@@ -968,7 +1085,11 @@ export function View() {
                 ) : (
                   <EmptyState
                     icon={File}
-                    title={urlSearch || filterMap.size > 0 ? undefined : 'No files found'}
+                    title={
+                      urlSearch || filterMap.size > 0
+                        ? undefined
+                        : 'No files found'
+                    }
                     description={
                       urlSearch || filterMap.size > 0
                         ? undefined
@@ -1014,9 +1135,9 @@ export function View() {
                             >
                               {/* Preview */}
                               {!pending &&
-                                file.mimeType?.startsWith('image/') &&
-                                projectId &&
-                                bucketId ? (
+                              file.mimeType?.startsWith('image/') &&
+                              projectId &&
+                              bucketId ? (
                                 <div className="h-32 w-full overflow-hidden border-b border-border">
                                   <img
                                     src={
@@ -1078,7 +1199,11 @@ export function View() {
                     <div>
                       <EmptyState
                         icon={File}
-                        title={urlSearch || filterMap.size > 0 ? undefined : 'No files found'}
+                        title={
+                          urlSearch || filterMap.size > 0
+                            ? undefined
+                            : 'No files found'
+                        }
                         description={
                           urlSearch || filterMap.size > 0
                             ? undefined
@@ -1097,9 +1222,15 @@ export function View() {
                               setSearchInput('')
                               navigate({
                                 to: '/projects/$projectId/storage/$bucketId/',
-                                params: { projectId: projectId!, bucketId: bucketId! },
+                                params: {
+                                  projectId: projectId!,
+                                  bucketId: bucketId!,
+                                },
                                 search: (prev: Record<string, unknown>) => {
-                                  const next = { ...prev } as Record<string, unknown>
+                                  const next = { ...prev } as Record<
+                                    string,
+                                    unknown
+                                  >
                                   next.limit = urlLimit
                                   delete next.search
                                   delete next.query

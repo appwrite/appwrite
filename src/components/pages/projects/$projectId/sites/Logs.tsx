@@ -164,9 +164,7 @@ export function View() {
         func={null}
         emptyStateTitle={hasFilters ? undefined : 'No logs yet'}
         emptyStateDescription={
-          hasFilters
-            ? undefined
-            : 'Logs will appear here when your site runs.'
+          hasFilters ? undefined : 'Logs will appear here when your site runs.'
         }
         hasFilters={hasFilters}
         itemLabel="logs"

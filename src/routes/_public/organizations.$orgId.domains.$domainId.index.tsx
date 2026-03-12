@@ -4,9 +4,11 @@ import {
   fetchDomain,
   fetchDomainRecords,
   fetchOrganizations,
+  DNS_RECORDS_DEFAULT_SORT_BY,
+  DNS_RECORDS_DEFAULT_SORT_ORDER,
 } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
-import { listSearchSchema } from '@/lib/table-filters'
+import { listSearchSchema, getSort } from '@/lib/table-filters'
 
 const RECORDS_PER_PAGE = 25
 const STALE_TIME = 30 * 1000
@@ -33,6 +35,9 @@ export const Route = createFileRoute(
     // Only prefetch unfiltered records when URL has no filter query (avoids duplicate no-filter + filtered requests).
     const url = new URL(location.pathname + location.search, 'http://localhost')
     const hasFilterQuery = !!url.searchParams.get('query')
+    const sort = getSort(url)
+    const sortBy = sort?.sortBy ?? DNS_RECORDS_DEFAULT_SORT_BY
+    const sortOrder = sort?.sortOrder ?? DNS_RECORDS_DEFAULT_SORT_ORDER
 
     const [domain, organizations, records] = await Promise.all([
       queryClient.fetchQuery({
@@ -48,8 +53,25 @@ export const Route = createFileRoute(
       hasFilterQuery
         ? Promise.resolve(undefined)
         : queryClient.fetchQuery({
-            queryKey: ['dns-records', 'domain', domainId, 0, RECORDS_PER_PAGE],
-            queryFn: () => fetchDomainRecords(domainId, 0, RECORDS_PER_PAGE),
+            queryKey: [
+              'dns-records',
+              'domain',
+              domainId,
+              0,
+              RECORDS_PER_PAGE,
+              undefined,
+              sortBy,
+              sortOrder,
+            ],
+            queryFn: () =>
+              fetchDomainRecords(
+                domainId,
+                0,
+                RECORDS_PER_PAGE,
+                undefined,
+                sortBy,
+                sortOrder,
+              ),
             staleTime: STALE_TIME,
           }),
     ])

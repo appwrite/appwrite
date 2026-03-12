@@ -30,9 +30,10 @@ export function parseStatusCounters(
 }
 
 /** Succeeded and total item counts from statusCounters for "X / Y" display. */
-export function getMigrationCounts(
-  m: Models.Migration,
-): { succeeded: number; total: number } {
+export function getMigrationCounts(m: Models.Migration): {
+  succeeded: number
+  total: number
+} {
   const map = parseStatusCounters(m)
   let succeeded = 0
   let total = 0
@@ -45,7 +46,8 @@ export function getMigrationCounts(
     const processing = c.processing ?? 0
     const warning = c.warning ?? 0
     succeeded += success
-    total += success + error + skip + warning + Math.max(0, pending) + processing
+    total +=
+      success + error + skip + warning + Math.max(0, pending) + processing
   }
   return { succeeded, total }
 }

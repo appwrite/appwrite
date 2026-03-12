@@ -44,9 +44,7 @@ export const Route = createFileRoute(
     await Promise.all([
       queryClient.ensureQueryData(projectQueryOptions(projectId)),
       queryClient.ensureQueryData(projectVariablesQueryOptions(projectId)),
-      queryClient.ensureQueryData(
-        siteVariablesQueryOptions(projectId, siteId),
-      ),
+      queryClient.ensureQueryData(siteVariablesQueryOptions(projectId, siteId)),
     ])
 
     return { site }

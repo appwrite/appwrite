@@ -12,8 +12,13 @@ import {
   getPage,
   getLimit,
   getQueryParam,
+  getSort,
   queryParamToMap,
 } from '@/lib/table-filters'
+import {
+  FUNCTIONS_DEFAULT_SORT_BY,
+  FUNCTIONS_DEFAULT_SORT_ORDER,
+} from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
 
 const DEFAULT_PAGE = 1
@@ -29,7 +34,10 @@ export const Route = createFileRoute('/_public/projects/$projectId/functions/')(
       const { queryClient } = context
       if (!projectId) return
 
-      const url = new URL(location.pathname + location.search, 'http://localhost')
+      const url = new URL(
+        location.pathname + location.search,
+        'http://localhost',
+      )
       const search = getSearch(url)
       const page = getPage(url, DEFAULT_PAGE)
       const limit = getLimit(url, DEFAULT_PAGE_SIZE)
@@ -37,6 +45,9 @@ export const Route = createFileRoute('/_public/projects/$projectId/functions/')(
       const filterMap = queryParamToMap(queryParam)
       const filterQueries =
         filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
+      const sort = getSort(url)
+      const sortBy = sort?.sortBy ?? FUNCTIONS_DEFAULT_SORT_BY
+      const sortOrder = sort?.sortOrder ?? FUNCTIONS_DEFAULT_SORT_ORDER
 
       const projectData = await queryClient.ensureQueryData({
         queryKey: ['project', projectId],
@@ -46,7 +57,15 @@ export const Route = createFileRoute('/_public/projects/$projectId/functions/')(
 
       await Promise.all([
         queryClient.ensureQueryData(
-          functionsQueryOptions(projectId, page - 1, limit, search ?? undefined, filterQueries),
+          functionsQueryOptions(
+            projectId,
+            page - 1,
+            limit,
+            search ?? undefined,
+            filterQueries,
+            sortBy,
+            sortOrder,
+          ),
         ),
         projectData?.teamId
           ? queryClient.ensureQueryData(

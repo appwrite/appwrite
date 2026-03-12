@@ -117,7 +117,11 @@ export function ErrorComponent({
   const isProjectRoute = location.pathname.startsWith('/projects/')
   const errorMessage = error.message || ''
   const lowerMessage = errorMessage.toLowerCase()
-  const errorWithCode = error as unknown as { code?: number; status?: number; type?: string }
+  const errorWithCode = error as unknown as {
+    code?: number
+    status?: number
+    type?: string
+  }
   const errorCode = errorWithCode.code
 
   const isProjectNotFound =
@@ -321,9 +325,9 @@ export function ErrorComponent({
         {!(isProjectNotFound || isProjectAccessDenied) && (
           <div className="w-full border-t border-border pt-6">
             <p className="text-muted-foreground text-[13px] leading-relaxed text-center">
-              We’ve already logged it to our error system and will probably
-              spin up a super agent any minute to hunt this bug down. If you
-              think this might be more than a client-side hiccup, check our{' '}
+              We’ve already logged it to our error system and will probably spin
+              up a super agent any minute to hunt this bug down. If you think
+              this might be more than a client-side hiccup, check our{' '}
               <a
                 href="https://status.appwrite.online"
                 target="_blank"

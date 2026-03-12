@@ -21,10 +21,7 @@ import type { Models } from '@appwrite.io/console'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { CodeBlock } from '@/components/global/shared/CodeBlock'
-import {
-  parseStatusCounters,
-  type StatusCounter,
-} from './migrationProgress'
+import { parseStatusCounters, type StatusCounter } from './migrationProgress'
 
 interface MigrationDetailsDrawerProps {
   open: boolean
@@ -94,8 +91,7 @@ function parseMigrationErrors(errors: unknown[] | undefined): ParsedError[] {
           ? JSON.parse(error)
           : (error as Record<string, unknown>)
       if (parsed && typeof parsed === 'object') {
-        const code =
-          typeof parsed.code === 'number' ? parsed.code : undefined
+        const code = typeof parsed.code === 'number' ? parsed.code : undefined
         const message =
           typeof parsed.message === 'string' && parsed.message.trim()
             ? parsed.message.trim()
@@ -136,8 +132,7 @@ function parseMigrationErrors(errors: unknown[] | undefined): ParsedError[] {
       // fallback: use as string
     }
     return {
-      friendlyMessage:
-        typeof error === 'string' ? error : String(error),
+      friendlyMessage: typeof error === 'string' ? error : String(error),
       raw: error,
     }
   })
@@ -296,47 +291,49 @@ export function MigrationDetailsDrawer({
                         countSummary.failed > 0 ||
                         countSummary.skipped > 0 ||
                         countSummary.warning > 0) && (
-                      <>
-                        <div className="border-t border-border" />
-                        <div className="px-6 py-3">
-                          <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider">
-                            Summary
-                          </p>
-                          <p className="mt-0.5 text-[13px] text-muted-foreground">
-                            {countSummary.succeeded > 0 && (
-                              <span>
-                                {countSummary.succeeded}{' '}
-                                {countSummary.succeeded === 1
-                                  ? 'item'
-                                  : 'items'}{' '}
-                                succeeded
-                                {(countSummary.failed > 0 ||
-                                  countSummary.skipped > 0 ||
-                                  countSummary.warning > 0) && ', '}
-                              </span>
-                            )}
-                            {countSummary.failed > 0 && (
-                              <span>
-                                {countSummary.failed}{' '}
-                                {countSummary.failed === 1 ? 'item' : 'items'}{' '}
-                                failed
-                                {(countSummary.skipped > 0 ||
-                                  countSummary.warning > 0) && ', '}
-                              </span>
-                            )}
-                            {countSummary.skipped > 0 && (
-                              <span>
-                                {countSummary.skipped} skipped
-                                {countSummary.warning > 0 && ', '}
-                              </span>
-                            )}
-                            {countSummary.warning > 0 && (
-                              <span>{countSummary.warning} warning</span>
-                            )}
-                          </p>
-                        </div>
-                      </>
-                    )}
+                        <>
+                          <div className="border-t border-border" />
+                          <div className="px-6 py-3">
+                            <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider">
+                              Summary
+                            </p>
+                            <p className="mt-0.5 text-[13px] text-muted-foreground">
+                              {countSummary.succeeded > 0 && (
+                                <span>
+                                  {countSummary.succeeded}{' '}
+                                  {countSummary.succeeded === 1
+                                    ? 'item'
+                                    : 'items'}{' '}
+                                  succeeded
+                                  {(countSummary.failed > 0 ||
+                                    countSummary.skipped > 0 ||
+                                    countSummary.warning > 0) &&
+                                    ', '}
+                                </span>
+                              )}
+                              {countSummary.failed > 0 && (
+                                <span>
+                                  {countSummary.failed}{' '}
+                                  {countSummary.failed === 1 ? 'item' : 'items'}{' '}
+                                  failed
+                                  {(countSummary.skipped > 0 ||
+                                    countSummary.warning > 0) &&
+                                    ', '}
+                                </span>
+                              )}
+                              {countSummary.skipped > 0 && (
+                                <span>
+                                  {countSummary.skipped} skipped
+                                  {countSummary.warning > 0 && ', '}
+                                </span>
+                              )}
+                              {countSummary.warning > 0 && (
+                                <span>{countSummary.warning} warning</span>
+                              )}
+                            </p>
+                          </div>
+                        </>
+                      )}
                   </div>
 
                   {/* Status card */}

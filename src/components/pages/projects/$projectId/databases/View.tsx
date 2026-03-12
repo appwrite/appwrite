@@ -230,6 +230,9 @@ import {
   getPage,
   getLimit,
   getQueryParam,
+  getSort,
+  parseSort,
+  encodeSort,
   queryParamToMap,
   mapToQueryParam,
   buildListSearchParams,
@@ -302,14 +305,25 @@ export function View() {
     location.pathname.replace(/\/$/, '') === `/projects/${projectId}/databases`
   const databaseListParams = useMemo(() => {
     if (!isDatabasesIndex || typeof search !== 'object') return null
-    const url = new URL(location.pathname + location.search, window.location.origin)
+    const url = new URL(
+      location.pathname + location.search,
+      window.location.origin,
+    )
     return {
       search: getSearch(url) ?? search.search,
       page: getPage(url, 1),
       limit: getLimit(url, ROWS_DEFAULT_PAGE_SIZE),
       filterMap: queryParamToMap(getQueryParam(url) ?? search.query ?? null),
     }
-  }, [isDatabasesIndex, search?.search, search?.query, search?.page, search?.limit, location.pathname, location.search])
+  }, [
+    isDatabasesIndex,
+    search?.search,
+    search?.query,
+    search?.page,
+    search?.limit,
+    location.pathname,
+    location.search,
+  ])
 
   const urlPage = databaseListParams?.page ?? 1
   const urlLimit = databaseListParams?.limit ?? ROWS_DEFAULT_PAGE_SIZE
@@ -373,7 +387,14 @@ export function View() {
         })
       }
     }
-  }, [search?.create, createDatabaseDialogOpen, useCreateDatabaseWizard, navigate, location.pathname, projectId])
+  }, [
+    search?.create,
+    createDatabaseDialogOpen,
+    useCreateDatabaseWizard,
+    navigate,
+    location.pathname,
+    projectId,
+  ])
 
   useEffect(() => {
     setSearchInput(urlSearch ?? '')
@@ -393,7 +414,13 @@ export function View() {
       setDisplayedFilterQueryString(filterQueryString)
       hasInitedDisplayedRef.current = true
     }
-  }, [isDatabasesIndex, databaseListParams, urlPage, urlSearch, filterQueryString])
+  }, [
+    isDatabasesIndex,
+    databaseListParams,
+    urlPage,
+    urlSearch,
+    filterQueryString,
+  ])
 
   useEffect(() => {
     if (!isDatabasesIndex) return
@@ -424,7 +451,15 @@ export function View() {
     return () => {
       if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
     }
-  }, [searchInput, projectId, navigate, urlSearch, urlLimit, filterQueryString, isDatabasesIndex])
+  }, [
+    searchInput,
+    projectId,
+    navigate,
+    urlSearch,
+    urlLimit,
+    filterQueryString,
+    isDatabasesIndex,
+  ])
 
   const {
     total: databasesTotal,
@@ -452,7 +487,13 @@ export function View() {
   )
 
   useEffect(() => {
-    if (!isDatabasesIndex || databasesFetching || databasesLoading || !databasesFetched) return
+    if (
+      !isDatabasesIndex ||
+      databasesFetching ||
+      databasesLoading ||
+      !databasesFetched
+    )
+      return
     const match =
       urlPage === displayedPage &&
       (urlSearch ?? '') === (displayedSearch ?? '') &&
@@ -1026,7 +1067,9 @@ export function View() {
           ) : (
             <EmptyState
               icon={Database}
-              title={urlSearch || filterMap.size > 0 ? undefined : 'No databases yet'}
+              title={
+                urlSearch || filterMap.size > 0 ? undefined : 'No databases yet'
+              }
               description={
                 urlSearch || filterMap.size > 0
                   ? undefined
@@ -1104,7 +1147,11 @@ export function View() {
                 <div className="col-span-full">
                   <EmptyState
                     icon={Database}
-                    title={urlSearch || filterMap.size > 0 ? undefined : 'No databases yet'}
+                    title={
+                      urlSearch || filterMap.size > 0
+                        ? undefined
+                        : 'No databases yet'
+                    }
                     description={
                       urlSearch || filterMap.size > 0
                         ? undefined
@@ -1516,7 +1563,9 @@ export function TableView({
   const projectId = params.projectId as string
   const navigate = useNavigate()
   const location = useLocation()
-  const search = useSearch({ strict: false }) as Record<string, unknown> | undefined
+  const search = useSearch({ strict: false }) as
+    | Record<string, unknown>
+    | undefined
   const isDatabaseLevelView = tableId === '-' || databaseTab != null
   const { isDebugModeOpen } = useDebugMode()
   const { features } = useConsoleProfile()
@@ -1651,9 +1700,14 @@ export function TableView({
   const { project } = useProject(projectId)
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
   const { access } = useOrganizationScopes(project?.teamId)
-  const showTableSecuritySettings =
-    canShowTableSecuritySettings(access, features)
-  const noCreateTablePermission = !canShowTableSecuritySettings(access, features)
+  const showTableSecuritySettings = canShowTableSecuritySettings(
+    access,
+    features,
+  )
+  const noCreateTablePermission = !canShowTableSecuritySettings(
+    access,
+    features,
+  )
   const noCreateDbPermission = !canCreateDatabase(access, features)
   const noCreateRowPermission = !canCreateRow(access, features)
   const createPermissionTooltip =
@@ -1840,28 +1894,42 @@ export function TableView({
         : []),
     ]
     return all
-  }, [
-    projectId,
-    databaseId,
-    tableId,
-    showTableSecuritySettings,
-  ])
+  }, [projectId, databaseId, tableId, showTableSecuritySettings])
 
+  const ROWS_DEFAULT_SORT_BY = '$createdAt'
+  const ROWS_DEFAULT_SORT_ORDER = 'desc' as const
   const isRowsTab = activeTab === 'rows' && tableId !== '-'
   const rowsListParams = useMemo(() => {
     if (!isRowsTab || typeof search !== 'object') return null
-    const url = new URL(location.pathname + location.search, window.location.origin)
+    const url = new URL(
+      location.pathname + location.search,
+      window.location.origin,
+    )
+    const defaultSort = {
+      sortBy: ROWS_DEFAULT_SORT_BY,
+      sortOrder: ROWS_DEFAULT_SORT_ORDER as 'asc' | 'desc',
+    }
+    const parsed =
+      parseSort(search?.sort as string | undefined) ??
+      getSort(url) ??
+      defaultSort
     return {
       search: getSearch(url) ?? (search?.search as string | undefined),
       page: getPage(url, 1),
       limit: getLimit(url, ROWS_DEFAULT_PAGE_SIZE),
-      filterMap: queryParamToMap(getQueryParam(url) ?? (search?.query as string | undefined) ?? null),
+      filterMap: queryParamToMap(
+        getQueryParam(url) ?? (search?.query as string | undefined) ?? null,
+      ),
+      sortBy: parsed.sortBy,
+      sortOrder: parsed.sortOrder,
     }
   }, [isRowsTab, search, location.pathname, location.search])
 
   const rowsUrlPage = rowsListParams?.page ?? 1
   const rowsUrlLimit = rowsListParams?.limit ?? ROWS_DEFAULT_PAGE_SIZE
   const rowsUrlSearch = rowsListParams?.search
+  const rowsSortBy = rowsListParams?.sortBy ?? ROWS_DEFAULT_SORT_BY
+  const rowsSortOrder = rowsListParams?.sortOrder ?? ROWS_DEFAULT_SORT_ORDER
   const rowsFilterMap = rowsListParams?.filterMap ?? new Map()
   const rowsFilterQueries =
     rowsFilterMap.size > 0 ? Array.from(rowsFilterMap.values()) : undefined
@@ -1884,8 +1952,10 @@ export function TableView({
     query?: string
     page?: number
     limit?: number
+    sort?: string
   }) => {
     const hasQueryKey = 'query' in params
+    const hasSortKey = 'sort' in params
     navigate({
       to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
       params: { projectId, databaseId, tableId },
@@ -1894,15 +1964,35 @@ export function TableView({
           search: params.search ?? rowsUrlSearch ?? undefined,
           query: hasQueryKey
             ? params.query
-            : (rowsFilterQueryString || undefined),
+            : rowsFilterQueryString || undefined,
           page: params.page ?? rowsUrlPage,
           limit: params.limit ?? rowsUrlLimit,
+          sort: hasSortKey
+            ? params.sort
+            : rowsSortBy !== ROWS_DEFAULT_SORT_BY ||
+                rowsSortOrder !== ROWS_DEFAULT_SORT_ORDER
+              ? encodeSort(rowsSortBy, rowsSortOrder)
+              : undefined,
         })
         const next = { ...prev, ...built }
         if (hasQueryKey && params.query === undefined) delete next.query
+        if (hasSortKey && params.sort === undefined) delete next.sort
         return next
       },
       replace: true,
+    })
+  }
+
+  const handleRowsSortChange = (sortBy: string, sortOrder: 'asc' | 'desc') => {
+    navigateToRowsList({
+      search: rowsUrlSearch ?? undefined,
+      query: rowsFilterQueryString || undefined,
+      page: 1,
+      limit: rowsUrlLimit,
+      sort:
+        sortBy !== ROWS_DEFAULT_SORT_BY || sortOrder !== ROWS_DEFAULT_SORT_ORDER
+          ? encodeSort(sortBy, sortOrder)
+          : undefined,
     })
   }
 
@@ -1914,6 +2004,11 @@ export function TableView({
       query: mapToQueryParam(next) || undefined,
       page: 1,
       limit: rowsUrlLimit,
+      sort:
+        rowsSortBy !== ROWS_DEFAULT_SORT_BY ||
+        rowsSortOrder !== ROWS_DEFAULT_SORT_ORDER
+          ? encodeSort(rowsSortBy, rowsSortOrder)
+          : undefined,
     })
   }
 
@@ -1925,6 +2020,11 @@ export function TableView({
       query: next.size > 0 ? mapToQueryParam(next) : undefined,
       page: 1,
       limit: rowsUrlLimit,
+      sort:
+        rowsSortBy !== ROWS_DEFAULT_SORT_BY ||
+        rowsSortOrder !== ROWS_DEFAULT_SORT_ORDER
+          ? encodeSort(rowsSortBy, rowsSortOrder)
+          : undefined,
     })
   }
 
@@ -1934,14 +2034,18 @@ export function TableView({
       query: undefined,
       page: 1,
       limit: rowsUrlLimit,
+      sort:
+        rowsSortBy !== ROWS_DEFAULT_SORT_BY ||
+        rowsSortOrder !== ROWS_DEFAULT_SORT_ORDER
+          ? encodeSort(rowsSortBy, rowsSortOrder)
+          : undefined,
     })
     setRowsFiltersOpen(false)
   }
 
   // Columns/indexes filter state (URL query) and handlers for header FiltersPopover
   const tableDetailFilterMap = useMemo(
-    () =>
-      queryParamToMap((search?.query as string | undefined) ?? null),
+    () => queryParamToMap((search?.query as string | undefined) ?? null),
     [search?.query],
   )
   const [columnsFiltersOpen, setColumnsFiltersOpen] = useState(false)
@@ -2315,9 +2419,7 @@ export function TableView({
                   variant="ghost"
                   size="icon"
                   className="h-6 w-6"
-                  onClick={() =>
-                    setSidebarTablesRequestedPage((p) => p + 1)
-                  }
+                  onClick={() => setSidebarTablesRequestedPage((p) => p + 1)}
                   disabled={
                     sidebarTablesDisplayedPage >=
                     Math.ceil((sidebarTablesTotal ?? 0) / sidebarTablesPageSize)
@@ -2399,11 +2501,11 @@ export function TableView({
               to="/projects/$projectId/databases/$databaseId/tables/$tableId/insights"
               params={{ projectId, databaseId, tableId }}
               className={cn(
-                  'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
-                  databaseTab === 'insights'
-                    ? 'bg-accent text-foreground'
-                    : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-                )}
+                'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
+                databaseTab === 'insights'
+                  ? 'bg-accent text-foreground'
+                  : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+              )}
             >
               <BarChart3 className="h-3.5 w-3.5 shrink-0" />
               <span>Insights</span>
@@ -2414,13 +2516,13 @@ export function TableView({
               to="/projects/$projectId/databases/$databaseId/tables/$tableId/backups"
               params={{ projectId, databaseId, tableId }}
               className={cn(
-                  'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
-                  databaseTab === 'backups'
-                    ? 'bg-accent text-foreground'
-                    : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-                )}
-              >
-                <Archive className="h-3.5 w-3.5 shrink-0" />
+                'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
+                databaseTab === 'backups'
+                  ? 'bg-accent text-foreground'
+                  : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+              )}
+            >
+              <Archive className="h-3.5 w-3.5 shrink-0" />
               <span>Backups</span>
             </Link>
           )}
@@ -2486,7 +2588,7 @@ export function TableView({
             !isDatabaseLevelView &&
             (activeTab === 'rows'
               ? noCreateRowPermission
-              : (activeTab === 'columns' || activeTab === 'indexes')
+              : activeTab === 'columns' || activeTab === 'indexes'
                 ? noCreateTablePermission
                 : false)
           }
@@ -2530,14 +2632,30 @@ export function TableView({
                 onApplyFilter={rowsApplyFilter}
                 resourceLabel="rows"
                 filterScope={`databases.rows.${databaseId}.${tableId}`}
-                onApplyQuery={(queryParam) =>
+                onApplyQuery={(queryParam, sortParam) =>
                   navigateToRowsList({
                     search: rowsUrlSearch ?? undefined,
                     query: queryParam ?? undefined,
                     page: 1,
                     limit: rowsUrlLimit,
+                    sort: sortParam ?? undefined,
                   })
                 }
+                sortBy={rowsSortBy}
+                sortOrder={rowsSortOrder}
+                onSortChange={handleRowsSortChange}
+                defaultSortParam={encodeSort(
+                  ROWS_DEFAULT_SORT_BY,
+                  ROWS_DEFAULT_SORT_ORDER,
+                )}
+                onReset={() => {
+                  navigate({
+                    to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+                    params: { projectId, databaseId, tableId },
+                    search: { page: 1, limit: rowsUrlLimit },
+                    replace: true,
+                  })
+                }}
                 teamId={project?.teamId}
               />
             ) : !isDatabaseLevelView && activeTab === 'columns' ? (
@@ -2626,59 +2744,46 @@ export function TableView({
             !isDatabaseLevelView && activeTab === 'rows' && !hasRows
           }
           beforeCreateButtons={
-            isDatabaseLevelView || !showTableSecuritySettings
-              ? undefined
-              :               activeTab === 'columns'
-                ? (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            if (openSuggestColumnsDialogRef.current) {
-                              openSuggestColumnsDialogRef.current()
-                            }
-                          }}
-                          className="h-9"
-                        >
-                          <Lightbulb className="h-3.5 w-3.5 shrink-0 sm:mr-1.5" />
-                          <span className="hidden sm:inline">
-                            Suggest columns
-                          </span>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">
-                        Suggest columns
-                      </TooltipContent>
-                    </Tooltip>
-                  )
-                : activeTab === 'indexes'
-                  ? (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              if (openSuggestIndexesDialogRef.current) {
-                                openSuggestIndexesDialogRef.current()
-                              }
-                            }}
-                            className="h-9"
-                          >
-                            <Lightbulb className="h-3.5 w-3.5 shrink-0 sm:mr-1.5" />
-                            <span className="hidden sm:inline">
-                              Suggest indexes
-                            </span>
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom">
-                          Suggest indexes
-                        </TooltipContent>
-                      </Tooltip>
-                    )
-                  : undefined
+            isDatabaseLevelView ||
+            !showTableSecuritySettings ? undefined : activeTab === 'columns' ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (openSuggestColumnsDialogRef.current) {
+                        openSuggestColumnsDialogRef.current()
+                      }
+                    }}
+                    className="h-9"
+                  >
+                    <Lightbulb className="h-3.5 w-3.5 shrink-0 sm:mr-1.5" />
+                    <span className="hidden sm:inline">Suggest columns</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">Suggest columns</TooltipContent>
+              </Tooltip>
+            ) : activeTab === 'indexes' ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (openSuggestIndexesDialogRef.current) {
+                        openSuggestIndexesDialogRef.current()
+                      }
+                    }}
+                    className="h-9"
+                  >
+                    <Lightbulb className="h-3.5 w-3.5 shrink-0 sm:mr-1.5" />
+                    <span className="hidden sm:inline">Suggest indexes</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">Suggest indexes</TooltipContent>
+              </Tooltip>
+            ) : undefined
           }
           collapsible={!isDatabaseLevelView}
           fullWidthBorder
@@ -2710,16 +2815,15 @@ export function TableView({
                   createDisabledTooltip={createPermissionTooltip}
                   onSelect={async (newDatabaseId) => {
                     try {
-                      const tablesData =
-                        await queryClient.ensureQueryData(
-                          tablesQueryOptions(
-                            projectId,
-                            newDatabaseId,
-                            0,
-                            100,
-                            undefined,
-                          ),
-                        )
+                      const tablesData = await queryClient.ensureQueryData(
+                        tablesQueryOptions(
+                          projectId,
+                          newDatabaseId,
+                          0,
+                          100,
+                          undefined,
+                        ),
+                      )
                       const sorted = [...(tablesData.tables || [])].sort(
                         (a: { name?: string }, b: { name?: string }) => {
                           const nameA = a.name?.toLowerCase() || ''
@@ -2727,7 +2831,9 @@ export function TableView({
                           return nameA.localeCompare(nameB)
                         },
                       )
-                      const firstTable = sorted[0] as { $id?: string } | undefined
+                      const firstTable = sorted[0] as
+                        | { $id?: string }
+                        | undefined
                       navigate({
                         to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
                         params: {
@@ -2867,6 +2973,8 @@ export function TableView({
                   rowsUrlLimit={rowsUrlLimit}
                   rowsFilterQueries={rowsFilterQueries}
                   rowsFilterQueryString={rowsFilterQueryString}
+                  rowsSortBy={rowsSortBy}
+                  rowsSortOrder={rowsSortOrder}
                   onNavigateToRowsList={navigateToRowsList}
                 />
               )}
@@ -3511,10 +3619,18 @@ export function DatabaseOverview({
 
   const { project } = useProject(projectId)
   const { access } = useOrganizationScopes(project?.teamId)
-  const showDbSecuritySettings =
-    canShowDatabaseSecuritySettings(access, features)
-  const noCreateTablePermission = !canShowTableSecuritySettings(access, features)
-  const showTableSecuritySettings = canShowTableSecuritySettings(access, features)
+  const showDbSecuritySettings = canShowDatabaseSecuritySettings(
+    access,
+    features,
+  )
+  const noCreateTablePermission = !canShowTableSecuritySettings(
+    access,
+    features,
+  )
+  const showTableSecuritySettings = canShowTableSecuritySettings(
+    access,
+    features,
+  )
 
   // Redirect from backups/insights when feature disabled
   useEffect(() => {
@@ -3549,13 +3665,7 @@ export function DatabaseOverview({
         replace: true,
       })
     }
-  }, [
-    showDbSecuritySettings,
-    activeTab,
-    projectId,
-    databaseId,
-    navigate,
-  ])
+  }, [showDbSecuritySettings, activeTab, projectId, databaseId, navigate])
 
   const databaseTabs: Tab[] = useMemo(
     () =>
@@ -5039,7 +5149,10 @@ function RowEditDrawer({
     const col = columnInfo as { array?: boolean; type?: string } | undefined
     // Array columns always use the array UI (add/remove items per element)
     if (col?.array) return 'array'
-    if (col?.type === 'array' || (typeof col?.type === 'string' && col.type.endsWith('[]')))
+    if (
+      col?.type === 'array' ||
+      (typeof col?.type === 'string' && col.type.endsWith('[]'))
+    )
       return 'array'
     // Use column type from metadata if available (element type for arrays)
     if (col?.type) return col.type
@@ -5332,8 +5445,9 @@ function RowEditDrawer({
                                       (item, index) => {
                                         const columnInfo = getColumnInfo(key)
                                         const size = columnInfo?.size || null
-                                        const rawType =
-                                          ((columnInfo as { type?: string })?.type || 'string') as string
+                                        const rawType = ((
+                                          columnInfo as { type?: string }
+                                        )?.type || 'string') as string
                                         const colType = rawType.endsWith('[]')
                                           ? rawType.slice(0, -2)
                                           : rawType
@@ -5384,8 +5498,10 @@ function RowEditDrawer({
                                             const scrollLeft =
                                               scrollContainer.scrollLeft
                                             requestAnimationFrame(() => {
-                                              scrollContainer.scrollTop = scrollTop
-                                              scrollContainer.scrollLeft = scrollLeft
+                                              scrollContainer.scrollTop =
+                                                scrollTop
+                                              scrollContainer.scrollLeft =
+                                                scrollLeft
                                             })
                                           }
                                         }
@@ -5397,10 +5513,12 @@ function RowEditDrawer({
                                           colType === 'float' ||
                                           colType === 'number'
                                         const isBoolType =
-                                          colType === 'boolean' || colType === 'bool'
+                                          colType === 'boolean' ||
+                                          colType === 'bool'
                                         const isEnumType = colType === 'enum'
                                         const isDateTimeType =
-                                          colType === 'datetime' || colType === 'date'
+                                          colType === 'datetime' ||
+                                          colType === 'date'
 
                                         return (
                                           <div
@@ -5429,7 +5547,9 @@ function RowEditDrawer({
                                                       index,
                                                       v === ''
                                                         ? null
-                                                        : colType === 'integer' || colType === 'int'
+                                                        : colType ===
+                                                              'integer' ||
+                                                            colType === 'int'
                                                           ? parseInt(v, 10)
                                                           : parseFloat(v),
                                                     )
@@ -5447,7 +5567,9 @@ function RowEditDrawer({
                                                 <div className="flex items-center gap-2 py-1">
                                                   <Switch
                                                     checked={item === true}
-                                                    onCheckedChange={(checked) =>
+                                                    onCheckedChange={(
+                                                      checked,
+                                                    ) =>
                                                       handleArrayItemChange(
                                                         key,
                                                         index,
@@ -6002,17 +6124,20 @@ interface SpreadsheetProps {
   /** When false, create row/column and suggest actions are disabled (e.g. read-only roles) */
   canWriteRows?: boolean
   canWriteTables?: boolean
-  /** URL-driven rows list (when set, search/page/limit/filters come from URL) */
+  /** URL-driven rows list (when set, search/page/limit/filters/sort come from URL) */
   rowsUrlSearch?: string
   rowsUrlPage?: number
   rowsUrlLimit?: number
   rowsFilterQueries?: string[]
   rowsFilterQueryString?: string
+  rowsSortBy?: string
+  rowsSortOrder?: 'asc' | 'desc'
   onNavigateToRowsList?: (params: {
     search?: string
     query?: string
     page?: number
     limit?: number
+    sort?: string
   }) => void
   /** When provided (e.g. from table view header), used for client-side filtering instead of URL */
   filterMap?: Map<CompactFilterKey, string>
@@ -6031,6 +6156,8 @@ function RowsSpreadsheet({
   rowsUrlLimit = ROWS_DEFAULT_PAGE_SIZE,
   rowsFilterQueries,
   rowsFilterQueryString,
+  rowsSortBy = '$createdAt',
+  rowsSortOrder = 'desc',
   onNavigateToRowsList,
 }: SpreadsheetProps) {
   const params = useParams({
@@ -6043,8 +6170,12 @@ function RowsSpreadsheet({
   const urlDriven = onNavigateToRowsList != null
 
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
-  const [requestedPage, setRequestedPage] = useState(urlDriven ? rowsUrlPage : 1)
-  const [displayedPage, setDisplayedPage] = useState(urlDriven ? rowsUrlPage : 1)
+  const [requestedPage, setRequestedPage] = useState(
+    urlDriven ? rowsUrlPage : 1,
+  )
+  const [displayedPage, setDisplayedPage] = useState(
+    urlDriven ? rowsUrlPage : 1,
+  )
   const [displayedSearch, setDisplayedSearch] = useState<string>(
     urlDriven ? (rowsUrlSearch ?? '') : '',
   )
@@ -6060,9 +6191,15 @@ function RowsSpreadsheet({
   const [displayedSortOrder, setDisplayedSortOrder] = useState<'asc' | 'desc'>(
     'desc',
   )
-  const [pageSize, setPageSize] = useState(urlDriven ? rowsUrlLimit : ROWS_DEFAULT_PAGE_SIZE)
-  const [sortBy, setSortBy] = useState<string>('$createdAt')
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+  const [pageSize, setPageSize] = useState(
+    urlDriven ? rowsUrlLimit : ROWS_DEFAULT_PAGE_SIZE,
+  )
+  const [sortBy, setSortBy] = useState<string>(
+    urlDriven ? rowsSortBy : '$createdAt',
+  )
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(
+    urlDriven ? rowsSortOrder : 'desc',
+  )
   const [editDrawerOpen, setEditDrawerOpen] = useState(false)
   const [drawerInitialTab, setDrawerInitialTab] = useState<
     'data' | 'permissions' | null
@@ -6098,9 +6235,30 @@ function RowsSpreadsheet({
       setDisplayedPage(rowsUrlPage)
       setDisplayedSearch(rowsUrlSearch ?? '')
       setDisplayedFilterQueryString(rowsFilterQueryString ?? '')
+      setDisplayedSortBy(rowsSortBy)
+      setDisplayedSortOrder(rowsSortOrder)
+      setSortBy(rowsSortBy)
+      setSortOrder(rowsSortOrder)
       hasInitedDisplayedRef.current = true
     }
-  }, [urlDriven, rowsUrlPage, rowsUrlLimit, rowsUrlSearch, rowsFilterQueryString])
+  }, [
+    urlDriven,
+    rowsUrlPage,
+    rowsUrlLimit,
+    rowsUrlSearch,
+    rowsFilterQueryString,
+    rowsSortBy,
+    rowsSortOrder,
+  ])
+
+  useEffect(() => {
+    if (urlDriven && (rowsSortBy !== sortBy || rowsSortOrder !== sortOrder)) {
+      setSortBy(rowsSortBy)
+      setSortOrder(rowsSortOrder)
+      setDisplayedSortBy(rowsSortBy)
+      setDisplayedSortOrder(rowsSortOrder)
+    }
+  }, [urlDriven, rowsSortBy, rowsSortOrder, sortBy, sortOrder])
 
   useEffect(() => {
     setSelectedRows(new Set())
@@ -6108,12 +6266,25 @@ function RowsSpreadsheet({
     if (!urlDriven) {
       setRequestedPage(1)
       setDisplayedPage(1)
+      setDisplayedSortBy('$createdAt')
+      setDisplayedSortOrder('desc')
+      setSortBy('$createdAt')
+      setSortOrder('desc')
+    } else {
+      setDisplayedSortBy(rowsSortBy)
+      setDisplayedSortOrder(rowsSortOrder)
+      setSortBy(rowsSortBy)
+      setSortOrder(rowsSortOrder)
     }
-    setDisplayedSortBy('$createdAt')
-    setDisplayedSortOrder('desc')
-    setSortBy('$createdAt')
-    setSortOrder('desc')
-  }, [location.pathname, projectId, databaseId, tableId, urlDriven])
+  }, [
+    location.pathname,
+    projectId,
+    databaseId,
+    tableId,
+    urlDriven,
+    rowsSortBy,
+    rowsSortOrder,
+  ])
 
   const effectiveSearch = urlDriven ? (rowsUrlSearch ?? '') : ''
   const effectivePageSize = urlDriven ? rowsUrlLimit : pageSize
@@ -6299,7 +6470,10 @@ function RowsSpreadsheet({
         const value = rowObj[key]
         const col = apiColumns.find(
           (c: Record<string, unknown>) =>
-            c.key === key || c.name === key || c.$id === key || c.attribute === key,
+            c.key === key ||
+            c.name === key ||
+            c.$id === key ||
+            c.attribute === key,
         )
         data[key] = normalizeValueForColumn(value, col) as
           | string
@@ -6370,26 +6544,39 @@ function RowsSpreadsheet({
   }
 
   const handleSortColumn = (columnKey: string) => {
+    let nextSortBy: string
+    let nextSortOrder: 'asc' | 'desc'
     if (sortBy === columnKey) {
-      // 3-click cycle: asc → desc → reset to default
       if (sortOrder === 'asc') {
-        setSortOrder('desc')
+        nextSortBy = columnKey
+        nextSortOrder = 'desc'
       } else {
-        // sortOrder === 'desc': reset to default (or toggle if $createdAt)
         if (columnKey === '$createdAt') {
-          setSortOrder('asc')
+          nextSortBy = '$createdAt'
+          nextSortOrder = 'asc'
         } else {
-          setSortBy('$createdAt')
-          setSortOrder('desc')
+          nextSortBy = '$createdAt'
+          nextSortOrder = 'desc'
         }
       }
     } else {
-      setSortBy(columnKey)
-      setSortOrder('asc')
+      nextSortBy = columnKey
+      nextSortOrder = 'asc'
     }
+    setSortBy(nextSortBy)
+    setSortOrder(nextSortOrder)
     setRequestedPage(1)
     setDisplayedPage(1)
     setSelectedRows(new Set())
+    if (urlDriven && onNavigateToRowsList) {
+      onNavigateToRowsList({
+        page: 1,
+        sort:
+          nextSortBy !== '$createdAt' || nextSortOrder !== 'desc'
+            ? encodeSort(nextSortBy, nextSortOrder)
+            : undefined,
+      })
+    }
   }
 
   const handleRowClick = (row: RowData) => {
@@ -6798,9 +6985,7 @@ function RowsSpreadsheet({
               {!canWriteTables ? (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Card
-                      className="cursor-not-allowed opacity-60 p-0 gap-0 shadow-none"
-                    >
+                    <Card className="cursor-not-allowed opacity-60 p-0 gap-0 shadow-none">
                       <div className="flex items-start gap-3 p-4">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
                           <Lightbulb className="h-5 w-5 text-muted-foreground" />
@@ -7565,7 +7750,9 @@ function ColumnsSpreadsheet({
   )
   const columnsFilterMap = filterMapProp ?? columnsFilterMapFromUrl
   const columnsFilterQueries =
-    columnsFilterMap.size > 0 ? Array.from(columnsFilterMap.values()) : undefined
+    columnsFilterMap.size > 0
+      ? Array.from(columnsFilterMap.values())
+      : undefined
 
   const columnsListParams = useMemo(() => {
     const url = new URL(
@@ -7794,12 +7981,15 @@ function ColumnsSpreadsheet({
           suggestionType === 'string' || suggestionType === 'varchar'
             ? suggestion.size
             : undefined,
-        encrypt:
-          ['string', 'text', 'mediumtext', 'longtext', 'varchar'].includes(
-            suggestionType,
-          )
-            ? suggestion.encrypt
-            : undefined,
+        encrypt: [
+          'string',
+          'text',
+          'mediumtext',
+          'longtext',
+          'varchar',
+        ].includes(suggestionType)
+          ? suggestion.encrypt
+          : undefined,
         min: suggestion.min,
         max: suggestion.max,
         elements: suggestion.elements,
@@ -8466,284 +8656,284 @@ function ColumnsSpreadsheet({
           </div>
         </div>
       ) : (
-      <>
-      <div
-        className={cn(
-          'flex-1 overflow-auto overscroll-contain',
-          suggestedColumns.length > 0 && 'pb-24',
-        )}
-      >
-        <table className="w-full border-collapse">
-          <thead className={stickyTheadClass}>
-            <tr>
-              <th
-                className={cn(
-                  'min-w-[200px] px-3 py-2 text-left',
-                  headerCellBorderClass,
-                )}
-              >
-                <span className="text-[12px] font-medium text-foreground">
-                  Key
-                </span>
-              </th>
-              <th
-                className={cn(
-                  'min-w-[120px] px-3 py-2 text-left',
-                  headerCellBorderClass,
-                )}
-              >
-                <span className="text-[12px] font-medium text-foreground">
-                  Type
-                </span>
-              </th>
-              <th
-                className={cn(
-                  'min-w-[80px] px-3 py-2 text-left',
-                  headerCellBorderClass,
-                )}
-              >
-                <span className="text-[12px] font-medium text-foreground">
-                  Size
-                </span>
-              </th>
-              <th
-                className={cn(
-                  'min-w-[80px] px-3 py-2 text-left',
-                  headerCellBorderClass,
-                )}
-              >
-                <span className="text-[12px] font-medium text-foreground">
-                  Required
-                </span>
-              </th>
-              <th
-                className={cn(
-                  'min-w-[80px] px-3 py-2 text-left',
-                  headerCellBorderClass,
-                )}
-              >
-                <span className="text-[12px] font-medium text-foreground">
-                  Array
-                </span>
-              </th>
-              <th
-                className={cn(
-                  'min-w-[80px] px-3 py-2 text-left',
-                  headerCellBorderClass,
-                )}
-              >
-                <span className="text-[12px] font-medium text-foreground">
-                  Encrypted
-                </span>
-              </th>
-              <th
-                className={cn(
-                  'min-w-[120px] px-3 py-2 text-left',
-                  headerCellBorderClass,
-                )}
-              >
-                <span className="text-[12px] font-medium text-foreground">
-                  Default
-                </span>
-              </th>
-              <th
-                className={cn(
-                  'w-10 px-2 py-2 bg-background',
-                  'shadow-[inset_0_1px_0_0_#d1d5db,inset_0_-1px_0_0_#d1d5db]',
-                  'dark:shadow-[inset_0_1px_0_0_rgb(255_255_255_/_0.1),inset_0_-1px_0_0_rgb(255_255_255_/_0.1)]',
-                )}
-              />
-            </tr>
-          </thead>
-          <tbody>
-            {allColumns.map((col: unknown) => {
-              const Icon = getColumnIcon(col.type)
-              const isSystem = col.key ? col.key.startsWith('$') : false
-              const isSuggestion = col.isSuggestion
-              return (
-                <tr
-                  key={col.key}
-                  data-suggestion-row={isSuggestion ? 'true' : undefined}
-                  className={cn(
-                    'group transition-colors hover:bg-muted/50',
-                    isSystem && 'bg-muted/30',
-                    isSuggestion && 'bg-amber-500/5',
-                  )}
-                >
-                  <td className={cn('px-3 py-2', bodyCellBorderClass)}>
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                        <code
-                          className={cn(
-                            'font-mono text-[12px]',
-                            isSystem
-                              ? 'text-muted-foreground'
-                              : 'text-foreground',
-                          )}
-                        >
-                          {col.key || 'unnamed'}
-                        </code>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                const name = col.key || 'unnamed'
-                                navigator.clipboard.writeText(name)
-                                toast.success('Column name copied')
-                              }}
-                              className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover:opacity-100"
-                            >
-                              <Copy className="h-3 w-3" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent side="top">
-                            <p>Copy column name</p>
-                          </TooltipContent>
-                        </Tooltip>
-                        {isSuggestion && (
-                          <span className="inline-flex items-center rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400">
-                            Suggested
-                          </span>
-                        )}
-                      </div>
-                      {isSuggestion && (
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => handleApproveSuggestion(col.key)}
-                            className="flex h-6 w-6 items-center justify-center rounded bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors cursor-pointer"
-                          >
-                            <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                          </button>
-                          <button
-                            onClick={() => handleRemoveSuggestion(col.key)}
-                            className="flex h-6 w-6 items-center justify-center rounded bg-destructive/10 hover:bg-destructive/20 transition-colors cursor-pointer"
-                          >
-                            <X className="h-3.5 w-3.5 text-destructive" />
-                          </button>
-                          <div className="h-4 w-px bg-border mx-0.5" />
-                          <button
-                            onClick={() => handleEditSuggestion(col)}
-                            className="flex h-6 w-6 items-center justify-center rounded bg-blue-500/10 hover:bg-blue-500/20 transition-colors cursor-pointer"
-                          >
-                            <Pencil className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                  <td className={cn('px-3 py-2', bodyCellBorderClass)}>
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        'text-[11px] font-medium border',
-                        getColumnTypeColor(col.type),
-                      )}
-                    >
-                      {col.type}
-                    </Badge>
-                  </td>
-                  <td
+        <>
+          <div
+            className={cn(
+              'flex-1 overflow-auto overscroll-contain',
+              suggestedColumns.length > 0 && 'pb-24',
+            )}
+          >
+            <table className="w-full border-collapse">
+              <thead className={stickyTheadClass}>
+                <tr>
+                  <th
                     className={cn(
-                      'px-3 py-2 text-[12px] text-muted-foreground',
-                      bodyCellBorderClass,
+                      'min-w-[200px] px-3 py-2 text-left',
+                      headerCellBorderClass,
                     )}
                   >
-                    {col.key !== '$id' &&
-                    (col.type === 'string' || col.type === 'varchar')
-                      ? (col.size ?? '—')
-                      : '—'}
-                  </td>
-                  <td className={cn('px-3 py-2', bodyCellBorderClass)}>
-                    {col.required ? (
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                    ) : (
-                      <span className="text-[12px] text-muted-foreground">
-                        —
-                      </span>
+                    <span className="text-[12px] font-medium text-foreground">
+                      Key
+                    </span>
+                  </th>
+                  <th
+                    className={cn(
+                      'min-w-[120px] px-3 py-2 text-left',
+                      headerCellBorderClass,
                     )}
-                  </td>
-                  <td className={cn('px-3 py-2', bodyCellBorderClass)}>
-                    {col.array ? (
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                    ) : (
-                      <span className="text-[12px] text-muted-foreground">
-                        —
-                      </span>
+                  >
+                    <span className="text-[12px] font-medium text-foreground">
+                      Type
+                    </span>
+                  </th>
+                  <th
+                    className={cn(
+                      'min-w-[80px] px-3 py-2 text-left',
+                      headerCellBorderClass,
                     )}
-                  </td>
-                  <td className={cn('px-3 py-2', bodyCellBorderClass)}>
-                    {col.encrypt ? (
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                    ) : (
-                      <span className="text-[12px] text-muted-foreground">
-                        —
-                      </span>
+                  >
+                    <span className="text-[12px] font-medium text-foreground">
+                      Size
+                    </span>
+                  </th>
+                  <th
+                    className={cn(
+                      'min-w-[80px] px-3 py-2 text-left',
+                      headerCellBorderClass,
                     )}
-                  </td>
-                  <td className={cn('px-3 py-2', bodyCellBorderClass)}>
-                    <code className="font-mono text-[11px] text-muted-foreground">
-                      {col.default ?? 'NULL'}
-                    </code>
-                  </td>
-                  <td className={cn('px-2 py-2', lastCellBorderClass)}>
-                    {!isSuggestion && !isSystem && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="rounded p-1 opacity-0 transition-opacity hover:bg-muted group-hover:opacity-100">
-                            <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => handleEditColumn(col)}
-                          >
-                            Update Column
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-destructive"
-                            onClick={() => handleDeleteColumn(col.key)}
-                          >
-                            Delete Column
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                  >
+                    <span className="text-[12px] font-medium text-foreground">
+                      Required
+                    </span>
+                  </th>
+                  <th
+                    className={cn(
+                      'min-w-[80px] px-3 py-2 text-left',
+                      headerCellBorderClass,
                     )}
-                  </td>
+                  >
+                    <span className="text-[12px] font-medium text-foreground">
+                      Array
+                    </span>
+                  </th>
+                  <th
+                    className={cn(
+                      'min-w-[80px] px-3 py-2 text-left',
+                      headerCellBorderClass,
+                    )}
+                  >
+                    <span className="text-[12px] font-medium text-foreground">
+                      Encrypted
+                    </span>
+                  </th>
+                  <th
+                    className={cn(
+                      'min-w-[120px] px-3 py-2 text-left',
+                      headerCellBorderClass,
+                    )}
+                  >
+                    <span className="text-[12px] font-medium text-foreground">
+                      Default
+                    </span>
+                  </th>
+                  <th
+                    className={cn(
+                      'w-10 px-2 py-2 bg-background',
+                      'shadow-[inset_0_1px_0_0_#d1d5db,inset_0_-1px_0_0_#d1d5db]',
+                      'dark:shadow-[inset_0_1px_0_0_rgb(255_255_255_/_0.1),inset_0_-1px_0_0_rgb(255_255_255_/_0.1)]',
+                    )}
+                  />
                 </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Sticky Pagination Footer */}
-      <div className="shrink-0 bg-background border-t border-border">
-        <div className="@container flex items-center justify-between gap-4 px-4">
-          <div className="flex-1 min-w-0">
-            <Pagination
-              currentPage={columnsPage}
-              totalItems={columnsTotal ?? 0}
-              pageSize={columnsLimit}
-              pageSizeOptions={[10, 25, 50, 100]}
-              onPageChange={(page) => navigateColumnsList({ page })}
-              onPageSizeChange={(newLimit) =>
-                navigateColumnsList({ page: 1, limit: newLimit })
-              }
-              itemLabel="columns"
-            />
+              </thead>
+              <tbody>
+                {allColumns.map((col: unknown) => {
+                  const Icon = getColumnIcon(col.type)
+                  const isSystem = col.key ? col.key.startsWith('$') : false
+                  const isSuggestion = col.isSuggestion
+                  return (
+                    <tr
+                      key={col.key}
+                      data-suggestion-row={isSuggestion ? 'true' : undefined}
+                      className={cn(
+                        'group transition-colors hover:bg-muted/50',
+                        isSystem && 'bg-muted/30',
+                        isSuggestion && 'bg-amber-500/5',
+                      )}
+                    >
+                      <td className={cn('px-3 py-2', bodyCellBorderClass)}>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                            <code
+                              className={cn(
+                                'font-mono text-[12px]',
+                                isSystem
+                                  ? 'text-muted-foreground'
+                                  : 'text-foreground',
+                              )}
+                            >
+                              {col.key || 'unnamed'}
+                            </code>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    const name = col.key || 'unnamed'
+                                    navigator.clipboard.writeText(name)
+                                    toast.success('Column name copied')
+                                  }}
+                                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover:opacity-100"
+                                >
+                                  <Copy className="h-3 w-3" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="top">
+                                <p>Copy column name</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            {isSuggestion && (
+                              <span className="inline-flex items-center rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400">
+                                Suggested
+                              </span>
+                            )}
+                          </div>
+                          {isSuggestion && (
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => handleApproveSuggestion(col.key)}
+                                className="flex h-6 w-6 items-center justify-center rounded bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors cursor-pointer"
+                              >
+                                <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                              </button>
+                              <button
+                                onClick={() => handleRemoveSuggestion(col.key)}
+                                className="flex h-6 w-6 items-center justify-center rounded bg-destructive/10 hover:bg-destructive/20 transition-colors cursor-pointer"
+                              >
+                                <X className="h-3.5 w-3.5 text-destructive" />
+                              </button>
+                              <div className="h-4 w-px bg-border mx-0.5" />
+                              <button
+                                onClick={() => handleEditSuggestion(col)}
+                                className="flex h-6 w-6 items-center justify-center rounded bg-blue-500/10 hover:bg-blue-500/20 transition-colors cursor-pointer"
+                              >
+                                <Pencil className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className={cn('px-3 py-2', bodyCellBorderClass)}>
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            'text-[11px] font-medium border',
+                            getColumnTypeColor(col.type),
+                          )}
+                        >
+                          {col.type}
+                        </Badge>
+                      </td>
+                      <td
+                        className={cn(
+                          'px-3 py-2 text-[12px] text-muted-foreground',
+                          bodyCellBorderClass,
+                        )}
+                      >
+                        {col.key !== '$id' &&
+                        (col.type === 'string' || col.type === 'varchar')
+                          ? (col.size ?? '—')
+                          : '—'}
+                      </td>
+                      <td className={cn('px-3 py-2', bodyCellBorderClass)}>
+                        {col.required ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        ) : (
+                          <span className="text-[12px] text-muted-foreground">
+                            —
+                          </span>
+                        )}
+                      </td>
+                      <td className={cn('px-3 py-2', bodyCellBorderClass)}>
+                        {col.array ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        ) : (
+                          <span className="text-[12px] text-muted-foreground">
+                            —
+                          </span>
+                        )}
+                      </td>
+                      <td className={cn('px-3 py-2', bodyCellBorderClass)}>
+                        {col.encrypt ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        ) : (
+                          <span className="text-[12px] text-muted-foreground">
+                            —
+                          </span>
+                        )}
+                      </td>
+                      <td className={cn('px-3 py-2', bodyCellBorderClass)}>
+                        <code className="font-mono text-[11px] text-muted-foreground">
+                          {col.default ?? 'NULL'}
+                        </code>
+                      </td>
+                      <td className={cn('px-2 py-2', lastCellBorderClass)}>
+                        {!isSuggestion && !isSystem && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className="rounded p-1 opacity-0 transition-opacity hover:bg-muted group-hover:opacity-100">
+                                <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => handleEditColumn(col)}
+                              >
+                                Update Column
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={() => handleDeleteColumn(col.key)}
+                              >
+                                Delete Column
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
-          {suggestedColumns.length > 0 && (
-            <div className="flex-shrink-0 text-[12px] text-amber-600 dark:text-amber-400">
-              {suggestedColumns.length} suggestion
-              {suggestedColumns.length !== 1 ? 's' : ''}
+
+          {/* Sticky Pagination Footer */}
+          <div className="shrink-0 bg-background border-t border-border">
+            <div className="@container flex items-center justify-between gap-4 px-4">
+              <div className="flex-1 min-w-0">
+                <Pagination
+                  currentPage={columnsPage}
+                  totalItems={columnsTotal ?? 0}
+                  pageSize={columnsLimit}
+                  pageSizeOptions={[10, 25, 50, 100]}
+                  onPageChange={(page) => navigateColumnsList({ page })}
+                  onPageSizeChange={(newLimit) =>
+                    navigateColumnsList({ page: 1, limit: newLimit })
+                  }
+                  itemLabel="columns"
+                />
+              </div>
+              {suggestedColumns.length > 0 && (
+                <div className="flex-shrink-0 text-[12px] text-amber-600 dark:text-amber-400">
+                  {suggestedColumns.length} suggestion
+                  {suggestedColumns.length !== 1 ? 's' : ''}
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </div>
-      </>
+          </div>
+        </>
       )}
 
       {/* Bulk Action Bar for Suggestions */}
@@ -8798,7 +8988,10 @@ function ColumnsSpreadsheet({
           name: t.name,
         }))}
         existingColumns={apiColumns.map((c: unknown) => ({
-          key: (c as { key?: string }).key || (c as { name?: string }).name || (c as { $id?: string }).$id,
+          key:
+            (c as { key?: string }).key ||
+            (c as { name?: string }).name ||
+            (c as { $id?: string }).$id,
         }))}
         isLoading={
           createColumnMutation.isPending || updateColumnMutation.isPending
@@ -8949,7 +9142,9 @@ function IndexesSpreadsheet({
   )
   const indexesFilterMap = filterMapProp ?? indexesFilterMapFromUrl
   const indexesFilterQueries =
-    indexesFilterMap.size > 0 ? Array.from(indexesFilterMap.values()) : undefined
+    indexesFilterMap.size > 0
+      ? Array.from(indexesFilterMap.values())
+      : undefined
 
   const indexesListParams = useMemo(() => {
     const url = new URL(
@@ -9420,235 +9615,242 @@ function IndexesSpreadsheet({
           </div>
         </div>
       ) : (
-      <>
-      <div
-        className={cn(
-          'flex-1 overflow-y-auto overscroll-contain',
-          suggestedIndexes.length > 0 && 'pb-24',
-        )}
-      >
-        <table className="w-full border-collapse">
-          <thead className={stickyTheadClass}>
-            <tr>
-              <th
-                className={cn(
-                  'min-w-[200px] px-3 py-2 text-left',
-                  headerCellBorderClass,
-                )}
-              >
-                <span className="text-[12px] font-medium text-foreground">
-                  Key
-                </span>
-              </th>
-              <th
-                className={cn(
-                  'min-w-[100px] px-3 py-2 text-left',
-                  headerCellBorderClass,
-                )}
-              >
-                <span className="text-[12px] font-medium text-foreground">
-                  Type
-                </span>
-              </th>
-              <th
-                className={cn(
-                  'min-w-[300px] px-3 py-2 text-left',
-                  headerCellBorderClass,
-                )}
-              >
-                <span className="text-[12px] font-medium text-foreground">
-                  Columns
-                </span>
-              </th>
-              <th
-                className={cn(
-                  'min-w-[100px] px-3 py-2 text-left',
-                  headerCellBorderClass,
-                )}
-              >
-                <span className="text-[12px] font-medium text-foreground">
-                  Status
-                </span>
-              </th>
-              <th
-                className={cn(
-                  'w-10 px-2 py-2 bg-background',
-                  'shadow-[inset_0_1px_0_0_#d1d5db,inset_0_-1px_0_0_#d1d5db]',
-                  'dark:shadow-[inset_0_1px_0_0_rgb(255_255_255_/_0.1),inset_0_-1px_0_0_rgb(255_255_255_/_0.1)]',
-                )}
-              />
-            </tr>
-          </thead>
-          <tbody>
-            {allIndexes.map((index: unknown) => {
-              const isSystem = index.key?.startsWith('_key_')
-              const isSuggestion = index.isSuggestion === true
-              return (
-                <tr
-                  key={index.key || 'unnamed'}
-                  data-suggestion-row={isSuggestion ? 'true' : undefined}
-                  className={cn(
-                    'group transition-colors hover:bg-muted/50',
-                    isSystem && 'bg-muted/30',
-                    isSuggestion && 'bg-amber-500/5',
-                  )}
-                >
-                  <td className={cn('px-3 py-2', bodyCellBorderClass)}>
-                    <div className="flex items-center gap-2 justify-between">
-                      <div className="flex items-center gap-2">
-                        <Key className="h-3.5 w-3.5 text-muted-foreground" />
-                        <code
-                          className={cn(
-                            'font-mono text-[12px]',
-                            isSystem
-                              ? 'text-muted-foreground'
-                              : 'text-foreground',
-                          )}
-                        >
-                          {index.key || 'unnamed'}
-                        </code>
-                        {isSuggestion && (
-                          <Badge
-                            variant="secondary"
-                            className="h-5 px-1.5 text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
-                          >
-                            Suggested
-                          </Badge>
-                        )}
-                      </div>
-                      {isSuggestion && (
-                        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleApproveSuggestion(index.key)}
-                            className="h-6 w-6 p-0 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 cursor-pointer"
-                            title="Approve"
-                          >
-                            <Check className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleRemoveSuggestion(index.key)}
-                            className="h-6 w-6 p-0 rounded bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 cursor-pointer"
-                            title="Reject"
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </Button>
-                          <div className="h-4 w-px bg-border mx-0.5" />
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleEditSuggestion(index)}
-                            className="h-6 w-6 p-0 rounded bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 cursor-pointer"
-                            title="Edit"
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                  <td className={cn('px-3 py-2', bodyCellBorderClass)}>
-                    <Badge
-                      variant="outline"
+        <>
+          <div
+            className={cn(
+              'flex-1 overflow-y-auto overscroll-contain',
+              suggestedIndexes.length > 0 && 'pb-24',
+            )}
+          >
+            <table className="w-full border-collapse">
+              <thead className={stickyTheadClass}>
+                <tr>
+                  <th
+                    className={cn(
+                      'min-w-[200px] px-3 py-2 text-left',
+                      headerCellBorderClass,
+                    )}
+                  >
+                    <span className="text-[12px] font-medium text-foreground">
+                      Key
+                    </span>
+                  </th>
+                  <th
+                    className={cn(
+                      'min-w-[100px] px-3 py-2 text-left',
+                      headerCellBorderClass,
+                    )}
+                  >
+                    <span className="text-[12px] font-medium text-foreground">
+                      Type
+                    </span>
+                  </th>
+                  <th
+                    className={cn(
+                      'min-w-[300px] px-3 py-2 text-left',
+                      headerCellBorderClass,
+                    )}
+                  >
+                    <span className="text-[12px] font-medium text-foreground">
+                      Columns
+                    </span>
+                  </th>
+                  <th
+                    className={cn(
+                      'min-w-[100px] px-3 py-2 text-left',
+                      headerCellBorderClass,
+                    )}
+                  >
+                    <span className="text-[12px] font-medium text-foreground">
+                      Status
+                    </span>
+                  </th>
+                  <th
+                    className={cn(
+                      'w-10 px-2 py-2 bg-background',
+                      'shadow-[inset_0_1px_0_0_#d1d5db,inset_0_-1px_0_0_#d1d5db]',
+                      'dark:shadow-[inset_0_1px_0_0_rgb(255_255_255_/_0.1),inset_0_-1px_0_0_rgb(255_255_255_/_0.1)]',
+                    )}
+                  />
+                </tr>
+              </thead>
+              <tbody>
+                {allIndexes.map((index: unknown) => {
+                  const isSystem = index.key?.startsWith('_key_')
+                  const isSuggestion = index.isSuggestion === true
+                  return (
+                    <tr
+                      key={index.key || 'unnamed'}
+                      data-suggestion-row={isSuggestion ? 'true' : undefined}
                       className={cn(
-                        'text-[11px] font-medium border',
-                        getIndexTypeColor(index.type),
+                        'group transition-colors hover:bg-muted/50',
+                        isSystem && 'bg-muted/30',
+                        isSuggestion && 'bg-amber-500/5',
                       )}
                     >
-                      {index.type}
-                    </Badge>
-                  </td>
-                  <td className={cn('px-3 py-2', bodyCellBorderClass)}>
-                    <div className="flex flex-wrap gap-2">
-                      {index.columns.map((col: string, i: number) => {
-                        const order = index.orders?.[i]
-                        const length = index.lengths?.[i]
-                        // Ensure length is a number and greater than 0
-                        const hasLength = length != null && Number(length) > 0
-                        return (
-                          <div key={i} className="flex items-center gap-1">
-                            <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">
-                              {col}
+                      <td className={cn('px-3 py-2', bodyCellBorderClass)}>
+                        <div className="flex items-center gap-2 justify-between">
+                          <div className="flex items-center gap-2">
+                            <Key className="h-3.5 w-3.5 text-muted-foreground" />
+                            <code
+                              className={cn(
+                                'font-mono text-[12px]',
+                                isSystem
+                                  ? 'text-muted-foreground'
+                                  : 'text-foreground',
+                              )}
+                            >
+                              {index.key || 'unnamed'}
                             </code>
-                            {order && (
-                              <span className="text-[10px] text-muted-foreground/70">
-                                {order}
-                              </span>
-                            )}
-                            {hasLength && (
-                              <span className="text-[10px] text-muted-foreground/70">
-                                ({length})
-                              </span>
+                            {isSuggestion && (
+                              <Badge
+                                variant="secondary"
+                                className="h-5 px-1.5 text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                              >
+                                Suggested
+                              </Badge>
                             )}
                           </div>
-                        )
-                      })}
-                    </div>
-                  </td>
-                  <td className={cn('px-3 py-2', bodyCellBorderClass)}>
-                    <Badge
-                      variant={
-                        index.status === 'available' ? 'success' : 'processing'
-                      }
-                      className="text-[11px] font-medium capitalize"
-                    >
-                      {index.status}
-                    </Badge>
-                  </td>
-                  <td className={cn('px-2 py-2', lastCellBorderClass)}>
-                    {!isSystem && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="rounded p-1 opacity-0 transition-opacity hover:bg-muted group-hover:opacity-100">
-                            <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            className="text-destructive"
-                            onClick={() => handleDeleteIndex(index.key)}
-                          >
-                            Delete Index
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Sticky Pagination Footer */}
-      <div className="shrink-0 bg-background border-t border-border">
-        <div className="@container flex items-center justify-between gap-4 px-4">
-          <div className="flex-1 min-w-0">
-            <Pagination
-              currentPage={indexesPage}
-              totalItems={indexesTotal ?? 0}
-              pageSize={indexesLimit}
-              pageSizeOptions={[10, 25, 50, 100]}
-              onPageChange={(page) => navigateIndexesList({ page })}
-              onPageSizeChange={(newLimit) =>
-                navigateIndexesList({ page: 1, limit: newLimit })
-              }
-              itemLabel="indexes"
-            />
+                          {isSuggestion && (
+                            <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() =>
+                                  handleApproveSuggestion(index.key)
+                                }
+                                className="h-6 w-6 p-0 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 cursor-pointer"
+                                title="Approve"
+                              >
+                                <Check className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() =>
+                                  handleRemoveSuggestion(index.key)
+                                }
+                                className="h-6 w-6 p-0 rounded bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 cursor-pointer"
+                                title="Reject"
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </Button>
+                              <div className="h-4 w-px bg-border mx-0.5" />
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleEditSuggestion(index)}
+                                className="h-6 w-6 p-0 rounded bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 cursor-pointer"
+                                title="Edit"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className={cn('px-3 py-2', bodyCellBorderClass)}>
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            'text-[11px] font-medium border',
+                            getIndexTypeColor(index.type),
+                          )}
+                        >
+                          {index.type}
+                        </Badge>
+                      </td>
+                      <td className={cn('px-3 py-2', bodyCellBorderClass)}>
+                        <div className="flex flex-wrap gap-2">
+                          {index.columns.map((col: string, i: number) => {
+                            const order = index.orders?.[i]
+                            const length = index.lengths?.[i]
+                            // Ensure length is a number and greater than 0
+                            const hasLength =
+                              length != null && Number(length) > 0
+                            return (
+                              <div key={i} className="flex items-center gap-1">
+                                <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">
+                                  {col}
+                                </code>
+                                {order && (
+                                  <span className="text-[10px] text-muted-foreground/70">
+                                    {order}
+                                  </span>
+                                )}
+                                {hasLength && (
+                                  <span className="text-[10px] text-muted-foreground/70">
+                                    ({length})
+                                  </span>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </td>
+                      <td className={cn('px-3 py-2', bodyCellBorderClass)}>
+                        <Badge
+                          variant={
+                            index.status === 'available'
+                              ? 'success'
+                              : 'processing'
+                          }
+                          className="text-[11px] font-medium capitalize"
+                        >
+                          {index.status}
+                        </Badge>
+                      </td>
+                      <td className={cn('px-2 py-2', lastCellBorderClass)}>
+                        {!isSystem && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className="rounded p-1 opacity-0 transition-opacity hover:bg-muted group-hover:opacity-100">
+                                <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={() => handleDeleteIndex(index.key)}
+                              >
+                                Delete Index
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
-          {suggestedIndexes.length > 0 && (
-            <div className="flex-shrink-0 text-[12px] text-amber-600 dark:text-amber-400">
-              {suggestedIndexes.length} suggestion
-              {suggestedIndexes.length !== 1 ? 's' : ''}
+
+          {/* Sticky Pagination Footer */}
+          <div className="shrink-0 bg-background border-t border-border">
+            <div className="@container flex items-center justify-between gap-4 px-4">
+              <div className="flex-1 min-w-0">
+                <Pagination
+                  currentPage={indexesPage}
+                  totalItems={indexesTotal ?? 0}
+                  pageSize={indexesLimit}
+                  pageSizeOptions={[10, 25, 50, 100]}
+                  onPageChange={(page) => navigateIndexesList({ page })}
+                  onPageSizeChange={(newLimit) =>
+                    navigateIndexesList({ page: 1, limit: newLimit })
+                  }
+                  itemLabel="indexes"
+                />
+              </div>
+              {suggestedIndexes.length > 0 && (
+                <div className="flex-shrink-0 text-[12px] text-amber-600 dark:text-amber-400">
+                  {suggestedIndexes.length} suggestion
+                  {suggestedIndexes.length !== 1 ? 's' : ''}
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </div>
-      </>
+          </div>
+        </>
       )}
 
       {/* Index Form Dialog */}

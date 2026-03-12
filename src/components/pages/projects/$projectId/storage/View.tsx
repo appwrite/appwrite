@@ -9,6 +9,8 @@ import {
   useOrganizationPlan,
   useOrganizationScopes,
   fetchProjectBuckets,
+  BUCKETS_DEFAULT_SORT_BY,
+  BUCKETS_DEFAULT_SORT_ORDER,
 } from '@/lib/react-query/hooks'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { canCreateBucket } from '@/lib/console-access-checks'
@@ -58,6 +60,9 @@ import {
   getPage,
   getLimit,
   getQueryParam,
+  getSort,
+  parseSort,
+  encodeSort,
   queryParamToMap,
   mapToQueryParam,
   buildListSearchParams,
@@ -79,6 +84,7 @@ export function View() {
     query?: string
     page?: number
     limit?: number
+    sort?: string
   }
   const queryClient = useQueryClient()
 
@@ -86,18 +92,39 @@ export function View() {
     location.pathname.replace(/\/$/, '') === `/projects/${projectId}/storage`
   const bucketListParams = useMemo(() => {
     if (!isStorageIndex || typeof search !== 'object') return null
-    const url = new URL(location.pathname + location.search, window.location.origin)
+    const url = new URL(
+      location.pathname + location.search,
+      window.location.origin,
+    )
+    const defaultSort = {
+      sortBy: BUCKETS_DEFAULT_SORT_BY,
+      sortOrder: BUCKETS_DEFAULT_SORT_ORDER as 'asc' | 'desc',
+    }
+    const parsed = parseSort(search.sort) ?? getSort(url) ?? defaultSort
     return {
       search: getSearch(url) ?? search.search,
       page: getPage(url, 1),
       limit: getLimit(url, DEFAULT_PAGE_SIZE),
       filterMap: queryParamToMap(getQueryParam(url) ?? search.query ?? null),
+      sortBy: parsed.sortBy,
+      sortOrder: parsed.sortOrder,
     }
-  }, [isStorageIndex, search?.search, search?.query, search?.page, search?.limit, location.pathname, location.search])
+  }, [
+    isStorageIndex,
+    search?.search,
+    search?.query,
+    search?.page,
+    search?.limit,
+    search?.sort,
+    location.pathname,
+    location.search,
+  ])
 
   const urlPage = bucketListParams?.page ?? 1
   const urlLimit = bucketListParams?.limit ?? DEFAULT_PAGE_SIZE
   const urlSearch = bucketListParams?.search
+  const urlSortBy = bucketListParams?.sortBy ?? BUCKETS_DEFAULT_SORT_BY
+  const urlSortOrder = bucketListParams?.sortOrder ?? BUCKETS_DEFAULT_SORT_ORDER
   const filterMap = bucketListParams?.filterMap ?? new Map()
   const filterQueries =
     filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
@@ -108,6 +135,12 @@ export function View() {
   const [displayedPage, setDisplayedPage] = useState(1)
   const [displayedSearch, setDisplayedSearch] = useState<string | undefined>(
     undefined,
+  )
+  const [displayedSortBy, setDisplayedSortBy] = useState(
+    BUCKETS_DEFAULT_SORT_BY,
+  )
+  const [displayedSortOrder, setDisplayedSortOrder] = useState<'asc' | 'desc'>(
+    BUCKETS_DEFAULT_SORT_ORDER,
   )
   const [displayedFilterQueryString, setDisplayedFilterQueryString] =
     useState('')
@@ -150,10 +183,20 @@ export function View() {
     if (!hasInitedDisplayedRef.current) {
       setDisplayedPage(urlPage)
       setDisplayedSearch(urlSearch ?? undefined)
+      setDisplayedSortBy(urlSortBy)
+      setDisplayedSortOrder(urlSortOrder)
       setDisplayedFilterQueryString(filterQueryString)
       hasInitedDisplayedRef.current = true
     }
-  }, [isStorageIndex, bucketListParams, urlPage, urlSearch, filterQueryString])
+  }, [
+    isStorageIndex,
+    bucketListParams,
+    urlPage,
+    urlSearch,
+    urlSortBy,
+    urlSortOrder,
+    filterQueryString,
+  ])
 
   useEffect(() => {
     if (!isStorageIndex) return
@@ -173,6 +216,11 @@ export function View() {
               query: filterQueryString || undefined,
               page: 1,
               limit: urlLimit,
+              sort:
+                urlSortBy !== BUCKETS_DEFAULT_SORT_BY ||
+                urlSortOrder !== BUCKETS_DEFAULT_SORT_ORDER
+                  ? encodeSort(urlSortBy, urlSortOrder)
+                  : undefined,
             }),
           }
           if (!trimmed) delete next.search
@@ -184,7 +232,17 @@ export function View() {
     return () => {
       if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
     }
-  }, [searchInput, projectId, navigate, urlSearch, urlLimit, filterQueryString, isStorageIndex])
+  }, [
+    searchInput,
+    projectId,
+    navigate,
+    urlSearch,
+    urlLimit,
+    urlSortBy,
+    urlSortOrder,
+    filterQueryString,
+    isStorageIndex,
+  ])
 
   // Fetch data for the requested page (URL page)
   const {
@@ -198,6 +256,8 @@ export function View() {
     urlLimit,
     urlSearch ?? undefined,
     filterQueries,
+    urlSortBy,
+    urlSortOrder,
   )
 
   const {
@@ -210,19 +270,26 @@ export function View() {
     urlLimit,
     displayedSearch ?? undefined,
     displayedFilterQueries,
+    displayedSortBy,
+    displayedSortOrder,
   )
 
   const showLoading = displayedLoading && apiBuckets.length === 0
 
   useEffect(() => {
-    if (!isStorageIndex || bucketsFetching || bucketsLoading || !bucketsFetched) return
+    if (!isStorageIndex || bucketsFetching || bucketsLoading || !bucketsFetched)
+      return
     const match =
       urlPage === displayedPage &&
       (urlSearch ?? '') === (displayedSearch ?? '') &&
-      filterQueryString === displayedFilterQueryString
+      filterQueryString === displayedFilterQueryString &&
+      urlSortBy === displayedSortBy &&
+      urlSortOrder === displayedSortOrder
     if (!match) {
       setDisplayedPage(urlPage)
       setDisplayedSearch(urlSearch ?? undefined)
+      setDisplayedSortBy(urlSortBy)
+      setDisplayedSortOrder(urlSortOrder)
       setDisplayedFilterQueryString(filterQueryString)
     }
   }, [
@@ -232,9 +299,13 @@ export function View() {
     bucketsFetched,
     urlPage,
     urlSearch,
+    urlSortBy,
+    urlSortOrder,
     filterQueryString,
     displayedPage,
     displayedSearch,
+    displayedSortBy,
+    displayedSortOrder,
     displayedFilterQueryString,
   ])
 
@@ -281,6 +352,31 @@ export function View() {
     setSelectedBuckets(new Set())
   }
 
+  const handleBucketsSortChange = (
+    sortBy: string,
+    sortOrder: 'asc' | 'desc',
+  ) => {
+    navigate({
+      to: '/projects/$projectId/storage/',
+      params: { projectId: projectId! },
+      search: (prev: Record<string, unknown>) => ({
+        ...prev,
+        ...buildListSearchParams({
+          search: urlSearch,
+          query: filterQueryString || undefined,
+          page: 1,
+          limit: urlLimit,
+          sort:
+            sortBy !== BUCKETS_DEFAULT_SORT_BY ||
+            sortOrder !== BUCKETS_DEFAULT_SORT_ORDER
+              ? encodeSort(sortBy, sortOrder)
+              : undefined,
+        }),
+      }),
+      replace: true,
+    })
+  }
+
   const applyFilter = (compactKey: CompactFilterKey, queryStr: string) => {
     const newMap = new Map(filterMap)
     newMap.set(compactKey, queryStr)
@@ -294,6 +390,11 @@ export function View() {
           query: mapToQueryParam(newMap),
           page: 1,
           limit: urlLimit,
+          sort:
+            urlSortBy !== BUCKETS_DEFAULT_SORT_BY ||
+            urlSortOrder !== BUCKETS_DEFAULT_SORT_ORDER
+              ? encodeSort(urlSortBy, urlSortOrder)
+              : undefined,
         }),
       }),
       replace: true,
@@ -314,6 +415,11 @@ export function View() {
             query: newMap.size > 0 ? mapToQueryParam(newMap) : undefined,
             page: 1,
             limit: urlLimit,
+            sort:
+              urlSortBy !== BUCKETS_DEFAULT_SORT_BY ||
+              urlSortOrder !== BUCKETS_DEFAULT_SORT_ORDER
+                ? encodeSort(urlSortBy, urlSortOrder)
+                : undefined,
           }),
         }
         if (newMap.size === 0) delete next.query
@@ -334,6 +440,11 @@ export function View() {
             search: urlSearch,
             page: 1,
             limit: urlLimit,
+            sort:
+              urlSortBy !== BUCKETS_DEFAULT_SORT_BY ||
+              urlSortOrder !== BUCKETS_DEFAULT_SORT_ORDER
+                ? encodeSort(urlSortBy, urlSortOrder)
+                : undefined,
           }),
         }
         delete next.query
@@ -523,7 +634,7 @@ export function View() {
             onApplyFilter={applyFilter}
             resourceLabel="buckets"
             filterScope="storage.buckets"
-            onApplyQuery={(queryParam) => {
+            onApplyQuery={(queryParam, sortParam) => {
               navigate({
                 to: '/projects/$projectId/storage/',
                 params: { projectId: projectId! },
@@ -534,8 +645,24 @@ export function View() {
                     query: queryParam ?? undefined,
                     page: 1,
                     limit: urlLimit,
+                    sort: sortParam ?? undefined,
                   }),
                 }),
+                replace: true,
+              })
+            }}
+            sortBy={urlSortBy}
+            sortOrder={urlSortOrder}
+            onSortChange={handleBucketsSortChange}
+            defaultSortParam={encodeSort(
+              BUCKETS_DEFAULT_SORT_BY,
+              BUCKETS_DEFAULT_SORT_ORDER,
+            )}
+            onReset={() => {
+              navigate({
+                to: '/projects/$projectId/storage/',
+                params: { projectId: projectId! },
+                search: { page: 1, limit: urlLimit },
                 replace: true,
               })
             }}
@@ -659,7 +786,10 @@ export function View() {
                                       {bucketData.name}
                                     </p>
                                     <div className="mt-0.5">
-                                      <CopyableId id={bucketData.$id} size="xs" />
+                                      <CopyableId
+                                        id={bucketData.$id}
+                                        size="xs"
+                                      />
                                     </div>
                                   </div>
                                 </div>
@@ -746,7 +876,9 @@ export function View() {
           ) : (
             <EmptyState
               icon={FolderOpen}
-              title={urlSearch || filterMap.size > 0 ? undefined : 'No buckets yet'}
+              title={
+                urlSearch || filterMap.size > 0 ? undefined : 'No buckets yet'
+              }
               description={
                 urlSearch || filterMap.size > 0
                   ? undefined
@@ -789,38 +921,38 @@ export function View() {
                           statusLabel={isDisabled ? 'Disabled' : undefined}
                           metadata={[
                             ...(bucketData.compression &&
-                              bucketData.compression !== 'none'
+                            bucketData.compression !== 'none'
                               ? [
-                                {
-                                  label: 'Compression',
-                                  value:
-                                    bucketData.compression === 'gzip'
-                                      ? 'Gzip'
-                                      : bucketData.compression === 'zstd'
-                                        ? 'Zstd'
-                                        : bucketData.compression,
-                                },
-                              ]
+                                  {
+                                    label: 'Compression',
+                                    value:
+                                      bucketData.compression === 'gzip'
+                                        ? 'Gzip'
+                                        : bucketData.compression === 'zstd'
+                                          ? 'Zstd'
+                                          : bucketData.compression,
+                                  },
+                                ]
                               : []),
                             ...(bucketData.maximumFileSize &&
-                              bucketData.maximumFileSize > 0
+                            bucketData.maximumFileSize > 0
                               ? [
-                                {
-                                  label: 'Max size',
-                                  value: formatBytes(
-                                    bucketData.maximumFileSize,
-                                  ),
-                                },
-                              ]
+                                  {
+                                    label: 'Max size',
+                                    value: formatBytes(
+                                      bucketData.maximumFileSize,
+                                    ),
+                                  },
+                                ]
                               : []),
                             ...(bucketData.allowedFileExtensions &&
-                              bucketData.allowedFileExtensions.length > 0
+                            bucketData.allowedFileExtensions.length > 0
                               ? [
-                                {
-                                  label: 'Extensions',
-                                  value: `${bucketData.allowedFileExtensions.length} ${bucketData.allowedFileExtensions.length === 1 ? 'type' : 'types'}`,
-                                },
-                              ]
+                                  {
+                                    label: 'Extensions',
+                                    value: `${bucketData.allowedFileExtensions.length} ${bucketData.allowedFileExtensions.length === 1 ? 'type' : 'types'}`,
+                                  },
+                                ]
                               : []),
                             {
                               label: 'Encrypted',
@@ -841,7 +973,9 @@ export function View() {
             ) : (
               <EmptyState
                 icon={Folder}
-                title={urlSearch || filterMap.size > 0 ? undefined : 'No buckets yet'}
+                title={
+                  urlSearch || filterMap.size > 0 ? undefined : 'No buckets yet'
+                }
                 description={
                   urlSearch || filterMap.size > 0
                     ? undefined

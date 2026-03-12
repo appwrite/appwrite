@@ -118,9 +118,7 @@ export function ApiKeysList({
                 key={apiKey.id}
                 role={onUpdate ? 'button' : undefined}
                 tabIndex={onUpdate ? 0 : undefined}
-                onClick={
-                  onUpdate ? () => onUpdate(apiKey.id) : undefined
-                }
+                onClick={onUpdate ? () => onUpdate(apiKey.id) : undefined}
                 onKeyDown={
                   onUpdate
                     ? (e) => {
@@ -227,22 +225,22 @@ export function ApiKeysList({
                           <MoreHorizontal className="h-4 w-4" />
                         </button>
                       </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {onUpdate && (
-                        <DropdownMenuItem onClick={() => onUpdate(apiKey.id)}>
-                          Update
-                        </DropdownMenuItem>
-                      )}
-                      {onDelete && (
-                        <DropdownMenuItem
-                          onClick={() => onDelete(apiKey.id)}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          Delete
-                        </DropdownMenuItem>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                      <DropdownMenuContent align="end">
+                        {onUpdate && (
+                          <DropdownMenuItem onClick={() => onUpdate(apiKey.id)}>
+                            Update
+                          </DropdownMenuItem>
+                        )}
+                        {onDelete && (
+                          <DropdownMenuItem
+                            onClick={() => onDelete(apiKey.id)}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            Delete
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 )}
               </div>

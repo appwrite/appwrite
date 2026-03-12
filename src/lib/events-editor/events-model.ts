@@ -26,29 +26,17 @@ export const EVENT_SERVICES: EventService[] = [
     resources: [
       {
         name: 'files',
-        actions: [
-          { name: 'create' },
-          { name: 'update' },
-          { name: 'delete' },
-        ],
+        actions: [{ name: 'create' }, { name: 'update' }, { name: 'delete' }],
       },
     ],
-    actions: [
-      { name: 'create' },
-      { name: 'update' },
-      { name: 'delete' },
-    ],
+    actions: [{ name: 'create' }, { name: 'update' }, { name: 'delete' }],
   },
   {
     name: 'databases',
     resources: [
       {
         name: 'tables',
-        actions: [
-          { name: 'create' },
-          { name: 'update' },
-          { name: 'delete' },
-        ],
+        actions: [{ name: 'create' }, { name: 'update' }, { name: 'delete' }],
       },
       {
         name: 'columns',
@@ -68,37 +56,21 @@ export const EVENT_SERVICES: EventService[] = [
         actions: [{ name: 'create' }, { name: 'delete' }],
       },
     ],
-    actions: [
-      { name: 'create' },
-      { name: 'update' },
-      { name: 'delete' },
-    ],
+    actions: [{ name: 'create' }, { name: 'update' }, { name: 'delete' }],
   },
   {
     name: 'functions',
     resources: [
       {
         name: 'deployments',
-        actions: [
-          { name: 'create' },
-          { name: 'update' },
-          { name: 'delete' },
-        ],
+        actions: [{ name: 'create' }, { name: 'update' }, { name: 'delete' }],
       },
       {
         name: 'executions',
-        actions: [
-          { name: 'create' },
-          { name: 'update' },
-          { name: 'delete' },
-        ],
+        actions: [{ name: 'create' }, { name: 'update' }, { name: 'delete' }],
       },
     ],
-    actions: [
-      { name: 'create' },
-      { name: 'update' },
-      { name: 'delete' },
-    ],
+    actions: [{ name: 'create' }, { name: 'update' }, { name: 'delete' }],
   },
   {
     name: 'teams',
@@ -139,36 +111,21 @@ export const EVENT_SERVICES: EventService[] = [
   },
   {
     name: 'providers',
-    actions: [
-      { name: 'create' },
-      { name: 'update' },
-      { name: 'delete' },
-    ],
+    actions: [{ name: 'create' }, { name: 'update' }, { name: 'delete' }],
   },
   {
     name: 'topics',
     resources: [
       {
         name: 'subscribers',
-        actions: [
-          { name: 'create' },
-          { name: 'delete' },
-        ],
+        actions: [{ name: 'create' }, { name: 'delete' }],
       },
     ],
-    actions: [
-      { name: 'create' },
-      { name: 'update' },
-      { name: 'delete' },
-    ],
+    actions: [{ name: 'create' }, { name: 'update' }, { name: 'delete' }],
   },
   {
     name: 'messages',
-    actions: [
-      { name: 'create' },
-      { name: 'update' },
-      { name: 'delete' },
-    ],
+    actions: [{ name: 'create' }, { name: 'update' }, { name: 'delete' }],
   },
 ]
 
@@ -359,7 +316,9 @@ export function getResourceActions(
   return res?.actions ?? []
 }
 
-export function getActionsForSelection(sel: EventBuilderSelection): EventAction[] {
+export function getActionsForSelection(
+  sel: EventBuilderSelection,
+): EventAction[] {
   if (!sel.service) return []
   if (sel.resource) return getResourceActions(sel.service, sel.resource)
   return getActions(sel.service)

@@ -111,13 +111,11 @@ export function ProjectSelector({
     () => parsePinnedProjectIds(consoleTeam?.prefs),
     [consoleTeam?.prefs],
   )
-  const {
-    data: pinnedProjectsData,
-    isPlaceholderData: isPinnedPlaceholder,
-  } = useQuery({
-    ...pinnedProjectsQueryOptions(selectedTeam?.$id ?? null, pinnedIds),
-    placeholderData: keepPreviousData,
-  })
+  const { data: pinnedProjectsData, isPlaceholderData: isPinnedPlaceholder } =
+    useQuery({
+      ...pinnedProjectsQueryOptions(selectedTeam?.$id ?? null, pinnedIds),
+      placeholderData: keepPreviousData,
+    })
 
   // Fetch projects for selected team with infinite scroll (excluding pinned)
   const {
@@ -221,8 +219,7 @@ export function ProjectSelector({
   }, [selectedTeam, organizations])
 
   // Total project count = pinned + unpinned (from infinite query); no separate list call
-  const projectsCount =
-    pinnedIds.length + (infiniteTotal ?? 0)
+  const projectsCount = pinnedIds.length + (infiniteTotal ?? 0)
 
   const filteredTeams = useMemo(() => {
     if (!teams.length) return []
@@ -355,27 +352,27 @@ export function ProjectSelector({
             sideOffset={12}
             className="w-[520px] border-border bg-popover p-0"
           >
-          <ProjectSelectorContent
-            selectedTeam={selectedTeam}
-            onSelectTeam={handleSelectTeam}
-            selectedProject={selectedProject}
-            handleSelectProject={handleSelectProject}
-            teamSearch={teamSearch}
-            setTeamSearch={setTeamSearch}
-            projectSearch={projectSearch}
-            setProjectSearch={setProjectSearch}
-            filteredTeams={filteredTeams}
-            displayProjects={stableDisplayProjects}
-            pinnedProjectIds={stablePinnedIds}
-            isFetchingNextPage={isFetchingNextPage}
-            hasNextPage={hasNextPage}
-            fetchNextPage={fetchNextPage}
-            organizations={organizations}
-            currentProjectId={projectId}
-            onCreateProject={() => setCreateProjectDialogOpen(true)}
-          />
-        </PopoverContent>
-      </Popover>
+            <ProjectSelectorContent
+              selectedTeam={selectedTeam}
+              onSelectTeam={handleSelectTeam}
+              selectedProject={selectedProject}
+              handleSelectProject={handleSelectProject}
+              teamSearch={teamSearch}
+              setTeamSearch={setTeamSearch}
+              projectSearch={projectSearch}
+              setProjectSearch={setProjectSearch}
+              filteredTeams={filteredTeams}
+              displayProjects={stableDisplayProjects}
+              pinnedProjectIds={stablePinnedIds}
+              isFetchingNextPage={isFetchingNextPage}
+              hasNextPage={hasNextPage}
+              fetchNextPage={fetchNextPage}
+              organizations={organizations}
+              currentProjectId={projectId}
+              onCreateProject={() => setCreateProjectDialogOpen(true)}
+            />
+          </PopoverContent>
+        </Popover>
 
         <CreateProjectDialog
           open={createProjectDialogOpen}
@@ -585,10 +582,7 @@ function ProjectSelectorContent({
   currentProjectId,
   onCreateProject,
 }: ProjectSelectorContentProps) {
-  const pinnedSet = useMemo(
-    () => new Set(pinnedProjectIds),
-    [pinnedProjectIds],
-  )
+  const pinnedSet = useMemo(() => new Set(pinnedProjectIds), [pinnedProjectIds])
   // Ref for the scrollable container
   const projectsScrollRef = useRef<HTMLDivElement>(null)
   // Ref for the sentinel element that triggers loading
@@ -825,10 +819,7 @@ function MobileProjectSelectorContent({
   onCreateProject,
 }: ProjectSelectorContentProps) {
   const [activeTab, setActiveTab] = useState<'teams' | 'projects'>('projects')
-  const pinnedSet = useMemo(
-    () => new Set(pinnedProjectIds),
-    [pinnedProjectIds],
-  )
+  const pinnedSet = useMemo(() => new Set(pinnedProjectIds), [pinnedProjectIds])
 
   // Ref for the scrollable container
   const projectsScrollRef = useRef<HTMLDivElement>(null)
@@ -985,7 +976,9 @@ function MobileProjectSelectorContent({
         <div className="flex flex-1 flex-col overflow-hidden">
           {/* Selected Organization Indicator */}
           <div className="flex items-center gap-2 border-b border-border bg-muted/50 px-4 py-2">
-            <span className="text-[12px] text-muted-foreground">Organization:</span>
+            <span className="text-[12px] text-muted-foreground">
+              Organization:
+            </span>
             <span className="text-[12px] font-medium text-foreground">
               {selectedTeam.name}
             </span>
@@ -1017,7 +1010,9 @@ function MobileProjectSelectorContent({
             <div className="space-y-0.5">
               {displayProjects.length === 0 ? (
                 <p className="px-3 py-6 text-center text-[13px] text-muted-foreground">
-                  {selectedTeam ? 'No projects found' : 'Select an organization'}
+                  {selectedTeam
+                    ? 'No projects found'
+                    : 'Select an organization'}
                 </p>
               ) : (
                 <>

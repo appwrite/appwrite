@@ -81,8 +81,7 @@ export function BucketDetailView() {
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
-  const showSecuritySettings =
-    canShowBucketSecuritySettings(access, features)
+  const showSecuritySettings = canShowBucketSecuritySettings(access, features)
 
   // Derive active tab from pathname
   const activeTab = useMemo(() => {
@@ -457,8 +456,7 @@ export function BucketDetailView() {
                                     ? ''
                                     : 'cursor-pointer transition-colors border-b border-border/50',
                                   !pending && 'hover:bg-muted/30',
-                                  selectedFiles.has(file.$id) &&
-                                    'bg-muted',
+                                  selectedFiles.has(file.$id) && 'bg-muted',
                                 )}
                                 onClick={(e) => {
                                   if (pending) return

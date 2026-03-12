@@ -20,7 +20,9 @@ export type TeamPrefs = Record<string, unknown>
  * Parse pinned project IDs from team prefs.
  * Returns up to MAX_PINNED_PROJECTS IDs in order.
  */
-export function parsePinnedProjectIds(prefs: TeamPrefs | null | undefined): string[] {
+export function parsePinnedProjectIds(
+  prefs: TeamPrefs | null | undefined,
+): string[] {
   if (!prefs || typeof prefs[TEAM_PREFS_KEY_PINNED_PROJECT_IDS] !== 'string') {
     return []
   }

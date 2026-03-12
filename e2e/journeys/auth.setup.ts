@@ -69,10 +69,7 @@ test('authenticate once and persist storage state', async ({
     await page.waitForURL(
       (url) => {
         const pathname = new URL(url).pathname
-        return (
-          pathname === '/account' ||
-          pathname.startsWith('/organizations/')
-        )
+        return pathname === '/account' || pathname.startsWith('/organizations/')
       },
       { timeout: 15000 },
     )

@@ -30,7 +30,9 @@ export function RetryDomainDialog({
   onRetrySuccess,
 }: RetryDomainDialogProps) {
   const verifyDomainMutation = useVerifyDomain(projectId, region)
-  const [verificationError, setVerificationError] = useState<string | null>(null)
+  const [verificationError, setVerificationError] = useState<string | null>(
+    null,
+  )
 
   useEffect(() => {
     if (open) setVerificationError(null)
@@ -53,7 +55,8 @@ export function RetryDomainDialog({
       }
     } catch (error: unknown) {
       setVerificationError(
-        (error instanceof Error ? error.message : null) || 'Failed to retry verification',
+        (error instanceof Error ? error.message : null) ||
+          'Failed to retry verification',
       )
     }
   }

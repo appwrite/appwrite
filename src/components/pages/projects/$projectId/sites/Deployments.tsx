@@ -1,5 +1,12 @@
 import { useTheme } from 'next-themes'
-import { useState, useEffect, useLayoutEffect, useMemo, useRef, useContext } from 'react'
+import {
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useContext,
+} from 'react'
 import {
   useParams,
   Link,
@@ -95,11 +102,7 @@ import type { Models } from '@appwrite.io/console'
 import { useCreateDeployment } from '../shared/CreateDeploymentContext'
 import { CreateDeploymentDropdown } from '../shared/CreateDeploymentDropdown'
 import { DeploymentsToolbarContext } from './Layout'
-import {
-  getQueryParam,
-  queryParamToMap,
-  getPage,
-} from '@/lib/table-filters'
+import { getQueryParam, queryParamToMap, getPage } from '@/lib/table-filters'
 
 const DEPLOYMENTS_SELECT = [
   Query.select([
@@ -240,7 +243,7 @@ export function View() {
       typeof locSearch === 'object' &&
       locSearch !== null &&
       'query' in locSearch
-        ? (locSearch as { query?: string }).query ?? null
+        ? ((locSearch as { query?: string }).query ?? null)
         : getQueryParam(
             new URL(
               location.pathname +
@@ -295,8 +298,9 @@ export function View() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteActiveDialogOpen, setDeleteActiveDialogOpen] = useState(false)
   const [cancelBuildDialogOpen, setCancelBuildDialogOpen] = useState(false)
-  const [cancelTargetDeploymentId, setCancelTargetDeploymentId] =
-    useState<string | null>(null)
+  const [cancelTargetDeploymentId, setCancelTargetDeploymentId] = useState<
+    string | null
+  >(null)
   const [redeployDialogOpen, setRedeployDialogOpen] = useState(false)
   const [activateDialogOpen, setActivateDialogOpen] = useState(false)
   const [screenshotLoaded, setScreenshotLoaded] = useState(false)
@@ -587,11 +591,7 @@ export function View() {
       if (!projectId || !siteId) {
         throw new Error('Project ID and Site ID are required')
       }
-      return await cancelSiteDeployment(
-        projectId,
-        siteId,
-        deploymentIdToCancel,
-      )
+      return await cancelSiteDeployment(projectId, siteId, deploymentIdToCancel)
     },
     onSuccess: async () => {
       setCancelBuildDialogOpen(false)
@@ -778,7 +778,10 @@ export function View() {
                         Active deployment
                       </h3>
                       {isBuilding && (
-                        <Badge variant="warning" className="text-[10px] shrink-0">
+                        <Badge
+                          variant="warning"
+                          className="text-[10px] shrink-0"
+                        >
                           Building
                         </Badge>
                       )}
@@ -1234,9 +1237,11 @@ export function View() {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={handleDownloadBuild}
-                          disabled={!isDeploymentCompleted(
-                            activeDeploymentResolved?.status,
-                          )}
+                          disabled={
+                            !isDeploymentCompleted(
+                              activeDeploymentResolved?.status,
+                            )
+                          }
                           title={
                             !isDeploymentCompleted(
                               activeDeploymentResolved?.status,
@@ -1768,44 +1773,44 @@ export function View() {
                                   !isDeploymentInProgress(
                                     deploymentData.status,
                                   ) && (
-                                  <DropdownMenuItem
-                                    onClick={async (e) => {
-                                      e.stopPropagation()
-                                      try {
-                                        await deleteSiteDeployment(
-                                          projectId!,
-                                          siteId!,
-                                          deploymentData.$id,
-                                        )
-                                        queryClient.invalidateQueries({
-                                          queryKey: [
-                                            ...Dependencies.DEPLOYMENTS,
-                                          ],
-                                        })
-                                        queryClient.invalidateQueries({
-                                          queryKey: [
-                                            'site',
-                                            'project',
-                                            projectId,
-                                            siteId,
-                                          ],
-                                        })
-                                        toast.success(
-                                          'Deployment deleted successfully',
-                                        )
-                                      } catch (error) {
-                                        toast.error(
-                                          error instanceof Error
-                                            ? error.message
-                                            : 'Failed to delete deployment',
-                                        )
-                                      }
-                                    }}
-                                  >
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Delete
-                                  </DropdownMenuItem>
-                                )}
+                                    <DropdownMenuItem
+                                      onClick={async (e) => {
+                                        e.stopPropagation()
+                                        try {
+                                          await deleteSiteDeployment(
+                                            projectId!,
+                                            siteId!,
+                                            deploymentData.$id,
+                                          )
+                                          queryClient.invalidateQueries({
+                                            queryKey: [
+                                              ...Dependencies.DEPLOYMENTS,
+                                            ],
+                                          })
+                                          queryClient.invalidateQueries({
+                                            queryKey: [
+                                              'site',
+                                              'project',
+                                              projectId,
+                                              siteId,
+                                            ],
+                                          })
+                                          toast.success(
+                                            'Deployment deleted successfully',
+                                          )
+                                        } catch (error) {
+                                          toast.error(
+                                            error instanceof Error
+                                              ? error.message
+                                              : 'Failed to delete deployment',
+                                          )
+                                        }
+                                      }}
+                                    >
+                                      <Trash2 className="mr-2 h-4 w-4" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  )}
                                 {isDeploymentInProgress(
                                   deploymentData.status,
                                 ) && (
@@ -2022,9 +2027,10 @@ export function View() {
           <div className="px-6 pb-4 pt-4">
             {(displayedDeployments?.find(
               (d) => d.$id === cancelTargetDeploymentId,
-            ) ?? (cancelTargetDeploymentId === activeDeploymentResolved?.$id
-              ? activeDeploymentResolved
-              : null)) && (
+            ) ??
+              (cancelTargetDeploymentId === activeDeploymentResolved?.$id
+                ? activeDeploymentResolved
+                : null)) && (
               <DeploymentInfo
                 deployment={
                   displayedDeployments?.find(
@@ -2052,7 +2058,9 @@ export function View() {
                 cancelTargetDeploymentId &&
                 cancelBuildMutation.mutate(cancelTargetDeploymentId)
               }
-              disabled={cancelBuildMutation.isPending || !cancelTargetDeploymentId}
+              disabled={
+                cancelBuildMutation.isPending || !cancelTargetDeploymentId
+              }
               className="h-9 text-[13px]"
             >
               Cancel build

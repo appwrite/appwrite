@@ -132,7 +132,9 @@ export function FileContextMenu({
                   Copy name
                 </ContextMenuItem>
               )}
-              <ContextMenuItem onSelect={() => copyToClipboard('Link', fileHref)}>
+              <ContextMenuItem
+                onSelect={() => copyToClipboard('Link', fileHref)}
+              >
                 <ContextMenuIcon icon={Link2} />
                 Copy link
               </ContextMenuItem>
@@ -140,12 +142,10 @@ export function FileContextMenu({
                 onSelect={() =>
                   copyToClipboard(
                     'JSON',
-                    toPrettyJson(
-                      {
-                        id: file.id,
-                        name: file.name ?? null,
-                      },
-                    ),
+                    toPrettyJson({
+                      id: file.id,
+                      name: file.name ?? null,
+                    }),
                   )
                 }
               >
@@ -155,22 +155,16 @@ export function FileContextMenu({
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuSeparator />
-          <ContextMenuItem
-            onSelect={() => openInNewTab(fileHref)}
-          >
+          <ContextMenuItem onSelect={() => openInNewTab(fileHref)}>
             <ContextMenuIcon icon={ExternalLink} />
             Open in new tab
           </ContextMenuItem>
-          <ContextMenuItem
-            onSelect={() => openInNewWindow(fileHref)}
-          >
+          <ContextMenuItem onSelect={() => openInNewWindow(fileHref)}>
             <ContextMenuIcon icon={Square} />
             Open in new window
           </ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem
-            onSelect={handleDeleteClick}
-          >
+          <ContextMenuItem onSelect={handleDeleteClick}>
             <ContextMenuIcon icon={Trash2} />
             Delete
           </ContextMenuItem>

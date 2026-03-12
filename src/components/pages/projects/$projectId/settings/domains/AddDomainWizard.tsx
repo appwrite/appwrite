@@ -18,7 +18,10 @@ import {
   useVerifyDomain,
   useDeleteDomain,
 } from '@/lib/react-query/hooks'
-import { ensureApexDomainInOrganization, isValidDomain } from '@/lib/utils/proxy-domains'
+import {
+  ensureApexDomainInOrganization,
+  isValidDomain,
+} from '@/lib/utils/proxy-domains'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 
@@ -40,7 +43,9 @@ export function AddDomainWizard({
   const [domain, setDomain] = useState(initialDomain ?? '')
   const [error, setError] = useState('')
   const [rule, setRule] = useState<Models.ProxyRule | null>(null)
-  const [verificationError, setVerificationError] = useState<string | null>(null)
+  const [verificationError, setVerificationError] = useState<string | null>(
+    null,
+  )
 
   const fallbackPath = `/projects/${projectId}/settings/domains`
   const isPending = createMutation.isPending || verifyMutation.isPending
@@ -77,13 +82,19 @@ export function AddDomainWizard({
           queryKey: ['proxy-rules', 'project', projectId],
         })
         toast.success('Domain verified successfully')
-        navigate({ to: '/projects/$projectId/settings/domains', params: { projectId: projectId! } })
+        navigate({
+          to: '/projects/$projectId/settings/domains',
+          params: { projectId: projectId! },
+        })
       } else if (created.status === 'verifying') {
         await queryClient.refetchQueries({
           queryKey: ['proxy-rules', 'project', projectId],
         })
         toast.success('Verification in progress')
-        navigate({ to: '/projects/$projectId/settings/domains', params: { projectId: projectId! } })
+        navigate({
+          to: '/projects/$projectId/settings/domains',
+          params: { projectId: projectId! },
+        })
       } else {
         setRule(created)
       }
@@ -102,15 +113,24 @@ export function AddDomainWizard({
           queryKey: ['proxy-rules', 'project', projectId],
         })
         toast.success('Domain verified successfully')
-        navigate({ to: '/projects/$projectId/settings/domains', params: { projectId: projectId! } })
-      } else if (updated.status === 'created' || updated.status === 'unverified') {
+        navigate({
+          to: '/projects/$projectId/settings/domains',
+          params: { projectId: projectId! },
+        })
+      } else if (
+        updated.status === 'created' ||
+        updated.status === 'unverified'
+      ) {
         setVerificationError('Verification failed. Check DNS and retry.')
       } else {
         await queryClient.refetchQueries({
           queryKey: ['proxy-rules', 'project', projectId],
         })
         toast.success('Verification in progress')
-        navigate({ to: '/projects/$projectId/settings/domains', params: { projectId: projectId! } })
+        navigate({
+          to: '/projects/$projectId/settings/domains',
+          params: { projectId: projectId! },
+        })
       }
     } catch {
       setVerificationError('Failed to verify domain')
@@ -173,15 +193,17 @@ export function AddDomainWizard({
         <div className="flex gap-2 justify-end w-full">
           <Button
             variant="outline"
-            onClick={() => navigate({ to: '/projects/$projectId/settings/domains', params: { projectId: projectId! } })}
+            onClick={() =>
+              navigate({
+                to: '/projects/$projectId/settings/domains',
+                params: { projectId: projectId! },
+              })
+            }
             disabled={isPending}
           >
             Cancel
           </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={isPending || !domain.trim()}
-          >
+          <Button onClick={handleSubmit} disabled={isPending || !domain.trim()}>
             Add
           </Button>
         </div>

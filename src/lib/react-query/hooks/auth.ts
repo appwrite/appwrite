@@ -19,10 +19,7 @@ import {
 } from '@/lib/user-prefs-keys'
 import type { SavedFilter } from '@/lib/user-prefs-keys'
 import { DEFAULT_STALE_TIME } from './constants'
-import {
-  useConsoleTeam,
-  useUpdateConsoleTeamPrefs,
-} from './teams'
+import { useConsoleTeam, useUpdateConsoleTeamPrefs } from './teams'
 
 // ============================================================================
 // AUTH SECURITY FEATURES
@@ -615,7 +612,9 @@ export function useToggleFeatureNotification() {
  *
  * Must be used within RequireAuth (or where account is available).
  */
-export function useSidebarCollapsed(account: { prefs?: Record<string, unknown> } | undefined) {
+export function useSidebarCollapsed(
+  account: { prefs?: Record<string, unknown> } | undefined,
+) {
   const queryClient = useQueryClient()
 
   const accountPrefs = account?.prefs
@@ -654,8 +653,7 @@ export function useSidebarCollapsed(account: { prefs?: Record<string, unknown> }
 
   const setCollapsed = useCallback(
     (value: boolean | ((prev: boolean) => boolean)) => {
-      const nextValue =
-        typeof value === 'function' ? value(collapsed) : value
+      const nextValue = typeof value === 'function' ? value(collapsed) : value
       updateMutation.mutate(nextValue)
     },
     [collapsed, updateMutation],
@@ -687,9 +685,7 @@ export function useSavedFilters(
   const updateTeamPrefs = useUpdateConsoleTeamPrefs(teamId)
 
   const userSavedFilters: SavedFilter[] =
-    scope && account?.prefs
-      ? parseSavedFilters(account.prefs, scope)
-      : []
+    scope && account?.prefs ? parseSavedFilters(account.prefs, scope) : []
 
   const teamSavedFilters: SavedFilter[] =
     scope && team?.prefs && teamId
@@ -856,14 +852,12 @@ export function useSavedFilters(
     },
   })
 
-  const addSavedFilter = async (
-    args: {
-      name: string
-      query: string
-      level?: SavedFilterLevel
-      sort?: string
-    },
-  ) => {
+  const addSavedFilter = async (args: {
+    name: string
+    query: string
+    level?: SavedFilterLevel
+    sort?: string
+  }) => {
     const level = args.level ?? 'user'
     if (level === 'team' && teamId) {
       return addTeamMutation.mutateAsync({
@@ -879,10 +873,7 @@ export function useSavedFilters(
     })
   }
 
-  const deleteSavedFilter = async (
-    id: string,
-    level: SavedFilterLevel,
-  ) => {
+  const deleteSavedFilter = async (id: string, level: SavedFilterLevel) => {
     if (level === 'team' && teamId) {
       return deleteTeamMutation.mutateAsync(id)
     }
@@ -900,13 +891,7 @@ export function useSavedFilters(
   }
 
   const updateUserFilterMutation = useMutation({
-    mutationFn: async ({
-      id,
-      name,
-    }: {
-      id: string
-      name: string
-    }) => {
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
       const currentAccount = queryClient.getQueryData<{
         prefs?: Record<string, unknown>
       }>(['account', 'console'])
@@ -930,13 +915,7 @@ export function useSavedFilters(
   })
 
   const updateTeamFilterMutation = useMutation({
-    mutationFn: async ({
-      id,
-      name,
-    }: {
-      id: string
-      name: string
-    }) => {
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
       const currentTeam = queryClient.getQueryData<{
         prefs?: Record<string, unknown>
       }>(['team', 'console', teamId])
@@ -985,8 +964,7 @@ export function useSavedFilters(
     reorderSavedFilters,
     updateSavedFilterName,
     isAdding: addUserMutation.isPending || addTeamMutation.isPending,
-    isDeleting:
-      deleteUserMutation.isPending || deleteTeamMutation.isPending,
+    isDeleting: deleteUserMutation.isPending || deleteTeamMutation.isPending,
     hasTeamLevel: !!teamId,
   }
 }

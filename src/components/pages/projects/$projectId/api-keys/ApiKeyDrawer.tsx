@@ -50,9 +50,12 @@ export function ApiKeyDrawer({
   const isEditing = !!apiKey
   const showCreatedKey = !!createdKeySecret
   const secretToShow =
-    createdKeySecret ?? (apiKey?.secret && apiKey.secret.trim() ? apiKey.secret : null)
+    createdKeySecret ??
+    (apiKey?.secret && apiKey.secret.trim() ? apiKey.secret : null)
   const canCopyKey = !!secretToShow
-  const copyFieldId = createdKeySecret ? 'apiKeyDrawer-created' : `apiKeyDrawer-${apiKey?.$id ?? 'edit'}`
+  const copyFieldId = createdKeySecret
+    ? 'apiKeyDrawer-created'
+    : `apiKeyDrawer-${apiKey?.$id ?? 'edit'}`
   const isCopied = copiedField === copyFieldId
 
   // Predefined expiry options
@@ -236,7 +239,9 @@ export function ApiKeyDrawer({
                       value={secretToShow}
                       rows={3}
                       className="flex-1 rounded-md border border-border bg-muted px-3 py-2 font-mono text-[12px] text-foreground focus:outline-none focus:ring-2 focus:ring-ring select-all"
-                      onClick={(e) => (e.target as HTMLTextAreaElement).select()}
+                      onClick={(e) =>
+                        (e.target as HTMLTextAreaElement).select()
+                      }
                     />
                     <Button
                       type="button"
@@ -256,192 +261,194 @@ export function ApiKeyDrawer({
               )}
 
               {!showCreatedKey && (
-              <div className="space-y-5">
-                <div className="space-y-2">
-                  <Label htmlFor="name">
-                    Name <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder="Enter API key name"
-                    value={name}
-                    onChange={(e) => {
-                      setName(e.target.value)
-                      if (errors.name) {
-                        setErrors((prev) => ({ ...prev, name: '' }))
-                      }
-                    }}
-                    disabled={isLoading}
-                    className={errors.name ? 'border-destructive' : ''}
-                  />
-                  {errors.name && (
-                    <p className="text-[12px] text-destructive">
-                      {errors.name}
-                    </p>
-                  )}
-                </div>
-
-                {/* View/copy key in edit mode when secret is available */}
-                {isEditing && (
+                <div className="space-y-5">
                   <div className="space-y-2">
-                    <Label className="text-[12px] font-medium">API key</Label>
-                    {canCopyKey ? (
-                      <div className="flex gap-2">
-                        <Input
-                          readOnly
-                          type={keyRevealed ? 'text' : 'password'}
-                          value={keyRevealed ? secretToShow : maskKey(secretToShow!)}
-                          className="font-mono text-[12px]"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          className="h-9 w-9 shrink-0"
-                          onClick={() => setKeyRevealed((v) => !v)}
-                          title={keyRevealed ? 'Hide key' : 'Show key'}
-                        >
-                          {keyRevealed ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          className="h-9 w-9 shrink-0"
-                          onClick={handleCopyKey}
-                          title="Copy key"
-                        >
-                          {isCopied ? (
-                            <Check className="h-4 w-4 text-emerald-500" />
-                          ) : (
-                            <Copy className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                    ) : (
-                      <p className="text-[12px] text-muted-foreground">
-                        The key secret is only shown when the key is first created.
-                        It can&apos;t be viewed or copied again from here.
+                    <Label htmlFor="name">
+                      Name <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="name"
+                      type="text"
+                      placeholder="Enter API key name"
+                      value={name}
+                      onChange={(e) => {
+                        setName(e.target.value)
+                        if (errors.name) {
+                          setErrors((prev) => ({ ...prev, name: '' }))
+                        }
+                      }}
+                      disabled={isLoading}
+                      className={errors.name ? 'border-destructive' : ''}
+                    />
+                    {errors.name && (
+                      <p className="text-[12px] text-destructive">
+                        {errors.name}
                       </p>
                     )}
                   </div>
-                )}
 
-                <div className="space-y-2">
-                  <Label>Expiration date</Label>
-                  <RadioGroup
-                    value={expiryOption}
-                    defaultValue="never"
-                    onValueChange={(value) => {
-                      setExpiryOption(value)
-                      if (value === 'never') {
-                        setExpire('')
-                      } else if (value === 'custom') {
-                        // Keep existing expire value if it exists, otherwise leave empty
-                        if (!expire) {
-                          setExpire('')
-                        }
-                      } else {
-                        setExpire(getExpiryDateFromOption(value))
-                      }
-                      if (errors.expire) {
-                        setErrors((prev) => ({ ...prev, expire: '' }))
-                      }
-                    }}
-                    disabled={isLoading}
-                    className="grid grid-cols-2 gap-3"
-                  >
-                    {expiryOptions.map((option) => {
-                      const isSelected = expiryOption === option.value
-                      return (
-                        <div key={option.value}>
-                          <RadioGroupItem
-                            value={option.value}
-                            id={`expire-${option.value}`}
-                            className="peer sr-only"
+                  {/* View/copy key in edit mode when secret is available */}
+                  {isEditing && (
+                    <div className="space-y-2">
+                      <Label className="text-[12px] font-medium">API key</Label>
+                      {canCopyKey ? (
+                        <div className="flex gap-2">
+                          <Input
+                            readOnly
+                            type={keyRevealed ? 'text' : 'password'}
+                            value={
+                              keyRevealed
+                                ? secretToShow
+                                : maskKey(secretToShow!)
+                            }
+                            className="font-mono text-[12px]"
                           />
-                          <Label
-                            htmlFor={`expire-${option.value}`}
-                            className={cn(
-                              'flex cursor-pointer items-center justify-center rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium transition-all',
-                              'hover:border-primary/50 hover:bg-accent/50',
-                              isSelected && 'border-primary bg-accent',
-                              isLoading && 'cursor-not-allowed opacity-50',
-                            )}
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="h-9 w-9 shrink-0"
+                            onClick={() => setKeyRevealed((v) => !v)}
+                            title={keyRevealed ? 'Hide key' : 'Show key'}
                           >
-                            {option.label}
-                          </Label>
+                            {keyRevealed ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="h-9 w-9 shrink-0"
+                            onClick={handleCopyKey}
+                            title="Copy key"
+                          >
+                            {isCopied ? (
+                              <Check className="h-4 w-4 text-emerald-500" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
+                          </Button>
                         </div>
-                      )
-                    })}
-                  </RadioGroup>
-                  {expiryOption === 'custom' && (
-                    <div className="pt-2">
-                      <Input
-                        id="expire"
-                        type="datetime-local"
-                        value={formatDateForInput(expire)}
-                        onChange={(e) => {
-                          const value = e.target.value
-                          if (value) {
-                            // Convert from datetime-local format to ISO string
-                            const date = new Date(value)
-                            setExpire(date.toISOString())
-                          } else {
-                            setExpire('')
-                          }
-                          if (errors.expire) {
-                            setErrors((prev) => ({ ...prev, expire: '' }))
-                          }
-                        }}
-                        disabled={isLoading}
-                        className={errors.expire ? 'border-destructive' : ''}
-                      />
-                      {errors.expire && (
-                        <p className="text-[12px] text-destructive mt-1">
-                          {errors.expire}
+                      ) : (
+                        <p className="text-[12px] text-muted-foreground">
+                          The key secret is only shown when the key is first
+                          created. It can&apos;t be viewed or copied again from
+                          here.
                         </p>
                       )}
                     </div>
                   )}
-                </div>
 
-                <div className="space-y-2">
-                  <Label>Scopes</Label>
-                  <ScopeEditor
-                    value={scopes}
-                    onChange={setScopes}
-                    disabled={isLoading}
-                  />
-                  <p className="text-[12px] text-muted-foreground">
-                    Select the scopes this API key will have access to.{' '}
-                    <a
-                      href="https://appwrite.io/docs/advanced/platform/api-keys"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline"
+                  <div className="space-y-2">
+                    <Label>Expiration date</Label>
+                    <RadioGroup
+                      value={expiryOption}
+                      defaultValue="never"
+                      onValueChange={(value) => {
+                        setExpiryOption(value)
+                        if (value === 'never') {
+                          setExpire('')
+                        } else if (value === 'custom') {
+                          // Keep existing expire value if it exists, otherwise leave empty
+                          if (!expire) {
+                            setExpire('')
+                          }
+                        } else {
+                          setExpire(getExpiryDateFromOption(value))
+                        }
+                        if (errors.expire) {
+                          setErrors((prev) => ({ ...prev, expire: '' }))
+                        }
+                      }}
+                      disabled={isLoading}
+                      className="grid grid-cols-2 gap-3"
                     >
-                      Learn more about API key scopes
-                    </a>
-                    .
-                  </p>
+                      {expiryOptions.map((option) => {
+                        const isSelected = expiryOption === option.value
+                        return (
+                          <div key={option.value}>
+                            <RadioGroupItem
+                              value={option.value}
+                              id={`expire-${option.value}`}
+                              className="peer sr-only"
+                            />
+                            <Label
+                              htmlFor={`expire-${option.value}`}
+                              className={cn(
+                                'flex cursor-pointer items-center justify-center rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium transition-all',
+                                'hover:border-primary/50 hover:bg-accent/50',
+                                isSelected && 'border-primary bg-accent',
+                                isLoading && 'cursor-not-allowed opacity-50',
+                              )}
+                            >
+                              {option.label}
+                            </Label>
+                          </div>
+                        )
+                      })}
+                    </RadioGroup>
+                    {expiryOption === 'custom' && (
+                      <div className="pt-2">
+                        <Input
+                          id="expire"
+                          type="datetime-local"
+                          value={formatDateForInput(expire)}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            if (value) {
+                              // Convert from datetime-local format to ISO string
+                              const date = new Date(value)
+                              setExpire(date.toISOString())
+                            } else {
+                              setExpire('')
+                            }
+                            if (errors.expire) {
+                              setErrors((prev) => ({ ...prev, expire: '' }))
+                            }
+                          }}
+                          disabled={isLoading}
+                          className={errors.expire ? 'border-destructive' : ''}
+                        />
+                        {errors.expire && (
+                          <p className="text-[12px] text-destructive mt-1">
+                            {errors.expire}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Scopes</Label>
+                    <ScopeEditor
+                      value={scopes}
+                      onChange={setScopes}
+                      disabled={isLoading}
+                    />
+                    <p className="text-[12px] text-muted-foreground">
+                      Select the scopes this API key will have access to.{' '}
+                      <a
+                        href="https://appwrite.io/docs/advanced/platform/api-keys"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline"
+                      >
+                        Learn more about API key scopes
+                      </a>
+                      .
+                    </p>
+                  </div>
                 </div>
-              </div>
               )}
             </div>
           </div>
 
           <div className="flex-shrink-0 flex items-center justify-start gap-2 border-t border-border bg-muted/30 px-6 py-4">
             {showCreatedKey ? (
-              <Button
-                type="button"
-                onClick={() => handleOpenChange(false)}
-              >
+              <Button type="button" onClick={() => handleOpenChange(false)}>
                 Done
               </Button>
             ) : (

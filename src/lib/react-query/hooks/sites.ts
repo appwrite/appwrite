@@ -26,6 +26,9 @@ import { Dependencies } from './dependencies'
 // QUERY FUNCTIONS
 // ============================================================================
 
+export const SITES_DEFAULT_SORT_BY = '$createdAt'
+export const SITES_DEFAULT_SORT_ORDER = 'desc' as const
+
 /**
  * Query function to fetch sites for a project
  *
@@ -43,15 +46,19 @@ export async function fetchProjectSites(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
   filterQueries?: string[],
+  sortBy: string = SITES_DEFAULT_SORT_BY,
+  sortOrder: 'asc' | 'desc' = SITES_DEFAULT_SORT_ORDER,
 ) {
   if (!projectId) {
     return { sites: [], total: 0 }
   }
 
   const projectSdk = sdk.forProject(projectId)
+  const orderQuery =
+    sortOrder === 'asc' ? Query.orderAsc(sortBy) : Query.orderDesc(sortBy)
   const queries = [
     ...(filterQueries ?? []),
-    Query.orderDesc('$createdAt'),
+    orderQuery,
     Query.limit(limit),
     Query.offset(page * limit),
   ]
@@ -390,10 +397,31 @@ export function sitesQueryOptions(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
   filterQueries?: string[],
+  sortBy: string = SITES_DEFAULT_SORT_BY,
+  sortOrder: 'asc' | 'desc' = SITES_DEFAULT_SORT_ORDER,
 ) {
   return queryOptions({
-    queryKey: ['sites', 'project', projectId, page, limit, search, filterQueries],
-    queryFn: () => fetchProjectSites(projectId!, page, limit, search, filterQueries),
+    queryKey: [
+      'sites',
+      'project',
+      projectId,
+      page,
+      limit,
+      search,
+      filterQueries,
+      sortBy,
+      sortOrder,
+    ],
+    queryFn: () =>
+      fetchProjectSites(
+        projectId!,
+        page,
+        limit,
+        search,
+        filterQueries,
+        sortBy,
+        sortOrder,
+      ),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -434,8 +462,7 @@ export function siteDeploymentsQueryOptions(
   limit: number = DEFAULT_PAGE_SIZE,
   filterQueries?: string[],
 ) {
-  const hasFilters =
-    filterQueries !== undefined && filterQueries.length > 0
+  const hasFilters = filterQueries !== undefined && filterQueries.length > 0
   return queryOptions({
     queryKey: [
       'deployments',
@@ -491,8 +518,7 @@ export function siteDomainsQueryOptions(
   search?: string,
   filterQueries?: string[],
 ) {
-  const hasFilters =
-    filterQueries !== undefined && filterQueries.length > 0
+  const hasFilters = filterQueries !== undefined && filterQueries.length > 0
   return queryOptions({
     queryKey: [
       'proxy-rules',
@@ -505,14 +531,7 @@ export function siteDomainsQueryOptions(
       ...(hasFilters ? [filterQueries] : []),
     ],
     queryFn: () =>
-      fetchSiteDomains(
-        projectId!,
-        siteId!,
-        page,
-        limit,
-        search,
-        filterQueries,
-      ),
+      fetchSiteDomains(projectId!, siteId!, page, limit, search, filterQueries),
     enabled: !!projectId && !!siteId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -556,8 +575,7 @@ export function siteLogsQueryOptions(
   limit: number = DEFAULT_PAGE_SIZE,
   filterQueries?: string[],
 ) {
-  const hasFilters =
-    filterQueries !== undefined && filterQueries.length > 0
+  const hasFilters = filterQueries !== undefined && filterQueries.length > 0
   return queryOptions({
     queryKey: [
       'logs',
@@ -721,6 +739,8 @@ export function useProjectSites(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
   filterQueries?: string[],
+  sortBy: string = SITES_DEFAULT_SORT_BY,
+  sortOrder: 'asc' | 'desc' = SITES_DEFAULT_SORT_ORDER,
 ) {
   const {
     data: sitesData,
@@ -729,7 +749,17 @@ export function useProjectSites(
     isFetched,
     error,
     refetch,
-  } = useQuery(sitesQueryOptions(projectId, page, limit, search, filterQueries))
+  } = useQuery(
+    sitesQueryOptions(
+      projectId,
+      page,
+      limit,
+      search,
+      filterQueries,
+      sortBy,
+      sortOrder,
+    ),
+  )
 
   const sites = useMemo(() => {
     if (!sitesData?.sites) return []
@@ -774,13 +804,7 @@ export function useSiteDeployments(
   filterQueries?: string[],
 ) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(
-    siteDeploymentsQueryOptions(
-      projectId,
-      siteId,
-      page,
-      limit,
-      filterQueries,
-    ),
+    siteDeploymentsQueryOptions(projectId, siteId, page, limit, filterQueries),
   )
 
   return {
@@ -1575,10 +1599,12 @@ export function useCreateSiteDomainRule(projectId: string | null | undefined) {
         if (!redirectUrl?.trim() || !statusCode) {
           throw new Error('Redirect URL and status code are required')
         }
-        const { ProxyResourceType, StatusCode } = await import(
-          '@appwrite.io/console'
-        )
-        const codeMap: Record<string, (typeof StatusCode)[keyof typeof StatusCode]> = {
+        const { ProxyResourceType, StatusCode } =
+          await import('@appwrite.io/console')
+        const codeMap: Record<
+          string,
+          (typeof StatusCode)[keyof typeof StatusCode]
+        > = {
           '301': StatusCode.MovedPermanently301,
           '302': StatusCode.Found302,
           '307': StatusCode.TemporaryRedirect307,

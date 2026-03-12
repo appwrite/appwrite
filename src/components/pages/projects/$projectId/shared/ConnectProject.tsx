@@ -1952,16 +1952,28 @@ export function ConnectProject({
                     </p>
                     <ul className="text-[12px] text-muted-foreground space-y-1">
                       <li>
-                        <span className="text-foreground font-medium">Skills</span> — which SDKs to install (e.g. TypeScript, Go).
+                        <span className="text-foreground font-medium">
+                          Skills
+                        </span>{' '}
+                        — which SDKs to install (e.g. TypeScript, Go).
                       </li>
                       <li>
-                        <span className="text-foreground font-medium">Tools</span> — which AI tools use them (Cursor, Claude, etc.).
+                        <span className="text-foreground font-medium">
+                          Tools
+                        </span>{' '}
+                        — which AI tools use them (Cursor, Claude, etc.).
                       </li>
                       <li>
-                        <span className="text-foreground font-medium">Scope</span> — project (this repo) or global.
+                        <span className="text-foreground font-medium">
+                          Scope
+                        </span>{' '}
+                        — project (this repo) or global.
                       </li>
                       <li>
-                        <span className="text-foreground font-medium">Method</span> — prefer symlink so skills stay up to date.
+                        <span className="text-foreground font-medium">
+                          Method
+                        </span>{' '}
+                        — prefer symlink so skills stay up to date.
                       </li>
                     </ul>
                   </div>

@@ -45,11 +45,7 @@ export function MessagingProviderIcon({
       <img
         src={`/icons/${iconFile}`}
         alt={providerName || 'Provider'}
-        className={cn(
-          sizeClass,
-          PUBLIC_ICON_MUTED_CLASSES,
-          className,
-        )}
+        className={cn(sizeClass, PUBLIC_ICON_MUTED_CLASSES, className)}
       />
     )
   }

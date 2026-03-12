@@ -27,21 +27,28 @@ import { DEFAULT_STALE_TIME, DEFAULT_PAGE_SIZE } from './constants'
  * @param filterQueries - Optional list of Appwrite Query condition strings (from table filters)
  * @returns Paginated buckets with total count
  */
+export const BUCKETS_DEFAULT_SORT_BY = '$createdAt'
+export const BUCKETS_DEFAULT_SORT_ORDER = 'desc' as const
+
 export async function fetchProjectBuckets(
   projectId: string,
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
   filterQueries?: string[],
+  sortBy: string = BUCKETS_DEFAULT_SORT_BY,
+  sortOrder: 'asc' | 'desc' = BUCKETS_DEFAULT_SORT_ORDER,
 ): Promise<Models.BucketList> {
   if (!projectId) {
     return { buckets: [], total: 0 }
   }
 
   const projectSdk = sdk.forProject(projectId)
+  const orderQuery =
+    sortOrder === 'asc' ? Query.orderAsc(sortBy) : Query.orderDesc(sortBy)
   const queries = [
     ...(filterQueries ?? []),
-    Query.orderDesc('$createdAt'),
+    orderQuery,
     Query.limit(limit),
     Query.offset(page * limit),
   ]
@@ -88,6 +95,9 @@ const CSV_FILE_QUERIES = [
   ]),
 ]
 
+export const FILES_DEFAULT_SORT_BY = '$createdAt'
+export const FILES_DEFAULT_SORT_ORDER = 'desc' as const
+
 /**
  * Query function to fetch files in a bucket
  *
@@ -103,16 +113,20 @@ export async function fetchBucketFiles(
   search?: string,
   csvOnly?: boolean,
   filterQueries?: string[],
+  sortBy: string = FILES_DEFAULT_SORT_BY,
+  sortOrder: 'asc' | 'desc' = FILES_DEFAULT_SORT_ORDER,
 ): Promise<Models.FileList> {
   if (!projectId || !bucketId) {
     return { files: [], total: 0 }
   }
 
   const projectSdk = sdk.forProject(projectId)
+  const orderQuery =
+    sortOrder === 'asc' ? Query.orderAsc(sortBy) : Query.orderDesc(sortBy)
   const queries = [
     ...(filterQueries ?? []),
     ...(csvOnly ? CSV_FILE_QUERIES : []),
-    Query.orderDesc('$createdAt'),
+    orderQuery,
     Query.limit(limit),
     Query.offset(page * limit),
   ]
@@ -193,6 +207,8 @@ export function bucketFilesQueryOptions(
   search?: string,
   csvOnly?: boolean,
   filterQueries?: string[],
+  sortBy: string = FILES_DEFAULT_SORT_BY,
+  sortOrder: 'asc' | 'desc' = FILES_DEFAULT_SORT_ORDER,
 ) {
   return queryOptions({
     queryKey: [
@@ -206,6 +222,8 @@ export function bucketFilesQueryOptions(
       search,
       csvOnly,
       filterQueries,
+      sortBy,
+      sortOrder,
     ],
     queryFn: () =>
       fetchBucketFiles(
@@ -216,6 +234,8 @@ export function bucketFilesQueryOptions(
         search,
         csvOnly,
         filterQueries,
+        sortBy,
+        sortOrder,
       ),
     enabled: !!projectId && !!bucketId,
     staleTime: DEFAULT_STALE_TIME,
@@ -238,11 +258,31 @@ export function bucketsQueryOptions(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
   filterQueries?: string[],
+  sortBy: string = BUCKETS_DEFAULT_SORT_BY,
+  sortOrder: 'asc' | 'desc' = BUCKETS_DEFAULT_SORT_ORDER,
 ) {
   return queryOptions({
-    queryKey: ['buckets', 'project', projectId, page, limit, search, filterQueries],
+    queryKey: [
+      'buckets',
+      'project',
+      projectId,
+      page,
+      limit,
+      search,
+      filterQueries,
+      sortBy,
+      sortOrder,
+    ],
     queryFn: () =>
-      fetchProjectBuckets(projectId!, page, limit, search, filterQueries),
+      fetchProjectBuckets(
+        projectId!,
+        page,
+        limit,
+        search,
+        filterQueries,
+        sortBy,
+        sortOrder,
+      ),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -274,6 +314,8 @@ export function useProjectBuckets(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
   filterQueries?: string[],
+  sortBy: string = BUCKETS_DEFAULT_SORT_BY,
+  sortOrder: 'asc' | 'desc' = BUCKETS_DEFAULT_SORT_ORDER,
 ) {
   const {
     data: bucketsData,
@@ -283,7 +325,15 @@ export function useProjectBuckets(
     error,
     refetch,
   } = useQuery(
-    bucketsQueryOptions(projectId, page, limit, search, filterQueries),
+    bucketsQueryOptions(
+      projectId,
+      page,
+      limit,
+      search,
+      filterQueries,
+      sortBy,
+      sortOrder,
+    ),
   )
 
   const buckets = useMemo(() => {
@@ -335,6 +385,8 @@ export function useBucketFiles(
   search?: string,
   csvOnly?: boolean,
   filterQueries?: string[],
+  sortBy: string = FILES_DEFAULT_SORT_BY,
+  sortOrder: 'asc' | 'desc' = FILES_DEFAULT_SORT_ORDER,
 ) {
   return useQuery(
     bucketFilesQueryOptions(
@@ -345,6 +397,8 @@ export function useBucketFiles(
       search,
       csvOnly,
       filterQueries,
+      sortBy,
+      sortOrder,
     ),
   )
 }

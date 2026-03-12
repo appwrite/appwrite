@@ -1148,7 +1148,8 @@ export function View({
                       ].map((item) => {
                         const total =
                           trafficComposition.human + trafficComposition.ai
-                        const percentage = total > 0 ? (item.value / total) * 100 : 0
+                        const percentage =
+                          total > 0 ? (item.value / total) * 100 : 0
                         return (
                           <div key={item.type} className="space-y-1.5">
                             <div className="flex items-center justify-between">
@@ -1171,8 +1172,9 @@ export function View({
                                   {formatNumber(
                                     Math.round(
                                       (percentage / 100) *
-                                        (visitorMetrics.find((m) => m.id === 'total')
-                                          ?.value ?? 0),
+                                        (visitorMetrics.find(
+                                          (m) => m.id === 'total',
+                                        )?.value ?? 0),
                                     ),
                                   )}{' '}
                                   visits
@@ -1212,8 +1214,8 @@ export function View({
                           {formatNumber(aiDiscoveryImpact.humanConversions)}
                         </span>
                         <span className="flex items-center gap-0.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">
-                          <TrendingUp className="h-3 w-3" />
-                          +{aiDiscoveryImpact.trend}%
+                          <TrendingUp className="h-3 w-3" />+
+                          {aiDiscoveryImpact.trend}%
                         </span>
                       </div>
                       <p className="text-[12px] text-muted-foreground">

@@ -1,9 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useParams, useLocation } from '@tanstack/react-router'
-import {
-  useProject,
-  useOrganizationScopes,
-} from '@/lib/react-query/hooks'
+import { useProject, useOrganizationScopes } from '@/lib/react-query/hooks'
 import {
   canWriteDomains,
   canWriteWebhooks,
@@ -119,7 +116,9 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
 
   // Determine search and create props based on active tab
   const hasSearch =
-    activeTab !== 'overview' && activeTab !== 'smtp' && activeTab !== 'variables'
+    activeTab !== 'overview' &&
+    activeTab !== 'smtp' &&
+    activeTab !== 'variables'
   const searchPlaceholder = hasSearch ? `Search ${activeTab}...` : undefined
   const createLabel =
     activeTab === 'domains'

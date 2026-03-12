@@ -34,21 +34,28 @@ import { Dependencies } from './dependencies'
  * @param search - Optional search query
  * @returns Paginated domains list response from the API
  */
+export const DOMAINS_DEFAULT_SORT_BY = '$createdAt'
+export const DOMAINS_DEFAULT_SORT_ORDER = 'desc' as const
+
 export async function fetchOrganizationDomains(
   organizationId: string,
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
   filterQueries?: string[],
+  sortBy: string = DOMAINS_DEFAULT_SORT_BY,
+  sortOrder: 'asc' | 'desc' = DOMAINS_DEFAULT_SORT_ORDER,
 ) {
   if (!organizationId) {
     return { domains: [], total: 0 }
   }
 
+  const orderQuery =
+    sortOrder === 'asc' ? Query.orderAsc(sortBy) : Query.orderDesc(sortBy)
   const queries = [
     Query.equal('teamId', organizationId),
     ...(filterQueries ?? []),
-    Query.orderDesc('$createdAt'),
+    orderQuery,
     Query.limit(limit),
     Query.offset(page * limit),
   ]
@@ -91,7 +98,6 @@ export async function fetchDomainPrice(domain: string) {
   })
   return response
 }
-
 
 // ============================================================================
 // MUTATION FUNCTIONS
@@ -172,19 +178,26 @@ export async function updateDomainTeam(domainId: string, teamId: string) {
  * @param filterQueries - Optional Appwrite Query strings for filtering
  * @returns Paginated DNS records list response from the API
  */
+export const DNS_RECORDS_DEFAULT_SORT_BY = '$createdAt'
+export const DNS_RECORDS_DEFAULT_SORT_ORDER = 'asc' as const
+
 export async function fetchDomainRecords(
   domainId: string,
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   filterQueries?: string[],
+  sortBy: string = DNS_RECORDS_DEFAULT_SORT_BY,
+  sortOrder: 'asc' | 'desc' = DNS_RECORDS_DEFAULT_SORT_ORDER,
 ) {
   if (!domainId) {
     return { dnsRecords: [], total: 0 }
   }
 
+  const orderQuery =
+    sortOrder === 'asc' ? Query.orderAsc(sortBy) : Query.orderDesc(sortBy)
   const queries = [
     ...(filterQueries ?? []),
-    Query.orderAsc('$createdAt'),
+    orderQuery,
     Query.offset(page * limit),
     Query.limit(limit),
   ]
@@ -449,11 +462,31 @@ export function organizationDomainsQueryOptions(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
   filterQueries?: string[],
+  sortBy: string = DOMAINS_DEFAULT_SORT_BY,
+  sortOrder: 'asc' | 'desc' = DOMAINS_DEFAULT_SORT_ORDER,
 ) {
   return queryOptions({
-    queryKey: ['domains', 'organization', organizationId, page, limit, search, filterQueries],
+    queryKey: [
+      'domains',
+      'organization',
+      organizationId,
+      page,
+      limit,
+      search,
+      filterQueries,
+      sortBy,
+      sortOrder,
+    ],
     queryFn: () =>
-      fetchOrganizationDomains(organizationId!, page, limit, search, filterQueries),
+      fetchOrganizationDomains(
+        organizationId!,
+        page,
+        limit,
+        search,
+        filterQueries,
+        sortBy,
+        sortOrder,
+      ),
     enabled: !!organizationId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -501,9 +534,10 @@ export function domainRecordsQueryOptions(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   filterQueries?: string[],
+  sortBy: string = DNS_RECORDS_DEFAULT_SORT_BY,
+  sortOrder: 'asc' | 'desc' = DNS_RECORDS_DEFAULT_SORT_ORDER,
 ) {
-  const hasFilters =
-    filterQueries !== undefined && filterQueries.length > 0
+  const hasFilters = filterQueries !== undefined && filterQueries.length > 0
   return queryOptions({
     queryKey: [
       'dns-records',
@@ -512,9 +546,18 @@ export function domainRecordsQueryOptions(
       page,
       limit,
       ...(hasFilters ? [filterQueries] : []),
+      sortBy,
+      sortOrder,
     ],
     queryFn: () =>
-      fetchDomainRecords(domainId!, page, limit, filterQueries),
+      fetchDomainRecords(
+        domainId!,
+        page,
+        limit,
+        filterQueries,
+        sortBy,
+        sortOrder,
+      ),
     enabled: !!domainId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false, // Don't retry on error
@@ -544,6 +587,8 @@ export function useOrganizationDomains(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
   filterQueries?: string[],
+  sortBy: string = DOMAINS_DEFAULT_SORT_BY,
+  sortOrder: 'asc' | 'desc' = DOMAINS_DEFAULT_SORT_ORDER,
 ) {
   const {
     data: domainsData,
@@ -553,7 +598,15 @@ export function useOrganizationDomains(
     error,
     refetch,
   } = useQuery(
-    organizationDomainsQueryOptions(organizationId, page, limit, search, filterQueries),
+    organizationDomainsQueryOptions(
+      organizationId,
+      page,
+      limit,
+      search,
+      filterQueries,
+      sortBy,
+      sortOrder,
+    ),
   )
 
   const domains = useMemo(() => {
@@ -608,7 +661,12 @@ export function useDomainPrices(
   const pricesByDomain = useMemo(() => {
     const map = new Map<
       string,
-      { price: number; available: boolean; periodYears?: number; premium?: boolean }
+      {
+        price: number
+        available: boolean
+        periodYears?: number
+        premium?: boolean
+      }
     >()
     for (let i = 0; i < domains.length; i++) {
       const { data } = queries[i]
@@ -769,6 +827,8 @@ export function useDomainRecords(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   filterQueries?: string[],
+  sortBy: string = DNS_RECORDS_DEFAULT_SORT_BY,
+  sortOrder: 'asc' | 'desc' = DNS_RECORDS_DEFAULT_SORT_ORDER,
 ) {
   const {
     data: recordsData,
@@ -777,19 +837,19 @@ export function useDomainRecords(
     error,
     refetch,
   } = useQuery(
-    domainRecordsQueryOptions(domainId, page, limit, filterQueries),
+    domainRecordsQueryOptions(
+      domainId,
+      page,
+      limit,
+      filterQueries,
+      sortBy,
+      sortOrder,
+    ),
   )
 
   const dnsRecords = useMemo(() => {
     if (!recordsData?.dnsRecords) return []
-    // Sort by lock status (locked first) and creation date (oldest first)
-    return [...(recordsData.dnsRecords || [])].sort((a, b) => {
-      // Locked records first
-      if (a.lock && !b.lock) return -1
-      if (!a.lock && b.lock) return 1
-      // Then by creation date (oldest first)
-      return new Date(a.$createdAt).getTime() - new Date(b.$createdAt).getTime()
-    })
+    return recordsData.dnsRecords || []
   }, [recordsData])
 
   const totalPages = useMemo(() => {

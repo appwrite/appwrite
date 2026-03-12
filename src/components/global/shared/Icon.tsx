@@ -270,10 +270,9 @@ export function PlatformIcon({
   }
 
   if (isFlutter) {
-    const mainIcon =
-      baseIcon ?? (
-        <Globe className={sizeClasses[size as keyof typeof sizeClasses]} />
-      )
+    const mainIcon = baseIcon ?? (
+      <Globe className={sizeClasses[size as keyof typeof sizeClasses]} />
+    )
     return (
       <div className={cn('relative', className)}>
         {mainIcon}

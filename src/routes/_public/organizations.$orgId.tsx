@@ -57,9 +57,9 @@ export const Route = createFileRoute('/_public/organizations/$orgId')({
         ]
         if (getActiveProfileFeatures().orgRoles) {
           loaders.push(
-            queryClient.ensureQueryData(
-              organizationScopesQueryOptions(orgId),
-            ).catch(() => {}),
+            queryClient
+              .ensureQueryData(organizationScopesQueryOptions(orgId))
+              .catch(() => {}),
           )
         }
         await Promise.race([Promise.all(loaders), timeoutPromise])
@@ -73,12 +73,8 @@ export const Route = createFileRoute('/_public/organizations/$orgId')({
             organizationPlanQueryOptions(orgId).queryKey,
           ),
           membershipsData: queryClient.getQueryData(
-            organizationMembershipsQueryOptions(
-              orgId,
-              0,
-              DEFAULT_PAGE_SIZE,
-              '',
-            ).queryKey,
+            organizationMembershipsQueryOptions(orgId, 0, DEFAULT_PAGE_SIZE, '')
+              .queryKey,
           ),
           scopesData: getActiveProfileFeatures().orgRoles
             ? queryClient.getQueryData(

@@ -129,17 +129,15 @@ export function BuildLogsCard({
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       {!hideTitle && (
         <div className="px-6 py-4 flex items-center justify-between gap-3">
-          <h3 className="text-[15px] font-semibold text-foreground">
-            {title}
-          </h3>
+          <h3 className="text-[15px] font-semibold text-foreground">{title}</h3>
           {durationDisplay && (
-          <span className="text-[12px] sm:text-[13px] text-muted-foreground shrink-0">
-            Duration:{' '}
-            <span className="font-medium text-foreground">
-              {durationDisplay}
+            <span className="text-[12px] sm:text-[13px] text-muted-foreground shrink-0">
+              Duration:{' '}
+              <span className="font-medium text-foreground">
+                {durationDisplay}
+              </span>
             </span>
-          </span>
-        )}
+          )}
         </div>
       )}
       <div

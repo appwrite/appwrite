@@ -130,7 +130,9 @@ export function TeamContextMenu({
                   Copy name
                 </ContextMenuItem>
               )}
-              <ContextMenuItem onSelect={() => copyToClipboard('Link', teamHref)}>
+              <ContextMenuItem
+                onSelect={() => copyToClipboard('Link', teamHref)}
+              >
                 <ContextMenuIcon icon={Link2} />
                 Copy link
               </ContextMenuItem>
@@ -138,12 +140,10 @@ export function TeamContextMenu({
                 onSelect={() =>
                   copyToClipboard(
                     'JSON',
-                    toPrettyJson(
-                      {
-                        id: team.id,
-                        name: team.name ?? null,
-                      },
-                    ),
+                    toPrettyJson({
+                      id: team.id,
+                      name: team.name ?? null,
+                    }),
                   )
                 }
               >
@@ -153,22 +153,16 @@ export function TeamContextMenu({
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuSeparator />
-          <ContextMenuItem
-            onSelect={() => openInNewTab(teamHref)}
-          >
+          <ContextMenuItem onSelect={() => openInNewTab(teamHref)}>
             <ContextMenuIcon icon={ExternalLink} />
             Open in new tab
           </ContextMenuItem>
-          <ContextMenuItem
-            onSelect={() => openInNewWindow(teamHref)}
-          >
+          <ContextMenuItem onSelect={() => openInNewWindow(teamHref)}>
             <ContextMenuIcon icon={Square} />
             Open in new window
           </ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem
-            onSelect={handleDeleteClick}
-          >
+          <ContextMenuItem onSelect={handleDeleteClick}>
             <ContextMenuIcon icon={Trash2} />
             Delete
           </ContextMenuItem>

@@ -26,7 +26,13 @@ const authSearchSchema = listSearchSchema.extend({
   teamsSearch: z.string().optional().catch(undefined),
   teamsQuery: z.string().optional().catch(undefined),
   teamsPage: z.coerce.number().int().min(1).optional().catch(undefined),
-  teamsLimit: z.coerce.number().int().min(1).max(100).optional().catch(undefined),
+  teamsLimit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(100)
+    .optional()
+    .catch(undefined),
 })
 
 export const Route = createFileRoute('/_public/projects/$projectId/auth/')({
@@ -48,7 +54,8 @@ export const Route = createFileRoute('/_public/projects/$projectId/auth/')({
     const limit = getLimit(url, DEFAULT_PAGE_SIZE)
     const queryParam = getQueryParam(url)
     const filterMap = queryParamToMap(queryParam)
-    const filterQueries = filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
+    const filterQueries =
+      filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
     const sort = getSort(url)
     const sortBy = sort?.sortBy ?? USERS_DEFAULT_SORT_BY
     const sortOrder = sort?.sortOrder ?? USERS_DEFAULT_SORT_ORDER
@@ -78,7 +85,13 @@ function AuthIndexPage() {
       key={`auth-${projectId}-users-index`}
       usersListSearch={
         search && typeof search === 'object'
-          ? (search as { search?: string; query?: string; page?: number; limit?: number; sort?: string })
+          ? (search as {
+              search?: string
+              query?: string
+              page?: number
+              limit?: number
+              sort?: string
+            })
           : undefined
       }
     />

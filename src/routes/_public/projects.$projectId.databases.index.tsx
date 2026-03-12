@@ -34,7 +34,10 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
       const { queryClient } = context
       if (!projectId) return
 
-      const url = new URL(location.pathname + location.search, 'http://localhost')
+      const url = new URL(
+        location.pathname + location.search,
+        'http://localhost',
+      )
       const search = getSearch(url)
       const page = getPage(url, DEFAULT_PAGE)
       const limit = getLimit(url, ROWS_DEFAULT_PAGE_SIZE)
@@ -49,7 +52,13 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
 
       await Promise.all([
         queryClient.ensureQueryData(
-          databasesQueryOptions(projectId, page - 1, limit, search ?? undefined, filterQueries),
+          databasesQueryOptions(
+            projectId,
+            page - 1,
+            limit,
+            search ?? undefined,
+            filterQueries,
+          ),
         ),
         projectData?.teamId
           ? queryClient.ensureQueryData(

@@ -180,8 +180,7 @@ export function EventResourceIdSelector({
       20,
       debouncedSearch || undefined,
     ),
-    enabled:
-      !!projectId && !!databaseId && !!tableId && open && type === 'row',
+    enabled: !!projectId && !!databaseId && !!tableId && open && type === 'row',
     placeholderData: keepPreviousData,
   })
 
@@ -232,35 +231,32 @@ export function EventResourceIdSelector({
   const items = useMemo(() => {
     const baseItems =
       type === 'database'
-        ? dbQuery.data?.databases ?? []
+        ? (dbQuery.data?.databases ?? [])
         : type === 'table'
-          ? tableQuery.data?.tables ?? []
+          ? (tableQuery.data?.tables ?? [])
           : type === 'bucket'
-            ? bucketQuery.data?.buckets ?? []
+            ? (bucketQuery.data?.buckets ?? [])
             : type === 'file'
-              ? fileQuery.data?.files ?? []
+              ? (fileQuery.data?.files ?? [])
               : type === 'row'
-                ? rowQuery.data?.rows ?? []
+                ? (rowQuery.data?.rows ?? [])
                 : type === 'column'
-                  ? columnQuery.data?.columns ?? []
+                  ? (columnQuery.data?.columns ?? [])
                   : type === 'index'
-                    ? indexQuery.data?.indexes ?? []
+                    ? (indexQuery.data?.indexes ?? [])
                     : type === 'function'
-                      ? functionQuery.data?.functions ?? []
+                      ? (functionQuery.data?.functions ?? [])
                       : type === 'team'
-                        ? teamQuery.data?.teams ?? []
+                        ? (teamQuery.data?.teams ?? [])
                         : type === 'user'
-                          ? userQuery.data?.users ?? []
+                          ? (userQuery.data?.users ?? [])
                           : type === 'topic'
-                            ? topicQuery.data?.topics ?? []
+                            ? (topicQuery.data?.topics ?? [])
                             : type === 'provider'
-                              ? providerQuery.data?.providers ?? []
+                              ? (providerQuery.data?.providers ?? [])
                               : []
 
-    if (
-      (type === 'column' || type === 'index') &&
-      debouncedSearch.trim()
-    ) {
+    if ((type === 'column' || type === 'index') && debouncedSearch.trim()) {
       const q = debouncedSearch.trim().toLowerCase()
       return baseItems.filter(
         (x: { $id?: string; key?: string; name?: string }) => {
@@ -327,8 +323,12 @@ export function EventResourceIdSelector({
       ? placeholder
       : (() => {
           const item = items.find(
-            (x: { $id?: string; key?: string; name?: string; email?: string }) =>
-              getItemId(x) === value,
+            (x: {
+              $id?: string
+              key?: string
+              name?: string
+              email?: string
+            }) => getItemId(x) === value,
           )
           return item?.name ?? item?.key ?? item?.email ?? value
         })()

@@ -261,10 +261,7 @@ function handleRealtimeEvent(
     ) {
       // Merge updated rule into proxy-rules list caches so status updates in real
       // time without refetching. Avoids N refetches when N rules emit updates.
-      mergeRulePayloadIntoCache(
-        queryClient,
-        payload as Record<string, unknown>,
-      )
+      mergeRulePayloadIntoCache(queryClient, payload as Record<string, unknown>)
       // Update single-rule cache if it exists
       const ruleId = (payload as Record<string, unknown>).$id as string
       queryClient.setQueriesData(

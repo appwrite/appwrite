@@ -29,9 +29,7 @@ export function ComplianceTab() {
             <p className="text-[13px] text-muted-foreground">
               Download the DPA, review it with your legal team, sign it, and
               send a copy to{' '}
-              <span className="font-medium text-foreground">
-                {LEGAL_EMAIL}
-              </span>
+              <span className="font-medium text-foreground">{LEGAL_EMAIL}</span>
               . We'll countersign and return a fully executed copy within 5
               business days.
             </p>
@@ -43,11 +41,7 @@ export function ComplianceTab() {
             size="sm"
             className="h-9 text-[13px]"
             onClick={() => {
-              window.open(
-                '/legal/dpa.pdf',
-                '_blank',
-                'noopener,noreferrer',
-              )
+              window.open('/legal/dpa.pdf', '_blank', 'noopener,noreferrer')
             }}
           >
             Download DPA
@@ -118,7 +112,9 @@ export function ComplianceTab() {
           <div className="flex items-start gap-3 mt-3">
             <Shield className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
             <p className="text-[13px] text-muted-foreground">
-              <span className="font-medium text-foreground">Why it matters:</span>{' '}
+              <span className="font-medium text-foreground">
+                Why it matters:
+              </span>{' '}
               Many enterprise customers and regulated industries require SOC 2
               compliance from their vendors. Access to our SOC 2 report is
               available on Enterprise plans.

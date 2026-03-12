@@ -53,9 +53,8 @@ export function View({ initialData }: ViewProps = {}) {
   const [connectDialogOpen, setConnectDialogOpen] = useState(false)
   const [connectInitialSdk, setConnectInitialSdk] = useState('web')
   const [platformDrawerOpen, setPlatformDrawerOpen] = useState(false)
-  const [selectedPlatform, setSelectedPlatform] = useState<Models.Platform | null>(
-    null,
-  )
+  const [selectedPlatform, setSelectedPlatform] =
+    useState<Models.Platform | null>(null)
 
   // Use initialData on first paint so no loading skeleton flash
   const { platforms: platformsFromHook, isLoading } = usePlatforms(projectId)

@@ -149,6 +149,8 @@ export function isDeploymentInProgress(status: string): boolean {
  * Check if a deployment has completed (ready or failed).
  * Build output download is only available for completed deployments.
  */
-export function isDeploymentCompleted(status: string | undefined | null): boolean {
+export function isDeploymentCompleted(
+  status: string | undefined | null,
+): boolean {
   return status === 'ready' || status === 'failed'
 }

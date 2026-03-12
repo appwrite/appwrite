@@ -121,7 +121,9 @@ export function BucketContextMenu({
               Copy
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
-              <ContextMenuItem onSelect={() => copyToClipboard('ID', bucket.id)}>
+              <ContextMenuItem
+                onSelect={() => copyToClipboard('ID', bucket.id)}
+              >
                 <ContextMenuIcon icon={Copy} />
                 Copy ID
               </ContextMenuItem>
@@ -133,7 +135,9 @@ export function BucketContextMenu({
                   Copy name
                 </ContextMenuItem>
               )}
-              <ContextMenuItem onSelect={() => copyToClipboard('Link', bucketHref)}>
+              <ContextMenuItem
+                onSelect={() => copyToClipboard('Link', bucketHref)}
+              >
                 <ContextMenuIcon icon={Link2} />
                 Copy link
               </ContextMenuItem>
@@ -141,12 +145,10 @@ export function BucketContextMenu({
                 onSelect={() =>
                   copyToClipboard(
                     'JSON',
-                    toPrettyJson(
-                      {
-                        id: bucket.id,
-                        name: bucket.name ?? null,
-                      },
-                    ),
+                    toPrettyJson({
+                      id: bucket.id,
+                      name: bucket.name ?? null,
+                    }),
                   )
                 }
               >
@@ -156,22 +158,16 @@ export function BucketContextMenu({
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuSeparator />
-          <ContextMenuItem
-            onSelect={() => openInNewTab(bucketHref)}
-          >
+          <ContextMenuItem onSelect={() => openInNewTab(bucketHref)}>
             <ContextMenuIcon icon={ExternalLink} />
             Open in new tab
           </ContextMenuItem>
-          <ContextMenuItem
-            onSelect={() => openInNewWindow(bucketHref)}
-          >
+          <ContextMenuItem onSelect={() => openInNewWindow(bucketHref)}>
             <ContextMenuIcon icon={Square} />
             Open in new window
           </ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem
-            onSelect={handleDeleteClick}
-          >
+          <ContextMenuItem onSelect={handleDeleteClick}>
             <ContextMenuIcon icon={Trash2} />
             Delete
           </ContextMenuItem>

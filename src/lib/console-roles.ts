@@ -93,10 +93,8 @@ export function deriveAccessFromRolesScopes(
   const roleSet = new Set(roles)
   const scopeSet = new Set(scopes)
   const has = (s: string) => scopeSet.has(s)
-  const hasTableOrCollections =
-    has('tables.write') || has('collections.write')
-  const hasRowsOrDocuments =
-    has('rows.write') || has('documents.write')
+  const hasTableOrCollections = has('tables.write') || has('collections.write')
+  const hasRowsOrDocuments = has('rows.write') || has('documents.write')
 
   return {
     isOwner: roleSet.has('owner'),

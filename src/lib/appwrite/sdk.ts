@@ -45,9 +45,7 @@ import {
  */
 function isMultiRegionSupported(url: URL): boolean {
   const host = url.hostname.toLowerCase()
-  return (
-    host === 'cloud.appwrite.io' || host.endsWith('.cloud.appwrite.io')
-  )
+  return host === 'cloud.appwrite.io' || host.endsWith('.cloud.appwrite.io')
 }
 
 /**
@@ -94,7 +92,9 @@ export function getApiEndpoint(region?: string): string {
   const hostname = url.hostname
 
   const subdomain =
-    region && region.trim().toLowerCase() !== 'unknown' && isMultiRegionSupported(url)
+    region &&
+    region.trim().toLowerCase() !== 'unknown' &&
+    isMultiRegionSupported(url)
       ? `${region.trim().toLowerCase().replace(/\s+/g, '')}.`
       : ''
 

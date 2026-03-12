@@ -1,5 +1,10 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
-import { useParams, useSearch, useNavigate, useLocation } from '@tanstack/react-router'
+import {
+  useParams,
+  useSearch,
+  useNavigate,
+  useLocation,
+} from '@tanstack/react-router'
 import {
   MoreHorizontal,
   Loader2,
@@ -47,14 +52,19 @@ export function View() {
   const { projectId, functionId } = useParams({ strict: false })
   const navigate = useNavigate()
   const location = useLocation()
-  const search = useSearch({ strict: false }) as { search?: string; query?: string }
+  const search = useSearch({ strict: false }) as {
+    search?: string
+    query?: string
+  }
   const { project } = useProject(projectId)
   const [currentPage, setCurrentPage] = useState(0)
   const [pageSize, setPageSize] = useState(DOMAINS_DEFAULT_PAGE_SIZE)
   const [verifyOpen, setVerifyOpen] = useState(false)
   const [viewLogsOpen, setViewLogsOpen] = useState(false)
   const [deleteDomainOpen, setDeleteDomainOpen] = useState(false)
-  const [selectedRule, setSelectedRule] = useState<Models.ProxyRule | null>(null)
+  const [selectedRule, setSelectedRule] = useState<Models.ProxyRule | null>(
+    null,
+  )
   const [viewLogsRule, setViewLogsRule] = useState<Models.ProxyRule | null>(
     null,
   )
@@ -134,207 +144,209 @@ export function View() {
   }
 
   const hasFilters = filterMap.size > 0 || !!searchValue
-  const domainsContent = rules.length === 0 ? (
-    <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
-      <EmptyState
-        icon={Globe}
-        title={hasFilters ? undefined : 'No domains yet'}
-        description={
-          hasFilters
-            ? undefined
-            : 'Connect a custom domain to your function for a branded experience'
-        }
-        isEmpty={!hasFilters}
-        hasFilters={hasFilters}
-        variant="card"
-        iconSize="md"
-      />
-    </div>
-  ) : (
-    <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6">
-      <div className="space-y-0">
-        <div className="rounded-lg border border-border bg-card overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent border-b border-border">
-                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Domain
-                </TableHead>
-                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Type
-                </TableHead>
-                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Status
-                </TableHead>
-                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Created
-                </TableHead>
-                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[80px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rules.map((rule) => {
-                const statusConfig = getDomainStatusBadgeConfig(rule.status)
-
-                return (
-                  <TableRow key={rule.$id}>
-                    <TableCell className="px-4 py-3">
-                      <a
-                        href={`https://${rule.domain}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 font-mono text-[13px] font-medium text-foreground hover:underline"
-                      >
-                        {rule.domain}
-                        <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
-                      </a>
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-[13px]">
-                      {rule.redirectUrl ? (
-                        <span>Redirect to {rule.redirectUrl}</span>
-                      ) : rule.deploymentVcsProviderBranch ? (
-                        <span>
-                          Deployed from {rule.deploymentVcsProviderBranch}
-                        </span>
-                      ) : (
-                        <span>Active deployment</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <Badge
-                          variant={statusConfig.variant}
-                          className="text-[10px] shrink-0 gap-1.5"
-                          title={
-                            rule.status === 'verifying'
-                              ? 'SSL certificate is being issued. This usually takes a couple of minutes.'
-                              : undefined
-                          }
-                        >
-                          {rule.status === 'verifying' && (
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          )}
-                          {statusConfig.label}
-                        </Badge>
-                        {rule.status !== 'verified' && (
-                          <Button
-                            variant="link"
-                            size="sm"
-                            className="h-auto p-0 text-[13px]"
-                            onClick={() => handleViewLogs(rule)}
-                          >
-                            View logs
-                          </Button>
-                        )}
-                        {(rule.status === 'created' ||
-                          rule.status === 'unverified') && (
-                          <Button
-                            variant="link"
-                            size="sm"
-                            className="h-auto p-0 text-[13px]"
-                            onClick={() => handleRetry(rule)}
-                          >
-                            Retry
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <DateTooltip
-                        date={rule.$createdAt}
-                        className="text-[12px] text-muted-foreground"
-                      />
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-right">
-                      <div className="flex justify-end">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0"
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            {rule.status !== 'verified' && (
-                              <DropdownMenuItem
-                              onClick={() => handleViewLogs(rule)}
-                            >
-                              <FileText className="mr-2 h-4 w-4" />
-                              View logs
-                            </DropdownMenuItem>
-                            )}
-                            {(rule.status === 'created' ||
-                              rule.status === 'unverified') && (
-                              <DropdownMenuItem
-                              onClick={() => handleRetry(rule)}
-                            >
-                              <RefreshCw className="mr-2 h-4 w-4" />
-                              Retry
-                            </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem
-                              onClick={() => {
-                              const apex = getApexDomain(rule.domain)
-                              const orgDomainId = apex
-                                ? apexToOrgDomainId.get(apex.toLowerCase())
-                                : undefined
-                              if (project?.teamId && orgDomainId) {
-                                navigate({
-                                  to: '/organizations/$orgId/domains/$domainId',
-                                  params: {
-                                    orgId: project.teamId,
-                                    domainId: orgDomainId,
-                                  },
-                                })
-                              }
-                            }}
-                            disabled={
-                              !project?.teamId ||
-                              !getApexDomain(rule.domain) ||
-                              !apexToOrgDomainId.has(
-                                getApexDomain(rule.domain)?.toLowerCase() ?? '',
-                              )
-                            }
-                          >
-                            <FileText className="mr-2 h-4 w-4" />
-                            DNS Records
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleDelete(rule)}
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
-        </div>
-
-        <Pagination
-          currentPage={currentPage + 1}
-          totalItems={total}
-          pageSize={pageSize}
-          pageSizeOptions={[10, 25, 50, 100]}
-          onPageChange={(page) => setCurrentPage(page - 1)}
-          onPageSizeChange={(size) => {
-            setPageSize(size)
-            setCurrentPage(0)
-          }}
-          itemLabel="domains"
-          className="mt-0"
+  const domainsContent =
+    rules.length === 0 ? (
+      <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
+        <EmptyState
+          icon={Globe}
+          title={hasFilters ? undefined : 'No domains yet'}
+          description={
+            hasFilters
+              ? undefined
+              : 'Connect a custom domain to your function for a branded experience'
+          }
+          isEmpty={!hasFilters}
+          hasFilters={hasFilters}
+          variant="card"
+          iconSize="md"
         />
       </div>
-    </div>
-  )
+    ) : (
+      <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6">
+        <div className="space-y-0">
+          <div className="rounded-lg border border-border bg-card overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent border-b border-border">
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Domain
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Type
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Status
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Created
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[80px]"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rules.map((rule) => {
+                  const statusConfig = getDomainStatusBadgeConfig(rule.status)
+
+                  return (
+                    <TableRow key={rule.$id}>
+                      <TableCell className="px-4 py-3">
+                        <a
+                          href={`https://${rule.domain}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 font-mono text-[13px] font-medium text-foreground hover:underline"
+                        >
+                          {rule.domain}
+                          <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
+                        </a>
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-[13px]">
+                        {rule.redirectUrl ? (
+                          <span>Redirect to {rule.redirectUrl}</span>
+                        ) : rule.deploymentVcsProviderBranch ? (
+                          <span>
+                            Deployed from {rule.deploymentVcsProviderBranch}
+                          </span>
+                        ) : (
+                          <span>Active deployment</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            variant={statusConfig.variant}
+                            className="text-[10px] shrink-0 gap-1.5"
+                            title={
+                              rule.status === 'verifying'
+                                ? 'SSL certificate is being issued. This usually takes a couple of minutes.'
+                                : undefined
+                            }
+                          >
+                            {rule.status === 'verifying' && (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            )}
+                            {statusConfig.label}
+                          </Badge>
+                          {rule.status !== 'verified' && (
+                            <Button
+                              variant="link"
+                              size="sm"
+                              className="h-auto p-0 text-[13px]"
+                              onClick={() => handleViewLogs(rule)}
+                            >
+                              View logs
+                            </Button>
+                          )}
+                          {(rule.status === 'created' ||
+                            rule.status === 'unverified') && (
+                            <Button
+                              variant="link"
+                              size="sm"
+                              className="h-auto p-0 text-[13px]"
+                              onClick={() => handleRetry(rule)}
+                            >
+                              Retry
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        <DateTooltip
+                          date={rule.$createdAt}
+                          className="text-[12px] text-muted-foreground"
+                        />
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-right">
+                        <div className="flex justify-end">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {rule.status !== 'verified' && (
+                                <DropdownMenuItem
+                                  onClick={() => handleViewLogs(rule)}
+                                >
+                                  <FileText className="mr-2 h-4 w-4" />
+                                  View logs
+                                </DropdownMenuItem>
+                              )}
+                              {(rule.status === 'created' ||
+                                rule.status === 'unverified') && (
+                                <DropdownMenuItem
+                                  onClick={() => handleRetry(rule)}
+                                >
+                                  <RefreshCw className="mr-2 h-4 w-4" />
+                                  Retry
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  const apex = getApexDomain(rule.domain)
+                                  const orgDomainId = apex
+                                    ? apexToOrgDomainId.get(apex.toLowerCase())
+                                    : undefined
+                                  if (project?.teamId && orgDomainId) {
+                                    navigate({
+                                      to: '/organizations/$orgId/domains/$domainId',
+                                      params: {
+                                        orgId: project.teamId,
+                                        domainId: orgDomainId,
+                                      },
+                                    })
+                                  }
+                                }}
+                                disabled={
+                                  !project?.teamId ||
+                                  !getApexDomain(rule.domain) ||
+                                  !apexToOrgDomainId.has(
+                                    getApexDomain(rule.domain)?.toLowerCase() ??
+                                      '',
+                                  )
+                                }
+                              >
+                                <FileText className="mr-2 h-4 w-4" />
+                                DNS Records
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleDelete(rule)}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </div>
+
+          <Pagination
+            currentPage={currentPage + 1}
+            totalItems={total}
+            pageSize={pageSize}
+            pageSizeOptions={[10, 25, 50, 100]}
+            onPageChange={(page) => setCurrentPage(page - 1)}
+            onPageSizeChange={(size) => {
+              setPageSize(size)
+              setCurrentPage(0)
+            }}
+            itemLabel="domains"
+            className="mt-0"
+          />
+        </div>
+      </div>
+    )
 
   return (
     <>

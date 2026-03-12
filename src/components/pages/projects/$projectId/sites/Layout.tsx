@@ -49,9 +49,8 @@ import { CreateManualDeploymentModal } from '../shared/CreateManualDeploymentMod
 import { CreateDeploymentProvider } from '../shared/CreateDeploymentContext'
 
 /** When provided, Deployments view renders this below the active deployment card (filter + create). */
-export const DeploymentsToolbarContext = React.createContext<React.ReactNode>(
-  null,
-)
+export const DeploymentsToolbarContext =
+  React.createContext<React.ReactNode>(null)
 
 export function Layout() {
   return (
@@ -84,11 +83,7 @@ function SiteLayoutContent() {
       if (!projectId || !siteId || !activeDeployment?.$id) {
         throw new Error('Project ID, Site ID, and Deployment ID are required')
       }
-      return await cancelSiteDeployment(
-        projectId,
-        siteId,
-        activeDeployment.$id,
-      )
+      return await cancelSiteDeployment(projectId, siteId, activeDeployment.$id)
     },
     onSuccess: async () => {
       setCancelBuildDialogOpen(false)
@@ -151,11 +146,14 @@ function SiteLayoutContent() {
     // TanStack Router may expose search as a parsed object; use it so filter count/active filters show
     const queryParam =
       typeof search === 'object' && search !== null && 'query' in search
-        ? (search as { query?: string }).query ?? null
+        ? ((search as { query?: string }).query ?? null)
         : getQueryParam(
             new URL(
-              location.pathname + (typeof search === 'string' ? search || '' : ''),
-              typeof window !== 'undefined' ? window.location.origin : 'http://dummy',
+              location.pathname +
+                (typeof search === 'string' ? search || '' : ''),
+              typeof window !== 'undefined'
+                ? window.location.origin
+                : 'http://dummy',
             ),
           )
     return queryParamToMap(queryParam)
@@ -292,15 +290,15 @@ function SiteLayoutContent() {
                 onRemoveFilter={removeSiteFilter}
                 onClearAll={clearAllSiteFilters}
                 onApplyFilter={applySiteFilter}
-                resourceLabel={
-                  activeTab === 'logs' ? 'logs' : 'domains'
-                }
+                resourceLabel={activeTab === 'logs' ? 'logs' : 'domains'}
                 filterScope={`sites.${activeTab}`}
                 onApplyQuery={(queryParam) => {
                   navigate({
                     to: location.pathname,
                     search: (prev) => ({
-                      ...(typeof prev === 'object' && prev !== null ? prev : {}),
+                      ...(typeof prev === 'object' && prev !== null
+                        ? prev
+                        : {}),
                       query: queryParam ?? undefined,
                       page: 1,
                     }),
@@ -314,9 +312,7 @@ function SiteLayoutContent() {
           showRefresh={activeTab === 'logs' && hasRefreshHandler}
           onRefresh={activeTab === 'logs' ? triggerRefresh : undefined}
           isRefreshing={isRefreshing}
-          createLabel={
-            activeTab === 'domains' ? 'Add domain' : undefined
-          }
+          createLabel={activeTab === 'domains' ? 'Add domain' : undefined}
           onCreate={
             activeTab === 'domains'
               ? () =>
@@ -373,7 +369,9 @@ function SiteLayoutContent() {
                       navigate({
                         to: location.pathname,
                         search: (prev) => ({
-                          ...(typeof prev === 'object' && prev !== null ? prev : {}),
+                          ...(typeof prev === 'object' && prev !== null
+                            ? prev
+                            : {}),
                           query: queryParam ?? undefined,
                           page: 1,
                         }),

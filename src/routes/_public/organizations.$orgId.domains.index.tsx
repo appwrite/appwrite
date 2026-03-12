@@ -12,8 +12,13 @@ import {
   getPage,
   getLimit,
   getQueryParam,
+  getSort,
   queryParamToMap,
 } from '@/lib/table-filters'
+import {
+  DOMAINS_DEFAULT_SORT_BY,
+  DOMAINS_DEFAULT_SORT_ORDER,
+} from '@/lib/react-query/hooks'
 
 const DEFAULT_PAGE = 1
 
@@ -35,10 +40,21 @@ export const Route = createFileRoute('/_public/organizations/$orgId/domains/')({
     const filterMap = queryParamToMap(queryParam)
     const filterQueries =
       filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
+    const sort = getSort(url)
+    const sortBy = sort?.sortBy ?? DOMAINS_DEFAULT_SORT_BY
+    const sortOrder = sort?.sortOrder ?? DOMAINS_DEFAULT_SORT_ORDER
 
     await queryClient.ensureQueryData(organizationsQueryOptions())
     await queryClient.ensureQueryData(
-      organizationDomainsQueryOptions(orgId, page - 1, limit, search ?? undefined, filterQueries),
+      organizationDomainsQueryOptions(
+        orgId,
+        page - 1,
+        limit,
+        search ?? undefined,
+        filterQueries,
+        sortBy,
+        sortOrder,
+      ),
     )
   },
   component: DomainsIndexPage,

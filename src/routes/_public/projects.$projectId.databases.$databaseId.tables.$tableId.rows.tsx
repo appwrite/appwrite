@@ -109,7 +109,10 @@ export const Route = createFileRoute(
           replace: true,
         })
       }
-      const url = new URL(location.pathname + location.search, 'http://localhost')
+      const url = new URL(
+        location.pathname + location.search,
+        'http://localhost',
+      )
       const search = getSearch(url)
       const page = getPage(url, DEFAULT_PAGE)
       const limit = getLimit(url, ROWS_PER_PAGE)

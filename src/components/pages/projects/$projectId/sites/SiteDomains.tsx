@@ -50,8 +50,12 @@ export function SiteDomainsView() {
   const [verifyOpen, setVerifyOpen] = useState(false)
   const [viewLogsOpen, setViewLogsOpen] = useState(false)
   const [deleteDomainOpen, setDeleteDomainOpen] = useState(false)
-  const [selectedRule, setSelectedRule] = useState<Models.ProxyRule | null>(null)
-  const [viewLogsRule, setViewLogsRule] = useState<Models.ProxyRule | null>(null)
+  const [selectedRule, setSelectedRule] = useState<Models.ProxyRule | null>(
+    null,
+  )
+  const [viewLogsRule, setViewLogsRule] = useState<Models.ProxyRule | null>(
+    null,
+  )
   const search = { search: '' } // TODO: Add search support if needed
 
   const searchValue = search?.search || ''
@@ -131,7 +135,9 @@ export function SiteDomainsView() {
                 <TableBody>
                   {rules.map((rule) => {
                     const ruleData = rule as Models.ProxyRule
-                    const statusConfig = getDomainStatusBadgeConfig(ruleData.status)
+                    const statusConfig = getDomainStatusBadgeConfig(
+                      ruleData.status,
+                    )
 
                     return (
                       <TableRow key={ruleData.$id}>
@@ -213,56 +219,60 @@ export function SiteDomainsView() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                              {ruleData.status !== 'verified' && (
+                                {ruleData.status !== 'verified' && (
+                                  <DropdownMenuItem
+                                    onClick={() => handleViewLogs(ruleData)}
+                                  >
+                                    <FileText className="mr-2 h-4 w-4" />
+                                    View logs
+                                  </DropdownMenuItem>
+                                )}
+                                {(ruleData.status === 'created' ||
+                                  ruleData.status === 'unverified') && (
+                                  <DropdownMenuItem
+                                    onClick={() => handleRetry(ruleData)}
+                                  >
+                                    <RefreshCw className="mr-2 h-4 w-4" />
+                                    Retry
+                                  </DropdownMenuItem>
+                                )}
                                 <DropdownMenuItem
-                                  onClick={() => handleViewLogs(ruleData)}
+                                  onClick={() => {
+                                    const apex = getApexDomain(ruleData.domain)
+                                    const orgDomainId = apex
+                                      ? apexToOrgDomainId.get(
+                                          apex.toLowerCase(),
+                                        )
+                                      : undefined
+                                    if (project?.teamId && orgDomainId) {
+                                      navigate({
+                                        to: '/organizations/$orgId/domains/$domainId',
+                                        params: {
+                                          orgId: project.teamId,
+                                          domainId: orgDomainId,
+                                        },
+                                      })
+                                    }
+                                  }}
+                                  disabled={
+                                    !project?.teamId ||
+                                    !getApexDomain(ruleData.domain) ||
+                                    !apexToOrgDomainId.has(
+                                      getApexDomain(
+                                        ruleData.domain,
+                                      )?.toLowerCase() ?? '',
+                                    )
+                                  }
                                 >
                                   <FileText className="mr-2 h-4 w-4" />
-                                  View logs
+                                  DNS Records
                                 </DropdownMenuItem>
-                              )}
-                              {(ruleData.status === 'created' ||
-                                ruleData.status === 'unverified') && (
                                 <DropdownMenuItem
-                                  onClick={() => handleRetry(ruleData)}
+                                  onClick={() => handleDelete(ruleData)}
                                 >
-                                  <RefreshCw className="mr-2 h-4 w-4" />
-                                  Retry
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete
                                 </DropdownMenuItem>
-                              )}
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  const apex = getApexDomain(ruleData.domain)
-                                  const orgDomainId = apex
-                                    ? apexToOrgDomainId.get(apex.toLowerCase())
-                                    : undefined
-                                  if (project?.teamId && orgDomainId) {
-                                    navigate({
-                                      to: '/organizations/$orgId/domains/$domainId',
-                                      params: {
-                                        orgId: project.teamId,
-                                        domainId: orgDomainId,
-                                      },
-                                    })
-                                  }
-                                }}
-                                disabled={
-                                  !project?.teamId ||
-                                  !getApexDomain(ruleData.domain) ||
-                                  !apexToOrgDomainId.has(
-                                    getApexDomain(ruleData.domain)?.toLowerCase() ?? '',
-                                  )
-                                }
-                              >
-                                <FileText className="mr-2 h-4 w-4" />
-                                DNS Records
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleDelete(ruleData)}
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                              </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </div>

@@ -13,7 +13,8 @@ import {
  * Re-renders when the profile or any feature override changes (e.g. via debug menu).
  */
 export function useConsoleProfile() {
-  const [profileId, setProfileId] = useState<ConsoleProfileId>(getActiveProfileId)
+  const [profileId, setProfileId] =
+    useState<ConsoleProfileId>(getActiveProfileId)
   const [, setProfileVersion] = useState(0)
 
   useEffect(() => {

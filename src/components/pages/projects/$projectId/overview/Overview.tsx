@@ -441,182 +441,190 @@ export function View({ projectId, initialData }: ViewProps) {
       <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
         {/* Charts card - usage stats (cloud only) */}
         {features.usageStats && (
-        <div className="@container rounded-xl border border-border bg-card/50">
-          {/* Metric Tabs Row - inside the card */}
-          <div className="border-b border-border px-5">
-            <div
-              className="-mx-5 overflow-x-auto px-5"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            >
-              <div className="flex min-w-max" role="tablist">
-                {overviewTabs.map((tab, index) => {
-                  const isActive = activeTab === tab.id
-                  const isPositive = tab.change > 0
-                  const isNegative = tab.change < 0
+          <div className="@container rounded-xl border border-border bg-card/50">
+            {/* Metric Tabs Row - inside the card */}
+            <div className="border-b border-border px-5">
+              <div
+                className="-mx-5 overflow-x-auto px-5"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                <div className="flex min-w-max" role="tablist">
+                  {overviewTabs.map((tab, index) => {
+                    const isActive = activeTab === tab.id
+                    const isPositive = tab.change > 0
+                    const isNegative = tab.change < 0
 
-                  return (
-                    <div key={tab.id} className="flex">
-                      {/* Separator */}
-                      {index > 0 && <div className="my-2.5 w-px bg-border" />}
+                    return (
+                      <div key={tab.id} className="flex">
+                        {/* Separator */}
+                        {index > 0 && <div className="my-2.5 w-px bg-border" />}
 
-                      {/* Tab Button */}
-                      <button
-                        role="tab"
-                        aria-selected={isActive}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={cn(
-                          'relative flex min-w-[150px] flex-col gap-0.5 px-4 py-3 text-left cursor-pointer focus:cursor-pointer focus-visible:cursor-pointer transition-colors first:pl-0 rounded-sm',
-                          'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
-                          isActive
-                            ? 'text-foreground'
-                            : 'text-muted-foreground hover:text-foreground/80',
-                        )}
-                      >
-                        <div className="flex items-baseline gap-2">
-                          <span
-                            className={cn(
-                              'text-[18px] font-semibold tracking-tight sm:text-[20px]',
-                              isActive
-                                ? 'text-foreground'
-                                : 'text-muted-foreground',
-                            )}
-                          >
-                            {tab.value}
-                          </span>
-                          <div className="flex items-center gap-1">
-                            {isPositive && (
-                              <TrendingUp
-                                className={cn(
-                                  'h-3 w-3',
-                                  isActive
-                                    ? 'text-emerald-500'
-                                    : 'text-emerald-500/60',
-                                )}
-                              />
-                            )}
-                            {isNegative && (
-                              <TrendingDown
-                                className={cn(
-                                  'h-3 w-3',
-                                  isActive ? 'text-red-500' : 'text-red-500/60',
-                                )}
-                              />
-                            )}
-                            <span
-                              className={cn(
-                                'text-[11px] font-medium',
-                                isPositive &&
-                                  (isActive
-                                    ? 'text-emerald-500'
-                                    : 'text-emerald-500/60'),
-                                isNegative &&
-                                  (isActive
-                                    ? 'text-red-500'
-                                    : 'text-red-500/60'),
-                                !isPositive &&
-                                  !isNegative &&
-                                  'text-muted-foreground',
-                              )}
-                            >
-                              {isPositive && '+'}
-                              {tab.change}%
-                            </span>
-                          </div>
-                        </div>
-                        <span
+                        {/* Tab Button */}
+                        <button
+                          role="tab"
+                          aria-selected={isActive}
+                          onClick={() => setActiveTab(tab.id)}
                           className={cn(
-                            'text-[12px]',
+                            'relative flex min-w-[150px] flex-col gap-0.5 px-4 py-3 text-left cursor-pointer focus:cursor-pointer focus-visible:cursor-pointer transition-colors first:pl-0 rounded-sm',
+                            'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                             isActive
-                              ? 'text-muted-foreground'
-                              : 'text-muted-foreground/70',
+                              ? 'text-foreground'
+                              : 'text-muted-foreground hover:text-foreground/80',
                           )}
                         >
-                          {tab.label}
-                        </span>
+                          <div className="flex items-baseline gap-2">
+                            <span
+                              className={cn(
+                                'text-[18px] font-semibold tracking-tight sm:text-[20px]',
+                                isActive
+                                  ? 'text-foreground'
+                                  : 'text-muted-foreground',
+                              )}
+                            >
+                              {tab.value}
+                            </span>
+                            <div className="flex items-center gap-1">
+                              {isPositive && (
+                                <TrendingUp
+                                  className={cn(
+                                    'h-3 w-3',
+                                    isActive
+                                      ? 'text-emerald-500'
+                                      : 'text-emerald-500/60',
+                                  )}
+                                />
+                              )}
+                              {isNegative && (
+                                <TrendingDown
+                                  className={cn(
+                                    'h-3 w-3',
+                                    isActive
+                                      ? 'text-red-500'
+                                      : 'text-red-500/60',
+                                  )}
+                                />
+                              )}
+                              <span
+                                className={cn(
+                                  'text-[11px] font-medium',
+                                  isPositive &&
+                                    (isActive
+                                      ? 'text-emerald-500'
+                                      : 'text-emerald-500/60'),
+                                  isNegative &&
+                                    (isActive
+                                      ? 'text-red-500'
+                                      : 'text-red-500/60'),
+                                  !isPositive &&
+                                    !isNegative &&
+                                    'text-muted-foreground',
+                                )}
+                              >
+                                {isPositive && '+'}
+                                {tab.change}%
+                              </span>
+                            </div>
+                          </div>
+                          <span
+                            className={cn(
+                              'text-[12px]',
+                              isActive
+                                ? 'text-muted-foreground'
+                                : 'text-muted-foreground/70',
+                            )}
+                          >
+                            {tab.label}
+                          </span>
 
-                        {/* Active indicator */}
-                        {isActive && (
-                          <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground" />
-                        )}
-                      </button>
-                    </div>
-                  )
-                })}
+                          {/* Active indicator */}
+                          {isActive && (
+                            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground" />
+                          )}
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             </div>
+
+            {/* Chart content */}
+            {activeTab === 'bandwidth' && (
+              <div className="flex flex-col @[700px]:flex-row">
+                <div className="flex-1 border-b border-border p-5 @[700px]:border-b-0 @[700px]:border-r">
+                  <RequestsChart
+                    title="Bandwidth over time"
+                    metric="bandwidth"
+                  />
+                </div>
+                <div className="w-full p-5 @[700px]:w-[320px]">
+                  <TopRequests
+                    title="Top bandwidth consumers"
+                    metric="bandwidth"
+                  />
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'requests' && (
+              <div className="flex flex-col @[700px]:flex-row">
+                <div className="flex-1 border-b border-border p-5 @[700px]:border-b-0 @[700px]:border-r">
+                  <RequestsChart title="Requests over time" metric="requests" />
+                </div>
+                <div className="w-full p-5 @[700px]:w-[320px]">
+                  <TopRequests
+                    title="Top requested endpoints"
+                    metric="requests"
+                  />
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'storage' && (
+              <div className="flex flex-col @[700px]:flex-row">
+                <div className="flex-1 border-b border-border p-5 @[700px]:border-b-0 @[700px]:border-r">
+                  <RequestsChart
+                    title="Storage usage over time"
+                    metric="storage"
+                  />
+                </div>
+                <div className="w-full p-5 @[700px]:w-[320px]">
+                  <TopRequests title="Top storage buckets" metric="storage" />
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'executions' && (
+              <div className="flex flex-col @[700px]:flex-row">
+                <div className="flex-1 border-b border-border p-5 @[700px]:border-b-0 @[700px]:border-r">
+                  <RequestsChart
+                    title="Executions over time"
+                    metric="executions"
+                  />
+                </div>
+                <div className="w-full p-5 @[700px]:w-[320px]">
+                  <TopRequests
+                    title="Top executed functions"
+                    metric="executions"
+                  />
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'gbhours' && (
+              <div className="flex flex-col @[700px]:flex-row">
+                <div className="flex-1 border-b border-border p-5 @[700px]:border-b-0 @[700px]:border-r">
+                  <RequestsChart title="GB-hours over time" metric="gbhours" />
+                </div>
+                <div className="w-full p-5 @[700px]:w-[320px]">
+                  <TopRequests
+                    title="Top GB-hours consumers"
+                    metric="gbhours"
+                  />
+                </div>
+              </div>
+            )}
           </div>
-
-          {/* Chart content */}
-          {activeTab === 'bandwidth' && (
-            <div className="flex flex-col @[700px]:flex-row">
-              <div className="flex-1 border-b border-border p-5 @[700px]:border-b-0 @[700px]:border-r">
-                <RequestsChart title="Bandwidth over time" metric="bandwidth" />
-              </div>
-              <div className="w-full p-5 @[700px]:w-[320px]">
-                <TopRequests
-                  title="Top bandwidth consumers"
-                  metric="bandwidth"
-                />
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'requests' && (
-            <div className="flex flex-col @[700px]:flex-row">
-              <div className="flex-1 border-b border-border p-5 @[700px]:border-b-0 @[700px]:border-r">
-                <RequestsChart title="Requests over time" metric="requests" />
-              </div>
-              <div className="w-full p-5 @[700px]:w-[320px]">
-                <TopRequests
-                  title="Top requested endpoints"
-                  metric="requests"
-                />
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'storage' && (
-            <div className="flex flex-col @[700px]:flex-row">
-              <div className="flex-1 border-b border-border p-5 @[700px]:border-b-0 @[700px]:border-r">
-                <RequestsChart
-                  title="Storage usage over time"
-                  metric="storage"
-                />
-              </div>
-              <div className="w-full p-5 @[700px]:w-[320px]">
-                <TopRequests title="Top storage buckets" metric="storage" />
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'executions' && (
-            <div className="flex flex-col @[700px]:flex-row">
-              <div className="flex-1 border-b border-border p-5 @[700px]:border-b-0 @[700px]:border-r">
-                <RequestsChart
-                  title="Executions over time"
-                  metric="executions"
-                />
-              </div>
-              <div className="w-full p-5 @[700px]:w-[320px]">
-                <TopRequests
-                  title="Top executed functions"
-                  metric="executions"
-                />
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'gbhours' && (
-            <div className="flex flex-col @[700px]:flex-row">
-              <div className="flex-1 border-b border-border p-5 @[700px]:border-b-0 @[700px]:border-r">
-                <RequestsChart title="GB-hours over time" metric="gbhours" />
-              </div>
-              <div className="w-full p-5 @[700px]:w-[320px]">
-                <TopRequests title="Top GB-hours consumers" metric="gbhours" />
-              </div>
-            </div>
-          )}
-        </div>
         )}
 
         {/* Integrations Section */}

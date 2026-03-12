@@ -38,10 +38,8 @@ export function PlatformDrawer({
   onSuccess,
 }: PlatformDrawerProps) {
   const platformId = platform?.$id ?? null
-  const { platform: fullPlatform, isLoading: platformLoading } = useProjectPlatform(
-    projectId,
-    platformId,
-  )
+  const { platform: fullPlatform, isLoading: platformLoading } =
+    useProjectPlatform(projectId, platformId)
   const displayPlatform = fullPlatform ?? platform
 
   const updateMutation = useUpdatePlatform(projectId)
@@ -130,12 +128,10 @@ export function PlatformDrawer({
 
   const platformType = (displayPlatform?.type ?? 'web') as string
   const typeLower = platformType.toLowerCase()
-  const showKey =
-    typeLower.includes('android') || typeLower.includes('apple')
+  const showKey = typeLower.includes('android') || typeLower.includes('apple')
   const showHostname =
     typeLower === 'web' || typeLower.startsWith('flutter-web')
-  const showStore =
-    typeLower.includes('android') || typeLower.includes('apple')
+  const showStore = typeLower.includes('android') || typeLower.includes('apple')
 
   if (!platform && !platformId) return null
 
@@ -150,7 +146,10 @@ export function PlatformDrawer({
         <>
           <div className="border-t border-border shrink-0" />
 
-          <form onSubmit={handleSubmit} className="flex flex-1 flex-col min-h-0">
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-1 flex-col min-h-0"
+          >
             <div className="flex-1 overflow-y-auto">
               <div className="px-6 py-6 space-y-5">
                 {platformLoading && !displayPlatform ? (
@@ -161,7 +160,10 @@ export function PlatformDrawer({
                 ) : (
                   <>
                     <div className="space-y-2">
-                      <Label htmlFor="platform-name" className="text-[12px] font-medium">
+                      <Label
+                        htmlFor="platform-name"
+                        className="text-[12px] font-medium"
+                      >
                         Name <span className="text-destructive">*</span>
                       </Label>
                       <Input
@@ -170,13 +172,16 @@ export function PlatformDrawer({
                         value={name}
                         onChange={(e) => {
                           setName(e.target.value)
-                          if (errors.name) setErrors((prev) => ({ ...prev, name: '' }))
+                          if (errors.name)
+                            setErrors((prev) => ({ ...prev, name: '' }))
                         }}
                         disabled={isPending}
                         className={errors.name ? 'border-destructive' : ''}
                       />
                       {errors.name && (
-                        <p className="text-[12px] text-destructive">{errors.name}</p>
+                        <p className="text-[12px] text-destructive">
+                          {errors.name}
+                        </p>
                       )}
                     </div>
 
@@ -185,10 +190,7 @@ export function PlatformDrawer({
                         Type
                       </Label>
                       <div className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2">
-                        <PlatformIcon
-                          platform={platformType}
-                          size="sm"
-                        />
+                        <PlatformIcon platform={platformType} size="sm" />
                         <span className="text-[13px] text-foreground">
                           {getPlatformDisplayName(platformType)}
                         </span>
@@ -197,7 +199,10 @@ export function PlatformDrawer({
 
                     {showHostname && (
                       <div className="space-y-2">
-                        <Label htmlFor="platform-hostname" className="text-[12px] font-medium">
+                        <Label
+                          htmlFor="platform-hostname"
+                          className="text-[12px] font-medium"
+                        >
                           Hostname
                         </Label>
                         <Input
@@ -213,7 +218,8 @@ export function PlatformDrawer({
                             localhost
                           </code>{' '}
                           for development (no port or protocol). Add a separate
-                          platform for each origin (e.g. localhost and production).
+                          platform for each origin (e.g. localhost and
+                          production).
                         </p>
                         <a
                           href="https://appwrite.io/blog/post/cors-error"
@@ -229,7 +235,10 @@ export function PlatformDrawer({
 
                     {showKey && (
                       <div className="space-y-2">
-                        <Label htmlFor="platform-key" className="text-[12px] font-medium">
+                        <Label
+                          htmlFor="platform-key"
+                          className="text-[12px] font-medium"
+                        >
                           {platformType.toLowerCase().includes('apple')
                             ? 'Bundle ID'
                             : 'Package name'}
@@ -250,7 +259,10 @@ export function PlatformDrawer({
 
                     {showStore && (
                       <div className="space-y-2">
-                        <Label htmlFor="platform-store" className="text-[12px] font-medium">
+                        <Label
+                          htmlFor="platform-store"
+                          className="text-[12px] font-medium"
+                        >
                           App store / Play store ID
                         </Label>
                         <Input
@@ -272,8 +284,8 @@ export function PlatformDrawer({
                       <div className="border-t border-destructive/20" />
                       <div className="px-6 py-4">
                         <p className="text-[13px] text-muted-foreground">
-                          Remove this app from the project. This action cannot be
-                          undone.
+                          Remove this app from the project. This action cannot
+                          be undone.
                         </p>
                       </div>
                       <div className="px-6 py-4 border-t border-destructive/20 bg-destructive/5">
@@ -318,8 +330,8 @@ export function PlatformDrawer({
             <DialogTitle>Delete app</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Are you sure you want to delete{' '}
-              <strong>{displayPlatform?.name || 'this app'}</strong>? This action
-              cannot be undone.
+              <strong>{displayPlatform?.name || 'this app'}</strong>? This
+              action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

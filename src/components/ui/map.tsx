@@ -36,8 +36,7 @@ const COUNTRY_COORDINATES: Record<string, [number, number]> = {
   SG: [103.8198, 1.3521], // Singapore
 }
 
-interface MapProps
-  extends Omit<maplibregl.MapOptions, 'container' | 'style'> {
+interface MapProps extends Omit<maplibregl.MapOptions, 'container' | 'style'> {
   children?: React.ReactNode
   styles?: {
     light?: string | maplibregl.StyleSpecification
@@ -203,7 +202,13 @@ export function Map({
       }
       setIsLoaded(false)
     }
-  }, [mapStyle, theme, disableScrollZoom, JSON.stringify(mapOptions), projection])
+  }, [
+    mapStyle,
+    theme,
+    disableScrollZoom,
+    JSON.stringify(mapOptions),
+    projection,
+  ])
 
   return (
     <MapContext.Provider value={{ map: mapInstance, isLoaded }}>
@@ -355,8 +360,10 @@ export function MarkerContent({ children, className }: MarkerContentProps) {
   return <div className={cn('relative', className)}>{children}</div>
 }
 
-interface MarkerPopupProps
-  extends Omit<maplibregl.PopupOptions, 'className' | 'closeButton'> {
+interface MarkerPopupProps extends Omit<
+  maplibregl.PopupOptions,
+  'className' | 'closeButton'
+> {
   children?: React.ReactNode
   className?: string
   closeButton?: boolean

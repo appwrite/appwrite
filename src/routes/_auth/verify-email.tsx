@@ -1,10 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import {
-  createFileRoute,
-  useNavigate,
-  useSearch,
-} from '@tanstack/react-router'
+import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
 import { z } from 'zod'
 import { VerifyEmail } from '@/components/global/auth/VerifyEmail'
 import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
@@ -36,7 +32,10 @@ const searchSchema = z.object({
 })
 
 /** Parse userId and secret from the current URL (used when following email link) so long tokens are not altered by router. */
-function getVerificationParamsFromUrl(): { userId: string; secret: string } | null {
+function getVerificationParamsFromUrl(): {
+  userId: string
+  secret: string
+} | null {
   if (typeof window === 'undefined') return null
   const params = new URLSearchParams(window.location.search)
   const userId = params.get('userId')
@@ -123,9 +122,9 @@ function VerifyEmailPage() {
     }
   }, [])
 
-  const urlParams = typeof window !== 'undefined' ? getVerificationParamsFromUrl() : null
-  const isConfirming =
-    Boolean(urlParams) && confirmMutation.isPending
+  const urlParams =
+    typeof window !== 'undefined' ? getVerificationParamsFromUrl() : null
+  const isConfirming = Boolean(urlParams) && confirmMutation.isPending
 
   if (isConfirming) {
     return (

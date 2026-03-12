@@ -156,7 +156,9 @@ export function CommandCenter({
   const isProjectContext = context === 'project'
 
   // RBAC: resolve org/team for scopes (project context → project.teamId, org context → orgId)
-  const { project } = useProject(isProjectContext ? projectId ?? undefined : undefined)
+  const { project } = useProject(
+    isProjectContext ? (projectId ?? undefined) : undefined,
+  )
   const scopesOrgId = isOrgContext ? (orgId ?? undefined) : project?.teamId
   const { access } = useOrganizationScopes(scopesOrgId)
 
@@ -388,13 +390,7 @@ export function CommandCenter({
           ]
         : []),
     ],
-    [
-      onOrgNavigate,
-      onOpenChange,
-      showOrgDomains,
-      access,
-      features,
-    ],
+    [onOrgNavigate, onOpenChange, showOrgDomains, access, features],
   )
 
   // Organization create commands (Invite Member only when onInviteMember provided, e.g. for owners)

@@ -39,6 +39,8 @@ import {
   useOrganizationPlan,
   useOrganizationScopes,
   fetchProjectSites,
+  SITES_DEFAULT_SORT_BY,
+  SITES_DEFAULT_SORT_ORDER,
 } from '@/lib/react-query/hooks'
 import { ROWS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { canCreateSite } from '@/lib/console-access-checks'
@@ -55,6 +57,9 @@ import {
   getPage,
   getLimit,
   getQueryParam,
+  getSort,
+  parseSort,
+  encodeSort,
   queryParamToMap,
   mapToQueryParam,
   buildListSearchParams,
@@ -69,6 +74,7 @@ type SitesListSearch = {
   query?: string
   page?: number
   limit?: number
+  sort?: string
 }
 const SCREENSHOTS_BUCKET_ID = 'screenshots'
 
@@ -82,20 +88,37 @@ export function View() {
 
   const isSitesIndex =
     location.pathname.replace(/\/$/, '') === `/projects/${projectId}/sites`
+  const defaultSitesSort = {
+    sortBy: SITES_DEFAULT_SORT_BY,
+    sortOrder: SITES_DEFAULT_SORT_ORDER as 'asc' | 'desc',
+  }
   const sitesListParams = useMemo(() => {
     if (!isSitesIndex || typeof search !== 'object') return null
-    const url = new URL(location.pathname + location.search, window.location.origin)
+    const url = new URL(
+      location.pathname + location.search,
+      window.location.origin,
+    )
+    const parsed =
+      parseSort(search.sort as string | undefined) ??
+      getSort(url) ??
+      defaultSitesSort
     return {
       search: getSearch(url) ?? (search.search as string | undefined),
       page: getPage(url, 1),
       limit: getLimit(url, ROWS_DEFAULT_PAGE_SIZE),
-      filterMap: queryParamToMap(getQueryParam(url) ?? (search.query as string | undefined) ?? null),
+      filterMap: queryParamToMap(
+        getQueryParam(url) ?? (search.query as string | undefined) ?? null,
+      ),
+      sortBy: parsed.sortBy,
+      sortOrder: parsed.sortOrder,
     }
   }, [isSitesIndex, search, location.pathname, location.search, projectId])
 
   const urlPage = sitesListParams?.page ?? 1
   const urlLimit = sitesListParams?.limit ?? ROWS_DEFAULT_PAGE_SIZE
   const urlSearch = sitesListParams?.search
+  const urlSortBy = sitesListParams?.sortBy ?? SITES_DEFAULT_SORT_BY
+  const urlSortOrder = sitesListParams?.sortOrder ?? SITES_DEFAULT_SORT_ORDER
   const filterMap = sitesListParams?.filterMap ?? new Map()
   const filterQueries =
     filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
@@ -108,6 +131,10 @@ export function View() {
   const [displayedPage, setDisplayedPage] = useState(1)
   const [displayedSearch, setDisplayedSearch] = useState<string | undefined>(
     undefined,
+  )
+  const [displayedSortBy, setDisplayedSortBy] = useState(SITES_DEFAULT_SORT_BY)
+  const [displayedSortOrder, setDisplayedSortOrder] = useState<'asc' | 'desc'>(
+    SITES_DEFAULT_SORT_ORDER,
   )
   const [displayedFilterQueryString, setDisplayedFilterQueryString] =
     useState('')
@@ -138,10 +165,20 @@ export function View() {
     if (!hasInitedDisplayedRef.current) {
       setDisplayedPage(urlPage)
       setDisplayedSearch(urlSearch ?? undefined)
+      setDisplayedSortBy(urlSortBy)
+      setDisplayedSortOrder(urlSortOrder)
       setDisplayedFilterQueryString(filterQueryString)
       hasInitedDisplayedRef.current = true
     }
-  }, [isSitesIndex, sitesListParams, urlPage, urlSearch, filterQueryString])
+  }, [
+    isSitesIndex,
+    sitesListParams,
+    urlPage,
+    urlSearch,
+    urlSortBy,
+    urlSortOrder,
+    filterQueryString,
+  ])
 
   useEffect(() => {
     if (!isSitesIndex) return
@@ -156,33 +193,73 @@ export function View() {
         query: filterQueryString || undefined,
         page: 1,
         limit: urlLimit,
+        sort:
+          urlSortBy !== SITES_DEFAULT_SORT_BY ||
+          urlSortOrder !== SITES_DEFAULT_SORT_ORDER
+            ? encodeSort(urlSortBy, urlSortOrder)
+            : undefined,
       })
     }, 300)
     return () => {
       if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
     }
-  }, [searchInput, urlSearch, urlLimit, filterQueryString, isSitesIndex, navigate, projectId])
+  }, [
+    searchInput,
+    urlSearch,
+    urlLimit,
+    urlSortBy,
+    urlSortOrder,
+    filterQueryString,
+    isSitesIndex,
+    navigate,
+    projectId,
+  ])
 
   const navigateToSitesList = (params: SitesListSearch) => {
     const hasQueryKey = 'query' in params
     const hasSearchKey = 'search' in params
+    const hasSortKey = 'sort' in params
     navigate({
       to: '/projects/$projectId/sites',
       params: { projectId: projectId! },
       search: (prev: Record<string, unknown>) => {
         const built = buildListSearchParams({
           search: hasSearchKey ? params.search : (urlSearch ?? undefined),
-          query: hasQueryKey ? params.query : (filterQueryString || undefined),
+          query: hasQueryKey ? params.query : filterQueryString || undefined,
           page: params.page ?? 1,
           limit: params.limit ?? urlLimit,
+          sort: hasSortKey
+            ? params.sort
+            : urlSortBy !== SITES_DEFAULT_SORT_BY ||
+                urlSortOrder !== SITES_DEFAULT_SORT_ORDER
+              ? encodeSort(urlSortBy, urlSortOrder)
+              : undefined,
         })
         const next = { ...prev, ...built }
         if (hasQueryKey && params.query === undefined) delete next.query
-        if (hasSearchKey && (params.search === undefined || params.search === ''))
+        if (
+          hasSearchKey &&
+          (params.search === undefined || params.search === '')
+        )
           delete next.search
+        if (hasSortKey && params.sort === undefined) delete next.sort
         return next
       },
       replace: true,
+    })
+  }
+
+  const handleSitesSortChange = (sortBy: string, sortOrder: 'asc' | 'desc') => {
+    navigateToSitesList({
+      search: urlSearch ?? undefined,
+      query: filterQueryString || undefined,
+      page: 1,
+      limit: urlLimit,
+      sort:
+        sortBy !== SITES_DEFAULT_SORT_BY ||
+        sortOrder !== SITES_DEFAULT_SORT_ORDER
+          ? encodeSort(sortBy, sortOrder)
+          : undefined,
     })
   }
 
@@ -194,6 +271,11 @@ export function View() {
       query: mapToQueryParam(next) || undefined,
       page: 1,
       limit: urlLimit,
+      sort:
+        urlSortBy !== SITES_DEFAULT_SORT_BY ||
+        urlSortOrder !== SITES_DEFAULT_SORT_ORDER
+          ? encodeSort(urlSortBy, urlSortOrder)
+          : undefined,
     })
   }
 
@@ -205,6 +287,11 @@ export function View() {
       query: next.size > 0 ? mapToQueryParam(next) : undefined,
       page: 1,
       limit: urlLimit,
+      sort:
+        urlSortBy !== SITES_DEFAULT_SORT_BY ||
+        urlSortOrder !== SITES_DEFAULT_SORT_ORDER
+          ? encodeSort(urlSortBy, urlSortOrder)
+          : undefined,
     })
   }
 
@@ -214,6 +301,11 @@ export function View() {
       query: undefined,
       page: 1,
       limit: urlLimit,
+      sort:
+        urlSortBy !== SITES_DEFAULT_SORT_BY ||
+        urlSortOrder !== SITES_DEFAULT_SORT_ORDER
+          ? encodeSort(urlSortBy, urlSortOrder)
+          : undefined,
     })
     setFiltersOpen(false)
   }
@@ -259,6 +351,8 @@ export function View() {
     urlLimit,
     urlSearch ?? undefined,
     filterQueries,
+    urlSortBy,
+    urlSortOrder,
   )
 
   const {
@@ -271,6 +365,8 @@ export function View() {
     urlLimit,
     displayedSearch ?? undefined,
     displayedFilterQueries,
+    displayedSortBy,
+    displayedSortOrder,
   )
 
   useEffect(() => {
@@ -278,10 +374,14 @@ export function View() {
     const match =
       urlPage === displayedPage &&
       (urlSearch ?? '') === (displayedSearch ?? '') &&
-      filterQueryString === displayedFilterQueryString
+      filterQueryString === displayedFilterQueryString &&
+      urlSortBy === displayedSortBy &&
+      urlSortOrder === displayedSortOrder
     if (!match) {
       setDisplayedPage(urlPage)
       setDisplayedSearch(urlSearch ?? undefined)
+      setDisplayedSortBy(urlSortBy)
+      setDisplayedSortOrder(urlSortOrder)
       setDisplayedFilterQueryString(filterQueryString)
     }
   }, [
@@ -291,9 +391,13 @@ export function View() {
     sitesFetched,
     urlPage,
     urlSearch,
+    urlSortBy,
+    urlSortOrder,
     filterQueryString,
     displayedPage,
     displayedSearch,
+    displayedSortBy,
+    displayedSortOrder,
     displayedFilterQueryString,
   ])
 
@@ -301,8 +405,27 @@ export function View() {
   const showLoading = displayedLoading && apiSites.length === 0
 
   const { data: totalSitesData } = useQuery({
-    queryKey: ['sites', 'project', projectId, 0, urlLimit, undefined, undefined],
-    queryFn: () => fetchProjectSites(projectId!, 0, urlLimit, undefined, undefined),
+    queryKey: [
+      'sites',
+      'project',
+      projectId,
+      0,
+      urlLimit,
+      undefined,
+      undefined,
+      SITES_DEFAULT_SORT_BY,
+      SITES_DEFAULT_SORT_ORDER,
+    ],
+    queryFn: () =>
+      fetchProjectSites(
+        projectId!,
+        0,
+        urlLimit,
+        undefined,
+        undefined,
+        SITES_DEFAULT_SORT_BY,
+        SITES_DEFAULT_SORT_ORDER,
+      ),
     enabled: !!projectId,
     staleTime: 30 * 1000,
     refetchOnMount: false,
@@ -325,8 +448,7 @@ export function View() {
   const noCreatePermission = !canCreateSite(access, features)
   const sitesLimit = organizationPlan?.sites ?? 0
   const isCreateDisabled =
-    noCreatePermission ||
-    (sitesLimit > 0 && totalSitesCount >= sitesLimit)
+    noCreatePermission || (sitesLimit > 0 && totalSitesCount >= sitesLimit)
 
   useEffect(() => {
     setSelectedSites(new Set())
@@ -407,6 +529,11 @@ export function View() {
       query: filterQueryString || undefined,
       page,
       limit: urlLimit,
+      sort:
+        urlSortBy !== SITES_DEFAULT_SORT_BY ||
+        urlSortOrder !== SITES_DEFAULT_SORT_ORDER
+          ? encodeSort(urlSortBy, urlSortOrder)
+          : undefined,
     })
   }
 
@@ -419,6 +546,11 @@ export function View() {
       query: filterQueryString || undefined,
       page: 1,
       limit: newPageSize,
+      sort:
+        urlSortBy !== SITES_DEFAULT_SORT_BY ||
+        urlSortOrder !== SITES_DEFAULT_SORT_ORDER
+          ? encodeSort(urlSortBy, urlSortOrder)
+          : undefined,
     })
   }
 
@@ -481,14 +613,30 @@ export function View() {
             onApplyFilter={applyFilter}
             resourceLabel="sites"
             filterScope="sites"
-            onApplyQuery={(queryParam) =>
+            onApplyQuery={(queryParam, sortParam) =>
               navigateToSitesList({
                 search: urlSearch ?? undefined,
                 query: queryParam ?? undefined,
                 page: 1,
                 limit: urlLimit,
+                sort: sortParam ?? undefined,
               })
             }
+            sortBy={urlSortBy}
+            sortOrder={urlSortOrder}
+            onSortChange={handleSitesSortChange}
+            defaultSortParam={encodeSort(
+              SITES_DEFAULT_SORT_BY,
+              SITES_DEFAULT_SORT_ORDER,
+            )}
+            onReset={() => {
+              navigate({
+                to: '/projects/$projectId/sites',
+                params: { projectId: projectId! },
+                search: { page: 1, limit: urlLimit },
+                replace: true,
+              })
+            }}
             teamId={project?.teamId}
           />
         }
@@ -736,8 +884,12 @@ export function View() {
               icon={Globe}
               title="No sites yet"
               description="Create your first site to start deploying static sites"
-              isEmpty={!(urlSearch && urlSearch.length > 0) && filterMap.size === 0}
-              hasFilters={(urlSearch && urlSearch.length > 0) || filterMap.size > 0}
+              isEmpty={
+                !(urlSearch && urlSearch.length > 0) && filterMap.size === 0
+              }
+              hasFilters={
+                (urlSearch && urlSearch.length > 0) || filterMap.size > 0
+              }
               variant="card"
             />
           )

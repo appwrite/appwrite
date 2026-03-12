@@ -286,11 +286,17 @@ export function View({ initialData }: ViewProps = {}) {
                     {supportedLanguages.map(({ id, name }) => (
                       <Button
                         key={id}
-                        onClick={() => !noCreatePermission && setCreateDrawerOpen(true)}
+                        onClick={() =>
+                          !noCreatePermission && setCreateDrawerOpen(true)
+                        }
                         variant="outline"
                         size="lg"
                         disabled={noCreatePermission}
-                        title={noCreatePermission ? "You don't have permission to create API keys." : undefined}
+                        title={
+                          noCreatePermission
+                            ? "You don't have permission to create API keys."
+                            : undefined
+                        }
                       >
                         <LanguageIcon language={id} size="sm" />
                         <span>{name}</span>

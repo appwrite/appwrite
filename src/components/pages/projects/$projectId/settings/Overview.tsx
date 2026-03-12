@@ -626,9 +626,7 @@ export function ProjectSettingsOverview({
       {canWriteProjects && (
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
-            <h3 className="text-[15px] font-semibold text-foreground">
-              Name
-            </h3>
+            <h3 className="text-[15px] font-semibold text-foreground">Name</h3>
           </div>
           <div className="border-t border-border" />
           <div className="px-6 py-4">
@@ -737,122 +735,122 @@ export function ProjectSettingsOverview({
                 <div className="@[600px]:w-64 shrink-0">
                   <p className="text-[13px] text-muted-foreground">
                     Choose services you wish to enable or disable for the client
-                    API. When disabled, the services are not accessible to client
-                    SDKs but remain accessible to server SDKs.
+                    API. When disabled, the services are not accessible to
+                    client SDKs but remain accessible to server SDKs.
                   </p>
                 </div>
                 <div className="flex-1 min-w-0">
                   {/* Bulk Actions */}
                   <div className="flex items-center gap-2 mb-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 text-[12px]"
-                  disabled={anyServiceUpdating || allServicesEnabled}
-                  onClick={() => {
-                    // Open confirmation dialog for enable all
-                    // For now, directly update
-                    handleBulkServiceUpdate(true)
-                  }}
-                >
-                  Enable all
-                </Button>
-                <Separator orientation="vertical" className="h-4" />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 text-[12px]"
-                  disabled={anyServiceUpdating || allServicesDisabled}
-                  onClick={() => {
-                    // Open confirmation dialog for disable all
-                    // For now, directly update
-                    handleBulkServiceUpdate(false)
-                  }}
-                >
-                  Disable all
-                </Button>
-              </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 text-[12px]"
+                      disabled={anyServiceUpdating || allServicesEnabled}
+                      onClick={() => {
+                        // Open confirmation dialog for enable all
+                        // For now, directly update
+                        handleBulkServiceUpdate(true)
+                      }}
+                    >
+                      Enable all
+                    </Button>
+                    <Separator orientation="vertical" className="h-4" />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 text-[12px]"
+                      disabled={anyServiceUpdating || allServicesDisabled}
+                      onClick={() => {
+                        // Open confirmation dialog for disable all
+                        // For now, directly update
+                        handleBulkServiceUpdate(false)
+                      }}
+                    >
+                      Disable all
+                    </Button>
+                  </div>
 
-              {/* Service Cards */}
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {Object.entries(services)
-                  .filter(([service]) =>
-                    [
-                      'account',
-                      'avatars',
-                      'databases',
-                      'functions',
-                      'locale',
-                      'messaging',
-                      'storage',
-                      'teams',
-                      'users',
-                    ].includes(service),
-                  )
-                  .map(([service, enabled]) => {
-                    const serviceLabels: Record<string, string> = {
-                      account: 'Account',
-                      avatars: 'Avatars',
-                      databases: 'Databases',
-                      functions: 'Functions',
-                      locale: 'Locale',
-                      messaging: 'Messaging',
-                      storage: 'Storage',
-                      teams: 'Teams',
-                      users: 'Users',
-                    }
-                    const serviceIcons: Record<string, typeof User> = {
-                      account: User,
-                      avatars: UserCircle,
-                      databases: Database,
-                      functions: Zap,
-                      locale: Globe,
-                      messaging: MessageSquare,
-                      storage: Folder,
-                      teams: Building2,
-                      users: Users,
-                    }
-                    const Icon = serviceIcons[service] || User
-                    const isUpdating = updatingServices.has(service)
-                    return (
-                      <div
-                        key={service}
-                        className={cn(
-                          'rounded-lg border border-border bg-card/50 p-4 transition-colors',
-                          isUpdating && 'opacity-75',
-                          !isUpdating && 'hover:bg-card',
-                        )}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Icon className="h-4 w-4 text-muted-foreground" />
-                            <Label
-                              htmlFor={service}
-                              className="text-[13px] font-medium text-foreground cursor-pointer"
-                            >
-                              {serviceLabels[service] ||
-                                service.charAt(0).toUpperCase() +
-                                  service.slice(1)}
-                            </Label>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {isUpdating && (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                  {/* Service Cards */}
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {Object.entries(services)
+                      .filter(([service]) =>
+                        [
+                          'account',
+                          'avatars',
+                          'databases',
+                          'functions',
+                          'locale',
+                          'messaging',
+                          'storage',
+                          'teams',
+                          'users',
+                        ].includes(service),
+                      )
+                      .map(([service, enabled]) => {
+                        const serviceLabels: Record<string, string> = {
+                          account: 'Account',
+                          avatars: 'Avatars',
+                          databases: 'Databases',
+                          functions: 'Functions',
+                          locale: 'Locale',
+                          messaging: 'Messaging',
+                          storage: 'Storage',
+                          teams: 'Teams',
+                          users: 'Users',
+                        }
+                        const serviceIcons: Record<string, typeof User> = {
+                          account: User,
+                          avatars: UserCircle,
+                          databases: Database,
+                          functions: Zap,
+                          locale: Globe,
+                          messaging: MessageSquare,
+                          storage: Folder,
+                          teams: Building2,
+                          users: Users,
+                        }
+                        const Icon = serviceIcons[service] || User
+                        const isUpdating = updatingServices.has(service)
+                        return (
+                          <div
+                            key={service}
+                            className={cn(
+                              'rounded-lg border border-border bg-card/50 p-4 transition-colors',
+                              isUpdating && 'opacity-75',
+                              !isUpdating && 'hover:bg-card',
                             )}
-                            <Switch
-                              id={service}
-                              checked={enabled}
-                              onCheckedChange={(checked) =>
-                                handleServiceToggle(service, checked)
-                              }
-                              disabled={isUpdating}
-                            />
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Icon className="h-4 w-4 text-muted-foreground" />
+                                <Label
+                                  htmlFor={service}
+                                  className="text-[13px] font-medium text-foreground cursor-pointer"
+                                >
+                                  {serviceLabels[service] ||
+                                    service.charAt(0).toUpperCase() +
+                                      service.slice(1)}
+                                </Label>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {isUpdating && (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                                )}
+                                <Switch
+                                  id={service}
+                                  checked={enabled}
+                                  onCheckedChange={(checked) =>
+                                    handleServiceToggle(service, checked)
+                                  }
+                                  disabled={isUpdating}
+                                />
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    )
-                  })}
-              </div>
+                        )
+                      })}
+                  </div>
                 </div>
               </div>
             </div>

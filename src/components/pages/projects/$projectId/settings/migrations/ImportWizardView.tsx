@@ -125,20 +125,18 @@ export function ImportWizardView() {
   const [provider, setProvider] = useState<ImportProvider | null>(null)
   const [reportError, setReportError] = useState<string | null>(null)
   const [loadingReport, setLoadingReport] = useState(false)
-  const [reportData, setReportData] =
-    useState<Models.MigrationReport | null>(null)
-  const [resourceForm, setResourceForm] = useState<ResourceFormState>(
-    () => ({ ...INITIAL_RESOURCE_FORM }),
+  const [reportData, setReportData] = useState<Models.MigrationReport | null>(
+    null,
   )
+  const [resourceForm, setResourceForm] = useState<ResourceFormState>(() => ({
+    ...INITIAL_RESOURCE_FORM,
+  }))
 
   const [endpoint, setEndpoint] = useState('')
   const [projectID, setProjectID] = useState('')
   const [apiKey, setApiKey] = useState('')
 
-  const providers = useMemo(
-    () => getProviderOptions(isCloud),
-    [isCloud],
-  )
+  const providers = useMemo(() => getProviderOptions(isCloud), [isCloud])
 
   useEffect(() => {
     if (step === 1) {
@@ -186,18 +184,30 @@ export function ImportWizardView() {
   }
 
   function resourceFormToResources(): Resources[] {
-    const allowed =
-      supportsFunctions ? APPWRITE_RESOURCES
-      : provider === 'Firebase' ? FIREBASE_RESOURCES
-      : SUPABASE_NHOST_RESOURCES
+    const allowed = supportsFunctions
+      ? APPWRITE_RESOURCES
+      : provider === 'Firebase'
+        ? FIREBASE_RESOURCES
+        : SUPABASE_NHOST_RESOURCES
     const out: Resources[] = []
     if (resourceForm.users.root) out.push(Resources.User)
     if (resourceForm.databases.root) {
       if (supportsFunctions) {
-        out.push(Resources.Database, Resources.Table, Resources.Column, Resources.Index)
+        out.push(
+          Resources.Database,
+          Resources.Table,
+          Resources.Column,
+          Resources.Index,
+        )
         if (resourceForm.databases.rows) out.push(Resources.Row)
       } else {
-        out.push(Resources.Database, Resources.Collection, Resources.Attribute, Resources.Index, Resources.Document)
+        out.push(
+          Resources.Database,
+          Resources.Collection,
+          Resources.Attribute,
+          Resources.Index,
+          Resources.Document,
+        )
       }
     }
     if (resourceForm.storage.root) out.push(Resources.Bucket, Resources.File)
@@ -226,24 +236,41 @@ export function ImportWizardView() {
   const setGroupRoot = (group: ResourceGroupKey, value: boolean) => {
     setResourceForm((prev) => {
       const next = { ...prev }
-      if (group === 'users') next.users = { ...prev.users, root: value, teams: value }
-      else if (group === 'databases') next.databases = { ...prev.databases, root: value, rows: value }
+      if (group === 'users')
+        next.users = { ...prev.users, root: value, teams: value }
+      else if (group === 'databases')
+        next.databases = { ...prev.databases, root: value, rows: value }
       else if (group === 'storage') next.storage = { root: value }
-      else if (group === 'functions') next.functions = { ...prev.functions, root: value, env: value, inactive: value }
+      else if (group === 'functions')
+        next.functions = {
+          ...prev.functions,
+          root: value,
+          env: value,
+          inactive: value,
+        }
       return next
     })
   }
 
   const setGroupChild = (
     group: 'users' | 'databases' | 'functions',
-    child: keyof ResourceFormState['users'] | keyof ResourceFormState['databases'] | keyof ResourceFormState['functions'],
+    child:
+      | keyof ResourceFormState['users']
+      | keyof ResourceFormState['databases']
+      | keyof ResourceFormState['functions'],
     value: boolean,
   ) => {
     setResourceForm((prev) => {
       const next = { ...prev }
-      if (group === 'users' && (child === 'root' || child === 'teams')) next.users = { ...prev.users, [child]: value }
-      else if (group === 'databases' && (child === 'root' || child === 'rows')) next.databases = { ...prev.databases, [child]: value }
-      else if (group === 'functions' && (child === 'root' || child === 'env' || child === 'inactive')) next.functions = { ...prev.functions, [child]: value }
+      if (group === 'users' && (child === 'root' || child === 'teams'))
+        next.users = { ...prev.users, [child]: value }
+      else if (group === 'databases' && (child === 'root' || child === 'rows'))
+        next.databases = { ...prev.databases, [child]: value }
+      else if (
+        group === 'functions' &&
+        (child === 'root' || child === 'env' || child === 'inactive')
+      )
+        next.functions = { ...prev.functions, [child]: value }
       return next
     })
   }
@@ -253,10 +280,7 @@ export function ImportWizardView() {
     setReportError(null)
     setLoadingReport(true)
     try {
-      if (
-        provider === 'AppwriteSelfHosted' ||
-        provider === 'AppwriteCloud'
-      ) {
+      if (provider === 'AppwriteSelfHosted' || provider === 'AppwriteCloud') {
         if (!endpoint.trim() || !projectID.trim() || !apiKey.trim()) {
           toast.error('Please fill endpoint, project ID, and API key')
           return
@@ -305,7 +329,11 @@ export function ImportWizardView() {
           toast.error('Service account must be valid JSON')
           return
         }
-        const report = await fetchFirebaseReport(pid, { serviceAccount }, region)
+        const report = await fetchFirebaseReport(
+          pid,
+          { serviceAccount },
+          region,
+        )
         setReportData(report)
       } else if (provider === 'NHost') {
         if (
@@ -350,10 +378,7 @@ export function ImportWizardView() {
     }
     const resources = selectedResourcesList
     try {
-      if (
-        provider === 'AppwriteSelfHosted' ||
-        provider === 'AppwriteCloud'
-      ) {
+      if (provider === 'AppwriteSelfHosted' || provider === 'AppwriteCloud') {
         await createAppwrite.mutateAsync({
           resources,
           endpoint: endpoint.trim(),
@@ -390,9 +415,7 @@ export function ImportWizardView() {
         params: { projectId: pid },
       })
     } catch (e: unknown) {
-      toast.error(
-        e instanceof Error ? e.message : 'Failed to start migration',
-      )
+      toast.error(e instanceof Error ? e.message : 'Failed to start migration')
     }
   }
 
@@ -428,114 +451,114 @@ export function ImportWizardView() {
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {providers.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => {
-                setProvider(p.id)
-                setStep(2)
-              }}
-              className="flex w-full cursor-pointer items-center gap-3 rounded-xl border border-border bg-card/50 p-5 text-left transition-all hover:border-border/80 hover:bg-card/60"
-            >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground overflow-hidden">
-                {p.icon ? (
-                  <img
-                    src={p.icon}
-                    alt=""
-                    className={`h-5 w-5 object-contain ${PUBLIC_ICON_MUTED_CLASSES}`}
-                  />
-                ) : p.lucideIcon === 'zap' ? (
-                  <Zap className="h-5 w-5" />
-                ) : (
-                  <Database className="h-5 w-5" />
-                )}
-              </div>
-              <span className="text-[14px] font-medium text-foreground">
-                {p.label}
-              </span>
-            </button>
-          ))}
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => {
+                  setProvider(p.id)
+                  setStep(2)
+                }}
+                className="flex w-full cursor-pointer items-center gap-3 rounded-xl border border-border bg-card/50 p-5 text-left transition-all hover:border-border/80 hover:bg-card/60"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground overflow-hidden">
+                  {p.icon ? (
+                    <img
+                      src={p.icon}
+                      alt=""
+                      className={`h-5 w-5 object-contain ${PUBLIC_ICON_MUTED_CLASSES}`}
+                    />
+                  ) : p.lucideIcon === 'zap' ? (
+                    <Zap className="h-5 w-5" />
+                  ) : (
+                    <Database className="h-5 w-5" />
+                  )}
+                </div>
+                <span className="text-[14px] font-medium text-foreground">
+                  {p.label}
+                </span>
+              </button>
+            ))}
           </div>
         </>
       )}
 
       {step === 2 &&
         (provider === 'AppwriteSelfHosted' || provider === 'AppwriteCloud') && (
-        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-          <div className="px-6 py-4">
-            <h3 className="text-[15px] font-semibold text-foreground">
-              Credentials
-            </h3>
-            <p className="text-[12px] text-muted-foreground mt-1">
-              {provider === 'AppwriteSelfHosted'
-                ? 'Import from a self-hosted Appwrite instance. Enter the endpoint, project ID, and a server API key with read scopes for the resources you want to migrate.'
-                : 'Import from Appwrite Cloud. Enter the endpoint (with region), project ID, and a server API key with read scopes for the resources you want to migrate.'}
-            </p>
-          </div>
-          <div className="border-t border-border" />
-          <div className="px-6 py-4 space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="appwrite-endpoint" className="text-[13px]">
-                Endpoint
-              </Label>
-              <Input
-                id="appwrite-endpoint"
-                placeholder={
-                  provider === 'AppwriteSelfHosted'
-                    ? 'https://<YOUR_APPWRITE_HOSTNAME>/v1'
-                    : 'https://<region>.cloud.appwrite.io/v1'
-                }
-                value={endpoint}
-                onChange={(e) => setEndpoint(e.target.value)}
-                className="h-9 text-[13px]"
-              />
+          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+            <div className="px-6 py-4">
+              <h3 className="text-[15px] font-semibold text-foreground">
+                Credentials
+              </h3>
+              <p className="text-[12px] text-muted-foreground mt-1">
+                {provider === 'AppwriteSelfHosted'
+                  ? 'Import from a self-hosted Appwrite instance. Enter the endpoint, project ID, and a server API key with read scopes for the resources you want to migrate.'
+                  : 'Import from Appwrite Cloud. Enter the endpoint (with region), project ID, and a server API key with read scopes for the resources you want to migrate.'}
+              </p>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="appwrite-project-id" className="text-[13px]">
-                Project ID
-              </Label>
-              <Input
-                id="appwrite-project-id"
-                value={projectID}
-                onChange={(e) => setProjectID(e.target.value)}
-                placeholder="Source project ID"
-                className="h-9 text-[13px]"
-              />
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-1.5">
-                <Label htmlFor="appwrite-api-key" className="text-[13px]">
-                  API key
+            <div className="border-t border-border" />
+            <div className="px-6 py-4 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="appwrite-endpoint" className="text-[13px]">
+                  Endpoint
                 </Label>
-                <TooltipProvider delayDuration={0}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="max-w-[240px]">
-                      Server API key with read scopes for users, databases,
-                      storage, etc. The source project must be reachable from
-                      the internet.
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <Input
+                  id="appwrite-endpoint"
+                  placeholder={
+                    provider === 'AppwriteSelfHosted'
+                      ? 'https://<YOUR_APPWRITE_HOSTNAME>/v1'
+                      : 'https://<region>.cloud.appwrite.io/v1'
+                  }
+                  value={endpoint}
+                  onChange={(e) => setEndpoint(e.target.value)}
+                  className="h-9 text-[13px]"
+                />
               </div>
-              <Input
-                id="appwrite-api-key"
-                type="password"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="Server API key with read scopes"
-                className="h-9 text-[13px]"
-              />
+              <div className="space-y-2">
+                <Label htmlFor="appwrite-project-id" className="text-[13px]">
+                  Project ID
+                </Label>
+                <Input
+                  id="appwrite-project-id"
+                  value={projectID}
+                  onChange={(e) => setProjectID(e.target.value)}
+                  placeholder="Source project ID"
+                  className="h-9 text-[13px]"
+                />
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <Label htmlFor="appwrite-api-key" className="text-[13px]">
+                    API key
+                  </Label>
+                  <TooltipProvider delayDuration={0}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-[240px]">
+                        Server API key with read scopes for users, databases,
+                        storage, etc. The source project must be reachable from
+                        the internet.
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <Input
+                  id="appwrite-api-key"
+                  type="password"
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder="Server API key with read scopes"
+                  className="h-9 text-[13px]"
+                />
+              </div>
+              <p className="text-[11px] text-muted-foreground pt-1">
+                Migrations are non-destructive. $createdAt and $updatedAt may be
+                set to the migration date.
+              </p>
             </div>
-            <p className="text-[11px] text-muted-foreground pt-1">
-              Migrations are non-destructive. $createdAt and $updatedAt may be
-              set to the migration date.
-            </p>
           </div>
-        </div>
-      )}
+        )}
 
       {step === 2 && provider === 'Supabase' && (
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
@@ -545,9 +568,9 @@ export function ImportWizardView() {
             </h3>
             <p className="text-[12px] text-muted-foreground mt-1">
               In Supabase: <strong>Project Settings → Database</strong> (Host,
-              Port, Username, Password) and <strong>Project Settings → API</strong>{' '}
-              (Endpoint and API key). Use the <strong>service_role</strong> key
-              for the API key.
+              Port, Username, Password) and{' '}
+              <strong>Project Settings → API</strong> (Endpoint and API key).
+              Use the <strong>service_role</strong> key for the API key.
             </p>
           </div>
           <div className="border-t border-border" />
@@ -660,8 +683,8 @@ export function ImportWizardView() {
               />
             </div>
             <p className="text-[11px] text-muted-foreground pt-1">
-              Only Firestore is supported; Realtime Database is not. OAuth
-              users and functions are not migrated automatically.
+              Only Firestore is supported; Realtime Database is not. OAuth users
+              and functions are not migrated automatically.
             </p>
           </div>
         </div>
@@ -674,10 +697,10 @@ export function ImportWizardView() {
               Credentials
             </h3>
             <p className="text-[12px] text-muted-foreground mt-1">
-              Find these in your NHost project: <strong>Environment
-              variables</strong> (Region, Subdomain, Admin Secret) and{' '}
-              <strong>Database settings</strong> (Database name, Username,
-              Password). Admin Secret is used for files.
+              Find these in your NHost project:{' '}
+              <strong>Environment variables</strong> (Region, Subdomain, Admin
+              Secret) and <strong>Database settings</strong> (Database name,
+              Username, Password). Admin Secret is used for files.
             </p>
           </div>
           <div className="border-t border-border" />
@@ -780,8 +803,8 @@ export function ImportWizardView() {
           <p className="text-[13px] text-muted-foreground">
             Choose which resources to migrate. You do not need to keep the
             Console open; the migration continues in the background. After
-            migrating, add platforms in Overview → Integrations → Platforms
-            and set permissions on migrated resources.
+            migrating, add platforms in Overview → Integrations → Platforms and
+            set permissions on migrated resources.
           </p>
           {reportError && (
             <Alert variant="destructive">
@@ -791,10 +814,20 @@ export function ImportWizardView() {
           {!reportError && (
             <>
               <div className="flex gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={selectAll}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={selectAll}
+                >
                   Select all
                 </Button>
-                <Button type="button" variant="outline" size="sm" onClick={selectNone}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={selectNone}
+                >
                   Deselect all
                 </Button>
               </div>
@@ -830,7 +863,12 @@ export function ImportWizardView() {
                   }
                   if (group === 'users') {
                     return (
-                      <Accordion key={group} type="single" collapsible className="rounded-lg border border-border bg-card/50">
+                      <Accordion
+                        key={group}
+                        type="single"
+                        collapsible
+                        className="rounded-lg border border-border bg-card/50"
+                      >
                         <AccordionItem value="users" className="border-none">
                           <AccordionTrigger className="px-4 py-3 hover:no-underline [&[data-state=open]]:rounded-b-none">
                             <div className="flex items-center gap-3 text-left">
@@ -841,7 +879,9 @@ export function ImportWizardView() {
                                 }
                                 onClick={(e) => e.stopPropagation()}
                               />
-                              <span className="text-[13px] font-medium">Users</span>
+                              <span className="text-[13px] font-medium">
+                                Users
+                              </span>
                               <span className="text-[12px] text-muted-foreground tabular-nums">
                                 {countLabel}
                               </span>
@@ -856,12 +896,16 @@ export function ImportWizardView() {
                                   setGroupChild('users', 'teams', v === true)
                                 }
                               />
-                              <Label htmlFor="users-teams" className="cursor-pointer text-[13px] font-normal">
+                              <Label
+                                htmlFor="users-teams"
+                                className="cursor-pointer text-[13px] font-normal"
+                              >
                                 Include teams
                               </Label>
                             </div>
                             <p className="mt-1 pl-6 text-[11px] text-muted-foreground">
-                              Import all teams and the team memberships of your users.
+                              Import all teams and the team memberships of your
+                              users.
                             </p>
                           </AccordionContent>
                         </AccordionItem>
@@ -870,8 +914,16 @@ export function ImportWizardView() {
                   }
                   if (group === 'databases') {
                     return (
-                      <Accordion key={group} type="single" collapsible className="rounded-lg border border-border bg-card/50">
-                        <AccordionItem value="databases" className="border-none">
+                      <Accordion
+                        key={group}
+                        type="single"
+                        collapsible
+                        className="rounded-lg border border-border bg-card/50"
+                      >
+                        <AccordionItem
+                          value="databases"
+                          className="border-none"
+                        >
                           <AccordionTrigger className="px-4 py-3 hover:no-underline [&[data-state=open]]:rounded-b-none">
                             <div className="flex items-center gap-3 text-left">
                               <Checkbox
@@ -881,7 +933,9 @@ export function ImportWizardView() {
                                 }
                                 onClick={(e) => e.stopPropagation()}
                               />
-                              <span className="text-[13px] font-medium">Databases</span>
+                              <span className="text-[13px] font-medium">
+                                Databases
+                              </span>
                               <span className="text-[12px] text-muted-foreground tabular-nums">
                                 {countLabel}
                               </span>
@@ -896,7 +950,10 @@ export function ImportWizardView() {
                                   setGroupChild('databases', 'rows', v === true)
                                 }
                               />
-                              <Label htmlFor="databases-rows" className="cursor-pointer text-[13px] font-normal">
+                              <Label
+                                htmlFor="databases-rows"
+                                className="cursor-pointer text-[13px] font-normal"
+                              >
                                 Include rows
                               </Label>
                             </div>
@@ -910,8 +967,16 @@ export function ImportWizardView() {
                   }
                   if (group === 'functions') {
                     return (
-                      <Accordion key={group} type="single" collapsible className="rounded-lg border border-border bg-card/50">
-                        <AccordionItem value="functions" className="border-none">
+                      <Accordion
+                        key={group}
+                        type="single"
+                        collapsible
+                        className="rounded-lg border border-border bg-card/50"
+                      >
+                        <AccordionItem
+                          value="functions"
+                          className="border-none"
+                        >
                           <AccordionTrigger className="px-4 py-3 hover:no-underline [&[data-state=open]]:rounded-b-none">
                             <div className="flex items-center gap-3 text-left">
                               <Checkbox
@@ -921,7 +986,9 @@ export function ImportWizardView() {
                                 }
                                 onClick={(e) => e.stopPropagation()}
                               />
-                              <span className="text-[13px] font-medium">Functions</span>
+                              <span className="text-[13px] font-medium">
+                                Functions
+                              </span>
                               <span className="text-[12px] text-muted-foreground tabular-nums">
                                 {countLabel}
                               </span>
@@ -936,7 +1003,10 @@ export function ImportWizardView() {
                                   setGroupChild('functions', 'env', v === true)
                                 }
                               />
-                              <Label htmlFor="functions-env" className="cursor-pointer text-[13px] font-normal">
+                              <Label
+                                htmlFor="functions-env"
+                                className="cursor-pointer text-[13px] font-normal"
+                              >
                                 Include environment variables
                               </Label>
                             </div>
@@ -948,15 +1018,23 @@ export function ImportWizardView() {
                                 id="functions-inactive"
                                 checked={resourceForm.functions.inactive}
                                 onCheckedChange={(v) =>
-                                  setGroupChild('functions', 'inactive', v === true)
+                                  setGroupChild(
+                                    'functions',
+                                    'inactive',
+                                    v === true,
+                                  )
                                 }
                               />
-                              <Label htmlFor="functions-inactive" className="cursor-pointer text-[13px] font-normal">
+                              <Label
+                                htmlFor="functions-inactive"
+                                className="cursor-pointer text-[13px] font-normal"
+                              >
                                 Include inactive deployments
                               </Label>
                             </div>
                             <p className="pl-6 text-[11px] text-muted-foreground">
-                              Import all deployments that are not currently active.
+                              Import all deployments that are not currently
+                              active.
                             </p>
                           </AccordionContent>
                         </AccordionItem>

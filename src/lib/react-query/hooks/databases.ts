@@ -1114,8 +1114,7 @@ export async function updateProjectTableColumn(
     newKey,
   } = data
   // Explicit boolean so API receives true/false, not undefined
-  const encrypt =
-    typeof data.encrypt === 'boolean' ? data.encrypt : false
+  const encrypt = typeof data.encrypt === 'boolean' ? data.encrypt : false
 
   // Call the appropriate update method based on column type
   switch (type) {
@@ -1486,8 +1485,17 @@ export function databasesQueryOptions(
   filterQueries?: string[],
 ) {
   return queryOptions({
-    queryKey: ['databases', 'project', projectId, page, limit, search, filterQueries],
-    queryFn: () => fetchProjectDatabases(projectId!, page, limit, search, filterQueries),
+    queryKey: [
+      'databases',
+      'project',
+      projectId,
+      page,
+      limit,
+      search,
+      filterQueries,
+    ],
+    queryFn: () =>
+      fetchProjectDatabases(projectId!, page, limit, search, filterQueries),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false, // Don't retry on error
@@ -1644,8 +1652,7 @@ export function tableColumnsQueryOptions(
   page: number = 0,
   limit: number = COLUMNS_INDEXES_DEFAULT_PAGE_SIZE,
 ) {
-  const hasFilters =
-    filterQueries !== undefined && filterQueries.length > 0
+  const hasFilters = filterQueries !== undefined && filterQueries.length > 0
   return queryOptions({
     queryKey: [
       'columns',
@@ -1717,8 +1724,7 @@ export function tableIndexesQueryOptions(
   page: number = 0,
   limit: number = COLUMNS_INDEXES_DEFAULT_PAGE_SIZE,
 ) {
-  const hasFilters =
-    filterQueries !== undefined && filterQueries.length > 0
+  const hasFilters = filterQueries !== undefined && filterQueries.length > 0
   return queryOptions({
     queryKey: [
       'indexes',
@@ -1800,7 +1806,9 @@ export function useProjectDatabases(
     isFetched,
     error,
     refetch,
-  } = useQuery(databasesQueryOptions(projectId, page, limit, search, filterQueries))
+  } = useQuery(
+    databasesQueryOptions(projectId, page, limit, search, filterQueries),
+  )
 
   // Map databases to our Database type
   const databases = useMemo(() => {

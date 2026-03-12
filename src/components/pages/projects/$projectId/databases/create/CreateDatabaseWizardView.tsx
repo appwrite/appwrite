@@ -44,7 +44,12 @@ const DB_TYPE_OPTIONS: DbTypeChoice[] = [
     label: 'Tables DB',
     description:
       'Relational-style database with tables, columns, and indexes. Ideal for structured data and complex queries.',
-    tags: ['Relational data', 'CRUD apps', 'Structured schemas', 'SQL-like queries'],
+    tags: [
+      'Relational data',
+      'CRUD apps',
+      'Structured schemas',
+      'SQL-like queries',
+    ],
     icon: 'table',
   },
   {
@@ -52,7 +57,13 @@ const DB_TYPE_OPTIONS: DbTypeChoice[] = [
     label: 'Documents DB',
     description:
       'Document-based storage with flexible schemas. Store JSON documents and query with filters and full-text search.',
-    tags: ['JSON documents', 'Flexible schema', 'Content apps', 'Catalogs', 'Logs'],
+    tags: [
+      'JSON documents',
+      'Flexible schema',
+      'Content apps',
+      'Catalogs',
+      'Logs',
+    ],
     icon: 'braces',
   },
   {
@@ -97,11 +108,16 @@ export function CreateDatabaseWizardView() {
   const selectableSpecs = useMemo(() => {
     if (isTablesDB) {
       return SPEC_OPTIONS.map((s) =>
-        s.id === 'shared' ? { ...s, comingSoon: false } : { ...s, comingSoon: true },
+        s.id === 'shared'
+          ? { ...s, comingSoon: false }
+          : { ...s, comingSoon: true },
       )
     }
     // DocumentsDB / VectorsDB: only dedicated tiers, no Shared DB
-    return SPEC_OPTIONS.filter((s) => s.id !== 'shared').map((s) => ({ ...s, comingSoon: false }))
+    return SPEC_OPTIONS.filter((s) => s.id !== 'shared').map((s) => ({
+      ...s,
+      comingSoon: false,
+    }))
   }, [isTablesDB])
 
   const selectedSpec = useMemo(
@@ -114,7 +130,10 @@ export function CreateDatabaseWizardView() {
       createProjectDatabase(pid, data),
     onSuccess: () => {
       toast.success('Database created')
-      navigate({ to: '/projects/$projectId/databases', params: { projectId: pid } })
+      navigate({
+        to: '/projects/$projectId/databases',
+        params: { projectId: pid },
+      })
     },
     onError: (error) => {
       toast.error(getErrorMessage(error) || 'Failed to create database')
@@ -137,9 +156,11 @@ export function CreateDatabaseWizardView() {
   }
 
   const isCreatePending = createMutation.isPending
-  const showNameForm = selectedSpec && (!isTablesDB || selectedSpec.id === 'shared')
+  const showNameForm =
+    selectedSpec && (!isTablesDB || selectedSpec.id === 'shared')
 
-  const canCreate = showNameForm && dbType === 'TablesDB' && name.trim().length > 0
+  const canCreate =
+    showNameForm && dbType === 'TablesDB' && name.trim().length > 0
   const footer = (
     <div className="flex w-full justify-end">
       <Button
@@ -195,7 +216,9 @@ export function CreateDatabaseWizardView() {
                 placeholder="Leave blank to auto-generate"
               />
               {errors.databaseId && (
-                <p className="text-[12px] text-destructive">{errors.databaseId}</p>
+                <p className="text-[12px] text-destructive">
+                  {errors.databaseId}
+                </p>
               )}
             </div>
           </div>
@@ -207,7 +230,8 @@ export function CreateDatabaseWizardView() {
             Choose database type
           </h2>
           <p className="text-[13px] text-muted-foreground mb-4">
-            Choose the database type that best fits your use case. You can add more databases later.
+            Choose the database type that best fits your use case. You can add
+            more databases later.
           </p>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             {DB_TYPE_OPTIONS.map((opt) => (
@@ -220,7 +244,8 @@ export function CreateDatabaseWizardView() {
                 }}
                 className={cn(
                   'flex w-full cursor-pointer flex-col items-stretch gap-3 rounded-xl border border-border bg-card/50 p-5 text-left transition-all hover:border-border/80 hover:bg-card/60',
-                  dbType === opt.id && 'border-primary ring-1 ring-primary/20 hover:border-primary',
+                  dbType === opt.id &&
+                    'border-primary ring-1 ring-primary/20 hover:border-primary',
                 )}
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
@@ -238,10 +263,16 @@ export function CreateDatabaseWizardView() {
                     </Badge>
                   )}
                 </span>
-                <p className="text-[12px] text-muted-foreground">{opt.description}</p>
+                <p className="text-[12px] text-muted-foreground">
+                  {opt.description}
+                </p>
                 <div className="flex flex-wrap gap-1.5">
                   {opt.tags.map((tag) => (
-                    <Badge key={tag} variant="info" className="text-[10px] shrink-0">
+                    <Badge
+                      key={tag}
+                      variant="info"
+                      className="text-[10px] shrink-0"
+                    >
                       {tag}
                     </Badge>
                   ))}
@@ -262,7 +293,9 @@ export function CreateDatabaseWizardView() {
             </p>
             <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 mb-4">
               <p className="text-[13px] font-medium text-foreground">
-                Each organization includes <span className="font-semibold">$10 of compute credits</span> for database usage every month.
+                Each organization includes{' '}
+                <span className="font-semibold">$10 of compute credits</span>{' '}
+                for database usage every month.
               </p>
             </div>
             <div className="rounded-xl border border-border bg-card overflow-hidden">
@@ -291,7 +324,9 @@ export function CreateDatabaseWizardView() {
                   </TableHeader>
                   <TableBody>
                     {selectableSpecs.map((spec) => {
-                      const locked = isTablesDB ? spec.id !== 'shared' : !!spec.comingSoon
+                      const locked = isTablesDB
+                        ? spec.id !== 'shared'
+                        : !!spec.comingSoon
                       const isSelected = selectedSpec?.id === spec.id
                       return (
                         <TableRow
@@ -301,7 +336,9 @@ export function CreateDatabaseWizardView() {
                             locked && 'opacity-60',
                             !locked && 'cursor-pointer',
                             !locked && !isSelected && 'hover:bg-muted/40',
-                            isSelected && !locked && 'bg-primary/5 hover:bg-primary/5',
+                            isSelected &&
+                              !locked &&
+                              'bg-primary/5 hover:bg-primary/5',
                           )}
                           onClick={() => !locked && setSpecId(spec.id)}
                         >
@@ -325,7 +362,10 @@ export function CreateDatabaseWizardView() {
                           </TableCell>
                           <TableCell className="px-4 py-3.5 text-right">
                             {locked ? (
-                              <Badge variant="inactive" className="text-[10px] shrink-0">
+                              <Badge
+                                variant="inactive"
+                                className="text-[10px] shrink-0"
+                              >
                                 Coming soon
                               </Badge>
                             ) : (

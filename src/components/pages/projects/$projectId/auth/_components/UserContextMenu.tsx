@@ -146,7 +146,9 @@ export function UserContextMenu({
                   Copy name
                 </ContextMenuItem>
               )}
-              <ContextMenuItem onSelect={() => copyToClipboard('Link', userHref)}>
+              <ContextMenuItem
+                onSelect={() => copyToClipboard('Link', userHref)}
+              >
                 <ContextMenuIcon icon={Link2} />
                 Copy link
               </ContextMenuItem>
@@ -154,17 +156,15 @@ export function UserContextMenu({
                 onSelect={() =>
                   copyToClipboard(
                     'JSON',
-                    toPrettyJson(
-                      {
-                        id: user.$id,
-                        name: user.name ?? null,
-                        email: user.email ?? null,
-                        phone: user.phone ?? null,
-                        status: user.status ?? null,
-                        emailVerification: user.emailVerification ?? null,
-                        phoneVerification: user.phoneVerification ?? null,
-                      },
-                    ),
+                    toPrettyJson({
+                      id: user.$id,
+                      name: user.name ?? null,
+                      email: user.email ?? null,
+                      phone: user.phone ?? null,
+                      status: user.status ?? null,
+                      emailVerification: user.emailVerification ?? null,
+                      phoneVerification: user.phoneVerification ?? null,
+                    }),
                   )
                 }
               >
@@ -174,22 +174,16 @@ export function UserContextMenu({
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuSeparator />
-          <ContextMenuItem
-            onSelect={() => openInNewTab(userHref)}
-          >
+          <ContextMenuItem onSelect={() => openInNewTab(userHref)}>
             <ContextMenuIcon icon={ExternalLink} />
             Open in new tab
           </ContextMenuItem>
-          <ContextMenuItem
-            onSelect={() => openInNewWindow(userHref)}
-          >
+          <ContextMenuItem onSelect={() => openInNewWindow(userHref)}>
             <ContextMenuIcon icon={Square} />
             Open in new window
           </ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem
-            onSelect={handleDeleteClick}
-          >
+          <ContextMenuItem onSelect={handleDeleteClick}>
             <ContextMenuIcon icon={Trash2} />
             Delete
           </ContextMenuItem>

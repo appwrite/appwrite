@@ -11,12 +11,17 @@ import {
 import {
   useOrganizationDomains,
   fetchOrganizationDomains,
+  DOMAINS_DEFAULT_SORT_BY,
+  DOMAINS_DEFAULT_SORT_ORDER,
 } from '@/lib/react-query/hooks'
 import {
   getSearch,
   getPage,
   getLimit,
   getQueryParam,
+  getSort,
+  parseSort,
+  encodeSort,
   queryParamToMap,
   mapToQueryParam,
   buildListSearchParams,
@@ -64,6 +69,7 @@ type DomainsListSearch = {
   query?: string
   page?: number
   limit?: number
+  sort?: string
 }
 
 export function View() {
@@ -75,20 +81,38 @@ export function View() {
 
   const isDomainsIndex =
     location.pathname.replace(/\/$/, '') === `/organizations/${orgId}/domains`
+  const defaultDomainsSort = {
+    sortBy: DOMAINS_DEFAULT_SORT_BY,
+    sortOrder: DOMAINS_DEFAULT_SORT_ORDER as 'asc' | 'desc',
+  }
   const domainsListParams = useMemo(() => {
     if (!isDomainsIndex || typeof search !== 'object') return null
-    const url = new URL(location.pathname + location.search, window.location.origin)
+    const url = new URL(
+      location.pathname + location.search,
+      window.location.origin,
+    )
+    const parsed =
+      parseSort(search.sort as string | undefined) ??
+      getSort(url) ??
+      defaultDomainsSort
     return {
       search: getSearch(url) ?? (search.search as string | undefined),
       page: getPage(url, 1),
       limit: getLimit(url, DEFAULT_PAGE_SIZE),
-      filterMap: queryParamToMap(getQueryParam(url) ?? (search.query as string | undefined) ?? null),
+      filterMap: queryParamToMap(
+        getQueryParam(url) ?? (search.query as string | undefined) ?? null,
+      ),
+      sortBy: parsed.sortBy,
+      sortOrder: parsed.sortOrder,
     }
   }, [isDomainsIndex, search, location.pathname, location.search, orgId])
 
   const urlPage = domainsListParams?.page ?? 1
   const urlLimit = domainsListParams?.limit ?? DEFAULT_PAGE_SIZE
   const urlSearch = domainsListParams?.search
+  const urlSortBy = domainsListParams?.sortBy ?? DOMAINS_DEFAULT_SORT_BY
+  const urlSortOrder =
+    domainsListParams?.sortOrder ?? DOMAINS_DEFAULT_SORT_ORDER
   const filterMap = domainsListParams?.filterMap ?? new Map()
   const filterQueries =
     filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
@@ -100,6 +124,12 @@ export function View() {
   const [displayedPage, setDisplayedPage] = useState(1)
   const [displayedSearch, setDisplayedSearch] = useState<string | undefined>(
     undefined,
+  )
+  const [displayedSortBy, setDisplayedSortBy] = useState(
+    DOMAINS_DEFAULT_SORT_BY,
+  )
+  const [displayedSortOrder, setDisplayedSortOrder] = useState<'asc' | 'desc'>(
+    DOMAINS_DEFAULT_SORT_ORDER,
   )
   const [displayedFilterQueryString, setDisplayedFilterQueryString] =
     useState('')
@@ -132,10 +162,20 @@ export function View() {
     if (!hasInitedDisplayedRef.current) {
       setDisplayedPage(urlPage)
       setDisplayedSearch(urlSearch ?? undefined)
+      setDisplayedSortBy(urlSortBy)
+      setDisplayedSortOrder(urlSortOrder)
       setDisplayedFilterQueryString(filterQueryString)
       hasInitedDisplayedRef.current = true
     }
-  }, [isDomainsIndex, domainsListParams, urlPage, urlSearch, filterQueryString])
+  }, [
+    isDomainsIndex,
+    domainsListParams,
+    urlPage,
+    urlSearch,
+    urlSortBy,
+    urlSortOrder,
+    filterQueryString,
+  ])
 
   useEffect(() => {
     if (!isDomainsIndex) return
@@ -149,33 +189,76 @@ export function View() {
         query: filterQueryString || undefined,
         page: 1,
         limit: urlLimit,
+        sort:
+          urlSortBy !== DOMAINS_DEFAULT_SORT_BY ||
+          urlSortOrder !== DOMAINS_DEFAULT_SORT_ORDER
+            ? encodeSort(urlSortBy, urlSortOrder)
+            : undefined,
       })
     }, 300)
     return () => {
       if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
     }
-  }, [searchInput, urlSearch, urlLimit, filterQueryString, isDomainsIndex, navigate, orgId])
+  }, [
+    searchInput,
+    urlSearch,
+    urlLimit,
+    urlSortBy,
+    urlSortOrder,
+    filterQueryString,
+    isDomainsIndex,
+    navigate,
+    orgId,
+  ])
 
   const navigateToDomainsList = (params: DomainsListSearch) => {
     const hasQueryKey = 'query' in params
     const hasSearchKey = 'search' in params
+    const hasSortKey = 'sort' in params
     navigate({
       to: '/organizations/$orgId/domains',
       params: { orgId: orgId! },
       search: (prev: Record<string, unknown>) => {
         const built = buildListSearchParams({
           search: hasSearchKey ? params.search : (urlSearch ?? undefined),
-          query: hasQueryKey ? params.query : (filterQueryString || undefined),
+          query: hasQueryKey ? params.query : filterQueryString || undefined,
           page: params.page ?? 1,
           limit: params.limit ?? urlLimit,
+          sort: hasSortKey
+            ? params.sort
+            : urlSortBy !== DOMAINS_DEFAULT_SORT_BY ||
+                urlSortOrder !== DOMAINS_DEFAULT_SORT_ORDER
+              ? encodeSort(urlSortBy, urlSortOrder)
+              : undefined,
         })
         const next = { ...prev, ...built }
         if (hasQueryKey && params.query === undefined) delete next.query
-        if (hasSearchKey && (params.search === undefined || params.search === ''))
+        if (
+          hasSearchKey &&
+          (params.search === undefined || params.search === '')
+        )
           delete next.search
+        if (hasSortKey && params.sort === undefined) delete next.sort
         return next
       },
       replace: true,
+    })
+  }
+
+  const handleDomainsSortChange = (
+    sortBy: string,
+    sortOrder: 'asc' | 'desc',
+  ) => {
+    navigateToDomainsList({
+      search: urlSearch ?? undefined,
+      query: filterQueryString || undefined,
+      page: 1,
+      limit: urlLimit,
+      sort:
+        sortBy !== DOMAINS_DEFAULT_SORT_BY ||
+        sortOrder !== DOMAINS_DEFAULT_SORT_ORDER
+          ? encodeSort(sortBy, sortOrder)
+          : undefined,
     })
   }
 
@@ -187,6 +270,11 @@ export function View() {
       query: mapToQueryParam(next) || undefined,
       page: 1,
       limit: urlLimit,
+      sort:
+        urlSortBy !== DOMAINS_DEFAULT_SORT_BY ||
+        urlSortOrder !== DOMAINS_DEFAULT_SORT_ORDER
+          ? encodeSort(urlSortBy, urlSortOrder)
+          : undefined,
     })
   }
 
@@ -198,6 +286,11 @@ export function View() {
       query: next.size > 0 ? mapToQueryParam(next) : undefined,
       page: 1,
       limit: urlLimit,
+      sort:
+        urlSortBy !== DOMAINS_DEFAULT_SORT_BY ||
+        urlSortOrder !== DOMAINS_DEFAULT_SORT_ORDER
+          ? encodeSort(urlSortBy, urlSortOrder)
+          : undefined,
     })
   }
 
@@ -207,6 +300,11 @@ export function View() {
       query: undefined,
       page: 1,
       limit: urlLimit,
+      sort:
+        urlSortBy !== DOMAINS_DEFAULT_SORT_BY ||
+        urlSortOrder !== DOMAINS_DEFAULT_SORT_ORDER
+          ? encodeSort(urlSortBy, urlSortOrder)
+          : undefined,
     })
     setFiltersOpen(false)
   }
@@ -222,6 +320,8 @@ export function View() {
     urlLimit,
     urlSearch ?? undefined,
     filterQueries,
+    urlSortBy,
+    urlSortOrder,
   )
 
   const {
@@ -234,17 +334,24 @@ export function View() {
     urlLimit,
     displayedSearch ?? undefined,
     displayedFilterQueries,
+    displayedSortBy,
+    displayedSortOrder,
   )
 
   useEffect(() => {
-    if (!isDomainsIndex || domainsFetching || domainsLoading || !domainsFetched) return
+    if (!isDomainsIndex || domainsFetching || domainsLoading || !domainsFetched)
+      return
     const match =
       urlPage === displayedPage &&
       (urlSearch ?? '') === (displayedSearch ?? '') &&
-      filterQueryString === displayedFilterQueryString
+      filterQueryString === displayedFilterQueryString &&
+      urlSortBy === displayedSortBy &&
+      urlSortOrder === displayedSortOrder
     if (!match) {
       setDisplayedPage(urlPage)
       setDisplayedSearch(urlSearch ?? undefined)
+      setDisplayedSortBy(urlSortBy)
+      setDisplayedSortOrder(urlSortOrder)
       setDisplayedFilterQueryString(filterQueryString)
     }
   }, [
@@ -254,9 +361,13 @@ export function View() {
     domainsFetched,
     urlPage,
     urlSearch,
+    urlSortBy,
+    urlSortOrder,
     filterQueryString,
     displayedPage,
     displayedSearch,
+    displayedSortBy,
+    displayedSortOrder,
     displayedFilterQueryString,
   ])
 
@@ -344,6 +455,11 @@ export function View() {
       query: filterQueryString || undefined,
       page,
       limit: urlLimit,
+      sort:
+        urlSortBy !== DOMAINS_DEFAULT_SORT_BY ||
+        urlSortOrder !== DOMAINS_DEFAULT_SORT_ORDER
+          ? encodeSort(urlSortBy, urlSortOrder)
+          : undefined,
     })
   }
 
@@ -356,6 +472,11 @@ export function View() {
       query: filterQueryString || undefined,
       page: 1,
       limit: newPageSize,
+      sort:
+        urlSortBy !== DOMAINS_DEFAULT_SORT_BY ||
+        urlSortOrder !== DOMAINS_DEFAULT_SORT_ORDER
+          ? encodeSort(urlSortBy, urlSortOrder)
+          : undefined,
     })
   }
 
@@ -442,19 +563,39 @@ export function View() {
             onApplyFilter={applyFilter}
             resourceLabel="domains"
             filterScope="organizations.domains"
-            onApplyQuery={(queryParam) =>
+            onApplyQuery={(queryParam, sortParam) =>
               navigateToDomainsList({
                 search: urlSearch ?? undefined,
                 query: queryParam ?? undefined,
                 page: 1,
                 limit: urlLimit,
+                sort: sortParam ?? undefined,
               })
             }
+            sortBy={urlSortBy}
+            sortOrder={urlSortOrder}
+            onSortChange={handleDomainsSortChange}
+            defaultSortParam={encodeSort(
+              DOMAINS_DEFAULT_SORT_BY,
+              DOMAINS_DEFAULT_SORT_ORDER,
+            )}
+            onReset={() => {
+              navigate({
+                to: '/organizations/$orgId/domains',
+                params: { orgId: orgId! },
+                search: { page: 1, limit: urlLimit },
+                replace: true,
+              })
+            }}
             teamId={orgId}
           />
         </div>
         <div className="ml-auto flex items-center gap-2">
-          <Button variant="outline" asChild className="h-9 gap-1.5 text-[13px] font-medium">
+          <Button
+            variant="outline"
+            asChild
+            className="h-9 gap-1.5 text-[13px] font-medium"
+          >
             <Link
               to="/organizations/$orgId/domains/buy"
               params={{ orgId: orgId! }}

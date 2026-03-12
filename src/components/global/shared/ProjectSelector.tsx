@@ -37,7 +37,10 @@ export interface ProjectSelectorProps {
   /** Called when a project is selected (used when getProjectLink is not provided) */
   onSelectProject?: (projectId: string) => void
   /** When provided, items render as links for client-side navigation (avoids layout shift) */
-  getProjectLink?: (projectId: string) => { to: string; params: Record<string, string> }
+  getProjectLink?: (projectId: string) => {
+    to: string
+    params: Record<string, string>
+  }
   /** Placeholder for the trigger button */
   placeholder?: string
   /** Max projects to fetch per request */
@@ -74,12 +77,7 @@ export function ProjectSelector({
   }, [open])
 
   const { data, isFetching } = useQuery({
-    ...activeProjectsQueryOptions(
-      orgTeamId,
-      0,
-      limit,
-      debouncedSearch,
-    ),
+    ...activeProjectsQueryOptions(orgTeamId, 0, limit, debouncedSearch),
     enabled: !!orgTeamId && open,
     placeholderData: keepPreviousData,
   })

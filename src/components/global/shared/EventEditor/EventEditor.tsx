@@ -37,7 +37,9 @@ export function EventEditor({
   const [copied, setCopied] = useState(false)
 
   const handleConfirm = () => {
-    const str = builder.customMode ? builder.customInput.trim() : builder.eventString
+    const str = builder.customMode
+      ? builder.customInput.trim()
+      : builder.eventString
     if (str && builder.isValid) {
       onCreated(str)
       onOpenChange(false)
@@ -57,7 +59,9 @@ export function EventEditor({
   const actions = builder.selection.resource
     ? getResourceActions(builder.selection.service!, builder.selection.resource)
     : getActions(builder.selection.service!)
-  const selectedAction = actions.find((a) => a.name === builder.selection.action)
+  const selectedAction = actions.find(
+    (a) => a.name === builder.selection.action,
+  )
   const showResourceRow = resources.length > 0
   const showActionRow = builder.selection.service
   const showAttributeRow =
@@ -94,7 +98,11 @@ export function EventEditor({
                 autoFocus
               />
               <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={builder.cancelCustom}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={builder.cancelCustom}
+                >
                   Cancel
                 </Button>
                 <Button
@@ -157,9 +165,7 @@ export function EventEditor({
                   projectId={projectId}
                   type="team"
                   value={builder.selection.teamId ?? '*'}
-                  onSelect={(v) =>
-                    builder.setTeamId(v === '*' ? undefined : v)
-                  }
+                  onSelect={(v) => builder.setTeamId(v === '*' ? undefined : v)}
                   placeholder="All teams"
                 />
               )}
@@ -169,9 +175,7 @@ export function EventEditor({
                   projectId={projectId}
                   type="user"
                   value={builder.selection.userId ?? '*'}
-                  onSelect={(v) =>
-                    builder.setUserId(v === '*' ? undefined : v)
-                  }
+                  onSelect={(v) => builder.setUserId(v === '*' ? undefined : v)}
                   placeholder="All users"
                 />
               )}
@@ -449,7 +453,9 @@ function PillRow({
           <button
             key={opt}
             type="button"
-            onClick={() => onSelect(opt === value ? (optional ? null : opt) : opt)}
+            onClick={() =>
+              onSelect(opt === value ? (optional ? null : opt) : opt)
+            }
             className={cn(
               'rounded-md border px-2.5 py-1 text-[12px] font-medium transition-colors',
               value === opt

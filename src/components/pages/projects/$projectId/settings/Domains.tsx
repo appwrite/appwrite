@@ -119,7 +119,6 @@ export function Domains({
     return status === 'created' || status === 'unverified'
   }
 
-
   // Filter rules by search
   const filteredRules = useMemo(() => {
     if (!searchValueProp.trim()) return rules
@@ -230,54 +229,62 @@ export function Domains({
                               size="sm"
                               className="h-8 w-8 p-0"
                             >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          {rule.status !== 'verified' && (
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {rule.status !== 'verified' && (
+                              <DropdownMenuItem
+                                onClick={() => handleViewLogs(rule)}
+                              >
+                                <FileText className="mr-2 h-4 w-4" />
+                                View logs
+                              </DropdownMenuItem>
+                            )}
+                            {canRetry(rule.status) && (
+                              <DropdownMenuItem
+                                onClick={() => handleRetry(rule)}
+                              >
+                                <RefreshCw className="mr-2 h-4 w-4" />
+                                Retry
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem
-                              onClick={() => handleViewLogs(rule)}
+                              onClick={() => {
+                                const apex = getApexDomain(rule.domain)
+                                const orgDomainId = apex
+                                  ? apexToOrgDomainId.get(apex.toLowerCase())
+                                  : undefined
+                                if (project?.teamId && orgDomainId) {
+                                  navigate({
+                                    to: '/organizations/$orgId/domains/$domainId',
+                                    params: {
+                                      orgId: project.teamId,
+                                      domainId: orgDomainId,
+                                    },
+                                  })
+                                }
+                              }}
+                              disabled={
+                                !project?.teamId ||
+                                !getApexDomain(rule.domain) ||
+                                !apexToOrgDomainId.has(
+                                  getApexDomain(rule.domain)?.toLowerCase() ??
+                                    '',
+                                )
+                              }
                             >
                               <FileText className="mr-2 h-4 w-4" />
-                              View logs
+                              DNS Records
                             </DropdownMenuItem>
-                          )}
-                          {canRetry(rule.status) && (
-                            <DropdownMenuItem onClick={() => handleRetry(rule)}>
-                              <RefreshCw className="mr-2 h-4 w-4" />
-                              Retry
+                            <DropdownMenuItem
+                              onClick={() => handleDelete(rule)}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
                             </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem
-                            onClick={() => {
-                              const apex = getApexDomain(rule.domain)
-                              const orgDomainId = apex
-                                ? apexToOrgDomainId.get(apex.toLowerCase())
-                                : undefined
-                              if (project?.teamId && orgDomainId) {
-                                navigate({
-                                  to: '/organizations/$orgId/domains/$domainId',
-                                  params: { orgId: project.teamId, domainId: orgDomainId },
-                                })
-                              }
-                            }}
-                            disabled={
-                              !project?.teamId ||
-                              !getApexDomain(rule.domain) ||
-                              !apexToOrgDomainId.has(
-                                getApexDomain(rule.domain)?.toLowerCase() ?? '',
-                              )
-                            }
-                          >
-                            <FileText className="mr-2 h-4 w-4" />
-                            DNS Records
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDelete(rule)}>
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </TableCell>
                   </TableRow>

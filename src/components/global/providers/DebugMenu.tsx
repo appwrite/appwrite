@@ -140,7 +140,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     const profileOptions: MenuItem[] = [
       {
         label: 'Cloud',
-        description: 'Full feature set (billing, domains, usage, activity, org roles, system status, account MFA, account identities)',
+        description:
+          'Full feature set (billing, domains, usage, activity, org roles, system status, account MFA, account identities)',
         onClick: () => {
           setIsOpen(false)
           // Defer profile change so popover unmounts before app re-renders (avoids removeChild DOM error)
@@ -238,7 +239,8 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           },
           {
             label: 'Success team card',
-            description: 'Show the success team card on organization overview (custom plans).',
+            description:
+              'Show the success team card on organization overview (custom plans).',
             variant: 'switch' as const,
             switchValue: overrides.showSuccessTeamCard,
             switchOnChange: (checked: boolean) => {
@@ -258,7 +260,12 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           {
             label: 'Console profile',
             description: CONSOLE_PROFILES[profileId].description,
-            icon: profileId === 'cloud' ? <Cloud className="h-3 w-3" /> : <Server className="h-3 w-3" />,
+            icon:
+              profileId === 'cloud' ? (
+                <Cloud className="h-3 w-3" />
+              ) : (
+                <Server className="h-3 w-3" />
+              ),
             submenu: profileOptions,
           },
           {
@@ -268,20 +275,36 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             submenu: [
               {
                 label: 'Dedicated DBs support (global)',
-                description: 'Use fullscreen create wizard and show spec upgrade for supported DB types.',
+                description:
+                  'Use fullscreen create wizard and show spec upgrade for supported DB types.',
                 variant: 'switch' as const,
                 switchValue: features.dedicatedDbsSupport,
                 switchOnChange: (checked: boolean) => {
-                  setTimeout(() => setDebugProfileFeatureOverride('dedicatedDbsSupport', checked), 0)
+                  setTimeout(
+                    () =>
+                      setDebugProfileFeatureOverride(
+                        'dedicatedDbsSupport',
+                        checked,
+                      ),
+                    0,
+                  )
                 },
               },
               {
                 label: 'Dedicated DBs: Tables DB',
-                description: 'Spec selector in wizard and "Upgrade database specs" in rows view.',
+                description:
+                  'Spec selector in wizard and "Upgrade database specs" in rows view.',
                 variant: 'switch' as const,
                 switchValue: features.dedicatedDbsTablesDB,
                 switchOnChange: (checked: boolean) => {
-                  setTimeout(() => setDebugProfileFeatureOverride('dedicatedDbsTablesDB', checked), 0)
+                  setTimeout(
+                    () =>
+                      setDebugProfileFeatureOverride(
+                        'dedicatedDbsTablesDB',
+                        checked,
+                      ),
+                    0,
+                  )
                 },
               },
               {
@@ -290,7 +313,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 variant: 'switch' as const,
                 switchValue: features.dedicatedDbsDocumentsDB,
                 switchOnChange: (checked: boolean) => {
-                  setTimeout(() => setDebugProfileFeatureOverride('dedicatedDbsDocumentsDB', checked), 0)
+                  setTimeout(
+                    () =>
+                      setDebugProfileFeatureOverride(
+                        'dedicatedDbsDocumentsDB',
+                        checked,
+                      ),
+                    0,
+                  )
                 },
               },
               {
@@ -299,16 +329,31 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 variant: 'switch' as const,
                 switchValue: features.dedicatedDbsVectorsDB,
                 switchOnChange: (checked: boolean) => {
-                  setTimeout(() => setDebugProfileFeatureOverride('dedicatedDbsVectorsDB', checked), 0)
+                  setTimeout(
+                    () =>
+                      setDebugProfileFeatureOverride(
+                        'dedicatedDbsVectorsDB',
+                        checked,
+                      ),
+                    0,
+                  )
                 },
               },
               {
                 label: 'Console user verification',
-                description: 'Require email verification after signup; redirect to verify-email page on cloud.',
+                description:
+                  'Require email verification after signup; redirect to verify-email page on cloud.',
                 variant: 'switch' as const,
                 switchValue: features.userVerification,
                 switchOnChange: (checked: boolean) => {
-                  setTimeout(() => setDebugProfileFeatureOverride('userVerification', checked), 0)
+                  setTimeout(
+                    () =>
+                      setDebugProfileFeatureOverride(
+                        'userVerification',
+                        checked,
+                      ),
+                    0,
+                  )
                 },
               },
             ],
@@ -318,22 +363,30 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
               ? 'Use env var'
               : endpointPreset === 'custom' && endpointCustomUrl
                 ? `Custom: ${endpointCustomUrl.replace(/\/v1\/?$/, '')}`
-                : endpointPreset !== 'custom' && ENDPOINT_PRESETS[endpointPreset as keyof typeof ENDPOINT_PRESETS]
-                  ? ENDPOINT_PRESETS[endpointPreset as keyof typeof ENDPOINT_PRESETS].label
+                : endpointPreset !== 'custom' &&
+                    ENDPOINT_PRESETS[
+                      endpointPreset as keyof typeof ENDPOINT_PRESETS
+                    ]
+                  ? ENDPOINT_PRESETS[
+                      endpointPreset as keyof typeof ENDPOINT_PRESETS
+                    ].label
                   : endpointPreset
             const endpointOptions: MenuItem[] = [
-              ...(Object.entries(ENDPOINT_PRESETS) as [keyof typeof ENDPOINT_PRESETS, (typeof ENDPOINT_PRESETS)[keyof typeof ENDPOINT_PRESETS]][]).map(
-                ([id, { label, description }]) => ({
-                  label,
-                  description,
-                  onClick: () => {
-                    setIsOpen(false)
-                    setTimeout(() => setDebugEndpointOverride(id), 0)
-                  },
-                  active: endpointPreset === id,
-                  icon: <Globe className="h-3 w-3" />,
-                }),
-              ),
+              ...(
+                Object.entries(ENDPOINT_PRESETS) as [
+                  keyof typeof ENDPOINT_PRESETS,
+                  (typeof ENDPOINT_PRESETS)[keyof typeof ENDPOINT_PRESETS],
+                ][]
+              ).map(([id, { label, description }]) => ({
+                label,
+                description,
+                onClick: () => {
+                  setIsOpen(false)
+                  setTimeout(() => setDebugEndpointOverride(id), 0)
+                },
+                active: endpointPreset === id,
+                icon: <Globe className="h-3 w-3" />,
+              })),
               {
                 label: 'Custom...',
                 description: 'Enter a custom API URL',
@@ -517,7 +570,10 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             </div>
           </div>
 
-          <div className="overflow-y-auto p-3" style={{ maxHeight: 'calc(85vh - 52px)' }}>
+          <div
+            className="overflow-y-auto p-3"
+            style={{ maxHeight: 'calc(85vh - 52px)' }}
+          >
             {currentSubmenu ? (
               <nav className="space-y-0.5" aria-label={currentSubmenu.title}>
                 {currentSubmenu.items.map((item, itemIndex) =>
@@ -553,7 +609,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                       }`}
                     >
                       {item.icon && (
-                        <span className="flex-shrink-0 text-[#9B87F5]">{item.icon}</span>
+                        <span className="flex-shrink-0 text-[#9B87F5]">
+                          {item.icon}
+                        </span>
                       )}
                       <span className="flex-1">
                         <span className="block font-medium">{item.label}</span>
@@ -631,9 +689,13 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                             }`}
                           >
                             {item.icon && (
-                              <span className="flex-shrink-0 text-[#9B87F5]">{item.icon}</span>
+                              <span className="flex-shrink-0 text-[#9B87F5]">
+                                {item.icon}
+                              </span>
                             )}
-                            <span className="flex-1 font-medium">{item.label}</span>
+                            <span className="flex-1 font-medium">
+                              {item.label}
+                            </span>
                             {item.badge !== undefined && (
                               <span className="flex-shrink-0 rounded-full bg-[#9B87F5]/30 px-2 py-0.5 text-[11px] font-medium text-[#9B87F5]">
                                 {item.badge}

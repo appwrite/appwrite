@@ -320,7 +320,8 @@ export function pinnedProjectsQueryOptions(
   orgId: string | null | undefined,
   projectIds: string[],
 ) {
-  const idsKey = projectIds.length > 0 ? projectIds.slice().sort().join(',') : ''
+  const idsKey =
+    projectIds.length > 0 ? projectIds.slice().sort().join(',') : ''
   return queryOptions({
     queryKey: ['projects', 'pinned', orgId, idsKey],
     queryFn: () => fetchProjectsByIds(orgId!, projectIds),
@@ -531,13 +532,7 @@ export function useProjectsForTeamInfinite(
       excludeKey,
     ],
     queryFn: ({ pageParam = 0 }) =>
-      fetchActiveProjects(
-        teamId!,
-        pageParam,
-        limit,
-        search,
-        excludeProjectIds,
-      ),
+      fetchActiveProjects(teamId!, pageParam, limit, search, excludeProjectIds),
     enabled: !!teamId,
     staleTime: DEFAULT_STALE_TIME,
     placeholderData: keepPreviousData,
@@ -826,7 +821,10 @@ export function platformQueryOptions(
       if (!projectId || !platformId) {
         throw new Error('Project ID and Platform ID are required')
       }
-      return await sdk.forConsole.projects.getPlatform({ projectId, platformId })
+      return await sdk.forConsole.projects.getPlatform({
+        projectId,
+        platformId,
+      })
     },
     enabled: !!projectId && !!platformId,
     staleTime: LONG_STALE_TIME,

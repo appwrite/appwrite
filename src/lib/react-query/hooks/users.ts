@@ -54,9 +54,7 @@ export async function fetchProjectUsers(
 
   const projectSdk = sdk.forProject(projectId)
   const orderQuery =
-    sortOrder === 'asc'
-      ? Query.orderAsc(sortBy)
-      : Query.orderDesc(sortBy)
+    sortOrder === 'asc' ? Query.orderAsc(sortBy) : Query.orderDesc(sortBy)
   const queries = [
     ...(filterQueries ?? []),
     orderQuery,
@@ -242,9 +240,27 @@ export function usersQueryOptions(
   sortOrder: 'asc' | 'desc' = USERS_DEFAULT_SORT_ORDER,
 ) {
   return queryOptions({
-    queryKey: ['users', 'project', projectId, page, limit, search, filterQueries, sortBy, sortOrder],
+    queryKey: [
+      'users',
+      'project',
+      projectId,
+      page,
+      limit,
+      search,
+      filterQueries,
+      sortBy,
+      sortOrder,
+    ],
     queryFn: () =>
-      fetchProjectUsers(projectId!, page, limit, search, filterQueries, sortBy, sortOrder),
+      fetchProjectUsers(
+        projectId!,
+        page,
+        limit,
+        search,
+        filterQueries,
+        sortBy,
+        sortOrder,
+      ),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false, // Don't retry on error
@@ -271,7 +287,15 @@ export function teamsQueryOptions(
   filterQueries?: string[],
 ) {
   return queryOptions({
-    queryKey: ['teams', 'project', projectId, page, limit, search, filterQueries],
+    queryKey: [
+      'teams',
+      'project',
+      projectId,
+      page,
+      limit,
+      search,
+      filterQueries,
+    ],
     queryFn: () =>
       fetchProjectTeams(projectId!, page, limit, search, filterQueries),
     enabled: !!projectId,
@@ -319,7 +343,15 @@ export function useProjectUsers(
     error,
     refetch,
   } = useQuery(
-    usersQueryOptions(projectId, page, limit, search, filterQueries, sortBy, sortOrder),
+    usersQueryOptions(
+      projectId,
+      page,
+      limit,
+      search,
+      filterQueries,
+      sortBy,
+      sortOrder,
+    ),
   )
 
   // Map users to our User type

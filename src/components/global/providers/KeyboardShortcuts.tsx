@@ -207,10 +207,18 @@ export function KeyboardShortcutsProvider({
         navigateToSection('sites')
       },
       ...(features.activity
-        ? { 'g l': () => { navigateToSection('activity') } }
+        ? {
+            'g l': () => {
+              navigateToSection('activity')
+            },
+          }
         : {}),
       ...(features.usageStats
-        ? { 'g u': () => { navigateToSection('usage') } }
+        ? {
+            'g u': () => {
+              navigateToSection('usage')
+            },
+          }
         : {}),
       'g ,': () => {
         navigateToSection('settings')

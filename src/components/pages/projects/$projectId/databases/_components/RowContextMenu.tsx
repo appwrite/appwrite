@@ -241,9 +241,7 @@ export function RowContextMenu({
             Duplicate
           </ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem
-            onSelect={handleOpenInNewTab}
-          >
+          <ContextMenuItem onSelect={handleOpenInNewTab}>
             <span className="flex h-4 w-4 shrink-0 items-center justify-center">
               <ExternalLink className="size-4" />
             </span>
@@ -292,7 +290,6 @@ export function RowContextMenu({
           </div>
         </DialogContent>
       </Dialog>
-
     </>
   )
 }

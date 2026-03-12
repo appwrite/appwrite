@@ -40,7 +40,10 @@ export function Migrations({ projectId, initialData }: MigrationsProps) {
   const [selectedMigrationId, setSelectedMigrationId] = useState<string | null>(
     null,
   )
-  const { migrations, total, isLoading } = useProjectMigrations(projectId, region)
+  const { migrations, total, isLoading } = useProjectMigrations(
+    projectId,
+    region,
+  )
   const detailsOpen = selectedMigrationId !== null
   // Use hook data when available; otherwise use prefetched initialData so first paint has content
   const effectiveMigrations =
@@ -62,7 +65,12 @@ export function Migrations({ projectId, initialData }: MigrationsProps) {
       }
     > = {
       completed: { label: 'Complete', variant: 'success' },
-      processing: { label: 'Processing', variant: 'processing', icon: Loader2, spin: true },
+      processing: {
+        label: 'Processing',
+        variant: 'processing',
+        icon: Loader2,
+        spin: true,
+      },
       failed: { label: 'Failed', variant: 'error' },
       pending: { label: 'Pending', variant: 'warning' },
     }
@@ -74,10 +82,7 @@ export function Migrations({ projectId, initialData }: MigrationsProps) {
     const Icon = config.icon
 
     return (
-      <Badge
-        variant={config.variant}
-        className="text-[10px] shrink-0 gap-1.5"
-      >
+      <Badge variant={config.variant} className="text-[10px] shrink-0 gap-1.5">
         {Icon && (
           <Icon className={cn('h-3 w-3', config.spin && 'animate-spin')} />
         )}
@@ -205,7 +210,6 @@ export function Migrations({ projectId, initialData }: MigrationsProps) {
           </Table>
         </div>
       )}
-
 
       {selectedMigrationId && selectedMigration && (
         <MigrationDetailsDrawer

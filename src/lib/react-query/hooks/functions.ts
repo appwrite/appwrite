@@ -27,6 +27,9 @@ import { Dependencies } from './dependencies'
 // QUERY FUNCTIONS
 // ============================================================================
 
+export const FUNCTIONS_DEFAULT_SORT_BY = '$createdAt'
+export const FUNCTIONS_DEFAULT_SORT_ORDER = 'desc' as const
+
 /**
  * Query function to fetch functions for a project
  *
@@ -44,15 +47,19 @@ export async function fetchProjectFunctions(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
   filterQueries?: string[],
+  sortBy: string = FUNCTIONS_DEFAULT_SORT_BY,
+  sortOrder: 'asc' | 'desc' = FUNCTIONS_DEFAULT_SORT_ORDER,
 ) {
   if (!projectId) {
     return { functions: [], total: 0 }
   }
 
   const projectSdk = sdk.forProject(projectId)
+  const orderQuery =
+    sortOrder === 'asc' ? Query.orderAsc(sortBy) : Query.orderDesc(sortBy)
   const queries = [
     ...(filterQueries ?? []),
-    Query.orderDesc('$createdAt'),
+    orderQuery,
     Query.limit(limit),
     Query.offset(page * limit),
   ]
@@ -397,10 +404,31 @@ export function functionsQueryOptions(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
   filterQueries?: string[],
+  sortBy: string = FUNCTIONS_DEFAULT_SORT_BY,
+  sortOrder: 'asc' | 'desc' = FUNCTIONS_DEFAULT_SORT_ORDER,
 ) {
   return queryOptions({
-    queryKey: ['functions', 'project', projectId, page, limit, search, filterQueries],
-    queryFn: () => fetchProjectFunctions(projectId!, page, limit, search, filterQueries),
+    queryKey: [
+      'functions',
+      'project',
+      projectId,
+      page,
+      limit,
+      search,
+      filterQueries,
+      sortBy,
+      sortOrder,
+    ],
+    queryFn: () =>
+      fetchProjectFunctions(
+        projectId!,
+        page,
+        limit,
+        search,
+        filterQueries,
+        sortBy,
+        sortOrder,
+      ),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false, // Don't retry on error
@@ -470,8 +498,7 @@ export function functionDeploymentsQueryOptions(
   limit: number = DEFAULT_PAGE_SIZE,
   filterQueries?: string[],
 ) {
-  const hasFilters =
-    filterQueries !== undefined && filterQueries.length > 0
+  const hasFilters = filterQueries !== undefined && filterQueries.length > 0
   return queryOptions({
     queryKey: [
       'deployments',
@@ -513,8 +540,7 @@ export function functionExecutionsQueryOptions(
   limit: number = DEFAULT_PAGE_SIZE,
   filterQueries?: string[],
 ) {
-  const hasFilters =
-    filterQueries !== undefined && filterQueries.length > 0
+  const hasFilters = filterQueries !== undefined && filterQueries.length > 0
   return queryOptions({
     queryKey: [
       'executions',
@@ -557,8 +583,7 @@ export function functionDomainsQueryOptions(
   search?: string,
   filterQueries?: string[],
 ) {
-  const hasFilters =
-    filterQueries !== undefined && filterQueries.length > 0
+  const hasFilters = filterQueries !== undefined && filterQueries.length > 0
   return queryOptions({
     queryKey: [
       'proxy-rules',
@@ -706,6 +731,8 @@ export function useProjectFunctions(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
   filterQueries?: string[],
+  sortBy: string = FUNCTIONS_DEFAULT_SORT_BY,
+  sortOrder: 'asc' | 'desc' = FUNCTIONS_DEFAULT_SORT_ORDER,
 ) {
   const {
     data: functionsData,
@@ -714,7 +741,17 @@ export function useProjectFunctions(
     isFetched,
     error,
     refetch,
-  } = useQuery(functionsQueryOptions(projectId, page, limit, search, filterQueries))
+  } = useQuery(
+    functionsQueryOptions(
+      projectId,
+      page,
+      limit,
+      search,
+      filterQueries,
+      sortBy,
+      sortOrder,
+    ),
+  )
 
   const functions = useMemo(() => {
     if (!functionsData || !('functions' in functionsData)) return []
@@ -1000,8 +1037,7 @@ export function useFunctionDeploymentProxyRules(
     functionId,
     deploymentId,
   )
-  const enabled =
-    (options?.enabled !== false) && baseOptions.enabled !== false
+  const enabled = options?.enabled !== false && baseOptions.enabled !== false
 
   const { data, isLoading, error, refetch } = useQuery({
     ...baseOptions,
@@ -1258,9 +1294,8 @@ export function useCreateFunctionDomainRule(
         if (!redirectUrl?.trim() || !statusCode) {
           throw new Error('Redirect URL and status code are required')
         }
-        const { ProxyResourceType, StatusCode } = await import(
-          '@appwrite.io/console'
-        )
+        const { ProxyResourceType, StatusCode } =
+          await import('@appwrite.io/console')
         const codeMap: Record<
           string,
           (typeof StatusCode)[keyof typeof StatusCode]

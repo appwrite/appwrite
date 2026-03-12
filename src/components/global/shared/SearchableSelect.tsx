@@ -55,7 +55,11 @@ export function SearchableSelect({
   const [open, setOpen] = useState(false)
   const selectedLabel = items.find((i) => i.value === value)?.label ?? ''
   const displayText =
-    value && selectedLabel ? selectedLabel : showPlaceholderWhenEmpty ? placeholder : ''
+    value && selectedLabel
+      ? selectedLabel
+      : showPlaceholderWhenEmpty
+        ? placeholder
+        : ''
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -76,11 +80,17 @@ export function SearchableSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className={cn('z-[200] w-[var(--radix-popover-trigger-width)] p-0', contentClassName)}
+        className={cn(
+          'z-[200] w-[var(--radix-popover-trigger-width)] p-0',
+          contentClassName,
+        )}
         align="start"
       >
         <Command>
-          <CommandInput placeholder={searchPlaceholder} className="h-9 text-[13px]" />
+          <CommandInput
+            placeholder={searchPlaceholder}
+            className="h-9 text-[13px]"
+          />
           <CommandList className="max-h-[240px]">
             <CommandEmpty className="py-4 text-center text-[13px] text-muted-foreground">
               {emptyMessage}

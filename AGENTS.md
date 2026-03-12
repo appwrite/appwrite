@@ -962,28 +962,28 @@ Follow the modal structure pattern above. For no-content modals, skip content se
 
 ## Quick Reference
 
-| Task                   | Pattern                                                                                                                                                               |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Fetch data             | Extract query function, use in hook + route loader                                                                                                                    |
-| Pagination             | requestedPage + displayedPage; use displayed data/total for list and Pagination until new page loads                                                                  |
-| Filters                | FiltersPopover + URL `query`; `placeholderData: keepPreviousData` on list query; no loading state when filters change; different empty state for "no items" vs "no results for filters" (see "Filters (table/list)") |
-| Delete resource        | Use `refetchQueries` (not `invalidateQueries`) in onSuccess so list updates without reload                                                                            |
-| Create resource        | Form resets and closes dialog on success                                                                                                                              |
-| Update resource        | Use "Update" terminology, not "Edit"                                                                                                                                  |
-| Button during action   | Keep text, use `disabled` state                                                                                                                                       |
-| Unavailable action     | Disable button with tooltip, don't hide                                                                                                                               |
-| Text buttons           | No tooltip when button has a text label (tooltips only for icon-only buttons)                                                                                        |
-| Service avatar         | `bg-muted text-muted-foreground` (never colored)                                                                                                                      |
-| Badge style            | Use status variants (`error`, `warning`, `success`, `info`) for same design; `text-[10px] shrink-0` when inline with text                                             |
-| Icon spacing           | `mr-1.5` or `gap-1.5`                                                                                                                                                 |
-| Date display           | Always include DateTooltip                                                                                                                                            |
-| Route prefetch         | All crucial data at route level                                                                                                                                       |
-| Detail page (no flash) | Loader returns data; route passes `initialData` to View; View uses `initialData` for first paint (see "Detail page: no loading flash")                                |
-| Models types           | Always `Models.*` from `@appwrite.io/console`                                                                                                                         |
-| Table header           | `hover:bg-transparent border-b border-border` on row, `px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider` on head                    |
-| Actions column         | Never use "Actions" as title—use empty `TableHead`                                                                                                                     |
-| Table cells            | `px-4 py-3` on all cells (preserve special padding like `pl-6 sm:pl-8` where needed)                                                                                  |
-| Long-running progress  | One panel per scope; flat list of cards (no wrapper per type); same card style + ProgressBarRow; per-card dismiss; auto-action only on status transition to completed |
+| Task                   | Pattern                                                                                                                                                                                                                                   |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fetch data             | Extract query function, use in hook + route loader                                                                                                                                                                                        |
+| Pagination             | requestedPage + displayedPage; use displayed data/total for list and Pagination until new page loads                                                                                                                                      |
+| Filters                | FiltersPopover + URL `query`; `placeholderData: keepPreviousData` on list query; no loading state when filters change; different empty state for "no items" vs "no results for filters" (see "Filters (table/list)")                      |
+| Delete resource        | Use `refetchQueries` (not `invalidateQueries`) in onSuccess so list updates without reload                                                                                                                                                |
+| Create resource        | Form resets and closes dialog on success                                                                                                                                                                                                  |
+| Update resource        | Use "Update" terminology, not "Edit"                                                                                                                                                                                                      |
+| Button during action   | Keep text, use `disabled` state                                                                                                                                                                                                           |
+| Unavailable action     | Disable button with tooltip, don't hide                                                                                                                                                                                                   |
+| Text buttons           | No tooltip when button has a text label (tooltips only for icon-only buttons)                                                                                                                                                             |
+| Service avatar         | `bg-muted text-muted-foreground` (never colored)                                                                                                                                                                                          |
+| Badge style            | Use status variants (`error`, `warning`, `success`, `info`) for same design; `text-[10px] shrink-0` when inline with text                                                                                                                 |
+| Icon spacing           | `mr-1.5` or `gap-1.5`                                                                                                                                                                                                                     |
+| Date display           | Always include DateTooltip                                                                                                                                                                                                                |
+| Route prefetch         | All crucial data at route level                                                                                                                                                                                                           |
+| Detail page (no flash) | Loader returns data; route passes `initialData` to View; View uses `initialData` for first paint (see "Detail page: no loading flash")                                                                                                    |
+| Models types           | Always `Models.*` from `@appwrite.io/console`                                                                                                                                                                                             |
+| Table header           | `hover:bg-transparent border-b border-border` on row, `px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider` on head                                                                                        |
+| Actions column         | Never use "Actions" as title—use empty `TableHead`                                                                                                                                                                                        |
+| Table cells            | `px-4 py-3` on all cells (preserve special padding like `pl-6 sm:pl-8` where needed)                                                                                                                                                      |
+| Long-running progress  | One panel per scope; flat list of cards (no wrapper per type); same card style + ProgressBarRow; per-card dismiss; auto-action only on status transition to completed                                                                     |
 | RBAC (roles)           | Use **feature check methods** from `@/lib/console-access-checks` only; never check `access.isOwner` or `access.canWrite*` directly. Use `canAccess*` from `console-rbac-loader` in route loaders. See "Role-based access control (RBAC)". |
 
 ---
@@ -993,6 +993,7 @@ Follow the modal structure pattern above. For no-content modals, skip content se
 Profiles control which features are available based on deployment type (cloud vs self-hosted).
 
 **Profiles:**
+
 - **Cloud** (default): Full feature set – billing, domains, usage stats, activity, org roles, system status, account MFA, account identities, **user verification** (redirect to verify-email page after signup)
 - **Self-hosted**: Cloud-only features disabled (user verification off; signup redirects directly to console)
 
@@ -1017,14 +1018,14 @@ Access is driven by **organization roles and scopes** when the Console profile h
 
 ### Key files and hooks
 
-| File / hook | Purpose |
-|-------------|--------|
-| `src/lib/console-roles.ts` | `ConsoleAccess` type, `deriveAccessFromRolesScopes`, `FULL_ACCESS` when roles disabled |
-| `src/lib/console-access-checks.ts` | **Single source of truth** for all permission checks. Use these functions in UI and routes; **never** check `access.isOwner`, `access.canWrite*`, etc. directly. |
-| `src/lib/console-rbac-loader.ts` | Async `canAccess*` helpers for **route loaders** (delegate to `console-access-checks` internally) |
-| `useOrganizationScopes(organizationId)` | Returns `{ access: ConsoleAccess, ... }`; pass `access` and `features` into functions from `console-access-checks` |
-| `useProject(projectId)` | Returns `project` (includes `teamId`) so you can pass `project?.teamId` to `useOrganizationScopes` |
-| `useConsoleProfile()` | Returns `features`; pass to `console-access-checks` functions that need `orgRoles` or other flags |
+| File / hook                             | Purpose                                                                                                                                                          |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/lib/console-roles.ts`              | `ConsoleAccess` type, `deriveAccessFromRolesScopes`, `FULL_ACCESS` when roles disabled                                                                           |
+| `src/lib/console-access-checks.ts`      | **Single source of truth** for all permission checks. Use these functions in UI and routes; **never** check `access.isOwner`, `access.canWrite*`, etc. directly. |
+| `src/lib/console-rbac-loader.ts`        | Async `canAccess*` helpers for **route loaders** (delegate to `console-access-checks` internally)                                                                |
+| `useOrganizationScopes(organizationId)` | Returns `{ access: ConsoleAccess, ... }`; pass `access` and `features` into functions from `console-access-checks`                                               |
+| `useProject(projectId)`                 | Returns `project` (includes `teamId`) so you can pass `project?.teamId` to `useOrganizationScopes`                                                               |
+| `useConsoleProfile()`                   | Returns `features`; pass to `console-access-checks` functions that need `orgRoles` or other flags                                                                |
 
 ### Rules
 
@@ -1080,7 +1081,11 @@ const tabs = useMemo(() => [
 useEffect(() => {
   if (showSecuritySettings || !projectId || !bucketId) return
   if (activeTab === 'security' || activeTab === 'settings') {
-    navigate({ to: '/projects/$projectId/storage/$bucketId', params: { projectId, bucketId }, replace: true })
+    navigate({
+      to: '/projects/$projectId/storage/$bucketId',
+      params: { projectId, bucketId },
+      replace: true,
+    })
   }
 }, [showSecuritySettings, activeTab, projectId, bucketId, navigate])
 ```
@@ -1125,25 +1130,25 @@ Use `console-access-checks` (e.g. `canShowProjectSettings`, `canShowConnectSecti
 
 ### Mapping: screen/component type → what to use
 
-| Screen / component type | Where to gate | What to use |
-|-------------------------|----------------|-------------|
-| Service detail tabs (Security, Settings, Variables) | View that renders `ServiceHeader` + tabs | `canShowXSecuritySettings(access, features)` or `canShowTopicSettingsTab` etc.; filter tabs, add redirect `useEffect` |
-| Security/Settings/Variables **route** (URL) | Route file | `canAccess*` from `console-rbac-loader` in **loader**; `throw redirect(...)` if `!canAccess` |
-| Create buttons (list, header, dialogs) | Same view as list/header | `!canCreateX(access, features)`; set `createDisabled` and `createDisabledTooltip` (prefer disable + tooltip over hiding) |
-| Sidebar (project Settings, Connect, Get started) | Layout/sidebar component | `canShowProjectSettings`, `canShowConnectSection`, `canShowGetStartedSection`, `canSeeProjectNavItem` from `console-access-checks` |
-| Command Center (nav, create, org) | CommandCenter.tsx | Same `console-access-checks` functions; hide or disable commands and shortcuts accordingly |
-| Org overview (tabs, invite, Domains, Settings sub-tabs) | Org overview View | `canShowOrgDomainsTab`, `canShowOrgSettingsTab`, `canAccessOrgSettings*`, `getFirstAllowedOrgSettingsPath`, `canInviteOrgMember`, `canCreateProject` from `console-access-checks` |
+| Screen / component type                                 | Where to gate                            | What to use                                                                                                                                                                       |
+| ------------------------------------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Service detail tabs (Security, Settings, Variables)     | View that renders `ServiceHeader` + tabs | `canShowXSecuritySettings(access, features)` or `canShowTopicSettingsTab` etc.; filter tabs, add redirect `useEffect`                                                             |
+| Security/Settings/Variables **route** (URL)             | Route file                               | `canAccess*` from `console-rbac-loader` in **loader**; `throw redirect(...)` if `!canAccess`                                                                                      |
+| Create buttons (list, header, dialogs)                  | Same view as list/header                 | `!canCreateX(access, features)`; set `createDisabled` and `createDisabledTooltip` (prefer disable + tooltip over hiding)                                                          |
+| Sidebar (project Settings, Connect, Get started)        | Layout/sidebar component                 | `canShowProjectSettings`, `canShowConnectSection`, `canShowGetStartedSection`, `canSeeProjectNavItem` from `console-access-checks`                                                |
+| Command Center (nav, create, org)                       | CommandCenter.tsx                        | Same `console-access-checks` functions; hide or disable commands and shortcuts accordingly                                                                                        |
+| Org overview (tabs, invite, Domains, Settings sub-tabs) | Org overview View                        | `canShowOrgDomainsTab`, `canShowOrgSettingsTab`, `canAccessOrgSettings*`, `getFirstAllowedOrgSettingsPath`, `canInviteOrgMember`, `canCreateProject` from `console-access-checks` |
 
 ### Adding a new gated area
 
-1. **New project resource (e.g. “X” with Security/Settings)**  
-   - In **console-access-checks.ts**: add e.g. `canShowXSecuritySettings(access, features)` using `whenOrgRoles(access, features, access.canWriteX)`. In **console-rbac-loader.ts**: add `canAccessXSecuritySettings(queryClient, projectId)` that gets access and returns `canShowXSecuritySettings(access, getActiveProfileFeatures())`.  
-   - In **route loaders** for `.../security` and `.../settings`: call that helper and `throw redirect` when `!canAccess`.  
+1. **New project resource (e.g. “X” with Security/Settings)**
+   - In **console-access-checks.ts**: add e.g. `canShowXSecuritySettings(access, features)` using `whenOrgRoles(access, features, access.canWriteX)`. In **console-rbac-loader.ts**: add `canAccessXSecuritySettings(queryClient, projectId)` that gets access and returns `canShowXSecuritySettings(access, getActiveProfileFeatures())`.
+   - In **route loaders** for `.../security` and `.../settings`: call that helper and `throw redirect` when `!canAccess`.
    - In the **detail View**: use `showSecuritySettings = canShowXSecuritySettings(access, features)`; filter tabs and add redirect `useEffect`.
 
-2. **New org-level area (e.g. “Y” for owner and developer)**  
-   - In **console-access-checks.ts**: add e.g. `canShowOrgYTab(access, features)` or `canAccessOrgY(access, features)`.  
-   - If a route must be blocked: add `canAccessOrganizationY` in console-rbac-loader that uses the new check; use it in the route loader.  
+2. **New org-level area (e.g. “Y” for owner and developer)**
+   - In **console-access-checks.ts**: add e.g. `canShowOrgYTab(access, features)` or `canAccessOrgY(access, features)`.
+   - If a route must be blocked: add `canAccessOrganizationY` in console-rbac-loader that uses the new check; use it in the route loader.
    - In the org View: show the tab or nav item using the new check; redirect from the sub-route when the user lands without access (e.g. `getFirstAllowedOrgSettingsPath` for settings).
 
 ---

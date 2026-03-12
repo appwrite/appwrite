@@ -3,7 +3,11 @@ import { Link } from '@tanstack/react-router'
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/components/global/auth/RequireAuth'
-import { useSidebarCollapsed, useProject, useOrganizationScopes } from '@/lib/react-query/hooks'
+import {
+  useSidebarCollapsed,
+  useProject,
+  useOrganizationScopes,
+} from '@/lib/react-query/hooks'
 import {
   canSeeProjectNavItem,
   canSeeUsageNav,
@@ -245,21 +249,33 @@ export function ConsoleSidebar({
     return categories
       .map((cat) => ({
         ...cat,
-        items: (isDebugModeOpen ? cat.items : cat.items.filter((item) => !item.comingSoon))
-          .filter((item) => {
-            if (item.id === 'usage') return features.usageStats && canSeeUsageNav(access, features)
-            if (item.id === 'activity') return features.activity && canSeeActivityNav(access, features)
-            return canSeeProjectNavItem(access, features, item.id)
-          }),
+        items: (isDebugModeOpen
+          ? cat.items
+          : cat.items.filter((item) => !item.comingSoon)
+        ).filter((item) => {
+          if (item.id === 'usage')
+            return features.usageStats && canSeeUsageNav(access, features)
+          if (item.id === 'activity')
+            return features.activity && canSeeActivityNav(access, features)
+          return canSeeProjectNavItem(access, features, item.id)
+        }),
       }))
       .filter((cat) => cat.items.length > 0)
-  }, [projectId, isDebugModeOpen, features.usageStats, features.activity, features.orgRoles, access])
+  }, [
+    projectId,
+    isDebugModeOpen,
+    features.usageStats,
+    features.activity,
+    features.orgRoles,
+    access,
+  ])
 
   const showOverview = canSeeProjects(access, features)
   // Hide project Settings from left nav when user lacks write access (e.g. analyst).
   // When org roles are on, only show after scopes have loaded so we don't flash Settings.
   const showSettings =
-    !features.orgRoles || (!scopesLoading && canShowProjectSettings(access, features))
+    !features.orgRoles ||
+    (!scopesLoading && canShowProjectSettings(access, features))
   const showGetStarted = canShowGetStartedSection(access, features)
 
   // Handle keyboard navigation within sidebar within sidebar
@@ -516,7 +532,9 @@ export function ConsoleSidebar({
 
           {/* Overview */}
           {showOverview && (
-            <div className="space-y-0.5">{renderNavItem(overviewItem, true)}</div>
+            <div className="space-y-0.5">
+              {renderNavItem(overviewItem, true)}
+            </div>
           )}
 
           {visibleCategories.map((category) => renderCategory(category, true))}
