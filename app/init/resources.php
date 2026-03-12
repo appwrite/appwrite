@@ -465,6 +465,27 @@ Http::setResource('user', function (string $mode, Document $project, Document $c
         }
     }
 
+    // Impersonation: if current user has impersonator capability and headers are set, act as another user
+    $impersonateUserId = $request->getHeader('x-appwrite-impersonate-user-id', '');
+    $impersonateEmail = $request->getHeader('x-appwrite-impersonate-user-email', '');
+    $impersonatePhone = $request->getHeader('x-appwrite-impersonate-user-phone', '');
+    if (!$user->isEmpty() && $user->getAttribute('impersonator', false)) {
+        $userDb = (APP_MODE_ADMIN === $mode || $project->getId() === 'console') ? $dbForPlatform : $dbForProject;
+        $targetUser = null;
+        if (!empty($impersonateUserId)) {
+            $targetUser = $userDb->getAuthorization()->skip(fn () => $userDb->getDocument('users', $impersonateUserId));
+        } elseif (!empty($impersonateEmail)) {
+            $targetUser = $userDb->getAuthorization()->skip(fn () => $userDb->findOne('users', [Query::equal('email', [\strtolower($impersonateEmail)])]));
+        } elseif (!empty($impersonatePhone)) {
+            $targetUser = $userDb->getAuthorization()->skip(fn () => $userDb->findOne('users', [Query::equal('phone', [$impersonatePhone])]));
+        }
+        if ($targetUser !== null && !$targetUser->isEmpty()) {
+            $impersonatorUserId = $user->getId();
+            $user = clone $targetUser;
+            $user->setAttribute('impersonatorUserId', $impersonatorUserId);
+        }
+    }
+
     $dbForProject->setMetadata('user', $user->getId());
     $dbForPlatform->setMetadata('user', $user->getId());
 

@@ -109,6 +109,20 @@ class Account extends Model
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
+            ->addRule('impersonator', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether the user can impersonate other users.',
+                'required' => false,
+                'default' => false,
+                'example' => false,
+            ])
+            ->addRule('impersonatorUserId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'When present, the current session is impersonating this user ID. Only set when the request used impersonation headers.',
+                'required' => false,
+                'default' => '',
+                'example' => '5e5ea5c16897e',
+            ])
         ;
     }
 

@@ -1212,6 +1212,47 @@ Http::put('/v1/users/:userId/labels')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
+Http::patch('/v1/users/:userId/impersonator')
+    ->desc('Update user impersonator capability')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].update.impersonator')
+    ->label('scope', 'users.write')
+    ->label('audits.event', 'user.update')
+    ->label('audits.resource', 'user/{response.$id}')
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'users',
+        name: 'updateImpersonator',
+        description: '/docs/references/users/update-user-impersonator.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ]
+    ))
+    ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
+    ->param('impersonator', false, new Boolean(true), 'Whether the user can impersonate other users. When true, the user can pass impersonation headers to act as another user.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('queueForEvents')
+    ->action(function (string $userId, bool $impersonator, Response $response, Database $dbForProject, Event $queueForEvents) {
+
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['impersonator' => $impersonator]));
+
+        $queueForEvents
+            ->setParam('userId', $user->getId());
+
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
 Http::patch('/v1/users/:userId/verification/phone')
     ->desc('Update phone verification')
     ->groups(['api', 'users'])

@@ -338,6 +338,12 @@ Http::init()
 
         $scopes = \array_unique($scopes);
 
+        // Grant users.read scope when acting as another user via impersonation
+        if (!$user->isEmpty() && $user->getAttribute('impersonatorUserId')) {
+            $scopes[] = 'users.read';
+            $scopes = \array_unique($scopes);
+        }
+
         $authorization->addRole($role);
         foreach ($user->getRoles($authorization) as $authRole) {
             $authorization->addRole($authRole);
