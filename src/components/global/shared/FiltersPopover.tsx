@@ -36,7 +36,7 @@ export interface FiltersPopoverProps {
   onApplyQuery?: (queryParam: string | undefined, sortParam?: string) => void
   /** Team/org ID for team-level saved filters (project.teamId or orgId). When set, users can save filters for the team. */
   teamId?: string | null
-  /** When set, show "Sort by" inside the popover (options come from columns); sort is saved with filter presets. */
+  /** When set, show "Order by" inside the popover (options come from columns); sort is saved with filter presets. */
   sortBy?: string
   sortOrder?: 'asc' | 'desc'
   onSortChange?: (sortBy: string, sortOrder: 'asc' | 'desc') => void

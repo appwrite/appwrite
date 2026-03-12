@@ -74,7 +74,7 @@ export interface FiltersPopoverContentProps {
   onApplyQuery?: (queryParam: string | undefined, sortParam?: string) => void
   /** Team/org ID for team-level saved filters. When set, users can save filters for the team. */
   teamId?: string | null
-  /** Current sort field (e.g. $createdAt). When set with sortOrder and onSortChange, shows "Sort by" using columns. */
+  /** Current sort field (e.g. $createdAt). When set with sortOrder and onSortChange, shows "Order by" using columns. */
   sortBy?: string
   /** Current sort direction. */
   sortOrder?: 'asc' | 'desc'
@@ -510,13 +510,13 @@ export function FiltersPopoverContent({
 
   const filtersTabContent = (
     <>
-      {/* Sort by – when list supports sort; options from table columns; saved with filter presets */}
+      {/* Order by – when list supports sort; options from table columns; saved with filter presets */}
       {sortEnabled && sortOptionsFromColumns.length > 0 && (
         <>
           <div className="px-4 pt-3 pb-2">
             <div className="flex items-center justify-between gap-2 mb-2">
               <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider">
-                Sort by
+                Order by
               </p>
               {onReset && (hasNonDefaultSort || filterMap.size > 0) && (
                 <button
