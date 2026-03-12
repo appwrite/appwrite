@@ -47,6 +47,7 @@ use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
@@ -381,14 +382,21 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                     // isExecutionAllowed remains false
                 }
 
+                $userExists = false;
                 $userId = $payload['userId'] ?? '';
                 if (!empty($userId)) {
                     /** @var \Appwrite\Utopia\Database\Documents\User */
                     $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
                     if (!$user->isEmpty() && $user->getAttribute('status', false)) {
-                        $roles = $user->getRoles($authorization);
-                        $isExecutionAllowed = !empty(array_intersect($permissions, $roles));
+                        $userExists = true;
                     }
+                }
+
+                if ($userExists) {
+                    foreach ($user->getRoles($authorization) as $role) {
+                        $authorization->addRole($role);
+                    }
+                    $isExecutionAllowed = $authorization->isValid(new Input('execute', $permissions));
                 }
             }
 
