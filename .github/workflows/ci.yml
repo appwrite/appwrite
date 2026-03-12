@@ -20,6 +20,61 @@ on:
         default: ''
 
 jobs:
+  dependencies:
+    name: Checks / Dependencies
+    if: github.event_name == 'pull_request'
+    permissions:
+      security-events: write
+      contents: read
+    uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@v2.3.3"
+
+  security:
+    name: Checks / Image
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: 'recursive'
+
+      - name: Build the Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: pr_image:${{ github.sha }}
+          target: production
+
+      - name: Run Trivy vulnerability scanner on image
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: 'pr_image:${{ github.sha }}'
+          format: 'sarif'
+          output: 'trivy-image-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Run Trivy vulnerability scanner on source code
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-fs-results.sarif'
+          severity: 'CRITICAL,HIGH'
+          skip-setup-trivy: true
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: '.'
+
   format:
     name: Checks / Format
     runs-on: ubuntu-latest
@@ -30,6 +85,7 @@ jobs:
           fetch-depth: 2
 
       - run: git checkout HEAD^2
+        if: github.event_name == 'pull_request'
 
       - name: Validate composer.json and composer.lock
         run: |
@@ -48,7 +104,7 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v6
 
-      - name: Run CodeQL
+      - name: Run PHPStan
         run: |
           docker run --rm -v $PWD:/app composer:2.8 sh -c \
           "composer install --profile --ignore-platform-reqs && composer check"
@@ -95,8 +151,8 @@ jobs:
             core.setOutput('databases', JSON.stringify(databaseChanged ? allDatabases : defaultDatabases));
             core.setOutput('modes', JSON.stringify(databaseChanged ? allModes : defaultModes));
 
-  setup:
-    name: Setup
+  build:
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -138,7 +194,7 @@ jobs:
   unit:
     name: Tests / Unit
     runs-on: ubuntu-latest
-    needs: setup
+    needs: build
     permissions:
       contents: read
       pull-requests: write
@@ -186,7 +242,7 @@ jobs:
   e2e_general:
     name: Tests / E2E / General
     runs-on: ubuntu-latest
-    needs: setup
+    needs: build
     permissions:
       contents: read
       pull-requests: write
@@ -245,7 +301,7 @@ jobs:
   e2e_service:
     name: Tests / E2E / ${{ matrix.database }} (${{ matrix.mode }}) / ${{ matrix.service }}
     runs-on: ubuntu-latest
-    needs: [setup, matrix]
+    needs: [build, matrix]
     permissions:
       contents: read
       pull-requests: write
@@ -363,7 +419,7 @@ jobs:
   e2e_abuse:
     name: Tests / E2E / Abuse (${{ matrix.mode }})
     runs-on: ubuntu-latest
-    needs: [setup, matrix]
+    needs: [build, matrix]
     permissions:
       contents: read
       pull-requests: write
@@ -422,7 +478,7 @@ jobs:
   e2e_screenshots:
     name: Tests / E2E / Screenshots (${{ matrix.mode }})
     runs-on: ubuntu-latest
-    needs: [setup, matrix]
+    needs: [build, matrix]
     permissions:
       contents: read
       pull-requests: write
@@ -488,7 +544,7 @@ jobs:
   benchmark:
     name: Benchmark
     runs-on: ubuntu-latest
-    needs: setup
+    needs: build
     permissions:
       pull-requests: write
     steps:
@@ -501,6 +557,12 @@ jobs:
           key: ${{ env.CACHE_KEY }}
           path: /tmp/${{ env.IMAGE }}.tar
           fail-on-cache-miss: true
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Load and Start Appwrite
         run: |
