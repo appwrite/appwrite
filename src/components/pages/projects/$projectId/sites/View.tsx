@@ -50,6 +50,7 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
 import type { Models } from '@appwrite.io/console'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
+import { SiteContextMenu } from './_components/SiteContextMenu'
 import {
   getSearch,
   getPage,
@@ -550,33 +551,38 @@ export function View() {
                   <TableBody>
                     {paginatedSites.map((site) => {
                       const siteData = site as Models.Site
+                      if (!siteData?.$id) return null
                       return (
-                        <TableRow
+                        <SiteContextMenu
                           key={siteData.$id}
-                          className={cn(
-                            'cursor-pointer transition-colors border-b border-border/50',
-                            selectedSites.has(siteData.$id)
-                              ? 'bg-muted'
-                              : 'hover:bg-muted/30',
-                          )}
-                          onClick={(e) => {
-                            const target = e.target as HTMLElement
-                            if (
-                              target.closest('button') ||
-                              target.closest('[role="checkbox"]') ||
-                              target.closest('a')
-                            ) {
-                              return
-                            }
-                            navigate({
-                              to: '/projects/$projectId/sites/$siteId/',
-                              params: {
-                                projectId: projectId!,
-                                siteId: siteData.$id,
-                              },
-                            })
-                          }}
+                          projectId={projectId!}
+                          site={{ $id: siteData.$id, name: siteData.name }}
                         >
+                          <TableRow
+                            className={cn(
+                              'cursor-pointer transition-colors border-b border-border/50',
+                              selectedSites.has(siteData.$id)
+                                ? 'bg-muted'
+                                : 'hover:bg-muted/30',
+                            )}
+                            onClick={(e: React.MouseEvent) => {
+                              const target = e.target as HTMLElement
+                              if (
+                                target.closest('button') ||
+                                target.closest('[role="checkbox"]') ||
+                                target.closest('a')
+                              ) {
+                                return
+                              }
+                              navigate({
+                                to: '/projects/$projectId/sites/$siteId/',
+                                params: {
+                                  projectId: projectId!,
+                                  siteId: siteData.$id,
+                                },
+                              })
+                            }}
+                          >
                           <TableCell
                             onClick={(e) => e.stopPropagation()}
                             className="px-4 py-3"
@@ -715,7 +721,8 @@ export function View() {
                               )}
                             </Link>
                           </TableCell>
-                        </TableRow>
+                          </TableRow>
+                        </SiteContextMenu>
                       )
                     })}
                   </TableBody>
@@ -753,10 +760,15 @@ export function View() {
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {paginatedSites.map((site) => {
                   const siteData = site as Models.Site
+                  if (!siteData?.$id) return null
                   const screenshotUrl = getScreenshotUrl(siteData)
                   return (
+                    <SiteContextMenu
+                       key={siteData.$id}
+                      projectId={projectId!}
+                      site={{ $id: siteData.$id, name: siteData.name }}
+                    >
                     <Link
-                      key={siteData.$id}
                       to="/projects/$projectId/sites/$siteId/"
                       params={{ projectId, siteId: siteData.$id }}
                       className="block group"
@@ -830,6 +842,7 @@ export function View() {
                         </div>
                       </div>
                     </Link>
+                    </SiteContextMenu>
                   )
                 })}
               </div>

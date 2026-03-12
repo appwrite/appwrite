@@ -51,6 +51,9 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
 import { MessagingProviderIcon } from '@/components/global/shared/MessagingProviderIcon'
+import { MessageContextMenu } from './_components/MessageContextMenu'
+import { TopicContextMenu } from './_components/TopicContextMenu'
+import { ProviderContextMenu } from './_components/ProviderContextMenu'
 
 export function View() {
   const { projectId } = useParams({
@@ -311,11 +314,12 @@ export function View() {
   }
 
   const toggleAllItems = () => {
-    if (selectedItems.size === currentData.items.length) {
+    const items = currentData.items ?? []
+    if (selectedItems.size === items.length) {
       setSelectedItems(new Set())
     } else {
       setSelectedItems(
-        new Set(currentData.items.map((item: { $id: string }) => item.$id)),
+        new Set(items.map((item: { $id?: string }) => item?.$id).filter(Boolean) as string[]),
       )
     }
   }
@@ -486,7 +490,7 @@ export function View() {
                 Loading {activeTab}...
               </p>
             </div>
-          ) : currentData.items.length > 0 ? (
+          ) : (currentData.items ?? []).length > 0 ? (
             <>
               <div className="rounded-lg border border-border bg-card overflow-hidden">
                 <Table>
@@ -495,8 +499,8 @@ export function View() {
                       <TableHead className="w-[40px] px-4">
                         <Checkbox
                           checked={
-                            currentData.items.length > 0 &&
-                            selectedItems.size === currentData.items.length
+                            (currentData.items ?? []).length > 0 &&
+                            selectedItems.size === (currentData.items ?? []).length
                           }
                           onCheckedChange={toggleAllItems}
                         />
@@ -560,13 +564,18 @@ export function View() {
                   </TableHeader>
                   <TableBody>
                     {activeTab === 'messages' &&
-                      currentData.items.map((message: Models.Message) => {
+                      (currentData.items ?? []).map((message: Models.Message) => {
+                        if (!message?.$id) return null
                         const TypeIcon = getMessageTypeIcon(
                           message.providerType,
                         )
                         return (
-                          <TableRow
+                          <MessageContextMenu
                             key={message.$id}
+                            projectId={projectId!}
+                            message={{ $id: message.$id }}
+                          >
+                          <TableRow
                             className={cn(
                               'cursor-pointer transition-colors border-b border-border/50',
                               selectedItems.has(message.$id)
@@ -683,17 +692,23 @@ export function View() {
                               </Link>
                             </TableCell>
                           </TableRow>
+                          </MessageContextMenu>
                         )
                       })}
                     {activeTab === 'topics' &&
-                      currentData.items.map((topic: Models.Topic) => {
+                      (currentData.items ?? []).map((topic: Models.Topic) => {
+                        if (!topic?.$id) return null
                         const totalSubscribers =
                           (topic.emailTotal || 0) +
                           (topic.smsTotal || 0) +
                           (topic.pushTotal || 0)
                         return (
-                          <TableRow
+                          <TopicContextMenu
                             key={topic.$id}
+                            projectId={projectId!}
+                            topic={{ $id: topic.$id, name: topic.name }}
+                          >
+                          <TableRow
                             className={cn(
                               'cursor-pointer transition-colors border-b border-border/50',
                               selectedItems.has(topic.$id)
@@ -789,14 +804,20 @@ export function View() {
                               </Link>
                             </TableCell>
                           </TableRow>
+                          </TopicContextMenu>
                         )
                       })}
                     {activeTab === 'providers' &&
-                      currentData.items.map((provider: Models.Provider) => {
+                      (currentData.items ?? []).map((provider: Models.Provider) => {
+                        if (!provider?.$id) return null
                         const TypeIcon = getMessageTypeIcon(provider.type)
                         return (
-                          <TableRow
+                          <ProviderContextMenu
                             key={provider.$id}
+                            projectId={projectId!}
+                            provider={{ $id: provider.$id, name: provider.name }}
+                          >
+                          <TableRow
                             className={cn(
                               'cursor-pointer transition-colors border-b border-border/50',
                               selectedItems.has(provider.$id)
@@ -899,6 +920,7 @@ export function View() {
                               </Link>
                             </TableCell>
                           </TableRow>
+                          </ProviderContextMenu>
                         )
                       })}
                   </TableBody>
