@@ -79,8 +79,10 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
     depends_on:
-      - redis
-      - <?= $dbService  . "\n" ?>
+      redis:
+        condition: service_healthy
+      <?= $dbService ?>:
+        condition: service_healthy
 #      - clamav
     environment:
       - _APP_ENV
@@ -234,8 +236,10 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      - redis
-      - <?= $dbService  . "\n" ?>
+      redis:
+        condition: service_healthy
+      <?= $dbService ?>:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -265,8 +269,10 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      - redis
-      - <?= $dbService . "\n" ?>
+      redis:
+        condition: service_healthy
+      <?= $dbService ?>:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -293,8 +299,10 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      - redis
-      - <?= $dbService . "\n" ?>
+      redis:
+        condition: service_healthy
+      <?= $dbService ?>:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -323,8 +331,10 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      - redis
-      - <?= $dbService . "\n" ?>
+      redis:
+        condition: service_healthy
+      <?= $dbService ?>:
+        condition: service_healthy
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -388,8 +398,10 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      - redis
-      - <?= $dbService . "\n" ?>
+      redis:
+        condition: service_healthy
+      <?= $dbService ?>:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -416,8 +428,10 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      - redis
-      - <?= $dbService . "\n" ?>
+      redis:
+        condition: service_healthy
+      <?= $dbService ?>:
+        condition: service_healthy
     volumes:
       - appwrite-functions:/storage/functions:rw
       - appwrite-sites:/storage/sites:rw
@@ -486,8 +500,10 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      - redis
-      - <?= $dbService . "\n" ?>
+      redis:
+        condition: service_healthy
+      <?= $dbService ?>:
+        condition: service_healthy
     volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -525,9 +541,12 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      - redis
-      - <?= $dbService . "\n" ?>
-      - openruntimes-executor
+      redis:
+        condition: service_healthy
+      <?= $dbService ?>:
+        condition: service_healthy
+      openruntimes-executor:
+        condition: service_started
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -566,8 +585,10 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      - redis
-      - <?= $dbService  . "\n" ?>
+      redis:
+        condition: service_healthy
+      <?= $dbService ?>:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -605,8 +626,10 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     volumes:
       - appwrite-uploads:/storage/uploads:rw
     depends_on:
-      - redis
-      - <?= $dbService  . "\n" ?>
+      redis:
+        condition: service_healthy
+      <?= $dbService ?>:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -659,7 +682,8 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     volumes:
       - appwrite-imports:/storage/imports:rw
     depends_on:
-      - <?= $dbService . "\n" ?>
+      <?= $dbService ?>:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -695,8 +719,10 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      - redis
-      - <?= $dbService  . "\n" ?>
+      redis:
+        condition: service_healthy
+      <?= $dbService ?>:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -737,8 +763,10 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      - redis
-      - <?= $dbService . "\n" ?>
+      redis:
+        condition: service_healthy
+      <?= $dbService ?>:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -768,8 +796,10 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      - redis
-      - <?= $dbService . "\n" ?>
+      redis:
+        condition: service_healthy
+      <?= $dbService ?>:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -798,8 +828,10 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      - redis
-      - <?= $dbService . "\n" ?>
+      redis:
+        condition: service_healthy
+      <?= $dbService ?>:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -828,8 +860,10 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      - <?= $dbService . "\n" ?>
-      - redis
+      <?= $dbService ?>:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -855,8 +889,10 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      - <?= $dbService . "\n" ?>
-      - redis
+      <?= $dbService ?>:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -882,8 +918,10 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      - <?= $dbService . "\n" ?>
-      - redis
+      <?= $dbService ?>:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -988,6 +1026,12 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - MYSQL_PASSWORD=${_APP_DB_PASS}
       - MARIADB_AUTO_UPGRADE=1
     command: 'mysqld --innodb-flush-method=fsync'
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
 
 <?php elseif ($dbService === 'mongodb'): ?>
 
@@ -1100,6 +1144,12 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - appwrite
     volumes:
       - appwrite-redis:/data:rw
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   # clamav:
   #   image: appwrite/clamav:1.2.0
