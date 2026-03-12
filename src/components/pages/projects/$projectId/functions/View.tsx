@@ -48,6 +48,7 @@ import {
 import { TemplatesView } from './Templates'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
 import { formatCronExpression } from './CronScheduleEditor'
+import { FunctionContextMenu } from './_components/FunctionContextMenu'
 
 type FunctionsListSearch = {
   search?: string
@@ -598,12 +599,19 @@ export function View() {
                       : null
 
                     return (
-                      <Link
+                      <FunctionContextMenu
                         key={func.$id}
-                        to="/projects/$projectId/functions/$functionId"
-                        params={{ projectId: projectId!, functionId: func.$id }}
+                        projectId={projectId!}
+                        func={{ $id: func.$id, name: func.name }}
                       >
-                        <ResourceCard
+                        <Link
+                          to="/projects/$projectId/functions/$functionId"
+                          params={{
+                            projectId: projectId!,
+                            functionId: func.$id,
+                          }}
+                        >
+                          <ResourceCard
                           title={func.name || 'Unnamed Function'}
                           resourceId={func.$id}
                           customIcon={
@@ -658,6 +666,7 @@ export function View() {
                           ]}
                         />
                       </Link>
+                    </FunctionContextMenu>
                     )
                   })}
                 </div>
