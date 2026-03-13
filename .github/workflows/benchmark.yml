@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Set up Docker Buildx
@@ -33,7 +33,7 @@ jobs:
             TESTING=true
             VERSION=dev
       - name: Cache Docker Image
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           key: '${{ env.CACHE_KEY }}'
           path: '/tmp/${{ env.IMAGE }}.tar'
@@ -45,9 +45,9 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Load Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           key: '${{ env.CACHE_KEY }}'
           path: '/tmp/${{ env.IMAGE }}.tar'
@@ -97,7 +97,7 @@ jobs:
           echo "| 200 | $(jq -r '.statusCodeDistribution."200"|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark.json) | $(jq -r '.statusCodeDistribution."200"|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark-latest.json) | "  >> benchmark.txt
           echo "| P99 | $(jq -r '.latencyPercentiles.p99' benchmark.json ) | $(jq -r '.latencyPercentiles.p99' benchmark-latest.json ) | "  >> benchmark.txt
       - name: Save results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: '${{ !cancelled() }}'
         with:
           name: benchmark.json
@@ -105,7 +105,7 @@ jobs:
           retention-days: 7
       - name: Find Comment
         if: github.event.pull_request.head.repo.full_name == github.repository
-        uses: peter-evans/find-comment@v3
+        uses: peter-evans/find-comment@v4
         id: fc
         with:
           issue-number: '${{ github.event.pull_request.number }}'
@@ -113,7 +113,7 @@ jobs:
           body-includes: Benchmark results
       - name: Comment on PR
         if: github.event.pull_request.head.repo.full_name == github.repository
-        uses: peter-evans/create-or-update-comment@v4
+        uses: peter-evans/create-or-update-comment@v5
         with:
           comment-id: '${{ steps.fc.outputs.comment-id }}'
           issue-number: '${{ github.event.pull_request.number }}'
