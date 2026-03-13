@@ -2018,7 +2018,7 @@ class FunctionsCustomServerTest extends Scope
         $functionId = $this->setupFunction([
             'functionId' => ID::unique(),
             'name' => 'Test Scopes executions',
-            'commands' => 'bash setup.sh && npm install',
+            'commands' => 'bash setup.sh && npm ci',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
             'scopes' => ['users.read'],
