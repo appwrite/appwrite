@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -26,7 +27,16 @@ export function LineEditor({
   disabled = false,
   showNullCheckbox = true,
 }: LineEditorProps) {
-  const points = value || []
+  const [points, setPoints] = useState<number[][]>(value || [])
+
+  useEffect(() => {
+    setPoints(value || [])
+  }, [value])
+
+  const emitPoints = (nextPoints: number[][]) => {
+    setPoints(nextPoints)
+    onChange(nextPoints.length === 0 && !isRequired ? null : nextPoints)
+  }
 
   const updatePoint = (index: number, coordIndex: 0 | 1, newValue: string) => {
     const newPoints = [...points]
@@ -35,12 +45,12 @@ export function LineEditor({
     }
     const numValue = newValue === '' ? 0 : parseFloat(newValue)
     newPoints[index][coordIndex] = isNaN(numValue) ? 0 : numValue
-    onChange(newPoints.length >= 2 ? newPoints : null)
+    emitPoints(newPoints)
   }
 
   const addPoint = () => {
     const newPoints = [...points, [0, 0]]
-    onChange(newPoints)
+    emitPoints(newPoints)
   }
 
   const removePoint = (index: number) => {
@@ -49,7 +59,7 @@ export function LineEditor({
       return
     }
     const newPoints = points.filter((_, i) => i !== index)
-    onChange(newPoints.length >= 2 ? newPoints : null)
+    emitPoints(newPoints)
   }
 
   return (
@@ -121,6 +131,11 @@ export function LineEditor({
               </Button>
             </div>
           ))}
+          {points.length < 2 && (
+            <p className="text-[10px] text-amber-600 dark:text-amber-400">
+              Add at least 2 points to form a line
+            </p>
+          )}
         </div>
       )}
       {!isRequired && showNullCheckbox && (
@@ -129,6 +144,13 @@ export function LineEditor({
             id="line-null"
             checked={value === null}
             onCheckedChange={(checked) => {
+              const nextValue = checked
+                ? null
+                : [
+                    [0, 0],
+                    [0, 0],
+                  ]
+              setPoints(nextValue || [])
               onChange(
                 checked
                   ? null
