@@ -218,9 +218,15 @@ class Create extends Action
             $dbForProject->setDatabase(APP_DATABASE);
 
             if ($sharedTables) {
+                $tenant = null;
+                if ($sharedTablesV1) {
+                    $tenant = $dbForProject->getIdAttributeType() === Database::VAR_INTEGER
+                        ? (int)$project->getSequence()
+                        : $project->getSequence();
+                }
                 $dbForProject
                     ->setSharedTables(true)
-                    ->setTenant($sharedTablesV1 ? (int)$project->getSequence() : null)
+                    ->setTenant($tenant)
                     ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $dbForProject

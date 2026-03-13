@@ -479,7 +479,11 @@ class StatsUsage extends Action
             }
         }
         $documentClone = clone $stat;
-        $documentClone->setAttribute('$tenant', (int) $project->getSequence());
+        $dbForLogs = ($this->getLogsDB)();
+        $tenant = $dbForLogs->getIdAttributeType() === Database::VAR_INTEGER
+            ? (int) $project->getSequence()
+            : $project->getSequence();
+        $documentClone->setAttribute('$tenant', $tenant);
         $this->statDocuments[] = $documentClone;
     }
 

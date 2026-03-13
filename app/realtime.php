@@ -113,9 +113,12 @@ if (!function_exists('getProjectDB')) {
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
         if (\in_array($dsn->getHost(), $sharedTables)) {
+            $tenant = $database->getIdAttributeType() === Database::VAR_INTEGER
+                ? (int)$project->getSequence()
+                : $project->getSequence();
             $database
                 ->setSharedTables(true)
-                ->setTenant((int)$project->getSequence())
+                ->setTenant($tenant)
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
             $database
