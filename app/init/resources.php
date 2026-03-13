@@ -1307,7 +1307,7 @@ Http::setResource('team', function (Document $project, Database $dbForPlatform, 
 
     $team = $authorization->skip(function () use ($dbForPlatform, $teamInternalId) {
         return $dbForPlatform->findOne('teams', [
-            Query::equal('$internalId', [$teamInternalId]),
+            Query::equal('$sequence', [$teamInternalId]),
         ]);
     });
 
