@@ -123,7 +123,7 @@ cd appwrite
 git submodule update --init
 
 docker compose build
-docker compose up -d
+docker compose up -d --wait
 ```
 
 ### Code Autocompletion
@@ -307,7 +307,7 @@ Currently, all the Appwrite microservices are intended to communicate using the 
 
 ## Ports
 
-Appwrite dev version uses ports 80 and 443 as an entry point to the Appwrite API and console. We also expose multiple ports in the range of 9500-9504 for debugging some of the Appwrite containers on dev mode. If you have any conflicts with the ports running on your system, you can easily replace them by editing Appwrite's docker-compose.yml file and executing `docker compose up -d` command.
+Appwrite dev version uses ports 80 and 443 as an entry point to the Appwrite API and console. We also expose multiple ports in the range of 9500-9504 for debugging some of the Appwrite containers on dev mode. If you have any conflicts with the ports running on your system, you can easily replace them by editing Appwrite's docker-compose.yml file and executing `docker compose up -d --wait` command.
 
 ## Technology Stack
 

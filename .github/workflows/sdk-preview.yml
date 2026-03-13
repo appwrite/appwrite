@@ -38,7 +38,7 @@ jobs:
       - name: Load and Start Appwrite
         run: |
           docker compose build
-          docker compose up -d
+          docker compose up -d --wait
           docker compose exec appwrite sdks --platform=${{ steps.set-sdk.outputs.platform }} --sdk=${{ steps.set-sdk.outputs.sdk_type }} --version=latest --git=no
           sudo chown -R $USER:$USER ./app/sdks/${{ steps.set-sdk.outputs.platform }}-${{ steps.set-sdk.outputs.sdk_type }}
           

@@ -95,8 +95,7 @@ jobs:
       - name: Load and Start Appwrite
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
-          docker compose up -d
-          sleep 10
+          docker compose up -d --wait
 
       - name: Logs
         run: docker compose logs appwrite
@@ -131,8 +130,7 @@ jobs:
       - name: Load and Start Appwrite
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
-          docker compose up -d
-          sleep 10
+          docker compose up -d --wait
           
       - name: Wait for Open Runtimes
         timeout-minutes: 3
@@ -202,8 +200,7 @@ jobs:
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           sed -i 's|^_APP_BROWSER_HOST=.*|_APP_BROWSER_HOST=http://invalid-browser/v1|' .env
-          docker compose up -d
-          sleep 30
+          docker compose up -d --wait
 
       - name: Wait for Open Runtimes
         timeout-minutes: 3
@@ -285,8 +282,7 @@ jobs:
       - name: Load and Start Appwrite
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
-          docker compose up -d
-          sleep 30
+          docker compose up -d --wait
 
       - name: Wait for Open Runtimes
         timeout-minutes: 3
@@ -341,8 +337,7 @@ jobs:
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           sed -i 's/_APP_OPTIONS_ABUSE=disabled/_APP_OPTIONS_ABUSE=enabled/' .env
-          docker compose up -d
-          sleep 30
+          docker compose up -d --wait
 
       - name: Run Projects tests with dev keys in dedicated table mode
         run: |
@@ -391,8 +386,7 @@ jobs:
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           sed -i 's/_APP_OPTIONS_ABUSE=disabled/_APP_OPTIONS_ABUSE=enabled/' .env
-          docker compose up -d
-          sleep 30
+          docker compose up -d --wait
 
       - name: Run Projects tests with dev keys in ${{ matrix.tables-mode }} table mode
         run: |
@@ -439,8 +433,7 @@ jobs:
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           sed -i 's/_APP_OPTIONS_ABUSE=disabled/_APP_OPTIONS_ABUSE=enabled/' .env
-          docker compose up -d
-          sleep 30
+          docker compose up -d --wait
 
       - name: Run Site tests with browser connected in dedicated table mode
         run: |
@@ -490,8 +483,7 @@ jobs:
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           sed -i 's/_APP_OPTIONS_ABUSE=disabled/_APP_OPTIONS_ABUSE=enabled/' .env
-          docker compose up -d
-          sleep 30
+          docker compose up -d --wait
 
       - name: Run Site tests with browser connected in ${{ matrix.tables-mode }} table mode
         run: |
