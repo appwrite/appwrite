@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Bulk;
 
 use Appwrite\Event\Event;
-use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Action;
@@ -12,6 +11,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -76,7 +76,7 @@ class Delete extends Action
             ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForStatsUsage')
+            ->inject('usage')
             ->inject('queueForEvents')
             ->inject('queueForRealtime')
             ->inject('queueForFunctions')
@@ -86,7 +86,7 @@ class Delete extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, Event $queueForEvents, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan, EventProcessor $eventProcessor): void
+    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, Context $usage, Event $queueForEvents, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan, EventProcessor $eventProcessor): void
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
         if ($database->isEmpty()) {
@@ -185,10 +185,10 @@ class Delete extends Action
 
         foreach ($documents as $document) {
             $document->setAttribute('$databaseId', $database->getId());
-            $document->setAttribute('$'.$this->getCollectionsEventsContext().'Id', $collection->getId());
+            $document->setAttribute('$' . $this->getCollectionsEventsContext() . 'Id', $collection->getId());
         }
 
-        $queueForStatsUsage
+        $usage
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, \max(1, $modified))
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $modified));
 

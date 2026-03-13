@@ -3,8 +3,10 @@
 namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\Mail;
-use Appwrite\Event\StatsUsage;
+use Appwrite\Event\Message\Usage as UsageMessage;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Template\Template;
+use Appwrite\Usage\Context as UsageContext;
 use Exception;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -35,7 +37,7 @@ class Webhooks extends Action
             ->inject('project')
             ->inject('dbForPlatform')
             ->inject('queueForMails')
-            ->inject('queueForStatsUsage')
+            ->inject('publisherForUsage')
             ->inject('log')
             ->inject('plan')
             ->callback($this->action(...));
@@ -46,13 +48,13 @@ class Webhooks extends Action
      * @param Document $project
      * @param Database $dbForPlatform
      * @param Mail $queueForMails
-     * @param StatsUsage $queueForStatsUsage
+     * @param UsagePublisher $publisherForUsage
      * @param Log $log
      * @param array $plan
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, Mail $queueForMails, StatsUsage $queueForStatsUsage, Log $log, array $plan): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, Mail $queueForMails, UsagePublisher $publisherForUsage, Log $log, array $plan): void
     {
         $this->errors = [];
         $payload = $message->getPayload() ?? [];
@@ -71,7 +73,7 @@ class Webhooks extends Action
 
         foreach ($project->getAttribute('webhooks', []) as $webhook) {
             if (array_intersect($webhook->getAttribute('events', []), $events)) {
-                $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $queueForMails, $queueForStatsUsage, $plan);
+                $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $queueForMails, $publisherForUsage, $plan);
             }
         }
 
@@ -91,7 +93,7 @@ class Webhooks extends Action
      * @param array $plan
      * @return void
      */
-    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, Mail $queueForMails, StatsUsage $queueForStatsUsage, array $plan): void
+    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, Mail $queueForMails, UsagePublisher $publisherForUsage, array $plan): void
     {
         if ($webhook->getAttribute('enabled') !== true) {
             return;
@@ -180,26 +182,23 @@ class Webhooks extends Action
             $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
             $this->errors[] = $logs;
-            $queueForStatsUsage
+            $usage = (new UsageContext())
                 ->addMetric(METRIC_WEBHOOKS_FAILED, 1)
-                ->addMetric(str_replace('{webhookInternalId}', $webhook->getSequence(), METRIC_WEBHOOK_ID_FAILED), 1)
-            ;
-
-
+                ->addMetric(str_replace('{webhookInternalId}', $webhook->getSequence(), METRIC_WEBHOOK_ID_FAILED), 1);
         } else {
             $dbForPlatform->updateDocument('webhooks', $webhook->getId(), new Document([
                 'attempts' => 0,
             ]));
             $dbForPlatform->purgeCachedDocument('projects', $project->getId());
-            $queueForStatsUsage
+            $usage = (new UsageContext())
                 ->addMetric(METRIC_WEBHOOKS_SENT, 1)
-                ->addMetric(str_replace('{webhookInternalId}', $webhook->getSequence(), METRIC_WEBHOOK_ID_SENT), 1)
-            ;
+                ->addMetric(str_replace('{webhookInternalId}', $webhook->getSequence(), METRIC_WEBHOOK_ID_SENT), 1);
         }
 
-        $queueForStatsUsage
-            ->setProject($project)
-            ->trigger();
+        $publisherForUsage->enqueue(new UsageMessage(
+            project: $project,
+            metrics: $usage->getMetrics(),
+        ));
     }
 
     /**
