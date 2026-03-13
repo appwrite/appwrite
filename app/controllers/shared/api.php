@@ -338,7 +338,8 @@ Http::init()
 
         $scopes = \array_unique($scopes);
 
-        // Impersonators can browse users before and during impersonation.
+        // Intentional: impersonators get users.read so they can discover a target user
+        // before impersonation starts, and keep that access while impersonating.
         if (
             !$user->isEmpty()
             && (

@@ -148,7 +148,7 @@ class User extends Model
             ])
             ->addRule('impersonatorUserId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'When present, the current session is impersonating this user ID. Only set when the request used impersonation headers.',
+                'description' => 'ID of the user performing the impersonation. Present only when the current request is impersonating another user.',
                 'required' => false,
                 'default' => '',
                 'example' => '5e5ea5c16897e',
