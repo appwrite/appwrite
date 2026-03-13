@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b99693284208ff3d006260a089a4f7b9",
+    "content-hash": "130c3df95eea2462eab9952cc0a35b62",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3606,16 +3606,16 @@
         },
         {
             "name": "utopia-php/cache",
-            "version": "1.0.0",
+            "version": "1.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cache.git",
-                "reference": "7068870c086a6aea16173563a26b93ef3e408439"
+                "reference": "05ceba981436a4022553f7aaa2a05fa049d0f71c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cache/zipball/7068870c086a6aea16173563a26b93ef3e408439",
-                "reference": "7068870c086a6aea16173563a26b93ef3e408439",
+                "url": "https://api.github.com/repos/utopia-php/cache/zipball/05ceba981436a4022553f7aaa2a05fa049d0f71c",
+                "reference": "05ceba981436a4022553f7aaa2a05fa049d0f71c",
                 "shasum": ""
             },
             "require": {
@@ -3652,9 +3652,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cache/issues",
-                "source": "https://github.com/utopia-php/cache/tree/1.0.0"
+                "source": "https://github.com/utopia-php/cache/tree/1.0.1"
             },
-            "time": "2026-01-28T10:55:44+00:00"
+            "time": "2026-03-12T03:39:09+00:00"
         },
         {
             "name": "utopia-php/cli",
@@ -3850,16 +3850,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "5.3.10",
+            "version": "dev-fix-mongo-perms",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "1c768ad629984af7f6dbfbbb9e2e922f8cdfb3eb"
+                "reference": "706f3b9e8c0c20d0795f343c932f00536fa9963b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/1c768ad629984af7f6dbfbbb9e2e922f8cdfb3eb",
-                "reference": "1c768ad629984af7f6dbfbbb9e2e922f8cdfb3eb",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/706f3b9e8c0c20d0795f343c932f00536fa9963b",
+                "reference": "706f3b9e8c0c20d0795f343c932f00536fa9963b",
                 "shasum": ""
             },
             "require": {
@@ -3902,9 +3902,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/5.3.10"
+                "source": "https://github.com/utopia-php/database/tree/fix-mongo-perms"
             },
-            "time": "2026-03-13T06:10:41+00:00"
+            "time": "2026-03-13T06:53:49+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -9105,9 +9105,18 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-fix-mongo-perms",
+            "alias": "5.3.11",
+            "alias_normalized": "5.3.11.0"
+        }
+    ],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
