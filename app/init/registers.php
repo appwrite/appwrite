@@ -246,7 +246,7 @@ $register->set('pools', function () {
             $dsnUser = $dsn->getUser();
             $dsnPass = $dsn->getPassword();
             $dsnScheme = $dsn->getScheme();
-            $dsnDatabase = $dsn->getPath();
+            $dsnDatabase = ltrim($dsn->getPath(), '/');
 
             if (!in_array($dsnScheme, $schemes)) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid console database scheme");
@@ -295,7 +295,7 @@ $register->set('pools', function () {
                             default => null
                         };
 
-                        $adapter->setDatabase($dsn->getPath());
+                        $adapter->setDatabase(ltrim($dsn->getPath(), '/'));
                         return $adapter;
                     case 'pubsub':
                         return match ($dsn->getScheme()) {
