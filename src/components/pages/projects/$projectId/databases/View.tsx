@@ -4976,7 +4976,7 @@ function RowEditDrawer({
         const colKey =
           col.key || col.name || col.$id || col.attribute || col.attributeId
         if (colKey && !colKey.startsWith('$')) {
-          // Initialize with default value or empty string
+          // Initialize as editable empty values; save sanitization handles optional nulls
           if (col.default !== undefined && col.default !== null) {
             initialData[colKey] = col.default
           } else if (col.type === 'boolean') {
@@ -5073,6 +5073,19 @@ function RowEditDrawer({
     })
   }
 
+  const isColumnRequired = (
+    columnInfo?: Record<string, unknown> | null,
+  ): boolean => {
+    return (
+      columnInfo?.required === true ||
+      columnInfo?.required === 'true' ||
+      columnInfo?.isRequired === true ||
+      columnInfo?.isRequired === 'true' ||
+      columnInfo?.nullable === false ||
+      columnInfo?.nullable === 'false'
+    )
+  }
+
   // Detect RTL content
   const isRTL = (text: string | null | undefined): boolean => {
     if (!text || typeof text !== 'string') return false
@@ -5122,6 +5135,47 @@ function RowEditDrawer({
       : rowPermissions // Always pass for updates, even if empty
     const now = new Date().toISOString()
     const payload = { ...formData }
+    const missingRequiredFields: string[] = []
+
+    columns.forEach((col: unknown) => {
+      const columnInfo = col as Record<string, unknown>
+      const colKey =
+        columnInfo.key ||
+        columnInfo.name ||
+        columnInfo.$id ||
+        columnInfo.attribute ||
+        columnInfo.attributeId
+
+      if (!colKey || String(colKey).startsWith('$')) return
+
+      const fieldKey = String(colKey)
+      const currentValue = payload[fieldKey]
+      const fieldType = getFieldType(
+        fieldKey,
+        currentValue as string | number | boolean | unknown[] | null,
+        columnInfo,
+      )
+      const required = isColumnRequired(columnInfo)
+      const isEmptyValue =
+        currentValue === null ||
+        currentValue === undefined ||
+        (typeof currentValue === 'string' && currentValue.trim() === '')
+
+      if (required && fieldType !== 'boolean' && isEmptyValue) {
+        missingRequiredFields.push(fieldKey)
+        return
+      }
+
+      if (!required && isEmptyValue) {
+        payload[fieldKey] = null
+      }
+    })
+
+    if (missingRequiredFields.length > 0) {
+      toast.error(`Required: ${missingRequiredFields.join(', ')}`)
+      return
+    }
+
     if (
       payload['$createdAt'] === null ||
       payload['$createdAt'] === undefined ||
@@ -5317,13 +5371,9 @@ function RowEditDrawer({
                           key in formData ? formData[key] : value
                         const shouldFocus = focusedField === key
                         // Check multiple possible properties for required status
-                        const isRequired =
-                          columnInfo?.required === true ||
-                          columnInfo?.required === 'true' ||
-                          columnInfo?.isRequired === true ||
-                          columnInfo?.isRequired === 'true' ||
-                          columnInfo?.nullable === false ||
-                          columnInfo?.nullable === 'false'
+                        const isRequired = isColumnRequired(
+                          columnInfo as Record<string, unknown> | undefined,
+                        )
 
                         const arrayLength =
                           fieldType === 'array'
@@ -5451,13 +5501,11 @@ function RowEditDrawer({
                                         const colType = rawType.endsWith('[]')
                                           ? rawType.slice(0, -2)
                                           : rawType
-                                        const isRequired =
-                                          columnInfo?.required === true ||
-                                          columnInfo?.required === 'true' ||
-                                          columnInfo?.isRequired === true ||
-                                          columnInfo?.isRequired === 'true' ||
-                                          columnInfo?.nullable === false ||
-                                          columnInfo?.nullable === 'false'
+                                        const isRequired = isColumnRequired(
+                                          columnInfo as
+                                            | Record<string, unknown>
+                                            | undefined,
+                                        )
                                         const isNull = item === null
                                         const stringValue = isNull
                                           ? ''
