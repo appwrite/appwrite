@@ -1233,7 +1233,7 @@ Http::patch('/v1/users/:userId/impersonator')
         ]
     ))
     ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
-    ->param('impersonator', false, new Boolean(true), 'Whether the user can impersonate other users. When true, the user can browse project users to choose a target and can pass impersonation headers to act as that user.')
+    ->param('impersonator', false, new Boolean(true), 'Whether the user can impersonate other users. When true, the user can browse project users to choose a target and can pass impersonation headers to act as that user. Internal audit logs still attribute impersonated actions to the original impersonator and store the target user details only in internal audit payload data.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')

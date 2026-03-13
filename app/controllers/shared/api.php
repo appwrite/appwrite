@@ -382,8 +382,11 @@ Http::init()
         }
 
         if (!empty($user->getId())) {
+            $impersonatorUserId = $user->getAttribute('impersonatorUserId');
             $accessedAt = $user->getAttribute('accessedAt', 0);
-            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
+
+            // Skip updating accessedAt for impersonated requests so we don't attribute activity to the target user.
+            if (!$impersonatorUserId && DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
                 $user->setAttribute('accessedAt', DateTime::now());
 
                 if ($project->getId() !== 'console' && APP_MODE_ADMIN !== $mode) {

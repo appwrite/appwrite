@@ -480,9 +480,13 @@ Http::setResource('user', function (string $mode, Document $project, Document $c
             $targetUser = $userDb->getAuthorization()->skip(fn () => $userDb->findOne('users', [Query::equal('phone', [$impersonatePhone])]));
         }
         if ($targetUser !== null && !$targetUser->isEmpty()) {
-            $impersonatorUserId = $user->getId();
+            $impersonator = clone $user;
             $user = clone $targetUser;
-            $user->setAttribute('impersonatorUserId', $impersonatorUserId);
+            $user->setAttribute('impersonatorUserId', $impersonator->getId());
+            $user->setAttribute('impersonatorUserInternalId', $impersonator->getSequence());
+            $user->setAttribute('impersonatorUserName', $impersonator->getAttribute('name', ''));
+            $user->setAttribute('impersonatorUserEmail', $impersonator->getAttribute('email', ''));
+            $user->setAttribute('impersonatorAccessedAt', $impersonator->getAttribute('accessedAt', 0));
         }
     }
 

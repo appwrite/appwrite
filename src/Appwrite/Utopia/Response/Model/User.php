@@ -148,7 +148,7 @@ class User extends Model
             ])
             ->addRule('impersonatorUserId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'ID of the user performing the impersonation. Present only when the current request is impersonating another user.',
+                'description' => 'ID of the original actor performing the impersonation. Present only when the current request is impersonating another user. Internal audit logs attribute the action to this user, while the impersonated target is recorded only in internal audit payload data.',
                 'required' => false,
                 'default' => '',
                 'example' => '5e5ea5c16897e',
