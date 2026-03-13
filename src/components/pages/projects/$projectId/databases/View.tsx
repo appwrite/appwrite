@@ -173,6 +173,23 @@ const getColumnTypeColor = (type: string) => {
   return colors[type] || 'bg-muted text-muted-foreground border-border'
 }
 
+const getColumnDisplayType = (column: Record<string, unknown>) => {
+  const type = typeof column.type === 'string' ? column.type : 'string'
+  const format = typeof column.format === 'string' ? column.format : null
+
+  if (
+    format &&
+    (type === 'string' ||
+      type === 'varchar' ||
+      type === 'datetime' ||
+      type === 'date')
+  ) {
+    return format
+  }
+
+  return type
+}
+
 // Helper function for index type colors
 const getIndexTypeColor = (type: string) => {
   const colors: Record<string, string> = {
@@ -8231,6 +8248,7 @@ function ColumnsSpreadsheet({
   const columns = apiColumns.map((col: unknown) => ({
     key: col.key || col.name || col.$id,
     type: col.type || 'string',
+    format: col.format || null,
     // String fields
     size: col.size || null,
     encrypt: col.encrypt || false,
@@ -8950,10 +8968,14 @@ function ColumnsSpreadsheet({
                           variant="outline"
                           className={cn(
                             'text-[11px] font-medium border',
-                            getColumnTypeColor(col.type),
+                            getColumnTypeColor(
+                              getColumnDisplayType(
+                                col as Record<string, unknown>,
+                              ),
+                            ),
                           )}
                         >
-                          {col.type}
+                          {getColumnDisplayType(col as Record<string, unknown>)}
                         </Badge>
                       </td>
                       <td
