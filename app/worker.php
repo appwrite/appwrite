@@ -109,9 +109,12 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
     $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
     if (\in_array($dsn->getHost(), $sharedTables)) {
+        $tenant = $database->getIdAttributeType() === Database::VAR_INTEGER
+            ? (int) $project->getSequence()
+            : $project->getSequence();
         $database
             ->setSharedTables(true)
-            ->setTenant($project->getSequence())
+            ->setTenant($tenant)
             ->setNamespace($dsn->getParam('namespace'));
     } else {
         $database
@@ -149,9 +152,12 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
             $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
             if (\in_array($dsn->getHost(), $sharedTables)) {
+                $tenant = $database->getIdAttributeType() === Database::VAR_INTEGER
+                    ? (int) $project->getSequence()
+                    : $project->getSequence();
                 $database
                     ->setSharedTables(true)
-                    ->setTenant($project->getSequence())
+                    ->setTenant($tenant)
                     ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $database
@@ -171,9 +177,12 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
         if (\in_array($dsn->getHost(), $sharedTables)) {
+            $tenant = $database->getIdAttributeType() === Database::VAR_INTEGER
+                ? (int) $project->getSequence()
+                : $project->getSequence();
             $database
                 ->setSharedTables(true)
-                ->setTenant($project->getSequence())
+                ->setTenant($tenant)
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
             $database
@@ -195,7 +204,10 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache, Authoriza
     $database = null;
     return function (?Document $project = null) use ($pools, $cache, $database, $authorization) {
         if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant($project->getSequence());
+            $tenant = $database->getIdAttributeType() === Database::VAR_INTEGER
+                ? (int) $project->getSequence()
+                : $project->getSequence();
+            $database->setTenant($tenant);
             return $database;
         }
 
@@ -212,7 +224,10 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache, Authoriza
 
         // set tenant
         if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant($project->getSequence());
+            $tenant = $database->getIdAttributeType() === Database::VAR_INTEGER
+                ? (int) $project->getSequence()
+                : $project->getSequence();
+            $database->setTenant($tenant);
         }
 
         return $database;
