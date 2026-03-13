@@ -725,6 +725,20 @@
                         });
                         renderProgress();
 
+                        // If any step ended in error (e.g. account creation
+                        // failed), stay on the progress screen so the user can
+                        // see the error and choose to retry or navigate to the
+                        // console manually — don't auto-redirect.
+                        const hasErrors = INSTALLATION_STEPS.some((step) => {
+                            const state = progressState.get(step.id);
+                            return state && state.status === STATUS.ERROR;
+                        });
+
+                        if (hasErrors) {
+                            finalizeInstall();
+                            return;
+                        }
+
                         const accountState = progressState.get(STEP_IDS.ACCOUNT_SETUP);
                         const sessionDetails = accountState?.details;
                         finalizeInstall();
