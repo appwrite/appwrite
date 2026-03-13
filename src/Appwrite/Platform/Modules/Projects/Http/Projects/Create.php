@@ -220,9 +220,7 @@ class Create extends Action
             if ($sharedTables) {
                 $tenant = null;
                 if ($sharedTablesV1) {
-                    $tenant = $dbForProject->getIdAttributeType() === Database::VAR_INTEGER
-                        ? (int)$project->getSequence()
-                        : $project->getSequence();
+                    $tenant = $project->getSequence();
                 }
                 $dbForProject
                     ->setSharedTables(true)
