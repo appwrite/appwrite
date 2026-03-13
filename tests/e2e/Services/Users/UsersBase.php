@@ -2584,6 +2584,46 @@ trait UsersBase
     }
 
     /**
+     * Test that impersonator users get users.read before selecting a target
+     */
+    public function testImpersonatorUsersReadScopeWithoutActiveImpersonation(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', $headers, [
+            'userId' => ID::unique(),
+            'email' => 'impersonator-browse-users@appwrite.io',
+            'password' => 'password',
+            'name' => 'Impersonator Browse Users',
+        ]);
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $patch = $this->client->call(
+            Client::METHOD_PATCH,
+            '/users/' . $user['body']['$id'] . '/impersonator',
+            $headers,
+            ['impersonator' => true]
+        );
+        $this->assertEquals(200, $patch['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/sessions', $headers);
+        $this->assertEquals(201, $session['headers']['status-code']);
+
+        $users = $this->client->call(Client::METHOD_GET, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-session' => $session['body']['secret'],
+        ]);
+        $this->assertEquals(200, $users['headers']['status-code']);
+        $this->assertIsArray($users['body']['users']);
+        $this->assertGreaterThanOrEqual(1, count($users['body']['users']));
+    }
+
+    /**
      * Test that when impersonating, users.read scope is granted and list users succeeds
      */
     public function testImpersonationUsersReadScope(): void

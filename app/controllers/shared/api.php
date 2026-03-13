@@ -338,8 +338,14 @@ Http::init()
 
         $scopes = \array_unique($scopes);
 
-        // Grant users.read scope when acting as another user via impersonation
-        if (!$user->isEmpty() && $user->getAttribute('impersonatorUserId')) {
+        // Impersonators can browse users before and during impersonation.
+        if (
+            !$user->isEmpty()
+            && (
+                $user->getAttribute('impersonator', false)
+                || $user->getAttribute('impersonatorUserId')
+            )
+        ) {
             $scopes[] = 'users.read';
             $scopes = \array_unique($scopes);
         }
