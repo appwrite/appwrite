@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "130c3df95eea2462eab9952cc0a35b62",
+    "content-hash": "8accb3eb0ae303c9e7769beebba97543",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4572,16 +4572,16 @@
         },
         {
             "name": "utopia-php/mongo",
-            "version": "1.0.0",
+            "version": "dev-fix-collection-exists-code",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/mongo.git",
-                "reference": "45bedf36c2c946ec7a0a3e59b9f12f772de0b01d"
+                "reference": "bf85c7f937715a10600b06e3bf39837c30212f92"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/mongo/zipball/45bedf36c2c946ec7a0a3e59b9f12f772de0b01d",
-                "reference": "45bedf36c2c946ec7a0a3e59b9f12f772de0b01d",
+                "url": "https://api.github.com/repos/utopia-php/mongo/zipball/bf85c7f937715a10600b06e3bf39837c30212f92",
+                "reference": "bf85c7f937715a10600b06e3bf39837c30212f92",
                 "shasum": ""
             },
             "require": {
@@ -4627,9 +4627,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/mongo/issues",
-                "source": "https://github.com/utopia-php/mongo/tree/1.0.0"
+                "source": "https://github.com/utopia-php/mongo/tree/fix-collection-exists-code"
             },
-            "time": "2026-02-12T05:54:06+00:00"
+            "time": "2026-03-13T07:18:40+00:00"
         },
         {
             "name": "utopia-php/platform",
@@ -9111,11 +9111,18 @@
             "version": "dev-fix-mongo-perms",
             "alias": "5.3.11",
             "alias_normalized": "5.3.11.0"
+        },
+        {
+            "package": "utopia-php/mongo",
+            "version": "dev-fix-collection-exists-code",
+            "alias": "1.0.1",
+            "alias_normalized": "1.0.1.0"
         }
     ],
     "minimum-stability": "dev",
     "stability-flags": {
-        "utopia-php/database": 20
+        "utopia-php/database": 20,
+        "utopia-php/mongo": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
