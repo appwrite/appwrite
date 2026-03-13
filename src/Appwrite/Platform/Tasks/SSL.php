@@ -2,7 +2,8 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Event\Certificate;
+use Appwrite\Event\Message\Certificate as CertificateMessage;
+use Appwrite\Event\Publisher\Certificate as CertificatesPublisher;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -29,11 +30,11 @@ class SSL extends Action
             ->param('skip-check', 'true', new Boolean(true), 'If DNS and renew check should be skipped. Defaults to true, and when true, all jobs will result in certificate generation attempt.', true)
             ->inject('console')
             ->inject('dbForPlatform')
-            ->inject('queueForCertificates')
+            ->inject('publisherForCertificates')
             ->callback($this->action(...));
     }
 
-    public function action(string $domain, bool|string $skipCheck, Document $console, Database $dbForPlatform, Certificate $queueForCertificates): void
+    public function action(string $domain, bool|string $skipCheck, Document $console, Database $dbForPlatform, CertificatesPublisher $publisherForCertificates): void
     {
         $domain = new Domain(!empty($domain) ? $domain : '');
         if (!$domain->isKnown() || $domain->isTest()) {
@@ -98,12 +99,13 @@ class SSL extends Action
             Console::info('Updated existing rule ' . $rule->getId() . ' for domain: ' . $domain->get());
         }
 
-        $queueForCertificates
-            ->setDomain(new Document([
-                'domain' => $domain->get()
-            ]))
-            ->setSkipRenewCheck($skipCheck)
-            ->trigger();
+        $publisherForCertificates->enqueue(new CertificateMessage(
+            project: $console,
+            domain: new Document([
+                'domain' => $domain->get(),
+            ]),
+            skipRenewCheck: $skipCheck,
+        ));
 
         Console::success('Scheduled a job to issue a TLS certificate for domain: ' . $domain->get());
     }

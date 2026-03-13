@@ -4,7 +4,7 @@ namespace Appwrite\Event\Message;
 
 use Utopia\Database\Document;
 
-class Usage extends Base
+readonly class Usage extends Base
 {
     /**
      * @param Document $project

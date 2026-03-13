@@ -5,13 +5,13 @@ require_once __DIR__ . '/init.php';
 use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Build;
-use Appwrite\Event\Certificate;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
+use Appwrite\Event\Publisher\Certificate as CertificatesPublisher;
 use Appwrite\Event\Publisher\Mail;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
@@ -362,9 +362,10 @@ Server::setResource('queueForRealtime', function () {
     return new Realtime();
 }, []);
 
-Server::setResource('queueForCertificates', function (Publisher $publisher) {
-    return new Certificate($publisher);
-}, ['publisher']);
+Server::setResource('publisherForCertificates', fn (Publisher $publisher) => new CertificatesPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME))
+), ['publisher']);
 
 Server::setResource('queueForMigrations', function (Publisher $publisher) {
     return new Migration($publisher);

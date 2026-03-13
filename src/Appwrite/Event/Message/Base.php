@@ -2,7 +2,7 @@
 
 namespace Appwrite\Event\Message;
 
-abstract class Base
+abstract readonly class Base
 {
     /**
      * Serialize message to array for queue

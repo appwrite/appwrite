@@ -2,8 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Proxy\Http\Rules\Verification;
 
-use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Certificate as CertificateMessage;
+use Appwrite\Event\Publisher\Certificate as CertificatesPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Proxy\Action;
 use Appwrite\SDK\AuthType;
@@ -56,7 +57,7 @@ class Update extends Action
             ))
             ->param('ruleId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Rule ID.', false, ['dbForProject'])
             ->inject('response')
-            ->inject('queueForCertificates')
+            ->inject('publisherForCertificates')
             ->inject('queueForEvents')
             ->inject('project')
             ->inject('dbForPlatform')
@@ -67,7 +68,7 @@ class Update extends Action
     public function action(
         string $ruleId,
         Response $response,
-        Certificate $queueForCertificates,
+        CertificatesPublisher $publisherForCertificates,
         Event $queueForEvents,
         Document $project,
         Database $dbForPlatform,
@@ -109,12 +110,12 @@ class Update extends Action
         }
 
         // Issue a TLS certificate when DNS verification is successful
-        $queueForCertificates
-            ->setDomain(new Document([
+        $publisherForCertificates->enqueue(new CertificateMessage(
+            domain: new Document([
                 'domain' => $rule->getAttribute('domain'),
                 'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
-            ]))
-            ->trigger();
+            ]),
+        ));
 
         if (!empty($certificate)) {
             $rule->setAttribute('renewAt', $certificate->getAttribute('renewDate', ''));

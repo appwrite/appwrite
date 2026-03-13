@@ -6,13 +6,13 @@ use Appwrite\Auth\Key;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Audit as AuditEvent;
 use Appwrite\Event\Build;
-use Appwrite\Event\Certificate;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
+use Appwrite\Event\Publisher\Certificate as CertificatesPublisher;
 use Appwrite\Event\Publisher\Mail;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
@@ -167,9 +167,10 @@ Http::setResource('queueForFunctions', function (Publisher $publisher) {
 Http::setResource('eventProcessor', function () {
     return new EventProcessor();
 }, []);
-Http::setResource('queueForCertificates', function (Publisher $publisher) {
-    return new Certificate($publisher);
-}, ['publisher']);
+Http::setResource('publisherForCertificates', fn (Publisher $publisher) => new CertificatesPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME))
+), ['publisher']);
 Http::setResource('queueForMigrations', function (Publisher $publisher) {
     return new Migration($publisher);
 }, ['publisher']);

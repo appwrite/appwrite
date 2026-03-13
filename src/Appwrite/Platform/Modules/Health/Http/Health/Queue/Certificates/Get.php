@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Health\Http\Health\Queue\Certificates;
 
-use Appwrite\Event\Certificate;
+use Appwrite\Event\Publisher\Certificate as CertificatesPublisher;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -42,16 +42,16 @@ class Get extends Base
                 contentType: ContentType::JSON
             ))
             ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
-            ->inject('queueForCertificates')
+            ->inject('publisherForCertificates')
             ->inject('response')
             ->callback($this->action(...));
     }
 
-    public function action(int|string $threshold, Certificate $queueForCertificates, Response $response): void
+    public function action(int|string $threshold, CertificatesPublisher $publisherForCertificates, Response $response): void
     {
         $threshold = (int) $threshold;
 
-        $size = $queueForCertificates->getSize();
+        $size = $publisherForCertificates->getSize();
 
         $this->assertQueueThreshold($size, $threshold);
 

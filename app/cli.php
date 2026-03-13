@@ -2,10 +2,10 @@
 
 require_once __DIR__ . '/init.php';
 
-use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
+use Appwrite\Event\Publisher\Certificate as CertificatesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\StatsResources;
 use Appwrite\Platform\Appwrite;
@@ -267,9 +267,10 @@ $setResource('queueForFunctions', function (Publisher $publisher) {
 $setResource('queueForDeletes', function (Publisher $publisher) {
     return new Delete($publisher);
 }, ['publisher']);
-$setResource('queueForCertificates', function (Publisher $publisher) {
-    return new Certificate($publisher);
-}, ['publisher']);
+$setResource('publisherForCertificates', fn (Publisher $publisher) => new CertificatesPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME))
+), ['publisher']);
 $setResource('logError', function (Registry $register) {
     return function (Throwable $error, string $namespace, string $action) use ($register) {
         Console::error('[Error] Timestamp: ' . date('c', time()));

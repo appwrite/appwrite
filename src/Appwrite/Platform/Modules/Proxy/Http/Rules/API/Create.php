@@ -2,8 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Proxy\Http\Rules\API;
 
-use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Certificate as CertificateMessage;
+use Appwrite\Event\Publisher\Certificate as CertificatesPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Proxy\Action;
 use Appwrite\SDK\AuthType;
@@ -62,7 +63,7 @@ class Create extends Action
             ->param('domain', null, new ValidatorDomain(), 'Domain name.')
             ->inject('response')
             ->inject('project')
-            ->inject('queueForCertificates')
+            ->inject('publisherForCertificates')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
             ->inject('platform')
@@ -70,7 +71,7 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $domain, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform, array $platform, Log $log)
+    public function action(string $domain, Response $response, Document $project, CertificatesPublisher $publisherForCertificates, Event $queueForEvents, Database $dbForPlatform, array $platform, Log $log)
     {
         $this->validateDomainRestrictions($domain, $platform);
 
@@ -114,13 +115,13 @@ class Create extends Action
         }
 
         if ($rule->getAttribute('status', '') === RULE_STATUS_CERTIFICATE_GENERATING) {
-            $queueForCertificates
-                ->setDomain(new Document([
+            $publisherForCertificates->enqueue(new CertificateMessage(
+                domain: new Document([
                     'domain' => $rule->getAttribute('domain'),
                     'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
-                ]))
-                ->setAction(Certificate::ACTION_GENERATION)
-                ->trigger();
+                ]),
+                action: CertificateMessage::ACTION_GENERATION,
+            ));
         }
 
         $queueForEvents->setParam('ruleId', $rule->getId());
