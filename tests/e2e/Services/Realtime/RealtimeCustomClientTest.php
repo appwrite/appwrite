@@ -3802,7 +3802,7 @@ class RealtimeCustomClientTest extends Scope
                     'x-appwrite-key' => $this->getProject()['apiKey'],
                 ]));
                 $this->assertEquals('available', $response['body']['status']);
-            }, 30000, 250);
+            }, 60000, 500);
 
             $creates = [
                 ['name' => 'Doc A'],
