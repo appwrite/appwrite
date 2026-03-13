@@ -582,12 +582,9 @@ Http::setResource('dbForProject', function (Group $pools, Database $dbForPlatfor
     $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
     if (\in_array($dsn->getHost(), $sharedTables)) {
-        $tenant = $database->getIdAttributeType() === Database::VAR_INTEGER
-            ? (int) $project->getSequence()
-            : $project->getSequence();
         $database
             ->setSharedTables(true)
-            ->setTenant($tenant)
+            ->setTenant($project->getSequence())
             ->setNamespace($dsn->getParam('namespace'));
     } else {
         $database
@@ -853,12 +850,9 @@ Http::setResource('getProjectDB', function (Group $pools, Database $dbForPlatfor
             $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
             if (\in_array($dsn->getHost(), $sharedTables)) {
-                $tenant = $database->getIdAttributeType() === Database::VAR_INTEGER
-                    ? (int) $project->getSequence()
-                    : $project->getSequence();
                 $database
                     ->setSharedTables(true)
-                    ->setTenant($tenant)
+                    ->setTenant($project->getSequence())
                     ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $database
@@ -888,10 +882,7 @@ Http::setResource('getLogsDB', function (Group $pools, Cache $cache, Authorizati
 
     return function (?Document $project = null) use ($pools, $cache, $authorization, &$database) {
         if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $tenant = $database->getIdAttributeType() === Database::VAR_INTEGER
-                ? (int) $project->getSequence()
-                : $project->getSequence();
-            $database->setTenant($tenant);
+            $database->setTenant($project->getSequence());
             return $database;
         }
 
@@ -908,10 +899,7 @@ Http::setResource('getLogsDB', function (Group $pools, Cache $cache, Authorizati
 
         // set tenant
         if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $tenant = $database->getIdAttributeType() === Database::VAR_INTEGER
-                ? (int) $project->getSequence()
-                : $project->getSequence();
-            $database->setTenant($tenant);
+            $database->setTenant($project->getSequence());
         }
 
         return $database;
