@@ -5,6 +5,10 @@ concurrency:
   cancel-in-progress: true
 
 on: [pull_request]
+
+permissions:
+  contents: read
+
 jobs:
   lint:
     name: Linter

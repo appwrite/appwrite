@@ -1,6 +1,10 @@
 name: "Static code analysis"
 
 on: [pull_request]
+
+permissions:
+  contents: read
+
 jobs:
   lint:
     name: CodeQL
