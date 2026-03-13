@@ -8,8 +8,6 @@ use Utopia\Validator\Hostname;
 
 class Origin extends Validator
 {
-    protected array $hostnames = [];
-    protected array $schemes = [];
     protected ?string $scheme = null;
     protected ?string $host = null;
     protected string $origin = '';
@@ -17,14 +15,34 @@ class Origin extends Validator
     /**
      * Constructor
      *
-     * @param array<\Utopia\Database\Document> $platforms
+     * @param array<string> $allowedHostnames
+     * @param array<string> $allowedSchemes
      */
-    public function __construct(array $platforms)
+    public function __construct(protected array $allowedHostnames, protected array $allowedSchemes)
     {
-        $this->hostnames = Platform::getHostnames($platforms);
-        $this->schemes = Platform::getSchemes($platforms);
     }
 
+    public function setAllowedHostnames(array $allowedHostnames): self
+    {
+        $this->allowedHostnames = $allowedHostnames;
+        return $this;
+    }
+
+    public function setAllowedSchemes(array $allowedSchemes): self
+    {
+        $this->allowedSchemes = $allowedSchemes;
+        return $this;
+    }
+
+    public function getAllowedHostnames(): array
+    {
+        return $this->allowedHostnames;
+    }
+
+    public function getAllowedSchemes(): array
+    {
+        return $this->allowedSchemes;
+    }
 
     /**
      * Check if Origin is valid.
@@ -33,13 +51,13 @@ class Origin extends Validator
      */
     public function isValid($origin): bool
     {
-        $this->origin = $origin;
-        $this->scheme = null;
-        $this->host = null;
-
         if (!is_string($origin) || empty($origin)) {
             return false;
         }
+
+        $this->origin = $origin;
+        $this->scheme = null;
+        $this->host = null;
 
         $this->scheme = $this->parseScheme($origin);
         $this->host = strtolower(parse_url($origin, PHP_URL_HOST) ?? '');
@@ -53,11 +71,11 @@ class Origin extends Validator
             Platform::SCHEME_EDGE_EXTENSION,
         ];
         if (in_array($this->scheme, $webPlatforms, true)) {
-            $validator = new Hostname($this->hostnames);
+            $validator = new Hostname($this->allowedHostnames);
             return $validator->isValid($this->host);
         }
 
-        if (!empty($this->scheme) && in_array($this->scheme, $this->schemes, true)) {
+        if (!empty($this->scheme) && in_array($this->scheme, $this->allowedSchemes, true)) {
             return true;
         }
 

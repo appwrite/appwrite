@@ -92,9 +92,9 @@ class Rule extends Model
             ])
             ->addRule('logs', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Certificate generation logs. This will return an empty string if generation did not run, or succeeded.',
+                'description' => 'Logs from rule verification or certificate generation. Certificate generation logs are prioritized if both are available.',
                 'default' => '',
-                'example' => 'HTTP challegne failed.',
+                'example' => 'Verification of DNS records failed with DNS resolver 8.8.8.8. Domain stage.myapp.com does not have DNS record.',
             ])
             ->addRule('renewAt', [
                 'type' => self::TYPE_DATETIME,

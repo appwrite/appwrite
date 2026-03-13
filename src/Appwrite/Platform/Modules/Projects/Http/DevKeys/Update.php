@@ -9,6 +9,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -29,7 +30,7 @@ class Update extends Action
             ->setHttpPath('/v1/projects/:projectId/dev-keys/:keyId')
             ->desc('Update dev key')
             ->groups(['api', 'projects'])
-            ->label('scope', 'projects.write')
+            ->label('scope', 'devKeys.write')
             ->label('sdk', new Method(
                 namespace: 'projects',
                 group: 'devKeys',
@@ -46,8 +47,8 @@ class Update extends Action
                 ],
                 contentType: ContentType::JSON
             ))
-            ->param('projectId', '', new UID(), 'Project unique ID.')
-            ->param('keyId', '', new UID(), 'Key unique ID.')
+            ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
+            ->param('keyId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Key unique ID.', false, ['dbForProject'])
             ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
             ->param('expire', null, new DatetimeValidator(), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format.')
             ->inject('response')
@@ -73,7 +74,7 @@ class Update extends Action
             ->setAttribute('name', $name)
             ->setAttribute('expire', $expire);
 
-        $dbForPlatform->updateDocument('devKeys', $key->getId(), $key);
+        $dbForPlatform->updateDocument('devKeys', $key->getId(), new Document(['name' => $name, 'expire' => $expire]));
 
         $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 

@@ -26,6 +26,7 @@ class MessagingTest extends TestCase
         $realtime->subscribe(
             '1',
             1,
+            ID::unique(),
             [
                 Role::user(ID::custom('123'))->toString(),
                 Role::users()->toString(),
@@ -35,7 +36,8 @@ class MessagingTest extends TestCase
                 Role::team(ID::custom('def'))->toString(),
                 Role::team(ID::custom('def'), 'guest')->toString(),
             ],
-            ['files' => 0, 'documents' => 0, 'documents.789' => 0, 'account.123' => 0]
+            // Pass plain channel names, Realtime::subscribe will normalize them
+            ['files', 'documents', 'documents.789', 'account.123']
         );
 
         $event = [
@@ -48,89 +50,89 @@ class MessagingTest extends TestCase
             ]
         ];
 
-        $receivers = $realtime->getSubscribers($event);
+        $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
         $event['roles'] = [Role::users()->toString()];
 
-        $receivers = $realtime->getSubscribers($event);
+        $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
         $event['roles'] = [Role::user(ID::custom('123'))->toString()];
 
-        $receivers = $realtime->getSubscribers($event);
+        $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
         $event['roles'] = [Role::team(ID::custom('abc'))->toString()];
 
-        $receivers = $realtime->getSubscribers($event);
+        $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
         $event['roles'] = [Role::team(ID::custom('abc'), 'administrator')->toString()];
 
-        $receivers = $realtime->getSubscribers($event);
+        $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
         $event['roles'] = [Role::team(ID::custom('abc'), 'moderator')->toString()];
 
-        $receivers = $realtime->getSubscribers($event);
+        $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
         $event['roles'] = [Role::team(ID::custom('def'))->toString()];
 
-        $receivers = $realtime->getSubscribers($event);
+        $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
         $event['roles'] = [Role::team(ID::custom('def'), 'guest')->toString()];
 
-        $receivers = $realtime->getSubscribers($event);
+        $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
         $event['roles'] = [Role::user(ID::custom('456'))->toString()];
 
-        $receivers = $realtime->getSubscribers($event);
+        $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertEmpty($receivers);
 
         $event['roles'] = [Role::team(ID::custom('def'), 'member')->toString()];
 
-        $receivers = $realtime->getSubscribers($event);
+        $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertEmpty($receivers);
 
         $event['roles'] = [Role::any()->toString()];
         $event['data']['channels'] = ['documents.123'];
 
-        $receivers = $realtime->getSubscribers($event);
+        $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertEmpty($receivers);
 
         $event['data']['channels'] = ['documents.789'];
 
-        $receivers = $realtime->getSubscribers($event);
+        $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
         $event['project'] = '2';
 
-        $receivers = $realtime->getSubscribers($event);
+        $receivers = array_keys($realtime->getSubscribers($event));
 
         $this->assertEmpty($receivers);
 

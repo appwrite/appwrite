@@ -1,1 +1,0 @@
-appwrite sites list-templates

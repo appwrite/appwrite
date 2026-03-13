@@ -6,7 +6,9 @@ class Projects extends Base
 {
     public const ALLOWED_ATTRIBUTES = [
         'name',
-        'teamId'
+        'teamId',
+        'labels',
+        'search'
     ];
 
     /**
@@ -16,5 +18,10 @@ class Projects extends Base
     public function __construct()
     {
         parent::__construct('projects', self::ALLOWED_ATTRIBUTES);
+    }
+
+    public function isSelectQueryAllowed(): bool
+    {
+        return true;
     }
 }

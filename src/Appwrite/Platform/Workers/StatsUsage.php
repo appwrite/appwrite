@@ -4,7 +4,7 @@ namespace Appwrite\Platform\Workers;
 
 use Exception;
 use Throwable;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -160,7 +160,7 @@ class StatsUsage extends Action
         }
 
         $this->stats[$projectId]['project'] = $project;
-        $this->stats[$projectId]['receivedAt'] = DateTime::now();
+        $this->stats[$projectId]['receivedAt'] = DateTime::format(new \DateTime('@' . $message->getTimestamp()));
         foreach ($payload['metrics'] ?? [] as $metric) {
             $this->keys++;
             if (!isset($this->stats[$projectId]['keys'][$metric['key']])) {
@@ -435,7 +435,6 @@ class StatsUsage extends Action
                         return $cmp;
                     }
 
-                    unset($this->projects[$sequence]);
                     // Period ASC
                     $cmp = strcmp($a['period'], $b['period']);
                     if ($cmp !== 0) {
@@ -539,13 +538,11 @@ class StatsUsage extends Action
                 $this->statDocuments
             );
             Console::success('Usage logs pushed to Logs DB');
-
-            /**
-             * todo: Do we need to unset $this->statDocuments?
-             */
-
         } catch (Throwable $th) {
             Console::error($th->getMessage());
+        } finally {
+            // Clear statDocuments to prevent memory accumulation across batches
+            $this->statDocuments = [];
         }
     }
 }

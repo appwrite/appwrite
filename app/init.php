@@ -26,6 +26,7 @@ require_once __DIR__ . '/init/database/filters.php';
 require_once __DIR__ . '/init/database/formats.php';
 require_once __DIR__ . '/init/locales.php';
 require_once __DIR__ . '/init/registers.php';
+require_once __DIR__ . '/init/models.php';
 require_once __DIR__ . '/init/resources.php';
 
 \stream_context_set_default([ // Set global user agent and http settings

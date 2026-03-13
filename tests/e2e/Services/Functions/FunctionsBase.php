@@ -3,9 +3,10 @@
 namespace Tests\E2E\Services\Functions;
 
 use Appwrite\Tests\Async;
+use Appwrite\Tests\Async\Exceptions\Critical;
 use CURLFile;
 use Tests\E2E\Client;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\System\System;
@@ -17,15 +18,47 @@ trait FunctionsBase
     protected string $stdout = '';
     protected string $stderr = '';
 
+    /**
+     * Retry an API call on transient 401 auth errors.
+     * CI can intermittently fail API key lookups under load,
+     * especially on MongoDB when the database is recovering.
+     */
+    protected function callWithAuthRetry(string $method, string $path, array $headers, mixed $params = []): array
+    {
+        $maxRetries = 10;
+        $response = null;
+
+        for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+            // Refresh project credentials after several failed attempts
+            if ($attempt === 5) {
+                $project = $this->getProject(true);
+                $headers['x-appwrite-project'] = $project['$id'];
+                $headers['x-appwrite-key'] = $project['apiKey'];
+            }
+
+            $response = $this->client->call($method, $path, array_merge($headers), $params);
+
+            if ($response['headers']['status-code'] !== 401) {
+                return $response;
+            }
+
+            if ($attempt < $maxRetries) {
+                \sleep(\min($attempt, 3));
+            }
+        }
+
+        return $response;
+    }
+
     protected function setupFunction(mixed $params): string
     {
-        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+        $function = $this->callWithAuthRetry(Client::METHOD_POST, '/functions', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), $params);
+        ], $params);
 
-        $this->assertEquals($function['headers']['status-code'], 201, 'Setup function failed with status code: ' . $function['headers']['status-code'] . ' and response: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
+        $this->assertEquals(201, $function['headers']['status-code'], 'Setup function failed with status code: ' . $function['headers']['status-code'] . ' and response: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
 
         $functionId = $function['body']['$id'];
 
@@ -34,12 +67,12 @@ trait FunctionsBase
 
     protected function setupDeployment(string $functionId, mixed $params): string
     {
-        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
+        $deployment = $this->callWithAuthRetry(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', [
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), $params);
-        $this->assertEquals($deployment['headers']['status-code'], 202, 'Setup deployment failed with status code: ' . $deployment['headers']['status-code'] . ' and response: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
+        ], $params);
+        $this->assertEquals(202, $deployment['headers']['status-code'], 'Setup deployment failed with status code: ' . $deployment['headers']['status-code'] . ' and response: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
         $deploymentId = $deployment['body']['$id'] ?? '';
 
         $this->assertEventually(function () use ($functionId, $deploymentId) {
@@ -48,8 +81,15 @@ trait FunctionsBase
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
-            $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-        }, 100000, 500);
+            $this->assertNotEquals(401, $deployment['headers']['status-code'], 'Auth failed while polling deployment status');
+
+            $status = $deployment['body']['status'] ?? '';
+            if ($status === 'failed') {
+                throw new Critical('Deployment build failed: ' . ($deployment['body']['buildLogs'] ?? 'no logs'));
+            }
+
+            $this->assertEquals('ready', $status, 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
+        }, 120000, 500);
 
         // Not === so multipart/form-data works fine too
         if (($params['activate'] ?? false) == true) {
@@ -59,8 +99,9 @@ trait FunctionsBase
                     'x-appwrite-project' => $this->getProject()['$id'],
                     'x-appwrite-key' => $this->getProject()['apiKey'],
                 ]));
-                $this->assertEquals($deploymentId, $function['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
-            }, 100000, 500);
+                $this->assertNotEquals(401, $function['headers']['status-code'], 'Auth failed while polling function activation');
+                $this->assertEquals($deploymentId, $function['body']['deploymentId'] ?? '', 'Deployment is not activated, deployment: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
+            }, 120000, 500);
         }
 
         return $deploymentId;
@@ -68,13 +109,24 @@ trait FunctionsBase
 
     protected function cleanupFunction(string $functionId): void
     {
-        $function = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]));
+        $maxRetries = 3;
+        for ($i = 0; $i < $maxRetries; $i++) {
+            $function = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
 
-        $this->assertEquals($function['headers']['status-code'], 204);
+            if ($function['headers']['status-code'] === 204) {
+                return;
+            }
+
+            if ($i < $maxRetries - 1) {
+                \usleep(500000);
+            }
+        }
+
+        $this->assertEquals(204, $function['headers']['status-code']);
     }
 
     protected function createFunction(mixed $params): mixed
@@ -271,6 +323,29 @@ trait FunctionsBase
         return $template;
     }
 
+    protected function helperGetLatestCommit(string $owner, string $repository): ?string
+    {
+        $ch = curl_init("https://api.github.com/repos/{$owner}/{$repository}/commits/main");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'User-Agent: Appwrite',
+            'Accept: application/vnd.github.v3+json'
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode === 200) {
+            $commitData = json_decode($response, true);
+            if (isset($commitData['sha'])) {
+                return $commitData['sha'];
+            }
+        }
+
+        return null;
+    }
+
     protected function createExecution(string $functionId, mixed $params = []): mixed
     {
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
@@ -293,12 +368,13 @@ trait FunctionsBase
 
     protected function setupFunctionDomain(string $functionId, string $subdomain = ''): string
     {
+        $functionsDomain = \explode(',', System::getEnv('_APP_DOMAIN_FUNCTIONS', ''))[0];
         $subdomain = $subdomain ? $subdomain : ID::unique();
         $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/function', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'domain' => $subdomain . '.' . System::getEnv('_APP_DOMAIN_FUNCTIONS', ''),
+            'domain' => $subdomain . '.' . $functionsDomain,
             'functionId' => $functionId,
         ]);
 

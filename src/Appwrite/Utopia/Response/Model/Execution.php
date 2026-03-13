@@ -60,10 +60,10 @@ class Execution extends Model
             ])
             ->addRule('status', [
                 'type' => self::TYPE_ENUM,
-                'description' => 'The status of the function execution. Possible values can be: `waiting`, `processing`, `completed`, or `failed`.',
+                'description' => 'The status of the function execution. Possible values can be: `waiting`, `processing`, `completed`, `failed`, or `scheduled`.',
                 'default' => '',
                 'example' => 'processing',
-                'enum' => ['waiting', 'processing', 'completed', 'failed'],
+                'enum' => ['waiting', 'processing', 'completed', 'failed', 'scheduled'],
             ])
             ->addRule('requestMethod', [
                 'type' => self::TYPE_STRING,

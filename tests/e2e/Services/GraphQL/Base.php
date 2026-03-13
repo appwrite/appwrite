@@ -3,7 +3,7 @@
 namespace Tests\E2E\Services\GraphQL;
 
 use CURLFile;
-use Utopia\CLI\Console;
+use Utopia\Console;
 
 trait Base
 {
@@ -288,10 +288,12 @@ trait Base
     public const string GET_FAVICON = 'get_favicon';
     public const string GET_QRCODE = 'get_qrcode';
     public const string GET_USER_INITIALS = 'get_user_initials';
+    public const string GET_SCREENSHOT = 'get_screenshot';
 
     // Providers
     public const string CREATE_MAILGUN_PROVIDER = 'create_mailgun_provider';
     public const string CREATE_SENDGRID_PROVIDER = 'create_sendgrid_provider';
+    public const string CREATE_RESEND_PROVIDER = 'create_resend_provider';
     public const string CREATE_SMTP_PROVIDER = 'create_smtp_provider';
     public const string CREATE_TWILIO_PROVIDER = 'create_twilio_provider';
     public const string CREATE_TELESIGN_PROVIDER = 'create_telesign_provider';
@@ -304,6 +306,7 @@ trait Base
     public const string GET_PROVIDER = 'get_provider';
     public const string UPDATE_MAILGUN_PROVIDER = 'update_mailgun_provider';
     public const string UPDATE_SENDGRID_PROVIDER = 'update_sendgrid_provider';
+    public const string UPDATE_RESEND_PROVIDER = 'update_resend_provider';
     public const string UPDATE_SMTP_PROVIDER = 'update_smtp_provider';
     public const string UPDATE_TWILIO_PROVIDER = 'update_twilio_provider';
     public const string UPDATE_TELESIGN_PROVIDER = 'update_telesign_provider';
@@ -1779,6 +1782,12 @@ trait Base
                         status
                     }
                 }';
+            case self::GET_SCREENSHOT:
+                return 'query getScreenshot($url: String!, $width: Int, $height: Int, $viewportWidth: Int, $viewportHeight: Int, $scale: Float, $theme: String, $userAgent: String, $fullpage: Boolean, $locale: String, $timezone: String, $latitude: Float, $longitude: Float, $accuracy: Float, $touch: Boolean, $permissions: [String!]) {
+                    avatarsGetScreenshot(url: $url, width: $width, height: $height, viewportWidth: $viewportWidth, viewportHeight: $viewportHeight, scale: $scale, theme: $theme, userAgent: $userAgent, fullpage: $fullpage, locale: $locale, timezone: $timezone, latitude: $latitude, longitude: $longitude, accuracy: $accuracy, touch: $touch, permissions: $permissions) {
+                        status
+                    }
+                }';
             case self::GET_ACCOUNT:
                 return 'query getAccount {
                     accountGet {
@@ -2325,7 +2334,8 @@ trait Base
                         buckets {
                             _id
                             name
-                            enabled
+                            enabled,
+                            totalSize
                         }
                     }
                 }';
@@ -2335,6 +2345,7 @@ trait Base
                         _id
                         name
                         enabled
+                        totalSize
                     }
                 }';
             case self::UPDATE_BUCKET:
@@ -2417,15 +2428,21 @@ trait Base
             case self::GET_DB_HEALTH:
                 return 'query getDbHealth {
                     healthGetDB {
-                        ping
-                        status
+                        statuses {
+                            ping
+                            status
+                        }
+                        total
                     }
                 }';
             case self::GET_CACHE_HEALTH:
                 return 'query getCacheHealth {
                     healthGetCache {
-                        ping
-                        status
+                        statuses {
+                            ping
+                            status
+                        }
+                        total
                     }
                 }';
             case self::GET_TIME_HEALTH:
@@ -2487,6 +2504,16 @@ trait Base
             case self::CREATE_SENDGRID_PROVIDER:
                 return 'mutation createSendgridProvider($providerId: String!, $name: String!, $fromName: String!, $fromEmail: String!, $apiKey: String!, $replyToName: String, $replyToEmail: String) {
                     messagingCreateSendgridProvider(providerId: $providerId, name: $name, fromName: $fromName, fromEmail: $fromEmail, apiKey: $apiKey, replyToName: $replyToName, replyToEmail: $replyToEmail) {
+                        _id
+                        name
+                        provider
+                        type
+                        enabled
+                    }
+                }';
+            case self::CREATE_RESEND_PROVIDER:
+                return 'mutation createResendProvider($providerId: String!, $name: String!, $apiKey: String!, $fromName: String!, $fromEmail: String!, $replyToName: String, $replyToEmail: String) {
+                    messagingCreateResendProvider(providerId: $providerId, name: $name, apiKey: $apiKey, fromName: $fromName, fromEmail: $fromEmail, replyToName: $replyToName, replyToEmail: $replyToEmail) {
                         _id
                         name
                         provider
@@ -2611,6 +2638,16 @@ trait Base
             case self::UPDATE_SENDGRID_PROVIDER:
                 return 'mutation messagingUpdateSendgridProvider($providerId: String!, $name: String!, $apiKey: String!, $enabled: Boolean, $fromName: String, $fromEmail: String) {
                     messagingUpdateSendgridProvider(providerId: $providerId, name: $name, apiKey: $apiKey, enabled: $enabled, fromName: $fromName, fromEmail: $fromEmail) {
+                        _id
+                        name
+                        provider
+                        type
+                        enabled
+                    }
+                }';
+            case self::UPDATE_RESEND_PROVIDER:
+                return 'mutation messagingUpdateResendProvider($providerId: String!, $name: String!, $apiKey: String!, $enabled: Boolean, $fromName: String, $fromEmail: String, $replyToName: String, $replyToEmail: String) {
+                    messagingUpdateResendProvider(providerId: $providerId, name: $name, apiKey: $apiKey, enabled: $enabled, fromName: $fromName, fromEmail: $fromEmail, replyToName: $replyToName, replyToEmail: $replyToEmail) {
                         _id
                         name
                         provider

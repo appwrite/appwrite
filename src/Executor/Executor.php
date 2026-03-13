@@ -69,7 +69,7 @@ class Executor
         string $entrypoint = '',
         string $destination = '',
         array $variables = [],
-        string $command = null,
+        ?string $command = null,
         string $outputDirectory = '',
         string $runtimeEntrypoint = ''
     ) {
@@ -149,14 +149,20 @@ class Executor
             'x-opr-addressing-method' => 'broadcast'
         ], [], true, 30);
 
+        $status = $response['headers']['status-code'];
+        $message = \is_string($response['body']) ? $response['body'] : ($response['body']['message'] ?? '');
+
+        // Runtime already gone — nothing to do
+        if ($status === 404) {
+            return true;
+        }
+
         // Temporary fix for race condition
-        if ($response['headers']['status-code'] === 500 && \str_contains($response['body']['message'], 'already in progress')) {
+        if ($status === 500 && \str_contains($message, 'already in progress')) {
             return true; // OK, removal already in progress
         }
 
-        $status = $response['headers']['status-code'];
         if ($status >= 400) {
-            $message = \is_string($response['body']) ? $response['body'] : $response['body']['message'];
             throw new \Exception($message, $status);
         }
 
@@ -200,10 +206,6 @@ class Executor
         ?int $requestTimeout = null,
         string $responseFormat = self::RESPONSE_FORMAT_OBJECT_HEADERS
     ) {
-        if (empty($headers['host'])) {
-            $headers['host'] = System::getEnv('_APP_DOMAIN', '');
-        }
-
         $runtimeId = "$projectId-$deploymentId";
         $route = '/runtimes/' . $runtimeId . '/executions';
 
@@ -298,7 +300,7 @@ class Executor
      * @return array|string
      * @throws Exception
      */
-    private function call(string $endpoint, string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, int $timeout = 15, callable $callback = null)
+    private function call(string $endpoint, string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, int $timeout = 15, ?callable $callback = null)
     {
         $headers            = array_merge($this->headers, $headers);
         $ch                 = curl_init($endpoint . $path . (($method == self::METHOD_GET && !empty($params)) ? '?' . http_build_query($params) : ''));

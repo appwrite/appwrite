@@ -1,5 +1,6 @@
 <?php
 
+use Utopia\Auth\Hashes\Argon2;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 
@@ -172,7 +173,7 @@ return [
                 'size' => 256,
                 'signed' => true,
                 'required' => false,
-                'default' => 'argon2',
+                'default' => (new Argon2())->getName(),
                 'array' => false,
                 'filters' => [],
             ],
@@ -183,7 +184,7 @@ return [
                 'size' => 65535,
                 'signed' => true,
                 'required' => false,
-                'default' => ['type' => 'argon2', 'memoryCost' => 2048, 'timeCost' => 4, 'threads' => 3],
+                'default' => (new Argon2())->getOptions(),
                 'array' => false,
                 'filters' => ['json'],
             ],
@@ -362,6 +363,61 @@ return [
                 'default' => null,
                 'array' => false,
                 'filters' => ['datetime'],
+            ],
+            [
+                '$id' => ID::custom('emailCanonical'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 320,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('emailIsFree'),
+                'type' => Database::VAR_BOOLEAN,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('emailIsDisposable'),
+                'type' => Database::VAR_BOOLEAN,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('emailIsCorporate'),
+                'type' => Database::VAR_BOOLEAN,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('emailIsCanonical'),
+                'type' => Database::VAR_BOOLEAN,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
             ],
         ],
         'indexes' => [
@@ -1114,9 +1170,9 @@ return [
             [
                 '$id' => ID::custom('expire'),
                 'type' => Database::VAR_DATETIME,
+                'format' => '',
                 'size' => 0,
                 'required' => false,
-                'format' => '',
                 'signed' => false,
                 'default' => null,
                 'array' => false,
@@ -1231,6 +1287,17 @@ return [
                 'default' => new \stdClass(),
                 'array' => false,
                 'filters' => ['json'],
+            ],
+            [
+                '$id' => ID::custom('labels'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 128,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => true,
+                'filters' => [],
             ],
         ],
         'indexes' => [
@@ -1527,6 +1594,17 @@ return [
                 'array' => false,
             ],
             [
+                '$id' => ID::custom('transformations'),
+                'type' => Database::VAR_BOOLEAN,
+                'signed' => true,
+                'size' => 0,
+                'format' => '',
+                'filters' => [],
+                'required' => false,
+                'array' => false,
+                'default' => true,
+            ],
+            [
                 '$id' => ID::custom('search'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -1539,13 +1617,6 @@ return [
             ],
         ],
         'indexes' => [
-            [
-                '$id' => ID::custom('_fulltext_name'),
-                'type' => Database::INDEX_FULLTEXT,
-                'attributes' => ['name'],
-                'lengths' => [],
-                'orders' => [],
-            ],
             [
                 '$id' => ID::custom('_key_search'),
                 'type' => Database::INDEX_FULLTEXT,
@@ -1772,13 +1843,6 @@ return [
                 '$id' => ID::custom('_key_provider'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['provider'],
-                'lengths' => [],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => ID::custom('_key_name'),
-                'type' => Database::INDEX_FULLTEXT,
-                'attributes' => ['name'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
@@ -2049,14 +2113,8 @@ return [
                 'filters' => ['topicSearch'],
             ],
         ],
+
         'indexes' => [
-            [
-                '$id' => ID::custom('_key_name'),
-                'type' => Database::INDEX_FULLTEXT,
-                'attributes' => ['name'],
-                'lengths' => [],
-                'orders' => [],
-            ],
             [
                 '$id' => ID::custom('_key_search'),
                 'type' => Database::INDEX_FULLTEXT,

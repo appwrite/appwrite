@@ -2,7 +2,10 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\CLI\Console;
+use Appwrite\Docker\Compose;
+use Appwrite\Docker\Env;
+use Utopia\Console;
+use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
@@ -23,10 +26,11 @@ class Upgrade extends Install
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
+            ->param('database', 'mongodb', new Text(length: 0), 'Database to use (mongodb|mariadb|postgresql)', true)
             ->callback($this->action(...));
     }
 
-    public function action(string $httpPort, string $httpsPort, string $organization, string $image, string $interactive, bool $noStart): void
+    public function action(string $httpPort, string $httpsPort, string $organization, string $image, string $interactive, bool $noStart, string $database): void
     {
         // Check for previous installation
         $data = @file_get_contents($this->path . '/docker-compose.yml');
@@ -39,6 +43,33 @@ class Upgrade extends Install
             Console::log('      └── docker-compose.yml');
             Console::exit(1);
         }
-        parent::action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart);
+
+        $database = null;
+        $compose = new Compose($data);
+        foreach ($compose->getServices() as $service) {
+            if (!$service) {
+                continue;
+            }
+            $env = $service->getEnvironment()->list();
+            if (isset($env['_APP_DB_ADAPTER'])) {
+                $database = $env['_APP_DB_ADAPTER'];
+                break;
+            }
+        }
+
+        if ($database === null) {
+            $envData = @file_get_contents($this->path . '/.env');
+            if ($envData !== false) {
+                $envFile = new Env($envData);
+                $database = $envFile->list()['_APP_DB_ADAPTER'] ?? null;
+            }
+        }
+
+        if ($database === null) {
+            // TODO: Change default to 'mongodb' after next release
+            $database = System::getEnv('_APP_DB_ADAPTER', 'mariadb');
+        }
+
+        parent::action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, $database);
     }
 }

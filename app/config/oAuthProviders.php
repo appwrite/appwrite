@@ -462,4 +462,15 @@ return [
         'mock' => true,
         'class' => 'Appwrite\\Auth\\OAuth2\\Mock',
     ],
+    'mock-unverified' => [
+        'name' => 'MockUnverified',
+        'developers' => 'https://appwrite.io',
+        'icon' => 'icon-appwrite',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => true,
+        'class' => 'Appwrite\\Auth\\OAuth2\\MockUnverified',
+    ],
 ];

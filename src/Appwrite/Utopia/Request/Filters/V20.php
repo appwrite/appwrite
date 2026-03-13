@@ -5,10 +5,8 @@ namespace Appwrite\Utopia\Request\Filters;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request\Filter;
 use Utopia\Database\Database;
-use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 
 class V20 extends Filter
 {
@@ -139,27 +137,27 @@ class V20 extends Filter
         }
 
         try {
-            $database = Authorization::skip(fn () => $dbForProject->getDocument(
+            $database = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument(
                 'databases',
                 $databaseId
             ));
             if ($database->isEmpty()) {
                 return [];
             }
-        } catch (NotFound) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        } catch (\Throwable) {
+            return [];
         }
 
         try {
-            $collection = Authorization::skip(fn () => $dbForProject->getDocument(
+            $collection = $database = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument(
                 'database_' . $database->getSequence(),
                 $collectionId
             ));
             if ($collection->isEmpty()) {
                 return [];
             }
-        } catch (NotFound) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        } catch (\Throwable) {
+            return [];
         }
 
         $attributes = $collection->getAttribute('attributes', []);
