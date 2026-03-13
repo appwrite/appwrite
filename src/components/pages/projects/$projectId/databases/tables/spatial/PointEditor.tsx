@@ -65,8 +65,11 @@ export function PointEditor({
 
   return (
     <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-3">
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1.5">
+      <div className="flex items-end gap-2 rounded-md border border-border/60 bg-background px-3 py-2">
+        <span className="pb-2 font-mono text-[12px] text-muted-foreground">
+          [
+        </span>
+        <div className="flex-1 space-y-1.5">
           <Label className="text-[11px] text-muted-foreground">Longitude</Label>
           <Input
             type="number"
@@ -78,7 +81,10 @@ export function PointEditor({
             className="h-9 text-[13px]"
           />
         </div>
-        <div className="space-y-1.5">
+        <span className="pb-2 font-mono text-[12px] text-muted-foreground">
+          ,
+        </span>
+        <div className="flex-1 space-y-1.5">
           <Label className="text-[11px] text-muted-foreground">Latitude</Label>
           <Input
             type="number"
@@ -90,6 +96,9 @@ export function PointEditor({
             className="h-9 text-[13px]"
           />
         </div>
+        <span className="pb-2 font-mono text-[12px] text-muted-foreground">
+          ]
+        </span>
       </div>
       {!isRequired && showNullCheckbox && (
         <div className="flex items-center gap-1.5">

@@ -89,8 +89,11 @@ export function LineEditor({
               key={index}
               className="flex items-center gap-2 rounded-md border border-border bg-background p-2"
             >
-              <div className="flex-1 grid grid-cols-2 gap-2">
-                <div className="space-y-1">
+              <div className="flex flex-1 items-end gap-2 rounded-md border border-border/60 bg-muted/20 px-3 py-2">
+                <span className="pb-2 font-mono text-[12px] text-muted-foreground">
+                  [
+                </span>
+                <div className="flex-1 space-y-1">
                   <Label className="text-[10px] text-muted-foreground">
                     Lon
                   </Label>
@@ -104,7 +107,10 @@ export function LineEditor({
                     className="h-8 text-[12px]"
                   />
                 </div>
-                <div className="space-y-1">
+                <span className="pb-2 font-mono text-[12px] text-muted-foreground">
+                  ,
+                </span>
+                <div className="flex-1 space-y-1">
                   <Label className="text-[10px] text-muted-foreground">
                     Lat
                   </Label>
@@ -118,6 +124,10 @@ export function LineEditor({
                     className="h-8 text-[12px]"
                   />
                 </div>
+                <span className="pb-2 font-mono text-[12px] text-muted-foreground">
+                  ]
+                  {index < points.length - 1 ? ',' : ''}
+                </span>
               </div>
               <Button
                 type="button"

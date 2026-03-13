@@ -6885,6 +6885,17 @@ function RowsSpreadsheet({
   // Rows are already paginated by the API
   const paginatedRows = rows
 
+  const stringifyStructuredValue = (input: unknown): string => {
+    if (input === null || input === undefined) return 'null'
+    if (Array.isArray(input)) {
+      return `[${input.map((item) => stringifyStructuredValue(item)).join(', ')}]`
+    }
+    if (typeof input === 'object') {
+      return JSON.stringify(input)
+    }
+    return String(input)
+  }
+
   const formatCellValue = (
     value:
       | string
@@ -6897,11 +6908,7 @@ function RowsSpreadsheet({
   ) => {
     if (value === null || value === undefined)
       return { full: 'null', display: 'null', isNull: true }
-    const stringValue = Array.isArray(value)
-      ? value.map((v) => (v === null ? 'null' : String(v))).join(', ')
-      : typeof value === 'object'
-        ? JSON.stringify(value)
-        : String(value)
+      const stringValue = stringifyStructuredValue(value)
     const trimmed =
       stringValue.length > 80 ? `${stringValue.slice(0, 77)}…` : stringValue
     return { full: stringValue, display: trimmed, isNull: false }
