@@ -9,9 +9,9 @@ use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
-use Appwrite\Event\Mail;
 use Appwrite\Event\Message\Usage as UsageMessage;
 use Appwrite\Event\Messaging;
+use Appwrite\Event\Publisher\Mail as MailsPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
@@ -456,7 +456,7 @@ Http::init()
     ->inject('queueForBuilds')
     ->inject('usage')
     ->inject('queueForFunctions')
-    ->inject('queueForMails')
+    ->inject('publisherForMails')
     ->inject('dbForProject')
     ->inject('timelimit')
     ->inject('resourceToken')
@@ -467,7 +467,7 @@ Http::init()
     ->inject('telemetry')
     ->inject('platform')
     ->inject('authorization')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Context $usage, Func $queueForFunctions, Mail $queueForMails, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform, Authorization $authorization) {
+    ->action(function (Http $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Context $usage, Func $queueForFunctions, MailsPublisher $publisherForMails, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform, Authorization $authorization) {
 
         $route = $utopia->getRoute();
 
@@ -577,12 +577,10 @@ Http::init()
         $queueForMessaging->setProject($project);
         $queueForFunctions->setProject($project);
         $queueForBuilds->setProject($project);
-        $queueForMails->setProject($project);
 
         /* Auto-set platforms */
         $queueForFunctions->setPlatform($platform);
         $queueForBuilds->setPlatform($platform);
-        $queueForMails->setPlatform($platform);
 
         $useCache = $route->getLabel('cache', false);
         $storageCacheOperationsCounter = $telemetry->createCounter('storage.cache.operations.load');

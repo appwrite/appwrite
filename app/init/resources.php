@@ -11,9 +11,9 @@ use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
-use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
+use Appwrite\Event\Publisher\Mail;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Screenshot;
@@ -126,9 +126,10 @@ Http::setResource('publisherWebhooks', function (Publisher $publisher) {
 Http::setResource('queueForMessaging', function (Publisher $publisher) {
     return new Messaging($publisher);
 }, ['publisher']);
-Http::setResource('queueForMails', function (Publisher $publisher) {
-    return new Mail($publisher);
-}, ['publisher']);
+Http::setResource('publisherForMails', fn (Publisher $publisher) => new Mail(
+    $publisher,
+    new Queue(System::getEnv('_APP_MAILS_QUEUE_NAME', Event::MAILS_QUEUE_NAME))
+), ['publisher']);
 Http::setResource('queueForBuilds', function (Publisher $publisher) {
     return new Build($publisher);
 }, ['publisher']);

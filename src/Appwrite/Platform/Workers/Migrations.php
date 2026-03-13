@@ -3,8 +3,9 @@
 namespace Appwrite\Platform\Workers;
 
 use Ahc\Jwt\JWT;
-use Appwrite\Event\Mail;
+use Appwrite\Event\Message\Mail;
 use Appwrite\Event\Message\Usage as UsageMessage;
+use Appwrite\Event\Publisher\Mail as MailsPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
@@ -41,7 +42,7 @@ use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
 use Utopia\Migration\Transfer;
 use Utopia\Platform\Action;
-use Utopia\Queue\Message;
+use Utopia\Queue\Message as QueueMessage;
 use Utopia\Storage\Device;
 use Utopia\System\System;
 
@@ -85,7 +86,7 @@ class Migrations extends Action
             ->inject('queueForRealtime')
             ->inject('deviceForMigrations')
             ->inject('deviceForFiles')
-            ->inject('queueForMails')
+            ->inject('publisherForMails')
             ->inject('usage')
             ->inject('publisherForUsage')
             ->inject('plan')
@@ -97,7 +98,7 @@ class Migrations extends Action
      * @throws Exception
      */
     public function action(
-        Message $message,
+        QueueMessage $message,
         Document $project,
         Database $dbForProject,
         Database $dbForPlatform,
@@ -105,7 +106,7 @@ class Migrations extends Action
         Realtime $queueForRealtime,
         Device $deviceForMigrations,
         Device $deviceForFiles,
-        Mail $queueForMails,
+        MailsPublisher $publisherForMails,
         Context $usage,
         UsagePublisher $publisherForUsage,
         array $plan,
@@ -150,7 +151,7 @@ class Migrations extends Action
             $this->processMigration(
                 $migration,
                 $queueForRealtime,
-                $queueForMails,
+                $publisherForMails,
                 $usage,
                 $publisherForUsage,
                 $platform,
@@ -349,7 +350,7 @@ class Migrations extends Action
     protected function processMigration(
         Document $migration,
         Realtime $queueForRealtime,
-        Mail $queueForMails,
+        MailsPublisher $publisherForMails,
         Context $usage,
         UsagePublisher $publisherForUsage,
         array $platform,
@@ -519,7 +520,7 @@ class Migrations extends Action
 
                     // TODO: Move to CSV hook
                     if ($migration->getAttribute('destination') === DestinationCSV::getName()) {
-                        $this->handleCSVExportComplete($project, $migration, $queueForMails, $queueForRealtime, $platform, $authorization);
+                        $this->handleCSVExportComplete($project, $migration, $publisherForMails, $queueForRealtime, $platform, $authorization);
                     }
                 }
             } finally {
@@ -538,7 +539,7 @@ class Migrations extends Action
      *
      * @param Document $project
      * @param Document $migration
-     * @param Mail $queueForMails
+     * @param MailsPublisher $publisherForMails
      * @param Realtime $queueForRealtime
      * @param array $platform
      * @param Authorization $authorization
@@ -547,7 +548,7 @@ class Migrations extends Action
     protected function handleCSVExportComplete(
         Document $project,
         Document $migration,
-        Mail $queueForMails,
+        MailsPublisher $publisherForMails,
         Realtime $queueForRealtime,
         array $platform,
         Authorization $authorization,
@@ -598,7 +599,7 @@ class Migrations extends Action
                     project: $project,
                     user: $user,
                     options: $options,
-                    queueForMails: $queueForMails,
+                    publisherForMails: $publisherForMails,
                     platform: $platform,
                     sizeMB: $sizeMB
                 );
@@ -660,7 +661,7 @@ class Migrations extends Action
             project: $project,
             user: $user,
             options: $options,
-            queueForMails: $queueForMails,
+            publisherForMails: $publisherForMails,
             platform: $platform,
             downloadUrl: $downloadUrl
         );
@@ -673,7 +674,7 @@ class Migrations extends Action
      * @param Document $project
      * @param Document $user The user who triggered the operation
      * @param array $options Migration options
-     * @param Mail $queueForMails
+     * @param MailsPublisher $publisherForMails
      * @param array $platform
      * @param string $downloadUrl Download URL for successful exports
      * @param float $sizeMB File size in MB for failed exports
@@ -685,7 +686,7 @@ class Migrations extends Action
         Document $project,
         Document $user,
         array $options,
-        Mail $queueForMails,
+        MailsPublisher $publisherForMails,
         array $platform,
         string $downloadUrl = '',
         float $sizeMB = 0.0,
@@ -752,17 +753,20 @@ class Migrations extends Action
             'platform' => $platform['platformName'],
         ];
 
-        $queueForMails
-            ->setProject($project)
-            ->setSubject($subject)
-            ->setPreview($preview)
-            ->setBody($emailBody)
-            ->setBodyTemplate(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl')
-            ->setVariables($emailVariables)
-            ->setName($user->getAttribute('name', $user->getAttribute('email')))
-            ->setRecipient($user->getAttribute('email'))
-            ->setSenderName($platform['emailSenderName'])
-            ->trigger();
+        $publisherForMails->enqueue(new Mail(
+            project: $project,
+            recipient: $user->getAttribute('email'),
+            name: $user->getAttribute('name', $user->getAttribute('email')),
+            subject: $subject,
+            body: $emailBody,
+            preview: $preview,
+            variables: $emailVariables,
+            bodyTemplate: __DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl',
+            customMailOptions: [
+                'senderName' => $platform['emailSenderName'],
+            ],
+            platform: $platform,
+        ));
 
         Console::info("CSV export {$emailType} notification email sent to " . $user->getAttribute('email'));
     }

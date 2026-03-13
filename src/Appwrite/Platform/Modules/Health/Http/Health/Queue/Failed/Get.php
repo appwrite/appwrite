@@ -9,9 +9,9 @@ use Appwrite\Event\Database;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
-use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
+use Appwrite\Event\Publisher\Mail as MailsPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Screenshot;
 use Appwrite\Event\StatsResources;
@@ -76,7 +76,7 @@ class Get extends Base
             ->inject('queueForDatabase')
             ->inject('queueForDeletes')
             ->inject('queueForAudits')
-            ->inject('queueForMails')
+            ->inject('publisherForMails')
             ->inject('queueForFunctions')
             ->inject('queueForStatsResources')
             ->inject('publisherForUsage')
@@ -96,7 +96,7 @@ class Get extends Base
         Database $queueForDatabase,
         Delete $queueForDeletes,
         Audit $queueForAudits,
-        Mail $queueForMails,
+        MailsPublisher $publisherForMails,
         Func $queueForFunctions,
         StatsResources $queueForStatsResources,
         UsagePublisher $publisherForUsage,
@@ -113,7 +113,7 @@ class Get extends Base
             System::getEnv('_APP_DATABASE_QUEUE_NAME', Event::DATABASE_QUEUE_NAME) => $queueForDatabase,
             System::getEnv('_APP_DELETE_QUEUE_NAME', Event::DELETE_QUEUE_NAME) => $queueForDeletes,
             System::getEnv('_APP_AUDITS_QUEUE_NAME', Event::AUDITS_QUEUE_NAME) => $queueForAudits,
-            System::getEnv('_APP_MAILS_QUEUE_NAME', Event::MAILS_QUEUE_NAME) => $queueForMails,
+            System::getEnv('_APP_MAILS_QUEUE_NAME', Event::MAILS_QUEUE_NAME) => $publisherForMails,
             System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME) => $queueForFunctions,
             System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME) => $queueForStatsResources,
             System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME) => $publisherForUsage,

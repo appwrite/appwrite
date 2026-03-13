@@ -12,8 +12,9 @@ use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Event\Mail;
+use Appwrite\Event\Message\Mail;
 use Appwrite\Event\Messaging;
+use Appwrite\Event\Publisher\Mail as MailsPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Network\Validator\Email as EmailValidator;
@@ -75,7 +76,7 @@ use Utopia\Validator\WhiteList;
 $oauthDefaultSuccess = '/console/auth/oauth2/success';
 $oauthDefaultFailure = '/console/auth/oauth2/failure';
 
-function sendSessionAlert(Locale $locale, Document $user, Document $project, array $platform, Document $session, Mail $queueForMails)
+function sendSessionAlert(Locale $locale, Document $user, Document $project, array $platform, Document $session, MailsPublisher $publisherForMails)
 {
     $subject = $locale->getText("emails.sessionAlert.subject");
     $preview = $locale->getText("emails.sessionAlert.preview");
@@ -109,6 +110,9 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, arr
     $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
     $replyTo = "";
 
+    $smtpConfig = [];
+    $customMailOptions = [];
+
     if ($smtpEnabled) {
         if (!empty($smtp['senderEmail'])) {
             $senderEmail = $smtp['senderEmail'];
@@ -120,12 +124,13 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, arr
             $replyTo = $smtp['replyTo'];
         }
 
-        $queueForMails
-            ->setSmtpHost($smtp['host'] ?? '')
-            ->setSmtpPort($smtp['port'] ?? '')
-            ->setSmtpUsername($smtp['username'] ?? '')
-            ->setSmtpPassword($smtp['password'] ?? '')
-            ->setSmtpSecure($smtp['secure'] ?? '');
+        $smtpConfig = [
+            'host' => $smtp['host'] ?? '',
+            'port' => $smtp['port'] ?? '',
+            'username' => $smtp['username'] ?? '',
+            'password' => $smtp['password'] ?? '',
+            'secure' => $smtp['secure'] ?? '',
+        ];
 
         if (!empty($customTemplate)) {
             if (!empty($customTemplate['senderEmail'])) {
@@ -142,10 +147,9 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, arr
             $subject = $customTemplate['subject'] ?? $subject;
         }
 
-        $queueForMails
-            ->setSmtpReplyTo($replyTo)
-            ->setSmtpSenderEmail($senderEmail)
-            ->setSmtpSenderName($senderName);
+        $smtpConfig['replyTo'] = $replyTo;
+        $smtpConfig['senderEmail'] = $senderEmail;
+        $smtpConfig['senderName'] = $senderName;
     }
 
     // session alerts should always have a client name!
@@ -190,24 +194,26 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, arr
 
     $email = $user->getAttribute('email');
 
-    $queueForMails
-        ->setSubject($subject)
-        ->setPreview($preview)
-        ->setBody($body)
-        ->setBodyTemplate($bodyTemplate)
-        ->appendVariables($emailVariables)
-        ->setRecipient($email);
-
-    // since this is console project, set email sender name!
     if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
-        $queueForMails->setSenderName($platform['emailSenderName']);
+        $customMailOptions['senderName'] = $platform['emailSenderName'];
     }
 
-    $queueForMails->trigger();
+    $publisherForMails->enqueue(new Mail(
+        project: $project,
+        recipient: $email,
+        subject: $subject,
+        body: $body,
+        preview: $preview,
+        smtp: $smtpConfig,
+        variables: $emailVariables,
+        bodyTemplate: $bodyTemplate,
+        customMailOptions: $customMailOptions,
+        platform: $platform,
+    ));
 }
 
 
-$createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, Authorization $authorization) {
+$createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Reader $geodb, Event $queueForEvents, MailsPublisher $publisherForMails, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, Authorization $authorization) {
 
     /** @var Appwrite\Utopia\Database\Documents\User $userFromRequest */
     $userFromRequest = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
@@ -311,7 +317,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     ]) !== 1;
 
     if ($isAllowedTokenType && $hasUserEmail && $isSessionAlertsEnabled && $isNotFirstSession) {
-        sendSessionAlert($locale, $user, $project, $platform, $session, $queueForMails);
+        sendSessionAlert($locale, $user, $project, $platform, $session, $publisherForMails);
     }
 
     $queueForEvents
@@ -975,13 +981,13 @@ Http::post('/v1/account/sessions/email')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
-    ->inject('queueForMails')
+    ->inject('publisherForMails')
     ->inject('hooks')
     ->inject('store')
     ->inject('proofForPassword')
     ->inject('proofForToken')
     ->inject('authorization')
-    ->action(function (string $email, string $password, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, Authorization $authorization) {
+    ->action(function (string $email, string $password, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Reader $geodb, Event $queueForEvents, MailsPublisher $publisherForMails, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, Authorization $authorization) {
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
 
@@ -1086,7 +1092,7 @@ Http::post('/v1/account/sessions/email')
                     Query::equal('userId', [$user->getId()]),
                 ]) !== 1
             ) {
-                sendSessionAlert($locale, $user, $project, $platform, $session, $queueForMails);
+                sendSessionAlert($locale, $user, $project, $platform, $session, $publisherForMails);
             }
         }
 
@@ -1280,7 +1286,7 @@ Http::post('/v1/account/sessions/token')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
-    ->inject('queueForMails')
+    ->inject('publisherForMails')
     ->inject('store')
     ->inject('proofForToken')
     ->inject('proofForCode')
@@ -2121,11 +2127,11 @@ Http::post('/v1/account/tokens/magic-url')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('queueForEvents')
-    ->inject('queueForMails')
+    ->inject('publisherForMails')
     ->inject('proofForPassword')
     ->inject('platform')
     ->inject('authorization')
-    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsPassword $proofForPassword, array $platform, Authorization $authorization) {
+    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, MailsPublisher $publisherForMails, ProofsPassword $proofForPassword, array $platform, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -2281,6 +2287,9 @@ Http::post('/v1/account/tokens/magic-url')
 
         $replyTo = "";
 
+        $smtpConfig = [];
+        $customMailOptions = [];
+
         if ($smtpEnabled) {
             if (!empty($smtp['senderEmail'])) {
                 $senderEmail = $smtp['senderEmail'];
@@ -2292,12 +2301,13 @@ Http::post('/v1/account/tokens/magic-url')
                 $replyTo = $smtp['replyTo'];
             }
 
-            $queueForMails
-                ->setSmtpHost($smtp['host'] ?? '')
-                ->setSmtpPort($smtp['port'] ?? '')
-                ->setSmtpUsername($smtp['username'] ?? '')
-                ->setSmtpPassword($smtp['password'] ?? '')
-                ->setSmtpSecure($smtp['secure'] ?? '');
+            $smtpConfig = [
+                'host' => $smtp['host'] ?? '',
+                'port' => $smtp['port'] ?? '',
+                'username' => $smtp['username'] ?? '',
+                'password' => $smtp['password'] ?? '',
+                'secure' => $smtp['secure'] ?? '',
+            ];
 
             if (!empty($customTemplate)) {
                 if (!empty($customTemplate['senderEmail'])) {
@@ -2314,10 +2324,9 @@ Http::post('/v1/account/tokens/magic-url')
                 $subject = $customTemplate['subject'] ?? $subject;
             }
 
-            $queueForMails
-                ->setSmtpReplyTo($replyTo)
-                ->setSmtpSenderEmail($senderEmail)
-                ->setSmtpSenderName($senderName);
+            $smtpConfig['replyTo'] = $replyTo;
+            $smtpConfig['senderEmail'] = $senderEmail;
+            $smtpConfig['senderName'] = $senderName;
         }
 
         $projectName = $project->getAttribute('name');
@@ -2339,18 +2348,21 @@ Http::post('/v1/account/tokens/magic-url')
             'team' => '',
         ];
 
-        $queueForMails
-            ->setSubject($subject)
-            ->setPreview($preview)
-            ->setBody($body)
-            ->appendVariables($emailVariables)
-            ->setRecipient($email);
-
         if ($project->getId() === 'console') {
-            $queueForMails->setSenderName($platform['emailSenderName']);
+            $customMailOptions['senderName'] = $platform['emailSenderName'];
         }
 
-        $queueForMails->trigger();
+        $publisherForMails->enqueue(new Mail(
+            project: $project,
+            recipient: $email,
+            subject: $subject,
+            body: $body,
+            preview: $preview,
+            smtp: $smtpConfig,
+            variables: $emailVariables,
+            customMailOptions: $customMailOptions,
+            platform: $platform,
+        ));
 
         $token->setAttribute('secret', $tokenSecret);
 
@@ -2401,11 +2413,11 @@ Http::post('/v1/account/tokens/email')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('queueForEvents')
-    ->inject('queueForMails')
+    ->inject('publisherForMails')
     ->inject('proofForPassword')
     ->inject('proofForCode')
     ->inject('authorization')
-    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization) {
+    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Locale $locale, Event $queueForEvents, MailsPublisher $publisherForMails, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -2567,6 +2579,9 @@ Http::post('/v1/account/tokens/email')
         $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
         $replyTo = "";
 
+        $smtpConfig = [];
+        $customMailOptions = [];
+
         if ($smtpEnabled) {
             if (!empty($smtp['senderEmail'])) {
                 $senderEmail = $smtp['senderEmail'];
@@ -2578,12 +2593,13 @@ Http::post('/v1/account/tokens/email')
                 $replyTo = $smtp['replyTo'];
             }
 
-            $queueForMails
-                ->setSmtpHost($smtp['host'] ?? '')
-                ->setSmtpPort($smtp['port'] ?? '')
-                ->setSmtpUsername($smtp['username'] ?? '')
-                ->setSmtpPassword($smtp['password'] ?? '')
-                ->setSmtpSecure($smtp['secure'] ?? '');
+            $smtpConfig = [
+                'host' => $smtp['host'] ?? '',
+                'port' => $smtp['port'] ?? '',
+                'username' => $smtp['username'] ?? '',
+                'password' => $smtp['password'] ?? '',
+                'secure' => $smtp['secure'] ?? '',
+            ];
 
             if (!empty($customTemplate)) {
                 if (!empty($customTemplate['senderEmail'])) {
@@ -2600,10 +2616,9 @@ Http::post('/v1/account/tokens/email')
                 $subject = $customTemplate['subject'] ?? $subject;
             }
 
-            $queueForMails
-                ->setSmtpReplyTo($replyTo)
-                ->setSmtpSenderEmail($senderEmail)
-                ->setSmtpSenderName($senderName);
+            $smtpConfig['replyTo'] = $replyTo;
+            $smtpConfig['senderEmail'] = $senderEmail;
+            $smtpConfig['senderName'] = $senderName;
         }
 
         $projectName = $project->getAttribute('name');
@@ -2639,20 +2654,22 @@ Http::post('/v1/account/tokens/email')
             ]);
         }
 
-        $queueForMails
-            ->setSubject($subject)
-            ->setPreview($preview)
-            ->setBody($body)
-            ->setBodyTemplate($bodyTemplate)
-            ->appendVariables($emailVariables)
-            ->setRecipient($email);
-
-        // since this is console project, set email sender name!
         if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
-            $queueForMails->setSenderName($platform['emailSenderName']);
+            $customMailOptions['senderName'] = $platform['emailSenderName'];
         }
 
-        $queueForMails->trigger();
+        $publisherForMails->enqueue(new Mail(
+            project: $project,
+            recipient: $email,
+            subject: $subject,
+            body: $body,
+            preview: $preview,
+            smtp: $smtpConfig,
+            variables: $emailVariables,
+            bodyTemplate: $bodyTemplate,
+            customMailOptions: $customMailOptions,
+            platform: $platform,
+        ));
 
         $token->setAttribute('secret', $tokenSecret);
 
@@ -2708,14 +2725,14 @@ Http::put('/v1/account/sessions/magic-url')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
-    ->inject('queueForMails')
+    ->inject('publisherForMails')
     ->inject('store')
     ->inject('proofForCode')
     ->inject('authorization')
-    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geodb, $queueForEvents, $queueForMails, $store, $proofForCode, $authorization) use ($createSession) {
+    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geodb, $queueForEvents, $publisherForMails, $store, $proofForCode, $authorization) use ($createSession) {
         $proofForToken = new ProofsToken(TOKEN_LENGTH_MAGIC_URL);
         $proofForToken->setHash(new Sha());
-        $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geodb, $queueForEvents, $queueForMails, $store, $proofForToken, $proofForCode, $authorization);
+        $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geodb, $queueForEvents, $publisherForMails, $store, $proofForToken, $proofForCode, $authorization);
     });
 
 Http::put('/v1/account/sessions/phone')
@@ -2757,7 +2774,7 @@ Http::put('/v1/account/sessions/phone')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
-    ->inject('queueForMails')
+    ->inject('publisherForMails')
     ->inject('store')
     ->inject('proofForToken')
     ->inject('proofForCode')
@@ -3579,11 +3596,11 @@ Http::post('/v1/account/recovery')
     ->inject('project')
     ->inject('platform')
     ->inject('locale')
-    ->inject('queueForMails')
+    ->inject('publisherForMails')
     ->inject('queueForEvents')
     ->inject('proofForToken')
     ->inject('authorization')
-    ->action(function (string $email, string $url, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Mail $queueForMails, Event $queueForEvents, ProofsToken $proofForToken, Authorization $authorization) {
+    ->action(function (string $email, string $url, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, MailsPublisher $publisherForMails, Event $queueForEvents, ProofsToken $proofForToken, Authorization $authorization) {
 
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
@@ -3664,6 +3681,9 @@ Http::post('/v1/account/recovery')
         $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
         $replyTo = "";
 
+        $smtpConfig = [];
+        $customMailOptions = [];
+
         if ($smtpEnabled) {
             if (!empty($smtp['senderEmail'])) {
                 $senderEmail = $smtp['senderEmail'];
@@ -3675,12 +3695,13 @@ Http::post('/v1/account/recovery')
                 $replyTo = $smtp['replyTo'];
             }
 
-            $queueForMails
-                ->setSmtpHost($smtp['host'] ?? '')
-                ->setSmtpPort($smtp['port'] ?? '')
-                ->setSmtpUsername($smtp['username'] ?? '')
-                ->setSmtpPassword($smtp['password'] ?? '')
-                ->setSmtpSecure($smtp['secure'] ?? '');
+            $smtpConfig = [
+                'host' => $smtp['host'] ?? '',
+                'port' => $smtp['port'] ?? '',
+                'username' => $smtp['username'] ?? '',
+                'password' => $smtp['password'] ?? '',
+                'secure' => $smtp['secure'] ?? '',
+            ];
 
             if (!empty($customTemplate)) {
                 if (!empty($customTemplate['senderEmail'])) {
@@ -3697,10 +3718,9 @@ Http::post('/v1/account/recovery')
                 $subject = $customTemplate['subject'] ?? $subject;
             }
 
-            $queueForMails
-                ->setSmtpReplyTo($replyTo)
-                ->setSmtpSenderEmail($senderEmail)
-                ->setSmtpSenderName($senderName);
+            $smtpConfig['replyTo'] = $replyTo;
+            $smtpConfig['senderEmail'] = $senderEmail;
+            $smtpConfig['senderName'] = $senderName;
         }
 
         $emailVariables = [
@@ -3713,19 +3733,22 @@ Http::post('/v1/account/recovery')
             'team' => ''
         ];
 
-        $queueForMails
-            ->setRecipient($profile->getAttribute('email', ''))
-            ->setName($profile->getAttribute('name', ''))
-            ->setBody($body)
-            ->appendVariables($emailVariables)
-            ->setSubject($subject)
-            ->setPreview($preview);
-
         if ($project->getId() === 'console') {
-            $queueForMails->setSenderName($platform['emailSenderName']);
+            $customMailOptions['senderName'] = $platform['emailSenderName'];
         }
 
-        $queueForMails->trigger();
+        $publisherForMails->enqueue(new Mail(
+            project: $project,
+            recipient: $profile->getAttribute('email', ''),
+            name: $profile->getAttribute('name', ''),
+            subject: $subject,
+            body: $body,
+            preview: $preview,
+            smtp: $smtpConfig,
+            variables: $emailVariables,
+            customMailOptions: $customMailOptions,
+            platform: $platform,
+        ));
 
         $recovery->setAttribute('secret', $secret);
 
@@ -3893,10 +3916,10 @@ Http::post('/v1/account/verifications/email')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('queueForEvents')
-    ->inject('queueForMails')
+    ->inject('publisherForMails')
     ->inject('proofForToken')
     ->inject('authorization')
-    ->action(function (string $url, Request $request, Response $response, Document $project, array $platform, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsToken $proofForToken, Authorization $authorization) {
+    ->action(function (string $url, Request $request, Response $response, Document $project, array $platform, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, MailsPublisher $publisherForMails, ProofsToken $proofForToken, Authorization $authorization) {
 
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
@@ -3981,6 +4004,9 @@ Http::post('/v1/account/verifications/email')
         $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
         $replyTo = "";
 
+        $smtpConfig = [];
+        $customMailOptions = [];
+
         if ($smtpEnabled) {
             if (!empty($smtp['senderEmail'])) {
                 $senderEmail = $smtp['senderEmail'];
@@ -3992,12 +4018,13 @@ Http::post('/v1/account/verifications/email')
                 $replyTo = $smtp['replyTo'];
             }
 
-            $queueForMails
-                ->setSmtpHost($smtp['host'] ?? '')
-                ->setSmtpPort($smtp['port'] ?? '')
-                ->setSmtpUsername($smtp['username'] ?? '')
-                ->setSmtpPassword($smtp['password'] ?? '')
-                ->setSmtpSecure($smtp['secure'] ?? '');
+            $smtpConfig = [
+                'host' => $smtp['host'] ?? '',
+                'port' => $smtp['port'] ?? '',
+                'username' => $smtp['username'] ?? '',
+                'password' => $smtp['password'] ?? '',
+                'secure' => $smtp['secure'] ?? '',
+            ];
 
             if (!empty($customTemplate)) {
                 if (!empty($customTemplate['senderEmail'])) {
@@ -4014,10 +4041,9 @@ Http::post('/v1/account/verifications/email')
                 $subject = $customTemplate['subject'] ?? $subject;
             }
 
-            $queueForMails
-                ->setSmtpReplyTo($replyTo)
-                ->setSmtpSenderEmail($senderEmail)
-                ->setSmtpSenderName($senderName);
+            $smtpConfig['replyTo'] = $replyTo;
+            $smtpConfig['senderEmail'] = $senderEmail;
+            $smtpConfig['senderName'] = $senderName;
         }
 
         $emailVariables = [
@@ -4044,20 +4070,23 @@ Http::post('/v1/account/verifications/email')
             ]);
         }
 
-        $queueForMails
-            ->setSubject($subject)
-            ->setPreview($preview)
-            ->setBody($body)
-            ->setBodyTemplate($bodyTemplate)
-            ->appendVariables($emailVariables)
-            ->setRecipient($user->getAttribute('email'))
-            ->setName($user->getAttribute('name') ?? '');
-
         if ($project->getId() === 'console') {
-            $queueForMails->setSenderName($platform['emailSenderName']);
+            $customMailOptions['senderName'] = $platform['emailSenderName'];
         }
 
-        $queueForMails->trigger();
+        $publisherForMails->enqueue(new Mail(
+            project: $project,
+            recipient: $user->getAttribute('email'),
+            name: $user->getAttribute('name') ?? '',
+            subject: $subject,
+            body: $body,
+            preview: $preview,
+            smtp: $smtpConfig,
+            variables: $emailVariables,
+            bodyTemplate: $bodyTemplate,
+            customMailOptions: $customMailOptions,
+            platform: $platform,
+        ));
 
         $verification->setAttribute('secret', $verificationSecret);
 

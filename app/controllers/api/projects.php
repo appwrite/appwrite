@@ -3,7 +3,8 @@
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Validator\MockNumber;
 use Appwrite\Event\Delete;
-use Appwrite\Event\Mail;
+use Appwrite\Event\Message\Mail;
+use Appwrite\Event\Publisher\Mail as MailsPublisher;
 use Appwrite\Event\Validator\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Platform;
@@ -1837,9 +1838,9 @@ Http::post('/v1/projects/:projectId/smtp/tests')
     ->param('secure', '', new WhiteList(['tls', 'ssl'], true), 'Does SMTP server use secure connection', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->inject('queueForMails')
+    ->inject('publisherForMails')
     ->inject('plan')
-    ->action(function (string $projectId, array $emails, string $senderName, string $senderEmail, string $replyTo, string $host, int $port, string $username, string $password, string $secure, Response $response, Database $dbForPlatform, Mail $queueForMails, array $plan) {
+    ->action(function (string $projectId, array $emails, string $senderName, string $senderEmail, string $replyTo, string $host, int $port, string $username, string $password, string $secure, Response $response, Database $dbForPlatform, MailsPublisher $publisherForMails, array $plan) {
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1862,22 +1863,25 @@ Http::post('/v1/projects/:projectId/smtp/tests')
             ->setParam('{{privacyUrl}}', $plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL);
 
         foreach ($emails as $email) {
-            $queueForMails
-                ->setSmtpHost($host)
-                ->setSmtpPort($port)
-                ->setSmtpUsername($username)
-                ->setSmtpPassword($password)
-                ->setSmtpSecure($secure)
-                ->setSmtpReplyTo($replyTo)
-                ->setSmtpSenderEmail($senderEmail)
-                ->setSmtpSenderName($senderName)
-                ->setRecipient($email)
-                ->setName('')
-                ->setBodyTemplate(__DIR__ . '/../../config/locale/templates/email-base-styled.tpl')
-                ->setBody($template->render())
-                ->setVariables([])
-                ->setSubject($subject)
-                ->trigger();
+            $publisherForMails->enqueue(new Mail(
+                project: $project,
+                recipient: $email,
+                name: '',
+                subject: $subject,
+                body: $template->render(),
+                smtp: [
+                    'host' => $host,
+                    'port' => $port,
+                    'username' => $username,
+                    'password' => $password,
+                    'secure' => $secure,
+                    'replyTo' => $replyTo,
+                    'senderEmail' => $senderEmail,
+                    'senderName' => $senderName,
+                ],
+                variables: [],
+                bodyTemplate: __DIR__ . '/../../config/locale/templates/email-base-styled.tpl',
+            ));
         }
 
         return $response->noContent();

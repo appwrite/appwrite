@@ -5,8 +5,9 @@ namespace Appwrite\Platform\Modules\Account\Http\Account\MFA\Challenges;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
-use Appwrite\Event\Mail;
+use Appwrite\Event\Message\Mail;
 use Appwrite\Event\Messaging;
+use Appwrite\Event\Publisher\Mail as MailsPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -102,7 +103,7 @@ class Create extends Action
             ->inject('request')
             ->inject('queueForEvents')
             ->inject('queueForMessaging')
-            ->inject('queueForMails')
+            ->inject('publisherForMails')
             ->inject('timelimit')
             ->inject('usage')
             ->inject('plan')
@@ -122,7 +123,7 @@ class Create extends Action
         Request $request,
         Event $queueForEvents,
         Messaging $queueForMessaging,
-        Mail $queueForMails,
+        MailsPublisher $publisherForMails,
         callable $timelimit,
         Context $usage,
         array $plan,
@@ -255,6 +256,9 @@ class Create extends Action
                 $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
                 $replyTo = "";
 
+                $smtpConfig = [];
+                $customMailOptions = [];
+
                 if ($smtpEnabled) {
                     if (!empty($smtp['senderEmail'])) {
                         $senderEmail = $smtp['senderEmail'];
@@ -266,12 +270,13 @@ class Create extends Action
                         $replyTo = $smtp['replyTo'];
                     }
 
-                    $queueForMails
-                        ->setSmtpHost($smtp['host'] ?? '')
-                        ->setSmtpPort($smtp['port'] ?? '')
-                        ->setSmtpUsername($smtp['username'] ?? '')
-                        ->setSmtpPassword($smtp['password'] ?? '')
-                        ->setSmtpSecure($smtp['secure'] ?? '');
+                    $smtpConfig = [
+                        'host' => $smtp['host'] ?? '',
+                        'port' => $smtp['port'] ?? '',
+                        'username' => $smtp['username'] ?? '',
+                        'password' => $smtp['password'] ?? '',
+                        'secure' => $smtp['secure'] ?? '',
+                    ];
 
                     if (!empty($customTemplate)) {
                         if (!empty($customTemplate['senderEmail'])) {
@@ -288,10 +293,9 @@ class Create extends Action
                         $subject = $customTemplate['subject'] ?? $subject;
                     }
 
-                    $queueForMails
-                        ->setSmtpReplyTo($replyTo)
-                        ->setSmtpSenderEmail($senderEmail)
-                        ->setSmtpSenderName($senderName);
+                    $smtpConfig['replyTo'] = $replyTo;
+                    $smtpConfig['senderEmail'] = $senderEmail;
+                    $smtpConfig['senderName'] = $senderName;
                 }
 
                 $emailVariables = [
@@ -318,20 +322,22 @@ class Create extends Action
                     ]);
                 }
 
-                $queueForMails
-                    ->setSubject($subject)
-                    ->setPreview($preview)
-                    ->setBody($body)
-                    ->setBodyTemplate($bodyTemplate)
-                    ->appendVariables($emailVariables)
-                    ->setRecipient($user->getAttribute('email'));
-
-                // since this is console project, set email sender name!
                 if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
-                    $queueForMails->setSenderName($platform['emailSenderName']);
+                    $customMailOptions['senderName'] = $platform['emailSenderName'];
                 }
 
-                $queueForMails->trigger();
+                $publisherForMails->enqueue(new Mail(
+                    project: $project,
+                    recipient: $user->getAttribute('email'),
+                    subject: $subject,
+                    body: $body,
+                    preview: $preview,
+                    smtp: $smtpConfig,
+                    variables: $emailVariables,
+                    bodyTemplate: $bodyTemplate,
+                    customMailOptions: $customMailOptions,
+                    platform: $platform,
+                ));
                 break;
         }
 
