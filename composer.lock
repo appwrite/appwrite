@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "91746d74413c360396a1592a348d4d24",
+    "content-hash": "905187bcd7d187736f407a7e83d21b4e",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3953,26 +3953,25 @@
         },
         {
             "name": "utopia-php/di",
-            "version": "0.3.1",
+            "version": "0.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/di.git",
-                "reference": "68873b7267842315d01d82a83b988bae525eab31"
+                "reference": "22490c95f7ac3898ed1c33f1b1b5dd577305ee31"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/di/zipball/68873b7267842315d01d82a83b988bae525eab31",
-                "reference": "68873b7267842315d01d82a83b988bae525eab31",
+                "url": "https://api.github.com/repos/utopia-php/di/zipball/22490c95f7ac3898ed1c33f1b1b5dd577305ee31",
+                "reference": "22490c95f7ac3898ed1c33f1b1b5dd577305ee31",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.2",
-                "psr/container": "^2.0"
+                "php": ">=8.2"
             },
             "require-dev": {
-                "laravel/pint": "^1.27",
+                "laravel/pint": "^1.2",
                 "phpbench/phpbench": "^1.2",
-                "phpstan/phpstan": "^2.1",
+                "phpstan/phpstan": "^1.10",
                 "phpunit/phpunit": "^9.5.25",
                 "swoole/ide-helper": "4.8.3"
             },
@@ -3989,18 +3988,16 @@
             ],
             "description": "A simple and lite library for managing dependency injections",
             "keywords": [
-                "PSR-11",
-                "container",
-                "dependency-injection",
-                "di",
+                "framework",
+                "http",
                 "php",
-                "utopia"
+                "upf"
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/di/issues",
-                "source": "https://github.com/utopia-php/di/tree/0.3.1"
+                "source": "https://github.com/utopia-php/di/tree/0.1.0"
             },
-            "time": "2026-03-13T05:47:23+00:00"
+            "time": "2024-08-08T14:35:19+00:00"
         },
         {
             "name": "utopia-php/dns",
@@ -4911,21 +4908,21 @@
         },
         {
             "name": "utopia-php/servers",
-            "version": "0.2.6",
+            "version": "0.2.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/servers.git",
-                "reference": "235be31200df9437fc96a1c270ffef4c64fafe52"
+                "reference": "4770e879a90685af4ba14e7e5d95d0a17c7fdf03"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/servers/zipball/235be31200df9437fc96a1c270ffef4c64fafe52",
-                "reference": "235be31200df9437fc96a1c270ffef4c64fafe52",
+                "url": "https://api.github.com/repos/utopia-php/servers/zipball/4770e879a90685af4ba14e7e5d95d0a17c7fdf03",
+                "reference": "4770e879a90685af4ba14e7e5d95d0a17c7fdf03",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.2",
-                "utopia-php/di": "0.3.*",
+                "php": ">=8.0",
+                "utopia-php/di": "0.1.*",
                 "utopia-php/validators": "0.*"
             },
             "require-dev": {
@@ -4959,9 +4956,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/servers/issues",
-                "source": "https://github.com/utopia-php/servers/tree/0.2.6"
+                "source": "https://github.com/utopia-php/servers/tree/0.2.5"
             },
-            "time": "2026-03-13T11:31:42+00:00"
+            "time": "2026-02-10T04:21:53+00:00"
         },
         {
             "name": "utopia-php/span",

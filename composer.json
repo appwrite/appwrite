@@ -94,7 +94,9 @@
         "spomky-labs/otphp": "11.*",
         "webonyx/graphql-php": "14.11.*",
         "league/csv": "9.14.*",
-        "enshrined/svg-sanitize": "0.22.*"
+        "enshrined/svg-sanitize": "0.22.*",
+        "utopia-php/di": "0.1.0",
+        "utopia-php/servers": "0.2.5"
     },
     "require-dev": {
         "ext-fileinfo": "*",
