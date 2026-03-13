@@ -64,13 +64,13 @@ export interface ColumnFormData {
   required?: boolean
   array?: boolean
   xdefault?:
-    | string
-    | number
-    | boolean
-    | [number, number]
-    | number[][]
-    | number[][][]
-    | null
+  | string
+  | number
+  | boolean
+  | [number, number]
+  | number[][]
+  | number[][][]
+  | null
 }
 
 const VARCHAR_SIZE_MIN = 1
@@ -124,23 +124,23 @@ const RELATIONSHIP_TYPES: {
   value: 'oneToOne' | 'oneToMany' | 'manyToOne' | 'manyToMany'
   label: string
 }[] = [
-  { value: 'oneToOne', label: 'One to one' },
-  { value: 'oneToMany', label: 'One to many' },
-  { value: 'manyToOne', label: 'Many to one' },
-  { value: 'manyToMany', label: 'Many to many' },
-]
+    { value: 'oneToOne', label: 'One to one' },
+    { value: 'oneToMany', label: 'One to many' },
+    { value: 'manyToOne', label: 'Many to one' },
+    { value: 'manyToMany', label: 'Many to many' },
+  ]
 
 const ON_DELETE_OPTIONS: {
   value: 'setNull' | 'cascade' | 'restrict'
   label: string
 }[] = [
-  {
-    value: 'setNull',
-    label: 'Set NULL - set row ID as NULL in all related rows',
-  },
-  { value: 'cascade', label: 'Cascade - delete all related rows' },
-  { value: 'restrict', label: 'Restrict - row can not be deleted' },
-]
+    {
+      value: 'setNull',
+      label: 'Set NULL - set row ID as NULL in all related rows',
+    },
+    { value: 'cascade', label: 'Cascade - delete all related rows' },
+    { value: 'restrict', label: 'Restrict - row can not be deleted' },
+  ]
 
 export function ColumnDrawer({
   open,
@@ -502,8 +502,8 @@ export function ColumnDrawer({
                       onDelete: undefined,
                       array:
                         newType === 'point' ||
-                        newType === 'linestring' ||
-                        newType === 'polygon'
+                          newType === 'linestring' ||
+                          newType === 'polygon'
                           ? false
                           : prev.array,
                     }
@@ -632,9 +632,9 @@ export function ColumnDrawer({
                         value={
                           table.bytesMax > 0
                             ? Math.min(
-                                100,
-                                (table.bytesUsed / table.bytesMax) * 100,
-                              )
+                              100,
+                              (table.bytesUsed / table.bytesMax) * 100,
+                            )
                             : 0
                         }
                         className="h-2"
@@ -1088,16 +1088,16 @@ export function ColumnDrawer({
                             ? [0, 0]
                             : formData.type === 'linestring'
                               ? [
-                                  [0, 0],
-                                  [0, 0],
-                                ]
+                                [0, 0],
+                                [0, 0],
+                              ]
                               : [
-                                  [
-                                    [0, 0],
-                                    [0, 0],
-                                    [0, 0],
-                                  ],
-                                ]
+                                [
+                                  [0, 0],
+                                  [0, 0],
+                                  [0, 0],
+                                ],
+                              ]
                           : null,
                         required: checked ? false : prev.required,
                       }))
@@ -1242,8 +1242,8 @@ export function ColumnDrawer({
                     value={
                       formData.xdefault
                         ? new Date(formData.xdefault as string)
-                            .toISOString()
-                            .slice(0, 16)
+                          .toISOString()
+                          .slice(0, 16)
                         : ''
                     }
                     onChange={(e) => {
@@ -1288,7 +1288,7 @@ export function ColumnDrawer({
                     type="number"
                     value={
                       formData.xdefault !== null &&
-                      formData.xdefault !== undefined
+                        formData.xdefault !== undefined
                         ? String(formData.xdefault)
                         : ''
                     }
@@ -1336,8 +1336,8 @@ export function ColumnDrawer({
                     />
                   )
                 ) : ['text', 'mediumtext', 'longtext'].includes(
-                    formData.type,
-                  ) ? (
+                  formData.type,
+                ) ? (
                   <Textarea
                     id="column-default"
                     value={formData.xdefault ? String(formData.xdefault) : ''}
@@ -1398,8 +1398,8 @@ export function ColumnDrawer({
                           encrypt: value,
                           ...((formData.type === 'string' ||
                             formData.type === 'varchar') &&
-                          value &&
-                          (!prev.size || prev.size < 150)
+                            value &&
+                            (!prev.size || prev.size < 150)
                             ? { size: 150 }
                             : {}),
                         }))

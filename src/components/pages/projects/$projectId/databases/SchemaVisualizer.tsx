@@ -149,7 +149,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
     const checkDarkMode = () => {
       setIsDarkMode(
         document.documentElement.classList.contains('dark') ||
-          window.matchMedia('(prefers-color-scheme: dark)').matches,
+        window.matchMedia('(prefers-color-scheme: dark)').matches,
       )
     }
 
@@ -1730,7 +1730,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
                                                     Type: {idx.type || 'key'}
                                                     {idx.columns &&
                                                       idx.columns.length >
-                                                        1 && (
+                                                      1 && (
                                                         <span>
                                                           {' '}
                                                           • Columns:{' '}

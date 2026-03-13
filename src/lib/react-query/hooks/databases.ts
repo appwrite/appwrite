@@ -1076,6 +1076,30 @@ export async function createProjectTableColumn(
         tableId,
         ...columnData,
       })
+    case 'point':
+      return await projectSdk.tablesDB.createPointColumn({
+        databaseId,
+        tableId,
+        key,
+        required,
+        xdefault,
+      })
+    case 'linestring':
+      return await projectSdk.tablesDB.createLineColumn({
+        databaseId,
+        tableId,
+        key,
+        required,
+        xdefault,
+      })
+    case 'polygon':
+      return await projectSdk.tablesDB.createPolygonColumn({
+        databaseId,
+        tableId,
+        key,
+        required,
+        xdefault,
+      })
     default:
       throw new Error(`Unsupported column type: ${type}`)
   }

@@ -787,9 +787,9 @@ export function View() {
         onCreate={() =>
           useCreateDatabaseWizard
             ? navigate({
-                to: '/projects/$projectId/databases/create',
-                params: { projectId: projectId! },
-              })
+              to: '/projects/$projectId/databases/create',
+              params: { projectId: projectId! },
+            })
             : setCreateDatabaseDialogOpen(true)
         }
         createDisabled={isCreateDisabled}
@@ -835,8 +835,8 @@ export function View() {
           // Data is prefetched in route loader, only render if data exists
           // PlanLimitWarning handles its own visibility logic
           project &&
-          organizationPlan !== undefined &&
-          totalDatabasesData !== undefined ? (
+            organizationPlan !== undefined &&
+            totalDatabasesData !== undefined ? (
             <PlanLimitWarning
               currentCount={totalDatabasesCount}
               limit={databasesLimit}
@@ -991,7 +991,7 @@ export function View() {
                                       .backupPolicyCount > 0
                                       ? `${(db as DatabaseWithBackup).backupPolicyCount} ${(db as DatabaseWithBackup).backupPolicyCount === 1 ? 'policy' : 'policies'}`
                                       : (db as DatabaseWithBackup).backupPolicy
-                                          ?.name || 'Enabled'}
+                                        ?.name || 'Enabled'}
                                   </Badge>
                                 ) : (
                                   <Badge
@@ -1019,7 +1019,7 @@ export function View() {
                                 date={
                                   new Date(
                                     (db as DatabaseWithBackup).createdAt ||
-                                      new Date(),
+                                    new Date(),
                                   )
                                 }
                                 className="text-[12px] text-muted-foreground font-mono"
@@ -1040,8 +1040,8 @@ export function View() {
                                 date={
                                   new Date(
                                     (db as DatabaseWithBackup).updatedAt ||
-                                      (db as DatabaseWithBackup).createdAt ||
-                                      new Date(),
+                                    (db as DatabaseWithBackup).createdAt ||
+                                    new Date(),
                                   )
                                 }
                                 className="text-[12px] text-muted-foreground font-mono"
@@ -1110,32 +1110,32 @@ export function View() {
                       metadata={
                         features.databaseBackups
                           ? [
-                              {
-                                label: '',
-                                value: (db as DatabaseWithBackup)
-                                  .hasBackupPolicy ? (
-                                  <Badge
-                                    variant="success"
-                                    className="gap-1.5 text-[11px] font-medium"
-                                  >
-                                    <CheckCircle2 className="h-3 w-3" />
-                                    {(db as DatabaseWithBackup)
-                                      .backupPolicyCount > 0
-                                      ? `${(db as DatabaseWithBackup).backupPolicyCount} ${(db as DatabaseWithBackup).backupPolicyCount === 1 ? 'policy' : 'policies'}`
-                                      : (db as DatabaseWithBackup).backupPolicy
-                                          ?.name || 'Backup Enabled'}
-                                  </Badge>
-                                ) : (
-                                  <Badge
-                                    variant="warning"
-                                    className="gap-1.5 text-[11px] font-medium"
-                                  >
-                                    <AlertCircle className="h-3 w-3" />
-                                    No backup policies
-                                  </Badge>
-                                ),
-                              },
-                            ]
+                            {
+                              label: '',
+                              value: (db as DatabaseWithBackup)
+                                .hasBackupPolicy ? (
+                                <Badge
+                                  variant="success"
+                                  className="gap-1.5 text-[11px] font-medium"
+                                >
+                                  <CheckCircle2 className="h-3 w-3" />
+                                  {(db as DatabaseWithBackup)
+                                    .backupPolicyCount > 0
+                                    ? `${(db as DatabaseWithBackup).backupPolicyCount} ${(db as DatabaseWithBackup).backupPolicyCount === 1 ? 'policy' : 'policies'}`
+                                    : (db as DatabaseWithBackup).backupPolicy
+                                      ?.name || 'Backup Enabled'}
+                                </Badge>
+                              ) : (
+                                <Badge
+                                  variant="warning"
+                                  className="gap-1.5 text-[11px] font-medium"
+                                >
+                                  <AlertCircle className="h-3 w-3" />
+                                  No backup policies
+                                </Badge>
+                              ),
+                            },
+                          ]
                           : []
                       }
                     />
@@ -1878,19 +1878,19 @@ export function TableView({
       },
       ...(showTableSecuritySettings
         ? [
-            {
-              id: 'security' as const,
-              label: 'Security',
-              to: '/projects/$projectId/databases/$databaseId/tables/$tableId/security',
-              params: { projectId, databaseId, tableId },
-            },
-            {
-              id: 'settings' as const,
-              label: 'Settings',
-              to: '/projects/$projectId/databases/$databaseId/tables/$tableId/settings',
-              params: { projectId, databaseId, tableId },
-            },
-          ]
+          {
+            id: 'security' as const,
+            label: 'Security',
+            to: '/projects/$projectId/databases/$databaseId/tables/$tableId/security',
+            params: { projectId, databaseId, tableId },
+          },
+          {
+            id: 'settings' as const,
+            label: 'Settings',
+            to: '/projects/$projectId/databases/$databaseId/tables/$tableId/settings',
+            params: { projectId, databaseId, tableId },
+          },
+        ]
         : []),
     ]
     return all
@@ -1970,7 +1970,7 @@ export function TableView({
           sort: hasSortKey
             ? params.sort
             : rowsSortBy !== ROWS_DEFAULT_SORT_BY ||
-                rowsSortOrder !== ROWS_DEFAULT_SORT_ORDER
+              rowsSortOrder !== ROWS_DEFAULT_SORT_ORDER
               ? encodeSort(rowsSortBy, rowsSortOrder)
               : undefined,
         })
@@ -2006,7 +2006,7 @@ export function TableView({
       limit: rowsUrlLimit,
       sort:
         rowsSortBy !== ROWS_DEFAULT_SORT_BY ||
-        rowsSortOrder !== ROWS_DEFAULT_SORT_ORDER
+          rowsSortOrder !== ROWS_DEFAULT_SORT_ORDER
           ? encodeSort(rowsSortBy, rowsSortOrder)
           : undefined,
     })
@@ -2022,7 +2022,7 @@ export function TableView({
       limit: rowsUrlLimit,
       sort:
         rowsSortBy !== ROWS_DEFAULT_SORT_BY ||
-        rowsSortOrder !== ROWS_DEFAULT_SORT_ORDER
+          rowsSortOrder !== ROWS_DEFAULT_SORT_ORDER
           ? encodeSort(rowsSortBy, rowsSortOrder)
           : undefined,
     })
@@ -2036,7 +2036,7 @@ export function TableView({
       limit: rowsUrlLimit,
       sort:
         rowsSortBy !== ROWS_DEFAULT_SORT_BY ||
-        rowsSortOrder !== ROWS_DEFAULT_SORT_ORDER
+          rowsSortOrder !== ROWS_DEFAULT_SORT_ORDER
           ? encodeSort(rowsSortBy, rowsSortOrder)
           : undefined,
     })
@@ -2219,9 +2219,9 @@ export function TableView({
               onCreateClick={() =>
                 useCreateDatabaseWizard
                   ? navigate({
-                      to: '/projects/$projectId/databases/create',
-                      params: { projectId },
-                    })
+                    to: '/projects/$projectId/databases/create',
+                    params: { projectId },
+                  })
                   : setCreateDatabaseDialogOpen(true)
               }
             />
@@ -2599,20 +2599,20 @@ export function TableView({
             isDatabaseLevelView
               ? undefined
               : () => {
-                  if (activeTab === 'rows' && openCreateRowDrawerRef.current) {
-                    openCreateRowDrawerRef.current()
-                  } else if (
-                    activeTab === 'columns' &&
-                    openCreateColumnDialogRef.current
-                  ) {
-                    openCreateColumnDialogRef.current()
-                  } else if (
-                    activeTab === 'indexes' &&
-                    openCreateIndexDialogRef.current
-                  ) {
-                    openCreateIndexDialogRef.current()
-                  }
+                if (activeTab === 'rows' && openCreateRowDrawerRef.current) {
+                  openCreateRowDrawerRef.current()
+                } else if (
+                  activeTab === 'columns' &&
+                  openCreateColumnDialogRef.current
+                ) {
+                  openCreateColumnDialogRef.current()
+                } else if (
+                  activeTab === 'indexes' &&
+                  openCreateIndexDialogRef.current
+                ) {
+                  openCreateIndexDialogRef.current()
                 }
+              }
           }
           showFilters={
             !isDatabaseLevelView &&
@@ -2700,29 +2700,29 @@ export function TableView({
           onRefresh={
             !isDatabaseLevelView && activeTab === 'rows'
               ? async () => {
-                  if (rowsRefetchRef.current) {
-                    refreshStartTimeRef.current = Date.now()
-                    setIsRefreshingRows(true)
-                    try {
-                      await rowsRefetchRef.current()
-                      const elapsed =
-                        Date.now() - (refreshStartTimeRef.current || 0)
-                      const remaining = Math.max(
-                        0,
-                        minAnimationDuration - elapsed,
-                      )
-                      await new Promise((resolve) =>
-                        setTimeout(resolve, remaining),
-                      )
-                      toast.success('Rows refreshed successfully')
-                    } catch {
-                      toast.error('Failed to refresh rows')
-                    } finally {
-                      setIsRefreshingRows(false)
-                      refreshStartTimeRef.current = null
-                    }
+                if (rowsRefetchRef.current) {
+                  refreshStartTimeRef.current = Date.now()
+                  setIsRefreshingRows(true)
+                  try {
+                    await rowsRefetchRef.current()
+                    const elapsed =
+                      Date.now() - (refreshStartTimeRef.current || 0)
+                    const remaining = Math.max(
+                      0,
+                      minAnimationDuration - elapsed,
+                    )
+                    await new Promise((resolve) =>
+                      setTimeout(resolve, remaining),
+                    )
+                    toast.success('Rows refreshed successfully')
+                  } catch {
+                    toast.error('Failed to refresh rows')
+                  } finally {
+                    setIsRefreshingRows(false)
+                    refreshStartTimeRef.current = null
                   }
                 }
+              }
               : undefined
           }
           isRefreshing={isRefreshingRows}
@@ -2745,45 +2745,45 @@ export function TableView({
           }
           beforeCreateButtons={
             isDatabaseLevelView ||
-            !showTableSecuritySettings ? undefined : activeTab === 'columns' ? (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      if (openSuggestColumnsDialogRef.current) {
-                        openSuggestColumnsDialogRef.current()
-                      }
-                    }}
-                    className="h-9"
-                  >
-                    <Lightbulb className="h-3.5 w-3.5 shrink-0 sm:mr-1.5" />
-                    <span className="hidden sm:inline">Suggest columns</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">Suggest columns</TooltipContent>
-              </Tooltip>
-            ) : activeTab === 'indexes' ? (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      if (openSuggestIndexesDialogRef.current) {
-                        openSuggestIndexesDialogRef.current()
-                      }
-                    }}
-                    className="h-9"
-                  >
-                    <Lightbulb className="h-3.5 w-3.5 shrink-0 sm:mr-1.5" />
-                    <span className="hidden sm:inline">Suggest indexes</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">Suggest indexes</TooltipContent>
-              </Tooltip>
-            ) : undefined
+              !showTableSecuritySettings ? undefined : activeTab === 'columns' ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (openSuggestColumnsDialogRef.current) {
+                          openSuggestColumnsDialogRef.current()
+                        }
+                      }}
+                      className="h-9"
+                    >
+                      <Lightbulb className="h-3.5 w-3.5 shrink-0 sm:mr-1.5" />
+                      <span className="hidden sm:inline">Suggest columns</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">Suggest columns</TooltipContent>
+                </Tooltip>
+              ) : activeTab === 'indexes' ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (openSuggestIndexesDialogRef.current) {
+                          openSuggestIndexesDialogRef.current()
+                        }
+                      }}
+                      className="h-9"
+                    >
+                      <Lightbulb className="h-3.5 w-3.5 shrink-0 sm:mr-1.5" />
+                      <span className="hidden sm:inline">Suggest indexes</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">Suggest indexes</TooltipContent>
+                </Tooltip>
+              ) : undefined
           }
           collapsible={!isDatabaseLevelView}
           fullWidthBorder
@@ -2856,9 +2856,9 @@ export function TableView({
                   onCreateClick={() =>
                     useCreateDatabaseWizard
                       ? navigate({
-                          to: '/projects/$projectId/databases/create',
-                          params: { projectId },
-                        })
+                        to: '/projects/$projectId/databases/create',
+                        params: { projectId },
+                      })
                       : setCreateDatabaseDialogOpen(true)
                   }
                 />
@@ -3275,14 +3275,14 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
 interface DatabaseOverviewProps {
   databaseId: string
   activeTab:
-    | 'tables'
-    | 'backups'
-    | 'export-import'
-    | 'security'
-    | 'insights'
-    | 'settings'
-    | 'visualizer'
-    | 'browser'
+  | 'tables'
+  | 'backups'
+  | 'export-import'
+  | 'security'
+  | 'insights'
+  | 'settings'
+  | 'visualizer'
+  | 'browser'
   /** When true, only the tab content is rendered (no header). Used when embedded in TableView. */
   contentOnly?: boolean
 }
@@ -3684,33 +3684,33 @@ export function DatabaseOverview({
         },
         ...(showDbSecuritySettings
           ? [
-              {
-                id: 'security' as const,
-                label: 'Security',
-                to: '/projects/$projectId/databases/$databaseId/security',
-                params: { projectId, databaseId },
-              },
-            ]
+            {
+              id: 'security' as const,
+              label: 'Security',
+              to: '/projects/$projectId/databases/$databaseId/security',
+              params: { projectId, databaseId },
+            },
+          ]
           : []),
         ...(features.databaseInsights
           ? [
-              {
-                id: 'insights' as const,
-                label: 'Insights',
-                to: '/projects/$projectId/databases/$databaseId/insights',
-                params: { projectId, databaseId },
-              },
-            ]
+            {
+              id: 'insights' as const,
+              label: 'Insights',
+              to: '/projects/$projectId/databases/$databaseId/insights',
+              params: { projectId, databaseId },
+            },
+          ]
           : []),
         ...(features.databaseBackups
           ? [
-              {
-                id: 'backups' as const,
-                label: 'Backups',
-                to: '/projects/$projectId/databases/$databaseId/backups',
-                params: { projectId, databaseId },
-              },
-            ]
+            {
+              id: 'backups' as const,
+              label: 'Backups',
+              to: '/projects/$projectId/databases/$databaseId/backups',
+              params: { projectId, databaseId },
+            },
+          ]
           : []),
         {
           id: 'export-import',
@@ -3720,13 +3720,13 @@ export function DatabaseOverview({
         },
         ...(showDbSecuritySettings
           ? [
-              {
-                id: 'settings' as const,
-                label: 'Settings',
-                to: '/projects/$projectId/databases/$databaseId/settings',
-                params: { projectId, databaseId },
-              },
-            ]
+            {
+              id: 'settings' as const,
+              label: 'Settings',
+              to: '/projects/$projectId/databases/$databaseId/settings',
+              params: { projectId, databaseId },
+            },
+          ]
           : []),
       ] as Tab[],
     [
@@ -4540,7 +4540,7 @@ export function DatabaseOverview({
                     className="h-9 text-[13px]"
                     disabled={
                       enabled ===
-                        ((database as Models.Database).enabled !== false) ||
+                      ((database as Models.Database).enabled !== false) ||
                       updateEnabledMutation.isPending
                     }
                     onClick={() => {
@@ -4954,11 +4954,11 @@ function RowEditDrawer({
           value === null || value === undefined
             ? null
             : (normalizeValueForColumn(value, columnInfo) as
-                | string
-                | number
-                | boolean
-                | unknown[]
-                | null)
+              | string
+              | number
+              | boolean
+              | unknown[]
+              | null)
       })
       initialData['$createdAt'] = row.$createdAt ?? null
       initialData['$updatedAt'] = row.$updatedAt ?? null
@@ -5292,12 +5292,12 @@ function RowEditDrawer({
                     <div className="space-y-4">
                       {(isCreateMode
                         ? [
-                            '$createdAt',
-                            '$updatedAt',
-                            ...Object.keys(formData).filter(
-                              (k) => k !== '$createdAt' && k !== '$updatedAt',
-                            ),
-                          ]
+                          '$createdAt',
+                          '$updatedAt',
+                          ...Object.keys(formData).filter(
+                            (k) => k !== '$createdAt' && k !== '$updatedAt',
+                          ),
+                        ]
                         : ['$createdAt', '$updatedAt', ...Object.keys(row.data)]
                       ).map((key) => {
                         const value = isCreateMode
@@ -5407,7 +5407,7 @@ function RowEditDrawer({
                                   type="number"
                                   value={
                                     currentValue !== null &&
-                                    currentValue !== undefined
+                                      currentValue !== undefined
                                       ? String(currentValue)
                                       : ''
                                   }
@@ -5439,7 +5439,7 @@ function RowEditDrawer({
                             ) : fieldType === 'array' ? (
                               <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
                                 {((currentValue as unknown[]) || []).length >
-                                0 ? (
+                                  0 ? (
                                   <div className="space-y-2">
                                     {((currentValue as unknown[]) || []).map(
                                       (item, index) => {
@@ -5548,15 +5548,15 @@ function RowEditDrawer({
                                                       v === ''
                                                         ? null
                                                         : colType ===
-                                                              'integer' ||
-                                                            colType === 'int'
+                                                          'integer' ||
+                                                          colType === 'int'
                                                           ? parseInt(v, 10)
                                                           : parseFloat(v),
                                                     )
                                                   }}
                                                   step={
                                                     colType === 'double' ||
-                                                    colType === 'float'
+                                                      colType === 'float'
                                                       ? 0.1
                                                       : 1
                                                   }
@@ -5637,10 +5637,10 @@ function RowEditDrawer({
                                                     isNull || !item
                                                       ? ''
                                                       : formatDateTimeLocalForInput(
-                                                          new Date(
-                                                            item as string,
-                                                          ),
-                                                        )
+                                                        new Date(
+                                                          item as string,
+                                                        ),
+                                                      )
                                                   }
                                                   ref={(el) => setRef(el)}
                                                   autoFocus={
@@ -5654,8 +5654,8 @@ function RowEditDrawer({
                                                       index,
                                                       e.target.value
                                                         ? new Date(
-                                                            e.target.value,
-                                                          ).toISOString()
+                                                          e.target.value,
+                                                        ).toISOString()
                                                         : null,
                                                     )
                                                   }
@@ -5688,7 +5688,7 @@ function RowEditDrawer({
                                                   className={cn(
                                                     'min-h-[32px] max-h-[600px] text-[13px] flex-1 border-0 bg-transparent px-0 py-1.5 resize-none focus-visible:ring-0 focus-visible:ring-offset-0',
                                                     isNull &&
-                                                      'opacity-50 cursor-not-allowed',
+                                                    'opacity-50 cursor-not-allowed',
                                                     showNullCheckbox
                                                       ? 'pb-7'
                                                       : 'pb-1',
@@ -5789,8 +5789,8 @@ function RowEditDrawer({
                                 value={
                                   currentValue
                                     ? formatDateTimeLocalForInput(
-                                        new Date(currentValue as string),
-                                      )
+                                      new Date(currentValue as string),
+                                    )
                                     : ''
                                 }
                                 ref={(el) => {
@@ -5963,7 +5963,7 @@ function RowEditDrawer({
                                           className={cn(
                                             'min-h-[36px] max-h-[600px] text-[13px] resize-none',
                                             isNull &&
-                                              'opacity-50 cursor-not-allowed',
+                                            'opacity-50 cursor-not-allowed',
                                             showNullCheckbox ? 'pb-8' : 'pb-2',
                                             counterPadding,
                                           )}
@@ -5996,7 +5996,7 @@ function RowEditDrawer({
                                           className={cn(
                                             'h-9 text-[13px]',
                                             isNull &&
-                                              'opacity-50 cursor-not-allowed',
+                                            'opacity-50 cursor-not-allowed',
                                             counterPadding,
                                           )}
                                         />
@@ -6743,7 +6743,7 @@ function RowsSpreadsheet({
     onError: (error: Error, variables) => {
       toast.error(
         error.message ||
-          (variables.rowId ? 'Failed to update row' : 'Failed to create row'),
+        (variables.rowId ? 'Failed to update row' : 'Failed to create row'),
       )
     },
   })
@@ -7506,13 +7506,13 @@ function RowsSpreadsheet({
                       {(() => {
                         const { full, display, isNull } = formatCellValue(
                           row.data[col as keyof typeof row.data] as
-                            | string
-                            | number
-                            | boolean
-                            | unknown[]
-                            | Record<string, unknown>
-                            | null
-                            | undefined,
+                          | string
+                          | number
+                          | boolean
+                          | unknown[]
+                          | Record<string, unknown>
+                          | null
+                          | undefined,
                         )
                         // Only apply RTL detection to string values
                         const cellValue = row.data[col as keyof typeof row.data]
@@ -8682,8 +8682,8 @@ function ColumnsSpreadsheet({
   }, [columnsFetching, displayColumns])
   const columnsToShow =
     columnsFilterMap.size > 0 &&
-    columnsFetching &&
-    lastDisplayColumnsRef.current.length > 0
+      columnsFetching &&
+      lastDisplayColumnsRef.current.length > 0
       ? lastDisplayColumnsRef.current
       : displayColumns
 
@@ -8701,8 +8701,8 @@ function ColumnsSpreadsheet({
   return (
     <div className="flex h-full flex-col relative">
       {!columnsFetching &&
-      apiColumns.length === 0 &&
-      columnsFilterMap.size > 0 ? (
+        apiColumns.length === 0 &&
+        columnsFilterMap.size > 0 ? (
         <div className="flex flex-1 items-center justify-center py-12">
           <div className="text-center">
             <p className="text-[14px] font-medium text-foreground">
@@ -8908,7 +8908,7 @@ function ColumnsSpreadsheet({
                         )}
                       >
                         {col.key !== '$id' &&
-                        (col.type === 'string' || col.type === 'varchar')
+                          (col.type === 'string' || col.type === 'varchar')
                           ? (col.size ?? '—')
                           : '—'}
                       </td>
@@ -9493,14 +9493,14 @@ function IndexesSpreadsheet({
       prev.map((s) =>
         s.key === key
           ? {
-              ...s,
-              key: data.key,
-              type: data.type,
-              columns: data.columns.map((c) => c.column),
-              orders: data.columns.map((c) => c.order), // Keep nulls to maintain array indices
-              lengths: data.columns.map((c) => c.length), // Keep nulls to maintain array indices
-              isSuggestion: true,
-            }
+            ...s,
+            key: data.key,
+            type: data.type,
+            columns: data.columns.map((c) => c.column),
+            orders: data.columns.map((c) => c.order), // Keep nulls to maintain array indices
+            lengths: data.columns.map((c) => c.length), // Keep nulls to maintain array indices
+            isSuggestion: true,
+          }
           : s,
       ),
     )
@@ -9576,57 +9576,57 @@ function IndexesSpreadsheet({
     },
     ...(table.name === 'users'
       ? [
-          {
-            key: 'email_unique',
-            type: 'unique',
-            columns: ['email'],
-            orders: ['ASC'],
-            status: 'available',
-          },
-          {
-            key: 'status_idx',
-            type: 'key',
-            columns: ['status'],
-            orders: ['ASC'],
-            status: 'available',
-          },
-        ]
+        {
+          key: 'email_unique',
+          type: 'unique',
+          columns: ['email'],
+          orders: ['ASC'],
+          status: 'available',
+        },
+        {
+          key: 'status_idx',
+          type: 'key',
+          columns: ['status'],
+          orders: ['ASC'],
+          status: 'available',
+        },
+      ]
       : []),
     ...(table.name === 'products'
       ? [
-          {
-            key: 'category_idx',
-            type: 'key',
-            columns: ['category'],
-            orders: ['ASC'],
-            status: 'available',
-          },
-          {
-            key: 'price_idx',
-            type: 'key',
-            columns: ['price'],
-            orders: ['DESC'],
-            status: 'available',
-          },
-        ]
+        {
+          key: 'category_idx',
+          type: 'key',
+          columns: ['category'],
+          orders: ['ASC'],
+          status: 'available',
+        },
+        {
+          key: 'price_idx',
+          type: 'key',
+          columns: ['price'],
+          orders: ['DESC'],
+          status: 'available',
+        },
+      ]
       : []),
     ...(table.name === 'orders'
       ? [
-          {
-            key: 'orderId_unique',
-            type: 'unique',
-            columns: ['orderId'],
-            orders: ['ASC'],
-            status: 'available',
-          },
-          {
-            key: 'status_created',
-            type: 'key',
-            columns: ['status', '$createdAt'],
-            orders: ['ASC', 'DESC'],
-            status: 'building',
-          },
-        ]
+        {
+          key: 'orderId_unique',
+          type: 'unique',
+          columns: ['orderId'],
+          orders: ['ASC'],
+          status: 'available',
+        },
+        {
+          key: 'status_created',
+          type: 'key',
+          columns: ['status', '$createdAt'],
+          orders: ['ASC', 'DESC'],
+          status: 'building',
+        },
+      ]
       : []),
   ]
 
@@ -9649,8 +9649,8 @@ function IndexesSpreadsheet({
   }, [indexesFetching, displayIndexes])
   const indexesToShow =
     indexesFilterMap.size > 0 &&
-    indexesFetching &&
-    lastDisplayIndexesRef.current.length > 0
+      indexesFetching &&
+      lastDisplayIndexesRef.current.length > 0
       ? lastDisplayIndexesRef.current
       : displayIndexes
 
@@ -9660,8 +9660,8 @@ function IndexesSpreadsheet({
   return (
     <div className="flex h-full flex-col relative">
       {!indexesFetching &&
-      apiIndexes.length === 0 &&
-      indexesFilterMap.size > 0 ? (
+        apiIndexes.length === 0 &&
+        indexesFilterMap.size > 0 ? (
         <div className="flex flex-1 items-center justify-center py-12">
           <div className="text-center">
             <p className="text-[14px] font-medium text-foreground">
@@ -10736,7 +10736,7 @@ function TableSettings({ table }: SpreadsheetProps) {
             ))}
             {displayNames.length < 5 &&
               validStringColumns.length >
-                displayNames.filter((n) => n && n !== '$id').length && (
+              displayNames.filter((n) => n && n !== '$id').length && (
                 <Button
                   variant="outline"
                   size="sm"
