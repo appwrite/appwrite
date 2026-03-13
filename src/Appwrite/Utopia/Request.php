@@ -199,7 +199,13 @@ class Request extends UtopiaRequest
     public function getHeader(string $key, string $default = ''): string
     {
         $headers = $this->getHeaders();
-        return $headers[$key] ?? $default;
+        $header = $headers[$key] ?? $default;
+
+        if (\is_array($header)) {
+            $header = $header[0] ?? $default;
+        }
+
+        return \is_string($header) ? $header : $default;
     }
 
     /**

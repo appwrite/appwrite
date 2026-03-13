@@ -35,6 +35,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Roles;
 use Utopia\Http\Http;
+use Utopia\Http\Route;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Validator\WhiteList;
@@ -80,7 +81,7 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
 
 Http::init()
     ->groups(['api'])
-    ->inject('utopia')
+    ->inject('route')
     ->inject('request')
     ->inject('dbForPlatform')
     ->inject('dbForProject')
@@ -93,8 +94,7 @@ Http::init()
     ->inject('team')
     ->inject('apiKey')
     ->inject('authorization')
-    ->action(function (Http $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, Audit $queueForAudits, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization) {
-        $route = $utopia->getRoute();
+    ->action(function (Route $route, Request $request, Database $dbForPlatform, Database $dbForProject, Audit $queueForAudits, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization) {
 
         /**
          * Handle user authentication and session validation.
@@ -443,7 +443,7 @@ Http::init()
 
 Http::init()
     ->groups(['api'])
-    ->inject('utopia')
+    ->inject('route')
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -467,9 +467,7 @@ Http::init()
     ->inject('telemetry')
     ->inject('platform')
     ->inject('authorization')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Mail $queueForMails, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform, Authorization $authorization) {
-
-        $route = $utopia->getRoute();
+    ->action(function (Route $route, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Mail $queueForMails, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform, Authorization $authorization) {
 
         if (
             array_key_exists('rest', $project->getAttribute('apis', []))
@@ -594,7 +592,6 @@ Http::init()
         $useCache = $route->getLabel('cache', false);
         $storageCacheOperationsCounter = $telemetry->createCounter('storage.cache.operations.load');
         if ($useCache) {
-            $route = $utopia->match($request);
             $isImageTransformation = $route->getPath() === '/v1/storage/buckets/:bucketId/files/:fileId/preview';
             $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && !User::isPrivileged($authorization->getRoles());
 
@@ -704,12 +701,11 @@ Http::init()
  */
 Http::shutdown()
     ->groups(['session'])
-    ->inject('utopia')
     ->inject('request')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, Database $dbForProject) {
+    ->action(function (Request $request, Response $response, Document $project, Database $dbForProject) {
         $sessionLimit = $project->getAttribute('auths', [])['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT;
         $session = $response->getPayload();
         $userId = $session['userId'] ?? '';
@@ -738,7 +734,7 @@ Http::shutdown()
 
 Http::shutdown()
     ->groups(['api'])
-    ->inject('utopia')
+    ->inject('route')
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -758,7 +754,7 @@ Http::shutdown()
     ->inject('timelimit')
     ->inject('eventProcessor')
     ->inject('bus')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Audit $queueForAudits, StatsUsage $queueForStatsUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus) use ($parseLabel) {
+    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Audit $queueForAudits, StatsUsage $queueForStatsUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -808,7 +804,6 @@ Http::shutdown()
             }
         }
 
-        $route = $utopia->getRoute();
         $requestParams = $route->getParamsValues();
 
         /**

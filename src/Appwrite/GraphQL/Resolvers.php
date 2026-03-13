@@ -267,8 +267,18 @@ class Resolvers
         $utopia->setResource('request', static fn () => $request);
         $response->setContentType(Response::CONTENT_TYPE_NULL);
 
+        $previousRoute = Request::getRoute();
+        $previousRouteResource = null;
+
+        try {
+            $previousRouteResource = $utopia->getResource('route', true);
+        } catch (\Throwable) {
+        }
+
         try {
             $route = $utopia->match($request, fresh: true);
+            Request::setRoute($route);
+            $utopia->setResource('route', static fn () => $route);
 
             $utopia->execute($route, $request, $response);
         } catch (\Throwable $e) {
@@ -277,6 +287,13 @@ class Resolvers
             }
             $reject($e);
             return;
+        } finally {
+            Request::setRoute($previousRoute);
+            if ($previousRouteResource instanceof Route) {
+                $utopia->setResource('route', static fn () => $previousRouteResource);
+            } else {
+                $utopia->setResource('route', static fn () => null);
+            }
         }
 
         $payload = $response->getPayload();
