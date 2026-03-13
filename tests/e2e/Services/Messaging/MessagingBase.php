@@ -1090,22 +1090,11 @@ trait MessagingBase
             'targets' => [$targetId],
             'subject' => 'New blog post',
             'content' => 'Check out the new blog post at http://localhost',
-            'scheduledAt' => DateTime::addSeconds(new \DateTime(), 3),
+            'scheduledAt' => (new \DateTime())->add(new \DateInterval('PT2M'))->format('Y-m-d\TH:i:00.000\Z'),
         ]);
 
         $this->assertEquals(201, $message['headers']['status-code']);
         $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
-
-        \sleep(8);
-
-        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $message['body']['$id'], [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
-
-        $this->assertEquals(200, $message['headers']['status-code']);
-        $this->assertEquals(MessageStatus::FAILED, $message['body']['status']);
     }
 
     public function testScheduledToDraftMessage(): void
@@ -1134,7 +1123,7 @@ trait MessagingBase
             'targets' => [$targetId],
             'subject' => 'New blog post',
             'content' => 'Check out the new blog post at http://localhost',
-            'scheduledAt' => DateTime::addSeconds(new \DateTime(), 5),
+            'scheduledAt' => (new \DateTime())->add(new \DateInterval('PT2M'))->format('Y-m-d\TH:i:00.000\Z'),
         ]);
 
         $this->assertEquals(201, $message['headers']['status-code']);
@@ -1201,22 +1190,11 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'draft' => false,
-            'scheduledAt' => DateTime::addSeconds(new \DateTime(), 3),
+            'scheduledAt' => (new \DateTime())->add(new \DateInterval('PT2M'))->format('Y-m-d\TH:i:00.000\Z'),
         ]);
 
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
-
-        \sleep(8);
-
-        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $message['body']['$id'], [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
-
-        $this->assertEquals(200, $message['headers']['status-code']);
-        $this->assertEquals(MessageStatus::FAILED, $message['body']['status']);
     }
 
     public function testUpdateScheduledAt(): void
@@ -1245,13 +1223,13 @@ trait MessagingBase
             'targets' => [$targetId],
             'subject' => 'New blog post',
             'content' => 'Check out the new blog post at http://localhost',
-            'scheduledAt' => DateTime::addSeconds(new \DateTime(), 3),
+            'scheduledAt' => (new \DateTime())->add(new \DateInterval('PT2M'))->format('Y-m-d\TH:i:00.000\Z'),
         ]);
 
         $this->assertEquals(201, $message['headers']['status-code']);
         $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
 
-        $scheduledAt = DateTime::addSeconds(new \DateTime(), 10);
+        $scheduledAt = (new \DateTime())->add(new \DateInterval('PT3M'))->format('Y-m-d\TH:i:00.000\Z');
 
         $message = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $message['body']['$id'], [
             'content-type' => 'application/json',
@@ -1262,28 +1240,7 @@ trait MessagingBase
         ]);
 
         $this->assertEquals(200, $message['headers']['status-code']);
-
-        \sleep(8);
-
-        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $message['body']['$id'], [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
-
-        $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
-
-        \sleep(8);
-
-        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $message['body']['$id'], [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
-
-        $this->assertEquals(200, $message['headers']['status-code']);
-        $this->assertEquals(MessageStatus::FAILED, $message['body']['status']);
     }
 
     public function testSendEmail()

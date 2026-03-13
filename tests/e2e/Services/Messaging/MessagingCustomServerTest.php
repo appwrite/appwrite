@@ -9,6 +9,7 @@ use Tests\E2E\Scopes\SideServer;
 class MessagingCustomServerTest extends Scope
 {
     use MessagingBase;
+    use MessagingSchedulingPrecisionTest;
     use ProjectCustom;
     use SideServer;
 }
