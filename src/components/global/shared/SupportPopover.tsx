@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { useTheme } from 'next-themes'
 import {
   Popover,
   PopoverContent,
@@ -20,9 +19,15 @@ import {
   Activity,
   Mail,
   Building2,
+  Wrench,
 } from 'lucide-react'
-import { useOrganizationPlan } from '@/lib/react-query/hooks'
+import { Badge } from '@/components/ui/badge'
+import {
+  useOrganizationPlan,
+  useAppwriteCloudStatus,
+} from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { useDebugOverrides } from '@/lib/debug-overrides'
 import { getSupportHoursInLocalTime } from '@/lib/support'
 
 const CONTACT_SALES_URL =
@@ -33,26 +38,120 @@ interface SupportPopoverProps {
   orgId?: string | null
 }
 
+type DisplayCloudStatusState =
+  | 'operational'
+  | 'degraded'
+  | 'downtime'
+  | 'maintenance'
+
+function formatMaintenanceWindow(startsAt?: string | null, endsAt?: string | null) {
+  if (!startsAt) return undefined
+
+  const startDate = new Date(startsAt)
+  const endDate = endsAt ? new Date(endsAt) : undefined
+  if (Number.isNaN(startDate.getTime())) return undefined
+
+  const dateFormatter = new Intl.DateTimeFormat(undefined, {
+    month: 'short',
+    day: 'numeric',
+  })
+  const timeFormatter = new Intl.DateTimeFormat(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+
+  if (!endDate || Number.isNaN(endDate.getTime())) {
+    return `Starts ${dateFormatter.format(startDate)} at ${timeFormatter.format(startDate)} local time`
+  }
+
+  const isSameDay =
+    startDate.getFullYear() === endDate.getFullYear() &&
+    startDate.getMonth() === endDate.getMonth() &&
+    startDate.getDate() === endDate.getDate()
+
+  if (isSameDay) {
+    return `${dateFormatter.format(startDate)}, ${timeFormatter.format(startDate)} - ${timeFormatter.format(endDate)} local time`
+  }
+
+  return `${dateFormatter.format(startDate)}, ${timeFormatter.format(startDate)} - ${dateFormatter.format(endDate)}, ${timeFormatter.format(endDate)} local time`
+}
+
+function getStatusMeta(statusState: DisplayCloudStatusState) {
+  if (statusState === 'operational') {
+    return {
+      iconBg: 'bg-emerald-500/10',
+      iconText: 'text-emerald-500',
+      badgeVariant: 'success' as const,
+      badgeLabel: 'Operational',
+      summary: 'All services are available.',
+      Icon: Activity,
+    }
+  }
+
+  if (statusState === 'maintenance') {
+    return {
+      iconBg: 'bg-blue-500/10',
+      iconText: 'text-blue-500',
+      badgeVariant: 'processing' as const,
+      badgeLabel: 'Maintenance',
+      summary: 'Maintenance is in progress.',
+      Icon: Wrench,
+    }
+  }
+
+  if (statusState === 'downtime') {
+    return {
+      iconBg: 'bg-red-500/10',
+      iconText: 'text-red-500',
+      badgeVariant: 'error' as const,
+      badgeLabel: 'Outage',
+      summary: 'Some services are currently unavailable.',
+      Icon: Activity,
+    }
+  }
+
+  return {
+    iconBg: 'bg-amber-500/10',
+    iconText: 'text-amber-500',
+    badgeVariant: 'warning' as const,
+    badgeLabel: 'Degraded',
+    summary: 'Some services are experiencing issues.',
+    Icon: Activity,
+  }
+}
+
+function getMockReportTitle(state: DisplayCloudStatusState) {
+  switch (state) {
+    case 'downtime':
+      return 'Major service disruption affecting multiple services.'
+    case 'maintenance':
+      return 'Planned maintenance window in progress.'
+    case 'operational':
+      return undefined
+    default:
+      return 'A subset of services is degraded.'
+  }
+}
+
 export function SupportPopover({ orgId }: SupportPopoverProps) {
   const [supportHours, setSupportHours] = useState(() =>
     getSupportHoursInLocalTime(),
   )
-  const [isIframeLoaded, setIsIframeLoaded] = useState(false)
   const navigate = useNavigate()
-  const { resolvedTheme } = useTheme()
 
   // Fetch organization plan to check for premium support
   const { plan: organizationPlan } = useOrganizationPlan(orgId)
   const { features } = useConsoleProfile()
+  const { mockCloudStatusAlert } = useDebugOverrides()
+  const { data: statusData, isLoading: statusLoading } = useAppwriteCloudStatus(
+    features.systemStatus,
+  )
 
   // Check if the plan supports premium support
   const hasPremiumSupport = organizationPlan?.premiumSupport === true
 
   // "More options" applies when Contact Support section has content; otherwise these are the primary options
   const hasContactSupportOptions = hasPremiumSupport || features.billing
-
-  // Determine badge theme based on current theme
-  const badgeTheme = resolvedTheme === 'dark' ? 'dark' : 'light'
 
   const handleUpgrade = () => {
     if (orgId) {
@@ -71,10 +170,31 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
     return () => clearInterval(interval)
   }, [])
 
-  // Reset iframe loaded state when theme changes
-  useEffect(() => {
-    setIsIframeLoaded(false)
-  }, [badgeTheme])
+  const statusState: DisplayCloudStatusState =
+    mockCloudStatusAlert !== 'live'
+      ? mockCloudStatusAlert
+      : statusData?.aggregateState ?? 'operational'
+
+  const statusMeta = getStatusMeta(statusState)
+
+  const statusTitle =
+    mockCloudStatusAlert !== 'live'
+      ? getMockReportTitle(mockCloudStatusAlert)
+      : statusData?.activeReport?.title
+
+  const statusWindow =
+    statusState === 'maintenance'
+      ? mockCloudStatusAlert !== 'live'
+        ? formatMaintenanceWindow(
+            new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+            new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+          )
+        : formatMaintenanceWindow(
+            statusData?.activeReport?.startsAt,
+            statusData?.activeReport?.endsAt,
+          )
+      : undefined
+  const statusDetail = statusWindow ?? statusTitle ?? statusMeta.summary
 
   return (
     <Popover>
@@ -253,33 +373,43 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
         {features.systemStatus && (
           <>
             <Separator />
-            {/* Status Page - cloud only */}
             <div className="p-4">
-              <div className="flex items-start gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10">
-                  <Activity className="h-4 w-4 text-emerald-500" />
+              <a
+                href="https://status.appwrite.online"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex cursor-pointer items-start gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted"
+              >
+                <div
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${statusMeta.iconBg}`}
+                >
+                  <statusMeta.Icon className={`h-4 w-4 ${statusMeta.iconText}`} />
                 </div>
-                <div className="flex-1 space-y-1">
-                  <h4 className="text-sm font-medium">System Status</h4>
-                  <p className="text-xs text-muted-foreground">
-                    Check the current status of our services
-                  </p>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-[13px] font-medium text-foreground">
+                      System status
+                    </p>
+                    <Badge
+                      variant={statusMeta.badgeVariant}
+                      className="text-[10px] shrink-0"
+                    >
+                      {statusMeta.badgeLabel}
+                    </Badge>
+                    {statusLoading && mockCloudStatusAlert === 'live' ? (
+                      <span className="text-[11px] text-muted-foreground">
+                        Updating...
+                      </span>
+                    ) : null}
+                  </div>
+                  {statusDetail ? (
+                    <p className="mt-0.5 line-clamp-2 text-[12px] text-muted-foreground">
+                      {statusDetail}
+                    </p>
+                  ) : null}
                 </div>
-              </div>
-              <div className="mt-3 overflow-hidden rounded-lg border border-border bg-background px-2.5 pt-2.5 pb-1.5">
-                <iframe
-                  className={`block w-full transition-opacity duration-500 ${
-                    isIframeLoaded ? 'opacity-100' : 'opacity-0'
-                  }`}
-                  title="Appwrite Status"
-                  src={`https://status.appwrite.online/badge?theme=${badgeTheme}`}
-                  height="35"
-                  frameBorder="0"
-                  scrolling="no"
-                  onLoad={() => setIsIframeLoaded(true)}
-                  style={{ colorScheme: 'none', display: 'block' }}
-                />
-              </div>
+                <ExternalLink className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+              </a>
             </div>
           </>
         )}

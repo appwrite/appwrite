@@ -35,8 +35,9 @@ import {
   setDebugOverride,
   subscribeToDebugOverrides,
   type DebugOverrides,
+  type MockCloudStatusAlert,
 } from '@/lib/debug-overrides'
-import { useFavicon } from '@/hooks/use-favicon'
+import { useFavicon, type FaviconVariant } from '@/hooks/use-favicon'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   setDebugProfileOverride,
@@ -46,7 +47,6 @@ import {
 import {
   setDebugEndpointOverride,
   ENDPOINT_PRESETS,
-  type EndpointPresetId,
 } from '@/lib/debug-endpoint'
 import { useDebugEndpoint } from '@/hooks/use-debug-endpoint'
 import { useNavigate } from '@tanstack/react-router'
@@ -171,16 +171,21 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       },
     ]
 
-    const faviconOptions: MenuItem[] = [
-      { label: 'Default', faviconValue: 'default' },
-      { label: 'Green', faviconValue: 'green' },
-      { label: 'Orange', faviconValue: 'orange' },
-      { label: 'Red', faviconValue: 'red' },
-      { label: 'Theme', faviconValue: 'theme' },
-      { label: 'Theme + Green', faviconValue: 'theme-green' },
-      { label: 'Theme + Orange', faviconValue: 'theme-orange' },
-      { label: 'Theme + Red', faviconValue: 'theme-red' },
-    ].map((opt) => ({
+    const faviconOptions: MenuItem[] = (
+      [
+        { label: 'Default', faviconValue: 'default' },
+        { label: 'Green', faviconValue: 'green' },
+        { label: 'Orange', faviconValue: 'orange' },
+        { label: 'Red', faviconValue: 'red' },
+        { label: 'Theme', faviconValue: 'theme' },
+        { label: 'Theme + Green', faviconValue: 'theme-green' },
+        { label: 'Theme + Orange', faviconValue: 'theme-orange' },
+        { label: 'Theme + Red', faviconValue: 'theme-red' },
+      ] as const satisfies ReadonlyArray<{
+        label: string
+        faviconValue: FaviconVariant
+      }>
+    ).map((opt) => ({
       label: opt.label,
       onClick: () => {
         setFavicon(opt.faviconValue)
@@ -433,6 +438,65 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         icon: <AlertTriangle className="h-3.5 w-3.5" />,
         items: [
           {
+            label: 'Cloud status alert',
+            description:
+              overrides.mockCloudStatusAlert === 'live'
+                ? 'Use live Appwrite Cloud status'
+                : overrides.mockCloudStatusAlert === 'operational'
+                  ? 'Preview the normal state with no alert'
+                : `Mock ${overrides.mockCloudStatusAlert} alert`,
+            icon: <AlertTriangle className="h-3 w-3" />,
+            submenu: [
+              {
+                label: 'Live status',
+                description: 'Use the public Appwrite Cloud status page.',
+                onClick: () => {
+                  setDebugOverride('mockCloudStatusAlert', 'live')
+                  setIsOpen(false)
+                },
+                active: overrides.mockCloudStatusAlert === 'live',
+                icon: <RotateCcw className="h-3 w-3" />,
+              },
+              ...(
+                [
+                  {
+                    label: 'No alert',
+                    value: 'operational',
+                    description:
+                      'Preview the normal operational state with no banner.',
+                  },
+                  {
+                    label: 'Degraded',
+                    value: 'degraded',
+                    description: 'Preview the degraded-service alert.',
+                  },
+                  {
+                    label: 'Downtime',
+                    value: 'downtime',
+                    description: 'Preview the outage alert.',
+                  },
+                  {
+                    label: 'Maintenance',
+                    value: 'maintenance',
+                    description: 'Preview the maintenance alert.',
+                  },
+                ] as const
+              ).map((option) => ({
+                label: option.label,
+                description: option.description,
+                onClick: () => {
+                  setDebugOverride(
+                    'mockCloudStatusAlert',
+                    option.value as MockCloudStatusAlert,
+                  )
+                  setIsOpen(false)
+                },
+                active: overrides.mockCloudStatusAlert === option.value,
+                icon: <AlertTriangle className="h-3 w-3" />,
+              })),
+            ],
+          },
+          {
             label: 'Error page',
             description: 'Preview the error page as users see it.',
             onClick: () => {
@@ -499,6 +563,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     overrides.showNativeAppBar,
     overrides.showAIAssistant,
     overrides.showSuccessTeamCard,
+    overrides.mockCloudStatusAlert,
     banners.length,
     actions,
     navigate,

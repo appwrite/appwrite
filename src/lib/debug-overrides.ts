@@ -6,7 +6,15 @@ export const DEBUG_OVERRIDE_KEYS = {
   showNativeAppBar: 'debug:showNativeAppBar',
   showAIAssistant: 'debug:showAIAssistant',
   showSuccessTeamCard: 'debug:showSuccessTeamCard',
+  mockCloudStatusAlert: 'debug:mockCloudStatusAlert',
 } as const
+
+export type MockCloudStatusAlert =
+  | 'live'
+  | 'operational'
+  | 'degraded'
+  | 'downtime'
+  | 'maintenance'
 
 export type DebugOverrides = {
   showNativeAppBar: boolean
@@ -14,6 +22,8 @@ export type DebugOverrides = {
   showAIAssistant: boolean
   /** When true, the success team card is shown on organization overview (custom plans). Default false. */
   showSuccessTeamCard: boolean
+  /** Mock Appwrite Cloud status alert state for design review in debug mode. */
+  mockCloudStatusAlert: MockCloudStatusAlert
 }
 
 const isBrowser = typeof window !== 'undefined'
@@ -23,6 +33,17 @@ function readBooleanFromStorage(key: string, defaultValue = false) {
   const raw = localStorage.getItem(key)
   if (raw === null) return defaultValue
   return raw === 'true'
+}
+
+function readStringFromStorage<T extends string>(
+  key: string,
+  allowedValues: readonly T[],
+  defaultValue: T,
+): T {
+  if (!isBrowser) return defaultValue
+  const raw = localStorage.getItem(key)
+  if (raw === null) return defaultValue
+  return allowedValues.includes(raw as T) ? (raw as T) : defaultValue
 }
 
 export function loadDebugOverrides(): DebugOverrides {
@@ -38,6 +59,11 @@ export function loadDebugOverrides(): DebugOverrides {
       DEBUG_OVERRIDE_KEYS.showSuccessTeamCard,
       false,
     ),
+    mockCloudStatusAlert: readStringFromStorage(
+      DEBUG_OVERRIDE_KEYS.mockCloudStatusAlert,
+      ['live', 'operational', 'degraded', 'downtime', 'maintenance'] as const,
+      'live',
+    ),
   }
 }
 
@@ -49,6 +75,8 @@ export function setDebugOverride<K extends keyof DebugOverrides>(
   const storageKey = DEBUG_OVERRIDE_KEYS[key]
   if (typeof value === 'boolean') {
     localStorage.setItem(storageKey, value ? 'true' : 'false')
+  } else if (typeof value === 'string') {
+    localStorage.setItem(storageKey, value)
   } else if (value) {
     localStorage.setItem(storageKey, 'true')
   } else {
