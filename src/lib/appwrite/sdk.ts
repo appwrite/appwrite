@@ -36,6 +36,7 @@ import {
   getDebugEndpointBaseUrl,
   subscribeToDebugEndpointChange,
 } from '@/lib/debug-endpoint'
+import { wrapServiceObject } from '@/lib/appwrite/slow-call-reporting'
 
 /**
  * True when the endpoint host is a known multi-region Appwrite cloud host
@@ -144,8 +145,8 @@ export function getProjectApiEndpoint(projectId: string): string {
   return getApiEndpoint(region)
 }
 
-// Create Console SDK instance
-function createConsoleSdk(client: Client) {
+// Create Console SDK instance (raw, no slow-call wrapping)
+function createConsoleSdkRaw(client: Client) {
   return {
     client,
     account: new Account(client),
@@ -193,8 +194,8 @@ if (typeof window !== 'undefined') {
 const realtimeConsole = new Realtime(clientConsole)
 const realtimeProject = new Realtime(clientProject)
 
-// Create Project SDK instance
-const sdkForProject = {
+// Create Project SDK instance (raw), then wrap for slow-call reporting
+const sdkForProjectRaw = {
   client: clientProject,
   account: new Account(clientProject),
   avatars: new Avatars(clientProject),
@@ -217,17 +218,28 @@ const sdkForProject = {
   console: new Console(clientProject), // for suggestions API
 }
 
+const sdkForProject = wrapServiceObject(
+  sdkForProjectRaw as Record<string, unknown>,
+  'forProject',
+) as typeof sdkForProjectRaw
+
 // Export SDK instances
 export const sdk = {
-  // Console SDK - for managing console-level resources
-  forConsole: createConsoleSdk(clientConsole),
+  // Console SDK - for managing console-level resources (wrapped for slow-call reporting)
+  forConsole: wrapServiceObject(
+    createConsoleSdkRaw(clientConsole) as Record<string, unknown>,
+    'forConsole',
+  ) as ReturnType<typeof createConsoleSdkRaw>,
 
   // Console SDK for specific region - for managing console-level resources in a specific region
   forConsoleIn(region: string) {
     const regionEndpoint = getApiEndpoint(region)
     const regionClient = new Client()
     regionClient.setEndpoint(regionEndpoint).setProject('console')
-    return createConsoleSdk(regionClient)
+    return wrapServiceObject(
+      createConsoleSdkRaw(regionClient) as Record<string, unknown>,
+      'forConsoleIn',
+    ) as ReturnType<typeof createConsoleSdkRaw>
   },
 
   // Project SDK - for managing project-specific resources.
@@ -267,5 +279,5 @@ export const sdk = {
 }
 
 // Export types for TypeScript
-export type ConsoleSdk = ReturnType<typeof createConsoleSdk>
+export type ConsoleSdk = ReturnType<typeof createConsoleSdkRaw>
 export type ProjectSdk = typeof sdkForProject

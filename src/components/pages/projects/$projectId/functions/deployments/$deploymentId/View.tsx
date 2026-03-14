@@ -2,7 +2,6 @@ import { useParams } from '@tanstack/react-router'
 import {
   useFunctionDeployment,
   useProjectFunction,
-  useFunctionDeployments,
   deleteFunctionDeployment,
   cancelFunctionDeployment,
 } from '@/lib/react-query/hooks'
@@ -22,14 +21,6 @@ export function View() {
   )
 
   const { data: func } = useProjectFunction(projectId, functionId)
-
-  // Fetch all deployments for navigation
-  const { deployments } = useFunctionDeployments(
-    projectId,
-    functionId,
-    0,
-    1000, // Get enough to find current deployment
-  )
 
   const handleDelete = async (deploymentId: string): Promise<void> => {
     if (!projectId || !functionId) {
@@ -129,7 +120,7 @@ export function View() {
         deploymentId: func?.deploymentId,
         runtime: func?.runtime,
       }}
-      deployments={deployments || []}
+      deployments={[]}
       deploymentDetailRoute="/projects/$projectId/functions/$functionId/deployments/$deploymentId"
       listRoute="/projects/$projectId/functions/$functionId"
       onDelete={handleDelete}

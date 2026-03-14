@@ -2,7 +2,6 @@ import { useParams } from '@tanstack/react-router'
 import {
   useSiteDeployment,
   useProjectSite,
-  useSiteDeployments,
   deleteSiteDeployment,
   cancelSiteDeployment,
   Dependencies,
@@ -22,14 +21,6 @@ export function View() {
   )
 
   const { data: site } = useProjectSite(projectId, siteId)
-
-  // Fetch all deployments for navigation
-  const { deployments } = useSiteDeployments(
-    projectId,
-    siteId,
-    0,
-    1000, // Get enough to find current deployment
-  )
 
   const handleDelete = async (deploymentId: string): Promise<void> => {
     if (!projectId || !siteId) {
@@ -128,7 +119,7 @@ export function View() {
         name: site?.name,
         deploymentId: site?.deploymentId,
       }}
-      deployments={deployments || []}
+      deployments={[]}
       deploymentDetailRoute="/projects/$projectId/sites/$siteId/deployments/$deploymentId"
       listRoute="/projects/$projectId/sites/$siteId/"
       onDelete={handleDelete}
