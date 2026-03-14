@@ -6,7 +6,6 @@ use Ahc\Jwt\JWT;
 use Appwrite\Event\Delete as DeleteEvent;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
-use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\Validator\Headers;
@@ -15,6 +14,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Executor\Executor;
@@ -93,7 +93,7 @@ class Create extends Base
             ->inject('dbForPlatform')
             ->inject('user')
             ->inject('queueForEvents')
-            ->inject('queueForStatsUsage')
+            ->inject('usage')
             ->inject('queueForFunctions')
             ->inject('geodb')
             ->inject('store')
@@ -121,7 +121,7 @@ class Create extends Base
         Database $dbForPlatform,
         Document $user,
         Event $queueForEvents,
-        StatsUsage $queueForStatsUsage,
+        Context $usage,
         Func $queueForFunctions,
         Reader $geodb,
         Store $store,
@@ -499,7 +499,7 @@ class Create extends Base
                 throw $th;
             }
         } finally {
-            $queueForStatsUsage
+            $usage
                 ->addMetric(METRIC_EXECUTIONS, 1)
                 ->addMetric(str_replace(['{resourceType}'], [RESOURCE_TYPE_FUNCTIONS], METRIC_RESOURCE_TYPE_EXECUTIONS), 1)
                 ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS), 1)
