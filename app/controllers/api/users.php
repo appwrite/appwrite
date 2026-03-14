@@ -73,8 +73,9 @@ use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
 /** TODO: Remove function when we move to using utopia/platform */
-function createUser(Hash $hash, string $userId, ?string $email, ?string $password, ?string $phone, string $name, Document $project, Database $dbForProject, Hooks $hooks): Document
+function createUser(Hash $hash, string $userId, ?string $email, ?string $password, ?string $phone, ?string $name, Document $project, Database $dbForProject, Hooks $hooks): Document
 {
+    $name ??= '';
     $plaintextPassword = $password;
     $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
 
@@ -255,7 +256,7 @@ App::post('/v1/users')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
-    ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+    ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
         $plaintext = new Plaintext();
 
         $user = createUser($plaintext, $userId, $email, $password, $phone, $name, $project, $dbForProject, $hooks);
@@ -291,7 +292,7 @@ App::post('/v1/users/bcrypt')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+    ->action(function (string $userId, string $email, string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
         $bcrypt = new Bcrypt();
         $bcrypt->setCost(8); // Default cost
 
@@ -329,7 +330,7 @@ App::post('/v1/users/md5')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+    ->action(function (string $userId, string $email, string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
         $md5 = new MD5();
 
         $user = createUser($md5, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
@@ -366,7 +367,7 @@ App::post('/v1/users/argon2')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+    ->action(function (string $userId, string $email, string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
         $argon2 = new Argon2();
 
         $user = createUser($argon2, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
@@ -404,7 +405,7 @@ App::post('/v1/users/sha')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, string $passwordVersion, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+    ->action(function (string $userId, string $email, string $password, string $passwordVersion, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
         $sha = new Sha();
         if (!empty($passwordVersion)) {
             $sha->setVersion($passwordVersion);
@@ -444,7 +445,7 @@ App::post('/v1/users/phpass')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+    ->action(function (string $userId, string $email, string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
         $phpass = new PHPass();
 
         $user = createUser($phpass, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks);
@@ -486,7 +487,7 @@ App::post('/v1/users/scrypt')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, string $passwordSalt, int $passwordCpu, int $passwordMemory, int $passwordParallel, int $passwordLength, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+    ->action(function (string $userId, string $email, string $password, string $passwordSalt, int $passwordCpu, int $passwordMemory, int $passwordParallel, int $passwordLength, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
         $scrypt = new Scrypt();
         $scrypt
             ->setSalt($passwordSalt)
@@ -532,7 +533,7 @@ App::post('/v1/users/scrypt-modified')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, string $passwordSalt, string $passwordSaltSeparator, string $passwordSignerKey, string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
+    ->action(function (string $userId, string $email, string $password, string $passwordSalt, string $passwordSaltSeparator, string $passwordSignerKey, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks) {
         $scryptModified = new ScryptModified();
         $scryptModified
             ->setSalt($passwordSalt)
@@ -575,10 +576,12 @@ App::post('/v1/users/:userId/targets')
     ->inject('queueForEvents')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $targetId, string $userId, string $providerType, string $identifier, string $providerId, string $name, Event $queueForEvents, Response $response, Database $dbForProject) {
+    ->action(function (string $targetId, string $userId, string $providerType, string $identifier, ?string $providerId, ?string $name, Event $queueForEvents, Response $response, Database $dbForProject) {
         $targetId = $targetId == 'unique()' ? ID::unique() : $targetId;
+        $providerId ??= '';
+        $name ??= '';
 
-        $provider = $dbForProject->getDocument('providers', $providerId);
+        $provider = empty($providerId) ? new Document([]) : $dbForProject->getDocument('providers', $providerId);
 
         switch ($providerType) {
             case 'email':
@@ -1712,7 +1715,11 @@ App::patch('/v1/users/:userId/targets/:targetId')
     ->inject('queueForEvents')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $userId, string $targetId, string $identifier, string $providerId, string $name, Event $queueForEvents, Response $response, Database $dbForProject) {
+    ->action(function (string $userId, string $targetId, ?string $identifier, ?string $providerId, ?string $name, Event $queueForEvents, Response $response, Database $dbForProject) {
+        $identifier ??= '';
+        $providerId ??= '';
+        $name ??= '';
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -2305,7 +2312,10 @@ App::post('/v1/users/:userId/tokens')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, int $length, int $expire, Request $request, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $userId, ?int $length, ?int $expire, Request $request, Response $response, Database $dbForProject, Event $queueForEvents) {
+        $length ??= 6;
+        $expire ??= TOKEN_EXPIRATION_GENERIC;
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
