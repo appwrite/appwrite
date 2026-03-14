@@ -231,7 +231,7 @@ return [
                 'url' => 'https://github.com/appwrite/sdk-for-cli',
                 'package' => 'https://www.npmjs.com/package/appwrite-cli',
                 'enabled' => true,
-                'beta' => true,
+                'beta' => false,
                 'dev' => false,
                 'hidden' => false,
                 'family' => APP_SDK_PLATFORM_CONSOLE,

@@ -76,6 +76,7 @@ class Delete extends Action
             ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('queueForStatsUsage')
             ->inject('queueForEvents')
             ->inject('queueForRealtime')
@@ -86,7 +87,7 @@ class Delete extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, Event $queueForEvents, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan, EventProcessor $eventProcessor): void
+    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, StatsUsage $queueForStatsUsage, Event $queueForEvents, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan, EventProcessor $eventProcessor): void
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
         if ($database->isEmpty()) {
@@ -163,10 +164,11 @@ class Delete extends Action
             return;
         }
 
+        $dbForDatabases = $getDatabasesDB($database);
         $documents = [];
 
         try {
-            $modified = $dbForProject->deleteDocuments(
+            $modified = $dbForDatabases->deleteDocuments(
                 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                 $queries,
                 onNext: function (Document $document) use ($plan, &$documents) {
@@ -189,12 +191,12 @@ class Delete extends Action
         }
 
         $queueForStatsUsage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, \max(1, $modified))
-            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $modified));
+            ->addMetric($this->getDatabasesOperationWriteMetric(), \max(1, $modified))
+            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationWriteMetric()), \max(1, $modified));
 
         $response->dynamic(new Document([
             'total' => $modified,
-            $this->getSDKGroup() => $documents,
+            $this->getSDKGroup() => $documents
         ]), $this->getResponseModel());
 
         $this->triggerBulk(

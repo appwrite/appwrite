@@ -10,6 +10,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -119,7 +120,12 @@ class Create extends Action
             ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
             ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
             ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-        $dbForProject->updateDocument('functions', $function->getId(), $function);
+        $dbForProject->updateDocument('functions', $function->getId(), new Document([
+            'latestDeploymentId' => $function->getAttribute('latestDeploymentId'),
+            'latestDeploymentInternalId' => $function->getAttribute('latestDeploymentInternalId'),
+            'latestDeploymentCreatedAt' => $function->getAttribute('latestDeploymentCreatedAt'),
+            'latestDeploymentStatus' => $function->getAttribute('latestDeploymentStatus'),
+        ]));
 
         $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)

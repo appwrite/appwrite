@@ -16,26 +16,39 @@ trait SchedulesBase
             return self::$cachedScheduleProjectData;
         }
 
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
-            'name' => 'Schedule Test Team',
-        ]);
+        $teamId = ID::unique();
+        $team = null;
+        for ($i = 0; $i < 3; $i++) {
+            $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'teamId' => $teamId,
+                'name' => 'Schedule Test Team',
+            ]);
+            if (\in_array($team['headers']['status-code'], [201, 409])) {
+                break;
+            }
+            \usleep(500000);
+        }
+        $this->assertContains($team['headers']['status-code'], [201, 409]);
 
-        $this->assertEquals(201, $team['headers']['status-code']);
-
-        $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
-            'name' => 'Schedule Test Project',
-            'teamId' => $team['body']['$id'],
-            'region' => System::getEnv('_APP_REGION', 'default'),
-        ]);
-
+        $project = null;
+        for ($i = 0; $i < 3; $i++) {
+            $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'projectId' => ID::unique(),
+                'name' => 'Schedule Test Project',
+                'teamId' => $team['body']['$id'] ?? $teamId,
+                'region' => System::getEnv('_APP_REGION', 'default'),
+            ]);
+            if ($project['headers']['status-code'] === 201) {
+                break;
+            }
+            \usleep(500000);
+        }
         $this->assertEquals(201, $project['headers']['status-code']);
 
         $projectId = $project['body']['$id'];

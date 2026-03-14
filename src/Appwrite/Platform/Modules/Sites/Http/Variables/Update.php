@@ -9,6 +9,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -93,12 +94,19 @@ class Update extends Base
             ->setAttribute('search', implode(' ', [$variableId, $site->getId(), $key, 'site']));
 
         try {
-            $dbForProject->updateDocument('variables', $variable->getId(), $variable);
+            $dbForProject->updateDocument('variables', $variable->getId(), new Document([
+                'key' => $variable->getAttribute('key'),
+                'value' => $variable->getAttribute('value'),
+                'secret' => $variable->getAttribute('secret'),
+                'search' => $variable->getAttribute('search'),
+            ]));
         } catch (DuplicateException $th) {
             throw new Exception(Exception::VARIABLE_ALREADY_EXISTS);
         }
 
-        $dbForProject->updateDocument('sites', $site->getId(), $site->setAttribute('live', false));
+        $dbForProject->updateDocument('sites', $site->getId(), new Document([
+            'live' => false,
+        ]));
 
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     }

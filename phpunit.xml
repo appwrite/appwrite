@@ -6,6 +6,7 @@
          colors="true"
          processIsolation="false"
          stopOnFailure="false"
+         stopOnError="false"
          cacheDirectory=".phpunit.cache"
 >
     <extensions>

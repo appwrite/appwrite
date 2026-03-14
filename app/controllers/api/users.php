@@ -1161,7 +1161,7 @@ Http::patch('/v1/users/:userId/status')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('status', (bool) $status));
+        $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['status' => (bool) $status]));
 
         $queueForEvents
             ->setParam('userId', $user->getId());
@@ -1204,7 +1204,7 @@ Http::put('/v1/users/:userId/labels')
 
         $user->setAttribute('labels', (array) \array_values(\array_unique($labels)));
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+        $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['labels' => $user->getAttribute('labels')]));
 
         $queueForEvents
             ->setParam('userId', $user->getId());
@@ -1245,7 +1245,7 @@ Http::patch('/v1/users/:userId/verification/phone')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('phoneVerification', $phoneVerification));
+        $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['phoneVerification' => $phoneVerification]));
 
         $queueForEvents
             ->setParam('userId', $user->getId());
@@ -1289,7 +1289,7 @@ Http::patch('/v1/users/:userId/name')
 
         $user->setAttribute('name', $name);
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+        $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['name' => $user->getAttribute('name')]));
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -1344,7 +1344,10 @@ Http::patch('/v1/users/:userId/password')
                 ->setAttribute('password', '')
                 ->setAttribute('passwordUpdate', DateTime::now());
 
-            $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+            $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
+                'password' => $user->getAttribute('password'),
+                'passwordUpdate' => $user->getAttribute('passwordUpdate'),
+            ]));
             $queueForEvents->setParam('userId', $user->getId());
             $response->dynamic($user, Response::MODEL_USER);
         }
@@ -1377,7 +1380,13 @@ Http::patch('/v1/users/:userId/password')
             ->setAttribute('hash', $hasher->getName())
             ->setAttribute('hashOptions', $hasher->getOptions());
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+        $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
+            'password' => $user->getAttribute('password'),
+            'passwordHistory' => $user->getAttribute('passwordHistory'),
+            'passwordUpdate' => $user->getAttribute('passwordUpdate'),
+            'hash' => $user->getAttribute('hash'),
+            'hashOptions' => $user->getAttribute('hashOptions'),
+        ]));
 
         $sessions = $user->getAttribute('sessions', []);
         $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? false;
@@ -1469,7 +1478,15 @@ Http::patch('/v1/users/:userId/email')
         ;
 
         try {
-            $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+            $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
+                'email' => $user->getAttribute('email'),
+                'emailVerification' => $user->getAttribute('emailVerification'),
+                'emailCanonical' => $user->getAttribute('emailCanonical'),
+                'emailIsCanonical' => $user->getAttribute('emailIsCanonical'),
+                'emailIsCorporate' => $user->getAttribute('emailIsCorporate'),
+                'emailIsDisposable' => $user->getAttribute('emailIsDisposable'),
+                'emailIsFree' => $user->getAttribute('emailIsFree'),
+            ]));
             /**
              * @var Document $oldTarget
              */
@@ -1477,7 +1494,8 @@ Http::patch('/v1/users/:userId/email')
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
                 if (\strlen($email) !== 0) {
-                    $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email));
+                    $dbForProject->updateDocument('targets', $oldTarget->getId(), new Document(['identifier' => $email]));
+                    $oldTarget->setAttribute('identifier', $email);
                 } else {
                     $dbForProject->deleteDocument('targets', $oldTarget->getId());
                 }
@@ -1542,12 +1560,15 @@ Http::patch('/v1/users/:userId/phone')
 
         $oldPhone = $user->getAttribute('phone');
 
+        // Store null instead of empty string so unique constraint allows multiple users without phone
+        $phoneValue = $number !== '' ? $number : null;
+
         $user
-            ->setAttribute('phone', $number)
+            ->setAttribute('phone', $phoneValue)
             ->setAttribute('phoneVerification', false)
         ;
 
-        if (\strlen($number) !== 0) {
+        if ($number !== '') {
             $target = $dbForProject->findOne('targets', [
                 Query::equal('identifier', [$number]),
             ]);
@@ -1558,20 +1579,24 @@ Http::patch('/v1/users/:userId/phone')
         }
 
         try {
-            $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+            $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
+                'phone' => $phoneValue,
+                'phoneVerification' => $user->getAttribute('phoneVerification'),
+            ]));
             /**
              * @var Document $oldTarget
              */
             $oldTarget = $user->find('identifier', $oldPhone, 'targets');
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
-                if (\strlen($number) !== 0) {
-                    $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $number));
+                if ($number !== '') {
+                    $dbForProject->updateDocument('targets', $oldTarget->getId(), new Document(['identifier' => $number]));
+                    $oldTarget->setAttribute('identifier', $number);
                 } else {
                     $dbForProject->deleteDocument('targets', $oldTarget->getId());
                 }
             } else {
-                if (\strlen($number) !== 0) {
+                if ($number !== '') {
                     $target = $dbForProject->createDocument('targets', new Document([
                         '$permissions' => [
                             Permission::read(Role::user($user->getId())),
@@ -1630,7 +1655,7 @@ Http::patch('/v1/users/:userId/verification')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', $emailVerification));
+        $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['emailVerification' => $emailVerification]));
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -1668,7 +1693,7 @@ Http::patch('/v1/users/:userId/prefs')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('prefs', $prefs));
+        $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['prefs' => $prefs]));
 
         $queueForEvents
             ->setParam('userId', $user->getId());
@@ -1768,7 +1793,13 @@ Http::patch('/v1/users/:userId/targets/:targetId')
             $target->setAttribute('name', $name);
         }
 
-        $target = $dbForProject->updateDocument('targets', $target->getId(), $target);
+        $target = $dbForProject->updateDocument('targets', $target->getId(), new Document([
+            'identifier' => $target->getAttribute('identifier'),
+            'expired' => $target->getAttribute('expired'),
+            'providerId' => $target->getAttribute('providerId'),
+            'providerInternalId' => $target->getAttribute('providerInternalId'),
+            'name' => $target->getAttribute('name'),
+        ]));
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $queueForEvents
@@ -1836,7 +1867,7 @@ Http::patch('/v1/users/:userId/mfa')
 
         $user->setAttribute('mfa', $mfa);
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+        $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['mfa' => $user->getAttribute('mfa')]));
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -2024,7 +2055,7 @@ Http::patch('/v1/users/:userId/mfa/recovery-codes')
 
         $mfaRecoveryCodes = Type::generateBackupCodes();
         $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
-        $dbForProject->updateDocument('users', $user->getId(), $user);
+        $dbForProject->updateDocument('users', $user->getId(), new Document(['mfaRecoveryCodes' => $mfaRecoveryCodes]));
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -2096,7 +2127,7 @@ Http::put('/v1/users/:userId/mfa/recovery-codes')
 
         $mfaRecoveryCodes = Type::generateBackupCodes();
         $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
-        $dbForProject->updateDocument('users', $user->getId(), $user);
+        $dbForProject->updateDocument('users', $user->getId(), new Document(['mfaRecoveryCodes' => $mfaRecoveryCodes]));
 
         $queueForEvents->setParam('userId', $user->getId());
 

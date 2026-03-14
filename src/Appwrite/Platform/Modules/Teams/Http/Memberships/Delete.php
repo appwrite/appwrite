@@ -131,7 +131,10 @@ class Delete extends Action
             if (!$membership->isEmpty()) {
                 $team->setAttribute('userId', $membership->getAttribute('userId'));
                 $team->setAttribute('userInternalId', $membership->getAttribute('userInternalId'));
-                $dbForProject->updateDocument('teams', $team->getId(), $team);
+                $dbForProject->updateDocument('teams', $team->getId(), new Document([
+                    'userId' => $membership->getAttribute('userId'),
+                    'userInternalId' => $membership->getAttribute('userInternalId'),
+                ]));
             }
         }
 

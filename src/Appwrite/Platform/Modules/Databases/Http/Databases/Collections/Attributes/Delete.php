@@ -12,6 +12,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\IndexDependency as IndexDependencyValidator;
 use Utopia\Database\Validator\Key;
@@ -98,7 +99,8 @@ class Delete extends Action
         }
 
         if ($attribute->getAttribute('status') === 'available') {
-            $attribute = $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'deleting'));
+            $attribute->setAttribute('status', 'deleting');
+            $attribute = $dbForProject->updateDocument('attributes', $attribute->getId(), new Document(['status' => 'deleting']));
         }
 
         $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collectionId);
@@ -118,7 +120,8 @@ class Delete extends Action
                 }
 
                 if ($relatedAttribute->getAttribute('status') === 'available') {
-                    $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'deleting'));
+                    $relatedAttribute->setAttribute('status', 'deleting');
+                    $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), new Document(['status' => 'deleting']));
                 }
 
                 $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $options['relatedCollection']);

@@ -68,6 +68,7 @@ class Upsert extends DocumentUpsert
             ->inject('response')
             ->inject('user')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
             ->inject('transactionState')

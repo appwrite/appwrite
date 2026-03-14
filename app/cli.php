@@ -318,6 +318,10 @@ $setResource('logError', function (Registry $register) {
 
 $setResource('executor', fn () => new Executor(), []);
 
+$setResource('bus', function (Registry $register) use ($cli) {
+    return $register->get('bus')->setResolver(fn (string $name) => $cli->getResource($name));
+}, ['register']);
+
 $setResource('telemetry', fn () => new NoTelemetry(), []);
 
 $cli

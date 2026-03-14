@@ -160,13 +160,29 @@ $register->set('pools', function () {
         'pass' => System::getEnv('_APP_DB_PASS', ''),
         'path' => System::getEnv('_APP_DB_SCHEMA', ''),
     ]);
-
     $fallbackForRedis = 'redis_main=' . AppwriteURL::unparse([
         'scheme' => 'redis',
         'host' => System::getEnv('_APP_REDIS_HOST', 'redis'),
         'port' => System::getEnv('_APP_REDIS_PORT', '6379'),
         'user' => System::getEnv('_APP_REDIS_USER', ''),
         'pass' => System::getEnv('_APP_REDIS_PASS', ''),
+    ]);
+
+    $fallbackForDocumentsDB = 'db_main=' . AppwriteURL::unparse([
+        'scheme' => System::getEnv('_APP_DB_ADAPTER_DOCUMENTSDB', 'mongodb'),
+        'host' => System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb'),
+        'port' => System::getEnv('_APP_DB_PORT_DOCUMENTSDB', '27017'),
+        'user' => System::getEnv('_APP_DB_USER', ''),
+        'pass' => System::getEnv('_APP_DB_PASS', ''),
+        'path' => System::getEnv('_APP_DB_SCHEMA', ''),
+    ]);
+    $fallbackForVectorsDB = 'db_main=' . AppwriteURL::unparse([
+        'scheme' => System::getEnv('_APP_DB_ADAPTER_VECTORSDB', 'postgresql'),
+        'host' => System::getEnv('_APP_DB_HOST_VECTORSDB', 'postgresql'),
+        'port' => System::getEnv('_APP_DB_PORT_VECTORSDB', '5432'),
+        'user' => System::getEnv('_APP_DB_USER', ''),
+        'pass' => System::getEnv('_APP_DB_PASS', ''),
+        'path' => System::getEnv('_APP_DB_SCHEMA', ''),
     ]);
 
     $connections = [
@@ -180,13 +196,25 @@ $register->set('pools', function () {
             'type' => 'database',
             'dsns' => $fallbackForDB,
             'multiple' => true,
-            'schemes' => ['mariadb', 'mongodb', 'mysql', 'postgresql'],
+            'schemes' => ['mongodb','mariadb', 'mysql','postgresql'],
+        ],
+        'documentsdb' => [
+            'type' => 'database',
+            'dsns' => System::getEnv('_APP_CONNECTIONS_DATABASE_DOCUMENTSDB', $fallbackForDocumentsDB),
+            'multiple' => true,
+            'schemes' => ['mongodb'],
+        ],
+        'vectorsdb' => [
+            'type' => 'database',
+            'dsns' => System::getEnv('_APP_CONNECTIONS_DATABASE_VECTORSDB', $fallbackForVectorsDB),
+            'multiple' => true,
+            'schemes' => ['postgresql'],
         ],
         'logs' => [
             'type' => 'database',
             'dsns' => System::getEnv('_APP_CONNECTIONS_DB_LOGS', $fallbackForDB),
             'multiple' => false,
-            'schemes' => ['mariadb', 'mongodb', 'mysql', 'postgresql'],
+            'schemes' => ['mongodb','mariadb', 'mysql','postgresql'],
         ],
         'publisher' => [
             'type' => 'publisher',
@@ -420,6 +448,7 @@ $register->set('smtp', function () {
     $mail->Password = $password;
     $mail->SMTPSecure = System::getEnv('_APP_SMTP_SECURE', '');
     $mail->SMTPAutoTLS = false;
+    $mail->SMTPKeepAlive = true;
     $mail->CharSet = 'UTF-8';
     $mail->Timeout = 10; /* Connection timeout */
     $mail->getSMTPInstance()->Timelimit = 30; /* Timeout for each individual SMTP command (e.g. HELO, EHLO, etc.) */
@@ -448,4 +477,12 @@ $register->set('promiseAdapter', function () {
 });
 $register->set('hooks', function () {
     return new Hooks();
+});
+$listeners = require __DIR__ . '/../listeners.php';
+$register->set('bus', function () use ($listeners) {
+    $bus = new \Utopia\Bus\Bus();
+    foreach ($listeners as $listener) {
+        $bus->subscribe($listener);
+    }
+    return $bus;
 });

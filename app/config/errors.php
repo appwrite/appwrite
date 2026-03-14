@@ -27,7 +27,7 @@ return [
     Exception::GENERAL_RESOURCE_BLOCKED => [
         'name' => Exception::GENERAL_RESOURCE_BLOCKED,
         'description' => 'Access to this resource is blocked.',
-        'code' => 401,
+        'code' => 403,
     ],
     Exception::GENERAL_UNKNOWN_ORIGIN => [
         'name' => Exception::GENERAL_UNKNOWN_ORIGIN,
@@ -168,8 +168,8 @@ return [
     ],
     Exception::USER_BLOCKED => [
         'name' => Exception::USER_BLOCKED,
-        'description' => 'The current user has been blocked. You can unblock the user by making a request to the User API\'s "Update User Status" endpoint or in the Appwrite Console\'s Auth section.',
-        'code' => 401,
+        'description' => 'The current user has been blocked.',
+        'code' => 403,
     ],
     Exception::USER_INVALID_TOKEN => [
         'name' => Exception::USER_INVALID_TOKEN,
@@ -1200,6 +1200,11 @@ return [
         'name' => Exception::MIGRATION_IN_PROGRESS,
         'description' => 'Migration is already in progress. You can check the status of the migration in your Appwrite Console\'s "Settings" > "Migrations".',
         'code' => 409,
+    ],
+    Exception::MIGRATION_DATABASE_TYPE_UNSUPPORTED => [
+        'name' => Exception::MIGRATION_DATABASE_TYPE_UNSUPPORTED,
+        'description' => 'The specified database type is not supported for CSV import or export operations.',
+        'code' => 400,
     ],
 
     /** Realtime */

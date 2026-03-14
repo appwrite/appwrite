@@ -227,7 +227,9 @@ class Create extends Action
 
                 foreach ($activeDeployments as $activeDeployment) {
                     $activeDeployment->setAttribute('activate', false);
-                    $dbForProject->updateDocument('deployments', $activeDeployment->getId(), $activeDeployment);
+                    $dbForProject->updateDocument('deployments', $activeDeployment->getId(), new Document([
+                        'activate' => false,
+                    ]));
                 }
             }
 
@@ -255,14 +257,17 @@ class Create extends Action
                     'type' => $type
                 ]));
 
-                $function = $function
-                    ->setAttribute('latestDeploymentId', $deployment->getId())
-                    ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
-                    ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
-                    ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-                $dbForProject->updateDocument('functions', $function->getId(), $function);
+                $function = $dbForProject->updateDocument('functions', $function->getId(), new Document([
+                    'latestDeploymentId' => $deployment->getId(),
+                    'latestDeploymentInternalId' => $deployment->getSequence(),
+                    'latestDeploymentCreatedAt' => $deployment->getCreatedAt(),
+                    'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
+                ]));
             } else {
-                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('sourceSize', $fileSize)->setAttribute('sourceMetadata', $metadata));
+                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
+                    'sourceSize' => $fileSize,
+                    'sourceMetadata' => $metadata,
+                ]));
             }
 
             // Start the build
@@ -295,14 +300,17 @@ class Create extends Action
                     'type' => $type
                 ]));
 
-                $function = $function
-                    ->setAttribute('latestDeploymentId', $deployment->getId())
-                    ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
-                    ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
-                    ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-                $dbForProject->updateDocument('functions', $function->getId(), $function);
+                $function = $dbForProject->updateDocument('functions', $function->getId(), new Document([
+                    'latestDeploymentId' => $deployment->getId(),
+                    'latestDeploymentInternalId' => $deployment->getSequence(),
+                    'latestDeploymentCreatedAt' => $deployment->getCreatedAt(),
+                    'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
+                ]));
             } else {
-                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('sourceChunksUploaded', $chunksUploaded)->setAttribute('sourceMetadata', $metadata));
+                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
+                    'sourceChunksUploaded' => $chunksUploaded,
+                    'sourceMetadata' => $metadata,
+                ]));
             }
         }
 

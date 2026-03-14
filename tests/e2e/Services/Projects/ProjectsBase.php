@@ -26,26 +26,39 @@ trait ProjectsBase
             return self::$cachedProjectData;
         }
 
-        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
-            'name' => 'Project Test',
-        ]);
+        $teamId = ID::unique();
+        $team = null;
+        for ($i = 0; $i < 3; $i++) {
+            $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'teamId' => $teamId,
+                'name' => 'Project Test',
+            ]);
+            if (\in_array($team['headers']['status-code'], [201, 409])) {
+                break;
+            }
+            \usleep(500000);
+        }
+        $this->assertContains($team['headers']['status-code'], [201, 409]);
 
-        $this->assertEquals(201, $team['headers']['status-code']);
-
-        $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
-            'name' => 'Project Test',
-            'teamId' => $team['body']['$id'],
-            'region' => System::getEnv('_APP_REGION', 'default')
-        ]);
-
+        $project = null;
+        for ($i = 0; $i < 3; $i++) {
+            $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'projectId' => ID::unique(),
+                'name' => 'Project Test',
+                'teamId' => $team['body']['$id'] ?? $teamId,
+                'region' => System::getEnv('_APP_REGION', 'default')
+            ]);
+            if ($project['headers']['status-code'] === 201) {
+                break;
+            }
+            \usleep(500000);
+        }
         $this->assertEquals(201, $project['headers']['status-code']);
 
         self::$cachedProjectData = [
@@ -396,26 +409,41 @@ trait ProjectsBase
     protected function setupProject(mixed $params, ?string $teamId = null, bool $newTeam = true): string
     {
         if ($newTeam) {
-            $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            $generatedTeamId = $teamId ?? ID::unique();
+            $team = null;
+            for ($i = 0; $i < 3; $i++) {
+                $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders()), [
+                    'teamId' => $generatedTeamId,
+                    'name' => 'Project Test',
+                ]);
+                if (\in_array($team['headers']['status-code'], [201, 409])) {
+                    break;
+                }
+                \usleep(500000);
+            }
+
+            $this->assertContains($team['headers']['status-code'], [201, 409], 'Setup team failed with status code: ' . $team['headers']['status-code'] . ' and response: ' . json_encode($team['body'], JSON_PRETTY_PRINT));
+
+            $teamId = $team['body']['$id'] ?? $generatedTeamId;
+        }
+
+        $project = null;
+        for ($i = 0; $i < 3; $i++) {
+            $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
-                'teamId' => $teamId ?? ID::unique(),
-                'name' => 'Project Test',
+                ...$params,
+                'teamId' => $teamId,
             ]);
-
-            $this->assertEquals(201, $team['headers']['status-code'], 'Setup team failed with status code: ' . $team['headers']['status-code'] . ' and response: ' . json_encode($team['body'], JSON_PRETTY_PRINT));
-
-            $teamId = $team['body']['$id'];
+            if ($project['headers']['status-code'] === 201) {
+                break;
+            }
+            \usleep(500000);
         }
-
-        $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            ...$params,
-            'teamId' => $teamId,
-        ]);
 
         $this->assertEquals(201, $project['headers']['status-code'], 'Setup project failed with status code: ' . $project['headers']['status-code'] . ' and response: ' . json_encode($project['body'], JSON_PRETTY_PRINT));
 

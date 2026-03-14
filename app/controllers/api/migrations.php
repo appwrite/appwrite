@@ -46,6 +46,16 @@ use Utopia\Validator\WhiteList;
 
 include_once __DIR__ . '/../shared/api.php';
 
+function getDatabaseTransferResourceServices(string $databaseType)
+{
+    return match($databaseType) {
+        DATABASE_TYPE_LEGACY,
+        DATABASE_TYPE_TABLESDB => Transfer::GROUP_DATABASES_TABLES_DB,
+        DATABASE_TYPE_VECTORSDB => Transfer::GROUP_DATABASES_VECTOR_DB,
+        DATABASE_TYPE_DOCUMENTSDB => Transfer::GROUP_DATABASES_DOCUMENTS_DB
+    };
+}
+
 Http::post('/v1/migrations/appwrite')
     ->groups(['api', 'migrations'])
     ->desc('Create Appwrite migration')
@@ -430,8 +440,16 @@ Http::post('/v1/migrations/csv/imports')
             throw new \Exception('Unable to copy file');
         }
 
+        // getting databasetype
+        $resources = explode(':', $resourceId);
+        $databaseId = $resources[0];
+        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $databaseType = $database->getAttribute('type');
+        if (!in_array($databaseType, CSV_ALLOWED_DATABASE_TYPES)) {
+            throw new Exception(Exception::MIGRATION_DATABASE_TYPE_UNSUPPORTED, 'Database type not supported for csv');
+        }
         $fileSize = $deviceForMigrations->getFileSize($newPath);
-        $resources = Transfer::extractServices([Transfer::GROUP_DATABASES]);
+        $resources = Transfer::extractServices([getDatabaseTransferResourceServices($databaseType)]);
 
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => $migrationId,
@@ -560,13 +578,23 @@ Http::post('/v1/migrations/csv/exports')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
         }
 
+        // getting databasetype
+        $resources = explode(':', $resourceId);
+        $databaseId = $resources[0];
+        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $databaseType = $database->getAttribute('type');
+        if (!in_array($databaseType, CSV_ALLOWED_DATABASE_TYPES)) {
+            throw new Exception(Exception::MIGRATION_DATABASE_TYPE_UNSUPPORTED, 'Database type not supported for csv');
+        }
+        $resources = Transfer::extractServices([getDatabaseTransferResourceServices($databaseType)]);
+
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
             'stage' => 'init',
             'source' => Appwrite::getName(),
             'destination' => CSV::getName(),
-            'resources' => Transfer::extractServices([Transfer::GROUP_DATABASES]),
+            'resources' => $resources,
             'resourceId' => $resourceId,
             'resourceType' => Resource::TYPE_DATABASE,
             'statusCounters' => '{}',
@@ -769,26 +797,17 @@ Http::get('/v1/migrations/appwrite/report')
     ->param('projectID', '', new Text(512), "Source's Project ID")
     ->param('key', '', new Text(512), "Source's API Key")
     ->inject('response')
-    ->inject('dbForProject')
-    ->inject('project')
-    ->inject('user')
-    ->action(function (array $resources, string $endpoint, string $projectID, string $key, Response $response) {
-
-        $appwrite = new Appwrite($projectID, $endpoint, $key);
+    ->inject('getDatabasesDB')
+    ->action(function (array $resources, string $endpoint, string $projectID, string $key, Response $response, callable $getDatabasesDB) {
 
         try {
+            $appwrite = new Appwrite($projectID, $endpoint, $key, $getDatabasesDB);
             $report = $appwrite->report($resources);
         } catch (\Throwable $e) {
-            switch ($e->getCode()) {
-                case 401:
-                    throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Source Error: ' . $e->getMessage());
-                case 429:
-                    throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Source Error: Rate Limit Exceeded, Is your Cloud Provider blocking Appwrite\'s IP?');
-                case 500:
-                    throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Source Error: ' . $e->getMessage());
-            }
-
-            throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Source Error: ' . $e->getMessage());
+            throw new Exception(
+                Exception::MIGRATION_PROVIDER_ERROR,
+                'Unable to connect to the migration source. Please verify your credentials and ensure the source is reachable from this server. Check for network restrictions such as firewalls, IP allowlists, or outbound connectivity limits.'
+            );
         }
 
         $response
@@ -827,21 +846,14 @@ Http::get('/v1/migrations/firebase/report')
             throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Invalid Service Account JSON');
         }
 
-        $firebase = new Firebase($serviceAccount);
-
         try {
+            $firebase = new Firebase($serviceAccount);
             $report = $firebase->report($resources);
         } catch (\Throwable $e) {
-            switch ($e->getCode()) {
-                case 401:
-                    throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Source Error: ' . $e->getMessage());
-                case 429:
-                    throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Source Error: Rate Limit Exceeded, Is your Cloud Provider blocking Appwrite\'s IP?');
-                case 500:
-                    throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Source Error: ' . $e->getMessage());
-            }
-
-            throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Source Error: ' . $e->getMessage());
+            throw new Exception(
+                Exception::MIGRATION_PROVIDER_ERROR,
+                'Unable to connect to the migration source. Please verify your credentials and ensure the source is reachable from this server. Check for network restrictions such as firewalls, IP allowlists, or outbound connectivity limits.'
+            );
         }
 
         $response
@@ -876,21 +888,14 @@ Http::get('/v1/migrations/supabase/report')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (array $resources, string $endpoint, string $apiKey, string $databaseHost, string $username, string $password, int $port, Response $response) {
-        $supabase = new Supabase($endpoint, $apiKey, $databaseHost, 'postgres', $username, $password, $port);
-
         try {
+            $supabase = new Supabase($endpoint, $apiKey, $databaseHost, 'postgres', $username, $password, $port);
             $report = $supabase->report($resources);
         } catch (\Throwable $e) {
-            switch ($e->getCode()) {
-                case 401:
-                    throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Source Error: ' . $e->getMessage());
-                case 429:
-                    throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Source Error: Rate Limit Exceeded, Is your Cloud Provider blocking Appwrite\'s IP?');
-                case 500:
-                    throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Source Error: ' . $e->getMessage());
-            }
-
-            throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Source Error: ' . $e->getMessage());
+            throw new Exception(
+                Exception::MIGRATION_PROVIDER_ERROR,
+                'Unable to connect to the migration source. Please verify your credentials and ensure the source is reachable from this server. Check for network restrictions such as firewalls, IP allowlists, or outbound connectivity limits.'
+            );
         }
 
         $response
@@ -925,21 +930,14 @@ Http::get('/v1/migrations/nhost/report')
     ->param('port', 5432, new Integer(true), 'Source\'s Database Port.', true)
     ->inject('response')
     ->action(function (array $resources, string $subdomain, string $region, string $adminSecret, string $database, string $username, string $password, int $port, Response $response) {
-        $nhost = new NHost($subdomain, $region, $adminSecret, $database, $username, $password, $port);
-
         try {
+            $nhost = new NHost($subdomain, $region, $adminSecret, $database, $username, $password, $port);
             $report = $nhost->report($resources);
         } catch (\Throwable $e) {
-            switch ($e->getCode()) {
-                case 401:
-                    throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Source Error: ' . $e->getMessage());
-                case 429:
-                    throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Source Error: Rate Limit Exceeded, Is your Cloud Provider blocking Appwrite\'s IP?');
-                case 500:
-                    throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Source Error: ' . $e->getMessage());
-            }
-
-            throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Source Error: ' . $e->getMessage());
+            throw new Exception(
+                Exception::MIGRATION_PROVIDER_ERROR,
+                'Unable to connect to the migration source. Please verify your credentials and ensure the source is reachable from this server. Check for network restrictions such as firewalls, IP allowlists, or outbound connectivity limits.'
+            );
         }
 
         $response

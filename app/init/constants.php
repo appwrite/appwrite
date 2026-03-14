@@ -94,6 +94,7 @@ const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite?sub_confirmation=
 const APP_COMPUTE_CPUS_DEFAULT = 0.5;
 const APP_COMPUTE_MEMORY_DEFAULT = 512;
 const APP_COMPUTE_SPECIFICATION_DEFAULT = Specification::S_1VCPU_512MB;
+const APP_COMPUTE_DEPLOYMENT_MAX_RETENTION = 100 * 365; // 100 years
 const APP_SDK_PLATFORM_SERVER = 'server';
 const APP_SDK_PLATFORM_CLIENT = 'client';
 const APP_SDK_PLATFORM_CONSOLE = 'console';
@@ -290,6 +291,45 @@ const METRIC_DATABASES_OPERATIONS_READS  = 'databases.operations.reads';
 const METRIC_DATABASE_ID_OPERATIONS_READS = '{databaseInternalId}.databases.operations.reads';
 const METRIC_DATABASES_OPERATIONS_WRITES  = 'databases.operations.writes';
 const METRIC_DATABASE_ID_OPERATIONS_WRITES = '{databaseInternalId}.databases.operations.writes';
+
+// documentsdb
+const METRIC_DATABASES_DOCUMENTSDB = 'documentsdb.databases';
+const METRIC_COLLECTIONS_DOCUMENTSDB = 'documentsdb.collections';
+const METRIC_DATABASES_STORAGE_DOCUMENTSDB = 'documentsdb.databases.storage';
+const METRIC_DATABASE_ID_COLLECTIONS_DOCUMENTSDB = 'documentsdb.{databaseInternalId}.collections';
+const METRIC_DATABASE_ID_STORAGE_DOCUMENTSDB = 'documentsdb.{databaseInternalId}.databases.storage';
+const METRIC_DOCUMENTS_DOCUMENTSDB = 'documentsdb.documents';
+const METRIC_DATABASE_ID_DOCUMENTS_DOCUMENTSDB = 'documentsdb.{databaseInternalId}.documents';
+const METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS_DOCUMENTSDB = 'documentsdb.{databaseInternalId}.{collectionInternalId}.documents';
+const METRIC_DATABASE_ID_COLLECTION_ID_STORAGE_DOCUMENTSDB = 'documentsdb.{databaseInternalId}.{collectionInternalId}.databases.storage';
+const METRIC_DATABASES_OPERATIONS_READS_DOCUMENTSDB  = 'documentsdb.databases.operations.reads';
+const METRIC_DATABASE_ID_OPERATIONS_READS_DOCUMENTSDB = 'documentsdb.{databaseInternalId}.databases.operations.reads';
+const METRIC_DATABASES_OPERATIONS_WRITES_DOCUMENTSDB  = 'documentsdb.databases.operations.writes';
+const METRIC_DATABASE_ID_OPERATIONS_WRITES_DOCUMENTSDB = 'documentsdb.{databaseInternalId}.databases.operations.writes';
+
+// vectorsdb
+const METRIC_DATABASES_VECTORSDB = 'vectorsdb.databases';
+const METRIC_COLLECTIONS_VECTORSDB = 'vectorsdb.collections';
+const METRIC_DATABASES_STORAGE_VECTORSDB = 'vectorsdb.databases.storage';
+const METRIC_DATABASE_ID_COLLECTIONS_VECTORSDB = 'vectorsdb.{databaseInternalId}.collections';
+const METRIC_DATABASE_ID_STORAGE_VECTORSDB = 'vectorsdb.{databaseInternalId}.databases.storage';
+const METRIC_DOCUMENTS_VECTORSDB = 'vectorsdb.documents';
+const METRIC_DATABASE_ID_DOCUMENTS_VECTORSDB = 'vectorsdb.{databaseInternalId}.documents';
+const METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS_VECTORSDB = 'vectorsdb.{databaseInternalId}.{collectionInternalId}.documents';
+const METRIC_DATABASE_ID_COLLECTION_ID_STORAGE_VECTORSDB = 'vectorsdb.{databaseInternalId}.{collectionInternalId}.databases.storage';
+const METRIC_DATABASES_OPERATIONS_READS_VECTORSDB  = 'vectorsdb.databases.operations.reads';
+const METRIC_DATABASE_ID_OPERATIONS_READS_VECTORSDB = 'vectorsdb.{databaseInternalId}.databases.operations.reads';
+const METRIC_DATABASES_OPERATIONS_WRITES_VECTORSDB  = 'vectorsdb.databases.operations.writes';
+const METRIC_DATABASE_ID_OPERATIONS_WRITES_VECTORSDB = 'vectorsdb.{databaseInternalId}.databases.operations.writes';
+const METRIC_EMBEDDINGS_TEXT = 'embeddings.text';
+const METRIC_EMBEDDINGS_MODEL_TEXT = 'embeddings.text.{embeddingModel}';
+const METRIC_EMBEDDINGS_TEXT_TOTAL_ERROR = 'embeddings.text.totalErrors';
+const METRIC_EMBEDDINGS_MODEL_TEXT_TOTAL_ERROR = 'embeddings.text.{embeddingModel}.totalErrors';
+const METRIC_EMBEDDINGS_TEXT_TOTAL_DURATION = 'embeddings.text.totalDuration';
+const METRIC_EMBEDDINGS_MODEL_TEXT_TOTAL_DURATION = 'embeddings.text.{embeddingModel}.totalDuration';
+const METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS = 'embeddings.text.totalTokens';
+const METRIC_EMBEDDINGS_MODEL_TEXT_TOTAL_TOKENS = 'embeddings.text.{embeddingModel}.totalTokens';
+
 const METRIC_BUCKETS = 'buckets';
 const METRIC_FILES  = 'files';
 const METRIC_FILES_STORAGE  = 'files.storage';
@@ -364,6 +404,12 @@ const METRIC_AVATARS_SCREENSHOTS_GENERATED = 'avatars.screenshotsGenerated';
 const METRIC_FUNCTIONS_RUNTIME = 'functions.runtimes.{runtime}';
 const METRIC_SITES_FRAMEWORK = 'sites.frameworks.{framework}';
 
+// Realtime metrics
+const METRIC_REALTIME_CONNECTIONS = 'realtime.connections';
+const METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT = 'realtime.messages.sent';
+const METRIC_REALTIME_INBOUND = 'realtime.inbound';
+const METRIC_REALTIME_OUTBOUND = 'realtime.outbound';
+
 // Resource types
 const RESOURCE_TYPE_PROJECTS = 'projects';
 const RESOURCE_TYPE_FUNCTIONS = 'functions';
@@ -376,6 +422,7 @@ const RESOURCE_TYPE_SUBSCRIBERS = 'subscribers';
 const RESOURCE_TYPE_MESSAGES = 'messages';
 const RESOURCE_TYPE_EXECUTIONS = 'executions';
 const RESOURCE_TYPE_VCS = 'vcs';
+const RESOURCE_TYPE_EMBEDDINGS_TEXT = 'embeddingsText';
 
 // Resource types for Tokens
 const TOKENS_RESOURCE_TYPE_FILES = 'files';
@@ -397,3 +444,16 @@ const CACHE_RECONNECT_RETRY_DELAY = 1000;
 
 // Project status
 const PROJECT_STATUS_ACTIVE = 'active';
+
+// Database types
+const DATABASE_TYPE_LEGACY = 'legacy';
+const DATABASE_TYPE_TABLESDB = 'tablesdb';
+const DATABASE_TYPE_DOCUMENTSDB = 'documentsdb';
+const DATABASE_TYPE_VECTORSDB = 'vectorsdb';
+
+// CSV import/export allowed database types
+const CSV_ALLOWED_DATABASE_TYPES = [
+    DATABASE_TYPE_LEGACY,
+    DATABASE_TYPE_TABLESDB,
+    DATABASE_TYPE_VECTORSDB
+];

@@ -2360,7 +2360,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
-        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals(403, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
@@ -2371,7 +2371,7 @@ class AccountCustomClientTest extends Scope
             'password' => $password,
         ]);
 
-        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals(403, $response['headers']['status-code']);
     }
 
 
@@ -2440,7 +2440,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
-        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals(403, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
@@ -2451,7 +2451,7 @@ class AccountCustomClientTest extends Scope
             'password' => $password,
         ]);
 
-        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals(403, $response['headers']['status-code']);
     }
 
     public function testCreateJWT(): void

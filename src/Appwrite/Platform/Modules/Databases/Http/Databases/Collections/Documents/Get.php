@@ -68,13 +68,14 @@ class Get extends Action
             ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID to read uncommitted changes within the transaction.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('queueForStatsUsage')
             ->inject('transactionState')
             ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, array $queries, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, TransactionState $transactionState, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $documentId, array $queries, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, StatsUsage $queueForStatsUsage, TransactionState $transactionState, Authorization $authorization): void
     {
         $isAPIKey = User::isApp($authorization->getRoles());
         $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
@@ -86,6 +87,7 @@ class Get extends Action
 
         $collection = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
 
+        $dbForDatabases = $getDatabasesDB($database);
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
@@ -99,16 +101,17 @@ class Get extends Action
         try {
             $selects = Query::groupByType($queries)['selections'] ?? [];
             $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+            $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
             // Use transaction-aware document retrieval if transactionId is provided
             if ($transactionId !== null) {
-                $document = $transactionState->getDocument($collectionTableId, $documentId, $transactionId, $queries);
+                $document = $transactionState->getDocument($database, $collectionTableId, $documentId, $transactionId, $queries);
             } elseif (! empty($selects)) {
                 // has selects, allow relationship on documents!
-                $document = $dbForProject->getDocument($collectionTableId, $documentId, $queries);
+                $document = $dbForDatabases->getDocument($collectionTableId, $documentId, $queries);
             } else {
                 // has no selects, disable relationship looping on documents!
-                $document = $dbForProject->skipRelationships(fn () => $dbForProject->getDocument($collectionTableId, $documentId, $queries));
+                $document = $dbForDatabases->skipRelationships(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId, $queries));
             }
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
@@ -131,8 +134,8 @@ class Get extends Action
         );
 
         $queueForStatsUsage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_READS, max($operations, 1))
-            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations);
+            ->addMetric($this->getDatabasesOperationReadMetric(), max($operations, 1))
+            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationReadMetric()), $operations);
 
         $response->addHeader('X-Debug-Operations', $operations);
 

@@ -2535,29 +2535,35 @@ class RealtimeCustomClientQueryTest extends Scope
         $projectId = 'console';
 
         // Subscribe without queries - should receive all events
-        $clientNoQuery = $this->getWebsocket(['tests'], [
-            'origin' => 'http://localhost',
-        ], $projectId);
+        $clientNoQuery = $this->getWebsocket(
+            channels: ['tests'],
+            headers: ['origin' => 'http://localhost'],
+            projectId: $projectId,
+            timeout: 5
+        );
 
         $response = json_decode($clientNoQuery->receive(), true);
         $this->assertEquals('connected', $response['type']);
 
         // Subscribe with matching query - should receive events
-        $clientWithMatchingQuery = $this->getWebsocket(['tests'], [
-            'origin' => 'http://localhost',
-        ], $projectId, [
-            Query::equal('response', ['WS:/v1/realtime:passed'])->toString(),
-        ]);
+        $clientWithMatchingQuery = $this->getWebsocket(
+            channels: ['tests'],
+            headers: ['origin' => 'http://localhost'],
+            projectId: $projectId,
+            queries: [Query::equal('response', ['WS:/v1/realtime:passed'])->toString()],
+            timeout: 5
+        );
 
         $response = json_decode($clientWithMatchingQuery->receive(), true);
         $this->assertEquals('connected', $response['type']);
 
         // Subscribe with non-matching query - should NOT receive events
-        $clientWithNonMatchingQuery = $this->getWebsocket(['tests'], [
-            'origin' => 'http://localhost',
-        ], $projectId, [
-            Query::equal('response', ['failed'])->toString(),
-        ]);
+        $clientWithNonMatchingQuery = $this->getWebsocket(
+            channels: ['tests'],
+            headers: ['origin' => 'http://localhost'],
+            projectId: $projectId,
+            queries: [Query::equal('response', ['failed'])->toString()]
+        );
 
         $response = json_decode($clientWithNonMatchingQuery->receive(), true);
         $this->assertEquals('connected', $response['type']);

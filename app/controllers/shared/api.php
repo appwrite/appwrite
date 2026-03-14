@@ -2,6 +2,7 @@
 
 use Appwrite\Auth\Key;
 use Appwrite\Auth\MFA\Type\TOTP;
+use Appwrite\Bus\Events\RequestCompleted;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Build;
 use Appwrite\Event\Database as EventDatabase;
@@ -21,6 +22,7 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Abuse;
+use Utopia\Bus\Bus;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
@@ -212,6 +214,8 @@ Http::init()
                 }
 
                 if (!$dbKey) {
+                    \var_dump($apiKey);
+                    \var_dump($request->getHeader('x-appwrite-key', ''));
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
 
@@ -375,8 +379,9 @@ Http::init()
         if (!$project->isEmpty() && $project->getId() !== 'console') {
             $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
-                $project->setAttribute('accessedAt', DateTime::now());
-                $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $project));
+                $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                    'accessedAt' => DateTime::now()
+                ])));
             }
         }
 
@@ -386,9 +391,13 @@ Http::init()
                 $user->setAttribute('accessedAt', DateTime::now());
 
                 if ($project->getId() !== 'console' && APP_MODE_ADMIN !== $mode) {
-                    $dbForProject->updateDocument('users', $user->getId(), $user);
+                    $dbForProject->updateDocument('users', $user->getId(), new Document([
+                        'accessedAt' => $user->getAttribute('accessedAt')
+                    ]));
                 } else {
-                    $authorization->skip(fn () => $dbForPlatform->updateDocument('users', $user->getId(), $user));
+                    $authorization->skip(fn () => $dbForPlatform->updateDocument('users', $user->getId(), new Document([
+                        'accessedAt' => $user->getAttribute('accessedAt')
+                    ])));
                 }
             }
         }
@@ -478,6 +487,12 @@ Http::init()
     ->action(function (Http $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Mail $queueForMails, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform, Authorization $authorization) {
 
         $route = $utopia->getRoute();
+        $path = $route->getMatchedPath();
+        $databaseType = match (true) {
+            str_contains($path, '/documentsdb') => DATABASE_TYPE_DOCUMENTSDB,
+            str_contains($path, '/vectorsdb') => DATABASE_TYPE_VECTORSDB,
+            default => '',
+        };
 
         if (
             array_key_exists('rest', $project->getAttribute('apis', []))
@@ -664,7 +679,9 @@ Http::init()
                         $transformedAt = $file->getAttribute('transformedAt', '');
                         if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
                             $file->setAttribute('transformedAt', DateTime::now());
-                            $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $file->getAttribute('bucketInternalId'), $file->getId(), $file));
+                            $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $file->getAttribute('bucketInternalId'), $file->getId(), new Document([
+                                'transformedAt' => $file->getAttribute('transformedAt')
+                            ])));
                         }
                     }
                 }
@@ -763,7 +780,8 @@ Http::shutdown()
     ->inject('authorization')
     ->inject('timelimit')
     ->inject('eventProcessor')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Audit $queueForAudits, StatsUsage $queueForStatsUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor) use ($parseLabel) {
+    ->inject('bus')
+    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Audit $queueForAudits, StatsUsage $queueForStatsUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor, Bus $bus) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -962,7 +980,9 @@ Http::shutdown()
                     }
                 } elseif (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $accessedAt) {
                     $cacheLog->setAttribute('accessedAt', $now);
-                    $authorization->skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
+                    $authorization->skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), new Document([
+                        'accessedAt' => $cacheLog->getAttribute('accessedAt')
+                    ])));
                     // Overwrite the file every APP_CACHE_UPDATE seconds to update the file modified time that is used in the TTL checks in cache->load()
                     $cache->save($key, $data['payload']);
                 }
@@ -975,16 +995,11 @@ Http::shutdown()
 
         if ($project->getId() !== 'console') {
             if (!User::isPrivileged($authorization->getRoles())) {
-                $fileSize = 0;
-                $file = $request->getFiles('file');
-                if (!empty($file)) {
-                    $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
-                }
-
-                $queueForStatsUsage
-                    ->addMetric(METRIC_NETWORK_REQUESTS, 1)
-                    ->addMetric(METRIC_NETWORK_INBOUND, $request->getSize() + $fileSize)
-                    ->addMetric(METRIC_NETWORK_OUTBOUND, $response->getSize());
+                $bus->dispatch(new RequestCompleted(
+                    project: $project->getArrayCopy(),
+                    request: $request,
+                    response: $response,
+                ));
             }
 
             $queueForStatsUsage

@@ -119,7 +119,7 @@ class Update extends Action
 
         $authenticator->setAttribute('verified', true);
 
-        $dbForProject->updateDocument('authenticators', $authenticator->getId(), $authenticator);
+        $dbForProject->updateDocument('authenticators', $authenticator->getId(), new Document(['verified' => true]));
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $factors = $session->getAttribute('factors', []);
@@ -127,7 +127,7 @@ class Update extends Action
         $factors = \array_values(\array_unique($factors));
 
         $session->setAttribute('factors', $factors);
-        $dbForProject->updateDocument('sessions', $session->getId(), $session);
+        $dbForProject->updateDocument('sessions', $session->getId(), new Document(['factors' => $factors]));
 
         $queueForEvents->setParam('userId', $user->getId());
 
