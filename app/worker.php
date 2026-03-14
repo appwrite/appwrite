@@ -1,7 +1,6 @@
 <?php
 
 require_once __DIR__ . '/init.php';
-
 use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Build;

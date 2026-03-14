@@ -115,6 +115,8 @@ class Create extends Action
             'duration' => TOKEN_EXPIRATION_LOGIN_LONG,
             'personalDataCheck' => false,
             'disposableEmails' => false,
+            'canonicalEmails' => false,
+            'freeEmails' => false,
             'mockNumbers' => [],
             'sessionAlerts' => false,
             'membershipsUserName' => false,

@@ -39,6 +39,9 @@ $console = [
         'limit' => (System::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
         'duration' => TOKEN_EXPIRATION_LOGIN_LONG, // 1 Year in seconds
         'sessionAlerts' => System::getEnv('_APP_CONSOLE_SESSION_ALERTS', 'disabled') === 'enabled',
+        'disposableEmails' => false,
+        'canonicalEmails' => false,
+        'freeEmails' => false,
         'invalidateSessions' => true
     ],
     'authWhitelistEmails' => (!empty(System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],

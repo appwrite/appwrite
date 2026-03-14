@@ -169,13 +169,40 @@ class Create extends Action
                 throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
             }
 
+            $emailMetadata = [
+                'emailCanonical' => null,
+                'emailIsCanonical' => null,
+                'emailIsCorporate' => null,
+                'emailIsDisposable' => null,
+                'emailIsFree' => null,
+            ];
+
             try {
-                $userId = ID::unique();
-                $hash = $proofForPassword->hash($proofForPassword->generate());
-                $emailCanonical = new Email($email);
-            } catch (Throwable) {
-                $emailCanonical = null;
+                $parsedEmail = new Email($email);
+                $canonical = $parsedEmail->getCanonical();
+                $emailMetadata = [
+                    'emailCanonical' => $canonical,
+                    'emailIsCanonical' => $parsedEmail->get() === $canonical,
+                    'emailIsCorporate' => $parsedEmail->isCorporate(),
+                    'emailIsDisposable' => $parsedEmail->isDisposable(),
+                    'emailIsFree' => $parsedEmail->isFree(),
+                ];
+            } catch (\Throwable) {
             }
+
+            if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
+                throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
+            }
+
+            if (($plan['supportsCanonicalEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
+                throw new Exception(Exception::USER_EMAIL_NOT_CANONICAL);
+            }
+
+            if (($plan['supportsFreeEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
+                throw new Exception(Exception::USER_EMAIL_FREE);
+            }
+
+            $hash = $proofForPassword->hash($proofForPassword->generate());
 
             $userId = ID::unique();
 
@@ -209,11 +236,11 @@ class Create extends Action
                 'tokens' => null,
                 'memberships' => null,
                 'search' => implode(' ', [$userId, $email, $name]),
-                'emailCanonical' => $emailCanonical?->getCanonical(),
-                'emailIsCanonical' => $emailCanonical?->isCanonicalSupported(),
-                'emailIsCorporate' => $emailCanonical?->isCorporate(),
-                'emailIsDisposable' => $emailCanonical?->isDisposable(),
-                'emailIsFree' => $emailCanonical?->isFree(),
+                'emailCanonical' => $emailMetadata['emailCanonical'],
+                'emailIsCanonical' => $emailMetadata['emailIsCanonical'],
+                'emailIsCorporate' => $emailMetadata['emailIsCorporate'],
+                'emailIsDisposable' => $emailMetadata['emailIsDisposable'],
+                'emailIsFree' => $emailMetadata['emailIsFree'],
             ]);
 
             try {
