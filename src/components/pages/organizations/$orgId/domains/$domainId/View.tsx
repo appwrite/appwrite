@@ -966,7 +966,7 @@ export function View({ initialData }: ViewProps = {}) {
                         Registrar
                       </p>
                       <code className="text-[12px] font-mono text-foreground">
-                        —
+                        3rd party
                       </code>
                     </div>
 
