@@ -188,6 +188,13 @@ trait UsersBase
         $this->assertEquals(201, $res['headers']['status-code']);
         $this->assertSame('', $res['body']['name']);
 
+        $cleanup = $this->client->call(Client::METHOD_DELETE, '/users/' . $res['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $cleanup['headers']['status-code']);
+
         return ['userId' => $body['$id']];
     }
 
@@ -1654,6 +1661,7 @@ trait UsersBase
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertEquals($provider['body']['$id'], $response['body']['providerId']);
         $this->assertEquals('random-email@mail.org', $response['body']['identifier']);
+        $target = $response['body'];
 
         $response = $this->client->call(Client::METHOD_POST, '/users/' . $data['userId'] . '/targets', array_merge([
             'content-type' => 'application/json',
@@ -1669,7 +1677,15 @@ trait UsersBase
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNull($response['body']['providerId']);
         $this->assertNull($response['body']['name']);
-        return $response['body'];
+
+        $cleanup = $this->client->call(Client::METHOD_DELETE, '/users/' . $data['userId'] . '/targets/' . $response['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $cleanup['headers']['status-code']);
+
+        return $target;
     }
 
     /**
