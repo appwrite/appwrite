@@ -1260,8 +1260,10 @@ trait UsersBase
         ]);
 
         $this->assertEquals($user['headers']['status-code'], 200);
-        $this->assertEquals($user['body']['funcKey1'], 'funcValue1');
-        $this->assertEquals($user['body']['funcKey2'], 'funcValue2');
+        $this->assertArrayHasKey('$id', $user['body']);
+        $this->assertArrayHasKey('prefs', $user['body']);
+        $this->assertEquals($user['body']['prefs']['funcKey1'], 'funcValue1');
+        $this->assertEquals($user['body']['prefs']['funcKey2'], 'funcValue2');
 
         $user = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/prefs', array_merge([
             'content-type' => 'application/json',

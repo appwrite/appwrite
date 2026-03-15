@@ -464,7 +464,9 @@ class WebhooksCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(200, $user['headers']['status-code']);
-        $this->assertEquals('b', $user['body']['a']);
+        $this->assertArrayHasKey('$id', $user['body']);
+        $this->assertArrayHasKey('prefs', $user['body']);
+        $this->assertEquals('b', $user['body']['prefs']['a']);
 
         $webhook = $this->getLastRequest();
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
@@ -482,7 +484,9 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
-        $this->assertEquals('b', $webhook['data']['a']);
+        $this->assertArrayHasKey('$id', $webhook['data']);
+        $this->assertArrayHasKey('prefs', $webhook['data']);
+        $this->assertEquals('b', $webhook['data']['prefs']['a']);
 
         return $data;
     }
