@@ -175,6 +175,26 @@ trait UsersBase
         $this->assertEquals($res['body']['hashOptions']['signerKey'], 'XyEKE9RcTDeLEsL/RjwPDBv/RqDl8fb3gpYEOQaPihbxf1ZAtSOHCjuAAa7Q3oHpCYhXSN9tizHgVOwn6krflQ==');
         $this->assertEquals($res['body']['hashOptions']['saltSeparator'], 'Bw==');
 
+        $res = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => ID::unique(),
+            'email' => 'null-name@appwrite.io',
+            'password' => 'password',
+            'name' => null,
+        ]);
+
+        $this->assertEquals(201, $res['headers']['status-code']);
+        $this->assertSame('', $res['body']['name']);
+
+        $cleanup = $this->client->call(Client::METHOD_DELETE, '/users/' . $res['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $cleanup['headers']['status-code']);
+
         return ['userId' => $body['$id']];
     }
 
@@ -261,6 +281,19 @@ trait UsersBase
         $this->assertEquals(201, $token['headers']['status-code']);
         $this->assertEquals($data['userId'], $token['body']['userId']);
         $this->assertEquals(15, strlen($token['body']['secret']));
+        $this->assertNotEmpty($token['body']['expire']);
+
+        $token = $this->client->call(Client::METHOD_POST, '/users/' . $data['userId'] . '/tokens', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'length' => null,
+            'expire' => null,
+        ]);
+
+        $this->assertEquals(201, $token['headers']['status-code']);
+        $this->assertEquals($data['userId'], $token['body']['userId']);
+        $this->assertEquals(6, strlen($token['body']['secret']));
         $this->assertNotEmpty($token['body']['expire']);
 
         /**
@@ -1628,7 +1661,31 @@ trait UsersBase
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertEquals($provider['body']['$id'], $response['body']['providerId']);
         $this->assertEquals('random-email@mail.org', $response['body']['identifier']);
-        return $response['body'];
+        $target = $response['body'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/users/' . $data['userId'] . '/targets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'targetId' => ID::unique(),
+            'providerId' => null,
+            'providerType' => 'email',
+            'identifier' => 'null-target@mail.org',
+            'name' => null,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNull($response['body']['providerId']);
+        $this->assertNull($response['body']['name']);
+
+        $cleanup = $this->client->call(Client::METHOD_DELETE, '/users/' . $data['userId'] . '/targets/' . $response['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $cleanup['headers']['status-code']);
+
+        return $target;
     }
 
     /**
@@ -1645,6 +1702,18 @@ trait UsersBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('random-email1@mail.org', $response['body']['identifier']);
         $this->assertEquals(false, $response['body']['expired']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/targets/' . $data['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'identifier' => null,
+            'providerId' => null,
+            'name' => null,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('random-email1@mail.org', $response['body']['identifier']);
         return $response['body'];
     }
 
