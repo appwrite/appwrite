@@ -31,6 +31,9 @@ class UsersTest extends TestCase
         $this->assertEquals(true, $validator->isValid([Query::greaterThan('registration', '2020-10-15 06:38')]), $validator->getDescription());
         $this->assertEquals(true, $validator->isValid([Query::equal('emailVerification', [true])]), $validator->getDescription());
         $this->assertEquals(true, $validator->isValid([Query::equal('phoneVerification', [true])]), $validator->getDescription());
+        $this->assertEquals(true, $validator->isValid([Query::orderAsc('accessedAt')]), $validator->getDescription());
+        $this->assertEquals(true, $validator->isValid([Query::orderDesc('accessedAt')]), $validator->getDescription());
+        $this->assertEquals(true, $validator->isValid([Query::greaterThan('accessedAt', '2020-10-15 06:38')]), $validator->getDescription());
 
         /**
          * Test for Failure
