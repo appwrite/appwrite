@@ -63,6 +63,10 @@ class XList extends Base
 
     public function action(array $queries, string $search, bool $includeTotal, Response $response, Database $dbForProject)
     {
+        if ($search === 'null' || $search === 'undefined') {
+            $search = '';
+        }
+
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {

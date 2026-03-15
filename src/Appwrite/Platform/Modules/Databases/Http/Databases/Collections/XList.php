@@ -73,6 +73,10 @@ class XList extends Action
 
     public function action(string $databaseId, array $queries, string $search, bool $includeTotal, UtopiaResponse $response, Database $dbForProject, Authorization $authorization): void
     {
+        if ($search === 'null' || $search === 'undefined') {
+            $search = '';
+        }
+
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {

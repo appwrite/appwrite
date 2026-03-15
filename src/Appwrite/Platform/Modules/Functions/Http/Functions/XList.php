@@ -68,6 +68,10 @@ class XList extends Base
         Response $response,
         Database $dbForProject
     ) {
+        if ($search === 'null' || $search === 'undefined') {
+            $search = '';
+        }
+
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
