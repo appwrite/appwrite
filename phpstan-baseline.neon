@@ -82015,18 +82015,6 @@ parameters:
 			path: tests/unit/Filter/BranchDomainTest.php
 
 		-
-			message: '#^Method Tests\\Unit\\Functions\\Validator\\HeadersBench\:\:benchHeadersValidator\(\) has parameter \$data with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: tests/unit/Functions/Validator/HeadersBench.php
-
-		-
-			message: '#^Method Tests\\Unit\\Functions\\Validator\\HeadersBench\:\:providers\(\) return type has no value type specified in iterable type iterable\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: tests/unit/Functions/Validator/HeadersBench.php
-
-		-
 			message: '#^Cannot call method isValid\(\) on Appwrite\\Functions\\Validator\\Headers\|null\.$#'
 			identifier: method.nonObject
 			count: 23
