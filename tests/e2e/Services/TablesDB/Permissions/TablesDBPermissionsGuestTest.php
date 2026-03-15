@@ -1,9 +1,10 @@
 <?php
 
-namespace Tests\E2E\Services\Databases\Permissions;
+namespace Tests\E2E\Services\TablesDB\Permissions;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\E2E\Client;
+use Tests\E2E\Services\Databases\Permissions\DatabasesPermissionsBase;
 use Tests\E2E\Scopes\ApiTablesDB;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SchemaPolling;
