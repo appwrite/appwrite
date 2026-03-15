@@ -26,7 +26,7 @@ readonly class Mail extends Base
     public function toArray(): array
     {
         return [
-            'project' => $this->project,
+            'project' => $this->project?->getArrayCopy(),
             'recipient' => $this->recipient,
             'name' => $this->name,
             'subject' => $this->subject,
