@@ -1,7 +1,8 @@
 <?php
 
 /**
- * List of languages classified in ISO 639-1 and ISO 639-3 (sign languages).
+ * List of languages classified in ISO 639-1, ISO 639-3 (sign languages),
+ * and regioned locale tags (e.g., pt-br, zh-cn).
  *
  * Source:
  * https://gist.github.com/joshuabaker/d2775b5ada7d1601bcd7b31cb4081981
@@ -987,5 +988,15 @@ return [
         "code" => "ssp",
         "name" => "Spanish Sign Language",
         "nativeName" => "Lengua de signos española"
+    ],
+    [
+        "code" => "sgn",
+        "name" => "Sign Languages",
+        "nativeName" => "Sign Languages"
+    ],
+    [
+        "code" => "asf",
+        "name" => "Australian Sign Language",
+        "nativeName" => "Auslan"
     ]
 ];
