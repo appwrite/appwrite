@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { queryOptions, useQuery } from '@tanstack/react-query'
 
 const APPWRITE_CLOUD_STATUS_URL = 'https://status.appwrite.online/index.json'
@@ -249,6 +250,9 @@ export function appwriteCloudStatusQueryOptions(enabled = true) {
     queryKey: ['status-page', 'appwrite-cloud'],
     queryFn: fetchAppwriteCloudStatus,
     enabled,
+    meta: {
+      skipInitialLoader: true,
+    },
     staleTime: STATUS_REFRESH_INTERVAL,
     gcTime: STATUS_REFRESH_INTERVAL * 5,
     refetchInterval: STATUS_REFRESH_INTERVAL,
@@ -258,5 +262,11 @@ export function appwriteCloudStatusQueryOptions(enabled = true) {
 }
 
 export function useAppwriteCloudStatus(enabled = true) {
-  return useQuery(appwriteCloudStatusQueryOptions(enabled))
+  const [hasMounted, setHasMounted] = useState(false)
+
+  useEffect(() => {
+    setHasMounted(true)
+  }, [])
+
+  return useQuery(appwriteCloudStatusQueryOptions(enabled && hasMounted))
 }
