@@ -1863,6 +1863,7 @@ Http::post('/v1/projects/:projectId/smtp/tests')
             ->setParam('{{privacyUrl}}', $plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL);
 
         foreach ($emails as $email) {
+            /** @var string $email */
             $publisherForMails->enqueue(new Mail(
                 project: $project,
                 recipient: $email,

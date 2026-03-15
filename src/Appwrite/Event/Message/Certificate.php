@@ -4,7 +4,7 @@ namespace Appwrite\Event\Message;
 
 use Utopia\Database\Document;
 
-readonly class Certificate extends Base
+final readonly class Certificate extends Base
 {
     public const string ACTION_DOMAIN_VERIFICATION = 'verification';
     public const string ACTION_GENERATION = 'generation';
@@ -18,6 +18,9 @@ readonly class Certificate extends Base
     ) {
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function toArray(): array
     {
         return [
@@ -29,14 +32,22 @@ readonly class Certificate extends Base
         ];
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public static function fromArray(array $data): static
     {
-        return new static(
-            project: !empty($data['project']) ? new Document($data['project']) : null,
-            domain: !empty($data['domain']) ? new Document($data['domain']) : null,
-            skipRenewCheck: $data['skipRenewCheck'] ?? false,
-            validationDomain: $data['validationDomain'] ?? null,
-            action: $data['action'] ?? self::ACTION_GENERATION,
+        /** @var array<string, mixed> $project */
+        $project = is_array($data['project'] ?? null) ? $data['project'] : [];
+        /** @var array<string, mixed> $domain */
+        $domain = is_array($data['domain'] ?? null) ? $data['domain'] : [];
+
+        return new self(
+            project: !empty($project) ? new Document($project) : null,
+            domain: !empty($domain) ? new Document($domain) : null,
+            skipRenewCheck: (bool) ($data['skipRenewCheck'] ?? false),
+            validationDomain: is_string($data['validationDomain'] ?? null) ? $data['validationDomain'] : null,
+            action: is_string($data['action'] ?? null) ? $data['action'] : self::ACTION_GENERATION,
         );
     }
 }

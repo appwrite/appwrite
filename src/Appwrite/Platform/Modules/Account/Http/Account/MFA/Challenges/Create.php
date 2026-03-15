@@ -221,7 +221,9 @@ class Create extends Action
                 }
 
                 $subject = $locale->getText("emails.mfaChallenge.subject");
+                /** @var string $subject */
                 $preview = $locale->getText("emails.mfaChallenge.preview");
+                /** @var string $preview */
                 $heading = $locale->getText("emails.mfaChallenge.heading");
 
                 $customTemplate = $project->getAttribute('templates', [])['email.mfaChallenge-' . $locale->default] ?? [];
@@ -248,6 +250,7 @@ class Create extends Action
                     ->setParam('{{signature}}', $locale->getText("emails.mfaChallenge.signature"));
 
                 $body = $message->render();
+                /** @var string $body */
 
                 $smtp = $project->getAttribute('smtp', []);
                 $smtpEnabled = $smtp['enabled'] ?? false;
@@ -290,7 +293,9 @@ class Create extends Action
                         }
 
                         $body = $customTemplate['message'] ?? '';
+                        /** @var string $body */
                         $subject = $customTemplate['subject'] ?? $subject;
+                        /** @var string $subject */
                     }
 
                     $smtpConfig['replyTo'] = $replyTo;
@@ -326,9 +331,12 @@ class Create extends Action
                     $customMailOptions['senderName'] = $platform['emailSenderName'];
                 }
 
+                $recipient = $user->getAttribute('email');
+                /** @var string $recipient */
+                /** @var array<string, mixed> $platform */
                 $publisherForMails->enqueue(new Mail(
                     project: $project,
-                    recipient: $user->getAttribute('email'),
+                    recipient: $recipient,
                     subject: $subject,
                     body: $body,
                     preview: $preview,

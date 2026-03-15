@@ -257,10 +257,14 @@ class Webhooks extends Action
             ->setParam('{{year}}', date("Y"));
 
         foreach ($users as $user) {
+            $userEmail = $user->getAttribute('email');
+            /** @var string $userEmail */
+            $userName = $user->getAttribute('name', '');
+            /** @var string $userName */
             $publisherForMails->enqueue(new Mail(
                 project: $project,
-                recipient: $user->getAttribute('email'),
-                name: $user->getAttribute('name', ''),
+                recipient: $userEmail,
+                name: $userName,
                 subject: $subject,
                 body: $body->render(),
                 preview: $preview,

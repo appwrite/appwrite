@@ -79,7 +79,9 @@ $oauthDefaultFailure = '/console/auth/oauth2/failure';
 function sendSessionAlert(Locale $locale, Document $user, Document $project, array $platform, Document $session, MailsPublisher $publisherForMails)
 {
     $subject = $locale->getText("emails.sessionAlert.subject");
+    /** @var string $subject */
     $preview = $locale->getText("emails.sessionAlert.preview");
+    /** @var string $preview */
     $customTemplate = $project->getAttribute('templates', [])['email.sessionAlert-' . $locale->default] ?? [];
     $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
 
@@ -102,6 +104,7 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, arr
         ->setParam('{{signature}}', $locale->getText("emails.sessionAlert.signature"));
 
     $body = $message->render();
+    /** @var string $body */
 
     $smtp = $project->getAttribute('smtp', []);
     $smtpEnabled = $smtp['enabled'] ?? false;
@@ -144,7 +147,9 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, arr
             }
 
             $body = $customTemplate['message'] ?? '';
+            /** @var string $body */
             $subject = $customTemplate['subject'] ?? $subject;
+            /** @var string $subject */
         }
 
         $smtpConfig['replyTo'] = $replyTo;
@@ -193,11 +198,13 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, arr
     }
 
     $email = $user->getAttribute('email');
+    /** @var string $email */
 
     if ($smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE) {
         $customMailOptions['senderName'] = $platform['emailSenderName'];
     }
 
+    /** @var array<string, mixed> $platform */
     $publisherForMails->enqueue(new Mail(
         project: $project,
         recipient: $email,
@@ -2253,7 +2260,9 @@ Http::post('/v1/account/tokens/magic-url')
         $url = Template::unParseURL($url);
 
         $subject = $locale->getText("emails.magicSession.subject");
+        /** @var string $subject */
         $preview = $locale->getText("emails.magicSession.preview");
+        /** @var string $preview */
         $customTemplate = $project->getAttribute('templates', [])['email.magicSession-' . $locale->default] ?? [];
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
@@ -2278,6 +2287,7 @@ Http::post('/v1/account/tokens/magic-url')
         }
 
         $body = $message->render();
+        /** @var string $body */
 
         $smtp = $project->getAttribute('smtp', []);
         $smtpEnabled = $smtp['enabled'] ?? false;
@@ -2321,7 +2331,9 @@ Http::post('/v1/account/tokens/magic-url')
                 }
 
                 $body = $customTemplate['message'] ?? '';
+                /** @var string $body */
                 $subject = $customTemplate['subject'] ?? $subject;
+                /** @var string $subject */
             }
 
             $smtpConfig['replyTo'] = $replyTo;
@@ -2352,6 +2364,7 @@ Http::post('/v1/account/tokens/magic-url')
             $customMailOptions['senderName'] = $platform['emailSenderName'];
         }
 
+        /** @var array<string, mixed> $platform */
         $publisherForMails->enqueue(new Mail(
             project: $project,
             recipient: $email,
@@ -2538,7 +2551,9 @@ Http::post('/v1/account/tokens/email')
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $subject = $locale->getText("emails.otpSession.subject");
+        /** @var string $subject */
         $preview = $locale->getText("emails.otpSession.preview");
+        /** @var string $preview */
         $heading = $locale->getText("emails.otpSession.heading");
 
         $customTemplate = $project->getAttribute('templates', [])['email.otpSession-' . $locale->default] ?? [];
@@ -2571,6 +2586,7 @@ Http::post('/v1/account/tokens/email')
         }
 
         $body = $message->render();
+        /** @var string $body */
 
         $smtp = $project->getAttribute('smtp', []);
         $smtpEnabled = $smtp['enabled'] ?? false;
@@ -2613,7 +2629,9 @@ Http::post('/v1/account/tokens/email')
                 }
 
                 $body = $customTemplate['message'] ?? '';
+                /** @var string $body */
                 $subject = $customTemplate['subject'] ?? $subject;
+                /** @var string $subject */
             }
 
             $smtpConfig['replyTo'] = $replyTo;
@@ -2658,6 +2676,7 @@ Http::post('/v1/account/tokens/email')
             $customMailOptions['senderName'] = $platform['emailSenderName'];
         }
 
+        /** @var array<string, mixed> $platform */
         $publisherForMails->enqueue(new Mail(
             project: $project,
             recipient: $email,
@@ -2729,7 +2748,7 @@ Http::put('/v1/account/sessions/magic-url')
     ->inject('store')
     ->inject('proofForCode')
     ->inject('authorization')
-    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geodb, $queueForEvents, $publisherForMails, $store, $proofForCode, $authorization) use ($createSession) {
+    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geodb, $queueForEvents, MailsPublisher $publisherForMails, $store, $proofForCode, $authorization) use ($createSession) {
         $proofForToken = new ProofsToken(TOKEN_LENGTH_MAGIC_URL);
         $proofForToken->setHash(new Sha());
         $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geodb, $queueForEvents, $publisherForMails, $store, $proofForToken, $proofForCode, $authorization);
@@ -3661,7 +3680,9 @@ Http::post('/v1/account/recovery')
 
         $body = $locale->getText("emails.recovery.body");
         $subject = $locale->getText("emails.recovery.subject");
+        /** @var string $subject */
         $preview = $locale->getText("emails.recovery.preview");
+        /** @var string $preview */
         $customTemplate = $project->getAttribute('templates', [])['email.recovery-' . $locale->default] ?? [];
 
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
@@ -3673,6 +3694,7 @@ Http::post('/v1/account/recovery')
             ->setParam('{{buttonText}}', $locale->getText("emails.recovery.buttonText"))
             ->setParam('{{signature}}', $locale->getText("emails.recovery.signature"));
         $body = $message->render();
+        /** @var string $body */
 
         $smtp = $project->getAttribute('smtp', []);
         $smtpEnabled = $smtp['enabled'] ?? false;
@@ -3715,7 +3737,9 @@ Http::post('/v1/account/recovery')
                 }
 
                 $body = $customTemplate['message'] ?? '';
+                /** @var string $body */
                 $subject = $customTemplate['subject'] ?? $subject;
+                /** @var string $subject */
             }
 
             $smtpConfig['replyTo'] = $replyTo;
@@ -3737,10 +3761,15 @@ Http::post('/v1/account/recovery')
             $customMailOptions['senderName'] = $platform['emailSenderName'];
         }
 
+        $recipient = $profile->getAttribute('email', '');
+        /** @var string $recipient */
+        $name = $profile->getAttribute('name', '');
+        /** @var string $name */
+        /** @var array<string, mixed> $platform */
         $publisherForMails->enqueue(new Mail(
             project: $project,
-            recipient: $profile->getAttribute('email', ''),
-            name: $profile->getAttribute('name', ''),
+            recipient: $recipient,
+            name: $name,
             subject: $subject,
             body: $body,
             preview: $preview,
@@ -3973,7 +4002,9 @@ Http::post('/v1/account/verifications/email')
 
         $body = $locale->getText("emails.verification.body");
         $preview = $locale->getText("emails.verification.preview");
+        /** @var string $preview */
         $subject = $locale->getText("emails.verification.subject");
+        /** @var string $subject */
         $heading = $locale->getText("emails.verification.heading");
 
         $customTemplate = $project->getAttribute('templates', [])['email.verification-' . $locale->default] ?? [];
@@ -3996,6 +4027,7 @@ Http::post('/v1/account/verifications/email')
             ->setParam('{{signature}}', $locale->getText("emails.verification.signature"));
 
         $body = $message->render();
+        /** @var string $body */
 
         $smtp = $project->getAttribute('smtp', []);
         $smtpEnabled = $smtp['enabled'] ?? false;
@@ -4038,7 +4070,9 @@ Http::post('/v1/account/verifications/email')
                 }
 
                 $body = $customTemplate['message'] ?? '';
+                /** @var string $body */
                 $subject = $customTemplate['subject'] ?? $subject;
+                /** @var string $subject */
             }
 
             $smtpConfig['replyTo'] = $replyTo;
@@ -4074,10 +4108,15 @@ Http::post('/v1/account/verifications/email')
             $customMailOptions['senderName'] = $platform['emailSenderName'];
         }
 
+        $recipient = $user->getAttribute('email');
+        /** @var string $recipient */
+        $name = $user->getAttribute('name') ?? '';
+        /** @var string $name */
+        /** @var array<string, mixed> $platform */
         $publisherForMails->enqueue(new Mail(
             project: $project,
-            recipient: $user->getAttribute('email'),
-            name: $user->getAttribute('name') ?? '',
+            recipient: $recipient,
+            name: $name,
             subject: $subject,
             body: $body,
             preview: $preview,

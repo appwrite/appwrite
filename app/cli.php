@@ -269,7 +269,7 @@ $setResource('queueForDeletes', function (Publisher $publisher) {
 }, ['publisher']);
 $setResource('publisherForCertificates', fn (Publisher $publisher) => new CertificatesPublisher(
     $publisher,
-    new Queue(System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME))
+    new Queue(System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME) ?? Event::CERTIFICATES_QUEUE_NAME)
 ), ['publisher']);
 $setResource('logError', function (Registry $register) {
     return function (Throwable $error, string $namespace, string $action) use ($register) {

@@ -555,10 +555,14 @@ class Certificates extends Action
         ];
 
         $subject = $locale->getText("emails.certificate.subject");
+        /** @var string $subject */
         $preview = $locale->getText("emails.certificate.preview");
+        /** @var string $preview */
 
+        $recipient = System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'));
+        /** @var string $recipient */
         $publisherForMails->enqueue(new Mail(
-            recipient: System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS')),
+            recipient: $recipient,
             name: 'Appwrite Administrator',
             subject: $subject,
             body: $body,

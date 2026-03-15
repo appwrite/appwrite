@@ -835,12 +835,6 @@ parameters:
 			path: app/controllers/api/account.php
 
 		-
-			message: '#^Parameter \#1 \$body of method Appwrite\\Event\\Mail\:\:setBody\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 5
-			path: app/controllers/api/account.php
-
-		-
 			message: '#^Parameter \#1 \$class of function class_exists expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 4
@@ -889,12 +883,6 @@ parameters:
 			path: app/controllers/api/account.php
 
 		-
-			message: '#^Parameter \#1 \$host of method Appwrite\\Event\\Mail\:\:setSmtpHost\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 5
-			path: app/controllers/api/account.php
-
-		-
 			message: '#^Parameter \#1 \$input of class Utopia\\Database\\Document constructor expects array\<string, mixed\>, array given\.$#'
 			identifier: argument.type
 			count: 4
@@ -931,18 +919,6 @@ parameters:
 			path: app/controllers/api/account.php
 
 		-
-			message: '#^Parameter \#1 \$name of method Appwrite\\Event\\Mail\:\:setName\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/controllers/api/account.php
-
-		-
-			message: '#^Parameter \#1 \$name of method Appwrite\\Event\\Mail\:\:setSenderName\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 5
-			path: app/controllers/api/account.php
-
-		-
 			message: '#^Parameter \#1 \$name of method Utopia\\Http\\Response\:\:addCookie\(\) expects string, string\|null given\.$#'
 			identifier: argument.type
 			count: 7
@@ -952,24 +928,6 @@ parameters:
 			message: '#^Parameter \#1 \$numberToParse of method libphonenumber\\PhoneNumberUtil\:\:parse\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
-			path: app/controllers/api/account.php
-
-		-
-			message: '#^Parameter \#1 \$password of method Appwrite\\Event\\Mail\:\:setSmtpPassword\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 5
-			path: app/controllers/api/account.php
-
-		-
-			message: '#^Parameter \#1 \$port of method Appwrite\\Event\\Mail\:\:setSmtpPort\(\) expects int, mixed given\.$#'
-			identifier: argument.type
-			count: 5
-			path: app/controllers/api/account.php
-
-		-
-			message: '#^Parameter \#1 \$preview of method Appwrite\\Event\\Mail\:\:setPreview\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 5
 			path: app/controllers/api/account.php
 
 		-
@@ -997,45 +955,15 @@ parameters:
 			path: app/controllers/api/account.php
 
 		-
-			message: '#^Parameter \#1 \$recipient of method Appwrite\\Event\\Mail\:\:setRecipient\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 3
-			path: app/controllers/api/account.php
-
-		-
 			message: '#^Parameter \#1 \$recipients of method Appwrite\\Event\\Messaging\:\:setRecipients\(\) expects array\<string\>, array\<int, mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/controllers/api/account.php
 
 		-
-			message: '#^Parameter \#1 \$replyTo of method Appwrite\\Event\\Mail\:\:setSmtpReplyTo\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 5
-			path: app/controllers/api/account.php
-
-		-
 			message: '#^Parameter \#1 \$secret of method Appwrite\\Utopia\\Database\\Documents\\User\:\:sessionVerify\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 8
-			path: app/controllers/api/account.php
-
-		-
-			message: '#^Parameter \#1 \$secure of method Appwrite\\Event\\Mail\:\:setSmtpSecure\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 5
-			path: app/controllers/api/account.php
-
-		-
-			message: '#^Parameter \#1 \$senderEmail of method Appwrite\\Event\\Mail\:\:setSmtpSenderEmail\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 5
-			path: app/controllers/api/account.php
-
-		-
-			message: '#^Parameter \#1 \$senderName of method Appwrite\\Event\\Mail\:\:setSmtpSenderName\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 5
 			path: app/controllers/api/account.php
 
 		-
@@ -1048,12 +976,6 @@ parameters:
 			message: '#^Parameter \#1 \$string of function strtolower expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 14
-			path: app/controllers/api/account.php
-
-		-
-			message: '#^Parameter \#1 \$subject of method Appwrite\\Event\\Mail\:\:setSubject\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 5
 			path: app/controllers/api/account.php
 
 		-
@@ -1111,12 +1033,6 @@ parameters:
 			path: app/controllers/api/account.php
 
 		-
-			message: '#^Parameter \#1 \$username of method Appwrite\\Event\\Mail\:\:setSmtpUsername\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 5
-			path: app/controllers/api/account.php
-
-		-
 			message: '#^Parameter \#1 \$value of function count expects array\|Countable, mixed given\.$#'
 			identifier: argument.type
 			count: 3
@@ -1130,12 +1046,6 @@ parameters:
 
 		-
 			message: '#^Parameter \#11 \$queueForEvents of closure expects Appwrite\\Event\\Event, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/controllers/api/account.php
-
-		-
-			message: '#^Parameter \#12 \$queueForMails of closure expects Appwrite\\Event\\Mail, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/controllers/api/account.php
@@ -2666,12 +2576,6 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$queries of static method Utopia\\Database\\Query\:\:parseQueries\(\) expects array\<string\>, array given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/controllers/api/projects.php
-
-		-
-			message: '#^Parameter \#1 \$recipient of method Appwrite\\Event\\Mail\:\:setRecipient\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/controllers/api/projects.php
@@ -15181,25 +15085,7 @@ parameters:
 			path: src/Appwrite/Platform/Modules/Account/Http/Account/MFA/Challenges/Create.php
 
 		-
-			message: '#^Parameter \#1 \$body of method Appwrite\\Event\\Mail\:\:setBody\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Modules/Account/Http/Account/MFA/Challenges/Create.php
-
-		-
 			message: '#^Parameter \#1 \$content of static method Appwrite\\Template\\Template\:\:fromString\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Modules/Account/Http/Account/MFA/Challenges/Create.php
-
-		-
-			message: '#^Parameter \#1 \$host of method Appwrite\\Event\\Mail\:\:setSmtpHost\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Modules/Account/Http/Account/MFA/Challenges/Create.php
-
-		-
-			message: '#^Parameter \#1 \$name of method Appwrite\\Event\\Mail\:\:setSenderName\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Modules/Account/Http/Account/MFA/Challenges/Create.php
@@ -15211,67 +15097,7 @@ parameters:
 			path: src/Appwrite/Platform/Modules/Account/Http/Account/MFA/Challenges/Create.php
 
 		-
-			message: '#^Parameter \#1 \$password of method Appwrite\\Event\\Mail\:\:setSmtpPassword\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Modules/Account/Http/Account/MFA/Challenges/Create.php
-
-		-
-			message: '#^Parameter \#1 \$port of method Appwrite\\Event\\Mail\:\:setSmtpPort\(\) expects int, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Modules/Account/Http/Account/MFA/Challenges/Create.php
-
-		-
-			message: '#^Parameter \#1 \$preview of method Appwrite\\Event\\Mail\:\:setPreview\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Modules/Account/Http/Account/MFA/Challenges/Create.php
-
-		-
-			message: '#^Parameter \#1 \$recipient of method Appwrite\\Event\\Mail\:\:setRecipient\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Modules/Account/Http/Account/MFA/Challenges/Create.php
-
-		-
 			message: '#^Parameter \#1 \$recipients of method Appwrite\\Event\\Messaging\:\:setRecipients\(\) expects array\<string\>, array\<int, mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Modules/Account/Http/Account/MFA/Challenges/Create.php
-
-		-
-			message: '#^Parameter \#1 \$replyTo of method Appwrite\\Event\\Mail\:\:setSmtpReplyTo\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Modules/Account/Http/Account/MFA/Challenges/Create.php
-
-		-
-			message: '#^Parameter \#1 \$secure of method Appwrite\\Event\\Mail\:\:setSmtpSecure\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Modules/Account/Http/Account/MFA/Challenges/Create.php
-
-		-
-			message: '#^Parameter \#1 \$senderEmail of method Appwrite\\Event\\Mail\:\:setSmtpSenderEmail\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Modules/Account/Http/Account/MFA/Challenges/Create.php
-
-		-
-			message: '#^Parameter \#1 \$senderName of method Appwrite\\Event\\Mail\:\:setSmtpSenderName\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Modules/Account/Http/Account/MFA/Challenges/Create.php
-
-		-
-			message: '#^Parameter \#1 \$subject of method Appwrite\\Event\\Mail\:\:setSubject\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Modules/Account/Http/Account/MFA/Challenges/Create.php
-
-		-
-			message: '#^Parameter \#1 \$username of method Appwrite\\Event\\Mail\:\:setSmtpUsername\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Modules/Account/Http/Account/MFA/Challenges/Create.php
@@ -26551,25 +26377,7 @@ parameters:
 			path: src/Appwrite/Platform/Modules/Teams/Http/Memberships/Create.php
 
 		-
-			message: '#^Parameter \#1 \$body of method Appwrite\\Event\\Mail\:\:setBody\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Modules/Teams/Http/Memberships/Create.php
-
-		-
 			message: '#^Parameter \#1 \$email of class Utopia\\Emails\\Email constructor expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Modules/Teams/Http/Memberships/Create.php
-
-		-
-			message: '#^Parameter \#1 \$host of method Appwrite\\Event\\Mail\:\:setSmtpHost\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Modules/Teams/Http/Memberships/Create.php
-
-		-
-			message: '#^Parameter \#1 \$name of method Appwrite\\Event\\Mail\:\:setName\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Modules/Teams/Http/Memberships/Create.php
@@ -26581,73 +26389,13 @@ parameters:
 			path: src/Appwrite/Platform/Modules/Teams/Http/Memberships/Create.php
 
 		-
-			message: '#^Parameter \#1 \$password of method Appwrite\\Event\\Mail\:\:setSmtpPassword\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Modules/Teams/Http/Memberships/Create.php
-
-		-
-			message: '#^Parameter \#1 \$port of method Appwrite\\Event\\Mail\:\:setSmtpPort\(\) expects int, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Modules/Teams/Http/Memberships/Create.php
-
-		-
-			message: '#^Parameter \#1 \$preview of method Appwrite\\Event\\Mail\:\:setPreview\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Modules/Teams/Http/Memberships/Create.php
-
-		-
-			message: '#^Parameter \#1 \$recipient of method Appwrite\\Event\\Mail\:\:setRecipient\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Modules/Teams/Http/Memberships/Create.php
-
-		-
 			message: '#^Parameter \#1 \$recipients of method Appwrite\\Event\\Messaging\:\:setRecipients\(\) expects array\<string\>, array\<int, mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Modules/Teams/Http/Memberships/Create.php
 
 		-
-			message: '#^Parameter \#1 \$replyTo of method Appwrite\\Event\\Mail\:\:setSmtpReplyTo\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Modules/Teams/Http/Memberships/Create.php
-
-		-
-			message: '#^Parameter \#1 \$secure of method Appwrite\\Event\\Mail\:\:setSmtpSecure\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Modules/Teams/Http/Memberships/Create.php
-
-		-
-			message: '#^Parameter \#1 \$senderEmail of method Appwrite\\Event\\Mail\:\:setSmtpSenderEmail\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Modules/Teams/Http/Memberships/Create.php
-
-		-
-			message: '#^Parameter \#1 \$senderName of method Appwrite\\Event\\Mail\:\:setSmtpSenderName\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Modules/Teams/Http/Memberships/Create.php
-
-		-
-			message: '#^Parameter \#1 \$subject of method Appwrite\\Event\\Mail\:\:setSubject\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Modules/Teams/Http/Memberships/Create.php
-
-		-
 			message: '#^Parameter \#1 \$url of static method Appwrite\\Template\\Template\:\:unParseURL\(\) expects array, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Modules/Teams/Http/Memberships/Create.php
-
-		-
-			message: '#^Parameter \#1 \$username of method Appwrite\\Event\\Mail\:\:setSmtpUsername\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Modules/Teams/Http/Memberships/Create.php
@@ -31009,24 +30757,6 @@ parameters:
 			path: src/Appwrite/Platform/Workers/Certificates.php
 
 		-
-			message: '#^Parameter \#1 \$preview of method Appwrite\\Event\\Mail\:\:setPreview\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Workers/Certificates.php
-
-		-
-			message: '#^Parameter \#1 \$recipient of method Appwrite\\Event\\Mail\:\:setRecipient\(\) expects string, string\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Workers/Certificates.php
-
-		-
-			message: '#^Parameter \#1 \$subject of method Appwrite\\Event\\Mail\:\:setSubject\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Workers/Certificates.php
-
-		-
 			message: '#^Parameter \#10 \$validationDomain of method Appwrite\\Platform\\Workers\\Certificates\:\:handleDomainVerificationAction\(\) expects string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -33499,25 +33229,7 @@ parameters:
 			path: src/Appwrite/Platform/Workers/Migrations.php
 
 		-
-			message: '#^Parameter \#1 \$name of method Appwrite\\Event\\Mail\:\:setName\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Workers/Migrations.php
-
-		-
-			message: '#^Parameter \#1 \$name of method Appwrite\\Event\\Mail\:\:setSenderName\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Workers/Migrations.php
-
-		-
 			message: '#^Parameter \#1 \$name of method Utopia\\Locale\\Locale\:\:setFallback\(\) expects string, string\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Workers/Migrations.php
-
-		-
-			message: '#^Parameter \#1 \$preview of method Appwrite\\Event\\Mail\:\:setPreview\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Workers/Migrations.php
@@ -33542,12 +33254,6 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$queries of static method Utopia\\Database\\Query\:\:parseQueries\(\) expects array\<string\>, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Workers/Migrations.php
-
-		-
-			message: '#^Parameter \#1 \$recipient of method Appwrite\\Event\\Mail\:\:setRecipient\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Workers/Migrations.php
@@ -33584,12 +33290,6 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$subdomain of class Utopia\\Migration\\Sources\\NHost constructor expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Workers/Migrations.php
-
-		-
-			message: '#^Parameter \#1 \$subject of method Appwrite\\Event\\Mail\:\:setSubject\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Workers/Migrations.php
@@ -34478,18 +34178,6 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$input of class Utopia\\Database\\Document constructor expects array\<string, mixed\>, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Workers/Webhooks.php
-
-		-
-			message: '#^Parameter \#1 \$name of method Appwrite\\Event\\Mail\:\:setName\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Workers/Webhooks.php
-
-		-
-			message: '#^Parameter \#1 \$recipient of method Appwrite\\Event\\Mail\:\:setRecipient\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Workers/Webhooks.php

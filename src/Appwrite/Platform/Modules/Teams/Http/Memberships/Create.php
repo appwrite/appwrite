@@ -298,7 +298,9 @@ class Create extends Action
 
                 $body = $locale->getText('emails.invitation.body');
                 $preview = $locale->getText('emails.invitation.preview');
+                /** @var string $preview */
                 $subject = $locale->getText('emails.invitation.subject');
+                /** @var string $subject */
                 $customTemplate = $project->getAttribute('templates', [])['email.invitation-' . $locale->default] ?? [];
 
                 $message = Template::fromFile(APP_CE_CONFIG_DIR . '/locale/templates/email-inner-base.tpl');
@@ -310,6 +312,7 @@ class Create extends Action
                     ->setParam('{{buttonText}}', $locale->getText('emails.invitation.buttonText'))
                     ->setParam('{{signature}}', $locale->getText('emails.invitation.signature'));
                 $body = $message->render();
+                /** @var string $body */
 
                 $smtp = $project->getAttribute('smtp', []);
                 $smtpEnabled = $smtp['enabled'] ?? false;
@@ -351,7 +354,9 @@ class Create extends Action
                         }
 
                         $body = $customTemplate['message'] ?? '';
+                        /** @var string $body */
                         $subject = $customTemplate['subject'] ?? $subject;
+                        /** @var string $subject */
                     }
 
                     $smtpConfig['replyTo'] = $replyTo;
@@ -369,10 +374,14 @@ class Create extends Action
                     'project' => $projectName,
                 ];
 
+                $recipient = $invitee->getAttribute('email');
+                /** @var string $recipient */
+                $inviteeName = $invitee->getAttribute('name', '');
+                /** @var string $inviteeName */
                 $publisherForMails->enqueue(new Mail(
                     project: $project,
-                    recipient: $invitee->getAttribute('email'),
-                    name: $invitee->getAttribute('name', ''),
+                    recipient: $recipient,
+                    name: $inviteeName,
                     subject: $subject,
                     body: $body,
                     preview: $preview,

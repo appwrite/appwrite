@@ -709,7 +709,9 @@ class Migrations extends Action
 
         // Get localized email content
         $subject = $locale->getText("emails.csvExport.{$emailType}.subject");
+        /** @var string $subject */
         $preview = $locale->getText("emails.csvExport.{$emailType}.preview");
+        /** @var string $preview */
         $hello = $locale->getText("emails.csvExport.{$emailType}.hello");
         $body = $locale->getText("emails.csvExport.{$emailType}.body");
         $footer = $locale->getText("emails.csvExport.{$emailType}.footer");
@@ -753,10 +755,15 @@ class Migrations extends Action
             'platform' => $platform['platformName'],
         ];
 
+        $recipient = $user->getAttribute('email');
+        /** @var string $recipient */
+        $userName = $user->getAttribute('name', $user->getAttribute('email'));
+        /** @var string $userName */
+        /** @var array<string, mixed> $platform */
         $publisherForMails->enqueue(new Mail(
             project: $project,
-            recipient: $user->getAttribute('email'),
-            name: $user->getAttribute('name', $user->getAttribute('email')),
+            recipient: $recipient,
+            name: $userName,
             subject: $subject,
             body: $emailBody,
             preview: $preview,
