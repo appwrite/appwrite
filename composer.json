@@ -14,7 +14,7 @@
         "lint": "vendor/bin/pint --test --config pint.json",
         "format": "vendor/bin/pint --config pint.json",
         "bench": "vendor/bin/phpbench run --report=benchmark",
-        "check": "./vendor/bin/phpstan analyse -c phpstan.neon"
+        "analyze": "./vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G"
     },
     "autoload": {
         "psr-4": {
@@ -99,7 +99,7 @@
         "brianium/paratest": "7.*",
         "phpunit/phpunit": "12.*",
         "swoole/ide-helper": "6.*",
-        "phpstan/phpstan": "1.12.*",
+        "phpstan/phpstan": "^2.0",
         "textalk/websocket": "1.5.*",
         "czproject/git-php": "4.*",
         "laravel/pint": "1.*",
