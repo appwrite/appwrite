@@ -116,7 +116,7 @@ jobs:
       - name: Run PHPStan
         run: |
           docker run --rm -v $PWD:/app composer:2.8 sh -c \
-          "composer install --profile --ignore-platform-reqs && composer check"
+          "composer install --profile --ignore-platform-reqs && composer analyze"
 
       - name: Run Locale check
         run: |
