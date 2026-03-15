@@ -342,7 +342,7 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
-            'installCommand' => 'npm install',
+            'installCommand' => 'npm ci',
             'fallbackFile' => '',
         ]);
 
@@ -404,7 +404,7 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
-            'installCommand' => 'npm install',
+            'installCommand' => 'npm ci',
         ]);
         $this->assertNotEmpty($siteId);
 
@@ -445,7 +445,7 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
-            'installCommand' => 'npm install',
+            'installCommand' => 'npm ci',
         ]);
         $this->assertNotEmpty($siteId);
 
@@ -569,7 +569,7 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
-            'installCommand' => 'npm install',
+            'installCommand' => 'npm ci',
         ]);
         $this->assertNotEmpty($siteId);
 
@@ -598,7 +598,7 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
-            'installCommand' => 'npm install',
+            'installCommand' => 'npm ci',
             'adapter' => 'ssr',
             'fallbackFile' => '',
             '$id' => $siteId,
@@ -849,7 +849,7 @@ class SitesCustomServerTest extends Scope
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
             '$id' => $siteId,
-            'installCommand' => 'npm install'
+            'installCommand' => 'npm ci'
         ]);
 
         $dateValidator = new DatetimeValidator();
@@ -859,7 +859,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals('Test Site Updated', $site['body']['name']);
         $this->assertEquals(true, $dateValidator->isValid($site['body']['$createdAt']));
         $this->assertEquals(true, $dateValidator->isValid($site['body']['$updatedAt']));
-        $this->assertEquals('npm install', $site['body']['installCommand']);
+        $this->assertEquals('npm ci', $site['body']['installCommand']);
 
         $this->cleanupSite($siteId);
     }
@@ -2076,7 +2076,7 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
-            'installCommand' => 'npm install',
+            'installCommand' => 'npm ci',
             'fallbackFile' => '',
         ]);
 
@@ -2176,7 +2176,7 @@ class SitesCustomServerTest extends Scope
                 'buildRuntime' => 'node-22',
                 'outputDirectory' => './dist',
                 'buildCommand' => 'npm run build',
-                'installCommand' => 'npm install',
+                'installCommand' => 'npm ci',
                 'fallbackFile' => '',
                 'logging' => false // set logging to false
             ]
@@ -2605,7 +2605,7 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
-            'installCommand' => 'npm install',
+            'installCommand' => 'npm ci',
         ]);
 
         $this->assertNotEmpty($siteId);
@@ -2965,7 +2965,7 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
-            'installCommand' => 'echo "custom error" && npm install',
+            'installCommand' => 'echo "custom error" && npm ci',
             'adapter' => 'ssr',
         ]);
         $this->assertNotEmpty($siteId);
@@ -3008,7 +3008,7 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
-            'installCommand' => 'npm install',
+            'installCommand' => 'npm ci',
             'fallbackFile' => '',
         ]);
 
@@ -3050,7 +3050,7 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
-            'installCommand' => 'npm install',
+            'installCommand' => 'npm ci',
             'fallbackFile' => '',
         ]);
 
