@@ -327,7 +327,7 @@ Server::setResource('queueForMessaging', function (Publisher $publisher) {
 
 Server::setResource('publisherForMails', fn (Publisher $publisher) => new Mail(
     $publisher,
-    new Queue(System::getEnv('_APP_MAILS_QUEUE_NAME', Event::MAILS_QUEUE_NAME) ?? Event::MAILS_QUEUE_NAME)
+    new Queue(System::getEnv('_APP_MAILS_QUEUE_NAME', Event::MAILS_QUEUE_NAME))
 ), ['publisher']);
 
 Server::setResource('queueForBuilds', function (Publisher $publisher) {
@@ -364,7 +364,7 @@ Server::setResource('queueForRealtime', function () {
 
 Server::setResource('publisherForCertificates', fn (Publisher $publisher) => new CertificatesPublisher(
     $publisher,
-    new Queue(System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME) ?? Event::CERTIFICATES_QUEUE_NAME)
+    new Queue(System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME))
 ), ['publisher']);
 
 Server::setResource('queueForMigrations', function (Publisher $publisher) {

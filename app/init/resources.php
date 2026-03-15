@@ -156,7 +156,7 @@ Http::setResource('usage', function () {
 }, []);
 Http::setResource('publisherForUsage', fn (Publisher $publisher) => new UsagePublisher(
     $publisher,
-    new Queue(System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME) ?? Event::STATS_USAGE_QUEUE_NAME)
+    new Queue(System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME))
 ), ['publisher']);
 Http::setResource('queueForAudits', function (Publisher $publisher) {
     return new AuditEvent($publisher);
@@ -169,7 +169,7 @@ Http::setResource('eventProcessor', function () {
 }, []);
 Http::setResource('publisherForCertificates', fn (Publisher $publisher) => new CertificatesPublisher(
     $publisher,
-    new Queue(System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME) ?? Event::CERTIFICATES_QUEUE_NAME)
+    new Queue(System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME))
 ), ['publisher']);
 Http::setResource('queueForMigrations', function (Publisher $publisher) {
     return new Migration($publisher);
