@@ -121,8 +121,12 @@ export function PaymentModal({
   const elementsRef = useRef<StripeElements | null>(null)
   const paymentElementRef = useRef<PaymentElement | null>(null)
   const stripeContainerRef = useRef<HTMLDivElement>(null)
+  const createPaymentMethodMutationRef = useRef(
+    null as ReturnType<typeof useCreatePaymentMethod> | null,
+  )
 
   const createPaymentMethodMutation = useCreatePaymentMethod()
+  createPaymentMethodMutationRef.current = createPaymentMethodMutation
   const setPaymentMethodProviderMutation = useSetPaymentMethodProvider()
   const setDefaultPaymentMethodMutation =
     useSetOrganizationDefaultPaymentMethod()
@@ -130,7 +134,6 @@ export function PaymentModal({
   const { paymentMethods: allPaymentMethods } = usePaymentMethods()
 
   const { theme } = useTheme()
-  const appearance = getStripeAppearanceFromTheme(theme)
 
   const stripePublishableKey =
     typeof window !== 'undefined'
@@ -168,7 +171,7 @@ export function PaymentModal({
         setIsStripeLoading(true)
         setError(null)
 
-        // Check for existing incomplete payment method using the hook data
+        // Check for existing incomplete payment method (read once; do not depend on list in effect deps to avoid re-init when query invalidates after create)
         const existingIncomplete = allPaymentMethods?.find(
           (method: Models.PaymentMethod) =>
             method.clientSecret && !method.providerMethodId,
@@ -182,8 +185,9 @@ export function PaymentModal({
           paymentMethod = existingIncomplete
           secret = existingIncomplete.clientSecret!
         } else {
-          // Create new payment method
-          paymentMethod = await createPaymentMethodMutation.mutateAsync()
+          // Create new payment method (use ref so effect does not depend on mutation object)
+          paymentMethod =
+            await createPaymentMethodMutationRef.current!.mutateAsync()
           secret = paymentMethod.clientSecret!
         }
 
@@ -201,10 +205,10 @@ export function PaymentModal({
 
         stripeRef.current = stripe
 
-        // Create Elements
+        // Create Elements (compute appearance inside effect so we don't depend on a new object ref every render)
         const elements = stripe.elements({
           clientSecret: secret,
-          appearance,
+          appearance: getStripeAppearanceFromTheme(theme),
         })
 
         elementsRef.current = elements
@@ -282,14 +286,11 @@ export function PaymentModal({
         }
       })
     }
-  }, [
-    open,
-    hasStripePublicKey,
-    stripePublishableKey,
-    allPaymentMethods,
-    appearance,
-    createPaymentMethodMutation,
-  ])
+    // Intentionally omit allPaymentMethods and createPaymentMethodMutation:
+    // - allPaymentMethods changes when createPaymentMethod invalidates the query, which would re-run this effect and unmount/remount Stripe (form "reload")
+    // - createPaymentMethodMutation object reference is unstable; we use createPaymentMethodMutationRef.current inside the effect
+    // - appearance is computed inside the effect from theme; we depend on theme (string) not appearance (new object every render would cause endless re-init loop)
+  }, [open, hasStripePublicKey, stripePublishableKey, theme])
 
   // Reset form when modal closes
   useEffect(() => {
