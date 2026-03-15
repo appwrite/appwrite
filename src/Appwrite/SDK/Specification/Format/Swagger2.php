@@ -455,7 +455,6 @@ class Swagger2 extends Format
                             Database::VAR_POLYGON => '[[[1, 2], [3, 4], [5, 6], [1, 2]]]',
                         };
                         break;
-                    case \Appwrite\Network\Validator\Email::class:
                     case \Utopia\Emails\Validator\Email::class:
                         $node['type'] = $validator->getType();
                         $node['format'] = 'email';
