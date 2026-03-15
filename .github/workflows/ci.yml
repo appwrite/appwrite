@@ -300,7 +300,7 @@ jobs:
           command: >-
             docker compose exec
             -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-            appwrite test /usr/src/code/tests/unit
+            appwrite test /usr/src/code/tests/unit --stop-on-failure
 
   e2e_general:
     name: Tests / E2E / General
@@ -353,7 +353,7 @@ jobs:
           command: >-
             docker compose exec -T
             -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-            appwrite test /usr/src/code/tests/e2e/General
+            appwrite test /usr/src/code/tests/e2e/General --stop-on-failure
 
       - name: Failure Logs
         if: failure()
@@ -472,7 +472,7 @@ jobs:
 
             docker compose exec -T \
               -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
-              appwrite vendor/bin/paratest --processes $(nproc) $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --log-junit tests/e2e/Services/${{ matrix.service }}/junit.xml
+              appwrite vendor/bin/paratest --processes $(nproc) $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --stop-on-failure --log-junit tests/e2e/Services/${{ matrix.service }}/junit.xml
 
       - name: Failure Logs
         if: failure()
@@ -531,7 +531,7 @@ jobs:
           command: >-
             docker compose exec -T
             -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-            appwrite test /usr/src/code/tests/e2e --group=abuseEnabled
+            appwrite test /usr/src/code/tests/e2e --group=abuseEnabled --stop-on-failure
 
       - name: Failure Logs
         if: failure()
@@ -597,7 +597,7 @@ jobs:
           command: >-
             docker compose exec -T
             -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-            appwrite test /usr/src/code/tests/e2e/Services/Sites --group=screenshots
+            appwrite test /usr/src/code/tests/e2e/Services/Sites --group=screenshots --stop-on-failure
 
       - name: Failure Logs
         if: failure()
