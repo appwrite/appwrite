@@ -1,7 +1,7 @@
 <?php
 
 /**
- * List of languages classified in ISO 639-1.
+ * List of languages classified in ISO 639-1 and ISO 639-3 (sign languages).
  *
  * Source:
  * https://gist.github.com/joshuabaker/d2775b5ada7d1601bcd7b31cb4081981
@@ -937,5 +937,55 @@ return [
         "code" => "zu",
         "name" => "Zulu",
         "nativeName" => "isiZulu"
+    ],
+    [
+        "code" => "ase",
+        "name" => "American Sign Language",
+        "nativeName" => "American Sign Language"
+    ],
+    [
+        "code" => "bfi",
+        "name" => "British Sign Language",
+        "nativeName" => "British Sign Language"
+    ],
+    [
+        "code" => "fsl",
+        "name" => "French Sign Language",
+        "nativeName" => "Langue des signes française"
+    ],
+    [
+        "code" => "gsg",
+        "name" => "German Sign Language",
+        "nativeName" => "Deutsche Gebärdensprache"
+    ],
+    [
+        "code" => "jsl",
+        "name" => "Japanese Sign Language",
+        "nativeName" => "日本手話"
+    ],
+    [
+        "code" => "csl",
+        "name" => "Chinese Sign Language",
+        "nativeName" => "中国手语"
+    ],
+    [
+        "code" => "ins",
+        "name" => "Indian Sign Language",
+        "nativeName" => "भारतीय सांकेतिक भाषा"
+    ],
+    [
+        "code" => "bzs",
+        "name" => "Brazilian Sign Language",
+        "nativeName" => "Língua Brasileira de Sinais"
+    ],
+    [
+        "code" => "kvk",
+        "name" => "Korean Sign Language",
+        "nativeName" => "한국 수어"
+    ],
+    [
+        "code" => "ssp",
+        "name" => "Spanish Sign Language",
+        "nativeName" => "Lengua de signos española"
     ]
 ];
