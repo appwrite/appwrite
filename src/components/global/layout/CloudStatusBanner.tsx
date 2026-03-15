@@ -1,4 +1,4 @@
-import { Activity, ExternalLink, Wrench } from 'lucide-react'
+import { AlertTriangle, ExternalLink, Wrench } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -15,7 +15,7 @@ function getStatusPresentation(state: 'degraded' | 'downtime' | 'maintenance') {
         buttonClassName:
           'bg-red-500 text-red-950 hover:bg-red-400 dark:bg-red-500 dark:text-red-950 dark:hover:bg-red-400',
         title: 'Appwrite Cloud is experiencing an outage.',
-        Icon: Activity,
+        Icon: AlertTriangle,
       }
     case 'maintenance':
       return {
@@ -33,7 +33,7 @@ function getStatusPresentation(state: 'degraded' | 'downtime' | 'maintenance') {
         buttonClassName:
           'bg-amber-500 text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400',
         title: 'Appwrite Cloud is experiencing degraded service.',
-        Icon: Activity,
+        Icon: AlertTriangle,
       }
   }
 }

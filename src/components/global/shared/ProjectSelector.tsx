@@ -28,6 +28,7 @@ import { activeProjectsQueryOptions } from '@/lib/react-query/hooks'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
 
 const DEFAULT_PROJECT_LIMIT = 15
 
@@ -87,7 +88,12 @@ export function ProjectSelector({
     return list.map((p: Models.Project) => {
       const keys = p.keys || []
       const apiKeysCount = Array.isArray(keys) ? keys.length : 0
-      return { $id: p.$id, name: p.name, apiKeysCount }
+      return {
+        $id: p.$id,
+        name: p.name,
+        apiKeysCount,
+        paused: p.status === 'paused',
+      }
     })
   }, [data?.projects])
 
@@ -141,6 +147,14 @@ export function ProjectSelector({
                 const content = (
                   <>
                     <span className="truncate">{p.name}</span>
+                    {p.paused && (
+                      <Badge
+                        variant="outline"
+                        className="ml-1.5 shrink-0 text-[10px] font-normal text-muted-foreground"
+                      >
+                        Paused
+                      </Badge>
+                    )}
                     {showApiKeysCount && p.apiKeysCount > 0 && (
                       <span className="ml-1.5 shrink-0 text-muted-foreground">
                         ({p.apiKeysCount})

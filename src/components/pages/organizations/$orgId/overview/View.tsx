@@ -38,6 +38,7 @@ import {
   ChevronRight,
   Pin,
   PinOff,
+  PauseCircle,
 } from '@/lib/icons'
 import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
 import { RegionFlag } from '@/components/global/shared/RegionFlag'
@@ -201,12 +202,20 @@ const ROLE_OPTIONS = [
 function ProjectCardFooter({
   platformsCount,
   apiKeysCount,
+  paused,
 }: {
   platformsCount: number
   apiKeysCount: number
+  paused?: boolean
 }) {
   return (
-    <div className="mt-3.5 flex items-center gap-2 border-t border-border/60 pt-3.5">
+    <div className="mt-3.5 flex flex-wrap items-center gap-2 border-t border-border/60 pt-3.5">
+      {paused && (
+        <Badge variant="warning" className="gap-1.5 text-[10px] shrink-0">
+          <PauseCircle className="h-3 w-3" />
+          Paused
+        </Badge>
+      )}
       {/* Platforms Label */}
       {platformsCount > 0 ? (
         <Badge variant="info" className="gap-1.5 text-[10px] shrink-0">
@@ -835,6 +844,7 @@ export function OrgOverview({
           createdAt: project.$createdAt || new Date().toISOString(),
           icon: project.name.charAt(0).toUpperCase(),
           archived: project.status === 'archived',
+          paused: project.status === 'paused',
           platformsCount: Array.isArray(platforms) ? platforms.length : 0,
           apiKeysCount: Array.isArray(keys) ? keys.length : 0,
         }
@@ -892,6 +902,7 @@ export function OrgOverview({
         createdAt: project.$createdAt || new Date().toISOString(),
         icon: project.name.charAt(0).toUpperCase(),
         archived: project.status === 'archived',
+        paused: project.status === 'paused',
         platformsCount: Array.isArray(platforms) ? platforms.length : 0,
         apiKeysCount: Array.isArray(keys) ? keys.length : 0,
       }
@@ -1716,6 +1727,7 @@ export function OrgOverview({
                                           apiKeysCount={
                                             project.apiKeysCount || 0
                                           }
+                                          paused={project.paused}
                                         />
                                       </Link>
                                       {canPinProjectsResult && (
@@ -1799,6 +1811,7 @@ export function OrgOverview({
                                                 apiKeysCount={
                                                   project.apiKeysCount || 0
                                                 }
+                                                paused={project.paused}
                                               />
                                             </Link>
                                             {canPin && canPinProjectsResult && (

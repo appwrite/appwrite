@@ -20,7 +20,12 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { toast } from 'sonner'
-import { Resources, type Models } from '@appwrite.io/console'
+import {
+  AppwriteMigrationResource,
+  SupabaseMigrationResource,
+  FirebaseMigrationResource,
+  type Models,
+} from '@appwrite.io/console'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   useProject,
@@ -183,35 +188,55 @@ export function ImportWizardView() {
     return typeof value === 'number' ? value : null
   }
 
-  function resourceFormToResources(): Resources[] {
+  function resourceFormToResources(): (AppwriteMigrationResource | SupabaseMigrationResource | FirebaseMigrationResource)[] {
     const allowed = supportsFunctions
       ? APPWRITE_RESOURCES
       : provider === 'Firebase'
         ? FIREBASE_RESOURCES
         : SUPABASE_NHOST_RESOURCES
-    const out: Resources[] = []
-    if (resourceForm.users.root) out.push(Resources.User)
+    const out: (AppwriteMigrationResource | SupabaseMigrationResource | FirebaseMigrationResource)[] = []
+    if (resourceForm.users.root) {
+      out.push(
+        supportsFunctions
+          ? AppwriteMigrationResource.User
+          : provider === 'Firebase'
+            ? FirebaseMigrationResource.User
+            : SupabaseMigrationResource.User,
+      )
+    }
     if (resourceForm.databases.root) {
       if (supportsFunctions) {
         out.push(
-          Resources.Database,
-          Resources.Table,
-          Resources.Column,
-          Resources.Index,
+          AppwriteMigrationResource.Database,
+          AppwriteMigrationResource.Table,
+          AppwriteMigrationResource.Column,
+          AppwriteMigrationResource.Index,
         )
-        if (resourceForm.databases.rows) out.push(Resources.Row)
+        if (resourceForm.databases.rows) out.push(AppwriteMigrationResource.Row)
       } else {
+        const dbEnum =
+          provider === 'Firebase'
+            ? FirebaseMigrationResource
+            : SupabaseMigrationResource
         out.push(
-          Resources.Database,
-          Resources.Collection,
-          Resources.Attribute,
-          Resources.Index,
-          Resources.Document,
+          dbEnum.Database,
+          dbEnum.Collection,
+          dbEnum.Attribute,
+          ...(provider === 'Firebase' ? [] : [SupabaseMigrationResource.Index]),
+          dbEnum.Document,
         )
       }
     }
-    if (resourceForm.storage.root) out.push(Resources.Bucket, Resources.File)
-    return out.filter((r) => allowed.includes(r))
+    if (resourceForm.storage.root) {
+      const storageEnum =
+        supportsFunctions
+          ? AppwriteMigrationResource
+          : provider === 'Firebase'
+            ? FirebaseMigrationResource
+            : SupabaseMigrationResource
+      out.push(storageEnum.Bucket, storageEnum.File)
+    }
+    return out.filter((r) => allowed.includes(r as (typeof allowed)[number]))
   }
 
   const selectedResourcesList = useMemo(

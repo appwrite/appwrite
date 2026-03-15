@@ -767,6 +767,14 @@ function ProjectSelectorContent({
                             Current
                           </Badge>
                         )}
+                        {project.paused && (
+                          <Badge
+                            variant="outline"
+                            className="ml-1.5 shrink-0 text-[10px] font-normal text-muted-foreground"
+                          >
+                            Paused
+                          </Badge>
+                        )}
                       </span>
                       {isPinned && (
                         <Pin className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -1051,6 +1059,14 @@ function MobileProjectSelectorContent({
                               className="ml-1.5 shrink-0 text-[10px] font-normal text-muted-foreground"
                             >
                               Current
+                            </Badge>
+                          )}
+                          {project.paused && (
+                            <Badge
+                              variant="outline"
+                              className="ml-1.5 shrink-0 text-[10px] font-normal text-muted-foreground"
+                            >
+                              Paused
                             </Badge>
                           )}
                         </span>

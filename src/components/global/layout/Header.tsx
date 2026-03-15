@@ -23,6 +23,7 @@ import {
   Building2,
   FolderPlus,
   Plug2,
+  ArrowUpCircle,
 } from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/ProjectSelector'
@@ -636,12 +637,13 @@ export function ConsoleHeader({
                   asChild
                   size="sm"
                   variant="default"
-                  className="h-9 shrink-0 cursor-pointer px-3 text-[12px] font-semibold relative z-10 rounded-[calc(0.375rem-1px)]"
+                  className="h-9 shrink-0 cursor-pointer gap-1.5 px-3 text-[12px] font-semibold relative z-10 rounded-[calc(0.375rem-1px)]"
                 >
                   <Link
                     to="/organizations/$orgId/change-plan"
                     params={{ orgId }}
                   >
+                    <ArrowUpCircle className="h-4 w-4" />
                     Upgrade
                   </Link>
                 </Button>

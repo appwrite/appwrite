@@ -17,6 +17,7 @@ import {
   MessageCircle,
   ExternalLink,
   Activity,
+  AlertTriangle,
   Mail,
   Building2,
   Wrench,
@@ -106,7 +107,7 @@ function getStatusMeta(statusState: DisplayCloudStatusState) {
       badgeVariant: 'error' as const,
       badgeLabel: 'Outage',
       summary: 'Some services are currently unavailable.',
-      Icon: Activity,
+      Icon: AlertTriangle,
     }
   }
 
@@ -116,7 +117,7 @@ function getStatusMeta(statusState: DisplayCloudStatusState) {
     badgeVariant: 'warning' as const,
     badgeLabel: 'Degraded',
     summary: 'Some services are experiencing issues.',
-    Icon: Activity,
+    Icon: AlertTriangle,
   }
 }
 

@@ -13,9 +13,10 @@ import {
   keepPreviousData,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { Query, ID } from '@appwrite.io/console'
+import { Query, ID, Status } from '@appwrite.io/console'
 import type { Project } from '@/lib/utils/mock-data'
 import { sdk, setProjectRegion } from '@/lib/appwrite/sdk'
+import { generateFingerprintToken } from '@/lib/fingerprint'
 import {
   DEFAULT_STALE_TIME,
   LONG_STALE_TIME,
@@ -413,10 +414,11 @@ export function useProject(projectId: string | undefined) {
       createdAt: projectData.$createdAt || new Date().toISOString(),
       icon: projectData.name.charAt(0).toUpperCase(),
       archived: projectData.status === 'archived',
+      status: projectData.status,
       platforms,
       pingCount: (projectData as { pingCount?: number }).pingCount,
       pingedAt: (projectData as { pingedAt?: string }).pingedAt,
-    } as Project & { platforms: unknown[] }
+    } as Project & { status?: string; platforms: unknown[] }
   }, [projectData])
 
   return {
@@ -425,6 +427,39 @@ export function useProject(projectId: string | undefined) {
     error,
     refetch,
   }
+}
+
+const CONSOLE_FINGERPRINT_HEADER = 'X-Appwrite-Console-Fingerprint'
+
+/**
+ * Hook to resume a paused project (set status to active).
+ * Used when the user explicitly chooses to restore the project from the paused curtain.
+ * Sends a fingerprint header so the backend can mark the project as still under active development.
+ */
+export function useResumeProject(projectId: string | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!projectId) throw new Error('Project ID is required')
+      const fingerprint = await generateFingerprintToken()
+      const client = sdk.forConsole.client as { headers?: Record<string, string> }
+      if (client.headers) client.headers[CONSOLE_FINGERPRINT_HEADER] = fingerprint
+      try {
+        await sdk.forConsole.projects.updateStatus({
+          projectId,
+          status: Status.Active,
+        })
+      } finally {
+        if (client.headers) delete client.headers[CONSOLE_FINGERPRINT_HEADER]
+      }
+    },
+    onSuccess: () => {
+      if (projectId) {
+        queryClient.invalidateQueries({ queryKey: ['project', projectId] })
+      }
+    },
+  })
 }
 
 /**
@@ -557,15 +592,26 @@ export function useProjectsForTeamInfinite(
 
     const allProjects = data.pages.flatMap((page) => page.projects || [])
 
-    return allProjects.map((project: unknown) => ({
-      $id: project.$id,
-      name: project.name,
-      teamId: project.teamId,
-      region: project.region || 'unknown',
-      createdAt: project.$createdAt || new Date().toISOString(),
-      icon: project.name.charAt(0).toUpperCase(),
-      archived: project.status === 'archived',
-    })) as Project[]
+    return allProjects.map((raw: unknown) => {
+      const p = raw as {
+        $id: string
+        name: string
+        teamId: string
+        region?: string
+        $createdAt?: string
+        status?: string
+      }
+      return {
+        $id: p.$id,
+        name: p.name,
+        teamId: p.teamId,
+        region: p.region || 'unknown',
+        createdAt: p.$createdAt || new Date().toISOString(),
+        icon: p.name.charAt(0).toUpperCase(),
+        archived: p.status === 'archived',
+        paused: p.status === 'paused',
+      }
+    }) as Project[]
   }, [data])
 
   const total = useMemo(() => {

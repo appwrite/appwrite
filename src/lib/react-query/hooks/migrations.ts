@@ -11,7 +11,13 @@ import {
   useQueryClient,
   queryOptions,
 } from '@tanstack/react-query'
-import { Query, Resources } from '@appwrite.io/console'
+import {
+  Query,
+  AppwriteMigrationResource,
+  SupabaseMigrationResource,
+  FirebaseMigrationResource,
+  NHostMigrationResource,
+} from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { DEFAULT_STALE_TIME } from './constants'
@@ -446,41 +452,41 @@ export function useCreateCSVImport(projectId: string | null | undefined) {
 // ============================================================================
 
 /** All Appwrite resources for report and migration. */
-export const APPWRITE_RESOURCES: Resources[] = [
-  Resources.User,
-  Resources.Database,
-  Resources.Table,
-  Resources.Column,
-  Resources.Index,
-  Resources.Row,
-  Resources.Document,
-  Resources.Attribute,
-  Resources.Collection,
-  Resources.Bucket,
-  Resources.File,
+export const APPWRITE_RESOURCES: AppwriteMigrationResource[] = [
+  AppwriteMigrationResource.User,
+  AppwriteMigrationResource.Database,
+  AppwriteMigrationResource.Table,
+  AppwriteMigrationResource.Column,
+  AppwriteMigrationResource.Index,
+  AppwriteMigrationResource.Row,
+  AppwriteMigrationResource.Document,
+  AppwriteMigrationResource.Attribute,
+  AppwriteMigrationResource.Collection,
+  AppwriteMigrationResource.Bucket,
+  AppwriteMigrationResource.File,
 ]
 
 /** Resources supported by Supabase/NHost (no Row/Column/Table - use Document/Attribute/Collection). */
-export const SUPABASE_NHOST_RESOURCES: Resources[] = [
-  Resources.User,
-  Resources.Database,
-  Resources.Collection,
-  Resources.Attribute,
-  Resources.Index,
-  Resources.Document,
-  Resources.Bucket,
-  Resources.File,
+export const SUPABASE_NHOST_RESOURCES: SupabaseMigrationResource[] = [
+  SupabaseMigrationResource.User,
+  SupabaseMigrationResource.Database,
+  SupabaseMigrationResource.Collection,
+  SupabaseMigrationResource.Attribute,
+  SupabaseMigrationResource.Index,
+  SupabaseMigrationResource.Document,
+  SupabaseMigrationResource.Bucket,
+  SupabaseMigrationResource.File,
 ]
 
 /** Resources supported by Firebase (same as Supabase but no Index per prompt). */
-export const FIREBASE_RESOURCES: Resources[] = [
-  Resources.User,
-  Resources.Database,
-  Resources.Collection,
-  Resources.Attribute,
-  Resources.Document,
-  Resources.Bucket,
-  Resources.File,
+export const FIREBASE_RESOURCES: FirebaseMigrationResource[] = [
+  FirebaseMigrationResource.User,
+  FirebaseMigrationResource.Database,
+  FirebaseMigrationResource.Collection,
+  FirebaseMigrationResource.Attribute,
+  FirebaseMigrationResource.Document,
+  FirebaseMigrationResource.Bucket,
+  FirebaseMigrationResource.File,
 ]
 
 export interface AppwriteReportParams {
@@ -574,7 +580,7 @@ export async function fetchNHostReport(
 }
 
 export interface CreateAppwriteMigrationParams {
-  resources: Resources[]
+  resources: AppwriteMigrationResource[]
   endpoint: string
   projectId: string
   apiKey: string
@@ -605,7 +611,7 @@ export function useCreateAppwriteMigration(
 }
 
 export interface CreateSupabaseMigrationParams {
-  resources: Resources[]
+  resources: SupabaseMigrationResource[]
   endpoint: string
   apiKey: string
   databaseHost: string
@@ -642,7 +648,7 @@ export function useCreateSupabaseMigration(
 }
 
 export interface CreateFirebaseMigrationParams {
-  resources: Resources[]
+  resources: FirebaseMigrationResource[]
   serviceAccount: string
 }
 
@@ -669,7 +675,7 @@ export function useCreateFirebaseMigration(
 }
 
 export interface CreateNHostMigrationParams {
-  resources: Resources[]
+  resources: NHostMigrationResource[]
   subdomain: string
   region: string
   adminSecret: string
