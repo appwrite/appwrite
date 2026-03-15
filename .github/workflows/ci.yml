@@ -147,7 +147,7 @@ jobs:
         run: composer install --prefer-dist --no-progress --ignore-platform-reqs
 
       - name: Run PHPStan
-        run: composer check
+        run: composer analyze
 
   locale:
     name: Checks / Locale
@@ -189,14 +189,22 @@ jobs:
               return;
             }
 
-            const files = await github.paginate(github.rest.pulls.listFiles, {
+            const getContent = (ref) => github.rest.repos.getContent({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              pull_number: pr.number,
+              path: 'composer.lock',
+              ref,
             });
 
-            const lockFile = files.find(f => f.filename === 'composer.lock');
-            const databaseChanged = lockFile?.patch?.includes('"name": "utopia-php/database"') ?? false;
+            const getDbVersion = (lock) => lock.packages?.find(p => p.name === 'utopia-php/database')?.version;
+
+            const [{ data: base }, { data: head }] = await Promise.all([
+              getContent(pr.base.sha),
+              getContent(pr.head.sha),
+            ]);
+
+            const decode = (content) => JSON.parse(Buffer.from(content, 'base64').toString());
+            const databaseChanged = getDbVersion(decode(base.content)) !== getDbVersion(decode(head.content));
 
             core.setOutput('databases', JSON.stringify(databaseChanged ? allDatabases : defaultDatabases));
             core.setOutput('modes', JSON.stringify(databaseChanged ? allModes : defaultModes));
@@ -365,6 +373,7 @@ jobs:
           Avatars,
           Console,
           Databases,
+          TablesDB,
           Functions,
           FunctionsSchedule,
           GraphQL,
@@ -453,7 +462,7 @@ jobs:
             # Services that rely on sequential test method execution (shared static state)
             FUNCTIONAL_FLAG="--functional"
             case "${{ matrix.service }}" in
-              Databases|Functions|Realtime) FUNCTIONAL_FLAG="" ;;
+              Databases|TablesDB|Functions|Realtime) FUNCTIONAL_FLAG="" ;;
             esac
 
             docker compose exec -T \
