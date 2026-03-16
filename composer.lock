@@ -4307,17 +4307,18 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "d785061990b2a0957dce215f9bc6d29fa47f5683"
+                "reference": "61d9d2cefc06e549c521f5798b20faabe9478b98"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/d785061990b2a0957dce215f9bc6d29fa47f5683",
-                "reference": "d785061990b2a0957dce215f9bc6d29fa47f5683",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/61d9d2cefc06e549c521f5798b20faabe9478b98",
+                "reference": "61d9d2cefc06e549c521f5798b20faabe9478b98",
                 "shasum": ""
             },
             "require": {
                 "ext-swoole": "*",
                 "php": ">=8.2",
+                "utopia-php/compression": "0.1.*",
                 "utopia-php/di": "0.3.*",
                 "utopia-php/servers": "0.3.*",
                 "utopia-php/validators": "0.2.*"
@@ -4352,7 +4353,7 @@
                 "issues": "https://github.com/utopia-php/http/issues",
                 "source": "https://github.com/utopia-php/http/tree/feat/coroutines-option"
             },
-            "time": "2026-03-16T17:55:57+00:00"
+            "time": "2026-03-16T18:01:51+00:00"
         },
         {
             "name": "utopia-php/image",
