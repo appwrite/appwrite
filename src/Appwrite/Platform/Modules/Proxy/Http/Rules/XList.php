@@ -68,6 +68,10 @@ class XList extends Action
         Document $project,
         Database $dbForPlatform
     ) {
+        if ($search === 'null' || $search === 'undefined') {
+            $search = '';
+        }
+
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {

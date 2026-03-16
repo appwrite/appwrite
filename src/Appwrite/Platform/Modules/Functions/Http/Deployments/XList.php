@@ -74,6 +74,10 @@ class XList extends Base
         Response $response,
         Database $dbForProject
     ) {
+        if ($search === 'null' || $search === 'undefined') {
+            $search = '';
+        }
+
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {

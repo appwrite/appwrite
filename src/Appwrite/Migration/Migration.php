@@ -188,6 +188,8 @@ abstract class Migration
                     return;
                 }
 
+                $document->removeAttribute('$sequence');
+
                 try {
                     $this->dbForProject->updateDocument(
                         $document->getCollection(),
