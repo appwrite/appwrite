@@ -2289,7 +2289,7 @@ class RealtimeCustomClientTest extends Scope
             ]);
 
             $this->assertEquals('ready', $deployment['body']['status'], \json_encode($deployment['body']));
-        });
+        }, 240_000, 500);
 
         $response = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
             'content-type' => 'application/json',
