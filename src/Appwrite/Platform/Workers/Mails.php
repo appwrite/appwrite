@@ -162,6 +162,10 @@ class Mails extends Action
             $fromEmail = $customMailOptions['senderEmail'] ?? $mail->From;
             $fromName = $customMailOptions['senderName'] ?? $mail->FromName;
             $mail->setFrom($fromEmail, $fromName);
+        } elseif (empty($smtp)) {
+            $fromEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+            $fromName = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
+            $mail->setFrom($fromEmail, $fromName);
         }
 
         if (!empty($customMailOptions['replyToEmail']) || !empty($customMailOptions['replyToName'])) {
