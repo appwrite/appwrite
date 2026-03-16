@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Modules\Tokens\Http\Tokens\Buckets\Files;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Documents\User;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Platform\Action as UtopiaAction;
