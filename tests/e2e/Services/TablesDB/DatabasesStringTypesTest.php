@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\E2E\Services\Databases\TablesDB;
+namespace Tests\E2E\Services\TablesDB;
 
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ApiTablesDB;
