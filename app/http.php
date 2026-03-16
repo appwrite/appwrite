@@ -513,10 +513,16 @@ $swooleAdapter->onRequest(function ($utopiaRequest, $utopiaResponse) use ($regis
         return;
     }
 
+    global $container;
     $pools = $register->get('pools');
-    $swooleAdapter->getContainer()->set('pools', fn () => $pools);
+    $container->set('pools', fn () => $pools);
+
+    $requestContainer = $swooleAdapter->getContainer();
+    $requestContainer->set('request', fn () => $request);
+    $requestContainer->set('response', fn () => $response);
 
     $app = new Http($swooleAdapter, 'UTC');
+    $container->set('utopia', fn () => $app);
     $app->setCompression(System::getEnv('_APP_COMPRESSION_ENABLED', 'enabled') === 'enabled');
     $app->setCompressionMinSize(intval(System::getEnv('_APP_COMPRESSION_MIN_SIZE_BYTES', '1024'))); // 1KB
 
