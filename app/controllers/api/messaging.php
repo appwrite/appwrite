@@ -1456,6 +1456,167 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
+App::post('/v1/messaging/providers/onesignal')
+    ->desc('Create OneSignal provider')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'provider.create')
+    ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[providerId].create')
+    ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', [
+        new Method(
+            namespace: 'messaging',
+            group: 'providers',
+            name: 'createOneSignalProvider',
+            description: '/docs/references/messaging/create-onesignal-provider.md',
+            auth: [AuthType::ADMIN, AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_CREATED,
+                    model: Response::MODEL_PROVIDER,
+                )
+            ]
+        )
+    ])
+    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('name', '', new Text(128), 'Provider name.')
+    ->param('appId', '', new Text(0), 'OneSignal App ID.', true)
+    ->param('apiKey', '', new Text(0), 'OneSignal API Key.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->inject('queueForEvents')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $providerId, string $name, string $appId, string $apiKey, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+
+        $credentials = [];
+
+        if (!empty($appId)) {
+            $credentials['appId'] = $appId;
+        }
+
+        if (!empty($apiKey)) {
+            $credentials['apiKey'] = $apiKey;
+        }
+
+        if (
+            $enabled === true
+            && \array_key_exists('appId', $credentials)
+            && \array_key_exists('apiKey', $credentials)
+        ) {
+            $enabled = true;
+        } else {
+            $enabled = false;
+        }
+
+        $provider = new Document([
+            '$id' => $providerId,
+            'name' => $name,
+            'provider' => 'onesignal',
+            'type' => MESSAGE_TYPE_PUSH,
+            'enabled' => $enabled,
+            'credentials' => $credentials
+        ]);
+
+        try {
+            $provider = $dbForProject->createDocument('providers', $provider);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS);
+        }
+
+        $queueForEvents
+            ->setParam('providerId', $provider->getId());
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($provider, Response::MODEL_PROVIDER);
+    });
+
+App::patch('/v1/messaging/providers/onesignal/:providerId')
+    ->desc('Update OneSignal provider')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'provider.update')
+    ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[providerId].update')
+    ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', [
+        new Method(
+            namespace: 'messaging',
+            group: 'providers',
+            name: 'updateOneSignalProvider',
+            description: '/docs/references/messaging/update-onesignal-provider.md',
+            auth: [AuthType::ADMIN, AuthType::KEY],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_PROVIDER,
+                )
+            ]
+        )
+    ])
+    ->param('providerId', '', new UID(), 'Provider ID.')
+    ->param('name', '', new Text(128), 'Provider name.', true)
+    ->param('appId', '', new Text(0), 'OneSignal App ID.', true)
+    ->param('apiKey', '', new Text(0), 'OneSignal API Key.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->inject('queueForEvents')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $providerId, string $name, string $appId, string $apiKey, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+        $provider = $dbForProject->getDocument('providers', $providerId);
+
+        if ($provider->isEmpty()) {
+            throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        }
+
+        $providerProvider = $provider->getAttribute('provider');
+
+        if ($providerProvider !== 'onesignal') {
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
+        }
+
+        if (!empty($name)) {
+            $provider->setAttribute('name', $name);
+        }
+
+        $credentials = $provider->getAttribute('credentials');
+
+        if (!empty($appId)) {
+            $credentials['appId'] = $appId;
+        }
+
+        if (!empty($apiKey)) {
+            $credentials['apiKey'] = $apiKey;
+        }
+
+        $provider->setAttribute('credentials', $credentials);
+
+        if (!\is_null($enabled)) {
+            if ($enabled) {
+                if (
+                    \array_key_exists('appId', $credentials) &&
+                    \array_key_exists('apiKey', $credentials)
+                ) {
+                    $provider->setAttribute('enabled', true);
+                } else {
+                    throw new Exception(Exception::PROVIDER_MISSING_CREDENTIALS);
+                }
+            } else {
+                $provider->setAttribute('enabled', false);
+            }
+        }
+
+        $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
+
+        $queueForEvents
+            ->setParam('providerId', $provider->getId());
+
+        $response
+            ->dynamic($provider, Response::MODEL_PROVIDER);
+    });
+
 App::patch('/v1/messaging/providers/resend/:providerId')
     ->desc('Update Resend provider')
     ->groups(['api', 'messaging'])
@@ -3670,6 +3831,154 @@ App::post('/v1/messaging/messages/push')
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($message, Response::MODEL_MESSAGE);
+    });
+
+App::post('/v1/messaging/providers/onesignal')
+    ->desc('Create OneSignal provider')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'provider.create')
+    ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[providerId].create')
+    ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        group: 'providers',
+        name: 'createOneSignalProvider',
+        description: '/docs/references/messaging/create-onesignal-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
+    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('name', '', new Text(128), 'Provider name.')
+    ->param('appId', '', new Text(0), 'OneSignal App ID.', true)
+    ->param('apiKey', '', new Text(0), 'OneSignal API Key.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->inject('queueForEvents')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $providerId, string $name, string $appId, string $apiKey, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+
+        $credentials = [];
+
+        if (!empty($appId)) {
+            $credentials['appId'] = $appId;
+        }
+
+        if (!empty($apiKey)) {
+            $credentials['apiKey'] = $apiKey;
+        }
+
+        if (
+            $enabled === true
+            && \array_key_exists('appId', $credentials)
+            && \array_key_exists('apiKey', $credentials)
+        ) {
+            $enabled = true;
+        } else {
+            $enabled = false;
+        }
+
+        $provider = new Document([
+            '$id' => $providerId,
+            'name' => $name,
+            'provider' => 'onesignal',
+            'type' => MESSAGE_TYPE_PUSH,
+            'enabled' => $enabled,
+            'credentials' => $credentials,
+        ]);
+
+        try {
+            $provider = $dbForProject->createDocument('providers', $provider);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS);
+        }
+
+        $queueForEvents
+            ->setParam('providerId', $provider->getId());
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($provider, Response::MODEL_PROVIDER);
+    });
+
+App::patch('/v1/messaging/providers/onesignal/:providerId')
+    ->desc('Update OneSignal provider')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'provider.update')
+    ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[providerId].update')
+    ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        group: 'providers',
+        name: 'updateOneSignalProvider',
+        description: '/docs/references/messaging/update-onesignal-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
+    ->param('providerId', '', new UID(), 'Provider ID.')
+    ->param('name', null, new Nullable(new Text(128)), 'Provider name.', true)
+    ->param('appId', null, new Nullable(new Text(0)), 'OneSignal App ID.', true)
+    ->param('apiKey', null, new Nullable(new Text(0)), 'OneSignal API Key.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->inject('queueForEvents')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $providerId, ?string $name, ?string $appId, ?string $apiKey, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+        $provider = $dbForProject->getDocument('providers', $providerId);
+
+        if ($provider->isEmpty() || $provider->getAttribute('provider') !== 'onesignal') {
+            throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        }
+
+        if (!\is_null($name)) {
+            $provider->setAttribute('name', $name);
+        }
+
+        $credentials = $provider->getAttribute('credentials');
+
+        if (!\is_null($appId)) {
+            $credentials['appId'] = $appId;
+        }
+
+        if (!\is_null($apiKey)) {
+            $credentials['apiKey'] = $apiKey;
+        }
+
+        $provider->setAttribute('credentials', $credentials);
+
+        if (!\is_null($enabled)) {
+            $provider->setAttribute('enabled', $enabled);
+        }
+
+        if (
+            $provider->getAttribute('enabled') === true
+            && (!\array_key_exists('appId', $credentials) || empty($credentials['appId']))
+            && (!\array_key_exists('apiKey', $credentials) || empty($credentials['apiKey']))
+        ) {
+            $provider->setAttribute('enabled', false);
+        }
+
+        $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
+
+        $queueForEvents
+            ->setParam('providerId', $provider->getId());
+
+        $response
+            ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
 App::get('/v1/messaging/messages')
