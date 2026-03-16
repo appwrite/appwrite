@@ -13,7 +13,7 @@
         "test": "vendor/bin/phpunit",
         "lint": "vendor/bin/pint --test --config pint.json",
         "format": "vendor/bin/pint --config pint.json",
-		"analyze": "./vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G"
+		"analyze": "./vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G",
         "bench": "vendor/bin/phpbench run --report=benchmark",
         "check": "./vendor/bin/phpstan analyse -c phpstan.neon",
         "installer:clean": "php src/Appwrite/Platform/Installer/Server.php --clean",

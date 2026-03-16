@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fa19d408b3129791c333a983ff09194f",
+    "content-hash": "e1f638b802cda4c70699e4a36366f250",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3850,16 +3850,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "5.3.12",
+            "version": "5.3.13",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "7e843989e67b1de3bfb27212334c28694bda4e95"
+                "reference": "f84590defe4a50379607de0705d3781016dd7904"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/7e843989e67b1de3bfb27212334c28694bda4e95",
-                "reference": "7e843989e67b1de3bfb27212334c28694bda4e95",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/f84590defe4a50379607de0705d3781016dd7904",
+                "reference": "f84590defe4a50379607de0705d3781016dd7904",
                 "shasum": ""
             },
             "require": {
@@ -3902,9 +3902,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/5.3.12"
+                "source": "https://github.com/utopia-php/database/tree/5.3.13"
             },
-            "time": "2026-03-13T12:16:26+00:00"
+            "time": "2026-03-16T07:01:29+00:00"
         },
         {
             "name": "utopia-php/detector",
