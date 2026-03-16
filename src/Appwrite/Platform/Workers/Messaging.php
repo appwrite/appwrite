@@ -22,6 +22,7 @@ use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Messaging\Adapter\Push\APNS;
 use Utopia\Messaging\Adapter\Push as PushAdapter;
 use Utopia\Messaging\Adapter\Push\FCM;
+use Utopia\Messaging\Adapter\Push\OneSignal;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Messaging\Adapter\SMS\Fast2SMS;
 use Utopia\Messaging\Adapter\SMS\GEOSMS;
@@ -481,6 +482,10 @@ class Messaging extends Action
                 $options['sandbox'] ?? false
             ),
             'fcm' => new FCM(\json_encode($credentials['serviceAccountJSON'])),
+            'onesignal' => new OneSignal(
+                $credentials['appId'] ?? '',
+                $credentials['apiKey'] ?? ''
+            ),
             default => null
         };
     }
