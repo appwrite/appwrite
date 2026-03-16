@@ -1056,9 +1056,7 @@ class UsageTest extends Scope
             $response = $this->client->call(
                 Client::METHOD_GET,
                 '/functions/' . $functionId . '/executions/' . $executionId,
-                array_merge([
-                    'x-appwrite-project' => $this->getProject()['$id']
-                ], $this->getHeaders()),
+                $this->getConsoleHeaders(),
             );
             $this->assertContains($response['body']['status'], ['completed', 'failed']);
         }, 30_000, 500);
