@@ -16,6 +16,48 @@ class DatabasesConsoleClientTest extends Scope
     use ProjectCustom;
     use SideConsole;
 
+    public function testCreateDocumentNoPermissionsConsole(): void
+    {
+        $databaseId = ID::unique();
+        $tableId = ID::unique();
+
+        // Create a database
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'databaseId' => $databaseId,
+            'name' => 'Console Permission Test DB',
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+
+        // Create a collection
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'collectionId' => $tableId,
+            'name' => 'Console Permission Test Collection',
+            'permissions' => [],
+            'documentSecurity' => true,
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+
+        // Create a document WITHOUT permissions
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $tableId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => [],
+        ]);
+        $this->assertEquals(201, $document['headers']['status-code']);
+
+        // Assert that the permissions array is completely empty
+        $this->assertIsArray($document['body']['$permissions']);
+        $this->assertEmpty($document['body']['$permissions']);
+    }
+
     public function testCreateTable(): array
     {
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([

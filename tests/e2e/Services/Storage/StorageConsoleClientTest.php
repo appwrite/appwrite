@@ -108,6 +108,33 @@ class StorageConsoleClientTest extends Scope
         $this->assertIsArray($response['body']['imageTransformations']);
         $this->assertIsNumeric($response['body']['imageTransformationsTotal']);
     }
+    public function testCreateFileNoPermissionsConsole(): void
+    {
+        // Create a bucket
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Console Empty Permissions Bucket',
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+
+        // Create a file in the bucket WITHOUT permissions
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket['body']['$id'] . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+        ]);
+        $this->assertEquals(201, $file['headers']['status-code']);
+        
+        // Assert that the permissions array is completely empty
+        $this->assertIsArray($file['body']['$permissions']);
+        $this->assertEmpty($file['body']['$permissions']);
+    }
+
     public function testCreateBucketTransformationsDisabledConsole(): void
     {
         // Create a bucket with default settings
