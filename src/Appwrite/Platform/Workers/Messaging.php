@@ -28,6 +28,7 @@ use Utopia\Messaging\Adapter\SMS\GEOSMS;
 use Utopia\Messaging\Adapter\SMS\Inforu;
 use Utopia\Messaging\Adapter\SMS\Mock;
 use Utopia\Messaging\Adapter\SMS\Msg91;
+use Utopia\Messaging\Adapter\SMS\AlibabaCloud;
 use Utopia\Messaging\Adapter\SMS\Telesign;
 use Utopia\Messaging\Adapter\SMS\TextMagic;
 use Utopia\Messaging\Adapter\SMS\Twilio;
@@ -451,6 +452,12 @@ class Messaging extends Action
             'vonage' => new Vonage(
                 $credentials['apiKey'] ?? '',
                 $credentials['apiSecret'] ??  ''
+            ),
+            'alibabacloud' => new AlibabaCloud(
+                $credentials['accessKeyId'] ?? '',
+                $credentials['accessKeySecret'] ?? '',
+                $credentials['signName'] ?? '',
+                $credentials['templateCode'] ?? '',
             ),
             'fast2sms' => new Fast2SMS(
                 $credentials['apiKey'] ?? '',
