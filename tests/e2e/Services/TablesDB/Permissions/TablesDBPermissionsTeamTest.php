@@ -23,7 +23,7 @@ class TablesDBPermissionsTeamTest extends Scope
     use SchemaPolling;
 
     public array $collections = [];
-    public string $databaseId = 'testpermissiondb';
+    public string $databaseId = 'testpermdb_tablesdb';
 
     public function createTeams(): array
     {
