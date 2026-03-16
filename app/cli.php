@@ -24,7 +24,6 @@ use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\DI\Dependency;
 use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Platform\Service;
@@ -59,18 +58,9 @@ $taskName = $args[0];
 $platform->init(Service::TYPE_TASK);
 $cli = $platform->getCli();
 
-$setResource = function (string $name, callable $callback, array $injections = []) use ($cli) {
-    $dependency = new Dependency();
-    $dependency->setName($name)->setCallback($callback);
-    foreach ($injections as $injection) {
-        $dependency->inject($injection);
-    }
-    $cli->setResource($dependency);
-};
+$cli->setResource('register', fn () => $register, []);
 
-$setResource('register', fn () => $register, []);
-
-$setResource('cache', function ($pools) {
+$cli->setResource('cache', function ($pools) {
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
 
@@ -81,18 +71,18 @@ $setResource('cache', function ($pools) {
     return new Cache(new Sharding($adapters));
 }, ['pools']);
 
-$setResource('pools', function (Registry $register) {
+$cli->setResource('pools', function (Registry $register) {
     return $register->get('pools');
 }, ['register']);
 
-$setResource('authorization', function () {
+$cli->setResource('authorization', function () {
     $authorization = new Authorization();
     $authorization->disable();
 
     return $authorization;
 }, []);
 
-$setResource('dbForPlatform', function ($pools, $cache, $authorization) {
+$cli->setResource('dbForPlatform', function ($pools, $cache, $authorization) {
     $sleep = 3;
     $maxAttempts = 5;
     $attempts = 0;
@@ -135,17 +125,17 @@ $setResource('dbForPlatform', function ($pools, $cache, $authorization) {
     return $dbForPlatform;
 }, ['pools', 'cache', 'authorization']);
 
-$setResource('console', function () {
+$cli->setResource('console', function () {
     return new Document(Config::getParam('console'));
 }, []);
 
-$setResource(
+$cli->setResource(
     'isResourceBlocked',
     fn () => fn (Document $project, string $resourceType, ?string $resourceId) => false,
     []
 );
 
-$setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache, $authorization) {
+$cli->setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache, $authorization) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 
     return function (Document $project) use ($pools, $dbForPlatform, $cache, $authorization, &$databases) {
@@ -207,7 +197,7 @@ $setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $c
     };
 }, ['pools', 'dbForPlatform', 'cache', 'authorization']);
 
-$setResource('getLogsDB', function (Group $pools, Cache $cache, Authorization $authorization) {
+$cli->setResource('getLogsDB', function (Group $pools, Cache $cache, Authorization $authorization) {
     $database = null;
 
     return function (?Document $project = null) use ($pools, $cache, $database, $authorization) {
@@ -236,41 +226,41 @@ $setResource('getLogsDB', function (Group $pools, Cache $cache, Authorization $a
         return $database;
     };
 }, ['pools', 'cache', 'authorization']);
-$setResource('publisher', function (Group $pools) {
+$cli->setResource('publisher', function (Group $pools) {
     return new BrokerPool(publisher: $pools->get('publisher'));
 }, ['pools']);
-$setResource('publisherDatabases', function (BrokerPool $publisher) {
+$cli->setResource('publisherDatabases', function (BrokerPool $publisher) {
     return $publisher;
 }, ['publisher']);
-$setResource('publisherFunctions', function (BrokerPool $publisher) {
+$cli->setResource('publisherFunctions', function (BrokerPool $publisher) {
     return $publisher;
 }, ['publisher']);
-$setResource('publisherMigrations', function (BrokerPool $publisher) {
+$cli->setResource('publisherMigrations', function (BrokerPool $publisher) {
     return $publisher;
 }, ['publisher']);
-$setResource('publisherMessaging', function (BrokerPool $publisher) {
+$cli->setResource('publisherMessaging', function (BrokerPool $publisher) {
     return $publisher;
 }, ['publisher']);
-$setResource('usage', function () {
+$cli->setResource('usage', function () {
     return new UsageContext();
 }, []);
-$setResource('publisherForUsage', fn (Publisher $publisher) => new UsagePublisher(
+$cli->setResource('publisherForUsage', fn (Publisher $publisher) => new UsagePublisher(
     $publisher,
     new Queue(System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME))
 ), ['publisher']);
-$setResource('queueForStatsResources', function (Publisher $publisher) {
+$cli->setResource('queueForStatsResources', function (Publisher $publisher) {
     return new StatsResources($publisher);
 }, ['publisher']);
-$setResource('queueForFunctions', function (Publisher $publisher) {
+$cli->setResource('queueForFunctions', function (Publisher $publisher) {
     return new Func($publisher);
 }, ['publisher']);
-$setResource('queueForDeletes', function (Publisher $publisher) {
+$cli->setResource('queueForDeletes', function (Publisher $publisher) {
     return new Delete($publisher);
 }, ['publisher']);
-$setResource('queueForCertificates', function (Publisher $publisher) {
+$cli->setResource('queueForCertificates', function (Publisher $publisher) {
     return new Certificate($publisher);
 }, ['publisher']);
-$setResource('logError', function (Registry $register) {
+$cli->setResource('logError', function (Registry $register) {
     return function (Throwable $error, string $namespace, string $action) use ($register) {
         Console::error('[Error] Timestamp: ' . date('c', time()));
         Console::error('[Error] Type: ' . get_class($error));
@@ -322,13 +312,13 @@ $setResource('logError', function (Registry $register) {
     };
 }, ['register']);
 
-$setResource('executor', fn () => new Executor(), []);
+$cli->setResource('executor', fn () => new Executor(), []);
 
-$setResource('bus', function (Registry $register) use ($cli) {
+$cli->setResource('bus', function (Registry $register) use ($cli) {
     return $register->get('bus')->setResolver(fn (string $name) => $cli->getResource($name));
 }, ['register']);
 
-$setResource('telemetry', fn () => new NoTelemetry(), []);
+$cli->setResource('telemetry', fn () => new NoTelemetry(), []);
 
 $cli
     ->error()

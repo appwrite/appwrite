@@ -32,7 +32,7 @@ class Schema
         array $urls,
         array $params,
     ): GQLSchema {
-        Http::setResource('utopia:graphql', static function () use ($utopia) {
+        $utopia->setResource('utopia:graphql', static function () use ($utopia) {
             return $utopia;
         });
 

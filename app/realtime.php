@@ -33,6 +33,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\DI\Container;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
 use Utopia\Logger\Log;
@@ -606,15 +607,17 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 });
 
 $server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime) {
-    $app = new Http('UTC');
+    global $container;
     $request = new Request($request);
     $response = new Response(new SwooleResponse());
 
     Console::info("Connection open (user: {$connection})");
 
-    Http::setResource('pools', fn () => $register->get('pools'));
-    Http::setResource('request', fn () => $request);
-    Http::setResource('response', fn () => $response);
+    $container->set('pools', fn () => $register->get('pools'));
+    $adapter = new \Utopia\Http\Adapter\FPM\Server($container);
+    $app = new Http($adapter, 'UTC');
+    $app->setResource('request', fn () => $request);
+    $app->setResource('response', fn () => $response);
 
     $project = null;
     $logUser = null;

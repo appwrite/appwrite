@@ -18,6 +18,8 @@ use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
+use Utopia\DI\Container;
+use Utopia\Http\Adapter\FPM\Server as FPMServer;
 use Utopia\Http\Http;
 use Utopia\Http\Request as UtopiaRequest;
 use Utopia\Http\Response as UtopiaResponse;
@@ -283,10 +285,11 @@ class Specs extends Action
         $mocks = ($mode === 'mocks');
 
         // Mock dependencies
-        Http::setResource('request', fn () => $this->getRequest());
-        Http::setResource('response', fn () => $response);
-        Http::setResource('dbForPlatform', fn () => new Database(new MySQL(''), new Cache(new None())));
-        Http::setResource('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
+        $specsContainer = new Container();
+        $specsContainer->set('request', fn () => $this->getRequest());
+        $specsContainer->set('response', fn () => $response);
+        $specsContainer->set('dbForPlatform', fn () => new Database(new MySQL(''), new Cache(new None())));
+        $specsContainer->set('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
 
         $platforms = static::getPlatforms();
         $authCounts = $this->getAuthCounts();
@@ -377,7 +380,7 @@ class Specs extends Action
             }
 
             $arguments = [
-                new Http('UTC'),
+                new Http(new FPMServer($specsContainer), 'UTC'),
                 $services,
                 $routes,
                 $models,
