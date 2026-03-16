@@ -4,4 +4,6 @@
 
 return [
     'platforms' => 'platforms.read',
+    'keys' => 'keys.read',
+    'keysWrite' => 'keys.write',
 ];
