@@ -1297,6 +1297,91 @@ trait MigrationsBase
         $this->client->call(Client::METHOD_DELETE, '/projects/' . $this->getProject()['$id'] . '/platforms/' . $platform['$id'], $consoleSessionHeaders);
     }
 
+    public function testAppwriteMigrationDevKey(): void
+    {
+        $consoleSessionHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ];
+
+        // Create dev key on source project
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $this->getProject()['$id'] . '/dev-keys', $consoleSessionHeaders, [
+            'name' => 'Test Dev Key',
+            'expire' => '2030-01-01T00:00:00.000+00:00',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        $devKey = $response['body'];
+
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_DEV_KEY,
+            ],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals('completed', $result['status']);
+        $this->assertEquals([Resource::TYPE_DEV_KEY], $result['resources']);
+        $this->assertArrayHasKey(Resource::TYPE_DEV_KEY, $result['statusCounters']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DEV_KEY]['error']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DEV_KEY]['pending']);
+        $this->assertEquals(1, $result['statusCounters'][Resource::TYPE_DEV_KEY]['success']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DEV_KEY]['processing']);
+        $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_DEV_KEY]['warning']);
+
+        // Get a console key for the destination project to access console-scoped endpoints
+        $consoleKeyResponse = $this->client->call(Client::METHOD_POST, '/migrations/appwrite/console-key', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $consoleKeyResponse['headers']['status-code']);
+        $destConsoleKey = $consoleKeyResponse['body']['key'];
+
+        // Verify dev key on destination project using console key
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $this->getDestinationProject()['$id'] . '/dev-keys', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'x-appwrite-key' => $destConsoleKey,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertGreaterThan(0, $response['body']['total']);
+
+        $foundKey = null;
+
+        foreach ($response['body']['devKeys'] as $k) {
+            if ($k['name'] === 'Test Dev Key') {
+                $foundKey = $k;
+
+                break;
+            }
+        }
+
+        $this->assertNotNull($foundKey);
+        $this->assertEquals('Test Dev Key', $foundKey['name']);
+        $this->assertEquals('2030-01-01T00:00:00.000+00:00', $foundKey['expire']);
+
+        // Cleanup on destination using console key
+        $this->client->call(Client::METHOD_DELETE, '/projects/' . $this->getDestinationProject()['$id'] . '/dev-keys/' . $foundKey['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'x-appwrite-key' => $destConsoleKey,
+        ]);
+
+        // Cleanup on source using console project + session auth
+        $this->client->call(Client::METHOD_DELETE, '/projects/' . $this->getProject()['$id'] . '/dev-keys/' . $devKey['$id'], $consoleSessionHeaders);
+    }
+
     /**
      * Import documents from a CSV file.
      */

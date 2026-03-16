@@ -353,6 +353,7 @@ class Migrations extends Action
                 'messages.write',
                 'targets.read',
                 'targets.write',
+                'migrations.write',
             ]
         ]);
 
