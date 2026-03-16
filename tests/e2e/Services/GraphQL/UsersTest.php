@@ -456,7 +456,13 @@ class UsersTest extends Scope
         $this->assertIsArray($user['body']['data']);
         $this->assertArrayNotHasKey('errors', $user['body']);
         $this->assertIsArray($user['body']['data']['usersUpdatePrefs']);
-        $this->assertEquals('{"key":"value"}', $user['body']['data']['usersUpdatePrefs']['data']);
+        $this->assertArrayHasKey('_id', $user['body']['data']['usersUpdatePrefs']);
+        $this->assertEquals($this->getUser()['$id'], $user['body']['data']['usersUpdatePrefs']['_id']);
+        $this->assertArrayHasKey('prefs', $user['body']['data']['usersUpdatePrefs']);
+        $this->assertEquals(
+            ['key' => 'value'],
+            json_decode($user['body']['data']['usersUpdatePrefs']['prefs']['data'], true)
+        );
     }
 
     /**
