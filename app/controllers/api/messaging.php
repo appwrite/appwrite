@@ -3672,6 +3672,314 @@ App::post('/v1/messaging/messages/push')
             ->dynamic($message, Response::MODEL_MESSAGE);
     });
 
+App::post('/v1/messaging/providers/vonage-messages')
+    ->desc('Create Vonage Messages provider')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'provider.create')
+    ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[providerId].create')
+    ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        group: 'providers',
+        name: 'createVonageMessagesProvider',
+        description: '/docs/references/messaging/create-vonage-messages-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
+    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('name', '', new Text(128), 'Provider name.')
+    ->param('type', 'sms', new WhiteList(['sms', 'whatsapp', 'viber', 'mms']), 'Provider type.', true)
+    ->param('applicationId', '', new Text(0), 'Vonage Application ID.', true)
+    ->param('privateKey', '', new Text(0), 'Vonage Private Key.', true)
+    ->param('from', '', new Text(0), 'Vonage From Number.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->inject('queueForEvents')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $providerId, string $name, string $type, string $applicationId, string $privateKey, string $from, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+
+        $credentials = [];
+
+        if (!empty($applicationId)) {
+            $credentials['applicationId'] = $applicationId;
+        }
+
+        if (!empty($privateKey)) {
+            $credentials['privateKey'] = $privateKey;
+        }
+
+        if (!empty($from)) {
+            $credentials['from'] = $from;
+        }
+
+        if (
+            $enabled === true
+            && \array_key_exists('applicationId', $credentials)
+            && \array_key_exists('privateKey', $credentials)
+            && \array_key_exists('from', $credentials)
+        ) {
+            $enabled = true;
+        } else {
+            $enabled = false;
+        }
+
+        $provider = new Document([
+            '$id' => $providerId,
+            'name' => $name,
+            'provider' => 'vonage-messages',
+            'type' => $type,
+            'enabled' => $enabled,
+            'credentials' => $credentials,
+        ]);
+
+        try {
+            $provider = $dbForProject->createDocument('providers', $provider);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS);
+        }
+
+        $queueForEvents
+            ->setParam('providerId', $provider->getId());
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($provider, Response::MODEL_PROVIDER);
+    });
+
+App::patch('/v1/messaging/providers/vonage-messages/:providerId')
+    ->desc('Update Vonage Messages provider')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'provider.update')
+    ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[providerId].update')
+    ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        group: 'providers',
+        name: 'updateVonageMessagesProvider',
+        description: '/docs/references/messaging/update-vonage-messages-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
+    ->param('providerId', '', new UID(), 'Provider ID.')
+    ->param('name', null, new Nullable(new Text(128)), 'Provider name.', true)
+    ->param('applicationId', null, new Nullable(new Text(0)), 'Vonage Application ID.', true)
+    ->param('privateKey', null, new Nullable(new Text(0)), 'Vonage Private Key.', true)
+    ->param('from', null, new Nullable(new Text(0)), 'Vonage From Number.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->inject('queueForEvents')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $providerId, ?string $name, ?string $applicationId, ?string $privateKey, ?string $from, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+        $provider = $dbForProject->getDocument('providers', $providerId);
+
+        if ($provider->isEmpty() || $provider->getAttribute('provider') !== 'vonage-messages') {
+            throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        }
+
+        if (!\is_null($name)) {
+            $provider->setAttribute('name', $name);
+        }
+
+        $credentials = $provider->getAttribute('credentials');
+
+        if (!\is_null($applicationId)) {
+            $credentials['applicationId'] = $applicationId;
+        }
+
+        if (!\is_null($privateKey)) {
+            $credentials['privateKey'] = $privateKey;
+        }
+
+        if (!\is_null($from)) {
+            $credentials['from'] = $from;
+        }
+
+        $provider->setAttribute('credentials', $credentials);
+
+        if (!\is_null($enabled)) {
+            $provider->setAttribute('enabled', $enabled);
+        }
+
+        if (
+            $provider->getAttribute('enabled') === true
+            && (
+                (!\array_key_exists('applicationId', $credentials) || empty($credentials['applicationId']))
+                || (!\array_key_exists('privateKey', $credentials) || empty($credentials['privateKey']))
+                || (!\array_key_exists('from', $credentials) || empty($credentials['from']))
+            )
+        ) {
+            $provider->setAttribute('enabled', false);
+        }
+
+        $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
+
+        $queueForEvents
+            ->setParam('providerId', $provider->getId());
+
+        $response
+            ->dynamic($provider, Response::MODEL_PROVIDER);
+    });
+
+App::post('/v1/messaging/providers/alibaba-cloud')
+    ->desc('Create Alibaba Cloud provider')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'provider.create')
+    ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[providerId].create')
+    ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        group: 'providers',
+        name: 'createAlibabaCloudProvider',
+        description: '/docs/references/messaging/create-alibaba-cloud-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
+    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('name', '', new Text(128), 'Provider name.')
+    ->param('accessKeyId', '', new Text(0), 'Alibaba Cloud Access Key ID.', true)
+    ->param('accessKeySecret', '', new Text(0), 'Alibaba Cloud Access Key Secret.', true)
+    ->param('signName', '', new Text(0), 'Alibaba Cloud Sign Name.', true)
+    ->param('templateCode', '', new Text(0), 'Alibaba Cloud Template Code.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->inject('queueForEvents')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $providerId, string $name, string $accessKeyId, string $accessKeySecret, string $signName, string $templateCode, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+
+        $credentials = [
+            'accessKeyId' => $accessKeyId,
+            'accessKeySecret' => $accessKeySecret,
+            'signName' => $signName,
+            'templateCode' => $templateCode,
+        ];
+
+        if ($enabled === true) {
+            $enabled = true;
+        } else {
+            $enabled = false;
+        }
+
+        $provider = new Document([
+            '$id' => $providerId,
+            'name' => $name,
+            'provider' => 'alibaba-cloud',
+            'type' => MESSAGE_TYPE_SMS,
+            'enabled' => $enabled,
+            'credentials' => $credentials,
+        ]);
+
+        try {
+            $provider = $dbForProject->createDocument('providers', $provider);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS);
+        }
+
+        $queueForEvents
+            ->setParam('providerId', $provider->getId());
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($provider, Response::MODEL_PROVIDER);
+    });
+
+App::patch('/v1/messaging/providers/alibaba-cloud/:providerId')
+    ->desc('Update Alibaba Cloud provider')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'provider.update')
+    ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[providerId].update')
+    ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        group: 'providers',
+        name: 'updateAlibabaCloudProvider',
+        description: '/docs/references/messaging/update-alibaba-cloud-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER,
+            )
+        ]
+    ))
+    ->param('providerId', '', new UID(), 'Provider ID.')
+    ->param('name', null, new Nullable(new Text(128)), 'Provider name.', true)
+    ->param('accessKeyId', null, new Nullable(new Text(0)), 'Alibaba Cloud Access Key ID.', true)
+    ->param('accessKeySecret', null, new Nullable(new Text(0)), 'Alibaba Cloud Access Key Secret.', true)
+    ->param('signName', null, new Nullable(new Text(0)), 'Alibaba Cloud Sign Name.', true)
+    ->param('templateCode', null, new Nullable(new Text(0)), 'Alibaba Cloud Template Code.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->inject('queueForEvents')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $providerId, ?string $name, ?string $accessKeyId, ?string $accessKeySecret, ?string $signName, ?string $templateCode, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+        $provider = $dbForProject->getDocument('providers', $providerId);
+
+        if ($provider->isEmpty() || $provider->getAttribute('provider') !== 'alibaba-cloud') {
+            throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        }
+
+        if (!\is_null($name)) {
+            $provider->setAttribute('name', $name);
+        }
+
+        $credentials = $provider->getAttribute('credentials');
+
+        if (!\is_null($accessKeyId)) {
+            $credentials['accessKeyId'] = $accessKeyId;
+        }
+
+        if (!\is_null($accessKeySecret)) {
+            $credentials['accessKeySecret'] = $accessKeySecret;
+        }
+
+        if (!\is_null($signName)) {
+            $credentials['signName'] = $signName;
+        }
+
+        if (!\is_null($templateCode)) {
+            $credentials['templateCode'] = $templateCode;
+        }
+
+        $provider->setAttribute('credentials', $credentials);
+
+        if (!\is_null($enabled)) {
+            $provider->setAttribute('enabled', $enabled);
+        }
+
+        $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
+
+        $queueForEvents
+            ->setParam('providerId', $provider->getId());
+
+        $response
+            ->dynamic($provider, Response::MODEL_PROVIDER);
+    });
+
 App::get('/v1/messaging/messages')
     ->desc('List messages')
     ->groups(['api', 'messaging'])
