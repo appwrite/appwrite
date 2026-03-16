@@ -1261,6 +1261,7 @@ trait UsersBase
 
         $this->assertEquals($user['headers']['status-code'], 200);
         $this->assertArrayHasKey('$id', $user['body']);
+        $this->assertEquals($data['userId'], $user['body']['$id']);
         $this->assertArrayHasKey('prefs', $user['body']);
         $this->assertEquals($user['body']['prefs']['funcKey1'], 'funcValue1');
         $this->assertEquals($user['body']['prefs']['funcKey2'], 'funcValue2');
