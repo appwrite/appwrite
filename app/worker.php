@@ -112,7 +112,7 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
     if (\in_array($dsn->getHost(), $sharedTables)) {
         $database
             ->setSharedTables(true)
-            ->setTenant((int) $project->getSequence())
+            ->setTenant($project->getSequence())
             ->setNamespace($dsn->getParam('namespace'));
     } else {
         $database
@@ -152,7 +152,7 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
             if (\in_array($dsn->getHost(), $sharedTables)) {
                 $database
                     ->setSharedTables(true)
-                    ->setTenant((int) $project->getSequence())
+                    ->setTenant($project->getSequence())
                     ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $database
@@ -174,7 +174,7 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
         if (\in_array($dsn->getHost(), $sharedTables)) {
             $database
                 ->setSharedTables(true)
-                ->setTenant((int) $project->getSequence())
+                ->setTenant($project->getSequence())
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
             $database
@@ -196,9 +196,8 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache, Authoriza
     $database = null;
 
     return function (?Document $project = null) use ($pools, $cache, $database, $authorization) {
-        if ($database !== null && $project !== null && ! $project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant((int) $project->getSequence());
-
+        if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
+            $database->setTenant($project->getSequence());
             return $database;
         }
 
@@ -213,9 +212,8 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache, Authoriza
             ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER)
             ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES_WORKER);
 
-        // set tenant
-        if ($project !== null && ! $project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant((int) $project->getSequence());
+        if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
+            $database->setTenant($project->getSequence());
         }
 
         return $database;
