@@ -299,7 +299,14 @@ class Client
         $responseHeaders['status-code'] = $responseStatus;
 
         if ($responseStatus === 500) {
-            echo 'Server error(' . $method . ': ' . $path . '. Params: ' . json_encode($params) . '): ' . json_encode($responseBody) . '\n';
+            $errorPrefix = 'Server error(' . $method . ': ' . $path . '. Params: ' . json_encode($params) . '): ';
+            if (str_contains($responseType, 'text/html')) {
+                preg_match('/<title[^>]*>(.*?)<\/title>/si', is_string($responseBody) ? $responseBody : '', $matches);
+                $title = strip_tags($matches[1] ?? 'HTML response received');
+                echo $errorPrefix . '[HTML response] ' . $title . '\n';
+            } else {
+                echo $errorPrefix . json_encode($responseBody) . '\n';
+            }
         }
 
         return [
