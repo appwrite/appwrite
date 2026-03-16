@@ -455,9 +455,19 @@ export function useResumeProject(projectId: string | undefined) {
       }
     },
     onSuccess: () => {
-      if (projectId) {
-        queryClient.invalidateQueries({ queryKey: ['project', projectId] })
-      }
+      if (!projectId) return
+      queryClient.invalidateQueries({ queryKey: ['project', projectId] })
+      // Invalidate all project-scoped queries so the next page load refetches fresh data
+      // and we avoid HTTP errors from stale project-scoped API state after resume
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const k = query.queryKey
+          return (
+            (k[0] === 'project' && k[1] === projectId) ||
+            (k[1] === 'project' && k[2] === projectId)
+          )
+        },
+      })
     },
   })
 }

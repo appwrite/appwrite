@@ -90,3 +90,37 @@ export function getStripeAppearance(theme: string | undefined): {
 export function getStripeAppearanceFromTheme(theme: string | undefined) {
   return getStripeAppearance(theme)
 }
+
+/**
+ * Redirect to Stripe to confirm payment (e.g. 3DS). Call this when the API
+ * returns clientSecret indicating payment authentication is required.
+ *
+ * @param config - clientSecret, paymentMethodId, returnUrl
+ */
+export async function confirmPayment(config: {
+  clientSecret: string
+  paymentMethodId: string
+  returnUrl: string
+  publishableKey?: string
+}): Promise<void> {
+  const envKey =
+    typeof import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY === 'string'
+      ? import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
+      : undefined
+  const stripe = await getStripeInstance(
+    config.publishableKey ??
+      (typeof window !== 'undefined'
+        ? (window as Window & { __STRIPE_PUBLISHABLE_KEY__?: string })
+            .__STRIPE_PUBLISHABLE_KEY__ ?? envKey
+        : envKey),
+  )
+  if (!stripe) throw new Error('Stripe not available')
+  const { error } = await stripe.confirmPayment({
+    clientSecret: config.clientSecret,
+    confirmParams: {
+      return_url: config.returnUrl,
+      payment_method: config.paymentMethodId,
+    },
+  })
+  if (error) throw new Error(error.message ?? 'Payment confirmation failed')
+}

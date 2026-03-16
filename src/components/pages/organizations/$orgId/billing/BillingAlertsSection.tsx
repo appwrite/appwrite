@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Bell, Plus, Trash2 } from 'lucide-react'
+import { Bell, Plus, Trash2, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
   Select,
   SelectContent,
@@ -116,9 +117,12 @@ export function BillingAlertsSection({ orgId }: BillingAlertsSectionProps) {
           </h3>
         </div>
         <div className="border-t border-border px-6 py-4">
-          <p className="text-[13px] text-muted-foreground">
-            Enable budget cap to configure billing alerts.
-          </p>
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="text-[13px]">
+              Enable budget cap to configure billing alerts.
+            </AlertDescription>
+          </Alert>
         </div>
       </div>
     )

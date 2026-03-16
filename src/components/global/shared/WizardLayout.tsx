@@ -140,7 +140,7 @@ export function WizardLayout({
 
   /**
    * Handle ESC key to close wizard
-   * Only closes wizard if no Popover/Command is open
+   * Only closes wizard if no Popover/Command/Dialog is open
    */
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -149,15 +149,25 @@ export function WizardLayout({
         const target = event.target as HTMLElement
         const isInPopover = target.closest('[data-slot="popover-content"]')
         const isInCommand = target.closest('[data-slot="command"]')
+        const isInDialog = target.closest('[data-slot="dialog-content"]')
 
-        // Also check if any Popover is currently open (Radix UI sets data-state="open")
+        // Also check if any Popover or Dialog is currently open (Radix UI sets data-state="open")
         const hasOpenPopover = document.querySelector(
           '[data-slot="popover-content"][data-state="open"]',
         )
+        const hasOpenDialog = document.querySelector(
+          '[data-slot="dialog-overlay"][data-state="open"]',
+        )
 
-        // If ESC is pressed within a Popover/Command or if a Popover is open,
-        // let it handle the event (it will close the Popover, not the wizard)
-        if (isInPopover || isInCommand || hasOpenPopover) {
+        // If ESC is pressed within or if a Popover/Command/Dialog is open,
+        // let it handle the event (it will close that layer, not the wizard)
+        if (
+          isInPopover ||
+          isInCommand ||
+          isInDialog ||
+          hasOpenPopover ||
+          hasOpenDialog
+        ) {
           return
         }
 

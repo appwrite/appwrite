@@ -57,3 +57,15 @@ export const SMALL_PAGE_SIZE = 10
  * Default page size for very small lists (e.g., backup archives)
  */
 export const TINY_PAGE_SIZE = 6
+
+/**
+ * Default page size for billing plan summary project breakdown.
+ * When an org has many projects, the breakdown is paginated via getAggregation(limit, offset).
+ */
+export const DEFAULT_BILLING_PROJECTS_LIMIT = 10
+
+/**
+ * Max projects to fetch for billing aggregation when not using pagination (e.g. change-plan flow).
+ * Used so project breakdown pagination works without relying on API total.
+ */
+export const BILLING_BREAKDOWN_FETCH_LIMIT = 100

@@ -474,6 +474,8 @@ export function OrgOverview({
   const activeProjectsPage = displayedPage
   const [requestedMembershipsPage, setRequestedMembershipsPage] = useState(1)
   const [displayedMembershipsPage, setDisplayedMembershipsPage] = useState(1)
+  const [membershipsPageSize, setMembershipsPageSize] =
+    useState(DEFAULT_PAGE_SIZE)
   const [membershipsSearchQuery, setMembershipsSearchQuery] = useState('')
   const [settingsNavSearch, setSettingsNavSearch] = useState('')
 
@@ -997,7 +999,7 @@ export function OrgOverview({
     useOrganizationMemberships(
       orgId,
       requestedMembershipsPage - 1,
-      DEFAULT_PAGE_SIZE,
+      membershipsPageSize,
       membershipsSearchQuery,
       undefined,
       { placeholderData: keepPreviousData },
@@ -1012,7 +1014,7 @@ export function OrgOverview({
   } = useOrganizationMemberships(
     orgId,
     displayedMembershipsPage - 1,
-    DEFAULT_PAGE_SIZE,
+    membershipsPageSize,
     membershipsSearchQuery,
     displayedMembershipsPage === 1 && !membershipsSearchQuery
       ? initialData?.membershipsData
@@ -2612,15 +2614,20 @@ export function OrgOverview({
                                     </Table>
                                   </div>
 
-                                  {membershipsTotal > DEFAULT_PAGE_SIZE && (
+                                  {membershipsTotal > 0 && (
                                     <Pagination
                                       currentPage={displayedMembershipsPage}
                                       totalItems={membershipsTotal}
-                                      pageSize={DEFAULT_PAGE_SIZE}
+                                      pageSize={membershipsPageSize}
+                                      pageSizeOptions={[10, 25, 50, 100]}
                                       onPageChange={(page: number) =>
                                         setRequestedMembershipsPage(page)
                                       }
-                                      onPageSizeChange={() => {}}
+                                      onPageSizeChange={(size) => {
+                                        setMembershipsPageSize(size)
+                                        setRequestedMembershipsPage(1)
+                                        setDisplayedMembershipsPage(1)
+                                      }}
                                       itemLabel="members"
                                     />
                                   )}

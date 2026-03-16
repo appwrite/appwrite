@@ -25,7 +25,12 @@ export function PausedProjectCurtain({
     try {
       await resumeMutation.mutateAsync()
       toast.success('Project resumed successfully')
-      // Project query is invalidated by the mutation; layout will re-render and hide the curtain
+      // Mutation invalidates project and all project-scoped queries. Navigate to overview
+      // so the layout and overview load with fresh data and avoid HTTP errors.
+      navigate({
+        to: '/projects/$projectId',
+        params: { projectId },
+      })
     } catch (e) {
       const message =
         e && typeof e === 'object' && 'message' in e

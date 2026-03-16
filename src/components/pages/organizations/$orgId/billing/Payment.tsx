@@ -26,6 +26,7 @@ import {
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Stripe, StripeElements, PaymentElement } from '@stripe/stripe-js'
+import { cn } from '@/lib/utils'
 import {
   getStripeInstance,
   getStripeAppearanceFromTheme,
@@ -46,6 +47,8 @@ interface PaymentModalProps {
   organizationId?: string
   isBackup?: boolean
   onSuccess?: () => void
+  /** When true, dialog and overlay use z-[9999] so they appear above fullscreen wizards */
+  elevatedForWizard?: boolean
 }
 
 // US States list for state selector
@@ -108,6 +111,7 @@ export function PaymentModal({
   organizationId,
   isBackup = false,
   onSuccess,
+  elevatedForWizard = false,
 }: PaymentModalProps) {
   const [cardholderName, setCardholderName] = useState('')
   const [selectedState, setSelectedState] = useState<string>('')
@@ -427,7 +431,10 @@ export function PaymentModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md p-0">
+      <DialogContent
+        className={cn('sm:max-w-md p-0', elevatedForWizard && 'z-[9999]')}
+        overlayClassName={elevatedForWizard ? 'z-[9999]' : undefined}
+      >
         <DialogHeader className="px-6 pt-6 text-left">
           <DialogTitle>Add payment method</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">

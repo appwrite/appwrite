@@ -12,7 +12,10 @@ import {
   paymentMethodQueryOptions,
   billingAddressQueryOptions,
 } from '@/lib/react-query/hooks'
-import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import {
+  DEFAULT_PAGE_SIZE,
+  DEFAULT_BILLING_PROJECTS_LIMIT,
+} from '@/lib/react-query/hooks/constants'
 
 const INVOICES_PER_PAGE = 5
 const CREDITS_PER_PAGE = 5
@@ -53,12 +56,13 @@ export const Route = createFileRoute(
       queryClient.ensureQueryData(organizationQueryOptions(orgId)),
     ])
 
+    // Prefetch first page of project breakdown (server-side pagination)
     const aggregationPromise = orgData?.billingAggregationId
       ? queryClient.ensureQueryData(
           organizationBillingAggregationQueryOptions(
             orgId,
             orgData.billingAggregationId,
-            DEFAULT_PAGE_SIZE,
+            DEFAULT_BILLING_PROJECTS_LIMIT,
             0,
           ),
         )

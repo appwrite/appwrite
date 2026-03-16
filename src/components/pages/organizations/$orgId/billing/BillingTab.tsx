@@ -8,6 +8,7 @@ import { PaymentHistory } from './PaymentHistory'
 import { PaymentMethods } from './PaymentMethods'
 import { PaymentModal } from './Payment'
 import { BillingAddressSection } from './BillingAddressSection'
+import { AddCreditsModal } from './AddCreditsModal'
 import { TaxIdSection } from './TaxIdSection'
 import { BudgetCapSection } from './BudgetCapSection'
 import { BillingAlertsSection } from './BillingAlertsSection'
@@ -43,6 +44,7 @@ export function BillingTab() {
   // Payment modal state
   const [paymentModalOpen, setPaymentModalOpen] = useState(false)
   const [isBackupPaymentMethod, setIsBackupPaymentMethod] = useState(false)
+  const [addCreditsModalOpen, setAddCreditsModalOpen] = useState(false)
 
   // Fetch organization data for alerts
   const { organization, isLoading: orgLoading } = useOrganizationById(orgId)
@@ -126,16 +128,12 @@ export function BillingTab() {
     setPaymentModalOpen(false)
   }
 
-  const handleEditAddress = () => {
-    // TODO: Open edit address modal
-  }
-
   const handleEditTaxId = () => {
     // TODO: Open edit tax ID modal
   }
 
   const handleAddCredits = () => {
-    // TODO: Open add credits modal
+    setAddCreditsModalOpen(true)
   }
 
   return (
@@ -206,7 +204,7 @@ export function BillingTab() {
       />
 
       {/* Billing Address */}
-      <BillingAddressSection onEditAddress={handleEditAddress} orgId={orgId} />
+      <BillingAddressSection orgId={orgId} />
 
       {/* Tax ID */}
       <TaxIdSection onEditTaxId={handleEditTaxId} orgId={orgId} />
@@ -228,6 +226,17 @@ export function BillingTab() {
         isBackup={isBackupPaymentMethod}
         onSuccess={handlePaymentModalSuccess}
       />
+
+      {/* Add Credits Modal */}
+      {orgId && (
+        <AddCreditsModal
+          open={addCreditsModalOpen}
+          onOpenChange={setAddCreditsModalOpen}
+          organizationId={orgId}
+          organizationName={organization?.name}
+          onSuccess={() => setAddCreditsModalOpen(false)}
+        />
+      )}
     </div>
   )
 }

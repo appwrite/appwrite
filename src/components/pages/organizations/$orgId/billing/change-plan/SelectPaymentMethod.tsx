@@ -80,7 +80,7 @@ export function SelectPaymentMethod({
               <SelectTrigger id="payment-method" className="h-9 text-[13px]">
                 <SelectValue placeholder="Select payment method" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-[9999]">
                 {completedPaymentMethods.map((method) => (
                   <SelectItem key={method.$id} value={method.$id}>
                     {getDisplayText(method)}
