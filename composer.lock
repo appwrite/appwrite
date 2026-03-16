@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4ad48ed13cdfd66a288bb1529e731ead",
+    "content-hash": "71811c2ce39b1a4cc2e9c17d6e7ab07b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4517,16 +4517,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "dev-feat-platform-db-access",
+            "version": "dev-add-api-key-migration",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "12a4d8eb1d40e292c6592b917679a59b160b6374"
+                "reference": "86843355dced5e4ad763b19764a766a3821fb6b2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/12a4d8eb1d40e292c6592b917679a59b160b6374",
-                "reference": "12a4d8eb1d40e292c6592b917679a59b160b6374",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/86843355dced5e4ad763b19764a766a3821fb6b2",
+                "reference": "86843355dced5e4ad763b19764a766a3821fb6b2",
                 "shasum": ""
             },
             "require": {
@@ -4566,9 +4566,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/feat-platform-db-access"
+                "source": "https://github.com/utopia-php/migration/tree/add-api-key-migration"
             },
-            "time": "2026-03-14T22:37:16+00:00"
+            "time": "2026-03-14T23:10:53+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -9108,7 +9108,7 @@
     "aliases": [
         {
             "package": "utopia-php/migration",
-            "version": "dev-feat-platform-db-access",
+            "version": "dev-add-api-key-migration",
             "alias": "1.8.0",
             "alias_normalized": "1.8.0.0"
         }
