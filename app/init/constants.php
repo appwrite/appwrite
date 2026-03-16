@@ -240,6 +240,9 @@ const FUNCTION_ALLOWLIST_HEADERS_RESPONSE = ['content-type', 'content-length'];
 const MESSAGE_TYPE_EMAIL = 'email';
 const MESSAGE_TYPE_SMS = 'sms';
 const MESSAGE_TYPE_PUSH = 'push';
+const MESSAGE_TYPE_WHATSAPP = 'whatsapp';
+const MESSAGE_TYPE_VIBER = 'viber';
+const MESSAGE_TYPE_MMS = 'mms';
 // API key types
 const API_KEY_STANDARD = 'standard';
 const API_KEY_DYNAMIC = 'dynamic';
