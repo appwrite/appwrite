@@ -94,13 +94,16 @@
         "spomky-labs/otphp": "11.*",
         "webonyx/graphql-php": "14.11.*",
         "league/csv": "9.14.*",
-        "enshrined/svg-sanitize": "0.22.*",
-        "utopia-php/di": "0.1.0"
+        "enshrined/svg-sanitize": "0.22.*"
     },
     "repositories": [
         {
             "type": "vcs",
             "url": "https://github.com/utopia-php/database"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/http"
         }
     ],
     "require-dev": {
