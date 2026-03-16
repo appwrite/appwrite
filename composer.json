@@ -13,8 +13,11 @@
         "test": "vendor/bin/phpunit",
         "lint": "vendor/bin/pint --test --config pint.json",
         "format": "vendor/bin/pint --config pint.json",
+		"analyze": "./vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G",
         "bench": "vendor/bin/phpbench run --report=benchmark",
-        "analyze": "./vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G"
+        "check": "./vendor/bin/phpstan analyse -c phpstan.neon",
+        "installer:clean": "php src/Appwrite/Platform/Installer/Server.php --clean",
+        "installer:dev": "docker compose build && composer installer:clean && php src/Appwrite/Platform/Installer/Server.php --docker"
     },
     "autoload": {
         "psr-4": {
@@ -58,7 +61,7 @@
         "utopia-php/compression": "0.1.*",
         "utopia-php/config": "1.*",
         "utopia-php/console": "0.1.*",
-        "utopia-php/database": "5.*",
+        "utopia-php/database": "dev-fix-collection-recreate as 5.3.15",
         "utopia-php/detector": "0.2.*",
         "utopia-php/domains": "1.*",
         "utopia-php/emails": "0.6.*",
@@ -91,8 +94,15 @@
         "spomky-labs/otphp": "11.*",
         "webonyx/graphql-php": "14.11.*",
         "league/csv": "9.14.*",
-        "enshrined/svg-sanitize": "0.22.*"
+        "enshrined/svg-sanitize": "0.22.*",
+        "utopia-php/di": "0.1.0"
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/database"
+        }
+    ],
     "require-dev": {
         "ext-fileinfo": "*",
         "appwrite/sdk-generator": "*",
@@ -102,8 +112,7 @@
         "phpstan/phpstan": "^2.0",
         "textalk/websocket": "1.5.*",
         "czproject/git-php": "4.*",
-        "laravel/pint": "1.*",
-        "phpbench/phpbench": "1.*"
+        "laravel/pint": "1.*"
     },
     "provide": {
         "ext-phpiredis": "*"
