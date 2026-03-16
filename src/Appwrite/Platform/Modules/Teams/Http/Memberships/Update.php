@@ -83,8 +83,8 @@ class Update extends Action
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $isPrivilegedUser = $user::isPrivileged($authorization->getRoles());
-        $isAppUser = User::isApp($authorization->getRoles());
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
+        $isAppUser = $user->isApp($authorization->getRoles());
         $isOwner = $authorization->hasRole('team:' . $team->getId() . '/owner');
 
         if ($project->getId() === 'console') {

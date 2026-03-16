@@ -77,8 +77,8 @@ class Get extends Action
         ];
 
         $roles = $authorization->getRoles();
-        $isPrivilegedUser = $user::isPrivileged($roles);
-        $isAppUser = User::isApp($roles);
+        $isPrivilegedUser = $user->isPrivileged($roles);
+        $isAppUser = $user->isApp($roles);
 
         $membershipsPrivacy = array_map(function ($privacy) use ($isPrivilegedUser, $isAppUser) {
             return $privacy || $isPrivilegedUser || $isAppUser;

@@ -649,7 +649,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         if (
             array_key_exists('realtime', $project->getAttribute('apis', []))
             && !$project->getAttribute('apis', [])['realtime']
-            && !($user::isPrivileged($authorization->getRoles()) || User::isApp($authorization->getRoles()))
+            && !($user->isPrivileged($authorization->getRoles()) || $user->isApp($authorization->getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }

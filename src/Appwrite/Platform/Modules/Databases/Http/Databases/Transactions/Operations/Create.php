@@ -75,8 +75,8 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Operations array cannot be empty');
         }
 
-        $isAPIKey = User::isApp($authorization->getRoles());
-        $isPrivilegedUser = $user::isPrivileged($authorization->getRoles());
+        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         // API keys and admins can read any transaction, regular users need permissions
         $transaction = ($isAPIKey || $isPrivilegedUser)

@@ -505,9 +505,9 @@ class Response extends SwooleResponse
 
             if ($rule['sensitive']) {
                 $roles = $this->authorization->getRoles();
-                $userClass = $this->user !== null ? $this->user::class : DBUser::class;
-                $isPrivilegedUser = $userClass::isPrivileged($roles);
-                $isAppUser = DBUser::isApp($roles);
+                $user = $this->user ?? new DBUser();
+                $isPrivilegedUser = $user->isPrivileged($roles);
+                $isAppUser = $user->isApp($roles);
 
                 if ((!$isPrivilegedUser && !$isAppUser) && !self::$showSensitive) {
                     $data->setAttribute($key, '');

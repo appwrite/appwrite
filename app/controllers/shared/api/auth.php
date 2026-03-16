@@ -51,8 +51,8 @@ Http::init()
 
         $route = $utopia->match($request);
 
-        $isPrivilegedUser = $user::isPrivileged($authorization->getRoles());
-        $isAppUser = User::isApp($authorization->getRoles());
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
+        $isAppUser = $user->isApp($authorization->getRoles());
 
         if ($isAppUser || $isPrivilegedUser) { // Skip limits for app and console devs
             return;
