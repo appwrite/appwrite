@@ -13,11 +13,11 @@
         "test": "vendor/bin/phpunit",
         "lint": "vendor/bin/pint --test --config pint.json",
         "format": "vendor/bin/pint --config pint.json",
+		"analyze": "./vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G"
         "bench": "vendor/bin/phpbench run --report=benchmark",
         "check": "./vendor/bin/phpstan analyse -c phpstan.neon",
         "installer:clean": "php src/Appwrite/Platform/Installer/Server.php --clean",
-        "installer:dev": "docker compose build && composer installer:clean && php src/Appwrite/Platform/Installer/Server.php --docker",
-        "installer:dev-upgrade": "docker compose build && php src/Appwrite/Platform/Installer/Server.php --docker --upgrade"
+        "installer:dev": "docker compose build && composer installer:clean && php src/Appwrite/Platform/Installer/Server.php --docker"
     },
     "autoload": {
         "psr-4": {
@@ -104,11 +104,10 @@
         "brianium/paratest": "7.*",
         "phpunit/phpunit": "12.*",
         "swoole/ide-helper": "6.*",
-        "phpstan/phpstan": "1.12.*",
+        "phpstan/phpstan": "^2.0",
         "textalk/websocket": "1.5.*",
         "czproject/git-php": "4.*",
-        "laravel/pint": "1.*",
-        "phpbench/phpbench": "1.*"
+        "laravel/pint": "1.*"
     },
     "provide": {
         "ext-phpiredis": "*"
