@@ -103,7 +103,7 @@ class Delete extends Action
         TransactionState $transactionState,
         array $plan,
         Authorization $authorization,
-        Document $user
+        User $user
     ): void {
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 

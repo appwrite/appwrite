@@ -73,7 +73,7 @@ class XList extends Base
         Response $response,
         Database $dbForProject,
         Authorization $authorization,
-        Document $user
+        User $user
     ) {
         $function = $authorization->skip(fn () => $dbForProject->getDocument('functions', $functionId));
 

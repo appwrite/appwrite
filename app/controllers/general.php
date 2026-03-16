@@ -1272,8 +1272,9 @@ Http::error()
         if (!$publish && $project->getId() !== 'console') {
             $userClass = DBUser::class;
             try {
-                $user = $utopia->getResource('user');
-                $userClass = $user::class;
+                /** @var DBUser $errorUser */
+                $errorUser = $utopia->getResource('user');
+                $userClass = $errorUser::class;
             } catch (\Throwable) {
                 // User resource may not be available in error context
             }

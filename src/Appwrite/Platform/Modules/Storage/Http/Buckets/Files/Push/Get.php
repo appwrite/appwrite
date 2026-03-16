@@ -68,7 +68,7 @@ class Get extends Action
         string $mode,
         Device $deviceForFiles,
         Authorization $authorization,
-        Document $user
+        User $user
     ) {
         $decoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
 

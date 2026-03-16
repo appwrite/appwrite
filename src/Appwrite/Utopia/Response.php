@@ -675,14 +675,14 @@ class Response extends SwooleResponse
     }
 
     private ?Authorization $authorization = null;
-    private ?Document $user = null;
+    private ?DBUser $user = null;
 
     public function setAuthorization(Authorization $authorization): void
     {
         $this->authorization = $authorization;
     }
 
-    public function setUser(Document $user): void
+    public function setUser(DBUser $user): void
     {
         $this->user = $user;
     }

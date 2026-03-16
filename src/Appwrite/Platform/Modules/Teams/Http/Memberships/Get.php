@@ -56,7 +56,7 @@ class Get extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $membershipId, Response $response, Document $project, Database $dbForProject, Authorization $authorization, Document $user)
+    public function action(string $teamId, string $membershipId, Response $response, Document $project, Database $dbForProject, Authorization $authorization, User $user)
     {
         $team = $dbForProject->getDocument('teams', $teamId);
 

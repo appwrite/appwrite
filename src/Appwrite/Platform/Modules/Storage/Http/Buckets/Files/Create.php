@@ -103,7 +103,7 @@ class Create extends Action
         Request $request,
         Response $response,
         Database $dbForProject,
-        Document $user,
+        User $user,
         Event $queueForEvents,
         string $mode,
         Device $deviceForFiles,

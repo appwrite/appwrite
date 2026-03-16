@@ -78,7 +78,7 @@ class Update extends Action
         Database $dbForProject,
         Event $queueForEvents,
         Authorization $authorization,
-        Document $user
+        User $user
     ) {
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 

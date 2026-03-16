@@ -69,7 +69,7 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $transactionId, array $operations, UtopiaResponse $response, Database $dbForProject, TransactionState $transactionState, array $plan, Authorization $authorization, Document $user): void
+    public function action(string $transactionId, array $operations, UtopiaResponse $response, Database $dbForProject, TransactionState $transactionState, array $plan, Authorization $authorization, User $user): void
     {
         if (empty($operations)) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Operations array cannot be empty');

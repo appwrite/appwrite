@@ -12,7 +12,7 @@ use Utopia\Platform\Action as UtopiaAction;
 
 class Action extends UtopiaAction
 {
-    protected function getFileAndBucket(Database $dbForProject, Authorization $authorization, Document $user, string $bucketId, string $fileId): array
+    protected function getFileAndBucket(Database $dbForProject, Authorization $authorization, User $user, string $bucketId, string $fileId): array
     {
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 

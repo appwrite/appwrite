@@ -80,7 +80,7 @@ class Delete extends Action
         Device $deviceForFiles,
         DeleteEvent $queueForDeletes,
         Authorization $authorization,
-        Document $user
+        User $user
     ) {
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 

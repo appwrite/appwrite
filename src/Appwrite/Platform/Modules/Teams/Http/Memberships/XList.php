@@ -65,7 +65,7 @@ class XList extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, array $queries, string $search, bool $includeTotal, Response $response, Document $project, Database $dbForProject, Authorization $authorization, Document $user)
+    public function action(string $teamId, array $queries, string $search, bool $includeTotal, Response $response, Document $project, Database $dbForProject, Authorization $authorization, User $user)
     {
         $team = $dbForProject->getDocument('teams', $teamId);
 

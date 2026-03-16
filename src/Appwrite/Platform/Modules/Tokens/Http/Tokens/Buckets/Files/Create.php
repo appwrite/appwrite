@@ -8,6 +8,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Database\Database;
@@ -71,7 +72,7 @@ class Create extends Action
         ->callback($this->action(...));
     }
 
-    public function action(string $bucketId, string $fileId, ?string $expire, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $bucketId, string $fileId, ?string $expire, Response $response, User $user, Database $dbForProject, Event $queueForEvents, Authorization $authorization): void
     {
         /**
          * @var Document $bucket

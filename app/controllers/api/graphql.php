@@ -30,7 +30,7 @@ Http::init()
     ->inject('project')
     ->inject('user')
     ->inject('authorization')
-    ->action(function (Document $project, Document $user, Authorization $authorization) {
+    ->action(function (Document $project, User $user, Authorization $authorization) {
         if (
             array_key_exists('graphql', $project->getAttribute('apis', []))
             && !$project->getAttribute('apis', [])['graphql']

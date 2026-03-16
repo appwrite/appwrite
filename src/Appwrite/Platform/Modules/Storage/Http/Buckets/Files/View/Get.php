@@ -86,7 +86,7 @@ class Get extends Action
         Document $resourceToken,
         Device $deviceForFiles,
         Authorization $authorization,
-        Document $user
+        User $user
     ) {
         /* @type Document $bucket */
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));

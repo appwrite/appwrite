@@ -76,7 +76,7 @@ class XList extends Action
         Database $dbForProject,
         string $mode,
         Authorization $authorization,
-        Document $user
+        User $user
     ) {
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 

@@ -38,7 +38,7 @@ Http::init()
     ->inject('geodb')
     ->inject('user')
     ->inject('authorization')
-    ->action(function (Http $utopia, Request $request, Document $project, Reader $geodb, Document $user, Authorization $authorization) {
+    ->action(function (Http $utopia, Request $request, Document $project, Reader $geodb, User $user, Authorization $authorization) {
         $denylist = System::getEnv('_APP_CONSOLE_COUNTRIES_DENYLIST', '');
         if (!empty($denylist && $project->getId() === 'console')) {
             $countries = explode(',', $denylist);

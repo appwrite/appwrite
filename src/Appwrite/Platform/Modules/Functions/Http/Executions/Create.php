@@ -119,7 +119,7 @@ class Create extends Base
         Document $project,
         Database $dbForProject,
         Database $dbForPlatform,
-        Document $user,
+        User $user,
         Event $queueForEvents,
         Context $usage,
         Func $queueForFunctions,

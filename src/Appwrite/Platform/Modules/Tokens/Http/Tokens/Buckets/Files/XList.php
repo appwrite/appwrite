@@ -8,6 +8,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\FileTokens;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -63,7 +64,7 @@ class XList extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $bucketId, string $fileId, array $queries, bool $includeTotal, Response $response, Document $user, Database $dbForProject, Authorization $authorization)
+    public function action(string $bucketId, string $fileId, array $queries, bool $includeTotal, Response $response, User $user, Database $dbForProject, Authorization $authorization)
     {
         ['bucket' => $bucket, 'file' => $file] = $this->getFileAndBucket($dbForProject, $authorization, $user, $bucketId, $fileId);
 

@@ -119,7 +119,7 @@ class Get extends Action
         Device $deviceForLocal,
         Document $project,
         Authorization $authorization,
-        Document $user
+        User $user
     ) {
 
         if (!\extension_loaded('imagick')) {
