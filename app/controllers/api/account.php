@@ -245,7 +245,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         TOKEN_TYPE_INVITE => SESSION_PROVIDER_EMAIL,
         TOKEN_TYPE_MAGIC_URL => SESSION_PROVIDER_MAGIC_URL,
         TOKEN_TYPE_PHONE => SESSION_PROVIDER_PHONE,
-        TOKEN_TYPE_OAUTH2 => SESSION_PROVIDER_OAUTH2,
+        TOKEN_TYPE_OAUTH2 => $verifiedToken->getAttribute('provider', SESSION_PROVIDER_OAUTH2),
         default => SESSION_PROVIDER_TOKEN,
     };
     $session = new Document(array_merge(
@@ -1878,6 +1878,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getSequence(),
                 'type' => TOKEN_TYPE_OAUTH2,
+                'provider' => $provider,
                 'secret' => $proofForTokenOAuth2->hash($secret), // One way hash encryption to protect DB leak
                 'expire' => $expire,
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
