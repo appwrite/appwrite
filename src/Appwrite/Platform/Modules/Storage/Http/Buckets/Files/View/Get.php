@@ -71,6 +71,7 @@ class Get extends Action
             ->inject('resourceToken')
             ->inject('deviceForFiles')
             ->inject('authorization')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -84,13 +85,14 @@ class Get extends Action
         string $mode,
         Document $resourceToken,
         Device $deviceForFiles,
-        Authorization $authorization
+        Authorization $authorization,
+        Document $user
     ) {
         /* @type Document $bucket */
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         $isAPIKey = User::isApp($authorization->getRoles());
-        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
+        $isPrivilegedUser = $user::isPrivileged($authorization->getRoles());
 
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);

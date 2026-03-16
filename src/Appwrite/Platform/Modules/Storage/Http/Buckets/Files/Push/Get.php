@@ -52,6 +52,7 @@ class Get extends Action
             ->inject('mode')
             ->inject('deviceForFiles')
             ->inject('authorization')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -66,7 +67,8 @@ class Get extends Action
         Document $project,
         string $mode,
         Device $deviceForFiles,
-        Authorization $authorization
+        Authorization $authorization,
+        Document $user
     ) {
         $decoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
 
@@ -89,7 +91,7 @@ class Get extends Action
         $dbForProject = $isInternal ? $dbForPlatform : $dbForProject;
 
         $isAPIKey = User::isApp($authorization->getRoles());
-        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
+        $isPrivilegedUser = $user::isPrivileged($authorization->getRoles());
 
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {

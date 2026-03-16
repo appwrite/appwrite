@@ -64,19 +64,20 @@ class Create extends Action
         ->param('fileId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'File unique ID.', false, ['dbForProject'])
         ->param('expire', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Token expiry date', true)
         ->inject('response')
+        ->inject('user')
         ->inject('dbForProject')
         ->inject('queueForEvents')
         ->inject('authorization')
         ->callback($this->action(...));
     }
 
-    public function action(string $bucketId, string $fileId, ?string $expire, Response $response, Database $dbForProject, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $bucketId, string $fileId, ?string $expire, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Authorization $authorization): void
     {
         /**
          * @var Document $bucket
          * @var Document $file
          */
-        ['bucket' => $bucket, 'file' => $file] = $this->getFileAndBucket($dbForProject, $authorization, $bucketId, $fileId);
+        ['bucket' => $bucket, 'file' => $file] = $this->getFileAndBucket($dbForProject, $authorization, $user, $bucketId, $fileId);
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
         $bucketPermission =  $authorization->isValid(new Input(Database::PERMISSION_UPDATE, $bucket->getUpdate()));

@@ -505,7 +505,8 @@ class Response extends SwooleResponse
 
             if ($rule['sensitive']) {
                 $roles = $this->authorization->getRoles();
-                $isPrivilegedUser = DBUser::isPrivileged($roles);
+                $userClass = $this->user !== null ? $this->user::class : DBUser::class;
+                $isPrivilegedUser = $userClass::isPrivileged($roles);
                 $isAppUser = DBUser::isApp($roles);
 
                 if ((!$isPrivilegedUser && !$isAppUser) && !self::$showSensitive) {
@@ -674,9 +675,15 @@ class Response extends SwooleResponse
     }
 
     private ?Authorization $authorization = null;
+    private ?Document $user = null;
 
     public function setAuthorization(Authorization $authorization): void
     {
         $this->authorization = $authorization;
+    }
+
+    public function setUser(Document $user): void
+    {
+        $this->user = $user;
     }
 }

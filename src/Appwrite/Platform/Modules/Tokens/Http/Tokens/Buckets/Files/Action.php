@@ -5,18 +5,19 @@ namespace Appwrite\Platform\Modules\Tokens\Http\Tokens\Buckets\Files;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Documents\User;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Platform\Action as UtopiaAction;
 
 class Action extends UtopiaAction
 {
-    protected function getFileAndBucket(Database $dbForProject, Authorization $authorization, string $bucketId, string $fileId): array
+    protected function getFileAndBucket(Database $dbForProject, Authorization $authorization, Document $user, string $bucketId, string $fileId): array
     {
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         $isAPIKey = User::isApp($authorization->getRoles());
-        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
+        $isPrivilegedUser = $user::isPrivileged($authorization->getRoles());
 
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);

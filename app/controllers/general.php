@@ -1270,7 +1270,14 @@ Http::error()
          * If not a publishable error, track usage stats. Publishable errors are >= 500 or those explicitly marked as publish=true in errors.php
          */
         if (!$publish && $project->getId() !== 'console') {
-            if (!DBUser::isPrivileged($authorization->getRoles())) {
+            $userClass = DBUser::class;
+            try {
+                $user = $utopia->getResource('user');
+                $userClass = $user::class;
+            } catch (\Throwable) {
+                // User resource may not be available in error context
+            }
+            if (!$userClass::isPrivileged($authorization->getRoles())) {
                 $bus->dispatch(new RequestCompleted(
                     project: $project->getArrayCopy(),
                     request: $request,
