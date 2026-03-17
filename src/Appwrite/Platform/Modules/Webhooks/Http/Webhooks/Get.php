@@ -63,8 +63,9 @@ class Get extends Base
         Database $dbForPlatform,
         Authorization $authorization
     ) {
-        $webhook = $authorization->skip(fn () => $dbForPlatform->getDocument('webhooks', $webhookId, [
-            Query::equal('projectInternalId', [$project->getSequence()])
+        $webhook = $authorization->skip(fn () => $dbForPlatform->findOne('webhooks', [
+            Query::equal('$id', [$webhookId]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
         ]));
 
         if ($webhook->isEmpty()) {

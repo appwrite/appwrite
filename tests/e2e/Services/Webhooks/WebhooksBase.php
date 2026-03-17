@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Webhooks;
 
 use Appwrite\Tests\Async;
 use Tests\E2E\Client;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
@@ -1337,7 +1338,7 @@ trait WebhooksBase
         // Get next page using cursor
         $page2 = $this->listWebhooks([
             Query::limit(1)->toString(),
-            Query::cursorAfter($cursorId)->toString(),
+            Query::cursorAfter(new Document(['$id' => $cursorId]))->toString(),
         ], true);
 
         $this->assertEquals(200, $page2['headers']['status-code']);
@@ -1362,7 +1363,7 @@ trait WebhooksBase
     public function testListWebhooksInvalidCursor(): void
     {
         $list = $this->listWebhooks([
-            Query::cursorAfter('non-existent-id')->toString(),
+            Query::cursorAfter(new Document(['$id' => 'non-existent-id']))->toString(),
         ], true);
 
         $this->assertEquals(400, $list['headers']['status-code']);
@@ -1532,37 +1533,59 @@ trait WebhooksBase
 
     protected function createWebhook(string $webhookId, string $name, array $events, ?bool $enabled, ?string $url, ?bool $security, ?string $httpUser, ?string $httpPass): mixed
     {
-        $webhook = $this->client->call(Client::METHOD_POST, '/webhooks', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        $params = [
             'webhookId' => $webhookId,
             'name' => $name,
             'events' => $events,
-            'enabled' => $enabled,
             'url' => $url,
-            'security' => $security,
-            'httpUser' => $httpUser,
-            'httpPass' => $httpPass,
-        ]);
+        ];
+
+        if ($enabled !== null) {
+            $params['enabled'] = $enabled;
+        }
+        if ($security !== null) {
+            $params['security'] = $security;
+        }
+        if ($httpUser !== null) {
+            $params['httpUser'] = $httpUser;
+        }
+        if ($httpPass !== null) {
+            $params['httpPass'] = $httpPass;
+        }
+
+        $webhook = $this->client->call(Client::METHOD_POST, '/webhooks', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
 
         return $webhook;
     }
 
     protected function updateWebhook(string $webhookId, string $name, array $events, ?bool $enabled, ?string $url, ?bool $security, ?string $httpUser, ?string $httpPass): mixed
     {
+        $params = [
+            'name' => $name,
+            'events' => $events,
+            'url' => $url,
+        ];
+
+        if ($enabled !== null) {
+            $params['enabled'] = $enabled;
+        }
+        if ($security !== null) {
+            $params['security'] = $security;
+        }
+        if ($httpUser !== null) {
+            $params['httpUser'] = $httpUser;
+        }
+        if ($httpPass !== null) {
+            $params['httpPass'] = $httpPass;
+        }
+
         $webhook = $this->client->call(Client::METHOD_PUT, '/webhooks/' . $webhookId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => $name,
-            'events' => $events,
-            'enabled' => $enabled,
-            'url' => $url,
-            'security' => $security,
-            'httpUser' => $httpUser,
-            'httpPass' => $httpPass,
-        ]);
+        ], $this->getHeaders()), $params);
 
         return $webhook;
     }

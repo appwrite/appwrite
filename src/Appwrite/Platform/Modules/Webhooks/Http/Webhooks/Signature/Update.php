@@ -68,7 +68,8 @@ class Update extends Base
         Database $dbForPlatform,
         Authorization $authorization
     ) {
-        $webhook = $authorization->skip(fn () => $dbForPlatform->getDocument('webhooks', $webhookId, [
+        $webhook = $authorization->skip(fn () => $dbForPlatform->findOne('webhooks', [
+            Query::equal('$id', [$webhookId]),
             Query::equal('projectInternalId', [$project->getSequence()]),
         ]));
 
@@ -80,7 +81,7 @@ class Update extends Base
             'signatureKey' => \bin2hex(\random_bytes(64)),
         ]);
 
-        $authorization->skip(fn () => $dbForPlatform->updateDocument('webhooks', $webhook->getId(), $updates));
+        $webhook = $authorization->skip(fn () => $dbForPlatform->updateDocument('webhooks', $webhook->getId(), $updates));
 
         $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
 

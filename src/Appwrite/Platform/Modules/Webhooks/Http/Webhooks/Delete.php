@@ -54,7 +54,7 @@ class Delete extends Base
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('webhookId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Webhook ID.', false, ['$dbForPlatform'])
+            ->param('webhookId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Webhook ID.', false, ['dbForPlatform'])
             ->inject('project')
             ->inject('response')
             ->inject('dbForPlatform')
@@ -71,7 +71,8 @@ class Delete extends Base
         Event $queueForEvents,
         Authorization $authorization
     ) {
-        $webhook = $authorization->skip(fn () => $dbForPlatform->getDocument('webhooks', $webhookId, [
+        $webhook = $authorization->skip(fn () => $dbForPlatform->findOne('webhooks', [
+            Query::equal('$id', [$webhookId]),
             Query::equal('projectInternalId', [$project->getSequence()]),
         ]));
 

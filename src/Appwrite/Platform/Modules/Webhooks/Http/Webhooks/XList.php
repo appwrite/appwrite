@@ -90,7 +90,8 @@ class XList extends Base
             }
 
             $webhookId = $cursor->getValue();
-            $cursorDocument = $authorization->skip(fn () => $dbForPlatform->getDocument('webhooks', $webhookId, [
+            $cursorDocument = $authorization->skip(fn () => $dbForPlatform->findOne('webhooks', [
+                Query::equal('$id', [$webhookId]),
                 Query::equal('projectInternalId', [$project->getSequence()]),
             ]));
 
