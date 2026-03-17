@@ -68,9 +68,8 @@ class Create extends CreateDocumentAction
                     ],
                     contentType: ContentType::JSON,
                     parameters: [
-                        new Parameter('databaseId', optional: false),
-                        new Parameter('collectionId', optional: false),
-                        new Parameter('documents', optional: false),
+                        new Parameter('texts', optional: false),
+                        new Parameter('model', optional: true),
                     ]
                 )
             ])
