@@ -613,8 +613,10 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
     Console::info("Connection open (user: {$connection})");
 
+    $pools = $register->get('pools');
+    $container->set('pools', fn () => $pools);
+
     $connectionContainer = new Container($container);
-    $connectionContainer->set('pools', fn () => $register->get('pools'));
     registerRequestResources($connectionContainer);
     $adapter = new \Utopia\Http\Adapter\FPM\Server($connectionContainer);
     $app = new Http($adapter, 'UTC');
