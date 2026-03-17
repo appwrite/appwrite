@@ -175,7 +175,5 @@ class User extends Document
         }
 
         return false;
-
-        return false;
     }
 }

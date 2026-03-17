@@ -6319,13 +6319,13 @@ parameters:
 			path: app/realtime.php
 
 		-
-			message: '#^Parameter \#1 \$roles of static method Appwrite\\Utopia\\Database\\Documents\\User\:\:isApp\(\) expects array\<string\>, mixed given\.$#'
+			message: '#^Parameter \#1 \$roles of method Appwrite\\Utopia\\Database\\Documents\\User\:\:isApp\(\) expects array\<string\>, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/realtime.php
 
 		-
-			message: '#^Parameter \#1 \$roles of static method Appwrite\\Utopia\\Database\\Documents\\User\:\:isPrivileged\(\) expects array\<string\>, mixed given\.$#'
+			message: '#^Parameter \#1 \$roles of method Appwrite\\Utopia\\Database\\Documents\\User\:\:isPrivileged\(\) expects array\<string\>, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/realtime.php
@@ -36172,12 +36172,6 @@ parameters:
 			message: '#^Parameter \#2 \$hash of method Utopia\\Auth\\Proof\:\:verify\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 2
-			path: src/Appwrite/Utopia/Database/Documents/User.php
-
-		-
-			message: '#^Unreachable statement \- code above always terminates\.$#'
-			identifier: deadCode.unreachable
-			count: 1
 			path: src/Appwrite/Utopia/Database/Documents/User.php
 
 		-
