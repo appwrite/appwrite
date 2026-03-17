@@ -6,7 +6,6 @@ require_once __DIR__ . '/init/span.php';
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Constant;
-use Swoole\Http\Server;
 use Swoole\Process;
 use Swoole\Table;
 use Swoole\Timer;
@@ -25,7 +24,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
-use Utopia\Http\Adapter\Swoole\HttpServer;
+use Utopia\Http\Adapter\Swoole\Server;
 use Utopia\Http\Files;
 use Utopia\Http\Http;
 use Utopia\Logger\Log;
@@ -54,7 +53,7 @@ $container->set('certifiedDomains', fn () => $certifiedDomains);
 $payloadSize = 12 * (1024 * 1024); // 12MB - adding slight buffer for headers and other data that might be sent with the payload - update later with valid testing
 $totalWorkers = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
 
-$swooleAdapter = new HttpServer(
+$swooleAdapter = new Server(
     host: "0.0.0.0",
     port: System::getEnv('PORT', 80),
     settings: [
@@ -67,7 +66,6 @@ $swooleAdapter = new HttpServer(
         Constant::OPTION_TASK_WORKER_NUM => 1, // required for the task to fetch domains background
     ],
     container: $container,
-    coroutines: true,
 );
 
 $container->set('container', fn () => fn () => $swooleAdapter->getContainer());
@@ -288,7 +286,7 @@ function createDatabase(Http $app, string $resourceKey, string $dbName, array $c
     Span::current()?->finish();
 }
 
-$http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $totalWorkers, $register, $swooleAdapter) {
+$http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorkers, $register, $swooleAdapter) {
     global $container;
     $pools = $register->get('pools');
     /** @var Group $pools */
