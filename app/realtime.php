@@ -35,6 +35,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DSN\DSN;
+use Utopia\Http\Adapter\FPM\Server as HttpServer;
 use Utopia\Http\Http;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
@@ -618,7 +619,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
     $connectionContainer = new Container($container);
     registerRequestResources($connectionContainer);
-    $adapter = new \Utopia\Http\Adapter\FPM\Server($connectionContainer);
+
+    $adapter = new HttpServer($connectionContainer);
     $app = new Http($adapter, 'UTC');
     $app->setResource('request', fn () => $request);
     $app->setResource('response', fn () => $response);
