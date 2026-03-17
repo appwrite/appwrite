@@ -1074,7 +1074,12 @@ export async function createProjectTableColumn(
       return await projectSdk.tablesDB.createRelationshipColumn({
         databaseId,
         tableId,
-        ...columnData,
+        relatedTableId: data.relatedTableId as string,
+        type: data.relationshipType as any,
+        twoWay: data.twoWay as boolean,
+        key,
+        twoWayKey: data.twoWayKey as string,
+        onDelete: data.onDelete as any,
       })
     case 'point':
       return await projectSdk.tablesDB.createPointColumn({
@@ -1277,7 +1282,7 @@ export async function updateProjectTableColumn(
         databaseId,
         tableId,
         key: columnKey,
-        onDelete: columnData.onDelete,
+        onDelete: data.onDelete as any,
         newKey,
       })
     case 'point':

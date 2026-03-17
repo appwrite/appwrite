@@ -1012,7 +1012,7 @@ export function ColumnDrawer({
                         <span className="text-destructive">*</span>
                       </Label>
                       <Select
-                        value={formData.onDelete || 'setNull'}
+                        value={formData.onDelete || ''}
                         onValueChange={(value) => {
                           setFormData((prev) => ({
                             ...prev,
@@ -1027,7 +1027,7 @@ export function ColumnDrawer({
                             errors.onDelete ? 'border-destructive' : ''
                           }
                         >
-                          <SelectValue />
+                          <SelectValue placeholder="Select a deletion method" />
                         </SelectTrigger>
                         <SelectContent>
                           {ON_DELETE_OPTIONS.map((option) => (
