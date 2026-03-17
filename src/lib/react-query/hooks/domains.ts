@@ -493,6 +493,7 @@ export function organizationDomainsQueryOptions(
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    placeholderData: keepPreviousData, // Keep showing previous list until new data is ready (page size/page/search change)
     // Don't keep disabled queries in cache
     gcTime: organizationId ? 5 * 60 * 1000 : 0,
   })

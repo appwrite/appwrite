@@ -869,7 +869,7 @@ export function CreateSiteView() {
               currentPage={templateDisplayedPage}
               totalItems={templatesTotal}
               pageSize={templatePageSize}
-              pageSizeOptions={[9, 18, 36]}
+              pageSizeOptions={[12, 18, 36, 72]}
               onPageChange={setTemplateRequestedPage}
               onPageSizeChange={(size) => {
                 setTemplatePageSize(size)

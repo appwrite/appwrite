@@ -31,6 +31,7 @@ import {
   keepPreviousData,
 } from '@tanstack/react-query'
 import { getPlanBadgeColor } from '@/lib/utils/plan-badge'
+import { truncateMiddle } from '@/lib/utils'
 import { CreateProjectDialog } from '@/components/pages/organizations/$orgId/overview/CreateProjectDialog'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 
@@ -403,11 +404,23 @@ export function ProjectSelector({
             size="sm"
           />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-medium text-foreground">
-              {currentProject?.name || selectedProject.name}
+            <p
+              className="truncate text-[13px] font-medium text-foreground"
+              title={currentProject?.name || selectedProject.name}
+            >
+              {truncateMiddle(
+                currentProject?.name || selectedProject.name,
+                30,
+              )}
             </p>
-            <p className="truncate text-[11px] text-muted-foreground">
-              {currentProjectTeam?.name || selectedTeam.name}
+            <p
+              className="truncate text-[11px] text-muted-foreground"
+              title={currentProjectTeam?.name || selectedTeam.name}
+            >
+              {truncateMiddle(
+                currentProjectTeam?.name || selectedTeam.name,
+                30,
+              )}
             </p>
           </div>
           {isCloud && currentProjectOrg && (
@@ -489,9 +502,19 @@ export function ProjectSelector({
               size="sm"
             />
             <div className="min-w-0 flex items-center gap-2">
-              <p className="truncate text-[13px] font-medium text-foreground">
-                {currentProjectTeam?.name || selectedTeam.name} /{' '}
-                {currentProject?.name || selectedProject.name}
+              <p
+                className="truncate text-[13px] font-medium text-foreground"
+                title={`${currentProjectTeam?.name || selectedTeam.name} / ${currentProject?.name || selectedProject.name}`}
+              >
+                {truncateMiddle(
+                  currentProjectTeam?.name || selectedTeam.name,
+                  20,
+                )}{' '}
+                /{' '}
+                {truncateMiddle(
+                  currentProject?.name || selectedProject.name,
+                  22,
+                )}
               </p>
               {isCloud && currentProjectOrg && (
                 <span

@@ -64,7 +64,7 @@ import {
   buildPinnedProjectIdsPrefs,
   MAX_PINNED_PROJECTS,
 } from '@/lib/team-prefs-keys'
-import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
   canSeeProjects,
   canShowOrgDomainsTab,
@@ -467,15 +467,39 @@ export function OrgOverview({
     setCommandCenterOpen(true)
   })
 
+  // Projects list: prefer URL search so page size change and page are shareable
+  const projectsPageFromSearch =
+    typeof search === 'object' && search != null && 'projectsPage' in search
+      ? (typeof (search as { projectsPage?: number }).projectsPage === 'number'
+          ? (search as { projectsPage: number }).projectsPage
+          : Number((search as { projectsPage?: unknown }).projectsPage))
+      : undefined
+  const projectsLimitFromSearch =
+    typeof search === 'object' && search != null && 'projectsLimit' in search
+      ? (typeof (search as { projectsLimit?: number }).projectsLimit === 'number'
+          ? (search as { projectsLimit: number }).projectsLimit
+          : Number((search as { projectsLimit?: unknown }).projectsLimit))
+      : undefined
+  const urlProjectsPage =
+    Number.isInteger(projectsPageFromSearch) &&
+    (projectsPageFromSearch ?? 0) >= 1
+      ? projectsPageFromSearch!
+      : 1
+  const urlProjectsLimit =
+    Number.isInteger(projectsLimitFromSearch) &&
+    (projectsLimitFromSearch ?? 0) >= 1
+      ? projectsLimitFromSearch!
+      : GRID_DEFAULT_PAGE_SIZE
+
   // Pagination state (1-indexed for projects, like storage view)
-  const [requestedPage, setRequestedPage] = useState(1)
-  const [displayedPage, setDisplayedPage] = useState(1)
+  const [requestedPage, setRequestedPage] = useState(urlProjectsPage)
+  const [displayedPage, setDisplayedPage] = useState(urlProjectsPage)
   // Alias for projects current page (used in pagination UI; matches memberships pattern)
   const activeProjectsPage = displayedPage
   const [requestedMembershipsPage, setRequestedMembershipsPage] = useState(1)
   const [displayedMembershipsPage, setDisplayedMembershipsPage] = useState(1)
   const [membershipsPageSize, setMembershipsPageSize] =
-    useState(DEFAULT_PAGE_SIZE)
+    useState(GRID_DEFAULT_PAGE_SIZE)
   const [membershipsSearchQuery, setMembershipsSearchQuery] = useState('')
   const [settingsNavSearch, setSettingsNavSearch] = useState('')
 
@@ -710,6 +734,12 @@ export function OrgOverview({
     placeholderData: keepPreviousData,
   })
 
+  // Sync page state from URL when it changes (e.g. browser back or initial load)
+  useEffect(() => {
+    setRequestedPage((p) => (p === urlProjectsPage ? p : urlProjectsPage))
+    setDisplayedPage((p) => (p === urlProjectsPage ? p : urlProjectsPage))
+  }, [urlProjectsPage])
+
   // Fetch data for the requested page (triggers load when user changes page); exclude pinned
   const {
     data: requestedProjectsData,
@@ -720,7 +750,7 @@ export function OrgOverview({
     ...activeProjectsQueryOptions(
       orgTeamId,
       requestedPage - 1,
-      DEFAULT_PAGE_SIZE,
+      urlProjectsLimit,
       searchQuery,
       pinnedIds,
     ),
@@ -733,7 +763,7 @@ export function OrgOverview({
       ...activeProjectsQueryOptions(
         orgTeamId,
         displayedPage - 1,
-        DEFAULT_PAGE_SIZE,
+        urlProjectsLimit,
         searchQuery,
         pinnedIds,
       ),
@@ -763,7 +793,7 @@ export function OrgOverview({
 
   // Total count without search, without exclude - for plan limit checking (all org projects)
   const { data: totalProjectsData } = useQuery(
-    activeProjectsQueryOptions(orgTeamId, 0, DEFAULT_PAGE_SIZE, ''),
+    activeProjectsQueryOptions(orgTeamId, 0, urlProjectsLimit, ''),
   )
 
   // Reset pagination when search query changes
@@ -1873,15 +1903,41 @@ export function OrgOverview({
                               )}
 
                             {/* Pagination for Active Projects */}
-                            {activeProjectsTotal > DEFAULT_PAGE_SIZE && (
+                            {activeProjectsTotal > urlProjectsLimit && (
                               <Pagination
                                 currentPage={activeProjectsPage}
                                 totalItems={activeProjectsTotal}
-                                pageSize={DEFAULT_PAGE_SIZE}
-                                onPageChange={(page: number) =>
+                                pageSize={urlProjectsLimit}
+                                pageSizeOptions={[12, 18, 36, 72]}
+                                onPageChange={(page: number) => {
                                   setRequestedPage(page)
-                                }
-                                onPageSizeChange={() => {}} // Page size is fixed
+                                  navigate({
+                                    to: location.pathname,
+                                    search: (prev: Record<string, unknown>) => ({
+                                      ...(typeof prev === 'object' && prev
+                                        ? prev
+                                        : {}),
+                                      projectsPage: page,
+                                      projectsLimit: urlProjectsLimit,
+                                    }),
+                                    replace: true,
+                                  })
+                                }}
+                                onPageSizeChange={(size: number) => {
+                                  setRequestedPage(1)
+                                  setDisplayedPage(1)
+                                  navigate({
+                                    to: location.pathname,
+                                    search: (prev: Record<string, unknown>) => ({
+                                      ...(typeof prev === 'object' && prev
+                                        ? prev
+                                        : {}),
+                                      projectsPage: 1,
+                                      projectsLimit: size,
+                                    }),
+                                    replace: true,
+                                  })
+                                }}
                                 itemLabel="projects"
                               />
                             )}
@@ -2619,7 +2675,7 @@ export function OrgOverview({
                                       currentPage={displayedMembershipsPage}
                                       totalItems={membershipsTotal}
                                       pageSize={membershipsPageSize}
-                                      pageSizeOptions={[10, 25, 50, 100]}
+                                      pageSizeOptions={[12, 18, 36, 72]}
                                       onPageChange={(page: number) =>
                                         setRequestedMembershipsPage(page)
                                       }

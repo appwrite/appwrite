@@ -299,7 +299,7 @@ export function activeProjectsQueryOptions(
       ? excludeProjectIds!.slice().sort().join(',')
       : ''
   return queryOptions({
-    queryKey: ['projects', 'active', page, search, orgId, excludeKey],
+    queryKey: ['projects', 'active', orgId, page, limit, search, excludeKey],
     queryFn: () =>
       fetchActiveProjects(orgId!, page, limit, search, excludeProjectIds),
     enabled: !!orgId,
@@ -308,6 +308,7 @@ export function activeProjectsQueryOptions(
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    placeholderData: keepPreviousData, // Keep showing previous list until new data is ready (page size/page change)
     gcTime: orgId ? 5 * 60 * 1000 : 0,
   })
 }

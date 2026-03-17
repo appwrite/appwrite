@@ -7,18 +7,38 @@ import {
   pinnedProjectsQueryOptions,
 } from '@/lib/react-query/hooks'
 import { parsePinnedProjectIds } from '@/lib/team-prefs-keys'
-import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { pageTitle } from '@/lib/utils/page-title'
+
+function parseProjectsPage(url: URL): number {
+  const p = url.searchParams.get('projectsPage')
+  if (p == null || p === '') return 1
+  const n = Number(p)
+  return Number.isInteger(n) && n >= 1 ? n : 1
+}
+
+function parseProjectsLimit(url: URL): number {
+  const p = url.searchParams.get('projectsLimit')
+  if (p == null || p === '') return GRID_DEFAULT_PAGE_SIZE
+  const n = Number(p)
+  return Number.isInteger(n) && n >= 1 ? n : GRID_DEFAULT_PAGE_SIZE
+}
 
 export const Route = createFileRoute('/_public/organizations/$orgId/')({
   head: () => ({ meta: [{ title: pageTitle('Organization') }] }),
-  loader: async ({ params, context }) => {
+  loader: async ({ params, context, location }) => {
     if (typeof window === 'undefined') {
       return
     }
 
     const { orgId } = params
     const { queryClient } = context
+    const url = new URL(
+      location.pathname + (location.search ?? ''),
+      'http://localhost',
+    )
+    const projectsPage = parseProjectsPage(url)
+    const projectsLimit = parseProjectsLimit(url)
 
     await queryClient.ensureQueryData(organizationsQueryOptions())
 
@@ -34,14 +54,14 @@ export const Route = createFileRoute('/_public/organizations/$orgId/')({
         queryClient.ensureQueryData(
           activeProjectsQueryOptions(
             orgId,
-            0,
-            DEFAULT_PAGE_SIZE,
+            projectsPage - 1,
+            projectsLimit,
             '',
             pinnedIds,
           ),
         ),
         queryClient.ensureQueryData(
-          organizationMembershipsQueryOptions(orgId, 0, DEFAULT_PAGE_SIZE, ''),
+          organizationMembershipsQueryOptions(orgId, 0, GRID_DEFAULT_PAGE_SIZE, ''),
         ),
         ...(pinnedIds.length > 0
           ? [

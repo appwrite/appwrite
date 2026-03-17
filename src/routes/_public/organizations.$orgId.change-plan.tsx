@@ -11,7 +11,7 @@ import {
   organizationProjectsQueryOptions,
 } from '@/lib/react-query/hooks'
 import { ChangePlanWizardFullscreen } from '@/components/pages/organizations/$orgId/billing/ChangePlanWizardFullscreen'
-import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 
 export const Route = createFileRoute(
   '/_public/organizations/$orgId/change-plan',
@@ -53,7 +53,7 @@ export const Route = createFileRoute(
 
       // Organization memberships - CRITICAL for members count
       queryClient.ensureQueryData(
-        organizationMembershipsQueryOptions(orgId, 0, DEFAULT_PAGE_SIZE, ''),
+        organizationMembershipsQueryOptions(orgId, 0, GRID_DEFAULT_PAGE_SIZE, ''),
       ),
 
       // Billing plans - CRITICAL for plan selection UI

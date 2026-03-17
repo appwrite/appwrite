@@ -22,6 +22,12 @@ export const LONG_STALE_TIME = 5 * 60 * 1000 // 5 minutes
 export const DEFAULT_PAGE_SIZE = 10
 
 /**
+ * Default page size for lists shown in a 3-column grid (buckets, sites, functions, etc.).
+ * Divisible by 3 so each row is full. Must match between route loader and View.
+ */
+export const GRID_DEFAULT_PAGE_SIZE = 12
+
+/**
  * Default page size for database rows (table-style data)
  */
 export const ROWS_DEFAULT_PAGE_SIZE = 25

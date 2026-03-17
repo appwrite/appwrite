@@ -84,6 +84,7 @@ import {
 import {
   COLUMNS_INDEXES_DEFAULT_PAGE_SIZE,
   DEFAULT_PAGE_SIZE,
+  GRID_DEFAULT_PAGE_SIZE,
   ROWS_DEFAULT_PAGE_SIZE,
 } from '@/lib/react-query/hooks/constants'
 import { ColumnDrawer, ColumnFormData, type ColumnType } from './tables/Column'
@@ -309,10 +310,31 @@ export function View() {
       location.pathname + location.search,
       window.location.origin,
     )
+    // Prefer router search state (updated by navigate()) over URL so page size change takes effect even if URL lags
+    const pageFromSearch =
+      search.page != null
+        ? (typeof search.page === 'number'
+            ? search.page
+            : Number(search.page))
+        : undefined
+    const limitFromSearch =
+      search.limit != null
+        ? (typeof search.limit === 'number'
+            ? search.limit
+            : Number(search.limit))
+        : undefined
+    const page =
+      Number.isInteger(pageFromSearch) && (pageFromSearch ?? 0) >= 1
+        ? pageFromSearch!
+        : getPage(url, 1)
+    const limit =
+      Number.isInteger(limitFromSearch) && (limitFromSearch ?? 0) >= 1
+        ? limitFromSearch!
+        : getLimit(url, GRID_DEFAULT_PAGE_SIZE)
     return {
       search: getSearch(url) ?? search.search,
-      page: getPage(url, 1),
-      limit: getLimit(url, ROWS_DEFAULT_PAGE_SIZE),
+      page,
+      limit,
       filterMap: queryParamToMap(getQueryParam(url) ?? search.query ?? null),
     }
   }, [
@@ -326,7 +348,7 @@ export function View() {
   ])
 
   const urlPage = databaseListParams?.page ?? 1
-  const urlLimit = databaseListParams?.limit ?? ROWS_DEFAULT_PAGE_SIZE
+  const urlLimit = databaseListParams?.limit ?? GRID_DEFAULT_PAGE_SIZE
   const urlSearch = databaseListParams?.search
   const filterMap = databaseListParams?.filterMap ?? new Map()
   const filterQueries =
@@ -349,7 +371,7 @@ export function View() {
     return map.size > 0 ? Array.from(map.values()) : undefined
   }, [displayedFilterQueryString])
   const hasInitedDisplayedRef = useRef(false)
-  const [pageSize, setPageSize] = useState(ROWS_DEFAULT_PAGE_SIZE)
+  const [pageSize, setPageSize] = useState(GRID_DEFAULT_PAGE_SIZE)
   const [selectedDatabases, setSelectedDatabases] = useState<Set<string>>(
     new Set(),
   )
@@ -737,15 +759,19 @@ export function View() {
     navigate({
       to: '/projects/$projectId/databases/',
       params: { projectId: projectId! },
-      search: (prev: Record<string, unknown>) => ({
-        ...prev,
-        ...buildListSearchParams({
-          search: urlSearch,
-          query: filterQueryString || undefined,
-          page: 1,
-          limit: newPageSize,
-        }),
-      }),
+      search: (prev: Record<string, unknown>) => {
+        const next = {
+          ...prev,
+          ...buildListSearchParams({
+            search: urlSearch,
+            query: filterQueryString || undefined,
+            page: 1,
+            limit: newPageSize,
+          }),
+        }
+        delete next.page
+        return next
+      },
       replace: true,
     })
   }
@@ -1059,7 +1085,7 @@ export function View() {
                 currentPage={displayedPage}
                 totalItems={displayedDatabasesTotal ?? databasesTotal}
                 pageSize={pageSize}
-                pageSizeOptions={[10, 25, 50, 100]}
+                pageSizeOptions={[12, 18, 36, 72]}
                 onPageChange={handlePageChange}
                 onPageSizeChange={handlePageSizeChange}
                 itemLabel="databases"
@@ -1170,7 +1196,7 @@ export function View() {
                 currentPage={displayedPage}
                 totalItems={displayedDatabasesTotal ?? databasesTotal}
                 pageSize={pageSize}
-                pageSizeOptions={[10, 25, 50, 100]}
+                pageSizeOptions={[12, 18, 36, 72]}
                 onPageChange={handlePageChange}
                 onPageSizeChange={handlePageSizeChange}
                 itemLabel="databases"
@@ -1914,10 +1940,31 @@ export function TableView({
       parseSort(search?.sort as string | undefined) ??
       getSort(url) ??
       defaultSort
+    // Prefer router search state (updated by navigate()) over URL so page size change takes effect even if URL lags
+    const pageFromSearch =
+      search?.page != null
+        ? (typeof search.page === 'number'
+            ? search.page
+            : Number(search.page))
+        : undefined
+    const limitFromSearch =
+      search?.limit != null
+        ? (typeof search.limit === 'number'
+            ? search.limit
+            : Number(search.limit))
+        : undefined
+    const page =
+      Number.isInteger(pageFromSearch) && (pageFromSearch ?? 0) >= 1
+        ? pageFromSearch!
+        : getPage(url, 1)
+    const limit =
+      Number.isInteger(limitFromSearch) && (limitFromSearch ?? 0) >= 1
+        ? limitFromSearch!
+        : getLimit(url, ROWS_DEFAULT_PAGE_SIZE)
     return {
       search: getSearch(url) ?? (search?.search as string | undefined),
-      page: getPage(url, 1),
-      limit: getLimit(url, ROWS_DEFAULT_PAGE_SIZE),
+      page,
+      limit,
       filterMap: queryParamToMap(
         getQueryParam(url) ?? (search?.query as string | undefined) ?? null,
       ),
@@ -1976,6 +2023,7 @@ export function TableView({
               : undefined,
         })
         const next = { ...prev, ...built }
+        if (params.page === 1) delete next.page
         if (hasQueryKey && params.query === undefined) delete next.query
         if (hasSortKey && params.sort === undefined) delete next.sort
         return next
@@ -7810,7 +7858,9 @@ function ColumnsSpreadsheet({
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const location = useLocation()
-  const search = useSearch({ strict: false }) as { query?: string } | undefined
+  const search = useSearch({ strict: false }) as
+    | { query?: string; page?: number; limit?: number }
+    | undefined
   const columnsFilterMapFromUrl = useMemo(
     () => queryParamToMap(search?.query ?? null),
     [search?.query],
@@ -7826,11 +7876,29 @@ function ColumnsSpreadsheet({
       location.pathname + location.search,
       window.location.origin,
     )
-    return {
-      page: getPage(url, 1),
-      limit: getLimit(url, COLUMNS_INDEXES_DEFAULT_PAGE_SIZE),
-    }
-  }, [location.pathname, location.search])
+    // Prefer router search state over URL so page size change takes effect even if URL lags
+    const pageFromSearch =
+      search?.page != null
+        ? (typeof search.page === 'number'
+            ? search.page
+            : Number(search.page))
+        : undefined
+    const limitFromSearch =
+      search?.limit != null
+        ? (typeof search.limit === 'number'
+            ? search.limit
+            : Number(search.limit))
+        : undefined
+    const page =
+      Number.isInteger(pageFromSearch) && (pageFromSearch ?? 0) >= 1
+        ? pageFromSearch!
+        : getPage(url, 1)
+    const limit =
+      Number.isInteger(limitFromSearch) && (limitFromSearch ?? 0) >= 1
+        ? limitFromSearch!
+        : getLimit(url, COLUMNS_INDEXES_DEFAULT_PAGE_SIZE)
+    return { page, limit }
+  }, [location.pathname, location.search, search?.page, search?.limit])
   const columnsPage = columnsListParams.page
   const columnsLimit = columnsListParams.limit
   const columnsPageIndexed = Math.max(0, columnsPage - 1)
@@ -9202,7 +9270,9 @@ function IndexesSpreadsheet({
   const tableId = table.$id
   const navigate = useNavigate()
   const location = useLocation()
-  const search = useSearch({ strict: false }) as { query?: string } | undefined
+  const search = useSearch({ strict: false }) as
+    | { query?: string; page?: number; limit?: number }
+    | undefined
   const indexesFilterMapFromUrl = useMemo(
     () => queryParamToMap(search?.query ?? null),
     [search?.query],
@@ -9218,11 +9288,29 @@ function IndexesSpreadsheet({
       location.pathname + location.search,
       window.location.origin,
     )
-    return {
-      page: getPage(url, 1),
-      limit: getLimit(url, COLUMNS_INDEXES_DEFAULT_PAGE_SIZE),
-    }
-  }, [location.pathname, location.search])
+    // Prefer router search state over URL so page size change takes effect even if URL lags
+    const pageFromSearch =
+      search?.page != null
+        ? (typeof search.page === 'number'
+            ? search.page
+            : Number(search.page))
+        : undefined
+    const limitFromSearch =
+      search?.limit != null
+        ? (typeof search.limit === 'number'
+            ? search.limit
+            : Number(search.limit))
+        : undefined
+    const page =
+      Number.isInteger(pageFromSearch) && (pageFromSearch ?? 0) >= 1
+        ? pageFromSearch!
+        : getPage(url, 1)
+    const limit =
+      Number.isInteger(limitFromSearch) && (limitFromSearch ?? 0) >= 1
+        ? limitFromSearch!
+        : getLimit(url, COLUMNS_INDEXES_DEFAULT_PAGE_SIZE)
+    return { page, limit }
+  }, [location.pathname, location.search, search?.page, search?.limit])
   const indexesPage = indexesListParams.page
   const indexesLimit = indexesListParams.limit
   const indexesPageIndexed = Math.max(0, indexesPage - 1)

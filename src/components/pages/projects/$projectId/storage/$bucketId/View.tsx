@@ -59,7 +59,7 @@ import { BucketSecurity } from '../_components/BucketSecurity'
 import { useUploadQueue } from '@/lib/upload-queue/use-upload-queue'
 import type { Models } from '@appwrite.io/console'
 import { FileContextMenu } from '../_components/FileContextMenu'
-import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
   getSearch,
   getPage,
@@ -146,10 +146,31 @@ export function View() {
       window.location.origin,
     )
     const parsed = parseSort(search.sort) ?? getSort(url) ?? defaultFilesSort
+    // Prefer router search state (updated by navigate()) over URL so page size change takes effect even if URL lags
+    const pageFromSearch =
+      search.page != null
+        ? (typeof search.page === 'number'
+            ? search.page
+            : Number(search.page))
+        : undefined
+    const limitFromSearch =
+      search.limit != null
+        ? (typeof search.limit === 'number'
+            ? search.limit
+            : Number(search.limit))
+        : undefined
+    const page =
+      Number.isInteger(pageFromSearch) && (pageFromSearch ?? 0) >= 1
+        ? pageFromSearch!
+        : getPage(url, 1)
+    const limit =
+      Number.isInteger(limitFromSearch) && (limitFromSearch ?? 0) >= 1
+        ? limitFromSearch!
+        : getLimit(url, GRID_DEFAULT_PAGE_SIZE)
     return {
       search: getSearch(url) ?? search.search,
-      page: getPage(url, 1),
-      limit: getLimit(url, DEFAULT_PAGE_SIZE),
+      page,
+      limit,
       filterMap: queryParamToMap(getQueryParam(url) ?? search.query ?? null),
       sortBy: parsed.sortBy,
       sortOrder: parsed.sortOrder,
@@ -168,7 +189,7 @@ export function View() {
   ])
 
   const urlPage = filesListParams?.page ?? 1
-  const urlLimit = filesListParams?.limit ?? DEFAULT_PAGE_SIZE
+  const urlLimit = filesListParams?.limit ?? GRID_DEFAULT_PAGE_SIZE
   const urlSearch = filesListParams?.search
   const urlSortBy = filesListParams?.sortBy ?? FILES_DEFAULT_SORT_BY
   const urlSortOrder = filesListParams?.sortOrder ?? FILES_DEFAULT_SORT_ORDER
@@ -624,7 +645,7 @@ export function View() {
         next.limit = urlLimit
         if (!next.search) delete next.search
         if (page === 1) delete next.page
-        if (next.limit === DEFAULT_PAGE_SIZE) delete next.limit
+        if (next.limit === GRID_DEFAULT_PAGE_SIZE) delete next.limit
         return next
       },
       replace: true,
@@ -1076,7 +1097,7 @@ export function View() {
                       currentPage={displayedPage}
                       totalItems={filesTotal}
                       pageSize={urlLimit}
-                      pageSizeOptions={[10, 25, 50, 100]}
+                      pageSizeOptions={[12, 18, 36, 72]}
                       onPageChange={handlePageChange}
                       onPageSizeChange={handlePageSizeChange}
                       itemLabel="files"
@@ -1252,7 +1273,7 @@ export function View() {
                       currentPage={displayedPage}
                       totalItems={filesTotal}
                       pageSize={urlLimit}
-                      pageSizeOptions={[10, 25, 50, 100]}
+                      pageSizeOptions={[12, 18, 36, 72]}
                       onPageChange={handlePageChange}
                       onPageSizeChange={handlePageSizeChange}
                       itemLabel="files"

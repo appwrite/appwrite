@@ -930,11 +930,11 @@ export function View({ initialData }: ViewProps = {}) {
                 <div className="mb-4 rounded-lg border border-border bg-card/50">
                   <div className="grid grid-cols-2 gap-x-6 gap-y-3 px-4 py-3 sm:grid-cols-3 lg:grid-cols-6">
                     {/* Status */}
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-0.5">
                         Status
                       </p>
-                      <div className="flex items-center gap-1.5">
+                      <div className="min-h-[1.25rem] flex items-center gap-1.5">
                         {verificationStatus && (
                           <>
                             <code
@@ -950,7 +950,7 @@ export function View({ initialData }: ViewProps = {}) {
                             {!verificationStatus.isVerified && (
                               <button
                                 onClick={() => setRetryDialogOpen(true)}
-                                className="text-[11px] text-primary hover:text-primary/80 font-medium"
+                                className="text-[11px] text-primary hover:text-primary/80 font-medium shrink-0"
                               >
                                 Retry
                               </button>
@@ -961,53 +961,63 @@ export function View({ initialData }: ViewProps = {}) {
                     </div>
 
                     {/* Registrar */}
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-0.5">
                         Registrar
                       </p>
-                      <code className="text-[12px] font-mono text-foreground">
-                        3rd party
-                      </code>
+                      <div className="min-h-[1.25rem] flex items-center">
+                        <code className="text-[12px] font-mono text-foreground">
+                          3rd party
+                        </code>
+                      </div>
                     </div>
 
                     {/* Nameservers */}
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-0.5">
                         Nameservers
                       </p>
-                      <code className="text-[12px] font-mono text-foreground truncate block">
-                        {domain.nameservers || '—'}
-                      </code>
+                      <div className="min-h-[1.25rem] flex items-center min-w-0">
+                        <code className="text-[12px] font-mono text-foreground truncate">
+                          {domain.nameservers || '—'}
+                        </code>
+                      </div>
                     </div>
 
                     {/* Expiry date */}
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-0.5">
                         Expiry date
                       </p>
-                      <code className="text-[12px] font-mono text-foreground">
-                        —
-                      </code>
+                      <div className="min-h-[1.25rem] flex items-center">
+                        <code className="text-[12px] font-mono text-foreground">
+                          —
+                        </code>
+                      </div>
                     </div>
 
                     {/* Auto renewal */}
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-0.5">
                         Auto renewal
                       </p>
-                      <code className="text-[12px] font-mono text-foreground">
-                        —
-                      </code>
+                      <div className="min-h-[1.25rem] flex items-center">
+                        <code className="text-[12px] font-mono text-foreground">
+                          —
+                        </code>
+                      </div>
                     </div>
 
                     {/* Renewal price */}
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-0.5">
                         Renewal price
                       </p>
-                      <code className="text-[12px] font-mono text-foreground">
-                        —
-                      </code>
+                      <div className="min-h-[1.25rem] flex items-center">
+                        <code className="text-[12px] font-mono text-foreground">
+                          —
+                        </code>
+                      </div>
                     </div>
                   </div>
                 </div>

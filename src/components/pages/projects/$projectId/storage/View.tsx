@@ -12,7 +12,7 @@ import {
   BUCKETS_DEFAULT_SORT_BY,
   BUCKETS_DEFAULT_SORT_ORDER,
 } from '@/lib/react-query/hooks'
-import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { canCreateBucket } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { ServiceHeader } from '../shared/ServiceHeader'
@@ -101,10 +101,31 @@ export function View() {
       sortOrder: BUCKETS_DEFAULT_SORT_ORDER as 'asc' | 'desc',
     }
     const parsed = parseSort(search.sort) ?? getSort(url) ?? defaultSort
+    // Prefer router search state (updated by navigate()) over URL so page size change takes effect even if URL lags
+    const pageFromSearch =
+      search.page != null
+        ? (typeof search.page === 'number'
+            ? search.page
+            : Number(search.page))
+        : undefined
+    const limitFromSearch =
+      search.limit != null
+        ? (typeof search.limit === 'number'
+            ? search.limit
+            : Number(search.limit))
+        : undefined
+    const page =
+      Number.isInteger(pageFromSearch) && (pageFromSearch ?? 0) >= 1
+        ? pageFromSearch!
+        : getPage(url, 1)
+    const limit =
+      Number.isInteger(limitFromSearch) && (limitFromSearch ?? 0) >= 1
+        ? limitFromSearch!
+        : getLimit(url, GRID_DEFAULT_PAGE_SIZE)
     return {
       search: getSearch(url) ?? search.search,
-      page: getPage(url, 1),
-      limit: getLimit(url, DEFAULT_PAGE_SIZE),
+      page,
+      limit,
       filterMap: queryParamToMap(getQueryParam(url) ?? search.query ?? null),
       sortBy: parsed.sortBy,
       sortOrder: parsed.sortOrder,
@@ -121,7 +142,7 @@ export function View() {
   ])
 
   const urlPage = bucketListParams?.page ?? 1
-  const urlLimit = bucketListParams?.limit ?? DEFAULT_PAGE_SIZE
+  const urlLimit = bucketListParams?.limit ?? GRID_DEFAULT_PAGE_SIZE
   const urlSearch = bucketListParams?.search
   const urlSortBy = bucketListParams?.sortBy ?? BUCKETS_DEFAULT_SORT_BY
   const urlSortOrder = bucketListParams?.sortOrder ?? BUCKETS_DEFAULT_SORT_ORDER
@@ -311,8 +332,8 @@ export function View() {
 
   // Get total count from the first page query (no search/filters) - for limit checking
   const { data: totalBucketsData } = useQuery({
-    queryKey: ['buckets', 'project', projectId, 0, DEFAULT_PAGE_SIZE, ''],
-    queryFn: () => fetchProjectBuckets(projectId!, 0, DEFAULT_PAGE_SIZE, ''),
+    queryKey: ['buckets', 'project', projectId, 0, GRID_DEFAULT_PAGE_SIZE, ''],
+    queryFn: () => fetchProjectBuckets(projectId!, 0, GRID_DEFAULT_PAGE_SIZE, ''),
     enabled: !!projectId,
     staleTime: 30 * 1000, // 30 seconds
     refetchOnMount: false, // Data is fresh from route loader, no need to refetch
@@ -867,7 +888,7 @@ export function View() {
                 currentPage={displayedPage}
                 totalItems={displayedTotal ?? bucketsTotal}
                 pageSize={urlLimit}
-                pageSizeOptions={[10, 25, 50, 100]}
+                pageSizeOptions={[12, 18, 36, 72]}
                 onPageChange={handlePageChange}
                 onPageSizeChange={handlePageSizeChange}
                 itemLabel="buckets"
@@ -991,7 +1012,7 @@ export function View() {
                 currentPage={displayedPage}
                 totalItems={displayedTotal ?? bucketsTotal}
                 pageSize={urlLimit}
-                pageSizeOptions={[10, 25, 50, 100]}
+                pageSizeOptions={[12, 18, 36, 72]}
                 onPageChange={handlePageChange}
                 onPageSizeChange={handlePageSizeChange}
                 itemLabel="buckets"

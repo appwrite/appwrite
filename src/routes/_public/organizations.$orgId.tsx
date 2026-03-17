@@ -14,12 +14,14 @@ import {
   organizationMembershipsQueryOptions,
 } from '@/lib/react-query/hooks'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
-import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { z } from 'zod'
 
-const searchSchema = z.object({
-  createOrg: z.boolean().optional(),
-})
+const searchSchema = z
+  .object({
+    createOrg: z.boolean().optional(),
+  })
+  .passthrough()
 
 export const Route = createFileRoute('/_public/organizations/$orgId')({
   validateSearch: searchSchema,
@@ -49,13 +51,13 @@ export const Route = createFileRoute('/_public/organizations/$orgId')({
           queryClient.ensureQueryData(organizationPlanQueryOptions(orgId)),
           queryClient.ensureQueryData(organizationsQueryOptions()),
           queryClient.ensureQueryData(
-            activeProjectsQueryOptions(orgId, 0, DEFAULT_PAGE_SIZE, ''),
+            activeProjectsQueryOptions(orgId, 0, GRID_DEFAULT_PAGE_SIZE, ''),
           ),
           queryClient.ensureQueryData(
             organizationMembershipsQueryOptions(
               orgId,
               0,
-              DEFAULT_PAGE_SIZE,
+              GRID_DEFAULT_PAGE_SIZE,
               '',
             ),
           ),
@@ -78,7 +80,7 @@ export const Route = createFileRoute('/_public/organizations/$orgId')({
             organizationPlanQueryOptions(orgId).queryKey,
           ),
           membershipsData: queryClient.getQueryData(
-            organizationMembershipsQueryOptions(orgId, 0, DEFAULT_PAGE_SIZE, '')
+            organizationMembershipsQueryOptions(orgId, 0, GRID_DEFAULT_PAGE_SIZE, '')
               .queryKey,
           ),
           scopesData: getActiveProfileFeatures().orgRoles

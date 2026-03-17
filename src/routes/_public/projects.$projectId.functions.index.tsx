@@ -5,7 +5,7 @@ import {
   fetchProject,
   organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
-import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
   listSearchSchema,
   getSearch,
@@ -40,7 +40,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/functions/')(
       )
       const search = getSearch(url)
       const page = getPage(url, DEFAULT_PAGE)
-      const limit = getLimit(url, DEFAULT_PAGE_SIZE)
+      const limit = getLimit(url, GRID_DEFAULT_PAGE_SIZE)
       const queryParam = getQueryParam(url)
       const filterMap = queryParamToMap(queryParam)
       const filterQueries =

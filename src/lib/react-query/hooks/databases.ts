@@ -9,6 +9,7 @@ import {
   useMutation,
   useQueryClient,
   queryOptions,
+  keepPreviousData,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { Query, ID } from '@appwrite.io/console'
@@ -1502,6 +1503,7 @@ export function databasesQueryOptions(
     refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
     refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
     refetchOnReconnect: false, // Prevent refetch on network reconnect
+    placeholderData: keepPreviousData, // Keep showing previous list until new data is ready (page size/page/search change)
     // Don't keep disabled queries in cache
     gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
@@ -1552,6 +1554,7 @@ export function tablesQueryOptions(
     refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
     refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
     refetchOnReconnect: false, // Prevent refetch on network reconnect
+    placeholderData: keepPreviousData, // Keep showing previous list until new data is ready (page size/page/search change)
     // Don't keep disabled queries in cache
     gcTime: projectId && databaseId ? 5 * 60 * 1000 : 0,
   })
@@ -1607,6 +1610,7 @@ export function tableRowsQueryOptions(
     refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
     refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
     refetchOnReconnect: false, // Prevent refetch on network reconnect
+    placeholderData: keepPreviousData, // Keep showing previous list until new data is ready (page size/page/search change)
     // Don't keep disabled queries in cache
     gcTime: projectId && databaseId && tableId ? 5 * 60 * 1000 : 0,
   })
@@ -1679,6 +1683,7 @@ export function tableColumnsQueryOptions(
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    placeholderData: keepPreviousData, // Keep showing previous list until new data is ready (page size/page change)
     gcTime: projectId && databaseId && tableId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -1751,6 +1756,7 @@ export function tableIndexesQueryOptions(
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    placeholderData: keepPreviousData, // Keep showing previous list until new data is ready (page size/page change)
     gcTime: projectId && databaseId && tableId ? 5 * 60 * 1000 : 0,
   })
 }
