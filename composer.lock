@@ -4307,12 +4307,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "61d9d2cefc06e549c521f5798b20faabe9478b98"
+                "reference": "6d7f82e50f9517d8d13667edccdafbc3560447d0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/61d9d2cefc06e549c521f5798b20faabe9478b98",
-                "reference": "61d9d2cefc06e549c521f5798b20faabe9478b98",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/6d7f82e50f9517d8d13667edccdafbc3560447d0",
+                "reference": "6d7f82e50f9517d8d13667edccdafbc3560447d0",
                 "shasum": ""
             },
             "require": {
@@ -4353,7 +4353,7 @@
                 "issues": "https://github.com/utopia-php/http/issues",
                 "source": "https://github.com/utopia-php/http/tree/feat/coroutines-option"
             },
-            "time": "2026-03-16T18:01:51+00:00"
+            "time": "2026-03-17T04:12:13+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -6235,11 +6235,11 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "2.1.40",
+            "version": "2.1.41",
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/9b2c7aeb83a75d8680ea5e7c9b7fca88052b766b",
-                "reference": "9b2c7aeb83a75d8680ea5e7c9b7fca88052b766b",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/a2eae8f20856b3afe74bf1f9726ce8c11438e300",
+                "reference": "a2eae8f20856b3afe74bf1f9726ce8c11438e300",
                 "shasum": ""
             },
             "require": {
@@ -6284,7 +6284,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-02-23T15:04:35+00:00"
+            "time": "2026-03-16T18:24:10+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
