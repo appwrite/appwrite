@@ -1,12 +1,6 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Variable \$dbForPlatform might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: app/cli.php
-
-		-
 			message: '#^PHPDoc tag @var above a method has no effect\.$#'
 			identifier: varTag.misplaced
 			count: 1
@@ -85,6 +79,12 @@ parameters:
 			path: app/controllers/general.php
 
 		-
+			message: '#^Unknown parameter \$override in call to method Utopia\\Http\\Response\:\:addHeader\(\)\.$#'
+			identifier: argument.unknown
+			count: 1
+			path: app/controllers/general.php
+
+		-
 			message: '#^Variable \$body on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.variable
 			count: 1
@@ -127,9 +127,21 @@ parameters:
 			path: app/controllers/shared/api.php
 
 		-
-			message: '#^Variable \$database might not be defined\.$#'
-			identifier: variable.undefined
-			count: 4
+			message: '#^Anonymous function has an unused use \$register\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: app/http.php
+
+		-
+			message: '#^Call to an undefined method Utopia\\Http\\Adapter\\Swoole\\Server\:\:bind\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/http.php
+
+		-
+			message: '#^Call to an undefined method Utopia\\Http\\Adapter\\Swoole\\Server\:\:getWorkerStatus\(\)\.$#'
+			identifier: method.notFound
+			count: 3
 			path: app/http.php
 
 		-
@@ -178,7 +190,7 @@ parameters:
 			message: '#^Variable \$hostname on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.variable
 			count: 1
-			path: app/init/resources.php
+			path: app/init/resources/request.php
 
 		-
 			message: '#^Anonymous function has an unused use \$register\.$#'
@@ -331,6 +343,18 @@ parameters:
 			path: src/Appwrite/GraphQL/Resolvers.php
 
 		-
+			message: '#^Method Utopia\\Http\\Http\:\:execute\(\) invoked with 3 parameters, 2 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: src/Appwrite/GraphQL/Resolvers.php
+
+		-
+			message: '#^Method Utopia\\Http\\Http\:\:getResource\(\) invoked with 2 parameters, 1 required\.$#'
+			identifier: arguments.count
+			count: 8
+			path: src/Appwrite/GraphQL/Resolvers.php
+
+		-
 			message: '#^Variable \$request in PHPDoc tag @var does not exist\.$#'
 			identifier: varTag.variableNotFound
 			count: 1
@@ -479,6 +503,18 @@ parameters:
 			identifier: parameter.notFound
 			count: 1
 			path: src/Appwrite/Platform/Action.php
+
+		-
+			message: '#^Class Utopia\\Http\\Http constructor invoked with 1 parameter, 2 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: src/Appwrite/Platform/Installer/Server.php
+
+		-
+			message: '#^Static call to instance method Utopia\\Http\\Http\:\:setResource\(\)\.$#'
+			identifier: method.staticCall
+			count: 4
+			path: src/Appwrite/Platform/Installer/Server.php
 
 		-
 			message: '#^Variable \$output in empty\(\) always exists and is not falsy\.$#'
@@ -715,18 +751,6 @@ parameters:
 			path: src/Appwrite/Platform/Modules/Functions/Http/Functions/Update.php
 
 		-
-			message: '#^Undefined variable\: \$cpus$#'
-			identifier: variable.undefined
-			count: 3
-			path: src/Appwrite/Platform/Modules/Functions/Workers/Builds.php
-
-		-
-			message: '#^Undefined variable\: \$memory$#'
-			identifier: variable.undefined
-			count: 3
-			path: src/Appwrite/Platform/Modules/Functions/Workers/Builds.php
-
-		-
 			message: '#^Variable \$deployment might not be defined\.$#'
 			identifier: variable.undefined
 			count: 4
@@ -847,6 +871,12 @@ parameters:
 			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Authorize/External/Update.php
 
 		-
+			message: '#^Variable \$previewRuleId in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Authorize/External/Update.php
+
+		-
 			message: '#^Variable \$previewUrl in empty\(\) always exists and is not falsy\.$#'
 			identifier: empty.variable
 			count: 1
@@ -891,6 +921,12 @@ parameters:
 		-
 			message: '#^Variable \$logBase might not be defined\.$#'
 			identifier: variable.undefined
+			count: 1
+			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Events/Create.php
+
+		-
+			message: '#^Variable \$previewRuleId in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
 			count: 1
 			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Events/Create.php
 
