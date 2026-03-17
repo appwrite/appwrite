@@ -97,7 +97,7 @@ $container->set('platform', function () {
     return Config::getParam('platform', []);
 }, []);
 
-require_once __DIR__ . '/resources.request.php';
+require_once __DIR__ . '/resources/request.php';
 
 
 $container->set('store', function (): Store {
