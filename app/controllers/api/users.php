@@ -73,8 +73,12 @@ use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
 /** TODO: Remove function when we move to using utopia/platform */
-function createUser(Hash $hash, string $userId, ?string $email, ?string $password, ?string $phone, string $name, Document $project, Database $dbForProject, Hooks $hooks): Document
+function createUser(Hash $hash, string $userId, ?string $email, ?string $password, ?string $phone, ?string $name, Document $project, Database $dbForProject, Hooks $hooks): Document
 {
+    if (empty($name)) {
+        throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Name is required');
+    }
+
     $plaintextPassword = $password;
     $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
 
