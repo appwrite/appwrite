@@ -38,6 +38,7 @@ import {
   ChevronRight,
   Pin,
   PinOff,
+  PauseCircle,
 } from '@/lib/icons'
 import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
 import { RegionFlag } from '@/components/global/shared/RegionFlag'
@@ -201,12 +202,20 @@ const ROLE_OPTIONS = [
 function ProjectCardFooter({
   platformsCount,
   apiKeysCount,
+  paused,
 }: {
   platformsCount: number
   apiKeysCount: number
+  paused?: boolean
 }) {
   return (
-    <div className="mt-3.5 flex items-center gap-2 border-t border-border/60 pt-3.5">
+    <div className="mt-3.5 flex flex-wrap items-center gap-2 border-t border-border/60 pt-3.5">
+      {paused && (
+        <Badge variant="warning" className="gap-1.5 text-[10px] shrink-0">
+          <PauseCircle className="h-3 w-3" />
+          Paused
+        </Badge>
+      )}
       {/* Platforms Label */}
       {platformsCount > 0 ? (
         <Badge variant="info" className="gap-1.5 text-[10px] shrink-0">
@@ -266,7 +275,7 @@ export function OrgOverview({
   const search = useSearch({ strict: false })
   const matches = useMatches()
   const [searchQuery, setSearchQuery] = useState('')
-  const { features } = useConsoleProfile()
+  const { features, isCloud } = useConsoleProfile()
   const { access } = useOrganizationScopes(orgId, initialData?.scopesData)
   const { showSuccessTeamCard: debugShowSuccessTeamCard } = useDebugOverrides()
 
@@ -465,6 +474,8 @@ export function OrgOverview({
   const activeProjectsPage = displayedPage
   const [requestedMembershipsPage, setRequestedMembershipsPage] = useState(1)
   const [displayedMembershipsPage, setDisplayedMembershipsPage] = useState(1)
+  const [membershipsPageSize, setMembershipsPageSize] =
+    useState(DEFAULT_PAGE_SIZE)
   const [membershipsSearchQuery, setMembershipsSearchQuery] = useState('')
   const [settingsNavSearch, setSettingsNavSearch] = useState('')
 
@@ -835,6 +846,7 @@ export function OrgOverview({
           createdAt: project.$createdAt || new Date().toISOString(),
           icon: project.name.charAt(0).toUpperCase(),
           archived: project.status === 'archived',
+          paused: project.status === 'paused',
           platformsCount: Array.isArray(platforms) ? platforms.length : 0,
           apiKeysCount: Array.isArray(keys) ? keys.length : 0,
         }
@@ -892,6 +904,7 @@ export function OrgOverview({
         createdAt: project.$createdAt || new Date().toISOString(),
         icon: project.name.charAt(0).toUpperCase(),
         archived: project.status === 'archived',
+        paused: project.status === 'paused',
         platformsCount: Array.isArray(platforms) ? platforms.length : 0,
         apiKeysCount: Array.isArray(keys) ? keys.length : 0,
       }
@@ -986,7 +999,7 @@ export function OrgOverview({
     useOrganizationMemberships(
       orgId,
       requestedMembershipsPage - 1,
-      DEFAULT_PAGE_SIZE,
+      membershipsPageSize,
       membershipsSearchQuery,
       undefined,
       { placeholderData: keepPreviousData },
@@ -1001,7 +1014,7 @@ export function OrgOverview({
   } = useOrganizationMemberships(
     orgId,
     displayedMembershipsPage - 1,
-    DEFAULT_PAGE_SIZE,
+    membershipsPageSize,
     membershipsSearchQuery,
     displayedMembershipsPage === 1 && !membershipsSearchQuery
       ? initialData?.membershipsData
@@ -1167,14 +1180,16 @@ export function OrgOverview({
                       <h1 className="truncate text-[13px] font-semibold text-foreground">
                         {selectedOrg.name}
                       </h1>
-                      <Badge
-                        className={cn(
-                          'rounded px-1.5 py-0.5 text-[10px] font-medium capitalize shrink-0',
-                          getPlanBadgeColor(selectedOrg.plan),
-                        )}
-                      >
-                        {selectedOrg.plan}
-                      </Badge>
+                      {isCloud && (
+                        <Badge
+                          className={cn(
+                            'rounded px-1.5 py-0.5 text-[10px] font-medium capitalize shrink-0',
+                            getPlanBadgeColor(selectedOrg.plan),
+                          )}
+                        >
+                          {selectedOrg.plan}
+                        </Badge>
+                      )}
                       <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
                     </button>
                   </PopoverTrigger>
@@ -1203,14 +1218,16 @@ export function OrgOverview({
                               {org.name}
                             </p>
                             <div className="flex items-center gap-2">
-                              <span
-                                className={cn(
-                                  'rounded px-1.5 py-0.5 text-[10px] font-medium capitalize',
-                                  getPlanBadgeColor(org.plan),
-                                )}
-                              >
-                                {org.plan}
-                              </span>
+                              {isCloud && (
+                                <span
+                                  className={cn(
+                                    'rounded px-1.5 py-0.5 text-[10px] font-medium capitalize',
+                                    getPlanBadgeColor(org.plan),
+                                  )}
+                                >
+                                  {org.plan}
+                                </span>
+                              )}
                               <span className="text-[11px] text-muted-foreground">
                                 {org.members} member
                                 {org.members !== 1 ? 's' : ''}
@@ -1712,6 +1729,7 @@ export function OrgOverview({
                                           apiKeysCount={
                                             project.apiKeysCount || 0
                                           }
+                                          paused={project.paused}
                                         />
                                       </Link>
                                       {canPinProjectsResult && (
@@ -1795,6 +1813,7 @@ export function OrgOverview({
                                                 apiKeysCount={
                                                   project.apiKeysCount || 0
                                                 }
+                                                paused={project.paused}
                                               />
                                             </Link>
                                             {canPin && canPinProjectsResult && (
@@ -2595,15 +2614,20 @@ export function OrgOverview({
                                     </Table>
                                   </div>
 
-                                  {membershipsTotal > DEFAULT_PAGE_SIZE && (
+                                  {membershipsTotal > 0 && (
                                     <Pagination
                                       currentPage={displayedMembershipsPage}
                                       totalItems={membershipsTotal}
-                                      pageSize={DEFAULT_PAGE_SIZE}
+                                      pageSize={membershipsPageSize}
+                                      pageSizeOptions={[10, 25, 50, 100]}
                                       onPageChange={(page: number) =>
                                         setRequestedMembershipsPage(page)
                                       }
-                                      onPageSizeChange={() => {}}
+                                      onPageSizeChange={(size) => {
+                                        setMembershipsPageSize(size)
+                                        setRequestedMembershipsPage(1)
+                                        setDisplayedMembershipsPage(1)
+                                      }}
                                       itemLabel="members"
                                     />
                                   )}

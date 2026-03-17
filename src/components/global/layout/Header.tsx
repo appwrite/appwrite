@@ -23,11 +23,12 @@ import {
   Building2,
   FolderPlus,
   Plug2,
+  ArrowUpCircle,
 } from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/ProjectSelector'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
-import { useNavigate } from '@tanstack/react-router'
+import { useNavigate, useParams } from '@tanstack/react-router'
 import { useProject, useOrganizationScopes } from '@/lib/react-query/hooks'
 import {
   canShowConnectSection,
@@ -86,6 +87,7 @@ export function ConsoleHeader({
   const { toggleChat } = useAIChat()
   const { account, signOut } = useAuth()
   const navigate = useNavigate()
+  const params = useParams({ strict: false })
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [connectDialogOpen, setConnectDialogOpen] = useState(false)
 
@@ -110,14 +112,22 @@ export function ConsoleHeader({
   const canCreateSiteFlag = canCreateSite(access, features)
   const canCreateTopicFlag = canWriteTopics(access, features)
 
-  // Get organization ID for upgrade button. When on a project page, use only the
-  // project's org so we don't fetch plan for a different org (e.g. account prefs).
+  // Organization ID for upgrade button. Project scope: use current project's teamId only.
+  // Org scope (e.g. billing): use orgId from URL so the link matches the org we're viewing.
+  const orgIdFromRoute = params?.orgId as string | undefined
   const orgId = projectId
     ? (project?.teamId ?? undefined)
-    : (account?.prefs?.organization as string | undefined)
+    : (orgIdFromRoute ?? (account?.prefs?.organization as string | undefined))
 
   // Fetch organization plan to check if upgrade button should be shown
   const { plan: organizationPlan } = useOrganizationPlan(orgId)
+  const selfService = organizationPlan?.selfService !== false
+  // Only show upgrade when current plan cost is 0 (free); hide when already on a paid plan
+  const showUpgradeButton =
+    features.billing &&
+    orgId &&
+    selfService &&
+    (organizationPlan?.price ?? 0) === 0
 
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text)
@@ -624,24 +634,25 @@ export function ConsoleHeader({
           )}
 
           {/* Divider before Upgrade Button - hidden on small containers */}
-          {features.billing && orgId && (
+          {showUpgradeButton && (
             <div className="mx-1 sm:mx-2 hidden h-5 w-px shrink-0 bg-border @[850px]:block" />
           )}
 
-          {/* Upgrade Button - hidden on small containers */}
-          {features.billing && orgId && (
+          {/* Upgrade Button - hidden on small containers; only when plan cost is 0 */}
+          {showUpgradeButton && (
             <div className="hidden @[850px]:flex shrink-0 rounded-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1 focus-within:ring-offset-background">
               <div className="upgrade-button-wrapper">
                 <Button
                   asChild
                   size="sm"
                   variant="default"
-                  className="h-9 shrink-0 cursor-pointer px-3 text-[12px] font-semibold relative z-10 rounded-[calc(0.375rem-1px)]"
+                  className="h-9 shrink-0 cursor-pointer gap-1.5 px-3 text-[12px] font-semibold relative z-10 rounded-[calc(0.375rem-1px)]"
                 >
                   <Link
                     to="/organizations/$orgId/change-plan"
                     params={{ orgId }}
                   >
+                    <ArrowUpCircle className="h-4 w-4" />
                     Upgrade
                   </Link>
                 </Button>

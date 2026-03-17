@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -19,12 +20,15 @@ interface ValidateCreditModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onCouponApply: (coupon: Models.Coupon) => void
+  /** When true, dialog and overlay use z-[9999] so they appear above fullscreen wizards */
+  elevatedForWizard?: boolean
 }
 
 export function ValidateCreditModal({
   open,
   onOpenChange,
   onCouponApply,
+  elevatedForWizard = false,
 }: ValidateCreditModalProps) {
   const [couponCode, setCouponCode] = useState('')
   const { coupon, isLoading, error, refetch } = useCouponAccount(
@@ -71,7 +75,10 @@ export function ValidateCreditModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md p-0">
+      <DialogContent
+        className={cn('sm:max-w-md p-0', elevatedForWizard && 'z-[9999]')}
+        overlayClassName={elevatedForWizard ? 'z-[9999]' : undefined}
+      >
         <DialogHeader className="px-6 pt-6 text-left">
           <DialogTitle>Add Credits</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">

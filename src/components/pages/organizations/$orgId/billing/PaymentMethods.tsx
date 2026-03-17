@@ -16,6 +16,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
 import { formatCardExpiry, maskCardNumber } from './utils'
 import { cn } from '@/lib/utils'
 import {
@@ -120,10 +121,11 @@ export function PaymentMethods({
     if (!orgId) return
 
     // Can't remove if it's the only method and not on free plan
+    const isFreePlan = getPlanNameFromTier(organization?.billingPlan) === 'free'
     if (
       isPrimary &&
       !organization?.backupPaymentMethodId &&
-      organization?.billingPlan !== 'tier0'
+      !isFreePlan
     ) {
       toast.error('Cannot remove the only payment method on a paid plan')
       return
@@ -174,17 +176,26 @@ export function PaymentMethods({
   if (!primaryMethod && completedPaymentMethods.length === 0) {
     return (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
+        <div className="px-6 py-4 flex items-center justify-between gap-4">
           <h3 className="text-[15px] font-semibold text-foreground">
             Payment Methods
           </h3>
+          <Button
+            size="sm"
+            className="h-9 gap-2 text-[13px] shrink-0"
+            onClick={() => onAddPaymentMethod?.()}
+          >
+            <Plus className="h-4 w-4" />
+            Add payment method
+          </Button>
         </div>
         <div className="border-t border-border px-6 py-8 text-center">
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
             <CreditCard className="h-6 w-6 text-muted-foreground" />
           </div>
           <p className="text-[13px] text-muted-foreground mb-4">
-            No payment method on file
+            No payment method on file. Add a new credit card to pay for your
+            organization.
           </p>
           <Button
             size="sm"
@@ -192,7 +203,7 @@ export function PaymentMethods({
             onClick={() => onAddPaymentMethod?.()}
           >
             <Plus className="h-4 w-4" />
-            Add payment method
+            Add new card
           </Button>
         </div>
       </div>
@@ -202,11 +213,85 @@ export function PaymentMethods({
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       {/* Header */}
-      <div className="px-6 py-4">
+      <div className="px-6 py-4 flex items-center justify-between gap-4">
         <h3 className="text-[15px] font-semibold text-foreground">
           Payment Methods
         </h3>
+        {!primaryMethod && (
+          <Button
+            size="sm"
+            className="h-9 gap-2 text-[13px] shrink-0"
+            onClick={() => onAddPaymentMethod?.()}
+          >
+            <Plus className="h-4 w-4" />
+            Add payment method
+          </Button>
+        )}
       </div>
+
+      {/* No primary – use existing or add new */}
+      {!primaryMethod && (
+        <div className="border-t border-border px-6 py-6">
+          <p className="text-[13px] text-muted-foreground mb-4">
+            No payment method on file. Use an existing card or add a new one for
+            this organization.
+          </p>
+          {availableMethods.length > 0 ? (
+            <div className="space-y-3">
+              <p className="text-[12px] font-medium text-foreground">
+                Use existing card
+              </p>
+              <div className="flex flex-col gap-2">
+                {availableMethods.map((pm: Models.PaymentMethod) => (
+                  <div
+                    key={pm.$id}
+                    className="flex items-center justify-between rounded-lg border border-border bg-muted/20 px-4 py-3"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted">
+                        <CreditCard className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="text-[13px] font-medium text-foreground">
+                          {pm.brand} {maskCardNumber(pm.last4 || '')}
+                        </p>
+                        {pm.expiryMonth && pm.expiryYear && (
+                          <p className="text-[12px] text-muted-foreground">
+                            Expires{' '}
+                            {formatCardExpiry(pm.expiryMonth, pm.expiryYear)}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      className="h-8 text-[12px] shrink-0"
+                      onClick={() => handleSetPrimary(pm.$id)}
+                      disabled={updatePaymentMethodMutation.isPending}
+                    >
+                      Use as primary
+                    </Button>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[12px] font-medium text-foreground pt-2">
+                Or add a new card
+              </p>
+            </div>
+          ) : null}
+          <Button
+            size="sm"
+            className={cn(
+              'h-9 gap-2 text-[13px]',
+              availableMethods.length > 0 && 'mt-3',
+            )}
+            onClick={() => onAddPaymentMethod?.()}
+          >
+            <Plus className="h-4 w-4" />
+            {availableMethods.length > 0 ? 'Add new card' : 'Add payment method'}
+          </Button>
+        </div>
+      )}
 
       {/* Primary Payment Method */}
       {primaryMethod && (

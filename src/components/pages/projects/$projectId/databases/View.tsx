@@ -72,7 +72,7 @@ import {
   useProject,
   useOrganizationPlan,
   useOrganizationScopes,
-  fetchProjectDatabases,
+  databasesQueryOptions,
   createProjectDatabase,
   createProjectTable,
   tablesQueryOptions,
@@ -536,15 +536,16 @@ export function View() {
   // Only show full loading when we have no data to display (initial load)
   const showLoading = displayedLoading && apiDatabases.length === 0
 
-  // Get total count from the first page query (no search) - already fetched in route loader
-  // This is used for limit checking and doesn't change when searching
-  const { data: totalDatabasesData } = useQuery({
-    queryKey: ['databases', 'project', projectId, 0, pageSize, ''],
-    queryFn: () => fetchProjectDatabases(projectId!, 0, pageSize, ''),
-    enabled: !!projectId,
-    staleTime: 30 * 1000, // 30 seconds
-    refetchOnMount: false, // Data is fresh from route loader, no need to refetch
-  })
+  // Get total count (no search/filters) for plan limit check - uses same query as route loader prefetch to avoid layout shift when showing PlanLimitWarning
+  const { data: totalDatabasesData } = useQuery(
+    databasesQueryOptions(
+      projectId,
+      0,
+      ROWS_DEFAULT_PAGE_SIZE,
+      undefined,
+      undefined,
+    ),
+  )
 
   // Paginated data - databases are already paginated by the API
   const paginatedDatabases = apiDatabases

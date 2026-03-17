@@ -7,7 +7,9 @@ export function useInitialLoader() {
   const location = useLocation()
 
   // Track all active queries and mutations (including Appwrite calls)
-  const isFetching = useIsFetching()
+  const isFetching = useIsFetching({
+    predicate: (query) => query.options.meta?.skipInitialLoader !== true,
+  })
   const isMutating = useIsMutating()
 
   // Determine if we should show loader

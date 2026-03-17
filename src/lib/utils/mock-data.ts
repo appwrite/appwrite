@@ -25,6 +25,8 @@ export interface Project {
   createdAt: string
   icon?: string
   archived?: boolean
+  /** True when the project is paused due to inactivity (cloud). */
+  paused?: boolean
   /** Number of times the ping was received for this project. */
   pingCount?: number
   /** Last ping datetime in ISO 8601 format. */

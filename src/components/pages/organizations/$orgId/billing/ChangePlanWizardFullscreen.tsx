@@ -1,5 +1,10 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { useParams, useNavigate, useSearch } from '@tanstack/react-router'
+import {
+  useParams,
+  useNavigate,
+  useSearch,
+  Link,
+} from '@tanstack/react-router'
 import {
   BillingPlanTier,
   type BillingPlanTier as BillingPlanTierType,
@@ -42,6 +47,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { confirmPayment } from '@/lib/utils/stripe'
 import type { Models } from '@appwrite.io/console'
 
 /**
@@ -310,6 +316,7 @@ export function ChangePlanWizardFullscreen() {
 
   // Check if submit button should be disabled
   const isButtonDisabled = useMemo(() => {
+    if (!selfService) return true
     if (!selectedPlan || selectedPlan === currentPlanEnum) return true
     if (updatePlanMutation.isPending) return true
 
@@ -330,14 +337,18 @@ export function ChangePlanWizardFullscreen() {
         if (!selected || selected.length !== targetProjectsLimit) return true
       }
 
-      // For free plan: feedback required
+      // For free plan: feedback required (message only, like old console)
       if (selectedPlan === BillingPlanTier.Tier0 && !hasFreeOrgs) {
-        if (!feedbackDowngradeReason || !feedbackMessage.trim()) return true
+        if (!feedbackMessage.trim()) return true
       }
+
+      // One free org per account: cannot downgrade to Free if user has another free org
+      if (selectedPlan === BillingPlanTier.Tier0 && hasFreeOrgs) return true
     }
 
     return false
   }, [
+    selfService,
     selectedPlan,
     currentPlanEnum,
     isUpgrade,
@@ -347,7 +358,6 @@ export function ChangePlanWizardFullscreen() {
     needsProjectSelection,
     usageLimitsComponentRef,
     targetProjectsLimit,
-    feedbackDowngradeReason,
     feedbackMessage,
     hasFreeOrgs,
     updatePlanMutation.isPending,
@@ -363,29 +373,31 @@ export function ChangePlanWizardFullscreen() {
         billingPlan: selectedPlan,
         paymentMethodId,
         billingAddressId: undefined,
-        couponId: selectedCoupon?.code,
+        couponId: selectedCoupon?.code ?? selectedCoupon?.$id,
         invites: [],
         budget: billingBudget,
         taxId: taxId || null,
       })
 
-      // Check if payment confirmation is needed (status 402)
-      if (
-        result &&
-        typeof result === 'object' &&
-        'status' in result &&
-        (result as { status?: number }).status === 402
-      ) {
-        const clientSecret = (result as { clientSecret?: string }).clientSecret
-        if (clientSecret) {
-          toast.error(
-            'Payment confirmation required. Please complete the payment process.',
-          )
-          return
-        }
+      // Payment authentication required (e.g. 3DS): redirect to Stripe, then user returns to change-plan?type=payment_confirmed
+      const resultObj = result as { clientSecret?: string; status?: number }
+      if (resultObj?.clientSecret) {
+        const base = `${window.location.origin}`
+        const returnPath = `/organizations/${orgId}/change-plan`
+        const params = new URLSearchParams()
+        params.set('type', 'payment_confirmed')
+        params.set('id', orgId)
+        params.set('invites', '')
+        if (selectedPlan) params.set('plan', selectedPlan)
+        const returnUrl = `${base}${returnPath}?${params.toString()}`
+        await confirmPayment({
+          clientSecret: resultObj.clientSecret,
+          paymentMethodId,
+          returnUrl,
+        })
+        return
       }
 
-      // If successful, invalidate and navigate
       toast.success('Plan updated successfully')
       navigate({
         to: '/organizations/$orgId/settings/billing',
@@ -421,11 +433,11 @@ export function ChangePlanWizardFullscreen() {
         }
       }
 
-      // Track feedback if downgrading to Free
+      // Track feedback if downgrading to Free (reason optional, message required per old console)
       if (selectedPlan === BillingPlanTier.Tier0 && !hasFreeOrgs) {
         await createDowngradeFeedbackMutation.mutateAsync({
           organizationId: orgId,
-          reason: feedbackDowngradeReason,
+          reason: feedbackDowngradeReason || 'other',
           message: feedbackMessage,
           fromPlanId: currentPlanEnum,
           toPlanId: selectedPlan,
@@ -493,6 +505,9 @@ export function ChangePlanWizardFullscreen() {
     <WizardLayout
       title="Change plan"
       fullscreen
+      fallbackPath={
+        orgId ? `/organizations/${orgId}/settings/billing` : undefined
+      }
       footerAlign="right"
       sidebar={
         <>
@@ -538,67 +553,114 @@ export function ChangePlanWizardFullscreen() {
         <h2 className="text-lg font-semibold text-foreground mb-2">
           Select plan
         </h2>
-        <p className="text-[13px] text-muted-foreground mb-4">
-          For more details on our plans, visit our{' '}
-          <a
-            href="https://appwrite.io/pricing"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline hover:text-foreground"
-          >
-            pricing page
-          </a>
-          .
-        </p>
-        {plansLoading ? (
-          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-            <div className="px-6 py-4">
-              <p className="text-[13px] text-muted-foreground">
-                Loading plans...
-              </p>
-            </div>
-          </div>
-        ) : billingPlans &&
-          typeof billingPlans === 'object' &&
-          Object.keys(billingPlans).length > 0 ? (
-          <PlanSelection
-            plans={billingPlans}
-            currentPlan={currentPlanEnum}
-            selectedPlan={selectedPlan}
-            onPlanSelect={setSelectedPlan}
-            selfService={selfService}
-            hasFreeOrgs={hasFreeOrgs}
-            variant="inline"
-          />
+        {!selfService ? (
+          <Alert className="mt-2">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Custom plan</AlertTitle>
+            <AlertDescription className="mt-2">
+              You are on a custom plan. To change your plan, contact your
+              customer success manager or{' '}
+              {orgId ? (
+                <Link
+                  to="/organizations/$orgId/support"
+                  params={{ orgId }}
+                  className="underline hover:text-foreground"
+                >
+                  contact support
+                </Link>
+              ) : (
+                'contact support'
+              )}
+              .
+            </AlertDescription>
+          </Alert>
         ) : (
-          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-            <div className="px-6 py-4">
-              <p className="text-[13px] text-muted-foreground">
-                No plans available. Please try refreshing the page.
-              </p>
-            </div>
-          </div>
+          <>
+            <p className="text-[13px] text-muted-foreground mb-4">
+              For more details on our plans, visit our{' '}
+              <a
+                href="https://appwrite.io/pricing"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-foreground"
+              >
+                pricing page
+              </a>
+              .
+            </p>
+            {plansLoading ? (
+              <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                <div className="px-6 py-4">
+                  <p className="text-[13px] text-muted-foreground">
+                    Loading plans...
+                  </p>
+                </div>
+              </div>
+            ) : billingPlans &&
+              typeof billingPlans === 'object' &&
+              Object.keys(billingPlans).length > 0 ? (
+              <PlanSelection
+                plans={billingPlans}
+                currentPlan={currentPlanEnum}
+                selectedPlan={selectedPlan}
+                onPlanSelect={setSelectedPlan}
+                selfService={selfService}
+                hasFreeOrgs={hasFreeOrgs}
+                variant="inline"
+              />
+            ) : (
+              <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                <div className="px-6 py-4">
+                  <p className="text-[13px] text-muted-foreground">
+                    No plans available. Please try refreshing the page.
+                  </p>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
       {/* Upgrade-specific sections */}
       {isUpgrade && selectedPlan && (
-        <SelectPaymentMethod
-          paymentMethods={paymentMethods}
-          selectedPaymentMethodId={paymentMethodId}
-          onPaymentMethodSelect={setPaymentMethodId}
-          onAddPaymentMethod={() => setPaymentModalOpen(true)}
-          taxId={taxId}
-          onTaxIdChange={setTaxId}
-          onAddCredits={() => setCouponModalOpen(true)}
-          organizationId={orgId}
-          onPaymentMethodAdded={handlePaymentMethodAdded}
-        />
+        <>
+          <SelectPaymentMethod
+            paymentMethods={paymentMethods}
+            selectedPaymentMethodId={paymentMethodId}
+            onPaymentMethodSelect={setPaymentMethodId}
+            onAddPaymentMethod={() => setPaymentModalOpen(true)}
+            taxId={taxId}
+            onTaxIdChange={setTaxId}
+            onAddCredits={() => setCouponModalOpen(true)}
+            organizationId={orgId}
+            onPaymentMethodAdded={handlePaymentMethodAdded}
+          />
+        </>
       )}
 
       {/* Downgrade-specific sections */}
       {isDowngrade && selectedPlan && (
         <>
+          {/* One free org per account */}
+          {selectedPlan === BillingPlanTier.Tier0 && hasFreeOrgs && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>You can only have one free organization per account</AlertTitle>
+              <AlertDescription className="mt-2">
+                To downgrade this organization, first migrate or delete your
+                existing free organization.{' '}
+                <a
+                  href="https://appwrite.io/docs/advanced/migrations/cloud"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                >
+                  Migration guide
+                </a>
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Project Selection */}
           {needsProjectSelection && (
             <OrganizationUsageLimits
@@ -648,22 +710,40 @@ export function ChangePlanWizardFullscreen() {
             </Alert>
           )}
 
-          {/* Feedback Form for Free Plan */}
+          {/* Feedback Form for Free Plan (matches old console: "What wasn't working for you?" required) */}
           {selectedPlan === BillingPlanTier.Tier0 && !hasFreeOrgs && (
             <div>
               <h2 className="text-lg font-semibold text-foreground mb-2">
-                Why are you downgrading?
+                Feedback
               </h2>
               <p className="text-[13px] text-muted-foreground mb-4">
-                Help us improve by sharing your feedback.
+                What wasn&apos;t working for you? Please share anything that
+                influenced your decision to downgrade. This feedback helps us
+                improve the platform.
               </p>
               <div className="space-y-4">
+                <div>
+                  <Label
+                    htmlFor="downgrade-message"
+                    className="text-[13px] font-medium"
+                  >
+                    Your feedback <span className="text-red-500">*</span>
+                  </Label>
+                  <Textarea
+                    id="downgrade-message"
+                    value={feedbackMessage}
+                    onChange={(e) => setFeedbackMessage(e.target.value)}
+                    placeholder="Please share anything that influenced your decision to downgrade..."
+                    className="mt-2 min-h-[100px]"
+                    required
+                  />
+                </div>
                 <div>
                   <Label
                     htmlFor="downgrade-reason"
                     className="text-[13px] font-medium"
                   >
-                    Reason
+                    Reason (optional)
                   </Label>
                   <Select
                     value={feedbackDowngradeReason}
@@ -689,21 +769,6 @@ export function ChangePlanWizardFullscreen() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label
-                    htmlFor="downgrade-message"
-                    className="text-[13px] font-medium"
-                  >
-                    Additional details (optional)
-                  </Label>
-                  <Textarea
-                    id="downgrade-message"
-                    value={feedbackMessage}
-                    onChange={(e) => setFeedbackMessage(e.target.value)}
-                    placeholder="Tell us more about your decision..."
-                    className="mt-2 min-h-[100px]"
-                  />
-                </div>
               </div>
             </div>
           )}
@@ -716,6 +781,7 @@ export function ChangePlanWizardFullscreen() {
         onOpenChange={setPaymentModalOpen}
         organizationId={orgId}
         onSuccess={handlePaymentMethodAdded}
+        elevatedForWizard
       />
 
       {/* Coupon Modal */}
@@ -726,6 +792,7 @@ export function ChangePlanWizardFullscreen() {
           setSelectedCoupon(coupon)
           setCouponModalOpen(false)
         }}
+        elevatedForWizard
       />
     </WizardLayout>
   )

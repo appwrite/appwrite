@@ -60,6 +60,16 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
             filterQueries,
           ),
         ),
+        // Prefetch total count (no search/filters) for plan limit check so PlanLimitWarning has data on first paint and avoids layout shift
+        queryClient.ensureQueryData(
+          databasesQueryOptions(
+            projectId,
+            0,
+            ROWS_DEFAULT_PAGE_SIZE,
+            undefined,
+            undefined,
+          ),
+        ),
         projectData?.teamId
           ? queryClient.ensureQueryData(
               organizationPlanQueryOptions(projectData.teamId),

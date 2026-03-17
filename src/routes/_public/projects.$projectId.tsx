@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet, useLocation } from '@tanstack/react-router'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
+import { PausedProjectCurtain } from '@/components/global/layout/PausedProjectCurtain'
 import { KeyboardShortcutsProvider } from '@/components/global/providers/KeyboardShortcuts'
 import { RealtimeProvider } from '@/components/global/providers/RealtimeProvider'
 import { RequireAuth } from '@/components/global/auth/RequireAuth'
@@ -16,56 +17,67 @@ import {
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { consoleVariablesQueryOptions } from '@/lib/react-query/hooks/console-variables'
 import { ErrorComponent } from '@/components/error/Component'
+import { reportConsoleAccess } from '@/lib/appwrite/console-access'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+
+/** Loader return: project data for first paint (avoids layout shift for paused curtain). */
+export type ProjectLayoutLoaderData = {
+  project: { $id: string; teamId: string; status?: string }
+} | undefined
 
 export const Route = createFileRoute('/_public/projects/$projectId')({
-  loader: async ({ params, context }) => {
+  loader: async ({ params, context }): Promise<ProjectLayoutLoaderData> => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
-      return
+      return undefined
     }
 
     const { projectId } = params
     const { queryClient } = context
 
-    if (projectId) {
-      // Fetch project data (needed for header/sidebar) - CRITICAL: blocks navigation until ready
-      // Use ensureQueryData to avoid duplicate calls and handle auth errors gracefully
-      try {
-        const projectData = await queryClient.ensureQueryData({
-          queryKey: ['project', projectId],
-          queryFn: () => fetchProject(projectId),
-          staleTime: 5 * 60 * 1000, // 5 minutes
-        })
+    if (!projectId) return undefined
 
-        // Fetch organization plan if we have a teamId (critical for header/limit checking)
-        // Use ensureQueryData to avoid duplicate calls if already fetching
-        if (projectData?.teamId) {
-          await queryClient
-            .ensureQueryData(organizationPlanQueryOptions(projectData.teamId))
-            .catch(() => {
-              // Ignore errors for optional prefetch - plan might not be available
-            })
-          if (getActiveProfileFeatures().orgRoles) {
-            await queryClient
-              .ensureQueryData(
-                organizationScopesQueryOptions(projectData.teamId),
-              )
-              .catch(() => {})
-          }
-        }
+    // Fetch project data (needed for header/sidebar and paused curtain) - CRITICAL: blocks navigation until ready
+    // Use ensureQueryData to avoid duplicate calls and handle auth errors gracefully
+    try {
+      const projectData = await queryClient.ensureQueryData({
+        queryKey: ['project', projectId],
+        queryFn: () => fetchProject(projectId),
+        staleTime: 5 * 60 * 1000, // 5 minutes
+      })
 
-        // Prefetch console variables (CNAME, A, AAAA, nameservers, CAA) for domain verification.
-        // Loaded once per project region and cached for the session.
+      // Fetch organization plan if we have a teamId (critical for header/limit checking)
+      if (projectData?.teamId) {
         await queryClient
-          .ensureQueryData(consoleVariablesQueryOptions(projectData?.region))
-          .catch(() => {
-            // Ignore errors - VerifyDomainContent will show error state if needed
-          })
-      } catch (error) {
-        // Don't throw - let the component handle the error to avoid blocking navigation
-        // The component will check the error and display appropriate message
-        console.warn('Failed to fetch project in loader:', error)
+          .ensureQueryData(organizationPlanQueryOptions(projectData.teamId))
+          .catch(() => {})
+        if (getActiveProfileFeatures().orgRoles) {
+          await queryClient
+            .ensureQueryData(
+              organizationScopesQueryOptions(projectData.teamId),
+            )
+            .catch(() => {})
+        }
       }
+
+      // Prefetch console variables (CNAME, A, AAAA, nameservers, CAA) for domain verification.
+      await queryClient
+        .ensureQueryData(consoleVariablesQueryOptions(projectData?.region))
+        .catch(() => {})
+
+      // Return project for first paint so paused curtain can show immediately (no layout shift)
+      return projectData
+        ? {
+            project: {
+              $id: projectData.$id,
+              teamId: projectData.teamId,
+              status: (projectData as { status?: string }).status,
+            },
+          }
+        : undefined
+    } catch (error) {
+      console.warn('Failed to fetch project in loader:', error)
+      return undefined
     }
   },
   component: ProjectLayout,
@@ -75,8 +87,17 @@ function ProjectLayout() {
   const { projectId } = Route.useParams()
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { isLoading: isProjectLoading, error: projectError } =
+  const loaderData = Route.useLoaderData() as ProjectLayoutLoaderData
+  const { project, isLoading: isProjectLoading, error: projectError } =
     useProject(projectId)
+  const { features } = useConsoleProfile()
+
+  // Use loader data for first paint so paused curtain shows immediately (no layout shift)
+  const projectForPaused =
+    loaderData?.project ?? (project ? { $id: project.$id, teamId: project.teamId, status: project.status } : null)
+  const isPaused =
+    (loaderData?.project?.status === 'paused') ||
+    (!isProjectLoading && project?.status === 'paused')
 
   // Extract active section from pathname
   const pathParts = location.pathname.split('/')
@@ -146,6 +167,16 @@ function ProjectLayout() {
     setSidebarOpen(false)
   }, [location.pathname])
 
+  // Keep project active: report console access when layout loads (cloud, non-paused). Fire-and-forget; backend has 6-day cooldown.
+  // Dedupe: only one call per projectId per mount (avoids double call from Strict Mode or dependency updates).
+  const reportedConsoleAccessForRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (typeof window === 'undefined' || !projectId || isPaused || !features.billing) return
+    if (reportedConsoleAccessForRef.current === projectId) return
+    reportedConsoleAccessForRef.current = projectId
+    reportConsoleAccess(projectId)
+  }, [projectId, isPaused, features.billing])
+
   // Check if this is a project not found or access denied error
   // Do this AFTER all hooks are called to avoid hooks order violation
   const errorMessage = projectError?.message || ''
@@ -197,6 +228,12 @@ function ProjectLayout() {
 
   return (
     <RequireAuth>
+      {isPaused && projectForPaused && (
+        <PausedProjectCurtain
+          projectId={projectForPaused.$id}
+          teamId={projectForPaused.teamId}
+        />
+      )}
       <SessionMigrationsProvider>
         <RealtimeProvider projectId={projectId}>
           <KeyboardShortcutsProvider projectId={projectId}>

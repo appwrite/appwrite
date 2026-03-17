@@ -3,7 +3,6 @@ import { View } from '@/components/pages/projects/$projectId/sites/deployments/$
 import {
   siteQueryOptions,
   siteDeploymentQueryOptions,
-  siteDeploymentsQueryOptions,
   deploymentProxyRulesQueryOptions,
 } from '@/lib/react-query/hooks/sites'
 import { projectQueryOptions } from '@/lib/react-query/hooks'
@@ -43,10 +42,6 @@ export const Route = createFileRoute(
       // Fetch deployment data - blocks navigation until ready
       queryClient.ensureQueryData(
         siteDeploymentQueryOptions(projectId, siteId, deploymentId),
-      ),
-      // Fetch deployments list for navigation (previous/next) - blocks navigation until ready
-      queryClient.ensureQueryData(
-        siteDeploymentsQueryOptions(projectId, siteId, 0, 1000),
       ),
       // Fetch proxy rules for this deployment - blocks navigation until ready
       queryClient.ensureQueryData(

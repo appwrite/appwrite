@@ -998,49 +998,51 @@ export function DeploymentDetailView({
         </>
       }
       headerActions={
-        <>
-          {/* Previous/Next Navigation */}
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0"
-              disabled={!previousDeployment}
-              onClick={() => {
-                if (previousDeployment) {
-                  navigate({
-                    to: deploymentDetailRoute as unknown,
-                    params: {
-                      ...routeParams,
-                      deploymentId: previousDeployment.$id,
-                    } as unknown,
-                  })
-                }
-              }}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0"
-              disabled={!nextDeployment}
-              onClick={() => {
-                if (nextDeployment) {
-                  navigate({
-                    to: deploymentDetailRoute as unknown,
-                    params: {
-                      ...routeParams,
-                      deploymentId: nextDeployment.$id,
-                    } as unknown,
-                  })
-                }
-              }}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </>
+        deployments.length > 0 ? (
+          <>
+            {/* Previous/Next Navigation - only shown when deployments list is provided */}
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+                disabled={!previousDeployment}
+                onClick={() => {
+                  if (previousDeployment) {
+                    navigate({
+                      to: deploymentDetailRoute as unknown,
+                      params: {
+                        ...routeParams,
+                        deploymentId: previousDeployment.$id,
+                      } as unknown,
+                    })
+                  }
+                }}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+                disabled={!nextDeployment}
+                onClick={() => {
+                  if (nextDeployment) {
+                    navigate({
+                      to: deploymentDetailRoute as unknown,
+                      params: {
+                        ...routeParams,
+                        deploymentId: nextDeployment.$id,
+                      } as unknown,
+                    })
+                  }
+                }}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </>
+        ) : undefined
       }
       headerBottom={
         <>

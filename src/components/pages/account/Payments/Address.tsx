@@ -33,6 +33,7 @@ import { cn } from '@/lib/utils'
 import {
   useCreateBillingAddress,
   useUpdateBillingAddress,
+  useSetOrganizationBillingAddress,
   useCountries,
   useLocale,
 } from '@/lib/react-query/hooks'
@@ -43,6 +44,8 @@ interface AddressModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   address?: Models.BillingAddress
+  /** When creating, if set the new address will be assigned to this organization */
+  organizationId?: string
   onSuccess?: () => void
 }
 
@@ -50,6 +53,7 @@ export function AddressModal({
   open,
   onOpenChange,
   address,
+  organizationId,
   onSuccess,
 }: AddressModalProps) {
   const isEditing = !!address
@@ -63,6 +67,7 @@ export function AddressModal({
 
   const createAddressMutation = useCreateBillingAddress()
   const updateAddressMutation = useUpdateBillingAddress()
+  const setOrgAddressMutation = useSetOrganizationBillingAddress()
   const { data: countriesData, isLoading: countriesLoading } = useCountries()
   const { data: localeData } = useLocale()
 
@@ -128,7 +133,7 @@ export function AddressModal({
         })
         toast.success('Billing address updated')
       } else {
-        await createAddressMutation.mutateAsync({
+        const newAddress = await createAddressMutation.mutateAsync({
           country,
           streetAddress,
           city,
@@ -136,7 +141,15 @@ export function AddressModal({
           postalCode: postalCode || undefined,
           addressLine2: addressLine2 || undefined,
         })
-        toast.success('Billing address created')
+        if (organizationId) {
+          await setOrgAddressMutation.mutateAsync({
+            organizationId,
+            billingAddressId: newAddress.$id,
+          })
+          toast.success('Billing address has been added to your organization')
+        } else {
+          toast.success('Billing address created')
+        }
       }
 
       onOpenChange(false)
@@ -151,7 +164,9 @@ export function AddressModal({
   }
 
   const isLoading =
-    createAddressMutation.isPending || updateAddressMutation.isPending
+    createAddressMutation.isPending ||
+    updateAddressMutation.isPending ||
+    setOrgAddressMutation.isPending
   const countries = countriesData?.countries || []
 
   return (

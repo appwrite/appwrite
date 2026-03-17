@@ -253,6 +253,22 @@ export async function fetchOrganizationCredits(
 }
 
 /**
+ * Mutation function to add credit to an organization using a coupon
+ *
+ * @param params - Organization ID and coupon ID (or coupon code)
+ * @returns Created credit
+ */
+export async function addOrganizationCredit(params: {
+  organizationId: string
+  couponId: string
+}) {
+  return await sdk.forConsole.organizations.addCredit({
+    organizationId: params.organizationId,
+    couponId: params.couponId,
+  })
+}
+
+/**
  * Query function to fetch payment methods for the current account
  *
  * @returns Payment methods list response from the API
@@ -641,28 +657,54 @@ export async function updateOrganizationPaymentMethod(params: {
 }
 
 /**
+ * Mutation function to set organization billing address (link an existing address to the org)
+ *
+ * @param params - Organization ID and billing address ID
+ * @returns Updated organization
+ */
+export async function setOrganizationBillingAddress(params: {
+  organizationId: string
+  billingAddressId: string
+}) {
+  return await sdk.forConsole.organizations.setBillingAddress({
+    organizationId: params.organizationId,
+    billingAddressId: params.billingAddressId,
+  })
+}
+
+/**
+ * Mutation function to remove billing address from organization (unlink; does not delete the address from account)
+ *
+ * @param params - Organization ID
+ * @returns Empty object
+ */
+export async function deleteOrganizationBillingAddress(params: {
+  organizationId: string
+}) {
+  return await sdk.forConsole.organizations.deleteBillingAddress({
+    organizationId: params.organizationId,
+  })
+}
+
+/**
  * Mutation function to update organization billing address
  *
  * @param params - Billing address update parameters
  * @returns Updated organization
+ * @deprecated Use setOrganizationBillingAddress or deleteOrganizationBillingAddress instead
  */
 export async function updateOrganizationBillingAddress(params: {
   organizationId: string
   billingAddressId?: string
 }) {
-  // Use updatePlan to update billing address
-  const org = await fetchOrganizationById(params.organizationId)
-  if (!org) {
-    throw new Error('Organization not found')
+  if (params.billingAddressId) {
+    return setOrganizationBillingAddress({
+      organizationId: params.organizationId,
+      billingAddressId: params.billingAddressId,
+    })
   }
-
-  // Convert string billingPlan to BillingPlan enum
-  const billingPlan = getBillingPlanEnum(org.billingPlan)
-
-  return await sdk.forConsole.organizations.updatePlan({
+  return deleteOrganizationBillingAddress({
     organizationId: params.organizationId,
-    billingPlan,
-    billingAddressId: params.billingAddressId,
   })
 }
 
@@ -1718,9 +1760,52 @@ export function useUpdateOrganizationPaymentMethod() {
 }
 
 /**
- * Hook to update organization billing address
+ * Hook to set organization billing address (link address to org)
  *
  * @returns Mutation object with mutate function
+ */
+export function useSetOrganizationBillingAddress() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: setOrganizationBillingAddress,
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['organization', variables.organizationId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['billing-addresses', 'account'],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to remove billing address from organization (unlink only)
+ *
+ * @returns Mutation object with mutate function
+ */
+export function useDeleteOrganizationBillingAddress() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: deleteOrganizationBillingAddress,
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['organization', variables.organizationId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['billing-addresses', 'account'],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to update organization billing address (set or remove)
+ *
+ * @returns Mutation object with mutate function
+ * @deprecated Prefer useSetOrganizationBillingAddress and useDeleteOrganizationBillingAddress
  */
 export function useUpdateOrganizationBillingAddress() {
   const queryClient = useQueryClient()
@@ -1728,9 +1813,11 @@ export function useUpdateOrganizationBillingAddress() {
   return useMutation({
     mutationFn: updateOrganizationBillingAddress,
     onSuccess: (_, variables) => {
-      // Invalidate organization query
       queryClient.invalidateQueries({
         queryKey: ['organization', variables.organizationId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['billing-addresses', 'account'],
       })
     },
   })
@@ -1754,6 +1841,27 @@ export function useRetryInvoicePayment() {
       // Invalidate organization query
       queryClient.invalidateQueries({
         queryKey: ['organization', variables.organizationId],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to add credit to an organization (redeem coupon)
+ *
+ * @returns Mutation object with mutate function
+ */
+export function useAddOrganizationCredit() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: addOrganizationCredit,
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['organization', variables.organizationId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['credits', 'organization', variables.organizationId],
       })
     },
   })

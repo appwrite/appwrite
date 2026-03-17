@@ -1,5 +1,10 @@
 import { OrgOverview } from '@/components/pages/organizations/$orgId/overview/View'
-import { createFileRoute, Outlet, useMatches } from '@tanstack/react-router'
+import {
+  createFileRoute,
+  Outlet,
+  useMatches,
+  useLocation,
+} from '@tanstack/react-router'
 import { RequireAuth } from '@/components/global/auth/RequireAuth'
 import {
   organizationsQueryOptions,
@@ -95,7 +100,12 @@ export const Route = createFileRoute('/_public/organizations/$orgId')({
 
 function OrganizationLayout() {
   const matches = useMatches()
+  const location = useLocation()
   const loaderData = Route.useLoaderData()
+
+  // Use pathname as well as matches so we switch to wizard immediately on navigation
+  // (matches can lag one frame, causing a flash of projects list when clicking Upgrade)
+  const pathname = location.pathname
 
   // Check if we're on a domain detail route (should not have org header/tabs)
   const isDomainDetailRoute = matches.some(
@@ -108,12 +118,15 @@ function OrganizationLayout() {
   )
 
   // Check if we're on the change-plan route (should not have org header/tabs - it's fullscreen)
-  const isChangePlanRoute = matches.some(
-    (match) =>
-      match.routeId.includes('/change-plan') ||
-      match.routeId === '/_public/organizations/$orgId/change-plan' ||
-      match.routeId.startsWith('/_public/organizations/$orgId/change-plan'),
-  )
+  // Pathname check avoids one-frame flash of projects list when navigating to change-plan
+  const isChangePlanRoute =
+    pathname.includes('/change-plan') ||
+    matches.some(
+      (match) =>
+        match.routeId.includes('/change-plan') ||
+        match.routeId === '/_public/organizations/$orgId/change-plan' ||
+        match.routeId.startsWith('/_public/organizations/$orgId/change-plan'),
+    )
 
   // Check if we're on the support route (fullscreen wizard)
   const isSupportRoute = matches.some(
@@ -133,11 +146,15 @@ function OrganizationLayout() {
   return (
     <RequireAuth>
       {isDomainDetailRoute ||
-      isChangePlanRoute ||
       isSupportRoute ||
       isBuyDomainRoute ? (
-        // For domain detail, change-plan, and support routes, render outlet directly (they have their own layout)
+        // For domain detail and support routes, render outlet directly (they have their own layout)
         <Outlet />
+      ) : isChangePlanRoute ? (
+        // Change-plan: fullscreen wrapper so the wizard looks identical from header upgrade or billing upgrade
+        <div className="fixed inset-0 z-[9997] flex flex-col bg-background">
+          <Outlet />
+        </div>
       ) : (
         // For other routes, render OrgOverview which provides header/tabs
         <OrgOverview initialData={loaderData}>

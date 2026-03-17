@@ -342,13 +342,13 @@ export function View() {
     if (!isDomainsIndex || domainsFetching || domainsLoading || !domainsFetched)
       return
     const match =
-      urlPage === displayedPage &&
+      requestedPage === displayedPage &&
       (urlSearch ?? '') === (displayedSearch ?? '') &&
       filterQueryString === displayedFilterQueryString &&
       urlSortBy === displayedSortBy &&
       urlSortOrder === displayedSortOrder
     if (!match) {
-      setDisplayedPage(urlPage)
+      setDisplayedPage(requestedPage)
       setDisplayedSearch(urlSearch ?? undefined)
       setDisplayedSortBy(urlSortBy)
       setDisplayedSortOrder(urlSortOrder)
@@ -359,7 +359,7 @@ export function View() {
     domainsFetching,
     domainsLoading,
     domainsFetched,
-    urlPage,
+    requestedPage,
     urlSearch,
     urlSortBy,
     urlSortOrder,

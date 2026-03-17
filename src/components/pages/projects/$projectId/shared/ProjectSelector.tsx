@@ -32,6 +32,7 @@ import {
 } from '@tanstack/react-query'
 import { getPlanBadgeColor } from '@/lib/utils/plan-badge'
 import { CreateProjectDialog } from '@/components/pages/organizations/$orgId/overview/CreateProjectDialog'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 interface ProjectSelectorProps {
   className?: string
@@ -46,6 +47,7 @@ export function ProjectSelector({
   projectId,
   isMobile,
 }: ProjectSelectorProps) {
+  const { isCloud } = useConsoleProfile()
   const [open, setOpen] = useState(false)
   const [createProjectDialogOpen, setCreateProjectDialogOpen] = useState(false)
 
@@ -368,6 +370,7 @@ export function ProjectSelector({
               hasNextPage={hasNextPage}
               fetchNextPage={fetchNextPage}
               organizations={organizations}
+            isCloud={isCloud}
               currentProjectId={projectId}
               onCreateProject={() => setCreateProjectDialogOpen(true)}
             />
@@ -407,7 +410,7 @@ export function ProjectSelector({
               {currentProjectTeam?.name || selectedTeam.name}
             </p>
           </div>
-          {currentProjectOrg && (
+          {isCloud && currentProjectOrg && (
             <span
               className={cn(
                 'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium capitalize',
@@ -490,7 +493,7 @@ export function ProjectSelector({
                 {currentProjectTeam?.name || selectedTeam.name} /{' '}
                 {currentProject?.name || selectedProject.name}
               </p>
-              {currentProjectOrg && (
+              {isCloud && currentProjectOrg && (
                 <span
                   className={cn(
                     'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium capitalize',
@@ -526,6 +529,7 @@ export function ProjectSelector({
             hasNextPage={hasNextPage}
             fetchNextPage={fetchNextPage}
             organizations={organizations}
+            isCloud={isCloud}
             currentProjectId={projectId}
             onCreateProject={() => setCreateProjectDialogOpen(true)}
           />
@@ -559,6 +563,7 @@ interface ProjectSelectorContentProps {
   hasNextPage: boolean
   fetchNextPage: () => void
   organizations: Organization[]
+  isCloud: boolean
   currentProjectId?: string
   onCreateProject: () => void
 }
@@ -579,6 +584,7 @@ function ProjectSelectorContent({
   hasNextPage,
   fetchNextPage,
   organizations,
+  isCloud,
   currentProjectId,
   onCreateProject,
 }: ProjectSelectorContentProps) {
@@ -670,7 +676,7 @@ function ProjectSelectorContent({
                       <span className="truncate text-[13px] font-medium text-foreground">
                         {team.name}
                       </span>
-                      {teamOrg && (
+                      {isCloud && teamOrg && (
                         <span
                           className={cn(
                             'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium capitalize',
@@ -761,6 +767,14 @@ function ProjectSelectorContent({
                             Current
                           </Badge>
                         )}
+                        {project.paused && (
+                          <Badge
+                            variant="outline"
+                            className="ml-1.5 shrink-0 text-[10px] font-normal text-muted-foreground"
+                          >
+                            Paused
+                          </Badge>
+                        )}
                       </span>
                       {isPinned && (
                         <Pin className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -815,6 +829,7 @@ function MobileProjectSelectorContent({
   hasNextPage,
   fetchNextPage,
   organizations,
+  isCloud,
   currentProjectId,
   onCreateProject,
 }: ProjectSelectorContentProps) {
@@ -942,7 +957,7 @@ function MobileProjectSelectorContent({
                           {team.name}
                         </span>
                       </div>
-                      {teamOrg && (
+                      {isCloud && teamOrg && (
                         <span
                           className={cn(
                             'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium capitalize',
@@ -1044,6 +1059,14 @@ function MobileProjectSelectorContent({
                               className="ml-1.5 shrink-0 text-[10px] font-normal text-muted-foreground"
                             >
                               Current
+                            </Badge>
+                          )}
+                          {project.paused && (
+                            <Badge
+                              variant="outline"
+                              className="ml-1.5 shrink-0 text-[10px] font-normal text-muted-foreground"
+                            >
+                              Paused
                             </Badge>
                           )}
                         </span>

@@ -1,6 +1,14 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useSearch, useNavigate } from '@tanstack/react-router'
-import { ChevronDown, ChevronUp, Folder, ExternalLink } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import {
+  ChevronDown,
+  ChevronUp,
+  Folder,
+  ExternalLink,
+  ArrowUpCircle,
+  ArrowLeftRight,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
@@ -20,11 +28,13 @@ import {
 import {
   useOrganizationById,
   useOrganizationPlan,
-  useOrganizationBillingAggregation,
   useOrganizationCredits,
+  organizationBillingAggregationQueryOptions,
 } from '@/lib/react-query/hooks'
+import { DEFAULT_BILLING_PROJECTS_LIMIT } from '@/lib/react-query/hooks/constants'
 import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
 import { Link } from '@tanstack/react-router'
+import { Pagination } from '@/components/global/shared/Pagination'
 
 /**
  * PlanSummary Component
@@ -54,31 +64,64 @@ interface ResourceItem {
   formatType: 'bytes' | 'number' | 'sms'
 }
 
-const PROJECTS_PER_PAGE = 10
-
 export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
   const [expanded, setExpanded] = useState(true) // Default to expanded
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(
     new Set(),
   )
 
-  // Get pagination from URL
+  // Pagination: requestedPage from URL (user intent); displayedPage = what we show (no layout shift until new data is ready)
   const search = useSearch({ strict: false })
   const navigate = useNavigate()
-  const currentPage = Number(search?.page) || 1
-  const pageLimit = Number(search?.limit) || PROJECTS_PER_PAGE
-  const pageOffset = (currentPage - 1) * pageLimit
+  const requestedPage = Number(search?.page) || 1
+  // Fixed at 10; page size selector is hidden so limit from URL is ignored
+  const pageLimit = DEFAULT_BILLING_PROJECTS_LIMIT
+  const [displayedPage, setDisplayedPage] = useState(requestedPage)
 
   // Fetch organization data
   const { organization, isLoading: orgLoading } = useOrganizationById(orgId)
   const { plan, isLoading: planLoading } = useOrganizationPlan(orgId)
-  const { aggregation, isLoading: aggLoading } =
-    useOrganizationBillingAggregation(
+
+  // Requested page query (drives fetch when user changes page)
+  const {
+    isFetching: requestedAggregationFetching,
+    isLoading: requestedAggregationLoading,
+  } = useQuery(
+    organizationBillingAggregationQueryOptions(
       orgId,
       organization?.billingAggregationId,
       pageLimit,
-      pageOffset,
-    )
+      (requestedPage - 1) * pageLimit,
+    ),
+  )
+
+  // Displayed page query (what we show; stays on current page until requested page has loaded)
+  const { data: aggregation, isLoading: aggLoading } = useQuery(
+    organizationBillingAggregationQueryOptions(
+      orgId,
+      organization?.billingAggregationId,
+      pageLimit,
+      (displayedPage - 1) * pageLimit,
+    ),
+  )
+
+  // Keep showing current page until the requested page has finished loading (no layout shift)
+  useEffect(() => {
+    if (
+      requestedAggregationFetching ||
+      requestedAggregationLoading ||
+      requestedPage === displayedPage
+    ) {
+      return
+    }
+    setDisplayedPage(requestedPage)
+  }, [
+    requestedAggregationFetching,
+    requestedAggregationLoading,
+    requestedPage,
+    displayedPage,
+  ])
+
   const { credits } = useOrganizationCredits(orgId, 0, 1)
 
   // Calculate available credit
@@ -424,18 +467,19 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
     })
   }, [aggregation, plan])
 
-  // Get total projects count for pagination
+  // Total projects: from API resources when available (paginated response), else current page length
   const totalProjects = useMemo(() => {
-    if (!aggregation) return 0
-    const projects =
-      aggregation.breakdown ||
-      aggregation.projects ||
-      aggregation.projectBreakdown ||
-      []
-    return Array.isArray(projects) ? projects.length : 0
-  }, [aggregation])
+    if (
+      projectsResource?.value !== undefined &&
+      projectsResource?.value !== null
+    ) {
+      return Number(projectsResource.value)
+    }
+    return projectBreakdowns.length
+  }, [projectsResource?.value, projectBreakdowns.length])
 
-  const totalPages = Math.ceil(totalProjects / pageLimit)
+  // API returns current page only; we show the displayed page's data (no layout shift until it's loaded)
+  const displayedBreakdowns = projectBreakdowns
 
   const isLoading = orgLoading || planLoading || aggLoading
 
@@ -597,7 +641,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                   Project breakdown
                 </div>
                 <div className="space-y-1">
-                  {projectBreakdowns.map((project) => (
+                  {displayedBreakdowns.map((project) => (
                     <Collapsible
                       key={project.projectId}
                       open={expandedProjects.has(project.projectId)}
@@ -685,9 +729,11 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                                       )}
                                     </div>
 
-                                    {/* Usage/limit text - flexible */}
+                                    {/* Usage/limit text - flexible; when plan has 0 included quota, show count only */}
                                     <span className="text-[11px] text-muted-foreground whitespace-nowrap flex-1 min-w-0">
-                                      {usageFormatted} / {limitFormatted}
+                                      {resource.limit === 0
+                                        ? usageFormatted
+                                        : `${usageFormatted} / ${limitFormatted}`}
                                     </span>
 
                                     {/* Cost - right aligned to match parent prices */}
@@ -715,51 +761,29 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                   ))}
                 </div>
 
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="flex items-center justify-between pt-2 border-t border-border">
-                    <span className="text-[12px] text-muted-foreground">
-                      Showing {pageOffset + 1}–
-                      {Math.min(pageOffset + pageLimit, totalProjects)} of{' '}
-                      {totalProjects} projects
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 text-[12px]"
-                        disabled={currentPage === 1}
-                        onClick={() => {
-                          navigate({
-                            search: (prev: unknown) => ({
-                              ...prev,
-                              page: currentPage - 1,
-                            }),
-                          })
-                        }}
-                      >
-                        Previous
-                      </Button>
-                      <span className="text-[12px] text-muted-foreground">
-                        Page {currentPage} of {totalPages}
-                      </span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 text-[12px]"
-                        disabled={currentPage === totalPages}
-                        onClick={() => {
-                          navigate({
-                            search: (prev: unknown) => ({
-                              ...prev,
-                              page: currentPage + 1,
-                            }),
-                          })
-                        }}
-                      >
-                        Next
-                      </Button>
-                    </div>
+                {/* Pagination: standard component; current results stay until new page has loaded */}
+                {totalProjects > pageLimit && (
+                  <div className="pt-2 border-t border-border">
+                    <Pagination
+                      currentPage={displayedPage}
+                      totalItems={totalProjects}
+                      pageSize={pageLimit}
+                      onPageChange={(page) => {
+                        navigate({
+                          search: (prev: unknown) => ({
+                            ...(typeof prev === 'object' && prev !== null
+                              ? (prev as Record<string, unknown>)
+                              : {}),
+                            page,
+                            limit: pageLimit,
+                          }) as never,
+                        })
+                      }}
+                      onPageSizeChange={() => {}}
+                      showPageSizeSelector={false}
+                      itemLabel="projects"
+                      className="flex-wrap"
+                    />
                   </div>
                 )}
               </div>
@@ -780,21 +804,23 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
       {plan?.selfService !== false && (
         <div className="border-t border-border px-6 py-4 bg-muted/30">
           <div className="flex items-center gap-2">
-            {planName === 'Free' ? (
+            {(basePlanPrice ?? 0) === 0 ? (
               <Button
                 size="sm"
-                className="h-9 text-[13px]"
+                className="h-9 text-[13px] gap-1.5"
                 onClick={onChangePlan}
               >
+                <ArrowUpCircle className="h-4 w-4" />
                 Upgrade
               </Button>
             ) : (
               <Button
                 variant="outline"
                 size="sm"
-                className="h-9 text-[13px]"
+                className="h-9 text-[13px] gap-1.5"
                 onClick={onChangePlan}
               >
+                <ArrowLeftRight className="h-4 w-4" />
                 Change plan
               </Button>
             )}

@@ -26,7 +26,6 @@ import {
   DNS_RECORDS_DEFAULT_SORT_ORDER,
 } from '@/lib/react-query/hooks'
 import { ServiceHeader } from '@/components/pages/projects/$projectId/shared/ServiceHeader'
-import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import {
   Tooltip,
@@ -229,7 +228,28 @@ export function View({ initialData }: ViewProps = {}) {
   const rawRecords = canUseInitialRecords
     ? initialData!.records.dnsRecords
     : (recordsFromHook ?? [])
-  const dnsRecords = rawRecords
+  const dnsRecords = useMemo(() => {
+    if (rawRecords.length === 0) return rawRecords
+
+    const lockedRecords: Models.DnsRecord[] = []
+    const unlockedRecords: Models.DnsRecord[] = []
+
+    // Keep the current backend sort within each group, but always render locked
+    // records before editable ones.
+    for (const record of rawRecords) {
+      if (record.lock) {
+        lockedRecords.push(record)
+      } else {
+        unlockedRecords.push(record)
+      }
+    }
+
+    if (lockedRecords.length === 0 || unlockedRecords.length === 0) {
+      return rawRecords
+    }
+
+    return [...lockedRecords, ...unlockedRecords]
+  }, [rawRecords])
   const recordsTotal =
     isFirstPage && initialData?.records && !hasRecordFilters
       ? (recordsTotalFromHook ?? initialData.records.total)
@@ -946,7 +966,7 @@ export function View({ initialData }: ViewProps = {}) {
                         Registrar
                       </p>
                       <code className="text-[12px] font-mono text-foreground">
-                        —
+                        3rd party
                       </code>
                     </div>
 

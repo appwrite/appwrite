@@ -140,6 +140,8 @@ export interface PaginationProps {
   showTotal?: boolean
   /** Label for items (e.g., "rows", "users", "teams") */
   itemLabel?: string
+  /** Show the "Show X per page" selector; set to false to fix page size (e.g. billing breakdown) */
+  showPageSizeSelector?: boolean
 }
 
 export function Pagination({
@@ -152,6 +154,7 @@ export function Pagination({
   className,
   showTotal = true,
   itemLabel = 'items',
+  showPageSizeSelector = true,
 }: PaginationProps) {
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
   const startItem = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1
@@ -244,29 +247,31 @@ export function Pagination({
           </span>
         )}
 
-        <div className="hidden items-center gap-2 @[800px]:flex">
-          <span className="text-muted-foreground whitespace-nowrap text-[12px]">
-            Show
-          </span>
-          <Select
-            value={pageSize.toString()}
-            onValueChange={handlePageSizeChange}
-          >
-            <SelectTrigger className="h-8 w-[72px] text-[12px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {pageSizeOptions.map((size) => (
-                <SelectItem key={size} value={size.toString()}>
-                  {size}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <span className="text-muted-foreground whitespace-nowrap text-[12px]">
-            per page
-          </span>
-        </div>
+        {showPageSizeSelector && (
+          <div className="hidden items-center gap-2 @[800px]:flex">
+            <span className="text-muted-foreground whitespace-nowrap text-[12px]">
+              Show
+            </span>
+            <Select
+              value={pageSize.toString()}
+              onValueChange={handlePageSizeChange}
+            >
+              <SelectTrigger className="h-8 w-[72px] text-[12px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {pageSizeOptions.map((size) => (
+                  <SelectItem key={size} value={size.toString()}>
+                    {size}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <span className="text-muted-foreground whitespace-nowrap text-[12px]">
+              per page
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Right side - Page navigation */}

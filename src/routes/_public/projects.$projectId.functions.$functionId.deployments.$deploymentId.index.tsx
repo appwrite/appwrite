@@ -4,7 +4,6 @@ import {
   projectQueryOptions,
   projectFunctionQueryOptions,
   functionDeploymentQueryOptions,
-  functionDeploymentsQueryOptions,
   functionExecutionsQueryOptions,
 } from '@/lib/react-query/hooks'
 import { Query } from '@appwrite.io/console'
@@ -40,10 +39,6 @@ export const Route = createFileRoute(
       // Fetch deployment data - blocks navigation until ready
       queryClient.ensureQueryData(
         functionDeploymentQueryOptions(projectId, functionId, deploymentId),
-      ),
-      // Fetch deployments list for navigation (previous/next) - blocks navigation until ready
-      queryClient.ensureQueryData(
-        functionDeploymentsQueryOptions(projectId, functionId, 0, 1000),
       ),
       // Fetch executions count for this deployment - blocks navigation until ready
       queryClient.ensureQueryData(
