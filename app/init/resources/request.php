@@ -65,6 +65,10 @@ use Utopia\Validator\WhiteList;
  */
 function registerRequestResources(Container $container): void
 {
+    $container->set('utopia:graphql', function ($utopia) {
+        return $utopia;
+    }, ['utopia']);
+
     $container->set('log', fn () => new Log(), []);
 
     $container->set('logger', function ($register) {

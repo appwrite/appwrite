@@ -2,10 +2,14 @@
 
 namespace Appwrite\Promises;
 
+use Swoole\Coroutine;
 use Swoole\Coroutine\Channel;
+use Utopia\DI\Container;
 
 class Swoole extends Promise
 {
+    private const REQUEST_CONTAINER_CONTEXT_KEY = '__utopia_http_request_container';
+
     public function __construct(?callable $executor = null)
     {
         parent::__construct($executor);
@@ -16,7 +20,14 @@ class Swoole extends Promise
         callable $resolve,
         callable $reject
     ): void {
-        \go(function () use ($executor, $resolve, $reject) {
+        $parentContainer = (Coroutine::getCid() !== -1)
+            ? (Coroutine::getContext()[self::REQUEST_CONTAINER_CONTEXT_KEY] ?? null)
+            : null;
+
+        \go(function () use ($executor, $resolve, $reject, $parentContainer) {
+            if ($parentContainer !== null) {
+                Coroutine::getContext()[self::REQUEST_CONTAINER_CONTEXT_KEY] = new Container($parentContainer);
+            }
             try {
                 $executor($resolve, $reject);
             } catch (\Throwable $exception) {
