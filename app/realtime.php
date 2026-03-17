@@ -50,6 +50,16 @@ require_once __DIR__ . '/init.php';
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
+// Log uncaught exceptions in one line instead of relying on Swoole's full backtrace dump
+set_exception_handler(function (\Throwable $e) {
+    Console::error(sprintf(
+        'Realtime uncaught exception: %s in %s:%d',
+        $e->getMessage(),
+        $e->getFile(),
+        $e->getLine()
+    ));
+});
+
 // Allows overriding
 if (!function_exists('getConsoleDB')) {
     function getConsoleDB(): Database
@@ -985,15 +995,21 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
 });
 
 $server->onClose(function (int $connection) use ($realtime, $stats, $register) {
-    if (array_key_exists($connection, $realtime->connections)) {
-        $stats->decr($realtime->connections[$connection]['projectId'], 'connectionsTotal');
-        $register->get('telemetry.connectionCounter')->add(-1);
+    try {
+        if (array_key_exists($connection, $realtime->connections)) {
+            $stats->decr($realtime->connections[$connection]['projectId'], 'connectionsTotal');
+            $register->get('telemetry.connectionCounter')->add(-1);
 
-        $projectId = $realtime->connections[$connection]['projectId'];
+            $projectId = $realtime->connections[$connection]['projectId'];
 
-        triggerStats([
-            METRIC_REALTIME_CONNECTIONS => -1,
-        ], $projectId);
+            triggerStats([
+                METRIC_REALTIME_CONNECTIONS => -1,
+            ], $projectId);
+        }
+    } catch (\Throwable $th) {
+        // Log only; do not rethrow. If we let this bubble, Swoole dumps full coroutine
+        // backtraces and unsubscribe() below would never run (connection cleanup would fail).
+        Console::error('Realtime onClose error: ' . $th->getMessage());
     }
     $realtime->unsubscribe($connection);
 
