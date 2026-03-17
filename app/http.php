@@ -69,6 +69,8 @@ $swooleAdapter = new HttpServer(
     container: $container,
 );
 
+$container->set('container', fn () => fn () => $swooleAdapter->getContainer());
+
 $http = $swooleAdapter->getServer();
 
 /**
@@ -522,7 +524,10 @@ $swooleAdapter->onRequest(function ($utopiaRequest, $utopiaResponse) use ($regis
     $requestContainer->set('response', fn () => $response);
 
     $app = new Http($swooleAdapter, 'UTC');
-    $container->set('utopia', fn () => $app);
+    $requestContainer->set('utopia', fn () => $app);
+
+    registerRequestResources($requestContainer);
+
     $app->setCompression(System::getEnv('_APP_COMPRESSION_ENABLED', 'enabled') === 'enabled');
     $app->setCompressionMinSize(intval(System::getEnv('_APP_COMPRESSION_MIN_SIZE_BYTES', '1024'))); // 1KB
 
