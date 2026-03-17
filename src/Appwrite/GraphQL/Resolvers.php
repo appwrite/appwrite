@@ -30,9 +30,9 @@ class Resolvers
                 /** @var Response $response */
                 /** @var Request $request */
 
-                $utopia = $utopia->getResource('utopia:graphql', true);
-                $request = $utopia->getResource('request', true);
-                $response = $utopia->getResource('response', true);
+                $utopia = $utopia->getResource('utopia:graphql');
+                $request = $utopia->getResource('request');
+                $response = $utopia->getResource('response');
 
                 $path = $route->getPath();
                 foreach ($args as $key => $value) {
@@ -97,9 +97,9 @@ class Resolvers
     ): callable {
         return static fn ($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($utopia, $databaseId, $collectionId, $url, $type, $args) {
-                $utopia = $utopia->getResource('utopia:graphql', true);
-                $request = $utopia->getResource('request', true);
-                $response = $utopia->getResource('response', true);
+                $utopia = $utopia->getResource('utopia:graphql');
+                $request = $utopia->getResource('request');
+                $response = $utopia->getResource('response');
 
                 $request->setMethod('GET');
                 $request->setURI($url($databaseId, $collectionId, $args));
@@ -128,9 +128,9 @@ class Resolvers
     ): callable {
         return static fn ($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($utopia, $databaseId, $collectionId, $url, $params, $type, $args) {
-                $utopia = $utopia->getResource('utopia:graphql', true);
-                $request = $utopia->getResource('request', true);
-                $response = $utopia->getResource('response', true);
+                $utopia = $utopia->getResource('utopia:graphql');
+                $request = $utopia->getResource('request');
+                $response = $utopia->getResource('response');
 
                 $request->setMethod('GET');
                 $request->setURI($url($databaseId, $collectionId, $args));
@@ -164,9 +164,9 @@ class Resolvers
     ): callable {
         return static fn ($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($utopia, $databaseId, $collectionId, $url, $params, $type, $args) {
-                $utopia = $utopia->getResource('utopia:graphql', true);
-                $request = $utopia->getResource('request', true);
-                $response = $utopia->getResource('response', true);
+                $utopia = $utopia->getResource('utopia:graphql');
+                $request = $utopia->getResource('request');
+                $response = $utopia->getResource('response');
 
                 $request->setMethod('POST');
                 $request->setURI($url($databaseId, $collectionId, $args));
@@ -196,9 +196,9 @@ class Resolvers
     ): callable {
         return static fn ($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($utopia, $databaseId, $collectionId, $url, $params, $type, $args) {
-                $utopia = $utopia->getResource('utopia:graphql', true);
-                $request = $utopia->getResource('request', true);
-                $response = $utopia->getResource('response', true);
+                $utopia = $utopia->getResource('utopia:graphql');
+                $request = $utopia->getResource('request');
+                $response = $utopia->getResource('response');
 
                 $request->setMethod('PATCH');
                 $request->setURI($url($databaseId, $collectionId, $args));
@@ -226,9 +226,9 @@ class Resolvers
     ): callable {
         return static fn ($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($utopia, $databaseId, $collectionId, $url, $type, $args) {
-                $utopia = $utopia->getResource('utopia:graphql', true);
-                $request = $utopia->getResource('request', true);
-                $response = $utopia->getResource('response', true);
+                $utopia = $utopia->getResource('utopia:graphql');
+                $request = $utopia->getResource('request');
+                $response = $utopia->getResource('response');
 
                 $request->setMethod('DELETE');
                 $request->setURI($url($databaseId, $collectionId, $args));
@@ -270,7 +270,7 @@ class Resolvers
         try {
             $route = $utopia->match($request, fresh: true);
 
-            $utopia->execute($route, $request, $response);
+            $utopia->execute($route, $request);
         } catch (\Throwable $e) {
             if ($beforeReject) {
                 $e = $beforeReject($e);

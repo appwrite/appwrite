@@ -80,16 +80,16 @@ $http = $swooleAdapter->getServer();
  * riskier tasks to a dedicated worker subset. Prefers idle workers, with fallback to random selection if necessary.
  * doc: https://openswoole.com/docs/modules/swoole-server/configuration#dispatch_func
  *
- * @param Server $server Swoole server instance.
+ * @param \Swoole\Http\Server $server Swoole server instance.
  * @param int $fd client ID
  * @param int $type the type of data and its current state
  * @param string|null $data Request content for categorization.
  * @global int $totalThreads Total number of workers.
  * @return int Chosen worker ID for the request.
  */
-function dispatch(Server $server, int $fd, int $type, $data = null): int
+function dispatch(\Swoole\Http\Server $server, int $fd, int $type, $data = null): int
 {
-    $resolveWorkerId = function (Server $server, $data = null) {
+    $resolveWorkerId = function (\Swoole\Http\Server $server, $data = null) {
         global $totalWorkers, $riskyDomains;
 
         // If data is not set we can send request to any worker
@@ -294,7 +294,7 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
 
     $app = new Http($swooleAdapter, 'UTC');
 
-    go(function () use ($register, $app, $pools) {
+    go(function () use ($app, $pools) {
 
         /** @var array $collections */
         $collections = Config::getParam('collections', []);
