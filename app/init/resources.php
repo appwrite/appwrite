@@ -81,7 +81,6 @@ global $register;
 global $container;
 $container = new Container();
 
-$container->set('log', fn () => new Log());
 $container->set('logger', function ($register) {
     return $register->get('logger');
 }, ['register']);
@@ -91,18 +90,12 @@ $container->set('hooks', function ($register) {
 }, ['register']);
 
 $container->set('register', fn () => $register);
-$container->set('locale', function () {
-    $locale = new Locale(System::getEnv('_APP_LOCALE', 'en'));
-    $locale->setFallback(System::getEnv('_APP_LOCALE', 'en'));
-
-    return $locale;
-});
 
 $container->set('localeCodes', function () {
     return array_map(fn ($locale) => $locale['code'], Config::getParam('locale-codes', []));
 });
 
-// Queues
+// Queues - shared infrastructure (stateless pool wrappers)
 $container->set('publisher', function (Group $pools) {
     return new BrokerPool(publisher: $pools->get('publisher'));
 }, ['pools']);
@@ -127,58 +120,10 @@ $container->set('publisherMessaging', function (Publisher $publisher) {
 $container->set('publisherWebhooks', function (Publisher $publisher) {
     return $publisher;
 }, ['publisher']);
-$container->set('queueForMessaging', function (Publisher $publisher) {
-    return new Messaging($publisher);
-}, ['publisher']);
-$container->set('queueForMails', function (Publisher $publisher) {
-    return new Mail($publisher);
-}, ['publisher']);
-$container->set('queueForBuilds', function (Publisher $publisher) {
-    return new Build($publisher);
-}, ['publisher']);
-$container->set('queueForScreenshots', function (Publisher $publisher) {
-    return new Screenshot($publisher);
-}, ['publisher']);
-$container->set('queueForDatabase', function (Publisher $publisher) {
-    return new EventDatabase($publisher);
-}, ['publisher']);
-$container->set('queueForDeletes', function (Publisher $publisher) {
-    return new Delete($publisher);
-}, ['publisher']);
-$container->set('queueForEvents', function (Publisher $publisher) {
-    return new Event($publisher);
-}, ['publisher']);
-$container->set('queueForWebhooks', function (Publisher $publisher) {
-    return new Webhook($publisher);
-}, ['publisher']);
-$container->set('queueForRealtime', function () {
-    return new Realtime();
-}, []);
-$container->set('usage', function () {
-    return new UsageContext();
-}, []);
 $container->set('publisherForUsage', fn (Publisher $publisher) => new UsagePublisher(
     $publisher,
     new Queue(System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME))
 ), ['publisher']);
-$container->set('queueForAudits', function (Publisher $publisher) {
-    return new AuditEvent($publisher);
-}, ['publisher']);
-$container->set('queueForFunctions', function (Publisher $publisher) {
-    return new Func($publisher);
-}, ['publisher']);
-$container->set('eventProcessor', function () {
-    return new EventProcessor();
-}, []);
-$container->set('queueForCertificates', function (Publisher $publisher) {
-    return new Certificate($publisher);
-}, ['publisher']);
-$container->set('queueForMigrations', function (Publisher $publisher) {
-    return new Migration($publisher);
-}, ['publisher']);
-$container->set('queueForStatsResources', function (Publisher $publisher) {
-    return new StatsResources($publisher);
-}, ['publisher']);
 
 /**
  * Platform configuration
@@ -194,6 +139,196 @@ $container->set('platform', function () {
  */
 function registerRequestResources(Container $container): void
 {
+    $container->set('log', fn () => new Log(), []);
+
+    $container->set('logger', function ($register) {
+        return $register->get('logger');
+    }, ['register']);
+
+    $container->set('authorization', function () {
+        return new Authorization();
+    }, []);
+
+    $container->set('store', function (): Store {
+        return new Store();
+    }, []);
+
+    $container->set('proofForPassword', function (): Password {
+        $hash = new Argon2();
+        $hash
+            ->setMemoryCost(7168)
+            ->setTimeCost(5)
+            ->setThreads(1);
+
+        $password = new Password();
+        $password
+            ->setHash($hash);
+
+        return $password;
+    });
+
+    $container->set('proofForToken', function (): Token {
+        $token = new Token();
+        $token->setHash(new Sha());
+
+        return $token;
+    });
+
+    $container->set('proofForCode', function (): Code {
+        $code = new Code();
+        $code->setHash(new Sha());
+
+        return $code;
+    });
+
+    $container->set('locale', function () {
+        $locale = new Locale(System::getEnv('_APP_LOCALE', 'en'));
+        $locale->setFallback(System::getEnv('_APP_LOCALE', 'en'));
+
+        return $locale;
+    });
+
+    // Per-request queue resources (stateful, accumulate event data during request)
+    $container->set('queueForMessaging', function (Publisher $publisher) {
+        return new Messaging($publisher);
+    }, ['publisher']);
+    $container->set('queueForMails', function (Publisher $publisher) {
+        return new Mail($publisher);
+    }, ['publisher']);
+    $container->set('queueForBuilds', function (Publisher $publisher) {
+        return new Build($publisher);
+    }, ['publisher']);
+    $container->set('queueForScreenshots', function (Publisher $publisher) {
+        return new Screenshot($publisher);
+    }, ['publisher']);
+    $container->set('queueForDatabase', function (Publisher $publisher) {
+        return new EventDatabase($publisher);
+    }, ['publisher']);
+    $container->set('queueForDeletes', function (Publisher $publisher) {
+        return new Delete($publisher);
+    }, ['publisher']);
+    $container->set('queueForEvents', function (Publisher $publisher) {
+        return new Event($publisher);
+    }, ['publisher']);
+    $container->set('queueForWebhooks', function (Publisher $publisher) {
+        return new Webhook($publisher);
+    }, ['publisher']);
+    $container->set('queueForRealtime', function () {
+        return new Realtime();
+    }, []);
+    $container->set('usage', function () {
+        return new UsageContext();
+    }, []);
+    $container->set('queueForAudits', function (Publisher $publisher) {
+        return new AuditEvent($publisher);
+    }, ['publisher']);
+    $container->set('queueForFunctions', function (Publisher $publisher) {
+        return new Func($publisher);
+    }, ['publisher']);
+    $container->set('eventProcessor', function () {
+        return new EventProcessor();
+    }, []);
+    $container->set('queueForCertificates', function (Publisher $publisher) {
+        return new Certificate($publisher);
+    }, ['publisher']);
+    $container->set('queueForMigrations', function (Publisher $publisher) {
+        return new Migration($publisher);
+    }, ['publisher']);
+    $container->set('queueForStatsResources', function (Publisher $publisher) {
+        return new StatsResources($publisher);
+    }, ['publisher']);
+
+    $container->set('dbForPlatform', function (Group $pools, Cache $cache, Authorization $authorization) {
+        $adapter = new DatabasePool($pools->get('console'));
+        $database = new Database($adapter, $cache);
+
+        $database
+            ->setDatabase(APP_DATABASE)
+            ->setAuthorization($authorization)
+            ->setNamespace('_console')
+            ->setMetadata('host', \gethostname())
+            ->setMetadata('project', 'console')
+            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
+            ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
+
+        $database->setDocumentType('users', User::class);
+
+        return $database;
+    }, ['pools', 'cache', 'authorization']);
+
+    $container->set('getProjectDB', function (Group $pools, Database $dbForPlatform, Cache $cache, Authorization $authorization) {
+        $adapters = [];
+
+        return function (Document $project) use ($pools, $dbForPlatform, $cache, $authorization, &$adapters) {
+            if ($project->isEmpty() || $project->getId() === 'console') {
+                return $dbForPlatform;
+            }
+
+            $database = $project->getAttribute('database', '');
+            if (empty($database)) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Project database is not configured');
+            }
+
+            try {
+                $dsn = new DSN($database);
+            } catch (\InvalidArgumentException) {
+                // TODO: Temporary until all projects are using shared tables
+                $dsn = new DSN('mysql://' . $database);
+            }
+
+            $adapter = $adapters[$dsn->getHost()] ??= new DatabasePool($pools->get($dsn->getHost()));
+            $database = new Database($adapter, $cache);
+
+            $database
+                ->setDatabase(APP_DATABASE)
+                ->setAuthorization($authorization)
+                ->setMetadata('host', \gethostname())
+                ->setMetadata('project', $project->getId())
+                ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
+                ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES)
+                ->setDocumentType('users', User::class);
+
+            $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+
+            if (\in_array($dsn->getHost(), $sharedTables)) {
+                $database
+                    ->setSharedTables(true)
+                    ->setTenant($project->getSequence())
+                    ->setNamespace($dsn->getParam('namespace'));
+            } else {
+                $database
+                    ->setSharedTables(false)
+                    ->setTenant(null)
+                    ->setNamespace('_' . $project->getSequence());
+            }
+
+            return $database;
+        };
+    }, ['pools', 'dbForPlatform', 'cache', 'authorization']);
+
+    $container->set('getLogsDB', function (Group $pools, Cache $cache, Authorization $authorization) {
+        $adapter = null;
+
+        return function (?Document $project = null) use ($pools, $cache, $authorization, &$adapter) {
+            $adapter ??= new DatabasePool($pools->get('logs'));
+            $database = new Database($adapter, $cache);
+
+            $database
+                ->setDatabase(APP_DATABASE)
+                ->setAuthorization($authorization)
+                ->setSharedTables(true)
+                ->setNamespace('logsV1')
+                ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
+                ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
+
+            if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
+                $database->setTenant($project->getSequence());
+            }
+
+            return $database;
+        };
+    }, ['pools', 'cache', 'authorization']);
+
     /**
      * List of allowed request hostnames for the request.
      */
