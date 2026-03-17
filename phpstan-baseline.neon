@@ -5319,7 +5319,7 @@ parameters:
 		-
 			message: '#^Binary operation "\." between ''mysql\://'' and mixed results in an error\.$#'
 			identifier: binaryOp.invalid
-			count: 2
+			count: 3
 			path: app/init/resources.php
 
 		-
@@ -5379,7 +5379,7 @@ parameters:
 		-
 			message: '#^Cannot call method get\(\) on mixed\.$#'
 			identifier: method.nonObject
-			count: 3
+			count: 4
 			path: app/init/resources.php
 
 		-
@@ -5523,7 +5523,7 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$dsn of class Utopia\\DSN\\DSN constructor expects string, mixed given\.$#'
 			identifier: argument.type
-			count: 2
+			count: 3
 			path: app/init/resources.php
 
 		-
@@ -5577,7 +5577,7 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$pool of class Utopia\\Database\\Adapter\\Pool constructor expects Utopia\\Pools\\Pool\<covariant Utopia\\Database\\Adapter\>, Utopia\\Pools\\Pool\<covariant mixed\> given\.$#'
 			identifier: argument.type
-			count: 4
+			count: 7
 			path: app/init/resources.php
 
 		-
@@ -22671,7 +22671,7 @@ parameters:
 		-
 			message: '#^Cannot access offset ''cpus'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
+			count: 2
 			path: src/Appwrite/Platform/Modules/Functions/Workers/Builds.php
 
 		-
@@ -22683,7 +22683,7 @@ parameters:
 		-
 			message: '#^Cannot access offset ''memory'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
+			count: 2
 			path: src/Appwrite/Platform/Modules/Functions/Workers/Builds.php
 
 		-
@@ -23092,18 +23092,6 @@ parameters:
 			message: '#^Strict comparison using \=\=\= between mixed~''canceled'' and ''canceled'' will always evaluate to false\.$#'
 			identifier: identical.alwaysFalse
 			count: 1
-			path: src/Appwrite/Platform/Modules/Functions/Workers/Builds.php
-
-		-
-			message: '#^Undefined variable\: \$cpus$#'
-			identifier: variable.undefined
-			count: 3
-			path: src/Appwrite/Platform/Modules/Functions/Workers/Builds.php
-
-		-
-			message: '#^Undefined variable\: \$memory$#'
-			identifier: variable.undefined
-			count: 3
 			path: src/Appwrite/Platform/Modules/Functions/Workers/Builds.php
 
 		-
