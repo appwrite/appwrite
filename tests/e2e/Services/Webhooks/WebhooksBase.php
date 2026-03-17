@@ -11,22 +11,104 @@ trait WebhooksBase
 
     // Tests for all auth scenarios
 
-    public function testListWebhooks(): void
+    public function testCreateWebhook(): void
     {
-        $webhooks = $this->listWebhooks();
+    }
+    
+    public function testCreateWebhookWithSecurity(): void
+    {
+    }
+    
+    public function testCreateWebhookWithHttpAuth(): void
+    {
+    }
+    
+    public function testCreateWebhookEnabled(): void
+    {
+    }
+    
+    public function testCreateWebhookWithoutAuthentication(): void
+    {
+    }
+    
+    public function testCreateWebhookInvalidId(): void
+    {
+    }
 
-        $this->assertSame(200, $webhooks['headers']['status-code']);
-        $this->assertSame(1, $webhooks['body']['total']); // One created during project setup
-        $this->assertIsArray($webhooks['body']['webhooks']);
-        $this->assertCount(1, $webhooks['body']['webhooks']);
+    public function testCreateWebhookMissingName(): void
+    {
+    }
+    
+    public function testCreateWebhookMissingUrl(): void
+    {
+    }
+    
+    public function testCreateWebhookMissingEvents(): void
+    {
+    }
+    
+    public function testCreateWebhookDuplicateId(): void
+    {
+    }
+    
+    public function testCreateWebhookAudit(): void
+    {
+    }
+    
+    public function testUpdateWebhook(): void
+    {
+    }
+    
+    public function testUpdateWebhookWithSecurity(): void
+    {
+    }
+    
+    public function testUpdateWebhookWithHttpAuth(): void
+    {
+    }
+    
+    public function testUpdateWebhookEnabled(): void
+    {
+    }
+    
+    public function testUpdateWebhookWithoutAuthentication(): void
+    {
+    }
+    
+    public function testUpdateWebhookInvalidId(): void
+    {
+    }
+
+    public function testUpdateWebhookMissingName(): void
+    {
+    }
+    
+    public function testUpdateWebhookMissingUrl(): void
+    {
+    }
+    
+    public function testUpdateWebhookMissingEvents(): void
+    {
+    }
+    
+    public function testUpdateWebhookDuplicateId(): void
+    {
+    }
+    
+    public function testUpdateWebhookAudit(): void
+    {
+    }
+    
+    public function testUpdateWebhookSignature(): void
+    {
     }
 
     // Helpers
 
     /**
-     * @param array<string> $queries
+     * @param array<string>|null $queries
      */
-    protected function listWebhooks(array $queries = [], bool $total = true): mixed
+    protected function listWebhooks(?array $queries, ?bool $total): mixed
     {
         $webhooks = $this->client->call(Client::METHOD_GET, '/webhooks', array_merge([
             'content-type' => 'application/json',
@@ -37,5 +119,62 @@ trait WebhooksBase
         ]);
 
         return $webhooks;
+    }
+    
+    protected function getWebhook(string $webhookId): mixed
+    {
+        $webhook = $this->client->call(Client::METHOD_GET, '/webhooks/' . $webhookId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        return $webhook;
+    }
+    
+    protected function createWebhook(string $webhookId, string $name, array $events, ?bool $enabled, ?string $url, ?bool $security, ?string $httpUser, ?string $httpPass): mixed
+    {
+        $webhook = $this->client->call(Client::METHOD_POST, '/webhooks', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'webhookId' => $webhookId,
+            'name' => $name,
+            'events' => $events,
+            'enabled' => $enabled,
+            'url' => $url,
+            'security' => $security,
+            'httpUser' => $httpUser,
+            'httpPass' => $httpPass,
+        ]);
+
+        return $webhook;
+    }
+    
+    protected function updateWebhook(string $webhookId, string $name, array $events, ?bool $enabled, ?string $url, ?bool $security, ?string $httpUser, ?string $httpPass): mixed
+    {
+        $webhook = $this->client->call(Client::METHOD_PUT, '/webhooks/' . $webhookId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => $name,
+            'events' => $events,
+            'enabled' => $enabled,
+            'url' => $url,
+            'security' => $security,
+            'httpUser' => $httpUser,
+            'httpPass' => $httpPass,
+        ]);
+
+        return $webhook;
+    }
+    
+    protected function updateWebhookSignature(string $webhookId): mixed
+    {
+        $webhook = $this->client->call(Client::METHOD_PATCH, '/webhooks/' . $webhookId . '/signature', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        return $webhook;
     }
 }

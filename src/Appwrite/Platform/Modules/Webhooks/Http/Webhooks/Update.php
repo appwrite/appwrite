@@ -9,13 +9,12 @@ use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\UID;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -25,44 +24,43 @@ use Utopia\Validator\Multiple;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 
-class Create extends Base
+class Update extends Base
 {
     use HTTP;
 
     public static function getName()
     {
-        return 'createWebhook';
+        return 'updateWebhook';
     }
 
     public function __construct()
     {
-        $this
-            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
-            ->setHttpPath('/v1/webhooks')
-            ->desc('Create webhook')
+        $this->setHttpMethod(Action::HTTP_REQUEST_METHOD_PUT)
+            ->setHttpPath('/v1/webhooks/:webhookId')
+            ->desc('Update webhook')
             ->groups(['api', 'webhooks'])
             ->label('scope', 'webhooks.write')
-            ->label('event', 'webhooks.[webhookId].create')
-            ->label('audits.event', 'webhook.create')
+            ->label('event', 'webhooks.[webhookId].update')
+            ->label('audits.event', 'webhooks.update')
             ->label('audits.resource', 'webhook/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'webhooks',
                 group: null,
-                name: 'create',
+                name: 'update',
                 description: <<<EOT
-                Create a new webhook. Use this endpoint to configure a URL that will receive events from Appwrite when specific events occur.
+                Update a webhook by its unique ID. Use this endpoint to update the URL, events, or status of an existing webhook.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
-                        code: Response::STATUS_CODE_CREATED,
+                        code: Response::STATUS_CODE_OK,
                         model: Response::MODEL_WEBHOOK,
                     )
-                ],
+                ]
             ))
-            ->param('webhokId', '', fn (Database $dbForPlatform) => new CustomId(false, $dbForPlatform->getAdapter()->getMaxUIDLength()), 'Webhook ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['$dbForPlatform'])
-            ->param('url', '', fn () => new Multiple([new URL(['http', 'https']), new PublicDomain()], Multiple::TYPE_STRING), 'Webhook URL.')
+            ->param('webhookId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Webhook ID.', false, ['dbForPlatform'])
             ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
+            ->param('url', '', fn () => new Multiple([new URL(['http', 'https']), new PublicDomain()], Multiple::TYPE_STRING), 'Webhook URL.')
             ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
             ->param('enabled', true, new Boolean(), 'Enable or disable a webhook.', true)
             ->param('security', false, new Boolean(), 'Certificate verification, false for disabled or true for enabled.', true)
@@ -76,9 +74,6 @@ class Create extends Base
             ->callback($this->action(...));
     }
 
-    /**
-     * @param array<string> $events
-     */
     public function action(
         string $webhookId,
         string $name,
@@ -94,35 +89,34 @@ class Create extends Base
         Database $dbForPlatform,
         Authorization $authorization
     ) {
-        $webhookId = ($webhookId == 'unique()') ? ID::unique() : $webhookId;
+        $webhook = $authorization->skip(fn () => $dbForPlatform->getDocument('webhooks', $webhookId, [
+            Query::equal('projectInternalId', [$project->getSequence()]),
+        ]));
 
-        $webhook = new Document([
-            '$id' => $webhookId,
-            '$permissions' => [],
-            'projectInternalId' => $project->getSequence(),
-            'projectId' => $project->getId(),
+        if ($webhook->isEmpty()) {
+            throw new Exception(Exception::WEBHOOK_NOT_FOUND);
+        }
+
+        $updates = new Document([
             'name' => $name,
             'events' => $events,
             'url' => $url,
             'security' => $security,
             'httpUser' => $httpUser,
             'httpPass' => $httpPass,
-            'signatureKey' => \bin2hex(\random_bytes(64)),
             'enabled' => $enabled,
         ]);
 
-        try {
-            $webhook = $authorization->skip(fn () => $dbForPlatform->createDocument('webhooks', $webhook));
-        } catch (DuplicateException) {
-            throw new Exception(Exception::WEBHOOK_ALREADY_EXISTS);
+        if ($enabled) {
+            $updates->setAttribute('attempts', 0);
         }
+
+        $authorization->skip(fn () => $dbForPlatform->updateDocument('webhooks', $webhook->getId(), $updates));
 
         $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
 
         $queueForEvents->setParam('webhookId', $webhook->getId());
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($webhook, Response::MODEL_WEBHOOK);
+        $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     }
 }
