@@ -73,12 +73,6 @@ parameters:
 			path: app/cli.php
 
 		-
-			message: '#^Parameter \#1 \$name of method Utopia\\DI\\Injection\:\:inject\(\) expects string, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/cli.php
-
-		-
 			message: '#^Parameter \#1 \$pool of class Utopia\\Cache\\Adapter\\Pool constructor expects Utopia\\Pools\\Pool\<covariant Utopia\\Cache\\Adapter\>, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -109,7 +103,7 @@ parameters:
 			path: app/cli.php
 
 		-
-			message: '#^Parameter \#2 \$default of static method Utopia\\System\\System\:\:getEnv\(\) expects string\|null, string\|false given\.$#'
+			message: '#^Parameter \#2 \$default of static method Utopia\\System\\System\:\:getEnv\(\) expects string, string\|false given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/cli.php
@@ -123,12 +117,6 @@ parameters:
 		-
 			message: '#^Strict comparison using \!\=\= between null and null will always evaluate to false\.$#'
 			identifier: notIdentical.alwaysFalse
-			count: 1
-			path: app/cli.php
-
-		-
-			message: '#^Variable \$dbForPlatform might not be defined\.$#'
-			identifier: variable.undefined
 			count: 1
 			path: app/cli.php
 
@@ -2071,6 +2059,12 @@ parameters:
 			path: app/controllers/api/messaging.php
 
 		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array\<int, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/controllers/api/messaging.php
+
+		-
 			message: '#^Parameter \#2 \$default of method Utopia\\Locale\\Locale\:\:getText\(\) expects string\|null, false given\.$#'
 			identifier: argument.type
 			count: 4
@@ -2869,6 +2863,12 @@ parameters:
 			path: app/controllers/api/users.php
 
 		-
+			message: '#^Parameter \#1 \$array of function array_unique expects an array of values castable to string, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/controllers/api/users.php
+
+		-
 			message: '#^Parameter \#1 \$dictionary of class Appwrite\\Auth\\Validator\\PasswordDictionary constructor expects array, mixed given\.$#'
 			identifier: argument.type
 			count: 2
@@ -3487,7 +3487,7 @@ parameters:
 			path: app/controllers/general.php
 
 		-
-			message: '#^Parameter \#1 \$value of function intval expects array\|bool\|float\|int\|resource\|string\|null, mixed given\.$#'
+			message: '#^Parameter \#1 \$value of function intval expects array\|bool\|float\|GMP\|int\|resource\|SimpleXMLElement\|string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/controllers/general.php
@@ -3499,13 +3499,25 @@ parameters:
 			path: app/controllers/general.php
 
 		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/controllers/general.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array\<mixed, mixed\> given\.$#'
+			identifier: argument.type
+			count: 3
+			path: app/controllers/general.php
+
+		-
 			message: '#^Parameter \#2 \$default of method Utopia\\DSN\\DSN\:\:getParam\(\) expects string, float given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/controllers/general.php
 
 		-
-			message: '#^Parameter \#2 \$default of static method Utopia\\System\\System\:\:getEnv\(\) expects string\|null, string\|false given\.$#'
+			message: '#^Parameter \#2 \$default of static method Utopia\\System\\System\:\:getEnv\(\) expects string, string\|false given\.$#'
 			identifier: argument.type
 			count: 1
 			path: app/controllers/general.php
@@ -3663,6 +3675,12 @@ parameters:
 		-
 			message: '#^Strict comparison using \=\=\= between bool and non\-falsy\-string will always evaluate to false\.$#'
 			identifier: identical.alwaysFalse
+			count: 1
+			path: app/controllers/general.php
+
+		-
+			message: '#^Unknown parameter \$override in call to method Utopia\\Http\\Response\:\:addHeader\(\)\.$#'
+			identifier: argument.unknown
 			count: 1
 			path: app/controllers/general.php
 
@@ -3967,6 +3985,12 @@ parameters:
 			path: app/controllers/shared/api.php
 
 		-
+			message: '#^Parameter \#1 \$array of function array_intersect expects an array of values castable to string, array\<mixed, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/controllers/shared/api.php
+
+		-
 			message: '#^Parameter \#1 \$array of function array_shift expects array, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -4060,6 +4084,12 @@ parameters:
 			message: '#^Parameter \#2 \$array of function array_key_exists expects array, mixed given\.$#'
 			identifier: argument.type
 			count: 2
+			path: app/controllers/shared/api.php
+
+		-
+			message: '#^Parameter \#2 \$arrays of function array_intersect expects an array of values castable to string, array\<mixed, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
 			path: app/controllers/shared/api.php
 
 		-
@@ -4279,6 +4309,12 @@ parameters:
 			path: app/controllers/web/home.php
 
 		-
+			message: '#^Anonymous function has an unused use \$register\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: app/http.php
+
+		-
 			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
 			identifier: foreach.nonIterable
 			count: 2
@@ -4447,6 +4483,12 @@ parameters:
 			path: app/http.php
 
 		-
+			message: '#^Cannot call method end\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/http.php
+
+		-
 			message: '#^Cannot call method get\(\) on mixed\.$#'
 			identifier: method.nonObject
 			count: 5
@@ -4465,12 +4507,6 @@ parameters:
 			path: app/http.php
 
 		-
-			message: '#^Cannot call method getResource\(\) on mixed\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/http.php
-
-		-
 			message: '#^Cannot call method getRoles\(\) on mixed\.$#'
 			identifier: method.nonObject
 			count: 1
@@ -4483,9 +4519,27 @@ parameters:
 			path: app/http.php
 
 		-
+			message: '#^Cannot call method getSwooleRequest\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/http.php
+
+		-
+			message: '#^Cannot call method getSwooleResponse\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: app/http.php
+
+		-
 			message: '#^Cannot call method isEmpty\(\) on mixed\.$#'
 			identifier: method.nonObject
 			count: 1
+			path: app/http.php
+
+		-
+			message: '#^Cannot call method set\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 7
 			path: app/http.php
 
 		-
@@ -4520,6 +4574,12 @@ parameters:
 
 		-
 			message: '#^Cannot call method setServer\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/http.php
+
+		-
+			message: '#^Cannot call method setStatusCode\(\) on mixed\.$#'
 			identifier: method.nonObject
 			count: 1
 			path: app/http.php
@@ -4597,12 +4657,6 @@ parameters:
 			path: app/http.php
 
 		-
-			message: '#^Parameter \#1 \$content of method Swoole\\Http\\Response\:\:end\(\) expects string\|null, string\|false given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/http.php
-
-		-
 			message: '#^Parameter \#1 \$haystack of function str_ends_with expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -4645,6 +4699,18 @@ parameters:
 			path: app/http.php
 
 		-
+			message: '#^Parameter \#1 \$request of class Appwrite\\Utopia\\Request constructor expects Swoole\\Http\\Request, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/http.php
+
+		-
+			message: '#^Parameter \#1 \$response of class Appwrite\\Utopia\\Response constructor expects Swoole\\Http\\Response, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/http.php
+
+		-
 			message: '#^Parameter \#1 \$string of function ltrim expects string, string\|false given\.$#'
 			identifier: argument.type
 			count: 1
@@ -4681,15 +4747,15 @@ parameters:
 			path: app/http.php
 
 		-
-			message: '#^Parameter \#2 \$default of static method Utopia\\System\\System\:\:getEnv\(\) expects string\|null, int given\.$#'
+			message: '#^Parameter \#2 \$default of static method Utopia\\System\\System\:\:getEnv\(\) expects string, string\|false given\.$#'
 			identifier: argument.type
-			count: 5
+			count: 1
 			path: app/http.php
 
 		-
-			message: '#^Parameter \#2 \$default of static method Utopia\\System\\System\:\:getEnv\(\) expects string\|null, string\|false given\.$#'
+			message: '#^Parameter \#2 \$default of static method Utopia\\System\\System\:\:getEnv\(\) expects string\|null, int given\.$#'
 			identifier: argument.type
-			count: 1
+			count: 5
 			path: app/http.php
 
 		-
@@ -4717,15 +4783,9 @@ parameters:
 			path: app/http.php
 
 		-
-			message: '#^Parameter \$port of class Swoole\\Http\\Server constructor expects int, string given\.$#'
+			message: '#^Parameter \$container of class Utopia\\Http\\Adapter\\Swoole\\HttpServer constructor expects Utopia\\DI\\Container\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
-			path: app/http.php
-
-		-
-			message: '#^Variable \$database might not be defined\.$#'
-			identifier: variable.undefined
-			count: 4
 			path: app/http.php
 
 		-
@@ -4846,6 +4906,18 @@ parameters:
 			message: '#^Parameter \#1 \$string of function hex2bin expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 2
+			path: app/init/database/filters.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array\<int, mixed\> given\.$#'
+			identifier: argument.type
+			count: 3
+			path: app/init/database/filters.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array\<int\<0, max\>, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
 			path: app/init/database/filters.php
 
 		-
@@ -5422,6 +5494,12 @@ parameters:
 			message: '#^Parameter \#1 \$allowedHosts of class Appwrite\\Network\\Cors constructor expects array\<string\>, array given\.$#'
 			identifier: argument.type
 			count: 1
+			path: app/init/resources.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_unique expects an array of values castable to string, array given\.$#'
+			identifier: argument.type
+			count: 2
 			path: app/init/resources.php
 
 		-
@@ -6007,6 +6085,12 @@ parameters:
 			path: app/realtime.php
 
 		-
+			message: '#^Parameter \#1 \$parent of class Utopia\\DI\\Container constructor expects Psr\\Container\\ContainerInterface\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/realtime.php
+
+		-
 			message: '#^Parameter \#1 \$pool of class Appwrite\\PubSub\\Adapter\\Pool constructor expects Utopia\\Pools\\Pool, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -6079,15 +6163,15 @@ parameters:
 			path: app/realtime.php
 
 		-
-			message: '#^Parameter \#2 \$default of static method Utopia\\System\\System\:\:getEnv\(\) expects string\|null, int given\.$#'
+			message: '#^Parameter \#2 \$default of static method Utopia\\System\\System\:\:getEnv\(\) expects string, string\|false given\.$#'
 			identifier: argument.type
-			count: 4
+			count: 1
 			path: app/realtime.php
 
 		-
-			message: '#^Parameter \#2 \$default of static method Utopia\\System\\System\:\:getEnv\(\) expects string\|null, string\|false given\.$#'
+			message: '#^Parameter \#2 \$default of static method Utopia\\System\\System\:\:getEnv\(\) expects string\|null, int given\.$#'
 			identifier: argument.type
-			count: 1
+			count: 4
 			path: app/realtime.php
 
 		-
@@ -6301,15 +6385,15 @@ parameters:
 			path: app/worker.php
 
 		-
-			message: '#^Parameter \#2 \$default of static method Utopia\\System\\System\:\:getEnv\(\) expects string\|null, int given\.$#'
+			message: '#^Parameter \#2 \$default of static method Utopia\\System\\System\:\:getEnv\(\) expects string, string\|false given\.$#'
 			identifier: argument.type
-			count: 6
+			count: 2
 			path: app/worker.php
 
 		-
-			message: '#^Parameter \#2 \$default of static method Utopia\\System\\System\:\:getEnv\(\) expects string\|null, string\|false given\.$#'
+			message: '#^Parameter \#2 \$default of static method Utopia\\System\\System\:\:getEnv\(\) expects string\|null, int given\.$#'
 			identifier: argument.type
-			count: 2
+			count: 6
 			path: app/worker.php
 
 		-
@@ -6667,6 +6751,12 @@ parameters:
 			path: src/Appwrite/Auth/OAuth2/Amazon.php
 
 		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Auth/OAuth2/Amazon.php
+
+		-
 			message: '#^Property Appwrite\\Auth\\OAuth2\\Amazon\:\:\$scopes type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -6772,6 +6862,12 @@ parameters:
 			message: '#^Parameter \#1 \$string of function mb_substr expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 4
+			path: src/Appwrite/Auth/OAuth2/Apple.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 1
 			path: src/Appwrite/Auth/OAuth2/Apple.php
 
 		-
@@ -6895,6 +6991,12 @@ parameters:
 			path: src/Appwrite/Auth/OAuth2/Auth0.php
 
 		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Appwrite/Auth/OAuth2/Auth0.php
+
+		-
 			message: '#^Property Appwrite\\Auth\\OAuth2\\Auth0\:\:\$scopes type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -6985,6 +7087,12 @@ parameters:
 			path: src/Appwrite/Auth/OAuth2/Authentik.php
 
 		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Appwrite/Auth/OAuth2/Authentik.php
+
+		-
 			message: '#^Property Appwrite\\Auth\\OAuth2\\Authentik\:\:\$scopes type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -7047,6 +7155,12 @@ parameters:
 		-
 			message: '#^Method Appwrite\\Auth\\OAuth2\\Autodesk\:\:refreshTokens\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
+			count: 1
+			path: src/Appwrite/Auth/OAuth2/Autodesk.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Auth/OAuth2/Autodesk.php
 
@@ -7137,6 +7251,12 @@ parameters:
 		-
 			message: '#^Method Appwrite\\Auth\\OAuth2\\Bitbucket\:\:refreshTokens\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
+			count: 1
+			path: src/Appwrite/Auth/OAuth2/Bitbucket.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Auth/OAuth2/Bitbucket.php
 
@@ -7285,6 +7405,12 @@ parameters:
 			path: src/Appwrite/Auth/OAuth2/Box.php
 
 		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Appwrite/Auth/OAuth2/Box.php
+
+		-
 			message: '#^Property Appwrite\\Auth\\OAuth2\\Box\:\:\$scopes type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -7363,6 +7489,12 @@ parameters:
 			path: src/Appwrite/Auth/OAuth2/Dailymotion.php
 
 		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/Appwrite/Auth/OAuth2/Dailymotion.php
+
+		-
 			message: '#^Property Appwrite\\Auth\\OAuth2\\Dailymotion\:\:\$fields type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -7432,6 +7564,12 @@ parameters:
 			message: '#^Method Appwrite\\Auth\\OAuth2\\Discord\:\:refreshTokens\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
+			path: src/Appwrite/Auth/OAuth2/Discord.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 2
 			path: src/Appwrite/Auth/OAuth2/Discord.php
 
 		-
@@ -7510,6 +7648,12 @@ parameters:
 			message: '#^PHPDoc tag @param references unknown parameter\: \$token$#'
 			identifier: parameter.notFound
 			count: 1
+			path: src/Appwrite/Auth/OAuth2/Disqus.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 2
 			path: src/Appwrite/Auth/OAuth2/Disqus.php
 
 		-
@@ -7735,6 +7879,12 @@ parameters:
 			path: src/Appwrite/Auth/OAuth2/Facebook.php
 
 		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Auth/OAuth2/Facebook.php
+
+		-
 			message: '#^Property Appwrite\\Auth\\OAuth2\\Facebook\:\:\$scopes type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -7797,6 +7947,12 @@ parameters:
 		-
 			message: '#^Method Appwrite\\Auth\\OAuth2\\Figma\:\:refreshTokens\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
+			count: 1
+			path: src/Appwrite/Auth/OAuth2/Figma.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Auth/OAuth2/Figma.php
 
@@ -7909,6 +8065,12 @@ parameters:
 			path: src/Appwrite/Auth/OAuth2/Github.php
 
 		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Auth/OAuth2/Github.php
+
+		-
 			message: '#^Parameter \#4 \$payload of method Appwrite\\Auth\\OAuth2\:\:request\(\) expects string, string\|false given\.$#'
 			identifier: argument.type
 			count: 1
@@ -7993,6 +8155,12 @@ parameters:
 			path: src/Appwrite/Auth/OAuth2/Gitlab.php
 
 		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Auth/OAuth2/Gitlab.php
+
+		-
 			message: '#^Property Appwrite\\Auth\\OAuth2\\Gitlab\:\:\$scopes type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -8055,6 +8223,12 @@ parameters:
 		-
 			message: '#^Method Appwrite\\Auth\\OAuth2\\Google\:\:refreshTokens\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
+			count: 1
+			path: src/Appwrite/Auth/OAuth2/Google.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Auth/OAuth2/Google.php
 
@@ -8139,6 +8313,12 @@ parameters:
 		-
 			message: '#^Method Appwrite\\Auth\\OAuth2\\Linkedin\:\:refreshTokens\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
+			count: 1
+			path: src/Appwrite/Auth/OAuth2/Linkedin.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Auth/OAuth2/Linkedin.php
 
@@ -8233,6 +8413,12 @@ parameters:
 			path: src/Appwrite/Auth/OAuth2/Microsoft.php
 
 		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Appwrite/Auth/OAuth2/Microsoft.php
+
+		-
 			message: '#^Property Appwrite\\Auth\\OAuth2\\Microsoft\:\:\$scopes type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -8301,6 +8487,12 @@ parameters:
 		-
 			message: '#^Method Appwrite\\Auth\\OAuth2\\Mock\:\:refreshTokens\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
+			count: 1
+			path: src/Appwrite/Auth/OAuth2/Mock.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Auth/OAuth2/Mock.php
 
@@ -8539,6 +8731,12 @@ parameters:
 			path: src/Appwrite/Auth/OAuth2/Oidc.php
 
 		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Appwrite/Auth/OAuth2/Oidc.php
+
+		-
 			message: '#^Property Appwrite\\Auth\\OAuth2\\Oidc\:\:\$scopes type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -8647,6 +8845,12 @@ parameters:
 			path: src/Appwrite/Auth/OAuth2/Okta.php
 
 		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Appwrite/Auth/OAuth2/Okta.php
+
+		-
 			message: '#^Property Appwrite\\Auth\\OAuth2\\Okta\:\:\$scopes type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -8744,6 +8948,12 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$array of function array_filter expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Auth/OAuth2/Paypal.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Auth/OAuth2/Paypal.php
@@ -8851,7 +9061,7 @@ parameters:
 			path: src/Appwrite/Auth/OAuth2/Podio.php
 
 		-
-			message: '#^Parameter \#1 \$value of function strval expects bool\|float\|int\|resource\|string\|null, mixed given\.$#'
+			message: '#^Parameter \#1 \$value of function strval expects bool\|float\|GMP\|int\|resource\|string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Auth/OAuth2/Podio.php
@@ -8937,6 +9147,12 @@ parameters:
 		-
 			message: '#^Method Appwrite\\Auth\\OAuth2\\Salesforce\:\:refreshTokens\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
+			count: 1
+			path: src/Appwrite/Auth/OAuth2/Salesforce.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Auth/OAuth2/Salesforce.php
 
@@ -9031,6 +9247,12 @@ parameters:
 			path: src/Appwrite/Auth/OAuth2/Slack.php
 
 		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Auth/OAuth2/Slack.php
+
+		-
 			message: '#^Property Appwrite\\Auth\\OAuth2\\Slack\:\:\$scopes type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -9097,6 +9319,12 @@ parameters:
 			path: src/Appwrite/Auth/OAuth2/Spotify.php
 
 		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Auth/OAuth2/Spotify.php
+
+		-
 			message: '#^Property Appwrite\\Auth\\OAuth2\\Spotify\:\:\$scopes type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -9159,6 +9387,12 @@ parameters:
 		-
 			message: '#^Method Appwrite\\Auth\\OAuth2\\Stripe\:\:refreshTokens\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
+			count: 1
+			path: src/Appwrite/Auth/OAuth2/Stripe.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Auth/OAuth2/Stripe.php
 
@@ -9271,6 +9505,12 @@ parameters:
 			path: src/Appwrite/Auth/OAuth2/Tradeshift.php
 
 		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Auth/OAuth2/Tradeshift.php
+
+		-
 			message: '#^Property Appwrite\\Auth\\OAuth2\\Tradeshift\:\:\$apiDomain type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -9363,6 +9603,12 @@ parameters:
 		-
 			message: '#^Method Appwrite\\Auth\\OAuth2\\Twitch\:\:refreshTokens\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
+			count: 1
+			path: src/Appwrite/Auth/OAuth2/Twitch.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Auth/OAuth2/Twitch.php
 
@@ -9511,6 +9757,12 @@ parameters:
 			path: src/Appwrite/Auth/OAuth2/Yahoo.php
 
 		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Auth/OAuth2/Yahoo.php
+
+		-
 			message: '#^Property Appwrite\\Auth\\OAuth2\\Yahoo\:\:\$scopes type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -9649,6 +9901,12 @@ parameters:
 			path: src/Appwrite/Auth/OAuth2/Yandex.php
 
 		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Auth/OAuth2/Yandex.php
+
+		-
 			message: '#^Property Appwrite\\Auth\\OAuth2\\Yandex\:\:\$scopes type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -9706,6 +9964,12 @@ parameters:
 			message: '#^Method Appwrite\\Auth\\OAuth2\\Zoho\:\:refreshTokens\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
+			path: src/Appwrite/Auth/OAuth2/Zoho.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 2
 			path: src/Appwrite/Auth/OAuth2/Zoho.php
 
 		-
@@ -9783,6 +10047,12 @@ parameters:
 		-
 			message: '#^Method Appwrite\\Auth\\OAuth2\\Zoom\:\:refreshTokens\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
+			count: 1
+			path: src/Appwrite/Auth/OAuth2/Zoom.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Auth/OAuth2/Zoom.php
 
@@ -10543,6 +10813,12 @@ parameters:
 			path: src/Appwrite/Docker/Compose/Service.php
 
 		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Docker/Compose/Service.php
+
+		-
 			message: '#^Parameter \#2 \$string of function explode expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -10741,6 +11017,12 @@ parameters:
 			path: src/Appwrite/Event/Event.php
 
 		-
+			message: '#^Parameter \#1 \$array of function array_unique expects an array of values castable to string, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Event/Event.php
+
+		-
 			message: '#^Parameter \#1 \$haystack of function str_contains expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 2
@@ -10750,6 +11032,12 @@ parameters:
 			message: '#^Parameter \#1 \$string of function trim expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 3
+			path: src/Appwrite/Event/Event.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array\<int, mixed\> given\.$#'
+			identifier: argument.type
+			count: 11
 			path: src/Appwrite/Event/Event.php
 
 		-
@@ -11407,6 +11695,18 @@ parameters:
 			path: src/Appwrite/Functions/EventProcessor.php
 
 		-
+			message: '#^Parameter \#1 \$array of function array_unique expects an array of values castable to string, list given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Functions/EventProcessor.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_unique expects an array of values castable to string, list\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Functions/EventProcessor.php
+
+		-
 			message: '#^Parameter \#1 \$json of function json_decode expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -11560,6 +11860,18 @@ parameters:
 			message: '#^Method Appwrite\\GraphQL\\Resolvers\:\:escapePayload\(\) has parameter \$payload with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
+			path: src/Appwrite/GraphQL/Resolvers.php
+
+		-
+			message: '#^Method Utopia\\Http\\Http\:\:execute\(\) invoked with 3 parameters, 2 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: src/Appwrite/GraphQL/Resolvers.php
+
+		-
+			message: '#^Method Utopia\\Http\\Http\:\:getResource\(\) invoked with 2 parameters, 1 required\.$#'
+			identifier: arguments.count
+			count: 8
 			path: src/Appwrite/GraphQL/Resolvers.php
 
 		-
@@ -12133,6 +12445,12 @@ parameters:
 			path: src/Appwrite/GraphQL/Types/Mapper.php
 
 		-
+			message: '#^Parameter \#1 \$list of method Utopia\\Http\\Http\:\:getResources\(\) expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/GraphQL/Types/Mapper.php
+
+		-
 			message: '#^Parameter \#1 \$rule of static method Appwrite\\GraphQL\\Types\\Mapper\:\:getObjectType\(\) expects array, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -12554,6 +12872,12 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$array of function array_flip expects array\<int\|string\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Messaging/Adapter/Realtime.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_unique expects an array of values castable to string, array given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Messaging/Adapter/Realtime.php
@@ -13112,6 +13436,12 @@ parameters:
 
 		-
 			message: '#^Parameter \#2 \$array of function array_map expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Migration/Version/V15.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array\<int, mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Migration/Version/V15.php
@@ -14173,6 +14503,12 @@ parameters:
 			path: src/Appwrite/Migration/Version/V22.php
 
 		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array\<int, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Migration/Version/V22.php
+
+		-
 			message: '#^Parameter \#2 \$collectionId of method Appwrite\\Migration\\Migration\:\:createAttributesFromCollection\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 8
@@ -14971,8 +15307,20 @@ parameters:
 			path: src/Appwrite/Platform/Installer/Server.php
 
 		-
+			message: '#^Class Utopia\\Http\\Http constructor invoked with 1 parameter, 2 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: src/Appwrite/Platform/Installer/Server.php
+
+		-
 			message: '#^Method Appwrite\\Platform\\Installer\\Server\:\:startDockerInstaller\(\) has parameter \$opts with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
+			count: 1
+			path: src/Appwrite/Platform/Installer/Server.php
+
+		-
+			message: '#^Method Utopia\\Http\\Adapter\\Swoole\\Server@anonymous/src/Appwrite/Platform/Installer/Server\.php\:156\:\:getNativeServer\(\) should return Swoole\\Http\\Server but returns Swoole\\Coroutine\\Http\\Server\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Appwrite/Platform/Installer/Server.php
 
@@ -14990,6 +15338,12 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$path of function realpath expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Platform/Installer/Server.php
+
+		-
+			message: '#^Parameter \#1 \$server of class Utopia\\Http\\Http constructor expects Utopia\\Http\\Adapter, string given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Installer/Server.php
@@ -15028,6 +15382,12 @@ parameters:
 			message: '#^Property Appwrite\\Platform\\Installer\\Server\:\:\$paths type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
+			path: src/Appwrite/Platform/Installer/Server.php
+
+		-
+			message: '#^Static call to instance method Utopia\\Http\\Http\:\:setResource\(\)\.$#'
+			identifier: method.staticCall
+			count: 4
 			path: src/Appwrite/Platform/Installer/Server.php
 
 		-
@@ -16177,6 +16537,18 @@ parameters:
 			path: src/Appwrite/Platform/Modules/Compute/Base.php
 
 		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array\<int, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Platform/Modules/Compute/Base.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, list\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Platform/Modules/Compute/Base.php
+
+		-
 			message: '#^Parameter \#2 \$default of static method Utopia\\System\\System\:\:getEnv\(\) expects string\|null, int given\.$#'
 			identifier: argument.type
 			count: 2
@@ -16257,6 +16629,12 @@ parameters:
 		-
 			message: '#^Method Appwrite\\Platform\\Modules\\Compute\\Validator\\Specification\:\:getAllowedSpecifications\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
+			count: 1
+			path: src/Appwrite/Platform/Modules/Compute/Validator/Specification.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Modules/Compute/Validator/Specification.php
 
@@ -16393,7 +16771,7 @@ parameters:
 			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Action.php
 
 		-
-			message: '#^Parameter \#1 \$operator of static method Utopia\\Database\\Operator\:\:parseOperator\(\) expects array\<string, mixed\>, array given\.$#'
+			message: '#^Parameter \#1 \$operator of static method Utopia\\Database\\Operator\:\:parseOperator\(\) expects array\<string, mixed\>, array\<mixed, mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Action.php
@@ -16759,7 +17137,7 @@ parameters:
 			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Attributes/Float/Create.php
 
 		-
-			message: '#^Parameter \#1 \$value of function floatval expects array\|bool\|float\|int\|resource\|string\|null, mixed given\.$#'
+			message: '#^Parameter \#1 \$value of function floatval expects array\|bool\|float\|GMP\|int\|resource\|SimpleXMLElement\|string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 2
 			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Attributes/Float/Create.php
@@ -16789,7 +17167,7 @@ parameters:
 			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Attributes/Float/Update.php
 
 		-
-			message: '#^Parameter \#1 \$value of function floatval expects array\|bool\|float\|int\|resource\|string\|null, mixed given\.$#'
+			message: '#^Parameter \#1 \$value of function floatval expects array\|bool\|float\|GMP\|int\|resource\|SimpleXMLElement\|string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 2
 			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Attributes/Float/Update.php
@@ -16879,7 +17257,7 @@ parameters:
 			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Attributes/Integer/Create.php
 
 		-
-			message: '#^Parameter \#1 \$value of function intval expects array\|bool\|float\|int\|resource\|string\|null, mixed given\.$#'
+			message: '#^Parameter \#1 \$value of function intval expects array\|bool\|float\|GMP\|int\|resource\|SimpleXMLElement\|string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 2
 			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Attributes/Integer/Create.php
@@ -16909,7 +17287,7 @@ parameters:
 			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Attributes/Integer/Update.php
 
 		-
-			message: '#^Parameter \#1 \$value of function intval expects array\|bool\|float\|int\|resource\|string\|null, mixed given\.$#'
+			message: '#^Parameter \#1 \$value of function intval expects array\|bool\|float\|GMP\|int\|resource\|SimpleXMLElement\|string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 2
 			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Attributes/Integer/Update.php
@@ -17965,7 +18343,7 @@ parameters:
 			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Create.php
 
 		-
-			message: '#^Parameter \#1 \$input of class Utopia\\Database\\Document constructor expects array\<string, mixed\>, array given\.$#'
+			message: '#^Parameter \#1 \$input of class Utopia\\Database\\Document constructor expects array\<string, mixed\>, array\<mixed, mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Create.php
@@ -18303,7 +18681,13 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$input of class Utopia\\Database\\Document constructor expects array\<string, mixed\>, array given\.$#'
 			identifier: argument.type
-			count: 2
+			count: 1
+			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Update.php
+
+		-
+			message: '#^Parameter \#1 \$input of class Utopia\\Database\\Document constructor expects array\<string, mixed\>, array\<mixed, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
 			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Update.php
 
 		-
@@ -18465,7 +18849,13 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$input of class Utopia\\Database\\Document constructor expects array\<string, mixed\>, array given\.$#'
 			identifier: argument.type
-			count: 2
+			count: 1
+			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Upsert.php
+
+		-
+			message: '#^Parameter \#1 \$input of class Utopia\\Database\\Document constructor expects array\<string, mixed\>, array\<mixed, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
 			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Upsert.php
 
 		-
@@ -18806,6 +19196,12 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$permissions of static method Utopia\\Database\\Helpers\\Permission\:\:aggregate\(\) expects array\<string\>\|null, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Update.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array\<int, mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Update.php
@@ -19675,6 +20071,12 @@ parameters:
 			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Transactions/XList.php
 
 		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array\<int, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Update.php
+
+		-
 			message: '#^Binary operation "\*" between mixed and mixed results in an error\.$#'
 			identifier: binaryOp.invalid
 			count: 1
@@ -20317,19 +20719,19 @@ parameters:
 			path: src/Appwrite/Platform/Modules/Databases/Workers/Databases.php
 
 		-
-			message: '#^Parameter \#1 \$value of function floatval expects array\|bool\|float\|int\|resource\|string\|null, mixed given\.$#'
+			message: '#^Parameter \#1 \$value of function floatval expects array\|bool\|float\|GMP\|int\|resource\|SimpleXMLElement\|string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Modules/Databases/Workers/Databases.php
 
 		-
-			message: '#^Parameter \#1 \$value of function intval expects array\|bool\|float\|int\|resource\|string\|null, mixed given\.$#'
+			message: '#^Parameter \#1 \$value of function intval expects array\|bool\|float\|GMP\|int\|resource\|SimpleXMLElement\|string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Modules/Databases/Workers/Databases.php
 
 		-
-			message: '#^Parameter \#1 \$value of function strval expects bool\|float\|int\|resource\|string\|null, mixed given\.$#'
+			message: '#^Parameter \#1 \$value of function strval expects bool\|float\|GMP\|int\|resource\|string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 2
 			path: src/Appwrite/Platform/Modules/Databases/Workers/Databases.php
@@ -20344,6 +20746,12 @@ parameters:
 			message: '#^Parameter \#11 \$filters of method Utopia\\Database\\Database\:\:createAttribute\(\) expects array\<string\>, mixed given\.$#'
 			identifier: argument.type
 			count: 1
+			path: src/Appwrite/Platform/Modules/Databases/Workers/Databases.php
+
+		-
+			message: '#^Parameter \#2 \$arrays of function array_diff expects an array of values castable to string, list\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 2
 			path: src/Appwrite/Platform/Modules/Databases/Workers/Databases.php
 
 		-
@@ -20575,7 +20983,7 @@ parameters:
 			path: src/Appwrite/Platform/Modules/Functions/Http/Deployments/Create.php
 
 		-
-			message: '#^Parameter \#1 \$value of function strval expects bool\|float\|int\|resource\|string\|null, mixed given\.$#'
+			message: '#^Parameter \#1 \$value of function strval expects bool\|float\|GMP\|int\|resource\|string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 2
 			path: src/Appwrite/Platform/Modules/Functions/Http/Deployments/Create.php
@@ -21061,7 +21469,7 @@ parameters:
 			path: src/Appwrite/Platform/Modules/Functions/Http/Executions/Create.php
 
 		-
-			message: '#^Parameter \#1 \$value of function strval expects bool\|float\|int\|resource\|string\|null, mixed given\.$#'
+			message: '#^Parameter \#1 \$value of function strval expects bool\|float\|GMP\|int\|resource\|string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 2
 			path: src/Appwrite/Platform/Modules/Functions/Http/Executions/Create.php
@@ -21267,6 +21675,12 @@ parameters:
 		-
 			message: '#^Method Appwrite\\Platform\\Modules\\Functions\\Http\\Executions\\XList\:\:getName\(\) has no return type specified\.$#'
 			identifier: missingType.return
+			count: 1
+			path: src/Appwrite/Platform/Modules/Functions/Http/Executions/XList.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_diff expects an array of values castable to string, array\<mixed\> given\.$#'
+			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Modules/Functions/Http/Executions/XList.php
 
@@ -21559,6 +21973,12 @@ parameters:
 			path: src/Appwrite/Platform/Modules/Functions/Http/Functions/Update.php
 
 		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array\<int, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Platform/Modules/Functions/Http/Functions/Update.php
+
+		-
 			message: '#^Parameter \#2 \$default of static method Utopia\\System\\System\:\:getEnv\(\) expects string\|null, int given\.$#'
 			identifier: argument.type
 			count: 5
@@ -21811,6 +22231,12 @@ parameters:
 			path: src/Appwrite/Platform/Modules/Functions/Http/Templates/XList.php
 
 		-
+			message: '#^Parameter \#1 \$array of function array_intersect expects an array of values castable to string, array given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Appwrite/Platform/Modules/Functions/Http/Templates/XList.php
+
+		-
 			message: '#^Parameter \#1 \$array of function array_keys expects array, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -21830,6 +22256,12 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$value of function count expects array\|Countable, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Platform/Modules/Functions/Http/Templates/XList.php
+
+		-
+			message: '#^Parameter \#2 \$arrays of function array_intersect expects an array of values castable to string, list given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Modules/Functions/Http/Templates/XList.php
@@ -22453,6 +22885,12 @@ parameters:
 			path: src/Appwrite/Platform/Modules/Functions/Workers/Builds.php
 
 		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array\<int, mixed\> given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Appwrite/Platform/Modules/Functions/Workers/Builds.php
+
+		-
 			message: '#^Parameter \#2 \$default of static method Utopia\\System\\System\:\:getEnv\(\) expects string\|null, int given\.$#'
 			identifier: argument.type
 			count: 2
@@ -22777,7 +23215,7 @@ parameters:
 			path: src/Appwrite/Platform/Modules/Functions/Workers/Screenshots.php
 
 		-
-			message: '#^Parameter \#1 \$value of function intval expects array\|bool\|float\|int\|resource\|string\|null, mixed given\.$#'
+			message: '#^Parameter \#1 \$value of function intval expects array\|bool\|float\|GMP\|int\|resource\|SimpleXMLElement\|string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Modules/Functions/Workers/Screenshots.php
@@ -22832,6 +23270,12 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$pool of class Utopia\\Cache\\Adapter\\Pool constructor expects Utopia\\Pools\\Pool\<covariant Utopia\\Cache\\Adapter\>, Utopia\\Pools\\Pool\<covariant mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Platform/Modules/Health/Http/Health/Cache/Get.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, list\<mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Modules/Health/Http/Health/Cache/Get.php
@@ -22903,6 +23347,12 @@ parameters:
 			path: src/Appwrite/Platform/Modules/Health/Http/Health/DB/Get.php
 
 		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, list\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Platform/Modules/Health/Http/Health/DB/Get.php
+
+		-
 			message: '#^Part \$database \(mixed\) of encapsed string cannot be cast to string\.$#'
 			identifier: encapsedStringPart.nonString
 			count: 1
@@ -22916,6 +23366,12 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$name of method Utopia\\Pools\\Group\:\:get\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Platform/Modules/Health/Http/Health/PubSub/Get.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, list\<mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Modules/Health/Http/Health/PubSub/Get.php
@@ -23467,6 +23923,12 @@ parameters:
 			path: src/Appwrite/Platform/Modules/Projects/Http/Schedules/Create.php
 
 		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Platform/Modules/Projects/Http/Schedules/Create.php
+
+		-
 			message: '#^Method Appwrite\\Platform\\Modules\\Projects\\Http\\Schedules\\XList\:\:action\(\) has parameter \$queries with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -23893,7 +24355,13 @@ parameters:
 			path: src/Appwrite/Platform/Modules/Sites/Http/Deployments/Create.php
 
 		-
-			message: '#^Parameter \#1 \$value of function strval expects bool\|float\|int\|resource\|string\|null, mixed given\.$#'
+			message: '#^Parameter \#1 \$value of function strval expects bool\|float\|GMP\|int\|resource\|string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Appwrite/Platform/Modules/Sites/Http/Deployments/Create.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, list\<mixed\> given\.$#'
 			identifier: argument.type
 			count: 2
 			path: src/Appwrite/Platform/Modules/Sites/Http/Deployments/Create.php
@@ -24037,6 +24505,12 @@ parameters:
 			path: src/Appwrite/Platform/Modules/Sites/Http/Deployments/Duplicate/Create.php
 
 		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, list\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Platform/Modules/Sites/Http/Deployments/Duplicate/Create.php
+
+		-
 			message: '#^Method Appwrite\\Platform\\Modules\\Sites\\Http\\Deployments\\Get\:\:action\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
@@ -24087,6 +24561,12 @@ parameters:
 		-
 			message: '#^Method Appwrite\\Platform\\Modules\\Sites\\Http\\Deployments\\Template\\Create\:\:getName\(\) has no return type specified\.$#'
 			identifier: missingType.return
+			count: 1
+			path: src/Appwrite/Platform/Modules/Sites/Http/Deployments/Template/Create.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, list\<mixed\> given\.$#'
+			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Modules/Sites/Http/Deployments/Template/Create.php
 
@@ -24255,6 +24735,12 @@ parameters:
 		-
 			message: '#^Method Appwrite\\Platform\\Modules\\Sites\\Http\\Logs\\XList\:\:getName\(\) has no return type specified\.$#'
 			identifier: missingType.return
+			count: 1
+			path: src/Appwrite/Platform/Modules/Sites/Http/Logs/XList.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_diff expects an array of values castable to string, array\<mixed\> given\.$#'
+			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Modules/Sites/Http/Logs/XList.php
 
@@ -24434,6 +24920,12 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$teamId of method Appwrite\\Platform\\Modules\\Compute\\Base\:\:getPermissions\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Platform/Modules/Sites/Http/Sites/Update.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array\<int, mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Modules/Sites/Http/Sites/Update.php
@@ -24661,6 +25153,12 @@ parameters:
 			path: src/Appwrite/Platform/Modules/Sites/Http/Templates/XList.php
 
 		-
+			message: '#^Parameter \#1 \$array of function array_intersect expects an array of values castable to string, array given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Appwrite/Platform/Modules/Sites/Http/Templates/XList.php
+
+		-
 			message: '#^Parameter \#1 \$array of function array_keys expects array, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -24680,6 +25178,12 @@ parameters:
 
 		-
 			message: '#^Parameter \#1 \$value of function count expects array\|Countable, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Platform/Modules/Sites/Http/Templates/XList.php
+
+		-
+			message: '#^Parameter \#2 \$arrays of function array_intersect expects an array of values castable to string, list given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Modules/Sites/Http/Templates/XList.php
@@ -25210,6 +25714,12 @@ parameters:
 			message: '#^Parameter \#1 \$string of function bin2hex expects string, string\|false given\.$#'
 			identifier: argument.type
 			count: 1
+			path: src/Appwrite/Platform/Modules/Storage/Http/Buckets/Files/Create.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array\<int, mixed\> given\.$#'
+			identifier: argument.type
+			count: 2
 			path: src/Appwrite/Platform/Modules/Storage/Http/Buckets/Files/Create.php
 
 		-
@@ -26575,6 +27085,12 @@ parameters:
 			path: src/Appwrite/Platform/Modules/Teams/Http/Memberships/Create.php
 
 		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array\<int, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Platform/Modules/Teams/Http/Memberships/Create.php
+
+		-
 			message: '#^Parameter \#2 \$replace of function str_replace expects array\<string\>\|string, int\<min, \-1\>\|int\<1, max\> given\.$#'
 			identifier: argument.type
 			count: 1
@@ -27271,6 +27787,12 @@ parameters:
 			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Authorize/External/Update.php
 
 		-
+			message: '#^Parameter \#1 \$array of function array_unique expects an array of values castable to string, array\<mixed, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Authorize/External/Update.php
+
+		-
 			message: '#^Parameter \#1 \$deployment of method Appwrite\\Event\\Build\:\:setDeployment\(\) expects Utopia\\Database\\Document, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -27325,7 +27847,7 @@ parameters:
 			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Authorize/External/Update.php
 
 		-
-			message: '#^Parameter \#1 \$value of function strval expects bool\|float\|int\|resource\|string\|null, mixed given\.$#'
+			message: '#^Parameter \#1 \$value of function strval expects bool\|float\|GMP\|int\|resource\|string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Authorize/External/Update.php
@@ -27356,6 +27878,18 @@ parameters:
 
 		-
 			message: '#^Parameter \#13 \$providerCommitUrl of method Appwrite\\Platform\\Modules\\VCS\\Http\\GitHub\\Authorize\\External\\Update\:\:createGitDeployments\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Authorize/External/Update.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array\<int, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Authorize/External/Update.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, list\<mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Authorize/External/Update.php
@@ -27531,6 +28065,12 @@ parameters:
 		-
 			message: '#^Variable \$logBase might not be defined\.$#'
 			identifier: variable.undefined
+			count: 1
+			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Authorize/External/Update.php
+
+		-
+			message: '#^Variable \$previewRuleId in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
 			count: 1
 			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Authorize/External/Update.php
 
@@ -27925,7 +28465,7 @@ parameters:
 			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Events/Create.php
 
 		-
-			message: '#^Parameter \#1 \$value of function strval expects bool\|float\|int\|resource\|string\|null, mixed given\.$#'
+			message: '#^Parameter \#1 \$value of function strval expects bool\|float\|GMP\|int\|resource\|string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Events/Create.php
@@ -27962,6 +28502,24 @@ parameters:
 
 		-
 			message: '#^Parameter \#15 \$external of method Appwrite\\Platform\\Modules\\VCS\\Http\\GitHub\\Events\\Create\:\:createGitDeployments\(\) expects bool, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Events/Create.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array\<int, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Events/Create.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, list\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Events/Create.php
+
+		-
+			message: '#^Parameter \#2 \$arrays of function array_diff expects an array of values castable to string, array\<int, mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Events/Create.php
@@ -28171,6 +28729,12 @@ parameters:
 			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Events/Create.php
 
 		-
+			message: '#^Variable \$previewRuleId in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Events/Create.php
+
+		-
 			message: '#^Variable \$previewUrl in empty\(\) always exists and is not falsy\.$#'
 			identifier: empty.variable
 			count: 1
@@ -28369,7 +28933,7 @@ parameters:
 			path: src/Appwrite/Platform/Modules/VCS/Http/Installations/Repositories/Create.php
 
 		-
-			message: '#^Parameter \#1 \$input of class Utopia\\Database\\Document constructor expects array\<string, mixed\>, array given\.$#'
+			message: '#^Parameter \#1 \$input of class Utopia\\Database\\Document constructor expects array\<string, mixed\>, array\<mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Modules/VCS/Http/Installations/Repositories/Create.php
@@ -28393,7 +28957,7 @@ parameters:
 			path: src/Appwrite/Platform/Modules/VCS/Http/Installations/Repositories/Create.php
 
 		-
-			message: '#^Parameter \#1 \$value of function strval expects bool\|float\|int\|resource\|string\|null, mixed given\.$#'
+			message: '#^Parameter \#1 \$value of function strval expects bool\|float\|GMP\|int\|resource\|string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Modules/VCS/Http/Installations/Repositories/Create.php
@@ -28513,7 +29077,7 @@ parameters:
 			path: src/Appwrite/Platform/Modules/VCS/Http/Installations/Repositories/Get.php
 
 		-
-			message: '#^Parameter \#1 \$input of class Utopia\\Database\\Document constructor expects array\<string, mixed\>, array given\.$#'
+			message: '#^Parameter \#1 \$input of class Utopia\\Database\\Document constructor expects array\<string, mixed\>, array\<mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Modules/VCS/Http/Installations/Repositories/Get.php
@@ -28531,7 +29095,7 @@ parameters:
 			path: src/Appwrite/Platform/Modules/VCS/Http/Installations/Repositories/Get.php
 
 		-
-			message: '#^Parameter \#1 \$value of function strval expects bool\|float\|int\|resource\|string\|null, mixed given\.$#'
+			message: '#^Parameter \#1 \$value of function strval expects bool\|float\|GMP\|int\|resource\|string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Modules/VCS/Http/Installations/Repositories/Get.php
@@ -28735,7 +29299,7 @@ parameters:
 			path: src/Appwrite/Platform/Modules/VCS/Http/Installations/Repositories/XList.php
 
 		-
-			message: '#^Parameter \#1 \$value of function strval expects bool\|float\|int\|resource\|string\|null, mixed given\.$#'
+			message: '#^Parameter \#1 \$value of function strval expects bool\|float\|GMP\|int\|resource\|string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Platform/Modules/VCS/Http/Installations/Repositories/XList.php
@@ -29389,18 +29953,6 @@ parameters:
 			path: src/Appwrite/Platform/Tasks/Migrate.php
 
 		-
-			message: '#^Parameter \#1 \$project of method Appwrite\\Migration\\Migration\:\:setProject\(\) expects Utopia\\Database\\Document, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Tasks/Migrate.php
-
-		-
-			message: '#^Parameter \#1 of callable callable\(Utopia\\Database\\Document\)\: Utopia\\Database\\Database expects Utopia\\Database\\Document, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Appwrite/Platform/Tasks/Migrate.php
-
-		-
 			message: '#^Cannot cast mixed to int\.$#'
 			identifier: cast.int
 			count: 1
@@ -29653,6 +30205,12 @@ parameters:
 			path: src/Appwrite/Platform/Tasks/SDKs.php
 
 		-
+			message: '#^Parameter \#1 \$array of function array_unique expects an array of values castable to string, list given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Platform/Tasks/SDKs.php
+
+		-
 			message: '#^Parameter \#1 \$changelog of method Appwrite\\Platform\\Tasks\\SDKs\:\:extractReleaseNotes\(\) expects string, string\|false given\.$#'
 			identifier: argument.type
 			count: 1
@@ -29848,6 +30406,12 @@ parameters:
 			message: '#^Parameter \#2 \$array of function array_map expects array, mixed given\.$#'
 			identifier: argument.type
 			count: 1
+			path: src/Appwrite/Platform/Tasks/SDKs.php
+
+		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 2
 			path: src/Appwrite/Platform/Tasks/SDKs.php
 
 		-
@@ -30088,6 +30652,18 @@ parameters:
 			message: '#^Cannot call method record\(\) on Utopia\\Telemetry\\Histogram\|null\.$#'
 			identifier: method.nonObject
 			count: 2
+			path: src/Appwrite/Platform/Tasks/ScheduleBase.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_unique expects an array of values castable to string, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Platform/Tasks/ScheduleBase.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_unique expects an array of values castable to string, list\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
 			path: src/Appwrite/Platform/Tasks/ScheduleBase.php
 
 		-
@@ -31369,7 +31945,7 @@ parameters:
 			path: src/Appwrite/Platform/Workers/Deletes.php
 
 		-
-			message: '#^Parameter \#1 \$value of function strval expects bool\|float\|int\|resource\|string\|null, mixed given\.$#'
+			message: '#^Parameter \#1 \$value of function strval expects bool\|float\|GMP\|int\|resource\|string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 2
 			path: src/Appwrite/Platform/Workers/Deletes.php
@@ -33607,6 +34183,12 @@ parameters:
 			path: src/Appwrite/Platform/Workers/Migrations.php
 
 		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array\<int, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/Platform/Workers/Migrations.php
+
+		-
 			message: '#^Parameter \#2 \$endpoint of class Utopia\\Migration\\Destinations\\Appwrite constructor expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -34519,6 +35101,12 @@ parameters:
 			path: src/Appwrite/Platform/Workers/Webhooks.php
 
 		-
+			message: '#^Parameter \#2 \$array of function implode expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/Appwrite/Platform/Workers/Webhooks.php
+
+		-
 			message: '#^Parameter \#2 \$payload of method Appwrite\\Platform\\Workers\\Webhooks\:\:execute\(\) expects string, string\|false given\.$#'
 			identifier: argument.type
 			count: 1
@@ -35389,7 +35977,7 @@ parameters:
 			path: src/Appwrite/SDK/Specification/Format/OpenAPI3.php
 
 		-
-			message: '#^Parameter \#1 \$list of method Utopia\\Http\\Http\:\:getResources\(\) expects array, mixed given\.$#'
+			message: '#^Parameter \#1 \$list of method Utopia\\Http\\Http\:\:getResources\(\) expects array\<string\>, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/SDK/Specification/Format/OpenAPI3.php
@@ -35398,6 +35986,12 @@ parameters:
 			message: '#^Parameter \#1 \$object of function get_class expects object, mixed given\.$#'
 			identifier: argument.type
 			count: 2
+			path: src/Appwrite/SDK/Specification/Format/OpenAPI3.php
+
+		-
+			message: '#^Parameter \#2 \$array of function join expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 1
 			path: src/Appwrite/SDK/Specification/Format/OpenAPI3.php
 
 		-
@@ -35719,6 +36313,12 @@ parameters:
 			path: src/Appwrite/SDK/Specification/Format/Swagger2.php
 
 		-
+			message: '#^Parameter \#1 \$array of function array_unique expects an array of values castable to string, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Appwrite/SDK/Specification/Format/Swagger2.php
+
+		-
 			message: '#^Parameter \#1 \$array of function array_values expects array\<T\>, mixed given\.$#'
 			identifier: argument.type
 			count: 4
@@ -35737,7 +36337,7 @@ parameters:
 			path: src/Appwrite/SDK/Specification/Format/Swagger2.php
 
 		-
-			message: '#^Parameter \#1 \$list of method Utopia\\Http\\Http\:\:getResources\(\) expects array, mixed given\.$#'
+			message: '#^Parameter \#1 \$list of method Utopia\\Http\\Http\:\:getResources\(\) expects array\<string\>, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Appwrite/SDK/Specification/Format/Swagger2.php
@@ -35746,6 +36346,12 @@ parameters:
 			message: '#^Parameter \#1 \$object of function get_class expects object, mixed given\.$#'
 			identifier: argument.type
 			count: 2
+			path: src/Appwrite/SDK/Specification/Format/Swagger2.php
+
+		-
+			message: '#^Parameter \#2 \$array of function join expects array\<string\>, array given\.$#'
+			identifier: argument.type
+			count: 1
 			path: src/Appwrite/SDK/Specification/Format/Swagger2.php
 
 		-
@@ -36249,6 +36855,12 @@ parameters:
 		-
 			message: '#^Method Appwrite\\Utopia\\Database\\RuntimeQuery\:\:filter\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
+			count: 1
+			path: src/Appwrite/Utopia/Database/RuntimeQuery.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_unique expects an array of values castable to string, array given\.$#'
+			identifier: argument.type
 			count: 1
 			path: src/Appwrite/Utopia/Database/RuntimeQuery.php
 
@@ -36874,6 +37486,12 @@ parameters:
 			message: '#^Offset ''selections'' on array\{filters\: array\<Utopia\\Database\\Query\>, selections\: array\<Utopia\\Database\\Query\>, limit\: int\|null, offset\: int\|null, orderAttributes\: array\<string\>, orderTypes\: array\<string\>, cursor\: Utopia\\Database\\Document\|null, cursorDirection\: string\|null\} on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
 			count: 1
+			path: src/Appwrite/Utopia/Request/Filters/V20.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_unique expects an array of values castable to string, array given\.$#'
+			identifier: argument.type
+			count: 2
 			path: src/Appwrite/Utopia/Request/Filters/V20.php
 
 		-
@@ -38725,6 +39343,12 @@ parameters:
 			path: src/Executor/Executor.php
 
 		-
+			message: '#^Offset ''content\-type'' on array\<string, string\> on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/Executor/Executor.php
+
+		-
 			message: '#^Offset ''headers'' might not exist on array\|string\.$#'
 			identifier: offsetAccess.notFound
 			count: 4
@@ -38755,13 +39379,13 @@ parameters:
 			path: src/Executor/Executor.php
 
 		-
-			message: '#^Parameter \#1 \$value of function floatval expects array\|bool\|float\|int\|resource\|string\|null, mixed given\.$#'
+			message: '#^Parameter \#1 \$value of function floatval expects array\|bool\|float\|GMP\|int\|resource\|SimpleXMLElement\|string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 2
 			path: src/Executor/Executor.php
 
 		-
-			message: '#^Parameter \#1 \$value of function intval expects array\|bool\|float\|int\|resource\|string\|null, mixed given\.$#'
+			message: '#^Parameter \#1 \$value of function intval expects array\|bool\|float\|GMP\|int\|resource\|SimpleXMLElement\|string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Executor/Executor.php
@@ -38865,6 +39489,12 @@ parameters:
 		-
 			message: '#^Method Tests\\E2E\\Client\:\:parseCookie\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
+			count: 1
+			path: tests/e2e/Client.php
+
+		-
+			message: '#^Offset ''content\-type'' on array\<string, string\> on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
 			count: 1
 			path: tests/e2e/Client.php
 
@@ -39295,7 +39925,7 @@ parameters:
 			path: tests/e2e/General/CompressionTest.php
 
 		-
-			message: '#^Parameter \#1 \$value of function intval expects array\|bool\|float\|int\|resource\|string\|null, mixed given\.$#'
+			message: '#^Parameter \#1 \$value of function intval expects array\|bool\|float\|GMP\|int\|resource\|SimpleXMLElement\|string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: tests/e2e/General/CompressionTest.php
@@ -64288,6 +64918,12 @@ parameters:
 			message: '#^Method Tests\\E2E\\Services\\Migrations\\MigrationsConsoleClientTest\:\:updateProjectinvalidateSessionsProperty\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
+			path: tests/e2e/Services/Migrations/MigrationsConsoleClientTest.php
+
+		-
+			message: '#^Offset 1 might not exist on array\{\}\|array\{non\-falsy\-string, non\-falsy\-string\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 2
 			path: tests/e2e/Services/Migrations/MigrationsConsoleClientTest.php
 
 		-
