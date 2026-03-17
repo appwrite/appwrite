@@ -1703,6 +1703,7 @@ export function TableView({
   const openSuggestColumnsDialogRef = useRef<(() => void) | null>(null)
   const openCreateIndexDialogRef = useRef<(() => void) | null>(null)
   const openSuggestIndexesDialogRef = useRef<(() => void) | null>(null)
+  const [canCreateIndex, setCanCreateIndex] = useState(true)
   const [isRefreshingRows, setIsRefreshingRows] = useState(false)
   const refreshStartTimeRef = useRef<number | null>(null)
   const minAnimationDuration = 1000 // 1 second for at least one full rotation
@@ -2606,12 +2607,18 @@ export function TableView({
             !isDatabaseLevelView &&
             (activeTab === 'rows'
               ? noCreateRowPermission
-              : activeTab === 'columns' || activeTab === 'indexes'
+              : activeTab === 'columns'
                 ? noCreateTablePermission
-                : false)
+                : activeTab === 'indexes'
+                  ? noCreateTablePermission || !canCreateIndex
+                  : false)
           }
           createDisabledTooltip={
-            !isDatabaseLevelView ? createPermissionTooltip : undefined
+            !isDatabaseLevelView
+              ? activeTab === 'indexes' && !canCreateIndex
+                ? 'Add at least one non-relationship column to create indexes.'
+                : createPermissionTooltip
+              : undefined
           }
           onCreate={
             isDatabaseLevelView
@@ -2785,21 +2792,28 @@ export function TableView({
               ) : activeTab === 'indexes' ? (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        if (openSuggestIndexesDialogRef.current) {
-                          openSuggestIndexesDialogRef.current()
-                        }
-                      }}
-                      className="h-9"
-                    >
-                      <Lightbulb className="h-3.5 w-3.5 shrink-0 sm:mr-1.5" />
-                      <span className="hidden sm:inline">Suggest indexes</span>
-                    </Button>
+                    <span className="inline-flex">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (openSuggestIndexesDialogRef.current) {
+                            openSuggestIndexesDialogRef.current()
+                          }
+                        }}
+                        disabled={!canCreateIndex}
+                        className="h-9"
+                      >
+                        <Lightbulb className="h-3.5 w-3.5 shrink-0 sm:mr-1.5" />
+                        <span className="hidden sm:inline">Suggest indexes</span>
+                      </Button>
+                    </span>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom">Suggest indexes</TooltipContent>
+                  <TooltipContent side="bottom">
+                    {!canCreateIndex
+                      ? 'Add at least one non-relationship column to suggest indexes.'
+                      : 'Suggest indexes'}
+                  </TooltipContent>
                 </Tooltip>
               ) : undefined
           }
@@ -3020,6 +3034,7 @@ export function TableView({
                   onSuggestReady={(openDialog) => {
                     openSuggestIndexesDialogRef.current = openDialog
                   }}
+                  onIndexesAbilityChange={setCanCreateIndex}
                 />
               )}
               {activeTab === 'security' && (
@@ -6186,6 +6201,8 @@ interface SpreadsheetProps {
   onCreateColumnReady?: (() => void) | null
   onCreateReady?: (openDialog: () => void) => void
   onSuggestReady?: (openDialog: () => void) => void
+  /** When provided (indexes tab), called with whether table has any non-relationship columns so parent can disable create/suggest index buttons */
+  onIndexesAbilityChange?: (canCreate: boolean) => void
   onRowsCountChange?: (count: number) => void
   /** When false, create row/column and suggest actions are disabled (e.g. read-only roles) */
   canWriteRows?: boolean
@@ -9268,6 +9285,7 @@ function IndexesSpreadsheet({
   table,
   onCreateReady,
   onSuggestReady,
+  onIndexesAbilityChange,
   canWriteTables = true,
   filterMap: filterMapProp,
 }: SpreadsheetProps) {
@@ -9348,6 +9366,16 @@ function IndexesSpreadsheet({
     databaseId,
     tableId,
   )
+
+  // Notify parent when table has no non-relationship columns (disable create/suggest index buttons)
+  useEffect(() => {
+    if (!onIndexesAbilityChange) return
+    const nonRelationshipColumns =
+      availableColumns?.filter(
+        (c: { type?: string }) => c.type !== 'relationship',
+      ) ?? []
+    onIndexesAbilityChange(nonRelationshipColumns.length > 0)
+  }, [availableColumns, onIndexesAbilityChange])
 
   // Create index mutation
   const createIndexMutation = useMutation({
@@ -9485,6 +9513,10 @@ function IndexesSpreadsheet({
     }
   }
 
+  // Backend limit: 767 bytes = 191 chars (utf8mb4). Key indexes need explicit length for string/varchar to avoid "index full column" exceeding 767.
+  const INDEX_MAX_LENGTH = 767
+  const INDEX_MAX_CHARS = 191
+
   const handleApproveSuggestion = async (suggestionKey: string) => {
     try {
       // Get the current suggestion data from state (in case it was edited)
@@ -9494,28 +9526,41 @@ function IndexesSpreadsheet({
         return
       }
 
-      // Map columns and filter out invalid ones
+      // Build column map: string/varchar key -> attribute size (for key index length capping and safe default)
+      const columnSizeMap = new Map<string, number>()
+      availableColumns?.forEach((c: { key: string; type?: string; size?: number }) => {
+        if ((c.type === 'string' || c.type === 'varchar') && typeof c.size === 'number') {
+          columnSizeMap.set(c.key, c.size)
+        }
+      })
+
+      // Map columns and filter out invalid ones; for key indexes on string/varchar set safe default length when null (avoid lengths: [null,null] → backend indexes full column → 767 error)
       const validColumns = suggestion.columns
         .map((col: string, idx: number) => {
-          // Find the column definition
           const columnDef = availableColumns.find((c) => c.key === col)
 
-          // Skip array columns - they're not supported for indexes
           if (columnDef?.array) {
             return null
           }
 
           const columnType = columnDef?.type
-
-          // Only key indexes on string and varchar columns support length
           const supportsLength =
             suggestion.type === 'key' &&
             (columnType === 'string' || columnType === 'varchar')
 
-          // Cap length at maximum of 767
-          let length = suggestion.lengths?.[idx] || null
-          if (length && length > 767) {
-            length = 767
+          let length: number | null = suggestion.lengths?.[idx] ?? null
+          if (supportsLength) {
+            if (length != null && length > 0) {
+              const maxSize = columnSizeMap.get(col)
+              const cap = maxSize != null ? Math.min(maxSize, INDEX_MAX_LENGTH) : INDEX_MAX_LENGTH
+              if (length > cap) length = cap
+            } else if (length != null && length > INDEX_MAX_LENGTH) {
+              length = INDEX_MAX_LENGTH
+            } else {
+              // Key index on string/varchar with no length: set safe default so backend doesn't index full column (would exceed 767)
+              const colSize = columnSizeMap.get(col) ?? 255
+              length = Math.min(colSize, INDEX_MAX_CHARS)
+            }
           }
 
           return {
