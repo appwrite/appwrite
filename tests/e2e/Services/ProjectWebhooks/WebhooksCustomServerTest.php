@@ -175,7 +175,6 @@ class WebhooksCustomServerTest extends Scope
             'orders' => ['ASC', 'ASC'],
         ]);
 
-        $indexKey = $index['body']['key'];
         $this->assertEquals(202, $index['headers']['status-code']);
         $this->assertEquals('fullname', $index['body']['key']);
 
