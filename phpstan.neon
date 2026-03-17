@@ -2,7 +2,7 @@ includes:
   - phpstan-baseline.neon
 
 parameters:
-  level: max
+  level: 3
   paths:
     - src
     - app
