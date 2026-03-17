@@ -67,6 +67,7 @@ $swooleAdapter = new HttpServer(
         Constant::OPTION_TASK_WORKER_NUM => 1, // required for the task to fetch domains background
     ],
     container: $container,
+    coroutines: true,
 );
 
 $container->set('container', fn () => fn () => $swooleAdapter->getContainer());

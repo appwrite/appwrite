@@ -1203,6 +1203,8 @@ class Builds extends Action
     protected function sendUsage(Document $resource, Document $deployment, Document $project, Context $usage, UsagePublisher $publisherForUsage): void
     {
         $spec = Config::getParam('specifications')[$resource->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
+        $cpus = $spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT;
+        $memory = $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT;
 
         switch ($deployment->getAttribute('status')) {
             case 'ready':
