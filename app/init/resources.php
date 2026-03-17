@@ -390,19 +390,16 @@ Http::setResource('user', function (string $mode, Document $project, Document $c
 
     $user = null;
     if ($mode === APP_MODE_ADMIN) {
-        /** @var User $user */
-        $user = $dbForPlatform->getDocument('users', $store->getProperty('id', ''));
+        $user = new User($dbForPlatform->getDocument('users', $store->getProperty('id', ''))->getArrayCopy());
     } else {
         if ($project->isEmpty()) {
             $user = new User([]);
         } else {
             if (! empty($store->getProperty('id', ''))) {
                 if ($project->getId() === 'console') {
-                    /** @var User $user */
-                    $user = $dbForPlatform->getDocument('users', $store->getProperty('id', ''));
+                    $user = new User($dbForPlatform->getDocument('users', $store->getProperty('id', ''))->getArrayCopy());
                 } else {
-                    /** @var User $user */
-                    $user = $dbForProject->getDocument('users', $store->getProperty('id', ''));
+                    $user = new User($dbForProject->getDocument('users', $store->getProperty('id', ''))->getArrayCopy());
                 }
             }
         }
@@ -432,9 +429,9 @@ Http::setResource('user', function (string $mode, Document $project, Document $c
         $jwtUserId = $payload['userId'] ?? '';
         if (! empty($jwtUserId)) {
             if ($mode === APP_MODE_ADMIN) {
-                $user = $dbForPlatform->getDocument('users', $jwtUserId);
+                $user = new User($dbForPlatform->getDocument('users', $jwtUserId)->getArrayCopy());
             } else {
-                $user = $dbForProject->getDocument('users', $jwtUserId);
+                $user = new User($dbForProject->getDocument('users', $jwtUserId)->getArrayCopy());
             }
         }
         $jwtSessionId = $payload['sessionId'] ?? '';
@@ -453,8 +450,9 @@ Http::setResource('user', function (string $mode, Document $project, Document $c
             throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
         }
 
-        $accountKeyUser = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('users', $accountKeyUserId));
-        if (! $accountKeyUser->isEmpty()) {
+        $accountKeyDoc = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('users', $accountKeyUserId));
+        if (! $accountKeyDoc->isEmpty()) {
+            $accountKeyUser = new User($accountKeyDoc->getArrayCopy());
             $key = $accountKeyUser->find(
                 key: 'secret',
                 find: $accountKey,
