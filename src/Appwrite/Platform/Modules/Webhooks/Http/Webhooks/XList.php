@@ -61,12 +61,17 @@ class XList extends Base
             ->callback($this->action(...));
     }
 
-    public function action(array $queries, bool $includeTotal, Document $project, Response $response, Database $dbForPlatform, Authorization $authorization)
-    {
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
+    /**
+     * @param array<string> $queries
+     */
+    public function action(
+        array $queries,
+        bool $includeTotal,
+        Document $project,
+        Response $response,
+        Database $dbForPlatform,
+        Authorization $authorization
+    ) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
