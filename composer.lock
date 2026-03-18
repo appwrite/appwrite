@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1c156b2a11a5abb568b44d880d1ddec7",
+    "content-hash": "6efdf0d212038b3d65b12cf693276936",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3850,7 +3850,7 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-main",
+            "version": "5.3.15",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
@@ -3883,7 +3883,6 @@
                 "swoole/ide-helper": "5.1.3",
                 "utopia-php/cli": "0.22.*"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -4307,12 +4306,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "2f1b5ab33e56736ee9f061b0438cc7eede5b3acf"
+                "reference": "8420a83e4e21f606da34897a07589db247b90acf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/2f1b5ab33e56736ee9f061b0438cc7eede5b3acf",
-                "reference": "2f1b5ab33e56736ee9f061b0438cc7eede5b3acf",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/8420a83e4e21f606da34897a07589db247b90acf",
+                "reference": "8420a83e4e21f606da34897a07589db247b90acf",
                 "shasum": ""
             },
             "require": {
@@ -4352,7 +4351,7 @@
                 "issues": "https://github.com/utopia-php/http/issues",
                 "source": "https://github.com/utopia-php/http/tree/feat/coroutines-option"
             },
-            "time": "2026-03-18T04:09:48+00:00"
+            "time": "2026-03-18T11:08:21+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -8474,12 +8473,6 @@
     ],
     "aliases": [
         {
-            "package": "utopia-php/database",
-            "version": "dev-main",
-            "alias": "5.3.15",
-            "alias_normalized": "5.3.15.0"
-        },
-        {
             "package": "utopia-php/framework",
             "version": "dev-feat/coroutines-option",
             "alias": "0.34.15",
@@ -8488,7 +8481,6 @@
     ],
     "minimum-stability": "dev",
     "stability-flags": {
-        "utopia-php/database": 20,
         "utopia-php/framework": 20
     },
     "prefer-stable": true,
