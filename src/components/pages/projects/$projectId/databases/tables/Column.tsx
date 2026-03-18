@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { toast } from 'sonner'
-import { Info, X, Plus } from 'lucide-react'
+import { ArrowLeftRight, ArrowRight, Info, X, Plus } from 'lucide-react'
 import { PointEditor, LineEditor, PolygonEditor } from './spatial/index'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Textarea } from '@/components/ui/textarea'
@@ -136,6 +136,37 @@ const ON_DELETE_OPTIONS: {
     { value: 'cascade', label: 'Cascade - delete all related rows' },
     { value: 'restrict', label: 'Restrict - row can not be deleted' },
   ]
+
+function getRelationshipPreviewText(
+  relationshipType: ColumnFormData['relationshipType'],
+  sourceTableName: string,
+  targetTableName: string,
+) {
+  switch (relationshipType) {
+    case 'oneToOne':
+      return {
+        forward: `${sourceTableName} can contain one ${targetTableName}`,
+        backward: `${targetTableName} can belong to one ${sourceTableName}`,
+      }
+    case 'oneToMany':
+      return {
+        forward: `${sourceTableName} can contain many ${targetTableName}`,
+        backward: `${targetTableName} can belong to one ${sourceTableName}`,
+      }
+    case 'manyToOne':
+      return {
+        forward: `${sourceTableName} can contain one ${targetTableName}`,
+        backward: `${targetTableName} can belong to many ${sourceTableName}`,
+      }
+    case 'manyToMany':
+      return {
+        forward: `${sourceTableName} can contain many ${targetTableName}`,
+        backward: `${targetTableName} can belong to many ${sourceTableName}`,
+      }
+    default:
+      return null
+  }
+}
 
 export function ColumnDrawer({
   open,
@@ -429,6 +460,17 @@ export function ColumnDrawer({
   const showDefaultValue =
     !formData.required && !formData.array && !isSpatialType
   const showDefaultValueCheckbox = isSpatialType && !formData.required
+  const currentTableName =
+    availableTables.find((table) => table.$id === currentTableId)?.name ||
+    'Current table'
+  const relatedTableName =
+    relationshipTables.find((table) => table.$id === formData.relatedTableId)
+      ?.name || 'Related table'
+  const relationshipPreview = getRelationshipPreviewText(
+    formData.relationshipType,
+    currentTableName,
+    relatedTableName,
+  )
 
   return (
     <BaseDrawer
@@ -1002,6 +1044,46 @@ export function ColumnDrawer({
                         </p>
                       )}
                     </div>
+
+                    {formData.relationshipType && formData.relatedTableId && (
+                      <div className="space-y-3 rounded-xl border border-border bg-card/50 p-3">
+                        <div className="flex items-center justify-center gap-3 rounded-lg border border-border bg-background/70 px-3 py-4 text-center">
+                          <span className="text-base font-medium text-foreground">
+                            {currentTableName}
+                          </span>
+                          {formData.twoWay ? (
+                            <ArrowLeftRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          ) : (
+                            <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          )}
+                          <span className="text-base font-medium text-foreground">
+                            {relatedTableName}
+                          </span>
+                        </div>
+                        {relationshipPreview && (
+                          <div className="space-y-1 text-center text-[13px] leading-snug text-muted-foreground">
+                            <p>
+                              <span className="font-semibold text-foreground">
+                                {currentTableName}
+                              </span>{' '}
+                              {relationshipPreview.forward.replace(
+                                `${currentTableName} `,
+                                '',
+                              )}
+                            </p>
+                            <p>
+                              <span className="font-semibold text-foreground">
+                                {relatedTableName}
+                              </span>{' '}
+                              {relationshipPreview.backward.replace(
+                                `${relatedTableName} `,
+                                '',
+                              )}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     <div className="space-y-2">
                       <Label
