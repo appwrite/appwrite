@@ -565,10 +565,60 @@ Appwrite uses [XDebug](https://github.com/xdebug/xdebug) debugger, which can be 
 If you are in PHP Storm you don't need any plugin. Below are the settings required for remote debugger connection:
 
 1. Set **DEBUG** build arg in **appwrite** service in **docker-compose.yml** file.
+
+```yml
+  ...
+  appwrite:
+    container_name: appwrite
+    <<: *x-logging
+    image: appwrite-dev
+    build:
+      context: .
+      target: development
+      args:
+        DEBUG: true
+        TESTING: true
+        VERSION: dev
+    ports:
+      - 9501:80
+    ...
+```
+
 2. If needed edit the **dev/xdebug.ini** file to your needs.
-3. Launch your Appwrite instance while your debugger is listening for connections.
+3. Add a breakpoint in code for the debugger to catch. ./app/controllers/general.php line # 819 is a good starting point.
+4. Configure your editors debugger; VSCode and PHPStorm examples:
+
+### VS Code Launch Configuration
+
+Edit /path/to/project/.vscode/launch.json
+
+```json
+{
+    "configurations": [
+        ...
+        {
+            "name": "Listen for Xdebug",
+            "type": "php",
+            "request": "launch",
+            "port": 9003,
+            "pathMappings": {
+                "/usr/src/code": "${workspaceRoot}"
+            }
+        }
+        ...
+    ]
+}
+```
+
+### PHPStorm Setup
+
+In settings, go to **Languages & Frameworks** > **PHP** > **Debug**, under **Xdebug** set the debug port to **9003** and enable the **can accept external connections** checkbox.
+
+5. Start the debugger listening.
+6. Launch the Appwrite via `docker-compose up`.
 
 ## Profiling
+
 Appwrite uses XDebug [Profiler](https://xdebug.org/docs/profiler) for generating **CacheGrind** files. The generated file would be located in each of the `appwrite` containers inside the `/tmp/xdebug` folder.
 
 To disable the profiler while debugging remove the `,profiler` mode from the `xdebug.ini` file
@@ -579,24 +629,6 @@ zend_extension=xdebug
 -xdebug.mode=develop,debug,profile
 +xdebug.mode=develop,debug
 ```
-
-### VS Code Launch Configuration
-
-```json
-{
-  "name": "Listen for Xdebug",
-  "type": "php",
-  "request": "launch",
-  "port": 9005,
-  "pathMappings": {
-    "/usr/src/code": "${workspaceRoot}"
-  }
-}
-```
-
-### PHPStorm Setup
-
-In settings, go to **Languages & Frameworks** > **PHP** > **Debug**, under **Xdebug** set the debug port to **9005** and enable the **can accept external connections** checkbox.
 
 ## Tests
 
