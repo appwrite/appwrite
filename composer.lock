@@ -3934,7 +3934,7 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/database/tree/main",
+                "source": "https://github.com/utopia-php/database/tree/5.3.15",
                 "issues": "https://github.com/utopia-php/database/issues"
             },
             "time": "2026-03-16T11:41:45+00:00"
@@ -4307,12 +4307,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "27c6fcbf3d10932ea20a067e8476e82cf5a6afb4"
+                "reference": "2f1b5ab33e56736ee9f061b0438cc7eede5b3acf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/27c6fcbf3d10932ea20a067e8476e82cf5a6afb4",
-                "reference": "27c6fcbf3d10932ea20a067e8476e82cf5a6afb4",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/2f1b5ab33e56736ee9f061b0438cc7eede5b3acf",
+                "reference": "2f1b5ab33e56736ee9f061b0438cc7eede5b3acf",
                 "shasum": ""
             },
             "require": {
@@ -4352,7 +4352,7 @@
                 "issues": "https://github.com/utopia-php/http/issues",
                 "source": "https://github.com/utopia-php/http/tree/feat/coroutines-option"
             },
-            "time": "2026-03-17T11:42:30+00:00"
+            "time": "2026-03-18T04:09:48+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -4612,16 +4612,16 @@
         },
         {
             "name": "utopia-php/mongo",
-            "version": "1.0.1",
+            "version": "1.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/mongo.git",
-                "reference": "83dbcde768d5fb40241f5ca8aa5ed8ca140a7469"
+                "reference": "677a21c53f7a1316c528b4b45b3fce886cee7223"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/mongo/zipball/83dbcde768d5fb40241f5ca8aa5ed8ca140a7469",
-                "reference": "83dbcde768d5fb40241f5ca8aa5ed8ca140a7469",
+                "url": "https://api.github.com/repos/utopia-php/mongo/zipball/677a21c53f7a1316c528b4b45b3fce886cee7223",
+                "reference": "677a21c53f7a1316c528b4b45b3fce886cee7223",
                 "shasum": ""
             },
             "require": {
@@ -4667,9 +4667,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/mongo/issues",
-                "source": "https://github.com/utopia-php/mongo/tree/1.0.1"
+                "source": "https://github.com/utopia-php/mongo/tree/1.0.2"
             },
-            "time": "2026-03-13T07:29:24+00:00"
+            "time": "2026-03-18T02:45:50+00:00"
         },
         {
             "name": "utopia-php/platform",
@@ -6234,11 +6234,11 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "2.1.41",
+            "version": "2.1.42",
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/a2eae8f20856b3afe74bf1f9726ce8c11438e300",
-                "reference": "a2eae8f20856b3afe74bf1f9726ce8c11438e300",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/1279e1ce86ba768f0780c9d889852b4e02ff40d0",
+                "reference": "1279e1ce86ba768f0780c9d889852b4e02ff40d0",
                 "shasum": ""
             },
             "require": {
@@ -6283,7 +6283,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-03-16T18:24:10+00:00"
+            "time": "2026-03-17T14:58:32+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
