@@ -22,7 +22,7 @@ class LegacyPermissionsTeamTest extends Scope
     use SchemaPolling;
 
     public array $collections = [];
-    public string $databaseId = 'testpermissiondb';
+    public string $databaseId = 'testpermdb_legacy';
 
     public function createTeams(): array
     {

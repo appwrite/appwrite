@@ -84,6 +84,31 @@ jobs:
           sarif_file: 'trivy-fs-results.sarif'
           category: 'trivy-source'
 
+  composer:
+    name: Checks / Composer
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+          coverage: none
+
+      - name: Validate
+        run: composer validate
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --ignore-platform-reqs
+
+      - name: Audit
+        env:
+          COMPOSER_NO_AUDIT: 0
+        run: composer audit
+
   format:
     name: Checks / Format
     runs-on: ubuntu-latest
@@ -96,15 +121,18 @@ jobs:
       - run: git checkout HEAD^2
         if: github.event_name == 'pull_request'
 
-      - name: Validate composer.json and composer.lock
-        run: |
-          docker run --rm -v $PWD:/app composer:2.8 sh -c \
-          "composer validate"
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --ignore-platform-reqs
 
       - name: Run Linter
-        run: |
-          docker run --rm -v $PWD:/app composer:2.8 sh -c \
-          "composer install --profile --ignore-platform-reqs && composer lint"
+        run: composer lint
 
   analyze:
     name: Checks / Analyze
@@ -113,15 +141,33 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v6
 
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --ignore-platform-reqs
+
       - name: Run PHPStan
-        run: |
-          docker run --rm -v $PWD:/app composer:2.8 sh -c \
-          "composer install --profile --ignore-platform-reqs && composer analyze"
+        run: composer analyze
+
+  locale:
+    name: Checks / Locale
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
 
       - name: Run Locale check
-        run: |
-          docker run --rm -v $PWD:/app node:24-alpine sh -c \
-          "cd /app/.github/workflows/static-analysis/locale && node index.js"
+        run: node .github/workflows/static-analysis/locale/index.js
 
   matrix:
     name: Tests / Matrix

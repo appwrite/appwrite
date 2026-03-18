@@ -614,7 +614,7 @@ Http::setResource('dbForProject', function (Group $pools, Database $dbForPlatfor
     if (\in_array($dsn->getHost(), $sharedTables)) {
         $database
             ->setSharedTables(true)
-            ->setTenant((int) $project->getSequence())
+            ->setTenant($project->getSequence())
             ->setNamespace($dsn->getParam('namespace'));
     } else {
         $database
@@ -873,7 +873,7 @@ Http::setResource('getProjectDB', function (Group $pools, Database $dbForPlatfor
             if (\in_array($dsn->getHost(), $sharedTables)) {
                 $database
                     ->setSharedTables(true)
-                    ->setTenant((int) $project->getSequence())
+                    ->setTenant($project->getSequence())
                     ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $database
@@ -903,9 +903,8 @@ Http::setResource('getLogsDB', function (Group $pools, Cache $cache, Authorizati
     $database = null;
 
     return function (?Document $project = null) use ($pools, $cache, $authorization, &$database) {
-        if ($database !== null && $project !== null && ! $project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant((int) $project->getSequence());
-
+        if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
+            $database->setTenant($project->getSequence());
             return $database;
         }
 
@@ -921,8 +920,8 @@ Http::setResource('getLogsDB', function (Group $pools, Cache $cache, Authorizati
             ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
 
         // set tenant
-        if ($project !== null && ! $project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant((int) $project->getSequence());
+        if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
+            $database->setTenant($project->getSequence());
         }
 
         return $database;
