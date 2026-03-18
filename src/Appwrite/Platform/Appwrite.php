@@ -15,6 +15,7 @@ use Appwrite\Platform\Modules\Sites;
 use Appwrite\Platform\Modules\Storage;
 use Appwrite\Platform\Modules\Teams;
 use Appwrite\Platform\Modules\Tokens;
+use Appwrite\Platform\Modules\Variables;
 use Appwrite\Platform\Modules\VCS;
 use Appwrite\Platform\Modules\Webhooks;
 use Utopia\Platform\Platform;
@@ -38,5 +39,6 @@ class Appwrite extends Platform
         $this->addModule(new Storage\Module());
         $this->addModule(new VCS\Module());
         $this->addModule(new Webhooks\Module());
+        $this->addModule(new Variables\Module());
     }
 }
