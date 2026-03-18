@@ -44,7 +44,7 @@ class Create extends Base
                 group: 'variables',
                 name: 'createVariable',
                 description: <<<EOT
-                Create a new function environment variable. These variables can be accessed in the function at runtime as environment variables.
+                Create a new project environment variable. These variables can be accessed by all functions and sites in the project.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -95,7 +95,7 @@ class Create extends Base
 
         foreach (['functions', 'sites'] as $collection) {
             $dbForProject->updateDocuments($collection, new Document([
-                'live', 'false'
+                'live' => 'false'
             ]));
         }
 

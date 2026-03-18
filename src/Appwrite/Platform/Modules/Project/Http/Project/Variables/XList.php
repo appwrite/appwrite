@@ -41,7 +41,7 @@ class XList extends Base
                 group: 'variables',
                 name: 'listVariables',
                 description: <<<EOT
-                Get a list of all variables of a specific function.
+                Get a list of all project environment variables.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [

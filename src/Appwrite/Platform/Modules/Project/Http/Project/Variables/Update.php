@@ -78,8 +78,8 @@ class Update extends Base
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
         }
 
-        $isSeretVariable = $variable->getAttribute('secret', false) === true;
-        if ($isSeretVariable && $secret === false) {
+        $isSecretVariable = $variable->getAttribute('secret', false) === true;
+        if ($isSecretVariable && $secret === false) {
             throw new Exception(Exception::VARIABLE_CANNOT_UNSET_SECRET);
         }
 
@@ -99,14 +99,14 @@ class Update extends Base
         }
 
         try {
-            $dbForProject->updateDocument('variables', $variable->getId(), $updates);
+            $variable = $dbForProject->updateDocument('variables', $variable->getId(), $updates);
         } catch (Duplicate $th) {
             throw new Exception(Exception::VARIABLE_ALREADY_EXISTS);
         }
 
         foreach (['functions', 'sites'] as $collection) {
             $dbForProject->updateDocuments($collection, new Document([
-                'live', 'false'
+                'live' => 'false'
             ]));
         }
 
