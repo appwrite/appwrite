@@ -65,7 +65,7 @@ class Decrement extends DecrementDocumentAttribute
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
             ->inject('queueForEvents')
-            ->inject('queueForStatsUsage')
+            ->inject('usage')
             ->inject('plan')
             ->inject('authorization')
             ->callback($this->action(...));

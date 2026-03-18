@@ -79,7 +79,7 @@ class Create extends CreateDocumentAction
             ->inject('response')
             ->inject('project')
             ->inject('embeddingAgent')
-            ->inject('queueForStatsUsage')
+            ->inject('usage')
             ->inject('log')
             ->inject('logger')
             ->callback($this->action(...));

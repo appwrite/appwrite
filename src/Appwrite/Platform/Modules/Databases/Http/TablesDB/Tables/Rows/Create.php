@@ -107,7 +107,7 @@ class Create extends DocumentCreate
             ->inject('getDatabasesDB')
             ->inject('user')
             ->inject('queueForEvents')
-            ->inject('queueForStatsUsage')
+            ->inject('usage')
             ->inject('queueForRealtime')
             ->inject('queueForFunctions')
             ->inject('queueForWebhooks')
