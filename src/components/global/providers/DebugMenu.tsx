@@ -438,6 +438,20 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
         icon: <AlertTriangle className="h-3.5 w-3.5" />,
         items: [
           {
+            label: 'Show fullscreen loader',
+            description:
+              'Keep the initial loader visible to preview it (e.g. with status banner).',
+            variant: 'switch' as const,
+            switchValue: overrides.showFullscreenLoader,
+            switchOnChange: (checked: boolean) => {
+              setOverrides((prev) => ({
+                ...prev,
+                showFullscreenLoader: checked,
+              }))
+              setDebugOverride('showFullscreenLoader', checked)
+            },
+          },
+          {
             label: 'Cloud status alert',
             description:
               overrides.mockCloudStatusAlert === 'live'
@@ -563,6 +577,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     overrides.showNativeAppBar,
     overrides.showAIAssistant,
     overrides.showSuccessTeamCard,
+    overrides.showFullscreenLoader,
     overrides.mockCloudStatusAlert,
     banners.length,
     actions,

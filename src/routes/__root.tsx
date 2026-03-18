@@ -24,6 +24,10 @@ import {
   StaticFullscreenLoader,
 } from '@/components/ui/loader'
 import { useInitialLoader } from '@/hooks/use-initial-loader'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { getStatusBannerParts } from '@/lib/cloud-status-copy'
+import { useDebugOverrides } from '@/lib/debug-overrides'
+import { useAppwriteCloudStatus } from '@/lib/react-query/hooks'
 import { DynamicFavicon } from '@/components/global/shared/DynamicFavicon'
 import { UploadWarning } from '@/components/global/providers/UploadWarning'
 import { GlobalUploadProgress } from '@/components/global/shared/GlobalUploadProgress'
@@ -149,13 +153,36 @@ function isProjectRoute(pathname: string) {
   return parts[0] === 'projects' && parts.length >= 2
 }
 
+const STATUS_PAGE_URL = 'https://status.appwrite.online'
+
 function RootDocument({ children }: { children: React.ReactNode }) {
   const { isLoading, isAuthRoute } = useInitialLoader()
   const [clientMounted, setClientMounted] = useState(false)
   const location = useLocation()
+  const { features } = useConsoleProfile()
+  const { data: statusData } = useAppwriteCloudStatus(features.systemStatus)
+  const { showFullscreenLoader } = useDebugOverrides()
+
   useEffect(() => {
     setClientMounted(true)
   }, [])
+
+  const isLoaderVisible = isLoading || showFullscreenLoader
+
+  const statusBanner =
+    isLoaderVisible &&
+    statusData?.aggregateState &&
+    statusData.aggregateState !== 'operational'
+      ? {
+          ...getStatusBannerParts(statusData.aggregateState, {
+            reportTitle: statusData.activeReport?.title,
+            startsAt: statusData.activeReport?.startsAt,
+            endsAt: statusData.activeReport?.endsAt,
+          }),
+          href: STATUS_PAGE_URL,
+          state: statusData.aggregateState,
+        }
+      : undefined
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -173,7 +200,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                 so the very first HTML paint shows the logo instead of route-level "Loading...".
                 When clientMounted, use FullscreenLoader so it can run fade-out before unmount. */}
             {clientMounted ? (
-              <FullscreenLoader isVisible={isLoading} />
+              <FullscreenLoader
+                isVisible={isLoaderVisible}
+                statusBanner={statusBanner}
+              />
             ) : !isAuthRoute ? (
               <StaticFullscreenLoader />
             ) : null}
