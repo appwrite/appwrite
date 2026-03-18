@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "bb9817c50945198d9528fbbf69d80b4a",
+    "content-hash": "9d6f4cd0560bc899692de1a1ed248e2c",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3850,16 +3850,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "5.3.15",
+            "version": "dev-fix-shared-table-reconciliation",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "bb89e8c4a5d534fc7e650c4438aa796667fe160a"
+                "reference": "9d54d366fdf0aa42876ac485fb95a02934576f73"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/bb89e8c4a5d534fc7e650c4438aa796667fe160a",
-                "reference": "bb89e8c4a5d534fc7e650c4438aa796667fe160a",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/9d54d366fdf0aa42876ac485fb95a02934576f73",
+                "reference": "9d54d366fdf0aa42876ac485fb95a02934576f73",
                 "shasum": ""
             },
             "require": {
@@ -3889,7 +3889,38 @@
                     "Utopia\\Database\\": "src/Database"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Tests\\E2E\\": "tests/e2e",
+                    "Tests\\Unit\\": "tests/unit"
+                }
+            },
+            "scripts": {
+                "build": [
+                    "Composer\\Config::disableProcessTimeout",
+                    "docker compose build"
+                ],
+                "start": [
+                    "Composer\\Config::disableProcessTimeout",
+                    "docker compose up -d"
+                ],
+                "test": [
+                    "Composer\\Config::disableProcessTimeout",
+                    "docker compose exec tests vendor/bin/phpunit --configuration phpunit.xml"
+                ],
+                "lint": [
+                    "php -d memory_limit=2G ./vendor/bin/pint --test"
+                ],
+                "format": [
+                    "php -d memory_limit=2G ./vendor/bin/pint"
+                ],
+                "check": [
+                    "./vendor/bin/phpstan analyse --level 7 src tests --memory-limit 2G"
+                ],
+                "coverage": [
+                    "./vendor/bin/coverage-check ./tmp/clover.xml 90"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -3902,10 +3933,10 @@
                 "utopia"
             ],
             "support": {
-                "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/5.3.15"
+                "source": "https://github.com/utopia-php/database/tree/fix-shared-table-reconciliation",
+                "issues": "https://github.com/utopia-php/database/issues"
             },
-            "time": "2026-03-16T11:41:45+00:00"
+            "time": "2026-03-18T13:43:20+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4573,16 +4604,16 @@
         },
         {
             "name": "utopia-php/mongo",
-            "version": "1.0.1",
+            "version": "1.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/mongo.git",
-                "reference": "83dbcde768d5fb40241f5ca8aa5ed8ca140a7469"
+                "reference": "677a21c53f7a1316c528b4b45b3fce886cee7223"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/mongo/zipball/83dbcde768d5fb40241f5ca8aa5ed8ca140a7469",
-                "reference": "83dbcde768d5fb40241f5ca8aa5ed8ca140a7469",
+                "url": "https://api.github.com/repos/utopia-php/mongo/zipball/677a21c53f7a1316c528b4b45b3fce886cee7223",
+                "reference": "677a21c53f7a1316c528b4b45b3fce886cee7223",
                 "shasum": ""
             },
             "require": {
@@ -4628,9 +4659,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/mongo/issues",
-                "source": "https://github.com/utopia-php/mongo/tree/1.0.1"
+                "source": "https://github.com/utopia-php/mongo/tree/1.0.2"
             },
-            "time": "2026-03-13T07:29:24+00:00"
+            "time": "2026-03-18T02:45:50+00:00"
         },
         {
             "name": "utopia-php/platform",
@@ -8432,9 +8463,18 @@
             "time": "2024-11-07T12:36:22+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-fix-shared-table-reconciliation",
+            "alias": "5.3.15",
+            "alias_normalized": "5.3.15.0"
+        }
+    ],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
