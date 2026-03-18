@@ -33,7 +33,7 @@ class Delete extends Base
             ->desc('Delete project variable')
             ->groups(['api', 'project'])
             ->label('scope', 'project.write')
-            ->label('event', 'project.variables.[variableId].delete')
+            ->label('event', 'variables.[variableId].delete')
             ->label('audits.event', 'project.variable.delete')
             ->label('audits.resource', 'project.variable/{response.$id}')
             ->label('sdk', new Method(

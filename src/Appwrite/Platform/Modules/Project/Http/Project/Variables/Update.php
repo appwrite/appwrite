@@ -35,7 +35,7 @@ class Update extends Base
             ->desc('Update project variable')
             ->groups(['api', 'project'])
             ->label('scope', 'project.write')
-            ->label('event', 'project.variables.[variableId].update')
+            ->label('event', 'variables.[variableId].update')
             ->label('audits.event', 'project.variable.update')
             ->label('audits.resource', 'project.variable/{response.$id}')
             ->label('sdk', new Method(

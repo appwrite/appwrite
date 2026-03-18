@@ -36,7 +36,7 @@ class Create extends Base
             ->desc('Create project variable')
             ->groups(['api', 'project'])
             ->label('scope', 'project.write')
-            ->label('event', 'project.variables.[variableId].create')
+            ->label('event', 'variables.[variableId].create')
             ->label('audits.event', 'project.variable.create')
             ->label('audits.resource', 'project.variable/{response.$id}')
             ->label('sdk', new Method(
