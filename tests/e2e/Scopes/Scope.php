@@ -432,7 +432,7 @@ abstract class Scope extends TestCase
             return self::$root;
         }
 
-        $maxRetries = 5;
+        $maxRetries = 1;
 
         for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
             // Use more entropy to avoid collisions in parallel test execution
@@ -477,9 +477,6 @@ abstract class Scope extends TestCase
                 'cookie' => 'a_session_console=' . $session['cookies']['a_session_console'],
                 'x-appwrite-project' => 'console',
             ]);
-
-            var_dump($session['cookies']['a_session_console']);
-            var_dump($verify);
 
             if ($verify['headers']['status-code'] === 200) {
                 self::$root = [
