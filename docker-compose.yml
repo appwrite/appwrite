@@ -1244,7 +1244,7 @@ services:
       - MYSQL_USER=${_APP_DB_USER}
       - MYSQL_PASSWORD=${_APP_DB_PASS}
       - MARIADB_AUTO_UPGRADE=1
-    command: "mysqld --innodb-flush-method=fsync"
+    command: "mysqld --innodb-flush-method=fsync --max-connections=500"
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 5s
@@ -1308,7 +1308,7 @@ services:
       - POSTGRES_DB=${_APP_DB_SCHEMA}
       - POSTGRES_USER=${_APP_DB_USER}
       - POSTGRES_PASSWORD=${_APP_DB_PASS}
-    command: "postgres"
+    command: "postgres -N 500"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${_APP_DB_USER}"]
       interval: 5s

@@ -217,19 +217,8 @@ $register->set('pools', function () {
     $maxConnections = System::getEnv('_APP_CONNECTIONS_MAX', 151);
     $instanceConnections = $maxConnections / System::getEnv('_APP_POOL_CLIENTS', 14);
 
-    $multiprocessing = System::getEnv('_APP_SERVER_MULTIPROCESS', 'disabled') === 'enabled';
-
-    if ($multiprocessing) {
-        $workerCount = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
-    } else {
-        $workerCount = 1;
-    }
-
-    if ($workerCount > $instanceConnections) {
-        throw new \Exception('Pool size is too small. Increase the number of allowed database connections or decrease the number of workers.', 500);
-    }
-
-    $poolSize = (int)($instanceConnections / $workerCount);
+    $workerCount = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
+    $poolSize = max(1, (int)($instanceConnections / $workerCount));
 
     foreach ($connections as $key => $connection) {
         $type = $connection['type'] ?? '';
