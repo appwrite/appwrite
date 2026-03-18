@@ -65,7 +65,7 @@ return [
                 '$id' => ID::custom('database'),
                 'type' => Database::VAR_STRING,
                 'size' => 128,
-                'required' => false, // TODO: should be set to true after the whole migration is done
+                'required' => false,
                 'signed' => true,
                 'array' => false,
                 'filters' => [],

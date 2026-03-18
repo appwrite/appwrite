@@ -2,13 +2,13 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\VectorsDB\Embeddings\Text;
 
-use Appwrite\Event\StatsUsage;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Action as CreateDocumentAction;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Parameter;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Agents\Adapters\Ollama;
 use Utopia\Agents\Agent;
@@ -25,7 +25,7 @@ class Create extends CreateDocumentAction
 {
     public static function getName(): string
     {
-        return 'createTextEmbedding';
+        return 'createTextEmbeddings';
     }
 
     protected function getResponseModel(): string
@@ -85,7 +85,7 @@ class Create extends CreateDocumentAction
             ->callback($this->action(...));
     }
 
-    public function action(array $texts, string $model, UtopiaResponse $response, Document $project, Agent $embeddingAgent, StatsUsage $queueForStatsUsage, Log $log, ?Logger $logger): void
+    public function action(array $texts, string $model, UtopiaResponse $response, Document $project, Agent $embeddingAgent, Context $usage, Log $log, ?Logger $logger): void
     {
         $results = [];
         $embeddingAgent->getAdapter()->setModel($model);
@@ -140,8 +140,7 @@ class Create extends CreateDocumentAction
             ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
             ->dynamic($embeddings, $this->getBulkResponseModel());
 
-        $queueForStatsUsage
-            ->setProject($project)
+        $usage
             ->addMetric(METRIC_EMBEDDINGS_TEXT, \count($texts))
             ->addMetric(\str_replace('{embeddingModel}', $model, METRIC_EMBEDDINGS_MODEL_TEXT), \count($texts))
             ->addMetric(METRIC_EMBEDDINGS_TEXT_TOTAL_TOKENS, $totalTokens)
