@@ -440,7 +440,7 @@ jobs:
           _APP_BROWSER_HOST: http://invalid-browser/v1
           _APP_DATABASE_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'database_db_main' || '' }}
           _APP_DATABASE_SHARED_TABLES_V1: ${{ matrix.mode == 'shared_v1' && 'database_db_main' || '' }}
-          _APP_WORKERS_NUM: 4
+          _APP_WORKERS_NUM: 2
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose pull --quiet --ignore-buildable
