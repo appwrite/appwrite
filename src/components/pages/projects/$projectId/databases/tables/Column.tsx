@@ -14,12 +14,6 @@ import {
 import { toast } from 'sonner'
 import { Info, X, Plus } from 'lucide-react'
 import { PointEditor, LineEditor, PolygonEditor } from './spatial/index'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Textarea } from '@/components/ui/textarea'
 import { Progress } from '@/components/ui/progress'
@@ -94,6 +88,7 @@ interface ColumnDrawerProps {
   onSubmit: (data: ColumnFormData) => Promise<void>
   column?: unknown // Existing column for edit mode
   availableTables?: Array<{ $id: string; name: string }>
+  currentTableId?: string
   existingColumns?: Array<{ key: string }>
   isLoading?: boolean
   /** Table metadata for row size usage (varchar create only). Optional: bytesUsed, bytesMax. */
@@ -148,11 +143,15 @@ export function ColumnDrawer({
   onSubmit,
   column,
   availableTables = [],
+  currentTableId,
   existingColumns = [],
   isLoading = false,
   table,
 }: ColumnDrawerProps) {
   const isEditMode = !!column
+  const relationshipTables = availableTables.filter(
+    (table) => table.$id !== currentTableId,
+  )
   const [formData, setFormData] = useState<ColumnFormData>({
     key: '',
     type: 'text',
@@ -196,8 +195,9 @@ export function ColumnDrawer({
         data.elements = column.elements || []
         setEnumElements(column.elements || [''])
       } else if (column.type === 'relationship') {
-        data.relatedTableId = column.relatedTableId
-        data.relationshipType = column.relationshipType || column.type
+        data.relatedTableId = column.relatedTableId || column.relatedTable
+        data.relationshipType =
+          column.relationshipType || column.relationType
         data.twoWay = column.twoWay || false
         data.twoWayKey = column.twoWayKey
         data.onDelete = column.onDelete || 'setNull'
@@ -227,7 +227,7 @@ export function ColumnDrawer({
       formData.relatedTableId &&
       !isEditMode
     ) {
-      const relatedTable = availableTables.find(
+      const relatedTable = relationshipTables.find(
         (t) => t.$id === formData.relatedTableId,
       )
       if (relatedTable && !formData.key) {
@@ -241,7 +241,7 @@ export function ColumnDrawer({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.type, formData.relatedTableId, availableTables, isEditMode])
+  }, [formData.type, formData.relatedTableId, relationshipTables, isEditMode])
 
   // Auto-generate two-way key from current table name
   useEffect(() => {
@@ -818,13 +818,13 @@ export function ColumnDrawer({
                       }))
                     }}
                     disabled={isLoading || isEditMode}
-                    className="grid grid-cols-2 gap-4"
+                    className="grid grid-cols-1 gap-4 sm:grid-cols-2"
                   >
-                    <div className="flex items-center space-x-2 rounded-lg border border-border p-3">
+                    <div className="flex items-start gap-3 rounded-lg border border-border p-3">
                       <RadioGroupItem value="one" id="one-way" />
                       <Label
                         htmlFor="one-way"
-                        className="cursor-pointer flex-1"
+                        className="flex flex-1 flex-col items-start gap-1 leading-normal cursor-pointer"
                       >
                         <div className="font-medium text-[12px]">
                           One-way relationship
@@ -834,11 +834,11 @@ export function ColumnDrawer({
                         </div>
                       </Label>
                     </div>
-                    <div className="flex items-center space-x-2 rounded-lg border border-border p-3">
+                    <div className="flex items-start gap-3 rounded-lg border border-border p-3">
                       <RadioGroupItem value="two" id="two-way" />
                       <Label
                         htmlFor="two-way"
-                        className="cursor-pointer flex-1"
+                        className="flex flex-1 flex-col items-start gap-1 leading-normal cursor-pointer"
                       >
                         <div className="font-medium text-[12px]">
                           Two-way relationship
@@ -878,7 +878,7 @@ export function ColumnDrawer({
                       <SelectValue placeholder="Select a table" />
                     </SelectTrigger>
                     <SelectContent>
-                      {availableTables.map((table) => (
+                      {relationshipTables.map((table) => (
                         <SelectItem key={table.$id} value={table.$id}>
                           {table.name} ({table.$id})
                         </SelectItem>

@@ -384,7 +384,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
 
         // Pattern: {tableName}Id or {tableName}_id
         const match = columnKey.match(/^(.+?)(id|_id)$/)
-        if (match && column.type === 'string') {
+        if (match && col.type === 'string') {
           const referencedTableName = match[1]
 
           // Try to find the referenced table by name

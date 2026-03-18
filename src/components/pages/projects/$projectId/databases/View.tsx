@@ -271,6 +271,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
+import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -4919,6 +4920,236 @@ function normalizeValueForColumn(
   return value as unknown[]
 }
 
+function getColumnKey(column: unknown): string | null {
+  const col = column as Record<string, unknown> | undefined
+  const key =
+    col?.key || col?.name || col?.$id || col?.attribute || col?.attributeId
+
+  return typeof key === 'string' && key.length > 0 ? key : null
+}
+
+function getRelationshipTableId(columnInfo?: unknown): string | undefined {
+  const col = columnInfo as
+    | { relatedTable?: string; relatedTableId?: string }
+    | undefined
+
+  return col?.relatedTableId || col?.relatedTable || undefined
+}
+
+function getRelationshipKind(columnInfo?: unknown): string | undefined {
+  const col = columnInfo as
+    | { relationType?: string; relationshipType?: string }
+    | undefined
+
+  return col?.relationshipType || col?.relationType || undefined
+}
+
+function getRelationshipRowLabel(
+  row: Record<string, unknown>,
+  columns: unknown[],
+): string {
+  const labelColumn = columns.find((column) => {
+    const col = column as { type?: string } | undefined
+    const key = getColumnKey(column)
+
+    if (!key || key.startsWith('$')) return false
+
+    return (
+      col?.type === 'string' ||
+      col?.type === 'varchar' ||
+      col?.type === 'text' ||
+      col?.type === 'mediumtext' ||
+      col?.type === 'longtext' ||
+      col?.type === 'email' ||
+      col?.type === 'url'
+    )
+  })
+
+  const labelKey = labelColumn ? getColumnKey(labelColumn) : null
+  const labelValue =
+    labelKey && typeof row[labelKey] === 'string' ? row[labelKey] : null
+
+  if (labelValue && labelValue.trim().length > 0) {
+    return `${labelValue} (${row.$id})`
+  }
+
+  return String(row.$id ?? 'Unknown row')
+}
+
+interface RelationshipFieldProps {
+  columnInfo?: unknown
+  currentValue: string | unknown[] | null
+  isRequired: boolean
+  isSaving: boolean
+  onChange: (value: string | unknown[] | null) => void
+}
+
+function RelationshipField({
+  columnInfo,
+  currentValue,
+  isRequired,
+  isSaving,
+  onChange,
+}: RelationshipFieldProps) {
+  const params = useParams({ strict: false })
+  const projectId = params.projectId as string | undefined
+  const databaseId = params.databaseId as string | undefined
+  const relatedTableId = getRelationshipTableId(columnInfo)
+  const relationType = getRelationshipKind(columnInfo)
+  const isMulti =
+    relationType === 'oneToMany' || relationType === 'manyToMany'
+
+  const { rows: relatedRows, isLoading: relatedRowsLoading } =
+    useProjectTableRows(
+      projectId,
+      databaseId,
+      relatedTableId,
+      0,
+      100,
+      undefined,
+      'desc',
+      '$createdAt',
+    )
+  const { columns: relatedColumns } = useProjectTableColumns(
+    projectId,
+    databaseId,
+    relatedTableId,
+    undefined,
+    0,
+    100,
+  )
+
+  const selectedValues = Array.isArray(currentValue)
+    ? currentValue
+        .map((value) => (typeof value === 'string' ? value : null))
+        .filter((value): value is string => Boolean(value))
+    : typeof currentValue === 'string' && currentValue.length > 0
+      ? [currentValue]
+      : []
+
+  const options = relatedRows
+    .map((row) => row as Record<string, unknown>)
+    .filter((row) => typeof row.$id === 'string')
+    .map((row) => ({
+      value: row.$id as string,
+      label: getRelationshipRowLabel(row, relatedColumns),
+    }))
+
+  if (!relatedTableId) {
+    return (
+      <div className="rounded-lg border border-border bg-muted/30 p-3">
+        <p className="text-[12px] text-muted-foreground">
+          This relationship is missing its related table metadata.
+        </p>
+      </div>
+    )
+  }
+
+  if (isMulti) {
+    const availableItems = options.filter(
+      (option) => !selectedValues.includes(option.value),
+    )
+
+    return (
+      <div className="space-y-2">
+        <SearchableSelect
+          value=""
+          onValueChange={(value) => {
+            if (!selectedValues.includes(value)) {
+              onChange([...selectedValues, value])
+            }
+          }}
+          items={availableItems}
+          placeholder={
+            relatedRowsLoading ? 'Loading related rows…' : 'Add related row'
+          }
+          searchPlaceholder="Search related rows…"
+          emptyMessage={
+            relatedRowsLoading ? 'Loading related rows…' : 'No related rows'
+          }
+          disabled={isSaving || relatedRowsLoading || availableItems.length === 0}
+        />
+        {selectedValues.length > 0 ? (
+          <div className="space-y-2">
+            {selectedValues.map((value) => {
+              const option = options.find((item) => item.value === value)
+
+              return (
+                <div
+                  key={value}
+                  className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-3 py-2"
+                >
+                  <span className="truncate text-[12px] text-foreground">
+                    {option?.label || value}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-[12px] text-muted-foreground hover:text-destructive"
+                    disabled={isSaving}
+                    onClick={() =>
+                      onChange(selectedValues.filter((item) => item !== value))
+                    }
+                  >
+                    Remove
+                  </Button>
+                </div>
+              )
+            })}
+          </div>
+        ) : (
+          <p className="text-[12px] text-muted-foreground">
+            No related rows selected.
+          </p>
+        )}
+        {!isRequired && selectedValues.length > 0 && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 text-[12px]"
+            disabled={isSaving}
+            onClick={() => onChange([])}
+          >
+            Clear
+          </Button>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-2">
+      <SearchableSelect
+        value={selectedValues[0] || ''}
+        onValueChange={(value) => onChange(value)}
+        items={options}
+        placeholder={
+          relatedRowsLoading ? 'Loading related rows…' : 'Select related row'
+        }
+        searchPlaceholder="Search related rows…"
+        emptyMessage={
+          relatedRowsLoading ? 'Loading related rows…' : 'No related rows'
+        }
+        disabled={isSaving || relatedRowsLoading}
+      />
+      {!isRequired && selectedValues[0] && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-8 text-[12px]"
+          disabled={isSaving}
+          onClick={() => onChange(null)}
+        >
+          Clear
+        </Button>
+      )}
+    </div>
+  )
+}
+
 function RowEditDrawer({
   open,
   onOpenChange,
@@ -4981,7 +5212,11 @@ function RowEditDrawer({
         string,
         string | number | boolean | unknown[] | null
       > = {}
-      Object.entries(row.data).forEach(([key, value]) => {
+      columns.forEach((column) => {
+        const key = getColumnKey(column)
+        if (!key || key.startsWith('$')) return
+
+        const value = row.data[key]
         const columnInfo = getColumnInfo(key)
         initialData[key] =
           value === null || value === undefined
@@ -5100,8 +5335,7 @@ function RowEditDrawer({
   // Get column info for a field
   const getColumnInfo = (key: string) => {
     return columns.find((col: unknown) => {
-      const colKey =
-        col.key || col.name || col.$id || col.attribute || col.attributeId
+      const colKey = getColumnKey(col)
       return colKey === key
     })
   }
@@ -5168,6 +5402,11 @@ function RowEditDrawer({
       : rowPermissions // Always pass for updates, even if empty
     const now = new Date().toISOString()
     const payload = { ...formData }
+    const allowedFieldKeys = new Set(
+      columns
+        .map((column) => getColumnKey(column))
+        .filter((key): key is string => Boolean(key && !key.startsWith('$'))),
+    )
     const missingRequiredFields: string[] = []
 
     columns.forEach((col: unknown) => {
@@ -5192,7 +5431,8 @@ function RowEditDrawer({
       const isEmptyValue =
         currentValue === null ||
         currentValue === undefined ||
-        (typeof currentValue === 'string' && currentValue.trim() === '')
+        (typeof currentValue === 'string' && currentValue.trim() === '') ||
+        (Array.isArray(currentValue) && currentValue.length === 0)
 
       if (required && fieldType !== 'boolean' && isEmptyValue) {
         missingRequiredFields.push(fieldKey)
@@ -5201,6 +5441,13 @@ function RowEditDrawer({
 
       if (!required && isEmptyValue) {
         payload[fieldKey] = null
+      }
+    })
+
+    Object.keys(payload).forEach((key) => {
+      if (key.startsWith('$')) return
+      if (!allowedFieldKeys.has(key)) {
+        delete payload[key]
       }
     })
 
@@ -5377,16 +5624,35 @@ function RowEditDrawer({
                       Row Data
                     </h4>
                     <div className="space-y-4">
-                      {(isCreateMode
-                        ? [
-                          '$createdAt',
-                          '$updatedAt',
-                          ...Object.keys(formData).filter(
-                            (k) => k !== '$createdAt' && k !== '$updatedAt',
+                      {[
+                        '$createdAt',
+                        '$updatedAt',
+                        ...columns
+                          .map((column) => getColumnKey(column))
+                          .filter(
+                            (key): key is string =>
+                              Boolean(
+                                key &&
+                                  key !== '$createdAt' &&
+                                  key !== '$updatedAt' &&
+                                  !key.startsWith('$'),
+                              ),
                           ),
-                        ]
-                        : ['$createdAt', '$updatedAt', ...Object.keys(row.data)]
-                      ).map((key) => {
+                        ...Object.keys(isCreateMode ? formData : row?.data || {})
+                          .filter(
+                            (key) =>
+                              key !== '$createdAt' &&
+                              key !== '$updatedAt' &&
+                              !key.startsWith('$'),
+                          )
+                          .filter(
+                            (key, index, array) =>
+                              array.indexOf(key) === index &&
+                              !columns.some(
+                                (column) => getColumnKey(column) === key,
+                              ),
+                          ),
+                      ].map((key) => {
                         const value = isCreateMode
                           ? formData[key]
                           : key === '$createdAt' || key === '$updatedAt'
@@ -5936,13 +6202,16 @@ function RowEditDrawer({
                                 className="h-9 text-[13px]"
                               />
                             ) : fieldType === 'relationship' ? (
-                              <div className="rounded-lg border border-border bg-muted/30 p-3">
-                                <p className="text-[12px] text-muted-foreground">
-                                  Relationship columns are managed through the
-                                  relationship system. Edit related rows
-                                  directly.
-                                </p>
-                              </div>
+                              <RelationshipField
+                                columnInfo={columnInfo}
+                                currentValue={
+                                  (currentValue as string | unknown[] | null) ??
+                                  null
+                                }
+                                isRequired={isRequired}
+                                isSaving={isSaving}
+                                onChange={(val) => handleFieldChange(key, val)}
+                              />
                             ) : fieldType === 'point' ? (
                               <PointEditor
                                 value={currentValue as [number, number] | null}
@@ -7320,6 +7589,7 @@ function RowsSpreadsheet({
           onOpenChange={setColumnDialogOpen}
           onSubmit={handleColumnSubmit}
           column={selectedColumn}
+          currentTableId={tableId}
           availableTables={
             availableTablesForColumns?.map((t: unknown) => ({
               $id: t.$id,
@@ -7858,6 +8128,7 @@ function RowsSpreadsheet({
         onOpenChange={setColumnDialogOpen}
         onSubmit={handleColumnSubmit}
         column={selectedColumn}
+        currentTableId={tableId}
         availableTables={
           availableTablesForColumns?.map((t: unknown) => ({
             $id: t.$id,
@@ -8077,8 +8348,8 @@ function ColumnsSpreadsheet({
         // Enum fields
         elements: col.elements,
         // Relationship fields
-        relatedTableId: col.relatedTableId,
-        relationshipType: col.relationshipType,
+        relatedTableId: col.relatedTableId ?? col.relatedTable,
+        relationshipType: col.relationshipType ?? col.relationType,
         twoWay: col.twoWay,
         twoWayKey: col.twoWayKey,
         onDelete: col.onDelete,
@@ -8151,8 +8422,9 @@ function ColumnsSpreadsheet({
         elements: suggestion.elements,
         xdefault: suggestion.xdefault ?? suggestion.default,
         // Relationship fields
-        relatedTableId: suggestion.relatedTableId,
-        relationshipType: suggestion.relationshipType,
+        relatedTableId: suggestion.relatedTableId ?? suggestion.relatedTable,
+        relationshipType:
+          suggestion.relationshipType ?? suggestion.relationType,
         twoWay: suggestion.twoWay,
         twoWayKey: suggestion.twoWayKey,
         onDelete: suggestion.onDelete,
@@ -8276,8 +8548,8 @@ function ColumnsSpreadsheet({
     // Enum fields
     elements: col.elements || null,
     // Relationship fields
-    relatedTableId: col.relatedTableId,
-    relationshipType: col.relationshipType,
+    relatedTableId: col.relatedTableId ?? col.relatedTable,
+    relationshipType: col.relationshipType ?? col.relationType,
     twoWay: col.twoWay,
     twoWayKey: col.twoWayKey,
     onDelete: col.onDelete,
@@ -9144,6 +9416,7 @@ function ColumnsSpreadsheet({
         }}
         onSubmit={handleColumnSubmit}
         column={selectedColumn}
+        currentTableId={tableId}
         availableTables={availableTables.map((t) => ({
           $id: t.$id,
           name: t.name,
