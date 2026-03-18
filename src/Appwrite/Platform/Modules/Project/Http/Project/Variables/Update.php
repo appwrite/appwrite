@@ -83,6 +83,11 @@ class Update extends Base
             throw new Exception(Exception::VARIABLE_CANNOT_UNSET_SECRET);
         }
 
+        if (\is_null($key) && \is_null($value) && \is_null($secret)) {
+            $response->dynamic($variable, Response::MODEL_VARIABLE);
+            return;
+        }
+
         $updates = new Document();
 
         if (!\is_null($key)) {
