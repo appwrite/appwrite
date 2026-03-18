@@ -29,8 +29,13 @@ Http::init()
     ->groups(['graphql'])
     ->inject('project')
     ->inject('user')
+    ->inject('request')
+    ->inject('response')
     ->inject('authorization')
-    ->action(function (Document $project, User $user, Authorization $authorization) {
+    ->action(function (Document $project, User $user, Request $request, Response $response, Authorization $authorization) {
+        $response->setUser($user);
+        $request->setUser($user);
+
         if (
             array_key_exists('graphql', $project->getAttribute('apis', []))
             && !$project->getAttribute('apis', [])['graphql']
