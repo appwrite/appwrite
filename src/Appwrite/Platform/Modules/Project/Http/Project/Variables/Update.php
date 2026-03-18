@@ -30,7 +30,7 @@ class Update extends Base
 
     public function __construct()
     {
-        $this->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
+        $this->setHttpMethod(Action::HTTP_REQUEST_METHOD_PUT)
             ->setHttpPath('/v1/project/variables/:variableId')
             ->desc('Update project variable')
             ->groups(['api', 'project'])
