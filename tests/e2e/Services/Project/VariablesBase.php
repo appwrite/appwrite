@@ -30,27 +30,27 @@ trait VariablesBase
             'my-secret-value',
         );
 
-        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertSame(201, $variable['headers']['status-code']);
         $this->assertNotEmpty($variable['body']['$id']);
-        $this->assertEquals('APP_KEY', $variable['body']['key']);
-        $this->assertEquals(true, $variable['body']['secret']);
-        $this->assertNull($variable['body']['value']);
-        $this->assertEquals('project', $variable['body']['resourceType']);
-        $this->assertEquals('', $variable['body']['resourceId']);
+        $this->assertSame('APP_KEY', $variable['body']['key']);
+        $this->assertSame(true, $variable['body']['secret']);
+        $this->assertSame('', $variable['body']['value']);
+        $this->assertSame('project', $variable['body']['resourceType']);
+        $this->assertSame('', $variable['body']['resourceId']);
 
         $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($variable['body']['$createdAt']));
-        $this->assertEquals(true, $dateValidator->isValid($variable['body']['$updatedAt']));
+        $this->assertSame(true, $dateValidator->isValid($variable['body']['$createdAt']));
+        $this->assertSame(true, $dateValidator->isValid($variable['body']['$updatedAt']));
 
         // Verify via GET
         $get = $this->getVariable($variable['body']['$id']);
-        $this->assertEquals(200, $get['headers']['status-code']);
-        $this->assertEquals($variable['body']['$id'], $get['body']['$id']);
-        $this->assertEquals('APP_KEY', $get['body']['key']);
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame($variable['body']['$id'], $get['body']['$id']);
+        $this->assertSame('APP_KEY', $get['body']['key']);
 
         // Verify via LIST
         $list = $this->listVariables(null, true);
-        $this->assertEquals(200, $list['headers']['status-code']);
+        $this->assertSame(200, $list['headers']['status-code']);
         $this->assertGreaterThanOrEqual(1, $list['body']['total']);
         $this->assertGreaterThanOrEqual(1, \count($list['body']['variables']));
 
@@ -67,12 +67,12 @@ trait VariablesBase
             false
         );
 
-        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertSame(201, $variable['headers']['status-code']);
         $this->assertNotEmpty($variable['body']['$id']);
-        $this->assertEquals('PUBLIC_KEY', $variable['body']['key']);
-        $this->assertEquals(false, $variable['body']['secret']);
+        $this->assertSame('PUBLIC_KEY', $variable['body']['key']);
+        $this->assertSame(false, $variable['body']['secret']);
         $this->assertIsBool($variable['body']['secret']);
-        $this->assertEquals('public-value', $variable['body']['value']);
+        $this->assertSame('public-value', $variable['body']['value']);
 
         // Cleanup
         $this->deleteVariable($variable['body']['$id']);
@@ -87,14 +87,14 @@ trait VariablesBase
             true
         );
 
-        $this->assertEquals(201, $variable['headers']['status-code']);
-        $this->assertEquals(true, $variable['body']['secret']);
-        $this->assertNull($variable['body']['value']);
+        $this->assertSame(201, $variable['headers']['status-code']);
+        $this->assertSame(true, $variable['body']['secret']);
+        $this->assertSame('', $variable['body']['value']);
 
         // Verify value is also hidden on GET
         $get = $this->getVariable($variable['body']['$id']);
-        $this->assertEquals(200, $get['headers']['status-code']);
-        $this->assertNull($get['body']['value']);
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('', $get['body']['value']);
 
         // Cleanup
         $this->deleteVariable($variable['body']['$id']);
@@ -110,7 +110,7 @@ trait VariablesBase
             false
         );
 
-        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertSame(401, $response['headers']['status-code']);
     }
 
     public function testCreateVariableInvalidId(): void
@@ -121,7 +121,7 @@ trait VariablesBase
             'value',
         );
 
-        $this->assertEquals(400, $variable['headers']['status-code']);
+        $this->assertSame(400, $variable['headers']['status-code']);
     }
 
     public function testCreateVariableMissingKey(): void
@@ -132,7 +132,7 @@ trait VariablesBase
             'some-value',
         );
 
-        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertSame(400, $response['headers']['status-code']);
     }
 
     public function testCreateVariableMissingValue(): void
@@ -143,7 +143,7 @@ trait VariablesBase
             null,
         );
 
-        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertSame(400, $response['headers']['status-code']);
     }
 
     public function testCreateVariableDuplicateId(): void
@@ -156,7 +156,7 @@ trait VariablesBase
             'value1',
         );
 
-        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertSame(201, $variable['headers']['status-code']);
 
         // Attempt to create with same ID
         $duplicate = $this->createVariable(
@@ -165,8 +165,8 @@ trait VariablesBase
             'value2',
         );
 
-        $this->assertEquals(409, $duplicate['headers']['status-code']);
-        $this->assertEquals('variable_already_exists', $duplicate['body']['type']);
+        $this->assertSame(409, $duplicate['headers']['status-code']);
+        $this->assertSame('variable_already_exists', $duplicate['body']['type']);
 
         // Cleanup
         $this->deleteVariable($variableId);
@@ -182,13 +182,13 @@ trait VariablesBase
             'custom-value',
         );
 
-        $this->assertEquals(201, $variable['headers']['status-code']);
-        $this->assertEquals($customId, $variable['body']['$id']);
+        $this->assertSame(201, $variable['headers']['status-code']);
+        $this->assertSame($customId, $variable['body']['$id']);
 
         // Verify via GET
         $get = $this->getVariable($customId);
-        $this->assertEquals(200, $get['headers']['status-code']);
-        $this->assertEquals($customId, $get['body']['$id']);
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame($customId, $get['body']['$id']);
 
         // Cleanup
         $this->deleteVariable($customId);
@@ -205,22 +205,22 @@ trait VariablesBase
             false
         );
 
-        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertSame(201, $variable['headers']['status-code']);
         $variableId = $variable['body']['$id'];
 
         // Update key and value
         $updated = $this->updateVariable($variableId, 'UPDATED_KEY', 'updated-value');
 
-        $this->assertEquals(200, $updated['headers']['status-code']);
-        $this->assertEquals($variableId, $updated['body']['$id']);
-        $this->assertEquals('UPDATED_KEY', $updated['body']['key']);
-        $this->assertEquals('updated-value', $updated['body']['value']);
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame($variableId, $updated['body']['$id']);
+        $this->assertSame('UPDATED_KEY', $updated['body']['key']);
+        $this->assertSame('updated-value', $updated['body']['value']);
 
         // Verify update persisted via GET
         $get = $this->getVariable($variableId);
-        $this->assertEquals(200, $get['headers']['status-code']);
-        $this->assertEquals('UPDATED_KEY', $get['body']['key']);
-        $this->assertEquals('updated-value', $get['body']['value']);
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('UPDATED_KEY', $get['body']['key']);
+        $this->assertSame('updated-value', $get['body']['value']);
 
         // Cleanup
         $this->deleteVariable($variableId);
@@ -235,15 +235,15 @@ trait VariablesBase
             false
         );
 
-        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertSame(201, $variable['headers']['status-code']);
         $variableId = $variable['body']['$id'];
 
         // Update only key
         $updated = $this->updateVariable($variableId, 'KEY_AFTER');
 
-        $this->assertEquals(200, $updated['headers']['status-code']);
-        $this->assertEquals('KEY_AFTER', $updated['body']['key']);
-        $this->assertEquals('unchanged-value', $updated['body']['value']);
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame('KEY_AFTER', $updated['body']['key']);
+        $this->assertSame('unchanged-value', $updated['body']['value']);
 
         // Cleanup
         $this->deleteVariable($variableId);
@@ -258,15 +258,15 @@ trait VariablesBase
             false
         );
 
-        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertSame(201, $variable['headers']['status-code']);
         $variableId = $variable['body']['$id'];
 
         // Update only value
         $updated = $this->updateVariable($variableId, null, 'value-after');
 
-        $this->assertEquals(200, $updated['headers']['status-code']);
-        $this->assertEquals('UNCHANGED_KEY', $updated['body']['key']);
-        $this->assertEquals('value-after', $updated['body']['value']);
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame('UNCHANGED_KEY', $updated['body']['key']);
+        $this->assertSame('value-after', $updated['body']['value']);
 
         // Cleanup
         $this->deleteVariable($variableId);
@@ -281,16 +281,16 @@ trait VariablesBase
             false
         );
 
-        $this->assertEquals(201, $variable['headers']['status-code']);
-        $this->assertEquals(false, $variable['body']['secret']);
+        $this->assertSame(201, $variable['headers']['status-code']);
+        $this->assertSame(false, $variable['body']['secret']);
         $variableId = $variable['body']['$id'];
 
         // Update to secret
         $updated = $this->updateVariable($variableId, null, null, true);
 
-        $this->assertEquals(200, $updated['headers']['status-code']);
-        $this->assertEquals(true, $updated['body']['secret']);
-        $this->assertNull($updated['body']['value']);
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame(true, $updated['body']['secret']);
+        $this->assertSame('', $updated['body']['value']);
 
         // Cleanup
         $this->deleteVariable($variableId);
@@ -305,19 +305,19 @@ trait VariablesBase
             true
         );
 
-        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertSame(201, $variable['headers']['status-code']);
         $variableId = $variable['body']['$id'];
 
         // Attempt to unset secret
         $updated = $this->updateVariable($variableId, null, null, false);
 
-        $this->assertEquals(400, $updated['headers']['status-code']);
-        $this->assertEquals('variable_cannot_unset_secret', $updated['body']['type']);
+        $this->assertSame(400, $updated['headers']['status-code']);
+        $this->assertSame('variable_cannot_unset_secret', $updated['body']['type']);
 
         // Verify variable is unchanged
         $get = $this->getVariable($variableId);
-        $this->assertEquals(200, $get['headers']['status-code']);
-        $this->assertEquals(true, $get['body']['secret']);
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame(true, $get['body']['secret']);
 
         // Cleanup
         $this->deleteVariable($variableId);
@@ -331,13 +331,13 @@ trait VariablesBase
             'auth-value',
         );
 
-        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertSame(201, $variable['headers']['status-code']);
         $variableId = $variable['body']['$id'];
 
         // Attempt update without authentication
         $response = $this->updateVariable($variableId, 'UPDATED_KEY', null, null, false);
 
-        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertSame(401, $response['headers']['status-code']);
 
         // Cleanup
         $this->deleteVariable($variableId);
@@ -347,8 +347,8 @@ trait VariablesBase
     {
         $updated = $this->updateVariable('non-existent-id', 'NEW_KEY', 'new-value');
 
-        $this->assertEquals(404, $updated['headers']['status-code']);
-        $this->assertEquals('variable_not_found', $updated['body']['type']);
+        $this->assertSame(404, $updated['headers']['status-code']);
+        $this->assertSame('variable_not_found', $updated['body']['type']);
     }
 
     // Get variable tests
@@ -362,22 +362,22 @@ trait VariablesBase
             false
         );
 
-        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertSame(201, $variable['headers']['status-code']);
         $variableId = $variable['body']['$id'];
 
         $get = $this->getVariable($variableId);
 
-        $this->assertEquals(200, $get['headers']['status-code']);
-        $this->assertEquals($variableId, $get['body']['$id']);
-        $this->assertEquals('GET_TEST_KEY', $get['body']['key']);
-        $this->assertEquals('get-test-value', $get['body']['value']);
-        $this->assertEquals(false, $get['body']['secret']);
-        $this->assertEquals('project', $get['body']['resourceType']);
-        $this->assertEquals('', $get['body']['resourceId']);
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame($variableId, $get['body']['$id']);
+        $this->assertSame('GET_TEST_KEY', $get['body']['key']);
+        $this->assertSame('get-test-value', $get['body']['value']);
+        $this->assertSame(false, $get['body']['secret']);
+        $this->assertSame('project', $get['body']['resourceType']);
+        $this->assertSame('', $get['body']['resourceId']);
 
         $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($get['body']['$createdAt']));
-        $this->assertEquals(true, $dateValidator->isValid($get['body']['$updatedAt']));
+        $this->assertSame(true, $dateValidator->isValid($get['body']['$createdAt']));
+        $this->assertSame(true, $dateValidator->isValid($get['body']['$updatedAt']));
 
         // Cleanup
         $this->deleteVariable($variableId);
@@ -387,8 +387,8 @@ trait VariablesBase
     {
         $get = $this->getVariable('non-existent-id');
 
-        $this->assertEquals(404, $get['headers']['status-code']);
-        $this->assertEquals('variable_not_found', $get['body']['type']);
+        $this->assertSame(404, $get['headers']['status-code']);
+        $this->assertSame('variable_not_found', $get['body']['type']);
     }
 
     public function testGetVariableWithoutAuthentication(): void
@@ -399,13 +399,13 @@ trait VariablesBase
             'auth-get-value',
         );
 
-        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertSame(201, $variable['headers']['status-code']);
         $variableId = $variable['body']['$id'];
 
         // Attempt GET without authentication
         $response = $this->getVariable($variableId, false);
 
-        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertSame(401, $response['headers']['status-code']);
 
         // Cleanup
         $this->deleteVariable($variableId);
@@ -422,7 +422,7 @@ trait VariablesBase
             'alpha-value',
             false
         );
-        $this->assertEquals(201, $variable1['headers']['status-code']);
+        $this->assertSame(201, $variable1['headers']['status-code']);
 
         $variable2 = $this->createVariable(
             ID::unique(),
@@ -430,7 +430,7 @@ trait VariablesBase
             'beta-value',
             true
         );
-        $this->assertEquals(201, $variable2['headers']['status-code']);
+        $this->assertSame(201, $variable2['headers']['status-code']);
 
         $variable3 = $this->createVariable(
             ID::unique(),
@@ -438,12 +438,12 @@ trait VariablesBase
             'gamma-value',
             false
         );
-        $this->assertEquals(201, $variable3['headers']['status-code']);
+        $this->assertSame(201, $variable3['headers']['status-code']);
 
         // List all
         $list = $this->listVariables(null, true);
 
-        $this->assertEquals(200, $list['headers']['status-code']);
+        $this->assertSame(200, $list['headers']['status-code']);
         $this->assertGreaterThanOrEqual(3, $list['body']['total']);
         $this->assertGreaterThanOrEqual(3, \count($list['body']['variables']));
         $this->assertIsArray($list['body']['variables']);
@@ -473,21 +473,21 @@ trait VariablesBase
             'LIMIT_KEY_1',
             'limit-value-1',
         );
-        $this->assertEquals(201, $variable1['headers']['status-code']);
+        $this->assertSame(201, $variable1['headers']['status-code']);
 
         $variable2 = $this->createVariable(
             ID::unique(),
             'LIMIT_KEY_2',
             'limit-value-2',
         );
-        $this->assertEquals(201, $variable2['headers']['status-code']);
+        $this->assertSame(201, $variable2['headers']['status-code']);
 
         // List with limit of 1
         $list = $this->listVariables([
             Query::limit(1)->toString(),
         ], true);
 
-        $this->assertEquals(200, $list['headers']['status-code']);
+        $this->assertSame(200, $list['headers']['status-code']);
         $this->assertCount(1, $list['body']['variables']);
         $this->assertGreaterThanOrEqual(2, $list['body']['total']);
 
@@ -503,18 +503,18 @@ trait VariablesBase
             'OFFSET_KEY_1',
             'offset-value-1',
         );
-        $this->assertEquals(201, $variable1['headers']['status-code']);
+        $this->assertSame(201, $variable1['headers']['status-code']);
 
         $variable2 = $this->createVariable(
             ID::unique(),
             'OFFSET_KEY_2',
             'offset-value-2',
         );
-        $this->assertEquals(201, $variable2['headers']['status-code']);
+        $this->assertSame(201, $variable2['headers']['status-code']);
 
         // List all to get total
         $listAll = $this->listVariables(null, true);
-        $this->assertEquals(200, $listAll['headers']['status-code']);
+        $this->assertSame(200, $listAll['headers']['status-code']);
         $totalAll = \count($listAll['body']['variables']);
 
         // List with offset
@@ -522,7 +522,7 @@ trait VariablesBase
             Query::offset(1)->toString(),
         ], true);
 
-        $this->assertEquals(200, $listOffset['headers']['status-code']);
+        $this->assertSame(200, $listOffset['headers']['status-code']);
         $this->assertCount($totalAll - 1, $listOffset['body']['variables']);
 
         // Cleanup
@@ -537,13 +537,13 @@ trait VariablesBase
             'NO_TOTAL_KEY',
             'no-total-value',
         );
-        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertSame(201, $variable['headers']['status-code']);
 
         // List with total=false
         $list = $this->listVariables(null, false);
 
-        $this->assertEquals(200, $list['headers']['status-code']);
-        $this->assertEquals(0, $list['body']['total']);
+        $this->assertSame(200, $list['headers']['status-code']);
+        $this->assertSame(0, $list['body']['total']);
         $this->assertGreaterThanOrEqual(1, \count($list['body']['variables']));
 
         // Cleanup
@@ -557,21 +557,21 @@ trait VariablesBase
             'CURSOR_KEY_1',
             'cursor-value-1',
         );
-        $this->assertEquals(201, $variable1['headers']['status-code']);
+        $this->assertSame(201, $variable1['headers']['status-code']);
 
         $variable2 = $this->createVariable(
             ID::unique(),
             'CURSOR_KEY_2',
             'cursor-value-2',
         );
-        $this->assertEquals(201, $variable2['headers']['status-code']);
+        $this->assertSame(201, $variable2['headers']['status-code']);
 
         // Get first page with limit 1
         $page1 = $this->listVariables([
             Query::limit(1)->toString(),
         ], true);
 
-        $this->assertEquals(200, $page1['headers']['status-code']);
+        $this->assertSame(200, $page1['headers']['status-code']);
         $this->assertCount(1, $page1['body']['variables']);
         $cursorId = $page1['body']['variables'][0]['$id'];
 
@@ -581,7 +581,7 @@ trait VariablesBase
             Query::cursorAfter(new Document(['$id' => $cursorId]))->toString(),
         ], true);
 
-        $this->assertEquals(200, $page2['headers']['status-code']);
+        $this->assertSame(200, $page2['headers']['status-code']);
         $this->assertCount(1, $page2['body']['variables']);
         $this->assertNotEquals($cursorId, $page2['body']['variables'][0]['$id']);
 
@@ -594,7 +594,7 @@ trait VariablesBase
     {
         $response = $this->listVariables(null, null, false);
 
-        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertSame(401, $response['headers']['status-code']);
     }
 
     public function testListVariablesInvalidCursor(): void
@@ -603,7 +603,7 @@ trait VariablesBase
             Query::cursorAfter(new Document(['$id' => 'non-existent-id']))->toString(),
         ], true);
 
-        $this->assertEquals(400, $list['headers']['status-code']);
+        $this->assertSame(400, $list['headers']['status-code']);
     }
 
     // Delete variable tests
@@ -616,30 +616,30 @@ trait VariablesBase
             'delete-value',
         );
 
-        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertSame(201, $variable['headers']['status-code']);
         $variableId = $variable['body']['$id'];
 
         // Verify it exists
         $get = $this->getVariable($variableId);
-        $this->assertEquals(200, $get['headers']['status-code']);
+        $this->assertSame(200, $get['headers']['status-code']);
 
         // Delete
         $delete = $this->deleteVariable($variableId);
-        $this->assertEquals(204, $delete['headers']['status-code']);
+        $this->assertSame(204, $delete['headers']['status-code']);
         $this->assertEmpty($delete['body']);
 
         // Verify it no longer exists
         $get = $this->getVariable($variableId);
-        $this->assertEquals(404, $get['headers']['status-code']);
-        $this->assertEquals('variable_not_found', $get['body']['type']);
+        $this->assertSame(404, $get['headers']['status-code']);
+        $this->assertSame('variable_not_found', $get['body']['type']);
     }
 
     public function testDeleteVariableNotFound(): void
     {
         $delete = $this->deleteVariable('non-existent-id');
 
-        $this->assertEquals(404, $delete['headers']['status-code']);
-        $this->assertEquals('variable_not_found', $delete['body']['type']);
+        $this->assertSame(404, $delete['headers']['status-code']);
+        $this->assertSame('variable_not_found', $delete['body']['type']);
     }
 
     public function testDeleteVariableWithoutAuthentication(): void
@@ -650,17 +650,17 @@ trait VariablesBase
             'delete-auth-value',
         );
 
-        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertSame(201, $variable['headers']['status-code']);
         $variableId = $variable['body']['$id'];
 
         // Attempt DELETE without authentication
         $response = $this->deleteVariable($variableId, false);
 
-        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertSame(401, $response['headers']['status-code']);
 
         // Verify it still exists
         $get = $this->getVariable($variableId);
-        $this->assertEquals(200, $get['headers']['status-code']);
+        $this->assertSame(200, $get['headers']['status-code']);
 
         // Cleanup
         $this->deleteVariable($variableId);
@@ -674,22 +674,22 @@ trait VariablesBase
             'delete-list-value',
         );
 
-        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertSame(201, $variable['headers']['status-code']);
         $variableId = $variable['body']['$id'];
 
         // Get list count before delete
         $listBefore = $this->listVariables(null, true);
-        $this->assertEquals(200, $listBefore['headers']['status-code']);
+        $this->assertSame(200, $listBefore['headers']['status-code']);
         $countBefore = $listBefore['body']['total'];
 
         // Delete
         $delete = $this->deleteVariable($variableId);
-        $this->assertEquals(204, $delete['headers']['status-code']);
+        $this->assertSame(204, $delete['headers']['status-code']);
 
         // Get list count after delete
         $listAfter = $this->listVariables(null, true);
-        $this->assertEquals(200, $listAfter['headers']['status-code']);
-        $this->assertEquals($countBefore - 1, $listAfter['body']['total']);
+        $this->assertSame(200, $listAfter['headers']['status-code']);
+        $this->assertSame($countBefore - 1, $listAfter['body']['total']);
 
         // Verify the deleted variable is not in the list
         $ids = \array_column($listAfter['body']['variables'], '$id');
@@ -704,17 +704,17 @@ trait VariablesBase
             'double-delete-value',
         );
 
-        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertSame(201, $variable['headers']['status-code']);
         $variableId = $variable['body']['$id'];
 
         // First delete succeeds
         $delete = $this->deleteVariable($variableId);
-        $this->assertEquals(204, $delete['headers']['status-code']);
+        $this->assertSame(204, $delete['headers']['status-code']);
 
         // Second delete returns 404
         $delete = $this->deleteVariable($variableId);
-        $this->assertEquals(404, $delete['headers']['status-code']);
-        $this->assertEquals('variable_not_found', $delete['body']['type']);
+        $this->assertSame(404, $delete['headers']['status-code']);
+        $this->assertSame('variable_not_found', $delete['body']['type']);
     }
 
     // Integration tests
@@ -735,7 +735,7 @@ trait VariablesBase
             false
         );
 
-        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertSame(201, $variable['headers']['status-code']);
         $variableId = $variable['body']['$id'];
 
         // 2. Create a function with build commands that echo the variable
@@ -753,7 +753,7 @@ trait VariablesBase
             'commands' => 'echo $GLOBAL_VARIABLE',
         ]);
 
-        $this->assertEquals(201, $function['headers']['status-code']);
+        $this->assertSame(201, $function['headers']['status-code']);
         $functionId = $function['body']['$id'];
 
         // 3. Deploy the function (basic function reads GLOBAL_VARIABLE from env)
@@ -766,7 +766,7 @@ trait VariablesBase
             'activate' => true,
         ]);
 
-        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $this->assertSame(202, $deployment['headers']['status-code']);
         $deploymentId = $deployment['body']['$id'] ?? '';
 
         // 4. Wait for deployment to be ready and activated
@@ -782,7 +782,7 @@ trait VariablesBase
                 throw new Critical('Deployment build failed: ' . ($deployment['body']['buildLogs'] ?? 'no logs'));
             }
 
-            $this->assertEquals('ready', $status, 'Deployment status is not ready');
+            $this->assertSame('ready', $status, 'Deployment status is not ready');
         }, 120000, 500);
 
         $this->assertEventually(function () use ($projectId, $apiKey, $functionId, $deploymentId) {
@@ -791,7 +791,7 @@ trait VariablesBase
                 'x-appwrite-project' => $projectId,
                 'x-appwrite-key' => $apiKey,
             ]);
-            $this->assertEquals($deploymentId, $function['body']['deploymentId'] ?? '');
+            $this->assertSame($deploymentId, $function['body']['deploymentId'] ?? '');
         }, 120000, 500);
 
         // 5. Verify the project variable was available during build
@@ -800,7 +800,7 @@ trait VariablesBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apiKey,
         ]);
-        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertSame(200, $deployment['headers']['status-code']);
         $this->assertStringContainsString('Project Variable Value', $deployment['body']['buildLogs']);
 
         // 6. Execute the function and verify the project variable is in runtime output
@@ -811,11 +811,11 @@ trait VariablesBase
             'async' => false,
         ]);
 
-        $this->assertEquals(201, $execution['headers']['status-code']);
-        $this->assertEquals('completed', $execution['body']['status']);
-        $this->assertEquals(200, $execution['body']['responseStatusCode']);
+        $this->assertSame(201, $execution['headers']['status-code']);
+        $this->assertSame('completed', $execution['body']['status']);
+        $this->assertSame(200, $execution['body']['responseStatusCode']);
         $output = json_decode($execution['body']['responseBody'], true);
-        $this->assertEquals('Project Variable Value', $output['GLOBAL_VARIABLE']);
+        $this->assertSame('Project Variable Value', $output['GLOBAL_VARIABLE']);
 
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
@@ -841,7 +841,7 @@ trait VariablesBase
             'ProjectVarTest',
         );
 
-        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertSame(201, $variable['headers']['status-code']);
         $variableId = $variable['body']['$id'];
 
         // 2. Create a site
@@ -861,7 +861,7 @@ trait VariablesBase
             'fallbackFile' => '',
         ]);
 
-        $this->assertEquals(201, $site['headers']['status-code']);
+        $this->assertSame(201, $site['headers']['status-code']);
         $siteId = $site['body']['$id'];
 
         // 3. Setup domain for proxy access
@@ -874,7 +874,7 @@ trait VariablesBase
             'siteId' => $siteId,
         ]);
 
-        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertSame(201, $rule['headers']['status-code']);
 
         // 4. Deploy the site (astro site reads import.meta.env.name)
         $deployment = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments', [
@@ -886,7 +886,7 @@ trait VariablesBase
             'activate' => 'true',
         ]);
 
-        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $this->assertSame(202, $deployment['headers']['status-code']);
         $deploymentId = $deployment['body']['$id'] ?? '';
 
         // 5. Wait for deployment to be ready and activated
@@ -902,7 +902,7 @@ trait VariablesBase
                 throw new Critical('Site deployment failed: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
             }
 
-            $this->assertEquals('ready', $status, 'Deployment status is not ready');
+            $this->assertSame('ready', $status, 'Deployment status is not ready');
         }, 120000, 500);
 
         $this->assertEventually(function () use ($projectId, $apiKey, $siteId, $deploymentId) {
@@ -911,7 +911,7 @@ trait VariablesBase
                 'x-appwrite-project' => $projectId,
                 'x-appwrite-key' => $apiKey,
             ]);
-            $this->assertEquals($deploymentId, $site['body']['deploymentId'] ?? '');
+            $this->assertSame($deploymentId, $site['body']['deploymentId'] ?? '');
         }, 120000, 500);
 
         // 6. Verify the project variable was available during build
@@ -920,7 +920,7 @@ trait VariablesBase
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apiKey,
         ]);
-        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertSame(200, $deployment['headers']['status-code']);
         $this->assertStringContainsString('ProjectVarTest', $deployment['body']['buildLogs']);
 
         // 7. Get the domain and access the site
@@ -935,7 +935,7 @@ trait VariablesBase
             ],
         ]);
 
-        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertSame(200, $rules['headers']['status-code']);
         $this->assertGreaterThanOrEqual(1, \count($rules['body']['rules']));
         $domain = $rules['body']['rules'][0]['domain'];
 
@@ -944,7 +944,7 @@ trait VariablesBase
 
         $response = $proxyClient->call(Client::METHOD_GET, '/');
 
-        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSame(200, $response['headers']['status-code']);
         $this->assertStringContainsString('Env variable is ProjectVarTest', $response['body']);
         $this->assertStringNotContainsString('Variable not found', $response['body']);
 
@@ -1070,7 +1070,7 @@ trait VariablesBase
         $folderPath = realpath(__DIR__ . '/../../../resources/' . $type) . "/$name";
         $tarPath = "$folderPath/code.tar.gz";
 
-        Console::execute("cd $folderPath && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
+        Console::execute("cd $folderPath && tar --exclude code.tar.gz --exclude node_modules -czf code.tar.gz .", '', $this->stdout, $this->stderr);
 
         if (filesize($tarPath) > 1024 * 1024 * 5) {
             throw new \Exception('Code package is too large. Use the chunked upload method instead.');

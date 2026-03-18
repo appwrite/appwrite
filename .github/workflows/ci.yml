@@ -396,7 +396,8 @@ jobs:
           Webhooks,
           VCS,
           Messaging,
-          Migrations
+          Migrations,
+          Project
         ]
     steps:
       - name: Checkout repository

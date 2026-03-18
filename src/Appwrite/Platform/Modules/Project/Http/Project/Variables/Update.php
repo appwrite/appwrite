@@ -106,7 +106,7 @@ class Update extends Base
 
         foreach (['functions', 'sites'] as $collection) {
             $dbForProject->updateDocuments($collection, new Document([
-                'live' => 'false'
+                'live' => false
             ]));
         }
 
