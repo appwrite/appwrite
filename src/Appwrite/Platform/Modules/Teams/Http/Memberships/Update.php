@@ -116,7 +116,7 @@ class Update extends Action
          * Update the roles
          */
         $membership->setAttribute('roles', $roles);
-        $membership = $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
+        $membership = $dbForProject->updateDocument('memberships', $membership->getId(), new Document(['roles' => $roles]));
 
         /**
          * Replace membership on profile

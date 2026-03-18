@@ -13,6 +13,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -90,7 +91,10 @@ class Delete extends Base
             $schedule
                 ->setAttribute('resourceUpdatedAt', DateTime::now())
                 ->setAttribute('active', false);
-            $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
+            $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document([
+                'resourceUpdatedAt' => $schedule->getAttribute('resourceUpdatedAt'),
+                'active' => $schedule->getAttribute('active'),
+            ])));
         }
 
         $queueForDeletes

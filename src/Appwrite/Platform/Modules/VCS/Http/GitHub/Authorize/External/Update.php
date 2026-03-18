@@ -98,9 +98,8 @@ class Update extends Action
         }
 
         $providerPullRequestIds = \array_unique(\array_merge($repository->getAttribute('providerPullRequestIds', []), [$providerPullRequestId]));
-        $repository = $repository->setAttribute('providerPullRequestIds', $providerPullRequestIds);
 
-        $repository = $authorization->skip(fn () => $dbForPlatform->updateDocument('repositories', $repository->getId(), $repository));
+        $repository = $authorization->skip(fn () => $dbForPlatform->updateDocument('repositories', $repository->getId(), new Document(['providerPullRequestIds' => $providerPullRequestIds])));
 
         $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
         $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');

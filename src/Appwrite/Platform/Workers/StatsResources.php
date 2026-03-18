@@ -202,12 +202,23 @@ class StatsResources extends Action
         $totalFiles = 0;
         $totalStorage = 0;
         $this->foreachDocument($dbForProject, 'buckets', [], function ($bucket) use ($dbForProject, $dbForLogs, $region, &$totalFiles, &$totalStorage) {
-            $files = $dbForProject->count('bucket_' . $bucket->getSequence());
+            try {
+                $files = $dbForProject->count('bucket_' . $bucket->getSequence());
+            } catch (Throwable $th) {
+                call_user_func_array($this->logError, [$th, "StatsResources", "count_for_bucket_{$bucket->getSequence()}"]);
+                return;
+            }
 
             $metric = str_replace('{bucketInternalId}', $bucket->getSequence(), METRIC_BUCKET_ID_FILES);
             $this->createStatsDocuments($region, $metric, $files);
 
-            $storage = $dbForProject->sum('bucket_' . $bucket->getSequence(), 'sizeActual');
+            try {
+                $storage = $dbForProject->sum('bucket_' . $bucket->getSequence(), 'sizeActual');
+            } catch (Throwable $th) {
+                call_user_func_array($this->logError, [$th, "StatsResources", "sum_for_bucket_{$bucket->getSequence()}"]);
+                return;
+            }
+
             $metric = str_replace('{bucketInternalId}', $bucket->getSequence(), METRIC_BUCKET_ID_FILES_STORAGE);
             $this->createStatsDocuments($region, $metric, $storage);
 

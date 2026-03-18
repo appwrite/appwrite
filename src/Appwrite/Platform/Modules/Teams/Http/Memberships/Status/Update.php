@@ -189,7 +189,7 @@ class Update extends Action
             ;
         }
 
-        $membership = $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
+        $membership = $dbForProject->updateDocument('memberships', $membership->getId(), new Document(['joined' => $membership->getAttribute('joined'), 'confirm' => true]));
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 

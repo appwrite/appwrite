@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Attribute;
 
 use Appwrite\Event\Event;
-use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Action;
 use Appwrite\SDK\AuthType;
@@ -11,6 +10,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use InvalidArgumentException;
@@ -83,13 +83,13 @@ class Decrement extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
-            ->inject('queueForStatsUsage')
+            ->inject('usage')
             ->inject('plan')
             ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $min, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage, array $plan, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $min, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, Context $usage, array $plan, Authorization $authorization): void
     {
         $isAPIKey = User::isApp($authorization->getRoles());
         $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
@@ -200,7 +200,7 @@ class Decrement extends Action
             )
         );
 
-        $queueForStatsUsage
+        $usage
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, 1)
             ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), 1);
 

@@ -777,6 +777,7 @@ return [
                 'filters' => [],
             ],
             [
+                // At the moment, always empty (no runtime supports it yet)
                 'array' => false,
                 '$id' => ID::custom('startCommand'),
                 'type' => Database::VAR_STRING,

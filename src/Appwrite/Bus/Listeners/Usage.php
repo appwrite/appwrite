@@ -4,11 +4,12 @@ namespace Appwrite\Bus\Listeners;
 
 use Appwrite\Bus\Events\ExecutionCompleted;
 use Appwrite\Bus\Events\RequestCompleted;
-use Appwrite\Event\StatsUsage;
+use Appwrite\Event\Message\Usage as UsageMessage;
+use Appwrite\Event\Publisher\Usage as Publisher;
+use Appwrite\Usage\Context;
 use Utopia\Bus\Event;
 use Utopia\Bus\Listener;
 use Utopia\Database\Document;
-use Utopia\Queue\Publisher;
 
 class Usage extends Listener
 {
@@ -29,20 +30,21 @@ class Usage extends Listener
     {
         $this
             ->desc('Records usage metrics')
-            ->inject('publisherStatsUsage')
+            ->inject('publisherForUsage')
+            ->inject('usage')
             ->callback($this->handle(...));
     }
 
-    public function handle(Event $event, Publisher $publisher): void
+    public function handle(Event $event, Publisher $publisherForUsage, Context $usage): void
     {
         match (true) {
-            $event instanceof ExecutionCompleted => $this->handleExecutionCompleted($event, $publisher),
-            $event instanceof RequestCompleted => $this->handleRequestCompleted($event, $publisher),
+            $event instanceof ExecutionCompleted => $this->handleExecutionCompleted($event, $publisherForUsage),
+            $event instanceof RequestCompleted => $this->handleRequestCompleted($event, $usage),
             default => null,
         };
     }
 
-    private function handleExecutionCompleted(ExecutionCompleted $event, Publisher $publisher): void
+    private function handleExecutionCompleted(ExecutionCompleted $event, Publisher $publisherForUsage): void
     {
         $execution = new Document($event->execution);
         $resource = new Document($event->resource);
@@ -61,9 +63,7 @@ class Usage extends Listener
         $compute = (int)($duration * 1000);
         $mbSeconds = (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $duration * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT));
 
-        $queueForStatsUsage = new StatsUsage($publisher);
-        $queueForStatsUsage
-            ->setProject($project)
+        $context = (new Context())
             ->addMetric(METRIC_EXECUTIONS, 1)
             ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_EXECUTIONS), 1)
             ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$resourceType, $resourceInternalId], METRIC_RESOURCE_TYPE_ID_EXECUTIONS), 1)
@@ -72,11 +72,18 @@ class Usage extends Listener
             ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$resourceType, $resourceInternalId], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_COMPUTE), $compute)
             ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, $mbSeconds)
             ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_EXECUTIONS_MB_SECONDS), $mbSeconds)
-            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$resourceType, $resourceInternalId], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS), $mbSeconds)
-            ->trigger();
+            ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$resourceType, $resourceInternalId], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS), $mbSeconds);
+
+        $message = new UsageMessage(
+            project: $project,
+            metrics: $context->getMetrics(),
+            reduce: $context->getReduce()
+        );
+
+        $publisherForUsage->enqueue($message);
     }
 
-    private function handleRequestCompleted(RequestCompleted $event, Publisher $publisher): void
+    private function handleRequestCompleted(RequestCompleted $event, Context $usage): void
     {
         $fileSize = 0;
         $file = $event->request->getFiles('file');
@@ -84,18 +91,14 @@ class Usage extends Listener
             $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
         }
 
-        $project = new Document($event->project);
         $deployment = new Document($event->deployment);
-        $queueForStatsUsage = new StatsUsage($publisher);
 
         $inbound = $event->request->getSize() + $fileSize;
         $outbound = $event->response->getSize();
 
-        $queueForStatsUsage->setProject($project);
-
         if ($deployment->getAttribute('resourceType') === 'sites') {
             $siteInternalId = $deployment->getAttribute('resourceInternalId', '');
-            $queueForStatsUsage
+            $usage
                 ->addMetric(METRIC_SITES_REQUESTS, 1)
                 ->addMetric(METRIC_SITES_INBOUND, $inbound)
                 ->addMetric(METRIC_SITES_OUTBOUND, $outbound)
@@ -103,12 +106,10 @@ class Usage extends Listener
                 ->addMetric(str_replace('{siteInternalId}', $siteInternalId, METRIC_SITES_ID_INBOUND), $inbound)
                 ->addMetric(str_replace('{siteInternalId}', $siteInternalId, METRIC_SITES_ID_OUTBOUND), $outbound);
         } else {
-            $queueForStatsUsage
+            $usage
                 ->addMetric(METRIC_NETWORK_REQUESTS, 1)
                 ->addMetric(METRIC_NETWORK_INBOUND, $inbound)
                 ->addMetric(METRIC_NETWORK_OUTBOUND, $outbound);
         }
-
-        $queueForStatsUsage->trigger();
     }
 }

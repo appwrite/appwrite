@@ -1,0 +1,4 @@
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <circle class="check-bg" cx="8" cy="8" r="7" fill="var(--fgcolor-neutral-primary)"/>
+    <path class="check-mark" d="M5 8.2L7.2 10.2L11.2 6.2" fill="none" stroke="var(--fgcolor-on-invert)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

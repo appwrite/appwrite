@@ -102,67 +102,79 @@ trait ProjectCustom
         $this->assertEquals(201, $project['headers']['status-code'], 'Project creation failed with status: ' . $project['headers']['status-code']);
         $this->assertNotEmpty($project['body']);
 
-        $key = $this->client->call(Client::METHOD_POST, '/projects/' . $project['body']['$id'] . '/keys', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-            'x-appwrite-project' => 'console',
-        ], [
-            'keyId' => ID::unique(),
-            'name' => 'Demo Project Key',
-            'scopes' => [
-                'users.read',
-                'users.write',
-                'teams.read',
-                'teams.write',
-                'databases.read',
-                'databases.write',
-                'collections.read',
-                'collections.write',
-                'tables.read',
-                'tables.write',
-                'documents.read',
-                'documents.write',
-                'rows.read',
-                'rows.write',
-                'files.read',
-                'files.write',
-                'buckets.read',
-                'buckets.write',
-                'sites.read',
-                'sites.write',
-                'functions.read',
-                'functions.write',
-                'sites.read',
-                'sites.write',
-                'execution.read',
-                'execution.write',
-                'log.read',
-                'log.write',
-                'locale.read',
-                'avatars.read',
-                'health.read',
-                'rules.read',
-                'rules.write',
-                'sessions.write',
-                'targets.read',
-                'targets.write',
-                'providers.read',
-                'providers.write',
-                'messages.read',
-                'messages.write',
-                'topics.write',
-                'topics.read',
-                'subscribers.write',
-                'subscribers.read',
-                'migrations.write',
-                'migrations.read',
-                'tokens.read',
-                'tokens.write',
-            ],
-        ]);
+        $key = null;
+        for ($i = 0; $i < $maxRetries; $i++) {
+            $key = $this->client->call(Client::METHOD_POST, '/projects/' . $project['body']['$id'] . '/keys', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+                'x-appwrite-project' => 'console',
+            ], [
+                'keyId' => ID::unique(),
+                'name' => 'Demo Project Key',
+                'scopes' => [
+                    'users.read',
+                    'users.write',
+                    'teams.read',
+                    'teams.write',
+                    'databases.read',
+                    'databases.write',
+                    'collections.read',
+                    'collections.write',
+                    'tables.read',
+                    'tables.write',
+                    'documents.read',
+                    'documents.write',
+                    'rows.read',
+                    'rows.write',
+                    'files.read',
+                    'files.write',
+                    'buckets.read',
+                    'buckets.write',
+                    'sites.read',
+                    'sites.write',
+                    'functions.read',
+                    'functions.write',
+                    'sites.read',
+                    'sites.write',
+                    'execution.read',
+                    'execution.write',
+                    'log.read',
+                    'log.write',
+                    'locale.read',
+                    'avatars.read',
+                    'health.read',
+                    'rules.read',
+                    'rules.write',
+                    'sessions.write',
+                    'targets.read',
+                    'targets.write',
+                    'providers.read',
+                    'providers.write',
+                    'messages.read',
+                    'messages.write',
+                    'topics.write',
+                    'topics.read',
+                    'subscribers.write',
+                    'subscribers.read',
+                    'migrations.write',
+                    'migrations.read',
+                    'tokens.read',
+                    'tokens.write',
+                ],
+            ]);
 
-        $this->assertEquals(201, $key['headers']['status-code']);
+            if ($key['headers']['status-code'] === 201) {
+                break;
+            }
+
+            if ($key['headers']['status-code'] === 401 && $i < $maxRetries - 1) {
+                \usleep(500000);
+                continue;
+            }
+        }
+
+        $this->assertEquals(201, $key['headers']['status-code'], 'Key creation failed with status: ' . $key['headers']['status-code']);
         $this->assertNotEmpty($key['body']);
         $this->assertNotEmpty($key['body']['secret']);
 

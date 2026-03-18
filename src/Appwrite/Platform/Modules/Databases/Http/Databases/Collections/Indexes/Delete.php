@@ -12,6 +12,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
@@ -96,7 +97,8 @@ class Delete extends Action
 
         // Only update status if removing available index
         if ($index->getAttribute('status') === 'available') {
-            $index = $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'deleting'));
+            $index->setAttribute('status', 'deleting');
+            $index = $dbForProject->updateDocument('indexes', $index->getId(), new Document(['status' => 'deleting']));
         }
 
         $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collectionId);

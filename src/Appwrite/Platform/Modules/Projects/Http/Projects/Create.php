@@ -218,9 +218,13 @@ class Create extends Action
             $dbForProject->setDatabase(APP_DATABASE);
 
             if ($sharedTables) {
+                $tenant = null;
+                if ($sharedTablesV1) {
+                    $tenant = $project->getSequence();
+                }
                 $dbForProject
                     ->setSharedTables(true)
-                    ->setTenant($sharedTablesV1 ? (int)$project->getSequence() : null)
+                    ->setTenant($tenant)
                     ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $dbForProject
@@ -272,14 +276,37 @@ class Create extends Action
                     try {
                         $dbForProject->createCollection($key, $attributes, $indexes);
                     } catch (Duplicate) {
-                        $dbForProject->createDocument(Database::METADATA, new Document([
-                            '$id' => ID::custom($key),
-                            '$permissions' => [Permission::create(Role::any())],
-                            'name' => $key,
-                            'attributes' => $attributes,
-                            'indexes' => $indexes,
-                            'documentSecurity' => true
-                        ]));
+                        try {
+                            $dbForProject->createDocument(Database::METADATA, new Document([
+                                '$id' => ID::custom($key),
+                                '$permissions' => [Permission::create(Role::any())],
+                                'name' => $key,
+                                'attributes' => $attributes,
+                                'indexes' => $indexes,
+                                'documentSecurity' => true
+                            ]));
+                        } catch (Duplicate) {
+                            // Metadata already exists from concurrent creation
+                        }
+                    } catch (\Throwable $e) {
+                        // PostgreSQL adapter may throw a non-Duplicate exception when
+                        // a table or index already exists during concurrent project
+                        // creation in shared mode. Treat as duplicate if metadata
+                        // can be created successfully.
+                        try {
+                            $dbForProject->createDocument(Database::METADATA, new Document([
+                                '$id' => ID::custom($key),
+                                '$permissions' => [Permission::create(Role::any())],
+                                'name' => $key,
+                                'attributes' => $attributes,
+                                'indexes' => $indexes,
+                                'documentSecurity' => true
+                            ]));
+                        } catch (Duplicate) {
+                            // Metadata already exists from concurrent creation
+                        } catch (\Throwable) {
+                            throw $e; // Rethrow original if metadata creation also fails
+                        }
                     }
                 }
             }

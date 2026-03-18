@@ -50,6 +50,16 @@ require_once __DIR__ . '/init.php';
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
+// Log uncaught exceptions in one line instead of relying on Swoole's full backtrace dump
+set_exception_handler(function (\Throwable $e) {
+    Console::error(sprintf(
+        'Realtime uncaught exception: %s in %s:%d',
+        $e->getMessage(),
+        $e->getFile(),
+        $e->getLine()
+    ));
+});
+
 // Allows overriding
 if (!function_exists('getConsoleDB')) {
     function getConsoleDB(): Database
@@ -115,7 +125,7 @@ if (!function_exists('getProjectDB')) {
         if (\in_array($dsn->getHost(), $sharedTables)) {
             $database
                 ->setSharedTables(true)
-                ->setTenant((int)$project->getSequence())
+                ->setTenant($project->getSequence())
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
             $database
@@ -221,6 +231,13 @@ if (!function_exists('getTelemetry')) {
         }
 
         return $ctx['telemetry'] = new NoTelemetry();
+    }
+}
+
+if (!function_exists('triggerStats')) {
+    function triggerStats(array $event, string $projectId): void
+    {
+        return;
     }
 }
 
@@ -356,7 +373,10 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
                     ->setAttribute('timestamp', DateTime::now())
                     ->setAttribute('value', json_encode($payload));
 
-                $database->getAuthorization()->skip(fn () => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
+                $database->getAuthorization()->skip(fn () => $database->updateDocument('realtime', $statsDocument->getId(), new Document([
+                    'timestamp' => $statsDocument->getAttribute('timestamp'),
+                    'value' => $statsDocument->getAttribute('value')
+                ])));
             } catch (Throwable $th) {
                 logError($th, "updateWorkerDocument");
             }
@@ -545,20 +565,41 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 }
 
                 $total = 0;
+                $outboundBytes = 0;
+
                 foreach ($groups as $group) {
                     $data = $event['data'];
                     $data['subscriptions'] = $group['subscriptions'];
 
-                    $server->send($group['ids'], json_encode([
+                    $payloadJson = json_encode([
                         'type' => 'event',
                         'data' => $data
-                    ]));
-                    $total += count($group['ids']);
+                    ]);
+
+                    $server->send($group['ids'], $payloadJson);
+
+                    $count = count($group['ids']);
+                    $total += $count;
+                    $outboundBytes += strlen($payloadJson) * $count;
                 }
 
                 if ($total > 0) {
                     $register->get('telemetry.messageSentCounter')->add($total);
                     $stats->incr($event['project'], 'messages', $total);
+
+                    $projectId = $event['project'] ?? null;
+
+                    if (!empty($projectId)) {
+                        $metrics = [
+                            METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT => $total,
+                        ];
+
+                        if ($outboundBytes > 0) {
+                            $metrics[METRIC_REALTIME_OUTBOUND] = $outboundBytes;
+                        }
+
+                        triggerStats($metrics, $projectId);
+                    }
                 }
             });
         } catch (Throwable $th) {
@@ -635,6 +676,12 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception(Exception::REALTIME_TOO_MANY_MESSAGES, 'Too many requests');
         }
 
+        $rawSize = $request->getSize();
+
+        triggerStats([
+            METRIC_REALTIME_INBOUND => $rawSize,
+        ], $project->getId());
+
         /*
          * Validate Client Domain - Check to avoid CSRF attack.
          * Adding Appwrite API domains to allow XDOMAIN communication.
@@ -689,14 +736,16 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
         $user = empty($user->getId()) ? null : $response->output($user, Response::MODEL_ACCOUNT);
 
-        $server->send([$connection], json_encode([
+        $connectedPayloadJson = json_encode([
             'type' => 'connected',
             'data' => [
                 'channels' => $names,
                 'subscriptions' => $mapping,
                 'user' => $user
             ]
-        ]));
+        ]);
+
+        $server->send([$connection], $connectedPayloadJson);
 
         $register->get('telemetry.connectionCounter')->add(1);
         $register->get('telemetry.connectionCreatedCounter')->add(1);
@@ -707,6 +756,12 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         ]);
         $stats->incr($project->getId(), 'connections');
         $stats->incr($project->getId(), 'connectionsTotal');
+
+        $connectedOutboundBytes = \strlen($connectedPayloadJson);
+
+        triggerStats([METRIC_REALTIME_CONNECTIONS => 1, METRIC_REALTIME_OUTBOUND => $connectedOutboundBytes], $project->getId());
+
+
     } catch (Throwable $th) {
         logError($th, 'realtime', project: $project, user: $logUser, authorization: $authorization);
 
@@ -748,6 +803,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
     $authorization = null;
 
     try {
+        $rawSize = \strlen($message);
         $response = new Response(new SwooleResponse());
         $projectId = $realtime->connections[$connection]['projectId'] ?? null;
 
@@ -760,7 +816,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         $database = getConsoleDB();
         $database->setAuthorization($authorization);
 
-        if ($projectId !== 'console') {
+        if (!empty($projectId) && $projectId !== 'console') {
             $project = $authorization->skip(fn () => $database->getDocument('projects', $projectId));
 
             $database = getProjectDB($project);
@@ -786,17 +842,41 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
             throw new Exception(Exception::REALTIME_TOO_MANY_MESSAGES, 'Too many messages.');
         }
 
+        // Record realtime inbound bytes for this project
+        if ($project !== null && !$project->isEmpty()) {
+            triggerStats([
+                METRIC_REALTIME_INBOUND => $rawSize,
+            ], $project->getId());
+        }
+
         $message = json_decode($message, true);
 
         if (is_null($message) || (!array_key_exists('type', $message) && !array_key_exists('data', $message))) {
             throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Message format is not valid.');
         }
 
+        // Ping does not require project context; other messages do (e.g. after unsubscribe during auth)
+        if (empty($projectId) && ($message['type'] ?? '') !== 'ping') {
+            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Missing project context. Reconnect to the project first.');
+        }
+
         switch ($message['type']) {
             case 'ping':
-                $server->send([$connection], json_encode([
+                $pongPayloadJson = json_encode([
                     'type' => 'pong'
-                ]));
+                ]);
+
+                $server->send([$connection], $pongPayloadJson);
+
+                if ($project !== null && !$project->isEmpty()) {
+                    $pongOutboundBytes = \strlen($pongPayloadJson);
+
+                    if ($pongOutboundBytes > 0) {
+                        triggerStats([
+                            METRIC_REALTIME_OUTBOUND => $pongOutboundBytes,
+                        ], $project->getId());
+                    }
+                }
 
                 break;
             case 'authentication':
@@ -857,14 +937,27 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 }
 
                 $user = $response->output($user, Response::MODEL_ACCOUNT);
-                $server->send([$connection], json_encode([
+
+                $authResponsePayloadJson = json_encode([
                     'type' => 'response',
                     'data' => [
                         'to' => 'authentication',
                         'success' => true,
                         'user' => $user
                     ]
-                ]));
+                ]);
+
+                $server->send([$connection], $authResponsePayloadJson);
+
+                if ($project !== null && !$project->isEmpty()) {
+                    $authOutboundBytes = \strlen($authResponsePayloadJson);
+
+                    if ($authOutboundBytes > 0) {
+                        triggerStats([
+                            METRIC_REALTIME_OUTBOUND => $authOutboundBytes,
+                        ], $project->getId());
+                    }
+                }
 
                 break;
 
@@ -902,9 +995,21 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
 });
 
 $server->onClose(function (int $connection) use ($realtime, $stats, $register) {
-    if (array_key_exists($connection, $realtime->connections)) {
-        $stats->decr($realtime->connections[$connection]['projectId'], 'connectionsTotal');
-        $register->get('telemetry.connectionCounter')->add(-1);
+    try {
+        if (array_key_exists($connection, $realtime->connections)) {
+            $stats->decr($realtime->connections[$connection]['projectId'], 'connectionsTotal');
+            $register->get('telemetry.connectionCounter')->add(-1);
+
+            $projectId = $realtime->connections[$connection]['projectId'];
+
+            triggerStats([
+                METRIC_REALTIME_CONNECTIONS => -1,
+            ], $projectId);
+        }
+    } catch (\Throwable $th) {
+        // Log only; do not rethrow. If we let this bubble, Swoole dumps full coroutine
+        // backtraces and unsubscribe() below would never run (connection cleanup would fail).
+        Console::error('Realtime onClose error: ' . $th->getMessage());
     }
     $realtime->unsubscribe($connection);
 

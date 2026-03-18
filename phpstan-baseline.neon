@@ -1,0 +1,1885 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Variable \$dbForPlatform might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: app/cli.php
+
+		-
+			message: '#^PHPDoc tag @var above a method has no effect\.$#'
+			identifier: varTag.misplaced
+			count: 1
+			path: app/config/templates/function.php
+
+		-
+			message: '#^Array has 2 duplicate keys with value ''outputDirectory'' \(''outputDirectory'', ''outputDirectory''\)\.$#'
+			identifier: array.duplicateKey
+			count: 3
+			path: app/config/templates/site.php
+
+		-
+			message: '#^PHPDoc tag @var above a method has no effect\.$#'
+			identifier: varTag.misplaced
+			count: 1
+			path: app/config/templates/site.php
+
+		-
+			message: '#^Result of method Appwrite\\Utopia\\Response\:\:dynamic\(\) \(void\) is used\.$#'
+			identifier: method.void
+			count: 2
+			path: app/controllers/api/account.php
+
+		-
+			message: '#^Result of method Utopia\\Http\\Response\:\:noContent\(\) \(void\) is used\.$#'
+			identifier: method.void
+			count: 1
+			path: app/controllers/api/account.php
+
+		-
+			message: '#^Variable \$session might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: app/controllers/api/account.php
+
+		-
+			message: '#^Variable \$output might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: app/controllers/api/locale.php
+
+		-
+			message: '#^Variable \$currentScheduledAt on left side of \?\? is never defined\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: app/controllers/api/messaging.php
+
+		-
+			message: '#^Result of method Utopia\\Http\\Response\:\:noContent\(\) \(void\) is used\.$#'
+			identifier: method.void
+			count: 1
+			path: app/controllers/api/projects.php
+
+		-
+			message: '#^Result of method Appwrite\\Utopia\\Response\:\:dynamic\(\) \(void\) is used\.$#'
+			identifier: method.void
+			count: 2
+			path: app/controllers/api/users.php
+
+		-
+			message: '#^Result of method Utopia\\Http\\Response\:\:noContent\(\) \(void\) is used\.$#'
+			identifier: method.void
+			count: 1
+			path: app/controllers/api/users.php
+
+		-
+			message: '#^Result of method Utopia\\Http\\Response\:\:redirect\(\) \(void\) is used\.$#'
+			identifier: method.void
+			count: 2
+			path: app/controllers/general.php
+
+		-
+			message: '#^Result of method Utopia\\Http\\Response\:\:send\(\) \(void\) is used\.$#'
+			identifier: method.void
+			count: 1
+			path: app/controllers/general.php
+
+		-
+			message: '#^Variable \$body on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: app/controllers/general.php
+
+		-
+			message: '#^Variable \$deployment in PHPDoc tag @var does not exist\.$#'
+			identifier: varTag.variableNotFound
+			count: 1
+			path: app/controllers/general.php
+
+		-
+			message: '#^Variable \$executionId on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: app/controllers/general.php
+
+		-
+			message: '#^Variable \$executionResponse might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: app/controllers/general.php
+
+		-
+			message: '#^Variable \$user might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: app/controllers/general.php
+
+		-
+			message: '#^Variable \$installation might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: app/controllers/mock.php
+
+		-
+			message: '#^Call to an undefined method Utopia\\Database\\Document\:\:getRoles\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/controllers/shared/api.php
+
+		-
+			message: '#^Variable \$database might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: app/http.php
+
+		-
+			message: '#^Variable \$register might not be defined\.$#'
+			identifier: variable.undefined
+			count: 3
+			path: app/http.php
+
+		-
+			message: '#^Variable \$tag on left side of \?\? always exists and is always null\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: app/init/database/filters.php
+
+		-
+			message: '#^Anonymous function has an unused use \$dsn\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: app/init/registers.php
+
+		-
+			message: '#^Binary operation "/" between string and string results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: app/init/registers.php
+
+		-
+			message: '#^Property PHPMailer\\PHPMailer\\PHPMailer\:\:\$Port \(int\) does not accept string\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/init/registers.php
+
+		-
+			message: '#^Variable \$providerConfig in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 2
+			path: app/init/registers.php
+
+		-
+			message: '#^Variable \$providerConfig on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: app/init/registers.php
+
+		-
+			message: '#^Variable \$hostname on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: app/init/resources.php
+
+		-
+			message: '#^Anonymous function has an unused use \$register\.$#'
+			identifier: closure.unusedUse
+			count: 4
+			path: app/realtime.php
+
+		-
+			message: '#^Class Utopia\\Database\\Validator\\Authorization does not have a constructor and must be instantiated without any parameters\.$#'
+			identifier: new.noConstructor
+			count: 1
+			path: app/realtime.php
+
+		-
+			message: '#^Function triggerStats\(\) returns void but does not have any side effects\.$#'
+			identifier: void.pure
+			count: 1
+			path: app/realtime.php
+
+		-
+			message: '#^Binary operation "\*" between \-1 and string results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 3
+			path: app/worker.php
+
+		-
+			message: '#^PHPDoc tag @return with type string is incompatible with native type int\.$#'
+			identifier: return.phpDocType
+			count: 1
+			path: src/Appwrite/Auth/OAuth2.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$token$#'
+			identifier: parameter.notFound
+			count: 1
+			path: src/Appwrite/Auth/OAuth2/Disqus.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$value$#'
+			identifier: parameter.notFound
+			count: 1
+			path: src/Appwrite/Auth/Validator/PersonalData.php
+
+		-
+			message: '#^PHPDoc tag @var above a method has no effect\.$#'
+			identifier: varTag.misplaced
+			count: 1
+			path: src/Appwrite/Databases/TransactionState.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(DeviceDetector\)\: Unexpected token "\\n     ", expected variable at offset 32 on line 2$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: src/Appwrite/Detector/Detector.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(string\)\: Unexpected token "\\n     ", expected variable at offset 24 on line 2$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: src/Appwrite/Detector/Detector.php
+
+		-
+			message: '#^PHPDoc tag @var above a method has no effect\.$#'
+			identifier: varTag.misplaced
+			count: 1
+			path: src/Appwrite/Docker/Compose.php
+
+		-
+			message: '#^PHPDoc tag @var above a method has no effect\.$#'
+			identifier: varTag.misplaced
+			count: 1
+			path: src/Appwrite/Docker/Compose/Service.php
+
+		-
+			message: '#^PHPDoc tag @var above a method has no effect\.$#'
+			identifier: varTag.misplaced
+			count: 1
+			path: src/Appwrite/Docker/Env.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(int port\)\: Unexpected token "port", expected variable at offset 50 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: src/Appwrite/Event/Mail.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$password$#'
+			identifier: parameter.notFound
+			count: 1
+			path: src/Appwrite/Event/Mail.php
+
+		-
+			message: '#^PHPDoc tag @return with type string is incompatible with native type Appwrite\\Event\\Mail\.$#'
+			identifier: return.phpDocType
+			count: 1
+			path: src/Appwrite/Event/Mail.php
+
+		-
+			message: '#^Method Appwrite\\Event\\Message\\Usage\:\:fromArray\(\) should return static\(Appwrite\\Event\\Message\\Usage\) but returns Appwrite\\Event\\Message\\Usage\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Appwrite/Event/Message/Usage.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$message$#'
+			identifier: parameter.notFound
+			count: 1
+			path: src/Appwrite/Event/Messaging.php
+
+		-
+			message: '#^PHPDoc tag @return with type string is incompatible with native type Utopia\\Database\\Document\.$#'
+			identifier: return.phpDocType
+			count: 1
+			path: src/Appwrite/Event/Messaging.php
+
+		-
+			message: '#^Method Appwrite\\Functions\\EventProcessor\:\:getFunctionsEvents\(\) should return array\<string, bool\> but returns array\<int\<0, max\>\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Appwrite/Functions/EventProcessor.php
+
+		-
+			message: '#^Method Appwrite\\Functions\\EventProcessor\:\:getWebhooksEvents\(\) should return array\<string, bool\> but returns array\<int\<0, max\>\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Appwrite/Functions/EventProcessor.php
+
+		-
+			message: '#^Variable \$hostname on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Appwrite/Functions/EventProcessor.php
+
+		-
+			message: '#^Anonymous function has an unused use \$context\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: src/Appwrite/GraphQL/Resolvers.php
+
+		-
+			message: '#^Anonymous function has an unused use \$info\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: src/Appwrite/GraphQL/Resolvers.php
+
+		-
+			message: '#^Anonymous function has an unused use \$type\.$#'
+			identifier: closure.unusedUse
+			count: 5
+			path: src/Appwrite/GraphQL/Resolvers.php
+
+		-
+			message: '#^Variable \$request in PHPDoc tag @var does not exist\.$#'
+			identifier: varTag.variableNotFound
+			count: 1
+			path: src/Appwrite/GraphQL/Resolvers.php
+
+		-
+			message: '#^Variable \$response in PHPDoc tag @var does not exist\.$#'
+			identifier: varTag.variableNotFound
+			count: 1
+			path: src/Appwrite/GraphQL/Resolvers.php
+
+		-
+			message: '#^Variable \$databaseId might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: src/Appwrite/GraphQL/Schema.php
+
+		-
+			message: '#^Variable \$sdk in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: src/Appwrite/GraphQL/Schema.php
+
+		-
+			message: '#^Method Appwrite\\GraphQL\\Types\:\:assoc\(\) should return Appwrite\\GraphQL\\Types\\Json but returns GraphQL\\Type\\Definition\\Type\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Appwrite/GraphQL/Types.php
+
+		-
+			message: '#^Method Appwrite\\GraphQL\\Types\:\:inputFile\(\) should return Appwrite\\GraphQL\\Types\\InputFile but returns GraphQL\\Type\\Definition\\Type\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Appwrite/GraphQL/Types.php
+
+		-
+			message: '#^Method Appwrite\\GraphQL\\Types\:\:json\(\) should return Appwrite\\GraphQL\\Types\\Json but returns GraphQL\\Type\\Definition\\Type\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Appwrite/GraphQL/Types.php
+
+		-
+			message: '#^Class Appwrite\\Network\\Validator\\CNAME not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Appwrite/GraphQL/Types/Mapper.php
+
+		-
+			message: '#^Class Utopia\\Validator\\Origin not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Appwrite/GraphQL/Types/Mapper.php
+
+		-
+			message: '#^Unsafe access to private property Appwrite\\GraphQL\\Types\\Mapper\:\:\$models through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 3
+			path: src/Appwrite/GraphQL/Types/Mapper.php
+
+		-
+			message: '#^Unsafe call to private method Appwrite\\GraphQL\\Types\\Mapper\:\:getColumnImplementation\(\) through static\:\:\.$#'
+			identifier: staticClassAccess.privateMethod
+			count: 2
+			path: src/Appwrite/GraphQL/Types/Mapper.php
+
+		-
+			message: '#^Unsafe call to private method Appwrite\\GraphQL\\Types\\Mapper\:\:getHashOptionsImplementation\(\) through static\:\:\.$#'
+			identifier: staticClassAccess.privateMethod
+			count: 1
+			path: src/Appwrite/GraphQL/Types/Mapper.php
+
+		-
+			message: '#^Unsafe call to private method Appwrite\\GraphQL\\Types\\Mapper\:\:getUnionImplementation\(\) through static\:\:\.$#'
+			identifier: staticClassAccess.privateMethod
+			count: 1
+			path: src/Appwrite/GraphQL/Types/Mapper.php
+
+		-
+			message: '#^Call to an undefined method Appwrite\\Migration\\Version\\V15\:\:documentsIterator\(\)\.$#'
+			identifier: method.notFound
+			count: 7
+			path: src/Appwrite/Migration/Version/V15.php
+
+		-
+			message: '#^Method Appwrite\\Migration\\Version\\V15\:\:fixDocument\(\) should return Utopia\\Database\\Document but empty return statement found\.$#'
+			identifier: return.empty
+			count: 1
+			path: src/Appwrite/Migration/Version/V15.php
+
+		-
+			message: '#^PHPDoc tag @return with type string\|false is not subtype of native type string\.$#'
+			identifier: return.phpDocType
+			count: 1
+			path: src/Appwrite/Migration/Version/V15.php
+
+		-
+			message: '#^Variable \$tag on left side of \?\? always exists and is always null\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Appwrite/Migration/Version/V15.php
+
+		-
+			message: '#^Call to an undefined method Appwrite\\Migration\\Version\\V17\:\:documentsIterator\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Appwrite/Migration/Version/V17.php
+
+		-
+			message: '#^Call to an undefined method Appwrite\\Migration\\Version\\V18\:\:documentsIterator\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: src/Appwrite/Migration/Version/V18.php
+
+		-
+			message: '#^Call to an undefined method Appwrite\\Migration\\Version\\V19\:\:documentsIterator\(\)\.$#'
+			identifier: method.notFound
+			count: 4
+			path: src/Appwrite/Migration/Version/V19.php
+
+		-
+			message: '#^Call to an undefined method Appwrite\\Migration\\Version\\V20\:\:documentsIterator\(\)\.$#'
+			identifier: method.notFound
+			count: 6
+			path: src/Appwrite/Migration/Version/V20.php
+
+		-
+			message: '#^Variable \$query on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Appwrite/Migration/Version/V20.php
+
+		-
+			message: '#^Method Appwrite\\Network\\Cors\:\:headers\(\) should return array\<string, string\> but returns array\<string, int\|string\>\.$#'
+			identifier: return.type
+			count: 5
+			path: src/Appwrite/Network/Cors.php
+
+		-
+			message: '#^Parameter &\$tag by\-ref type of method Appwrite\\OpenSSL\\OpenSSL\:\:encrypt\(\) expects null, string\|null given\.$#'
+			identifier: parameterByRef.type
+			count: 1
+			path: src/Appwrite/OpenSSL/OpenSSL.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$projectId$#'
+			identifier: parameter.notFound
+			count: 1
+			path: src/Appwrite/Platform/Action.php
+
+		-
+			message: '#^Variable \$output in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: src/Appwrite/Platform/Modules/Avatars/Http/Action.php
+
+		-
+			message: '#^Variable \$output in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: src/Appwrite/Platform/Modules/Avatars/Http/Favicon/Get.php
+
+		-
+			message: '#^Variable \$output in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: src/Appwrite/Platform/Modules/Avatars/Http/Image/Get.php
+
+		-
+			message: '#^Binary operation "%%" between string and 5 results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Appwrite/Platform/Modules/Avatars/Http/Initials/Get.php
+
+		-
+			message: '#^Method Appwrite\\Platform\\Modules\\Databases\\Http\\Databases\\Action\:\:setHttpPath\(\) should return Appwrite\\Platform\\Action but returns Utopia\\Platform\\Action\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Action.php
+
+		-
+			message: '#^Method Appwrite\\Platform\\Modules\\Databases\\Http\\Databases\\Collections\\Documents\\Action\:\:setHttpPath\(\) should return Appwrite\\Platform\\Modules\\Databases\\Http\\Databases\\Action but returns Appwrite\\Platform\\Action\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Action.php
+
+		-
+			message: '#^Variable \$relations in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Action.php
+
+		-
+			message: '#^Anonymous function has an unused use \$dbForProject\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Create.php
+
+		-
+			message: '#^Variable \$document in PHPDoc tag @var does not match assigned variable \$collectionTableId\.$#'
+			identifier: varTag.differentVariable
+			count: 1
+			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Update.php
+
+		-
+			message: '#^Variable \$hostname on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/XList.php
+
+		-
+			message: '#^Variable \$enabled on left side of \?\?\= always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Update.php
+
+		-
+			message: '#^Offset ''deviceBrand'' does not exist on int\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Logs/XList.php
+
+		-
+			message: '#^Offset ''deviceModel'' does not exist on int\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Logs/XList.php
+
+		-
+			message: '#^Offset ''deviceName'' does not exist on int\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Logs/XList.php
+
+		-
+			message: '#^Method Appwrite\\Platform\\Modules\\Databases\\Http\\Databases\\Transactions\\Action\:\:setHttpPath\(\) should return Appwrite\\Platform\\Modules\\Databases\\Http\\Databases\\Action but returns Appwrite\\Platform\\Action\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Transactions/Action.php
+
+		-
+			message: '#^Anonymous function has an unused use \$existing\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Transactions/Operations/Create.php
+
+		-
+			message: '#^Anonymous function has an unused use \$queueForEvents\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Transactions/Update.php
+
+		-
+			message: '#^Anonymous function has an unused use \$queueForFunctions\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Transactions/Update.php
+
+		-
+			message: '#^Anonymous function has an unused use \$queueForRealtime\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Transactions/Update.php
+
+		-
+			message: '#^Anonymous function has an unused use \$queueForWebhooks\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Transactions/Update.php
+
+		-
+			message: '#^Anonymous function has an unused use \$usage\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Transactions/Update.php
+
+		-
+			message: '#^PHPDoc tag @throws with type Appwrite\\Platform\\Modules\\Databases\\Http\\Databases\\Transactions\\Structure\|Throwable\|Utopia\\Database\\Validator\\Authorization is not subtype of Throwable$#'
+			identifier: throws.notThrowable
+			count: 1
+			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Transactions/Update.php
+
+		-
+			message: '#^Variable \$currentDocumentId on left side of \?\? always exists and is always null\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Transactions/Update.php
+
+		-
+			message: '#^Offset ''deviceBrand'' does not exist on int\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: src/Appwrite/Platform/Modules/Databases/Http/TablesDB/Logs/XList.php
+
+		-
+			message: '#^Offset ''deviceModel'' does not exist on int\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: src/Appwrite/Platform/Modules/Databases/Http/TablesDB/Logs/XList.php
+
+		-
+			message: '#^Offset ''deviceName'' does not exist on int\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: src/Appwrite/Platform/Modules/Databases/Http/TablesDB/Logs/XList.php
+
+		-
+			message: '#^Variable \$device might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: src/Appwrite/Platform/Modules/Functions/Http/Deployments/Download/Get.php
+
+		-
+			message: '#^Variable \$path might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: src/Appwrite/Platform/Modules/Functions/Http/Deployments/Download/Get.php
+
+		-
+			message: '#^Call to method getAttribute\(\) on an unknown class Appwrite\\Platform\\Modules\\Functions\\Http\\Executions\\Utopia\\Database\\Document\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Appwrite/Platform/Modules/Functions/Http/Executions/Create.php
+
+		-
+			message: '#^Call to method getId\(\) on an unknown class Appwrite\\Platform\\Modules\\Functions\\Http\\Executions\\Utopia\\Database\\Document\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Appwrite/Platform/Modules/Functions/Http/Executions/Create.php
+
+		-
+			message: '#^Call to method isEmpty\(\) on an unknown class Appwrite\\Platform\\Modules\\Functions\\Http\\Executions\\Utopia\\Database\\Document\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Appwrite/Platform/Modules/Functions/Http/Executions/Create.php
+
+		-
+			message: '#^Method Appwrite\\Platform\\Modules\\Functions\\Http\\Executions\\Create\:\:enqueueDeletes\(\) returns void but does not have any side effects\.$#'
+			identifier: void.pure
+			count: 1
+			path: src/Appwrite/Platform/Modules/Functions/Http/Executions/Create.php
+
+		-
+			message: '#^PHPDoc tag @var for variable \$session contains unknown class Appwrite\\Platform\\Modules\\Functions\\Http\\Executions\\Utopia\\Database\\Document\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Appwrite/Platform/Modules/Functions/Http/Executions/Create.php
+
+		-
+			message: '#^Result of method Appwrite\\Utopia\\Response\:\:dynamic\(\) \(void\) is used\.$#'
+			identifier: method.void
+			count: 1
+			path: src/Appwrite/Platform/Modules/Functions/Http/Executions/Create.php
+
+		-
+			message: '#^Variable \$body on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Appwrite/Platform/Modules/Functions/Http/Executions/Create.php
+
+		-
+			message: '#^Variable \$executionId on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Appwrite/Platform/Modules/Functions/Http/Executions/Create.php
+
+		-
+			message: '#^Variable \$jwt on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Appwrite/Platform/Modules/Functions/Http/Executions/Create.php
+
+		-
+			message: '#^Call to an undefined method Appwrite\\Event\\Event\:\:setSubscribers\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Appwrite/Platform/Modules/Functions/Http/Functions/Create.php
+
+		-
+			message: '#^Variable \$enabled on left side of \?\?\= always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Appwrite/Platform/Modules/Functions/Http/Functions/Update.php
+
+		-
+			message: '#^Undefined variable\: \$cpus$#'
+			identifier: variable.undefined
+			count: 3
+			path: src/Appwrite/Platform/Modules/Functions/Workers/Builds.php
+
+		-
+			message: '#^Undefined variable\: \$memory$#'
+			identifier: variable.undefined
+			count: 3
+			path: src/Appwrite/Platform/Modules/Functions/Workers/Builds.php
+
+		-
+			message: '#^Variable \$deployment might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: src/Appwrite/Platform/Modules/Functions/Workers/Builds.php
+
+		-
+			message: '#^Variable \$logsAfter on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Appwrite/Platform/Modules/Functions/Workers/Builds.php
+
+		-
+			message: '#^Variable \$logsBefore on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Appwrite/Platform/Modules/Functions/Workers/Builds.php
+
+		-
+			message: '#^Variable \$providerCommitHash on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Appwrite/Platform/Modules/Functions/Workers/Builds.php
+
+		-
+			message: '#^Variable \$rule in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: src/Appwrite/Platform/Modules/Functions/Workers/Builds.php
+
+		-
+			message: '#^Result of method Appwrite\\Utopia\\Response\:\:dynamic\(\) \(void\) is used\.$#'
+			identifier: method.void
+			count: 1
+			path: src/Appwrite/Platform/Modules/Proxy/Http/Rules/Verification/Update.php
+
+		-
+			message: '#^Variable \$device might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: src/Appwrite/Platform/Modules/Sites/Http/Deployments/Download/Get.php
+
+		-
+			message: '#^Variable \$path might not be defined\.$#'
+			identifier: variable.undefined
+			count: 5
+			path: src/Appwrite/Platform/Modules/Sites/Http/Deployments/Download/Get.php
+
+		-
+			message: '#^Variable \$enabled on left side of \?\?\= always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Appwrite/Platform/Modules/Sites/Http/Sites/Update.php
+
+		-
+			message: '#^Variable \$iv might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: src/Appwrite/Platform/Modules/Storage/Http/Buckets/Files/Create.php
+
+		-
+			message: '#^Variable \$tag might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: src/Appwrite/Platform/Modules/Storage/Http/Buckets/Files/Create.php
+
+		-
+			message: '#^Variable \$allowedFileExtensions on left side of \?\?\= always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Appwrite/Platform/Modules/Storage/Http/Buckets/Update.php
+
+		-
+			message: '#^Variable \$antivirus on left side of \?\?\= always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Appwrite/Platform/Modules/Storage/Http/Buckets/Update.php
+
+		-
+			message: '#^Variable \$enabled on left side of \?\?\= always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Appwrite/Platform/Modules/Storage/Http/Buckets/Update.php
+
+		-
+			message: '#^Variable \$transformations on left side of \?\?\= always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Appwrite/Platform/Modules/Storage/Http/Buckets/Update.php
+
+		-
+			message: '#^Caught class Appwrite\\Platform\\Modules\\Teams\\Http\\Memberships\\Throwable not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Appwrite/Platform/Modules/Teams/Http/Memberships/Create.php
+
+		-
+			message: '#^Variable \$email in empty\(\) always exists and is always falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: src/Appwrite/Platform/Modules/Teams/Http/Memberships/Create.php
+
+		-
+			message: '#^Variable \$hash might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: src/Appwrite/Platform/Modules/Teams/Http/Memberships/Create.php
+
+		-
+			message: '#^Variable \$invitee might not be defined\.$#'
+			identifier: variable.undefined
+			count: 14
+			path: src/Appwrite/Platform/Modules/Teams/Http/Memberships/Create.php
+
+		-
+			message: '#^Variable \$logBase might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Authorize/External/Update.php
+
+		-
+			message: '#^Variable \$previewUrl in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Authorize/External/Update.php
+
+		-
+			message: '#^Variable \$repositoryName in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Authorize/External/Update.php
+
+		-
+			message: '#^Variable \$rule in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Authorize/External/Update.php
+
+		-
+			message: '#^Result of method Utopia\\Http\\Response\:\:redirect\(\) \(void\) is used\.$#'
+			identifier: method.void
+			count: 2
+			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Callback/Get.php
+
+		-
+			message: '#^Undefined variable\: \$redirectFailure$#'
+			identifier: variable.undefined
+			count: 2
+			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Callback/Get.php
+
+		-
+			message: '#^Variable \$redirectFailure in empty\(\) is never defined\.$#'
+			identifier: empty.variable
+			count: 1
+			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Callback/Get.php
+
+		-
+			message: '#^Result of method Appwrite\\Utopia\\Response\:\:json\(\) \(void\) is used\.$#'
+			identifier: method.void
+			count: 1
+			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Events/Create.php
+
+		-
+			message: '#^Variable \$logBase might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Events/Create.php
+
+		-
+			message: '#^Variable \$previewUrl in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Events/Create.php
+
+		-
+			message: '#^Variable \$repositoryName in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Events/Create.php
+
+		-
+			message: '#^Variable \$rule in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: src/Appwrite/Platform/Modules/VCS/Http/GitHub/Events/Create.php
+
+		-
+			message: '#^Variable \$providerConfig on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Appwrite/Platform/Tasks/Doctor.php
+
+		-
+			message: '#^Variable \$compose in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.variable
+			count: 1
+			path: src/Appwrite/Platform/Tasks/Install.php
+
+		-
+			message: '#^Variable \$prUrls might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: src/Appwrite/Platform/Tasks/SDKs.php
+
+		-
+			message: '#^Anonymous function has an unused use \$dbForPlatform\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: src/Appwrite/Platform/Tasks/StatsResources.php
+
+		-
+			message: '#^Call to static method error\(\) on an unknown class Utopia\\CLI\\Console\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Appwrite/Platform/Tasks/Upgrade.php
+
+		-
+			message: '#^Call to static method log\(\) on an unknown class Utopia\\CLI\\Console\.$#'
+			identifier: class.notFound
+			count: 5
+			path: src/Appwrite/Platform/Tasks/Upgrade.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$getProjectDB$#'
+			identifier: parameter.notFound
+			count: 1
+			path: src/Appwrite/Platform/Workers/Audits.php
+
+		-
+			message: '#^Anonymous function has an unused use \$certificates\.$#'
+			identifier: closure.unusedUse
+			count: 2
+			path: src/Appwrite/Platform/Workers/Deletes.php
+
+		-
+			message: '#^Anonymous function has an unused use \$dbForPlatform\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: src/Appwrite/Platform/Workers/Deletes.php
+
+		-
+			message: '#^Anonymous function has an unused use \$dbForProject\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: src/Appwrite/Platform/Workers/Deletes.php
+
+		-
+			message: '#^Anonymous function has an unused use \$project\.$#'
+			identifier: closure.unusedUse
+			count: 6
+			path: src/Appwrite/Platform/Workers/Deletes.php
+
+		-
+			message: '#^Anonymous function has an unused use \$resourceType\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: src/Appwrite/Platform/Workers/Deletes.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$build$#'
+			identifier: parameter.notFound
+			count: 1
+			path: src/Appwrite/Platform/Workers/Deletes.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$dbForPlatform$#'
+			identifier: parameter.notFound
+			count: 1
+			path: src/Appwrite/Platform/Workers/Deletes.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$target$#'
+			identifier: parameter.notFound
+			count: 1
+			path: src/Appwrite/Platform/Workers/Deletes.php
+
+		-
+			message: '#^PHPDoc tag @throws with type Appwrite\\Extend\\Exception\|Utopia\\Database\\Exception\|Utopia\\Database\\Validator\\Authorization is not subtype of Throwable$#'
+			identifier: throws.notThrowable
+			count: 2
+			path: src/Appwrite/Platform/Workers/Deletes.php
+
+		-
+			message: '#^PHPDoc tag @throws with type Appwrite\\Extend\\Exception\|Utopia\\Database\\Validator\\Authorization is not subtype of Throwable$#'
+			identifier: throws.notThrowable
+			count: 1
+			path: src/Appwrite/Platform/Workers/Deletes.php
+
+		-
+			message: '#^PHPDoc tag @throws with type Appwrite\\Platform\\Workers\\Exception is not subtype of Throwable$#'
+			identifier: throws.notThrowable
+			count: 2
+			path: src/Appwrite/Platform/Workers/Functions.php
+
+		-
+			message: '#^Variable \$body on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 2
+			path: src/Appwrite/Platform/Workers/Functions.php
+
+		-
+			message: '#^Variable \$errorCode might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: src/Appwrite/Platform/Workers/Functions.php
+
+		-
+			message: '#^Variable \$executionId on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Appwrite/Platform/Workers/Functions.php
+
+		-
+			message: '#^Binary operation "\+\=" between 0 and array\<array\<mixed\>\|int\|string\>\|int\|string results in an error\.$#'
+			identifier: assignOp.invalid
+			count: 1
+			path: src/Appwrite/Platform/Workers/Messaging.php
+
+		-
+			message: '#^Variable \$provider might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: src/Appwrite/Platform/Workers/Messaging.php
+
+		-
+			message: '#^Variable \$aggregatedResources might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: src/Appwrite/Platform/Workers/Migrations.php
+
+		-
+			message: '#^Anonymous function has an unused use \$dbForLogs\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: src/Appwrite/Platform/Workers/StatsResources.php
+
+		-
+			message: '#^Anonymous function has an unused use \$sequence\.$#'
+			identifier: closure.unusedUse
+			count: 1
+			path: src/Appwrite/Platform/Workers/StatsUsage.php
+
+		-
+			message: '#^Callable callable\(\)\: Utopia\\Database\\Database invoked with 1 parameter, 0 required\.$#'
+			identifier: arguments.count
+			count: 2
+			path: src/Appwrite/Platform/Workers/StatsUsage.php
+
+		-
+			message: '#^Variable \$curlError on left side of \?\? is never defined\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Appwrite/Platform/Workers/Webhooks.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 3
+			path: src/Appwrite/Promises/Promise.php
+
+		-
+			message: '#^Property Appwrite\\SDK\\Method\:\:\$hide on left side of \?\? is not nullable nor uninitialized\.$#'
+			identifier: nullCoalesce.initializedProperty
+			count: 1
+			path: src/Appwrite/SDK/Method.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$services$#'
+			identifier: parameter.notFound
+			count: 1
+			path: src/Appwrite/SDK/Specification/Format.php
+
+		-
+			message: '#^PHPDoc tag @return with type Appwrite\\SDK\\Specification\\Format is incompatible with native type array\.$#'
+			identifier: return.phpDocType
+			count: 1
+			path: src/Appwrite/SDK/Specification/Format.php
+
+		-
+			message: '#^Cannot unset offset ''schema'' on array\{description\: ''No content'', content\?\: non\-empty\-array\<''''\|''\*/\*''\|''application/json''\|''image/\*''\|''image/png''\|''multipart/form\-data''\|''text/html''\|''text/plain'', array\{schema\: array\{''\$ref''\: non\-falsy\-string\}\}\|array\{schema\: array\{oneOf\: array\<array\{''\$ref''\: non\-falsy\-string\}\>\}\}\>\}\.$#'
+			identifier: unset.offset
+			count: 1
+			path: src/Appwrite/SDK/Specification/Format/OpenAPI3.php
+
+		-
+			message: '#^Class Utopia\\Database\\Validator\\DatetimeValidator not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Appwrite/SDK/Specification/Format/OpenAPI3.php
+
+		-
+			message: '#^Class Utopia\\Validator\\Length not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Appwrite/SDK/Specification/Format/OpenAPI3.php
+
+		-
+			message: '#^Class Utopia\\Validator\\Mock not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Appwrite/SDK/Specification/Format/OpenAPI3.php
+
+		-
+			message: '#^Offset ''securityDefinitions'' on array\{openapi\: ''3\.0\.0'', info\: array\{version\: string, title\: string, description\: string, termsOfService\: string, contact\: array\{name\: string, url\: string, email\: string\}, license\: array\{name\: ''BSD\-3\-Clause'', url\: ''https\://raw…''\}\}, servers\: array\{array\{url\: string\}, array\{url\: string\}\}, paths\: array\{\}, tags\: array, components\: array\{schemas\: array\{\}, securitySchemes\: array\}, externalDocs\: array\{description\: string, url\: string\}\} in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: src/Appwrite/SDK/Specification/Format/OpenAPI3.php
+
+		-
+			message: '#^Variable \$desc on left side of \?\?\= always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Appwrite/SDK/Specification/Format/OpenAPI3.php
+
+		-
+			message: '#^Variable \$validator in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: src/Appwrite/SDK/Specification/Format/OpenAPI3.php
+
+		-
+			message: '#^Class Utopia\\Database\\Validator\\DatetimeValidator not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Appwrite/SDK/Specification/Format/Swagger2.php
+
+		-
+			message: '#^Class Utopia\\Validator\\Length not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Appwrite/SDK/Specification/Format/Swagger2.php
+
+		-
+			message: '#^Class Utopia\\Validator\\Mock not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Appwrite/SDK/Specification/Format/Swagger2.php
+
+		-
+			message: '#^PHPDoc tag @var with type Appwrite\\SDK\\Method is not subtype of native type \*NEVER\*\.$#'
+			identifier: varTag.nativeType
+			count: 1
+			path: src/Appwrite/SDK/Specification/Format/Swagger2.php
+
+		-
+			message: '#^Variable \$additionalMethods in empty\(\) always exists and is always falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: src/Appwrite/SDK/Specification/Format/Swagger2.php
+
+		-
+			message: '#^Variable \$desc on left side of \?\?\= always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: src/Appwrite/SDK/Specification/Format/Swagger2.php
+
+		-
+			message: '#^Variable \$sdk in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: src/Appwrite/SDK/Specification/Format/Swagger2.php
+
+		-
+			message: '#^Variable \$validator in empty\(\) always exists and is not falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: src/Appwrite/SDK/Specification/Format/Swagger2.php
+
+		-
+			message: '#^PHPDoc tag @var above a method has no effect\.$#'
+			identifier: varTag.misplaced
+			count: 2
+			path: src/Appwrite/Template/Template.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(Document \$this\)\: Unexpected token "\$this", expected variable at offset 69 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: src/Appwrite/Utopia/Database/Documents/User.php
+
+		-
+			message: '#^PHPDoc tag @param references unknown parameter\: \$sessions$#'
+			identifier: parameter.notFound
+			count: 1
+			path: src/Appwrite/Utopia/Database/Documents/User.php
+
+		-
+			message: '#^Call to method isValid\(\) on an unknown class Utopia\\Validator\\Email\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Appwrite/Utopia/Database/Validator/Attributes.php
+
+		-
+			message: '#^Instantiated class Utopia\\Validator\\Email not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Appwrite/Utopia/Database/Validator/Attributes.php
+
+		-
+			message: '#^Unsafe call to private method Appwrite\\Utopia\\Request\\Filters\\V17\:\:appendSymbol\(\) through static\:\:\.$#'
+			identifier: staticClassAccess.privateMethod
+			count: 4
+			path: src/Appwrite/Utopia/Request/Filters/V17.php
+
+		-
+			message: '#^Unsafe call to private method Appwrite\\Utopia\\Request\\Filters\\V17\:\:isSpecialChar\(\) through static\:\:\.$#'
+			identifier: staticClassAccess.privateMethod
+			count: 1
+			path: src/Appwrite/Utopia/Request/Filters/V17.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(callable The callback to show sensitive information for\)\: Unexpected token "The", expected variable at offset 91 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: src/Appwrite/Utopia/Response.php
+
+		-
+			message: '#^PHPDoc tag @return with type Appwrite\\Utopia\\Response\\Filter is incompatible with native type array\.$#'
+			identifier: return.phpDocType
+			count: 1
+			path: src/Appwrite/Utopia/Response.php
+
+		-
+			message: '#^PHPDoc tag @return with type string is incompatible with native type Utopia\\Database\\Document\.$#'
+			identifier: return.phpDocType
+			count: 1
+			path: src/Appwrite/Utopia/Response/Model/User.php
+
+		-
+			message: '#^Attribute class Tests\\E2E\\General\\Retry does not exist\.$#'
+			identifier: attribute.notFound
+			count: 1
+			path: tests/e2e/General/UsageTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\Databases\\Legacy\\DatabasesStringTypesTest\:\:\$setupCache through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 4
+			path: tests/e2e/Services/Databases/Legacy/DatabasesStringTypesTest.php
+
+		-
+			message: '#^Variable \$library might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: tests/e2e/Services/Databases/LegacyConsoleClientTest.php
+
+		-
+			message: '#^Variable \$person might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: tests/e2e/Services/Databases/LegacyConsoleClientTest.php
+
+		-
+			message: '#^Variable \$library might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: tests/e2e/Services/Databases/LegacyCustomClientTest.php
+
+		-
+			message: '#^Variable \$person might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: tests/e2e/Services/Databases/LegacyCustomClientTest.php
+
+		-
+			message: '#^Variable \$library might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: tests/e2e/Services/Databases/LegacyCustomServerTest.php
+
+		-
+			message: '#^Variable \$person might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: tests/e2e/Services/Databases/LegacyCustomServerTest.php
+
+		-
+			message: '#^Call to an undefined method Tests\\E2E\\Services\\Databases\\Permissions\\LegacyPermissionsGuestTest\:\:getIndexUrl\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/e2e/Services/Databases/Permissions/LegacyPermissionsGuestTest.php
+
+		-
+			message: '#^Call to an undefined method Tests\\E2E\\Services\\Databases\\Permissions\\LegacyPermissionsMemberTest\:\:getIndexUrl\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/e2e/Services/Databases/Permissions/LegacyPermissionsMemberTest.php
+
+		-
+			message: '#^Call to an undefined method Tests\\E2E\\Services\\Databases\\Permissions\\LegacyPermissionsTeamTest\:\:getIndexUrl\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/e2e/Services/Databases/Permissions/LegacyPermissionsTeamTest.php
+
+		-
+			message: '#^Method PHPUnit\\Framework\\TestCase\:\:addToAssertionCount\(\) invoked with 2 parameters, 1 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: tests/e2e/Services/Functions/FunctionsCustomClientTest.php
+
+		-
+			message: '#^Variable \$largeTag might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: tests/e2e/Services/Functions/FunctionsCustomServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\FunctionsClientTest\:\:\$cachedDeployment through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 3
+			path: tests/e2e/Services/GraphQL/FunctionsClientTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\FunctionsClientTest\:\:\$cachedExecution through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 4
+			path: tests/e2e/Services/GraphQL/FunctionsClientTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\FunctionsClientTest\:\:\$cachedFunction through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 3
+			path: tests/e2e/Services/GraphQL/FunctionsClientTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\FunctionsServerTest\:\:\$cachedDeployment through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 4
+			path: tests/e2e/Services/GraphQL/FunctionsServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\FunctionsServerTest\:\:\$cachedExecution through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 5
+			path: tests/e2e/Services/GraphQL/FunctionsServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\FunctionsServerTest\:\:\$cachedFunction through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 4
+			path: tests/e2e/Services/GraphQL/FunctionsServerTest.php
+
+		-
+			message: '#^Binary operation "\+" between string and 1 results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: tests/e2e/Services/GraphQL/Legacy/AbuseTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\Legacy\\DatabaseClientTest\:\:\$bulkData through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 4
+			path: tests/e2e/Services/GraphQL/Legacy/DatabaseClientTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\Legacy\\DatabaseClientTest\:\:\$collection through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 4
+			path: tests/e2e/Services/GraphQL/Legacy/DatabaseClientTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\Legacy\\DatabaseClientTest\:\:\$database through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 4
+			path: tests/e2e/Services/GraphQL/Legacy/DatabaseClientTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\Legacy\\DatabaseClientTest\:\:\$document through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 4
+			path: tests/e2e/Services/GraphQL/Legacy/DatabaseClientTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\MessagingTest\:\:\$cachedEmail through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 2
+			path: tests/e2e/Services/GraphQL/MessagingTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\MessagingTest\:\:\$cachedProviders through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 8
+			path: tests/e2e/Services/GraphQL/MessagingTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\MessagingTest\:\:\$cachedPush through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 4
+			path: tests/e2e/Services/GraphQL/MessagingTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\MessagingTest\:\:\$cachedSms through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 4
+			path: tests/e2e/Services/GraphQL/MessagingTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\MessagingTest\:\:\$cachedSubscriber through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 5
+			path: tests/e2e/Services/GraphQL/MessagingTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\MessagingTest\:\:\$cachedTopic through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 9
+			path: tests/e2e/Services/GraphQL/MessagingTest.php
+
+		-
+			message: '#^Variable \$from in empty\(\) is never defined\.$#'
+			identifier: empty.variable
+			count: 1
+			path: tests/e2e/Services/GraphQL/MessagingTest.php
+
+		-
+			message: '#^Method Tests\\E2E\\Services\\GraphQL\\StorageClientTest\:\:testGetFileDownload\(\) should return array but return statement is missing\.$#'
+			identifier: return.missing
+			count: 1
+			path: tests/e2e/Services/GraphQL/StorageClientTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\StorageClientTest\:\:\$cachedBucket through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 3
+			path: tests/e2e/Services/GraphQL/StorageClientTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\StorageClientTest\:\:\$cachedFile through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 5
+			path: tests/e2e/Services/GraphQL/StorageClientTest.php
+
+		-
+			message: '#^Method Tests\\E2E\\Services\\GraphQL\\StorageServerTest\:\:testGetFileDownload\(\) should return array but return statement is missing\.$#'
+			identifier: return.missing
+			count: 1
+			path: tests/e2e/Services/GraphQL/StorageServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\StorageServerTest\:\:\$cachedBucket through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 4
+			path: tests/e2e/Services/GraphQL/StorageServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\StorageServerTest\:\:\$cachedFile through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 6
+			path: tests/e2e/Services/GraphQL/StorageServerTest.php
+
+		-
+			message: '#^Binary operation "\+" between string and 1 results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: tests/e2e/Services/GraphQL/TablesDB/AbuseTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TablesDB\\DatabaseServerTest\:\:\$cachedBooleanColumnData through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 5
+			path: tests/e2e/Services/GraphQL/TablesDB/DatabaseServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TablesDB\\DatabaseServerTest\:\:\$cachedBulkData through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 4
+			path: tests/e2e/Services/GraphQL/TablesDB/DatabaseServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TablesDB\\DatabaseServerTest\:\:\$cachedDatabase through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 4
+			path: tests/e2e/Services/GraphQL/TablesDB/DatabaseServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TablesDB\\DatabaseServerTest\:\:\$cachedDatetimeColumnData through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 5
+			path: tests/e2e/Services/GraphQL/TablesDB/DatabaseServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TablesDB\\DatabaseServerTest\:\:\$cachedEmailColumnData through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 5
+			path: tests/e2e/Services/GraphQL/TablesDB/DatabaseServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TablesDB\\DatabaseServerTest\:\:\$cachedEnumColumnData through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 5
+			path: tests/e2e/Services/GraphQL/TablesDB/DatabaseServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TablesDB\\DatabaseServerTest\:\:\$cachedFloatColumnData through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 5
+			path: tests/e2e/Services/GraphQL/TablesDB/DatabaseServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TablesDB\\DatabaseServerTest\:\:\$cachedIPColumnData through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 5
+			path: tests/e2e/Services/GraphQL/TablesDB/DatabaseServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TablesDB\\DatabaseServerTest\:\:\$cachedIndexData through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 7
+			path: tests/e2e/Services/GraphQL/TablesDB/DatabaseServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TablesDB\\DatabaseServerTest\:\:\$cachedIntegerColumnData through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 5
+			path: tests/e2e/Services/GraphQL/TablesDB/DatabaseServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TablesDB\\DatabaseServerTest\:\:\$cachedRelationshipColumnData through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 5
+			path: tests/e2e/Services/GraphQL/TablesDB/DatabaseServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TablesDB\\DatabaseServerTest\:\:\$cachedRowData through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 5
+			path: tests/e2e/Services/GraphQL/TablesDB/DatabaseServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TablesDB\\DatabaseServerTest\:\:\$cachedStringColumnData through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 5
+			path: tests/e2e/Services/GraphQL/TablesDB/DatabaseServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TablesDB\\DatabaseServerTest\:\:\$cachedTableData through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 4
+			path: tests/e2e/Services/GraphQL/TablesDB/DatabaseServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TablesDB\\DatabaseServerTest\:\:\$cachedURLColumnData through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 5
+			path: tests/e2e/Services/GraphQL/TablesDB/DatabaseServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TeamsClientTest\:\:\$cachedMembership through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 4
+			path: tests/e2e/Services/GraphQL/TeamsClientTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TeamsClientTest\:\:\$cachedTeam through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 3
+			path: tests/e2e/Services/GraphQL/TeamsClientTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TeamsServerTest\:\:\$cachedMembership through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 4
+			path: tests/e2e/Services/GraphQL/TeamsServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TeamsServerTest\:\:\$cachedTeam through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 3
+			path: tests/e2e/Services/GraphQL/TeamsServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\TeamsServerTest\:\:\$cachedTeamWithPrefs through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 3
+			path: tests/e2e/Services/GraphQL/TeamsServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\UsersTest\:\:\$cachedUser through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 3
+			path: tests/e2e/Services/GraphQL/UsersTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\GraphQL\\UsersTest\:\:\$cachedUserTarget through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 5
+			path: tests/e2e/Services/GraphQL/UsersTest.php
+
+		-
+			message: '#^Variable \$from in empty\(\) is never defined\.$#'
+			identifier: empty.variable
+			count: 1
+			path: tests/e2e/Services/Messaging/MessagingConsoleClientTest.php
+
+		-
+			message: '#^Variable \$from in empty\(\) is never defined\.$#'
+			identifier: empty.variable
+			count: 1
+			path: tests/e2e/Services/Messaging/MessagingCustomClientTest.php
+
+		-
+			message: '#^Variable \$from in empty\(\) is never defined\.$#'
+			identifier: empty.variable
+			count: 1
+			path: tests/e2e/Services/Messaging/MessagingCustomServerTest.php
+
+		-
+			message: '#^Anonymous function has an unused use \$databaseId\.$#'
+			identifier: closure.unusedUse
+			count: 5
+			path: tests/e2e/Services/Migrations/MigrationsConsoleClientTest.php
+
+		-
+			message: '#^Anonymous function has an unused use \$tableId\.$#'
+			identifier: closure.unusedUse
+			count: 5
+			path: tests/e2e/Services/Migrations/MigrationsConsoleClientTest.php
+
+		-
+			message: '#^Variable \$largeFile might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: tests/e2e/Services/Storage/StorageConsoleClientTest.php
+
+		-
+			message: '#^Variable \$largeFile might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: tests/e2e/Services/Storage/StorageCustomClientTest.php
+
+		-
+			message: '#^Variable \$largeFile might not be defined\.$#'
+			identifier: variable.undefined
+			count: 8
+			path: tests/e2e/Services/Storage/StorageCustomServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\TablesDB\\DatabasesStringTypesTest\:\:\$setupCache through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 4
+			path: tests/e2e/Services/TablesDB/DatabasesStringTypesTest.php
+
+		-
+			message: '#^Call to an undefined method Tests\\E2E\\Services\\TablesDB\\Permissions\\TablesDBPermissionsGuestTest\:\:getIndexUrl\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/e2e/Services/TablesDB/Permissions/TablesDBPermissionsGuestTest.php
+
+		-
+			message: '#^Call to an undefined method Tests\\E2E\\Services\\TablesDB\\Permissions\\TablesDBPermissionsMemberTest\:\:getIndexUrl\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/e2e/Services/TablesDB/Permissions/TablesDBPermissionsMemberTest.php
+
+		-
+			message: '#^Call to an undefined method Tests\\E2E\\Services\\TablesDB\\Permissions\\TablesDBPermissionsTeamTest\:\:getIndexUrl\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/e2e/Services/TablesDB/Permissions/TablesDBPermissionsTeamTest.php
+
+		-
+			message: '#^Variable \$library might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: tests/e2e/Services/TablesDB/TablesDBConsoleClientTest.php
+
+		-
+			message: '#^Variable \$person might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: tests/e2e/Services/TablesDB/TablesDBConsoleClientTest.php
+
+		-
+			message: '#^Variable \$library might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: tests/e2e/Services/TablesDB/TablesDBCustomClientTest.php
+
+		-
+			message: '#^Variable \$person might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: tests/e2e/Services/TablesDB/TablesDBCustomClientTest.php
+
+		-
+			message: '#^Variable \$library might not be defined\.$#'
+			identifier: variable.undefined
+			count: 1
+			path: tests/e2e/Services/TablesDB/TablesDBCustomServerTest.php
+
+		-
+			message: '#^Variable \$person might not be defined\.$#'
+			identifier: variable.undefined
+			count: 4
+			path: tests/e2e/Services/TablesDB/TablesDBCustomServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\Tokens\\TokensConsoleClientTest\:\:\$bucketAndFileData through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 4
+			path: tests/e2e/Services/Tokens/TokensConsoleClientTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\Tokens\\TokensConsoleClientTest\:\:\$tokenData through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 4
+			path: tests/e2e/Services/Tokens/TokensConsoleClientTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\Tokens\\TokensCustomClientTest\:\:\$bucketAndFileData through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 4
+			path: tests/e2e/Services/Tokens/TokensCustomClientTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\Tokens\\TokensCustomServerTest\:\:\$bucketAndFileData through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 4
+			path: tests/e2e/Services/Tokens/TokensCustomServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\Tokens\\TokensCustomServerTest\:\:\$tokenData through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 4
+			path: tests/e2e/Services/Tokens/TokensCustomServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\Users\\UsersCustomServerTest\:\:\$cachedHashedPasswordUsers through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 2
+			path: tests/e2e/Services/Users/UsersCustomServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\Users\\UsersCustomServerTest\:\:\$cachedUser through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 7
+			path: tests/e2e/Services/Users/UsersCustomServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\Users\\UsersCustomServerTest\:\:\$cachedUserTarget through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 7
+			path: tests/e2e/Services/Users/UsersCustomServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\Users\\UsersCustomServerTest\:\:\$userEmailUpdated through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 3
+			path: tests/e2e/Services/Users/UsersCustomServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\Users\\UsersCustomServerTest\:\:\$userNameUpdated through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 3
+			path: tests/e2e/Services/Users/UsersCustomServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\Users\\UsersCustomServerTest\:\:\$userNumberUpdated through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 3
+			path: tests/e2e/Services/Users/UsersCustomServerTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\VCS\\VCSConsoleClientTest\:\:\$cachedFunctionData through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 4
+			path: tests/e2e/Services/VCS/VCSConsoleClientTest.php
+
+		-
+			message: '#^Unsafe access to private property Tests\\E2E\\Services\\VCS\\VCSConsoleClientTest\:\:\$cachedInstallationId through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 4
+			path: tests/e2e/Services/VCS/VCSConsoleClientTest.php
+
+		-
+			message: '#^Unsafe call to private method Tests\\Unit\\Auth\\KeyTest\:\:generateKey\(\) through static\:\:\.$#'
+			identifier: staticClassAccess.privateMethod
+			count: 3
+			path: tests/unit/Auth/KeyTest.php
+
+		-
+			message: '#^Call to an undefined method Utopia\\Queue\\Publisher\:\:getEvents\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/unit/Event/EventTest.php
+
+		-
+			message: '#^Call to method parse\(\) on an unknown class Tests\\Unit\\Utopia\\Response\\Filters\\Filter\.$#'
+			identifier: class.notFound
+			count: 6
+			path: tests/unit/Utopia/Response/Filters/V16Test.php
+
+		-
+			message: '#^Property Tests\\Unit\\Utopia\\Response\\Filters\\V16Test\:\:\$filter \(Tests\\Unit\\Utopia\\Response\\Filters\\Filter\) does not accept Appwrite\\Utopia\\Response\\Filters\\V16\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: tests/unit/Utopia/Response/Filters/V16Test.php
+
+		-
+			message: '#^Property Tests\\Unit\\Utopia\\Response\\Filters\\V16Test\:\:\$filter has unknown class Tests\\Unit\\Utopia\\Response\\Filters\\Filter as its type\.$#'
+			identifier: class.notFound
+			count: 1
+			path: tests/unit/Utopia/Response/Filters/V16Test.php
+
+		-
+			message: '#^Call to method parse\(\) on an unknown class Tests\\Unit\\Utopia\\Response\\Filters\\Filter\.$#'
+			identifier: class.notFound
+			count: 5
+			path: tests/unit/Utopia/Response/Filters/V17Test.php
+
+		-
+			message: '#^Property Tests\\Unit\\Utopia\\Response\\Filters\\V17Test\:\:\$filter \(Tests\\Unit\\Utopia\\Response\\Filters\\Filter\) does not accept Appwrite\\Utopia\\Response\\Filters\\V17\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: tests/unit/Utopia/Response/Filters/V17Test.php
+
+		-
+			message: '#^Property Tests\\Unit\\Utopia\\Response\\Filters\\V17Test\:\:\$filter has unknown class Tests\\Unit\\Utopia\\Response\\Filters\\Filter as its type\.$#'
+			identifier: class.notFound
+			count: 1
+			path: tests/unit/Utopia/Response/Filters/V17Test.php
+
+		-
+			message: '#^Call to method parse\(\) on an unknown class Tests\\Unit\\Utopia\\Response\\Filters\\Filter\.$#'
+			identifier: class.notFound
+			count: 4
+			path: tests/unit/Utopia/Response/Filters/V18Test.php
+
+		-
+			message: '#^Property Tests\\Unit\\Utopia\\Response\\Filters\\V18Test\:\:\$filter \(Tests\\Unit\\Utopia\\Response\\Filters\\Filter\) does not accept Appwrite\\Utopia\\Response\\Filters\\V18\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: tests/unit/Utopia/Response/Filters/V18Test.php
+
+		-
+			message: '#^Property Tests\\Unit\\Utopia\\Response\\Filters\\V18Test\:\:\$filter has unknown class Tests\\Unit\\Utopia\\Response\\Filters\\Filter as its type\.$#'
+			identifier: class.notFound
+			count: 1
+			path: tests/unit/Utopia/Response/Filters/V18Test.php
+
+		-
+			message: '#^Call to method parse\(\) on an unknown class Tests\\Unit\\Utopia\\Response\\Filters\\Filter\.$#'
+			identifier: class.notFound
+			count: 11
+			path: tests/unit/Utopia/Response/Filters/V19Test.php
+
+		-
+			message: '#^Property Tests\\Unit\\Utopia\\Response\\Filters\\V19Test\:\:\$filter \(Tests\\Unit\\Utopia\\Response\\Filters\\Filter\) does not accept Appwrite\\Utopia\\Response\\Filters\\V19\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: tests/unit/Utopia/Response/Filters/V19Test.php
+
+		-
+			message: '#^Property Tests\\Unit\\Utopia\\Response\\Filters\\V19Test\:\:\$filter has unknown class Tests\\Unit\\Utopia\\Response\\Filters\\Filter as its type\.$#'
+			identifier: class.notFound
+			count: 1
+			path: tests/unit/Utopia/Response/Filters/V19Test.php

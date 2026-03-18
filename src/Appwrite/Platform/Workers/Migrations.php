@@ -4,10 +4,12 @@ namespace Appwrite\Platform\Workers;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Event\Mail;
+use Appwrite\Event\Message\Usage as UsageMessage;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
-use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Template\Template;
+use Appwrite\Usage\Context;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
 use Utopia\Console;
@@ -84,7 +86,8 @@ class Migrations extends Action
             ->inject('deviceForMigrations')
             ->inject('deviceForFiles')
             ->inject('queueForMails')
-            ->inject('queueForStatsUsage')
+            ->inject('usage')
+            ->inject('publisherForUsage')
             ->inject('plan')
             ->inject('authorization')
             ->callback($this->action(...));
@@ -103,7 +106,8 @@ class Migrations extends Action
         Device $deviceForMigrations,
         Device $deviceForFiles,
         Mail $queueForMails,
-        StatsUsage $queueForStatsUsage,
+        Context $usage,
+        UsagePublisher $publisherForUsage,
         array $plan,
         Authorization $authorization,
     ): void {
@@ -147,7 +151,8 @@ class Migrations extends Action
                 $migration,
                 $queueForRealtime,
                 $queueForMails,
-                $queueForStatsUsage,
+                $usage,
+                $publisherForUsage,
                 $platform,
                 $authorization
             );
@@ -317,6 +322,16 @@ class Migrations extends Action
                 'sites.write',
                 'tokens.read',
                 'tokens.write',
+                'providers.read',
+                'providers.write',
+                'topics.read',
+                'topics.write',
+                'subscribers.read',
+                'subscribers.write',
+                'messages.read',
+                'messages.write',
+                'targets.read',
+                'targets.write',
             ]
         ]);
 
@@ -335,7 +350,8 @@ class Migrations extends Action
         Document $migration,
         Realtime $queueForRealtime,
         Mail $queueForMails,
-        StatsUsage $queueForStatsUsage,
+        Context $usage,
+        UsagePublisher $publisherForUsage,
         array $platform,
         Authorization $authorization,
     ): void {
@@ -350,7 +366,7 @@ class Migrations extends Action
             throw new \Exception('_APP_MIGRATION_HOST is not set');
         }
 
-        $endpoint = 'http://'.$host.'/v1';
+        $endpoint = 'http://' . $host . '/v1';
 
         try {
             $credentials = $migration->getAttribute('credentials', []);
@@ -453,7 +469,7 @@ class Migrations extends Action
             $migration->setAttribute('status', 'failed');
             $migration->setAttribute('stage', 'finished');
 
-            call_user_func($this->logError, $th, 'appwrite-worker', 'appwrite-queue-'.self::getName(), [
+            call_user_func($this->logError, $th, 'appwrite-worker', 'appwrite-queue-' . self::getName(), [
                 'migrationId' => $migration->getId(),
                 'source' => $migration->getAttribute('source') ?? '',
                 'destination' => $migration->getAttribute('destination') ?? '',
@@ -464,7 +480,7 @@ class Migrations extends Action
                 $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
                 if ($migration->getAttribute('status', '') === 'failed') {
-                    Console::error('Migration('.$migration->getSequence().':'.$migration->getId().') failed, Project('.$this->project->getSequence().':'.$this->project->getId().')');
+                    Console::error('Migration(' . $migration->getSequence() . ':' . $migration->getId() . ') failed, Project(' . $this->project->getSequence() . ':' . $this->project->getId() . ')');
 
                     $sourceErrors = $source?->getErrors() ?? [];
                     $destinationErrors = $destination?->getErrors() ?? [];
@@ -490,8 +506,9 @@ class Migrations extends Action
                     foreach ($aggregatedResources as $resource) {
                         $this->processMigrationResourceStats(
                             $resource,
-                            $queueForStatsUsage,
+                            $usage,
                             $project,
+                            $publisherForUsage,
                             $migration->getAttribute('source'),
                             $authorization,
                             $migration->getAttribute('resourceId')
@@ -571,11 +588,10 @@ class Migrations extends Action
             } finally {
                 $message = "Export file size {$sizeMB}MB exceeds your plan limit.";
 
-                $this->dbForProject->updateDocument('migrations', $migration->getId(), $migration->setAttribute(
-                    'errors',
-                    json_encode(['code' => 0, 'message' => $message]),
-                    Document::SET_TYPE_APPEND,
-                ));
+                $errors = $migration->getAttribute('errors', []);
+                $errors[] = json_encode(['code' => 0, 'message' => $message]);
+                $migration->setAttribute('errors', $errors);
+                $migration = $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
                 $this->sendCSVEmail(
                     success: false,
@@ -793,7 +809,7 @@ class Migrations extends Action
         return $errors;
     }
 
-    private function processMigrationResourceStats(array $resources, StatsUsage $queueForStatsUsage, Document $projectDocument, string $source, Authorization $authorization, ?string $resourceId)
+    private function processMigrationResourceStats(array $resources, Context $usage, Document $projectDocument, UsagePublisher $publisherForUsage, string $source, Authorization $authorization, ?string $resourceId)
     {
         $resourceName = $resources['name'];
         $count = $resources['count'];
@@ -810,11 +826,11 @@ class Migrations extends Action
 
         switch ($resourceName) {
             case ResourceDatabase::getName():
-                $queueForStatsUsage->addMetric(METRIC_DATABASES, $count);
+                $usage->addMetric(METRIC_DATABASES, $count);
                 break;
 
             case ResourceTable::getName():
-                $queueForStatsUsage
+                $usage
                     ->addMetric(METRIC_COLLECTIONS, $count)
                     ->addMetric(
                         str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_COLLECTIONS),
@@ -823,7 +839,7 @@ class Migrations extends Action
                 break;
 
             case ResourceRow::getName():
-                $queueForStatsUsage
+                $usage
                     ->addMetric(
                         str_replace(
                             ['{databaseInternalId}','{collectionInternalId}'],
@@ -843,7 +859,12 @@ class Migrations extends Action
                 break;
         }
 
-        $queueForStatsUsage->setProject($projectDocument)->trigger();
-        $queueForStatsUsage->reset();
+        $message = new UsageMessage(
+            project: $projectDocument,
+            metrics: $usage->getMetrics(),
+            reduce: $usage->getReduce()
+        );
+        $publisherForUsage->enqueue($message);
+        $usage->reset();
     }
 }

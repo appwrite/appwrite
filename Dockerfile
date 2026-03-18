@@ -12,7 +12,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:1.0.0 AS base
+FROM appwrite/base:1.0.1 AS base
 
 LABEL maintainer="team@appwrite.io"
 
@@ -70,6 +70,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/sdks && \
     chmod +x /usr/local/bin/specs && \
     chmod +x /usr/local/bin/ssl && \
+    chmod +x /usr/local/bin/task-time-travel && \
     chmod +x /usr/local/bin/screenshot && \
     chmod +x /usr/local/bin/test && \
     chmod +x /usr/local/bin/upgrade && \
@@ -120,5 +121,6 @@ RUN if [ "$DEBUG" = "true" ]; then \
     fi
 
 EXPOSE 80
+EXPOSE 8080
 
 CMD [ "php", "app/http.php" ]

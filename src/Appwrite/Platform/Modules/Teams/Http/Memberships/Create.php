@@ -6,7 +6,6 @@ use Appwrite\Auth\Validator\Phone;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
-use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email as EmailValidator;
 use Appwrite\Platform\Action;
@@ -14,6 +13,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Template\Template;
+use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use libphonenumber\NumberParseException;
@@ -70,7 +70,7 @@ class Create extends Action
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
                         model: Response::MODEL_MEMBERSHIP,
-                    )
+                    ),
                 ]
             ))
             ->label('abuse-limit', 10)
@@ -91,20 +91,20 @@ class Create extends Action
             ->inject('queueForMessaging')
             ->inject('queueForEvents')
             ->inject('timelimit')
-            ->inject('queueForStatsUsage')
+            ->inject('usage')
             ->inject('plan')
             ->inject('proofForPassword')
             ->inject('proofForToken')
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Authorization $authorization, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, Password $proofForPassword, Token $proofForToken)
+    public function action(string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Authorization $authorization, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents, callable $timelimit, Context $usage, array $plan, Password $proofForPassword, Token $proofForToken)
     {
         $isAppUser = User::isApp($authorization->getRoles());
         $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
 
         if (empty($url)) {
-            if (!$isAppUser && !$isPrivilegedUser) {
+            if (! $isAppUser && ! $isPrivilegedUser) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'URL is required');
             }
         }
@@ -113,7 +113,7 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'At least one of userId, email, or phone is required');
         }
 
-        if (!$isPrivilegedUser && !$isAppUser && empty(System::getEnv('_APP_SMTP_HOST'))) {
+        if (! $isPrivilegedUser && ! $isAppUser && empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED);
         }
 
@@ -124,28 +124,28 @@ class Create extends Action
         if ($team->isEmpty()) {
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
-        if (!empty($userId)) {
+        if (! empty($userId)) {
             $invitee = $dbForProject->getDocument('users', $userId);
             if ($invitee->isEmpty()) {
                 throw new Exception(Exception::USER_NOT_FOUND, 'User with given userId doesn\'t exist.', 404);
             }
-            if (!empty($email) && $invitee->getAttribute('email', '') !== $email) {
+            if (! empty($email) && $invitee->getAttribute('email', '') !== $email) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given userId and email doesn\'t match', 409);
             }
-            if (!empty($phone) && $invitee->getAttribute('phone', '') !== $phone) {
+            if (! empty($phone) && $invitee->getAttribute('phone', '') !== $phone) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given userId and phone doesn\'t match', 409);
             }
             $email = $invitee->getAttribute('email', '');
             $phone = $invitee->getAttribute('phone', '');
             $name = $invitee->getAttribute('name', '') ?: $name;
-        } elseif (!empty($email)) {
+        } elseif (! empty($email)) {
             $invitee = $dbForProject->findOne('users', [Query::equal('email', [$email])]); // Get user by email address
-            if (!$invitee->isEmpty() && !empty($phone) && $invitee->getAttribute('phone', '') !== $phone) {
+            if (! $invitee->isEmpty() && ! empty($phone) && $invitee->getAttribute('phone', '') !== $phone) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given email and phone doesn\'t match', 409);
             }
-        } elseif (!empty($phone)) {
+        } elseif (! empty($phone)) {
             $invitee = $dbForProject->findOne('users', [Query::equal('phone', [$phone])]);
-            if (!$invitee->isEmpty() && !empty($email) && $invitee->getAttribute('email', '') !== $email) {
+            if (! $invitee->isEmpty() && ! empty($email) && $invitee->getAttribute('email', '') !== $email) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given phone and email doesn\'t match', 409);
             }
         }
@@ -153,7 +153,7 @@ class Create extends Action
         if ($invitee->isEmpty()) { // Create new user if no user with same email found
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
-            if (!$isPrivilegedUser && !$isAppUser && $limit !== 0 && $project->getId() !== 'console') { // check users limit, console invites are allways allowed.
+            if (! $isPrivilegedUser && ! $isAppUser && $limit !== 0 && $project->getId() !== 'console') { // check users limit, console invites are allways allowed.
                 $total = $dbForProject->count('users', [], APP_LIMIT_USERS);
 
                 if ($total >= $limit) {
@@ -165,7 +165,7 @@ class Create extends Action
             $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                 Query::equal('providerEmail', [$email]),
             ]);
-            if (!$identityWithMatchingEmail->isEmpty()) {
+            if (! $identityWithMatchingEmail->isEmpty()) {
                 throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
             }
 
@@ -225,7 +225,7 @@ class Create extends Action
 
         $isOwner = $authorization->hasRole('team:' . $team->getId() . '/owner');
 
-        if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
+        if (! $isOwner && ! $isPrivilegedUser && ! $isAppUser) { // Not owner, not admin, not app (server)
             throw new Exception(Exception::USER_UNAUTHORIZED, 'User is not allowed to send invitations for this team');
         }
 
@@ -255,7 +255,7 @@ class Create extends Action
                 'joined' => ($isPrivilegedUser || $isAppUser) ? DateTime::now() : null,
                 'confirm' => ($isPrivilegedUser || $isAppUser),
                 'secret' => $proofForToken->hash($secret),
-                'search' => implode(' ', [$membershipId, $invitee->getId()])
+                'search' => implode(' ', [$membershipId, $invitee->getId()]),
             ]);
 
             $membership = ($isPrivilegedUser || $isAppUser) ?
@@ -266,17 +266,22 @@ class Create extends Action
                 $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
             }
         } elseif ($membership->getAttribute('confirm') === false) {
-            $membership->setAttribute('secret', $proofForToken->hash($secret));
-            $membership->setAttribute('invited', DateTime::now());
+            $secretHash = $proofForToken->hash($secret);
+            $invitedTime = DateTime::now();
 
             if ($isPrivilegedUser || $isAppUser) {
-                $membership->setAttribute('joined', DateTime::now());
-                $membership->setAttribute('confirm', true);
+                $membership = $authorization->skip(fn () => $dbForProject->updateDocument('memberships', $membership->getId(), new Document([
+                    'secret' => $secretHash,
+                    'invited' => $invitedTime,
+                    'joined' => DateTime::now(),
+                    'confirm' => true
+                ])));
+            } else {
+                $membership = $dbForProject->updateDocument('memberships', $membership->getId(), new Document([
+                    'secret' => $secretHash,
+                    'invited' => $invitedTime
+                ]));
             }
-
-            $membership = ($isPrivilegedUser || $isAppUser) ?
-                $authorization->skip(fn () => $dbForProject->updateDocument('memberships', $membership->getId(), $membership)) :
-                $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
         } else {
             throw new Exception(Exception::MEMBERSHIP_ALREADY_CONFIRMED);
         }
@@ -287,22 +292,22 @@ class Create extends Action
             $url = Template::parseURL($url);
             $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId, 'teamName' => $team->getAttribute('name')]);
             $url = Template::unParseURL($url);
-            if (!empty($email)) {
+            if (! empty($email)) {
                 $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
 
-                $body = $locale->getText("emails.invitation.body");
-                $preview = $locale->getText("emails.invitation.preview");
-                $subject = $locale->getText("emails.invitation.subject");
+                $body = $locale->getText('emails.invitation.body');
+                $preview = $locale->getText('emails.invitation.preview');
+                $subject = $locale->getText('emails.invitation.subject');
                 $customTemplate = $project->getAttribute('templates', [])['email.invitation-' . $locale->default] ?? [];
 
                 $message = Template::fromFile(APP_CE_CONFIG_DIR . '/locale/templates/email-inner-base.tpl');
                 $message
                     ->setParam('{{body}}', $body, escapeHtml: false)
-                    ->setParam('{{hello}}', $locale->getText("emails.invitation.hello"))
-                    ->setParam('{{footer}}', $locale->getText("emails.invitation.footer"))
-                    ->setParam('{{thanks}}', $locale->getText("emails.invitation.thanks"))
-                    ->setParam('{{buttonText}}', $locale->getText("emails.invitation.buttonText"))
-                    ->setParam('{{signature}}', $locale->getText("emails.invitation.signature"));
+                    ->setParam('{{hello}}', $locale->getText('emails.invitation.hello'))
+                    ->setParam('{{footer}}', $locale->getText('emails.invitation.footer'))
+                    ->setParam('{{thanks}}', $locale->getText('emails.invitation.thanks'))
+                    ->setParam('{{buttonText}}', $locale->getText('emails.invitation.buttonText'))
+                    ->setParam('{{signature}}', $locale->getText('emails.invitation.signature'));
                 $body = $message->render();
 
                 $smtp = $project->getAttribute('smtp', []);
@@ -310,16 +315,16 @@ class Create extends Action
 
                 $senderEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
                 $senderName = System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
-                $replyTo = "";
+                $replyTo = '';
 
                 if ($smtpEnabled) {
-                    if (!empty($smtp['senderEmail'])) {
+                    if (! empty($smtp['senderEmail'])) {
                         $senderEmail = $smtp['senderEmail'];
                     }
-                    if (!empty($smtp['senderName'])) {
+                    if (! empty($smtp['senderName'])) {
                         $senderName = $smtp['senderName'];
                     }
-                    if (!empty($smtp['replyTo'])) {
+                    if (! empty($smtp['replyTo'])) {
                         $replyTo = $smtp['replyTo'];
                     }
 
@@ -330,14 +335,14 @@ class Create extends Action
                         ->setSmtpPassword($smtp['password'] ?? '')
                         ->setSmtpSecure($smtp['secure'] ?? '');
 
-                    if (!empty($customTemplate)) {
-                        if (!empty($customTemplate['senderEmail'])) {
+                    if (! empty($customTemplate)) {
+                        if (! empty($customTemplate['senderEmail'])) {
                             $senderEmail = $customTemplate['senderEmail'];
                         }
-                        if (!empty($customTemplate['senderName'])) {
+                        if (! empty($customTemplate['senderName'])) {
                             $senderName = $customTemplate['senderName'];
                         }
-                        if (!empty($customTemplate['replyTo'])) {
+                        if (! empty($customTemplate['replyTo'])) {
                             $replyTo = $customTemplate['replyTo'];
                         }
 
@@ -358,7 +363,7 @@ class Create extends Action
                     'user' => $name,
                     'team' => $team->getAttribute('name'),
                     'redirect' => $url,
-                    'project' => $projectName
+                    'project' => $projectName,
                 ];
 
                 $queueForMails
@@ -369,7 +374,7 @@ class Create extends Action
                     ->setName($invitee->getAttribute('name', ''))
                     ->appendVariables($emailVariables)
                     ->trigger();
-            } elseif (!empty($phone)) {
+            } elseif (! empty($phone)) {
                 if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
                     throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
                 }
@@ -377,7 +382,7 @@ class Create extends Action
                 $message = Template::fromFile(APP_CE_CONFIG_DIR . '/locale/templates/sms-base.tpl');
 
                 $customTemplate = $project->getAttribute('templates', [])['sms.invitation-' . $locale->default] ?? [];
-                if (!empty($customTemplate)) {
+                if (! empty($customTemplate)) {
                     $message = $customTemplate['message'];
                 }
 
@@ -401,25 +406,20 @@ class Create extends Action
                 try {
                     $countryCode = $helper->parse($phone)->getCountryCode();
 
-                    if (!empty($countryCode)) {
-                        $queueForStatsUsage
-                            ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
+                    if (! empty($countryCode)) {
+                        $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                     }
                 } catch (NumberParseException $e) {
                     // Ignore invalid phone number for country code stats
                 }
-                $queueForStatsUsage
-                    ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
-                    ->setProject($project)
-                    ->trigger();
+                $usage->addMetric(METRIC_AUTH_METHOD_PHONE, 1);
             }
         }
 
         $queueForEvents
             ->setParam('userId', $invitee->getId())
             ->setParam('teamId', $team->getId())
-            ->setParam('membershipId', $membership->getId())
-        ;
+            ->setParam('membershipId', $membership->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

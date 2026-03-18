@@ -142,7 +142,12 @@ class Create extends Action
             ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
             ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
             ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-        $dbForProject->updateDocument('sites', $site->getId(), $site);
+        $dbForProject->updateDocument('sites', $site->getId(), new Document([
+            'latestDeploymentId' => $site->getAttribute('latestDeploymentId'),
+            'latestDeploymentInternalId' => $site->getAttribute('latestDeploymentInternalId'),
+            'latestDeploymentCreatedAt' => $site->getAttribute('latestDeploymentCreatedAt'),
+            'latestDeploymentStatus' => $site->getAttribute('latestDeploymentStatus'),
+        ]));
 
         // Preview deployments for sites
         $sitesDomain = $platform['sitesDomain'];

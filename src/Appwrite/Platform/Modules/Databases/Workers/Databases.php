@@ -322,13 +322,19 @@ class Databases extends Action
                 $dbForProject->updateDocument(
                     'attributes',
                     $attribute->getId(),
-                    $attribute->setAttribute('status', 'stuck')
+                    new Document([
+                        'error' => $attribute->getAttribute('error'),
+                        'status' => 'stuck',
+                    ])
                 );
                 if (!$relatedAttribute->isEmpty()) {
                     $dbForProject->updateDocument(
                         'attributes',
                         $relatedAttribute->getId(),
-                        $relatedAttribute->setAttribute('status', 'stuck')
+                        new Document([
+                            'error' => $relatedAttribute->getAttribute('error'),
+                            'status' => 'stuck',
+                        ])
                     );
                 }
 
@@ -382,7 +388,11 @@ class Databases extends Action
                         if ($exists) { // Delete the duplicate if created, else update in db
                             $this->deleteIndex($database, $collection, $index, $project, $dbForPlatform, $dbForProject, $queueForRealtime);
                         } else {
-                            $dbForProject->updateDocument('indexes', $index->getId(), $index);
+                            $dbForProject->updateDocument('indexes', $index->getId(), new Document([
+                                'attributes' => $index->getAttribute('attributes'),
+                                'lengths' => $index->getAttribute('lengths'),
+                                'orders' => $index->getAttribute('orders'),
+                            ]));
                         }
                     }
                 }

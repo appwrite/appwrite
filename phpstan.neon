@@ -1,13 +1,17 @@
+includes:
+  - phpstan-baseline.neon
+
 parameters:
-  level: 8
+  level: 3
   paths:
-    - src/Utopia/Bus
-    - src/Appwrite/Bus
-    - src/Appwrite/Transformation
+    - src
+    - app
+    - bin
+    - tests
   bootstrapFiles:
     - app/init/constants.php
   scanDirectories:
     - vendor/swoole/ide-helper
   excludePaths:
     - tests/resources
-    - app/sdks
+

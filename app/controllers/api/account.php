@@ -14,7 +14,6 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
-use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Network\Validator\Email as EmailValidator;
@@ -28,6 +27,7 @@ use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Template\Template;
 use Appwrite\URL\URL as URLParser;
+use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Identities;
@@ -286,7 +286,10 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     }
 
     try {
-        $dbForProject->updateDocument('users', $user->getId(), $user);
+        $dbForProject->updateDocument('users', $user->getId(), new Document([
+            'emailVerification' => $user->getAttribute('emailVerification'),
+            'phoneVerification' => $user->getAttribute('phoneVerification'),
+        ]));
     } catch (\Throwable $th) {
         throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed saving user to DB');
     }
@@ -1030,7 +1033,11 @@ Http::post('/v1/account/sessions/email')
                 ->setAttribute('password', $proofForPasswordUpdated->hash($password))
                 ->setAttribute('hash', $proofForPasswordUpdated->getHash()->getName())
                 ->setAttribute('hashOptions', $proofForPasswordUpdated->getHash()->getOptions());
-            $dbForProject->updateDocument('users', $user->getId(), $user);
+            $dbForProject->updateDocument('users', $user->getId(), new Document([
+                'password' => $user->getAttribute('password'),
+                'hash' => $user->getAttribute('hash'),
+                'hashOptions' => $user->getAttribute('hashOptions'),
+            ]));
         }
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
@@ -1820,7 +1827,11 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 ->setAttribute('providerAccessToken', $accessToken)
                 ->setAttribute('providerRefreshToken', $refreshToken)
                 ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry));
-            $dbForProject->updateDocument('identities', $identity->getId(), $identity);
+            $dbForProject->updateDocument('identities', $identity->getId(), new Document([
+                'providerAccessToken' => $identity->getAttribute('providerAccessToken'),
+                'providerRefreshToken' => $identity->getAttribute('providerRefreshToken'),
+                'providerAccessTokenExpiry' => $identity->getAttribute('providerAccessTokenExpiry'),
+            ]));
         }
 
         if (empty($user->getAttribute('email'))) {
@@ -1958,7 +1969,10 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     ->setAttribute('sessionId', $session->getId())
                     ->setAttribute('sessionInternalId', $session->getSequence());
 
-                $dbForProject->updateDocument('targets', $target->getId(), $target);
+                $dbForProject->updateDocument('targets', $target->getId(), new Document([
+                    'sessionId' => $target->getAttribute('sessionId'),
+                    'sessionInternalId' => $target->getAttribute('sessionInternalId'),
+                ]));
             }
         }
 
@@ -2785,12 +2799,12 @@ Http::post('/v1/account/tokens/phone')
     ->inject('queueForMessaging')
     ->inject('locale')
     ->inject('timelimit')
-    ->inject('queueForStatsUsage')
+    ->inject('usage')
     ->inject('plan')
     ->inject('store')
     ->inject('proofForCode')
     ->inject('authorization')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, Store $store, ProofsCode $proofForCode, Authorization $authorization) {
+    ->action(function (string $userId, string $phone, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, callable $timelimit, Context $usage, array $plan, Store $store, ProofsCode $proofForCode, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -2939,16 +2953,12 @@ Http::post('/v1/account/tokens/phone')
                 $countryCode = $helper->parse($phone)->getCountryCode();
 
                 if (!empty($countryCode)) {
-                    $queueForStatsUsage
-                        ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
+                    $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                 }
             } catch (NumberParseException $e) {
                 // Ignore invalid phone number for country code stats
             }
-            $queueForStatsUsage
-                ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
-                ->setProject($project)
-                ->trigger();
+            $usage->addMetric(METRIC_AUTH_METHOD_PHONE, 1);
         }
 
         $token->setAttribute('secret', $secret);
@@ -3143,7 +3153,9 @@ Http::patch('/v1/account/name')
 
         $user->setAttribute('name', $name);
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+        $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
+            'name' => $user->getAttribute('name'),
+        ]));
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -3796,13 +3808,15 @@ Http::put('/v1/account/recovery')
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
 
-        $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile
-                ->setAttribute('password', $newPassword)
-                ->setAttribute('passwordHistory', $history)
-                ->setAttribute('passwordUpdate', DateTime::now())
-                ->setAttribute('hash', $proofForPassword->getHash()->getName())
-                ->setAttribute('hashOptions', $proofForPassword->getHash()->getOptions())
-                ->setAttribute('emailVerification', true));
+        $profile = $dbForProject->updateDocument('users', $profile->getId(), new Document(
+            [
+                'password' => $newPassword,
+                'passwordHistory' => $history,
+                'passwordUpdate' => DateTime::now(),
+                'hash' => $proofForPassword->getHash()->getName(),
+                'hashOptions' => $proofForPassword->getHash()->getOptions(),
+                'emailVerification' => true]
+        ));
 
         $user->setAttributes($profile->getArrayCopy());
 
@@ -4124,7 +4138,7 @@ Http::put('/v1/account/verifications/email')
 
         $authorization->addRole(Role::user($profile->getId())->toString());
 
-        $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile->setAttribute('emailVerification', true));
+        $profile = $dbForProject->updateDocument('users', $profile->getId(), new Document(['emailVerification' => true]));
 
         $user->setAttributes($profile->getArrayCopy());
 
@@ -4179,11 +4193,11 @@ Http::post('/v1/account/verifications/phone')
     ->inject('project')
     ->inject('locale')
     ->inject('timelimit')
-    ->inject('queueForStatsUsage')
+    ->inject('usage')
     ->inject('plan')
     ->inject('proofForCode')
                 ->inject('authorization')
-    ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, ProofsCode $proofForCode, Authorization $authorization) {
+    ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale, callable $timelimit, Context $usage, array $plan, ProofsCode $proofForCode, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -4268,16 +4282,12 @@ Http::post('/v1/account/verifications/phone')
                 $countryCode = $helper->parse($phone)->getCountryCode();
 
                 if (!empty($countryCode)) {
-                    $queueForStatsUsage
-                        ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
+                    $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                 }
             } catch (NumberParseException $e) {
                 // Ignore invalid phone number for country code stats
             }
-            $queueForStatsUsage
-                ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
-                ->setProject($project)
-                ->trigger();
+            $usage->addMetric(METRIC_AUTH_METHOD_PHONE, 1);
         }
 
         $verification->setAttribute('secret', $secret);
@@ -4340,7 +4350,7 @@ Http::put('/v1/account/verifications/phone')
 
         $authorization->addRole(Role::user($profile->getId())->toString());
 
-        $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile->setAttribute('phoneVerification', true));
+        $profile = $dbForProject->updateDocument('users', $profile->getId(), new Document(['phoneVerification' => true]));
 
         $user->setAttributes($profile->getArrayCopy());
 
@@ -4498,7 +4508,11 @@ Http::put('/v1/account/targets/:targetId/push')
 
         $target->setAttribute('name', "{$device['deviceBrand']} {$device['deviceModel']}");
 
-        $target = $dbForProject->updateDocument('targets', $target->getId(), $target);
+        $target = $dbForProject->updateDocument('targets', $target->getId(), new Document([
+            'identifier' => $target->getAttribute('identifier'),
+            'expired' => $target->getAttribute('expired'),
+            'name' => $target->getAttribute('name'),
+        ]));
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 

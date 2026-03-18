@@ -59,12 +59,21 @@ abstract class Scope extends TestCase
 
         $root = $this->getRoot();
 
-        $response = $this->client->call(Client::METHOD_GET, '/console/variables', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => 'console',
-            'cookie' => 'a_session_console=' . $root['session'],
-        ]);
+        for ($i = 0; $i < 3; $i++) {
+            $response = $this->client->call(Client::METHOD_GET, '/console/variables', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => 'console',
+                'cookie' => 'a_session_console=' . $root['session'],
+            ]);
+
+            if ($response['headers']['status-code'] === 200 && !empty($response['body'])) {
+                self::$consoleVariables = $response['body'];
+                return self::$consoleVariables;
+            }
+
+            \usleep(500000);
+        }
 
         self::$consoleVariables = $response['body'] ?? [];
 
@@ -140,7 +149,7 @@ abstract class Scope extends TestCase
      */
     protected function getMaxIndexLength(): int
     {
-        return $this->getConsoleVariables()['maxIndexLength'] ?? 768;
+        return $this->getConsoleVariables()['maxIndexLength'] ?? 767;
     }
 
     /**
