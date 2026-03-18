@@ -23,7 +23,7 @@ class Install extends Action
     private const int WEB_SERVER_CHECK_DELAY_SECONDS = 1;
 
     private const int HEALTH_CHECK_ATTEMPTS = 30;
-    private const int HEALTH_CHECK_DELAY_SECONDS = 3;
+    private const int HEALTH_CHECK_DELAY_SECONDS = 1;
 
     private const string PATTERN_ENV_VAR_NAME = '/^[A-Z0-9_]+$/';
     private const string PATTERN_DB_PASSWORD_VAR = '/^_APP_DB_.*_PASS$/';
@@ -734,8 +734,8 @@ class Install extends Action
     {
         $client = new Client();
         $client
-            ->setTimeout(5000)
-            ->setConnectTimeout(5000)
+            ->setTimeout(2000)
+            ->setConnectTimeout(2000)
             ->addHeader('Host', $domain);
 
         $healthPath = '/v1/health/version';

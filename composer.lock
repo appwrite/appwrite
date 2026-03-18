@@ -4603,16 +4603,16 @@
         },
         {
             "name": "utopia-php/mongo",
-            "version": "1.0.1",
+            "version": "1.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/mongo.git",
-                "reference": "83dbcde768d5fb40241f5ca8aa5ed8ca140a7469"
+                "reference": "677a21c53f7a1316c528b4b45b3fce886cee7223"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/mongo/zipball/83dbcde768d5fb40241f5ca8aa5ed8ca140a7469",
-                "reference": "83dbcde768d5fb40241f5ca8aa5ed8ca140a7469",
+                "url": "https://api.github.com/repos/utopia-php/mongo/zipball/677a21c53f7a1316c528b4b45b3fce886cee7223",
+                "reference": "677a21c53f7a1316c528b4b45b3fce886cee7223",
                 "shasum": ""
             },
             "require": {
@@ -4658,9 +4658,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/mongo/issues",
-                "source": "https://github.com/utopia-php/mongo/tree/1.0.1"
+                "source": "https://github.com/utopia-php/mongo/tree/1.0.2"
             },
-            "time": "2026-03-13T07:29:24+00:00"
+            "time": "2026-03-18T02:45:50+00:00"
         },
         {
             "name": "utopia-php/platform",
@@ -5468,16 +5468,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.11.6",
+            "version": "1.11.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "f80e302d000cdc2f98b4bb5ff2fc3bd0bdff7b38"
+                "reference": "2f0f6ec54736ba7efdff188a9451b56f1665f25a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/f80e302d000cdc2f98b4bb5ff2fc3bd0bdff7b38",
-                "reference": "f80e302d000cdc2f98b4bb5ff2fc3bd0bdff7b38",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/2f0f6ec54736ba7efdff188a9451b56f1665f25a",
+                "reference": "2f0f6ec54736ba7efdff188a9451b56f1665f25a",
                 "shasum": ""
             },
             "require": {
@@ -5513,9 +5513,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.11.6"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.11.9"
             },
-            "time": "2026-03-09T07:12:51+00:00"
+            "time": "2026-03-17T08:16:49+00:00"
         },
         {
             "name": "brianium/paratest",
@@ -6224,11 +6224,11 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "2.1.40",
+            "version": "2.1.42",
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/9b2c7aeb83a75d8680ea5e7c9b7fca88052b766b",
-                "reference": "9b2c7aeb83a75d8680ea5e7c9b7fca88052b766b",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/1279e1ce86ba768f0780c9d889852b4e02ff40d0",
+                "reference": "1279e1ce86ba768f0780c9d889852b4e02ff40d0",
                 "shasum": ""
             },
             "require": {
@@ -6273,7 +6273,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-02-23T15:04:35+00:00"
+            "time": "2026-03-17T14:58:32+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
