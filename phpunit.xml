@@ -17,6 +17,7 @@
             <directory>./tests/unit</directory>
         </testsuite>
         <testsuite name="e2e">
+            <file>./tests/e2e/Client.php</file>
             <directory>./tests/e2e/General</directory>
             <directory>./tests/e2e/Scopes</directory>
             <directory>./tests/e2e/Services/Teams</directory>
@@ -35,6 +36,7 @@
             <directory>./tests/e2e/Services/Webhooks</directory>
             <directory>./tests/e2e/Services/Messaging</directory>
             <directory>./tests/e2e/Services/Migrations</directory>
+            <file>./tests/e2e/Services/Functions/FunctionsBase.php</file>
             <file>./tests/e2e/Services/Functions/FunctionsCustomServerTest.php</file>
             <file>./tests/e2e/Services/Functions/FunctionsCustomClientTest.php</file>
         </testsuite>
