@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "13579de3d747c541fdcce4f709df8e57",
+    "content-hash": "5746ded7729d3ef54c8e922287b98bca",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3850,16 +3850,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-fix-collection-recreate",
+            "version": "dev-joins8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "5208630969dfdfbe8eda9c34c6b28ce711ece7c4"
+                "reference": "3fed404d569c44ad751f8d82d3ff7948ba01b27b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/5208630969dfdfbe8eda9c34c6b28ce711ece7c4",
-                "reference": "5208630969dfdfbe8eda9c34c6b28ce711ece7c4",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/3fed404d569c44ad751f8d82d3ff7948ba01b27b",
+                "reference": "3fed404d569c44ad751f8d82d3ff7948ba01b27b",
                 "shasum": ""
             },
             "require": {
@@ -3932,10 +3932,10 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/database/tree/fix-collection-recreate",
+                "source": "https://github.com/utopia-php/database/tree/joins8",
                 "issues": "https://github.com/utopia-php/database/issues"
             },
-            "time": "2026-03-16T11:58:09+00:00"
+            "time": "2026-03-18T07:50:39+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4548,16 +4548,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.7.0",
+            "version": "dev-joins",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "97583ae502e40621ea91a71de19d053c5ae2e558"
+                "reference": "63df4ddb1a4ac58628fc94bb9d1473ee444c8dc4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/97583ae502e40621ea91a71de19d053c5ae2e558",
-                "reference": "97583ae502e40621ea91a71de19d053c5ae2e558",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/63df4ddb1a4ac58628fc94bb9d1473ee444c8dc4",
+                "reference": "63df4ddb1a4ac58628fc94bb9d1473ee444c8dc4",
                 "shasum": ""
             },
             "require": {
@@ -4566,7 +4566,7 @@
                 "ext-openssl": "*",
                 "halaxa/json-machine": "^1.2",
                 "php": ">=8.1",
-                "utopia-php/database": "5.*",
+                "utopia-php/database": "dev-joins8 as 5.3.1",
                 "utopia-php/dsn": "0.2.*",
                 "utopia-php/storage": "1.0.*"
             },
@@ -4597,22 +4597,22 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.7.0"
+                "source": "https://github.com/utopia-php/migration/tree/joins"
             },
-            "time": "2026-03-10T06:36:27+00:00"
+            "time": "2026-03-18T08:44:13+00:00"
         },
         {
             "name": "utopia-php/mongo",
-            "version": "1.0.1",
+            "version": "1.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/mongo.git",
-                "reference": "83dbcde768d5fb40241f5ca8aa5ed8ca140a7469"
+                "reference": "677a21c53f7a1316c528b4b45b3fce886cee7223"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/mongo/zipball/83dbcde768d5fb40241f5ca8aa5ed8ca140a7469",
-                "reference": "83dbcde768d5fb40241f5ca8aa5ed8ca140a7469",
+                "url": "https://api.github.com/repos/utopia-php/mongo/zipball/677a21c53f7a1316c528b4b45b3fce886cee7223",
+                "reference": "677a21c53f7a1316c528b4b45b3fce886cee7223",
                 "shasum": ""
             },
             "require": {
@@ -4658,9 +4658,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/mongo/issues",
-                "source": "https://github.com/utopia-php/mongo/tree/1.0.1"
+                "source": "https://github.com/utopia-php/mongo/tree/1.0.2"
             },
-            "time": "2026-03-13T07:29:24+00:00"
+            "time": "2026-03-18T02:45:50+00:00"
         },
         {
             "name": "utopia-php/platform",
@@ -5468,16 +5468,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.11.6",
+            "version": "1.11.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "f80e302d000cdc2f98b4bb5ff2fc3bd0bdff7b38"
+                "reference": "2f0f6ec54736ba7efdff188a9451b56f1665f25a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/f80e302d000cdc2f98b4bb5ff2fc3bd0bdff7b38",
-                "reference": "f80e302d000cdc2f98b4bb5ff2fc3bd0bdff7b38",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/2f0f6ec54736ba7efdff188a9451b56f1665f25a",
+                "reference": "2f0f6ec54736ba7efdff188a9451b56f1665f25a",
                 "shasum": ""
             },
             "require": {
@@ -5513,9 +5513,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.11.6"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.11.9"
             },
-            "time": "2026-03-09T07:12:51+00:00"
+            "time": "2026-03-17T08:16:49+00:00"
         },
         {
             "name": "brianium/paratest",
@@ -6224,11 +6224,11 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "2.1.40",
+            "version": "2.1.42",
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/9b2c7aeb83a75d8680ea5e7c9b7fca88052b766b",
-                "reference": "9b2c7aeb83a75d8680ea5e7c9b7fca88052b766b",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/1279e1ce86ba768f0780c9d889852b4e02ff40d0",
+                "reference": "1279e1ce86ba768f0780c9d889852b4e02ff40d0",
                 "shasum": ""
             },
             "require": {
@@ -6273,7 +6273,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-02-23T15:04:35+00:00"
+            "time": "2026-03-17T14:58:32+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -8465,14 +8465,21 @@
     "aliases": [
         {
             "package": "utopia-php/database",
-            "version": "dev-fix-collection-recreate",
-            "alias": "5.3.15",
-            "alias_normalized": "5.3.15.0"
+            "version": "dev-joins8",
+            "alias": "5.3.1",
+            "alias_normalized": "5.3.1.0"
+        },
+        {
+            "package": "utopia-php/migration",
+            "version": "dev-joins",
+            "alias": "1.7.0",
+            "alias_normalized": "1.7.0.0"
         }
     ],
     "minimum-stability": "dev",
     "stability-flags": {
-        "utopia-php/database": 20
+        "utopia-php/database": 20,
+        "utopia-php/migration": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
@@ -8497,5 +8504,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.6.0"
 }
