@@ -96,7 +96,7 @@ jobs:
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose up -d
-          sleep 10
+          sleep 30
 
       - name: Logs
         run: docker compose logs appwrite
