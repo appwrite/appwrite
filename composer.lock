@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6efdf0d212038b3d65b12cf693276936",
+    "content-hash": "f2035503cd8a83da2b41a975311d41f7",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4830,21 +4830,22 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "0.16.0",
+            "version": "dev-feat/di-container-refactor",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "ffdc9315d2f5999960c95a5860f067ea2eaa36f7"
+                "reference": "0467c190f0f73f9a3170f2ee21b393a04edaa588"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/ffdc9315d2f5999960c95a5860f067ea2eaa36f7",
-                "reference": "ffdc9315d2f5999960c95a5860f067ea2eaa36f7",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/0467c190f0f73f9a3170f2ee21b393a04edaa588",
+                "reference": "0467c190f0f73f9a3170f2ee21b393a04edaa588",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.3",
                 "php-amqplib/php-amqplib": "^3.7",
+                "utopia-php/di": "0.3.*",
                 "utopia-php/fetch": "0.5.*",
                 "utopia-php/pools": "1.*",
                 "utopia-php/servers": "0.3.*",
@@ -4890,9 +4891,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/0.16.0"
+                "source": "https://github.com/utopia-php/queue/tree/feat/di-container-refactor"
             },
-            "time": "2026-03-13T12:23:30+00:00"
+            "time": "2026-03-17T15:20:45+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -8477,11 +8478,18 @@
             "version": "dev-feat/coroutines-option",
             "alias": "0.34.15",
             "alias_normalized": "0.34.15.0"
+        },
+        {
+            "package": "utopia-php/queue",
+            "version": "dev-feat/di-container-refactor",
+            "alias": "0.16.0",
+            "alias_normalized": "0.16.0.0"
         }
     ],
     "minimum-stability": "dev",
     "stability-flags": {
-        "utopia-php/framework": 20
+        "utopia-php/framework": 20,
+        "utopia-php/queue": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
