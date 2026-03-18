@@ -2777,28 +2777,30 @@ trait MigrationsBase
                 return true;
             }, 30_000, 500);
 
-            $lastEmail = $this->getLastEmail();
-            $this->assertNotEmpty($lastEmail);
-            $this->assertEquals('Your CSV export is ready', $lastEmail['subject']);
+            $this->assertEventually(function () use ($migrationId) {
+                $email = $this->getLastEmail(1, function (array $email) {
+                    $this->assertEquals('Your CSV export is ready', $email['subject']);
+                });
+                $this->assertNotEmpty($email);
+                $this->assertEquals('Your CSV export is ready', $email['subject']);
+                \preg_match('/href="([^"]*\/storage\/buckets\/[^"]*\/push[^"]*)"/', $email['html'], $matches);
+                $this->assertNotEmpty($matches[1], 'Download URL not found in email');
+                $downloadUrl = html_entity_decode($matches[1]);
+                $components = \parse_url($downloadUrl);
+                $this->assertNotEmpty($components);
+                \parse_str($components['query'] ?? '', $queryParams);
+                $this->assertArrayHasKey('jwt', $queryParams);
+                $this->assertArrayHasKey('project', $queryParams);
 
-            \preg_match('/href="([^"]*\/storage\/buckets\/[^"]*\/push[^"]*)"/', $lastEmail['html'], $matches);
-            $this->assertNotEmpty($matches[1], 'Download URL not found in email');
-            $downloadUrl = html_entity_decode($matches[1]);
+                $path = \str_replace('/v1', '', $components['path']);
+                $downloadResponse = $this->client->call(Client::METHOD_GET, $path . '?project=' . $queryParams['project'] . '&jwt=' . $queryParams['jwt']);
+                $this->assertEquals(200, $downloadResponse['headers']['status-code']);
 
-            $components = \parse_url($downloadUrl);
-            $this->assertNotEmpty($components);
-            \parse_str($components['query'] ?? '', $queryParams);
-            $this->assertArrayHasKey('jwt', $queryParams);
-            $this->assertArrayHasKey('project', $queryParams);
-
-            $path = \str_replace('/v1', '', $components['path']);
-            $downloadResponse = $this->client->call(Client::METHOD_GET, $path . '?project=' . $queryParams['project'] . '&jwt=' . $queryParams['jwt']);
-            $this->assertEquals(200, $downloadResponse['headers']['status-code']);
-
-            $csvData = $downloadResponse['body'];
-            $this->assertStringContainsString('Vector Sample One', $csvData);
-            $this->assertStringContainsString('Vector Sample Two', $csvData);
-            $this->assertStringContainsString('[0.11,0.22,0.33]', $csvData);
+                $csvData = $downloadResponse['body'];
+                $this->assertStringContainsString('Vector Sample One', $csvData);
+                $this->assertStringContainsString('Vector Sample Two', $csvData);
+                $this->assertStringContainsString('[0.11,0.22,0.33]', $csvData);
+            }, 30_000, 500);
         } finally {
             if ($databaseId) {
                 $this->client->call(Client::METHOD_DELETE, '/vectorsdb/' . $databaseId, [
