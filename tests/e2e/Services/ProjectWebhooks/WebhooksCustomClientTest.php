@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\E2E\Services\Webhooks;
+namespace Tests\E2E\Services\ProjectWebhooks;
 
 use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
