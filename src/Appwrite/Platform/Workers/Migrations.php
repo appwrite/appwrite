@@ -359,6 +359,8 @@ class Migrations extends Action
                 'messages.write',
                 'targets.read',
                 'targets.write',
+                'webhooks.read',
+                'webhooks.write'
             ]
         ]);
 
