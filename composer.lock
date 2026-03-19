@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5746ded7729d3ef54c8e922287b98bca",
+    "content-hash": "685d2d49e6e9b92df4084e091a16ca6a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -686,23 +686,23 @@
         },
         {
             "name": "google/protobuf",
-            "version": "v4.33.5",
+            "version": "v4.33.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/protocolbuffers/protobuf-php.git",
-                "reference": "ebe8010a61b2ae0cff0d246fe1c4d44e9f7dfa6d"
+                "reference": "84b008c23915ed94536737eae46f41ba3bccfe67"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/ebe8010a61b2ae0cff0d246fe1c4d44e9f7dfa6d",
-                "reference": "ebe8010a61b2ae0cff0d246fe1c4d44e9f7dfa6d",
+                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/84b008c23915ed94536737eae46f41ba3bccfe67",
+                "reference": "84b008c23915ed94536737eae46f41ba3bccfe67",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.1.0"
             },
             "require-dev": {
-                "phpunit/phpunit": ">=5.0.0 <8.5.27"
+                "phpunit/phpunit": ">=10.5.62 <11.0.0"
             },
             "suggest": {
                 "ext-bcmath": "Need to support JSON deserialization"
@@ -724,9 +724,9 @@
                 "proto"
             ],
             "support": {
-                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.33.5"
+                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.33.6"
             },
-            "time": "2026-01-29T20:49:00+00:00"
+            "time": "2026-03-18T17:32:05+00:00"
         },
         {
             "name": "halaxa/json-machine",
@@ -1996,16 +1996,16 @@
         },
         {
             "name": "phpseclib/phpseclib",
-            "version": "3.0.49",
+            "version": "3.0.50",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpseclib/phpseclib.git",
-                "reference": "6233a1e12584754e6b5daa69fe1289b47775c1b9"
+                "reference": "aa6ad8321ed103dc3624fb600a25b66ebf78ec7b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/6233a1e12584754e6b5daa69fe1289b47775c1b9",
-                "reference": "6233a1e12584754e6b5daa69fe1289b47775c1b9",
+                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/aa6ad8321ed103dc3624fb600a25b66ebf78ec7b",
+                "reference": "aa6ad8321ed103dc3624fb600a25b66ebf78ec7b",
                 "shasum": ""
             },
             "require": {
@@ -2086,7 +2086,7 @@
             ],
             "support": {
                 "issues": "https://github.com/phpseclib/phpseclib/issues",
-                "source": "https://github.com/phpseclib/phpseclib/tree/3.0.49"
+                "source": "https://github.com/phpseclib/phpseclib/tree/3.0.50"
             },
             "funding": [
                 {
@@ -2102,7 +2102,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-01-27T09:17:28+00:00"
+            "time": "2026-03-19T02:57:58+00:00"
         },
         {
             "name": "psr/clock",
@@ -3854,12 +3854,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "3d9d0d49a692b57d96ad1fe44b301660b83f7116"
+                "reference": "0fdc9afb5302503090d858a8a40d3c38844b27f2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/3d9d0d49a692b57d96ad1fe44b301660b83f7116",
-                "reference": "3d9d0d49a692b57d96ad1fe44b301660b83f7116",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/0fdc9afb5302503090d858a8a40d3c38844b27f2",
+                "reference": "0fdc9afb5302503090d858a8a40d3c38844b27f2",
                 "shasum": ""
             },
             "require": {
@@ -3936,7 +3936,7 @@
                 "source": "https://github.com/utopia-php/database/tree/joins8",
                 "issues": "https://github.com/utopia-php/database/issues"
             },
-            "time": "2026-03-18T09:09:51+00:00"
+            "time": "2026-03-19T07:32:29+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -5469,16 +5469,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.11.9",
+            "version": "1.11.10",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "2f0f6ec54736ba7efdff188a9451b56f1665f25a"
+                "reference": "96e6b79a241fc615627a820107ca64bbd1b550a6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/2f0f6ec54736ba7efdff188a9451b56f1665f25a",
-                "reference": "2f0f6ec54736ba7efdff188a9451b56f1665f25a",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/96e6b79a241fc615627a820107ca64bbd1b550a6",
+                "reference": "96e6b79a241fc615627a820107ca64bbd1b550a6",
                 "shasum": ""
             },
             "require": {
@@ -5514,9 +5514,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.11.9"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.11.10"
             },
-            "time": "2026-03-17T08:16:49+00:00"
+            "time": "2026-03-19T05:27:36+00:00"
         },
         {
             "name": "brianium/paratest",
@@ -8467,8 +8467,8 @@
         {
             "package": "utopia-php/database",
             "version": "dev-joins8",
-            "alias": "5.3.1",
-            "alias_normalized": "5.3.1.0"
+            "alias": "5.3.15",
+            "alias_normalized": "5.3.15.0"
         },
         {
             "package": "utopia-php/migration",

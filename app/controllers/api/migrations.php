@@ -22,7 +22,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\QueryContext;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\Queries\V2 as DocumentsValidator;
+use Utopia\Database\Validator\Queries\Queries as DocumentsValidator;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Http;

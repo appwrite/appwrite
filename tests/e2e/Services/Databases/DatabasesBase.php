@@ -6224,6 +6224,7 @@ trait DatabasesBase
                     ],
                     'libraryName' => 'Library 1',
                 ],
+                'fullName' => 'Jake',
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),

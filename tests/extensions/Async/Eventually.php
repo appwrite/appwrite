@@ -4,6 +4,7 @@ namespace Appwrite\Tests\Async;
 
 use Appwrite\Tests\Async\Exceptions\Critical;
 use PHPUnit\Framework\Constraint\Constraint;
+use Utopia\Console;
 
 final class Eventually extends Constraint
 {
@@ -26,8 +27,13 @@ final class Eventually extends Constraint
                 return true;
             } catch (Critical $exception) {
                 throw $exception;
-            } catch (\Exception $exception) {
+            } catch (\Throwable $exception) {
                 $lastException = $exception;
+            } finally {
+                if (ob_get_level() > 0) {
+                    ob_flush();
+                }
+                flush();
             }
 
             usleep($this->waitMs * 1000);

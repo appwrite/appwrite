@@ -5,7 +5,7 @@ namespace Appwrite\Utopia\Database\Validator\Queries;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
 use Utopia\Database\QueryContext;
-use Utopia\Database\Validator\Queries\V2 as DocumentsValidator;
+use Utopia\Database\Validator\Queries\Queries as DocumentsValidator;
 use Utopia\Validator;
 
 class Types extends Validator
