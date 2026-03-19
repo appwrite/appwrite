@@ -212,14 +212,14 @@ function registerWorkerMessageResources(Container $container): void
 
     $container->set('auditRetention', function (Document $project) {
         if ($project->getId() === 'console') {
-            return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE', 15778800)); // 6 months
+            return DateTime::addSeconds(new \DateTime(), -1 * (int) System::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE', 15778800)); // 6 months
         }
 
-        return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 1209600)); // 14 days
+        return DateTime::addSeconds(new \DateTime(), -1 * (int) System::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 1209600)); // 14 days
     }, ['project']);
 
     $container->set('executionRetention', function () {
-        return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600)); // 14 days
+        return DateTime::addSeconds(new \DateTime(), -1 * (int) System::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600)); // 14 days
     }, []);
 
     $container->set('queueForDatabase', function (Publisher $publisher) {

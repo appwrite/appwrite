@@ -187,12 +187,6 @@ parameters:
 			path: app/realtime.php
 
 		-
-			message: '#^Binary operation "\*" between \-1 and string results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 3
-			path: app/worker.php
-
-		-
 			message: '#^PHPDoc tag @return with type string is incompatible with native type int\.$#'
 			identifier: return.phpDocType
 			count: 1

@@ -79,18 +79,18 @@ if (\str_starts_with($workerName, 'databases')) {
     $queueName = System::getEnv('_APP_QUEUE_NAME', 'v1-' . strtolower($workerName));
 }
 
+/** @var Group $pools */
+$pools = $container->get('pools');
+
+$adapter = new Swoole(
+    $pools->get('consumer')->pop()->getResource(),
+    System::getEnv('_APP_WORKERS_NUM', 1),
+    $queueName
+);
+
+$worker = new Server($adapter, $container);
+
 try {
-    /** @var Group $pools */
-    $pools = $container->get('pools');
-
-    $adapter = new Swoole(
-        $pools->get('consumer')->pop()->getResource(),
-        System::getEnv('_APP_WORKERS_NUM', 1),
-        $queueName
-    );
-
-    $worker = new Server($adapter, $container);
-
     $worker->init()->action(function () use ($worker) {
         registerWorkerMessageResources($worker->getContainer());
     });
