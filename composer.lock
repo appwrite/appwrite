@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5d9f9aec627e16f564331c708e42648b",
+    "content-hash": "3416a116f2912385f16498aea77ce6a3",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3850,16 +3850,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-fix-shared-table-reconciliation",
+            "version": "5.3.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "3be72b7b6fa25743b53ec41a037b672bee22bad9"
+                "reference": "f121418c4dc7169576735620fd8c17093c3b851d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/3be72b7b6fa25743b53ec41a037b672bee22bad9",
-                "reference": "3be72b7b6fa25743b53ec41a037b672bee22bad9",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/f121418c4dc7169576735620fd8c17093c3b851d",
+                "reference": "f121418c4dc7169576735620fd8c17093c3b851d",
                 "shasum": ""
             },
             "require": {
@@ -3903,9 +3903,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/fix-shared-table-reconciliation"
+                "source": "https://github.com/utopia-php/database/tree/5.3.16"
             },
-            "time": "2026-03-19T06:49:33+00:00"
+            "time": "2026-03-19T10:10:02+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4518,16 +4518,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "dev-backward-commpat-database",
+            "version": "1.8.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "a5cebfaffae91749a3af921c2b8b2b47a9397e81"
+                "reference": "8633523b3343d492427331b6eec53f020f6ab7a7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/a5cebfaffae91749a3af921c2b8b2b47a9397e81",
-                "reference": "a5cebfaffae91749a3af921c2b8b2b47a9397e81",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/8633523b3343d492427331b6eec53f020f6ab7a7",
+                "reference": "8633523b3343d492427331b6eec53f020f6ab7a7",
                 "shasum": ""
             },
             "require": {
@@ -4567,9 +4567,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/backward-commpat-database"
+                "source": "https://github.com/utopia-php/migration/tree/1.8.3"
             },
-            "time": "2026-03-19T07:48:51+00:00"
+            "time": "2026-03-19T09:18:47+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8432,25 +8432,9 @@
             "time": "2024-11-07T12:36:22+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-fix-shared-table-reconciliation",
-            "alias": "5.3.16",
-            "alias_normalized": "5.3.16.0"
-        },
-        {
-            "package": "utopia-php/migration",
-            "version": "dev-backward-commpat-database",
-            "alias": "1.8.4",
-            "alias_normalized": "1.8.4.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "utopia-php/database": 20,
-        "utopia-php/migration": 20
-    },
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
