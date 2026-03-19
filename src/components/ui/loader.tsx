@@ -150,7 +150,7 @@ export function FullscreenLoader({
                 </div>
                 <span
                   className={cn(
-                    'flex h-7 w-fit shrink-0 items-center gap-1.5 rounded-md px-3 text-[12px] font-medium shadow-sm sm:ml-auto',
+                    'flex h-8 w-fit shrink-0 items-center gap-2 rounded-md px-3 text-[13px] font-medium sm:ml-auto',
                     presentation.buttonClassName,
                   )}
                 >

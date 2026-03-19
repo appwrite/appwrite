@@ -22,24 +22,24 @@ export function getStatusPresentation(state: CloudStatusState) {
         containerClassName:
           'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400',
         buttonClassName:
-          'bg-red-500 text-red-950 hover:bg-red-400 dark:bg-red-500 dark:text-red-950 dark:hover:bg-red-400',
-        title: 'We’re currently experiencing an outage. Services may be unavailable.',
+          'border border-red-500 bg-transparent text-red-600 hover:bg-red-500/10 hover:text-red-700 dark:border-red-400 dark:text-red-400 dark:hover:bg-red-500/20 dark:hover:text-red-300',
+        title: 'We’re currently experiencing an outage.',
       }
     case 'maintenance':
       return {
         containerClassName:
           'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400',
         buttonClassName:
-          'bg-blue-500 text-blue-950 hover:bg-blue-400 dark:bg-blue-500 dark:text-blue-950 dark:hover:bg-blue-400',
-        title: 'Scheduled maintenance is in progress. Some features may be temporarily limited.',
+          'border border-blue-500 bg-transparent text-blue-600 hover:bg-blue-500/10 hover:text-blue-700 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-500/20 dark:hover:text-blue-300',
+        title: 'Scheduled maintenance is in progress.',
       }
     default:
       return {
         containerClassName:
           'bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400',
         buttonClassName:
-          'bg-amber-500 text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400',
-        title: 'We’re experiencing issues with some services. Performance may be affected.',
+          'border border-amber-500 bg-transparent text-amber-600 hover:bg-amber-500/10 hover:text-amber-700 dark:border-amber-400 dark:text-amber-400 dark:hover:bg-amber-500/20 dark:hover:text-amber-300',
+        title: 'We’re experiencing issues with some services.',
       }
   }
 }
