@@ -4686,6 +4686,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $data['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
+            'variableId' => 'unique()',
             'key' => 'APP_TEST_CREATE',
             'value' => 'TESTINGVALUE',
             'secret' => false
@@ -4702,6 +4703,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $data['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
+            'variableId' => 'unique()',
             'key' => 'APP_TEST_CREATE_1',
             'value' => 'TESTINGVALUE_1',
             'secret' => true
@@ -4720,6 +4722,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $data['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
+            'variableId' => 'unique()',
             'key' => 'APP_TEST_CREATE',
             'value' => 'ANOTHERTESTINGVALUE'
         ]);
@@ -4732,6 +4735,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $data['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
+            'variableId' => 'unique()',
             'key' => str_repeat("A", 256),
             'value' => 'TESTINGVALUE'
         ]);
@@ -4744,6 +4748,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $data['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
+            'variableId' => 'unique()',
             'key' => 'LONGKEY',
             'value' => str_repeat("#", 8193),
         ]);
@@ -4958,6 +4963,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $projectData['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
+            'variableId' => 'unique()',
             'key' => 'APP_TEST_DELETE',
             'value' => 'TESTINGVALUE',
             'secret' => false
@@ -4972,6 +4978,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $projectData['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
+            'variableId' => 'unique()',
             'key' => 'APP_TEST_DELETE_1',
             'value' => 'TESTINGVALUE_1',
             'secret' => true
