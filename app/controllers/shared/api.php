@@ -258,7 +258,7 @@ Http::init()
                     API_KEY_STANDARD => ACTIVITY_TYPE_KEY_PROJECT,
                     API_KEY_ACCOUNT => ACTIVITY_TYPE_KEY_ACCOUNT,
                     API_KEY_ORGANIZATION => ACTIVITY_TYPE_KEY_ORGANIZATION,
-                    default => ACTIVITY_TYPE_USER,
+                    default => ACTIVITY_TYPE_KEY_PROJECT,
                 });
                 $queueForAudits->setUser($userClone);
             }
