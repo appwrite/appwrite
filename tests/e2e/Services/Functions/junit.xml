@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuites>
-  <testsuite name="Tests\E2E\Services\Functions\FunctionsCustomServerTest" file="/usr/src/code/tests/e2e/Services/Functions/FunctionsCustomServerTest.php" tests="1" assertions="66" errors="0" failures="0" skipped="0" time="9.181782">
-    <testcase name="testScopes" class="Tests\E2E\Services\Functions\FunctionsCustomServerTest" classname="Tests.E2E.Services.Functions.FunctionsCustomServerTest" file="/usr/src/code/tests/e2e/Services/Functions/FunctionsCustomServerTest.php" line="2016" assertions="66" time="9.181782"/>
-  </testsuite>
-</testsuites>
