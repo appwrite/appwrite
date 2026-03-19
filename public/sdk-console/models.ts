@@ -778,4 +778,82 @@ export namespace Models {
          */
         countryName: string;
     }
+    /**
+     * Users List
+     */
+    export type UserList<Preferences extends Models.Preferences> = {
+        /**
+         * Total number of users documents that matched your query.
+         */
+        total: number;
+        /**
+         * List of users.
+         */
+        users: User<Preferences>[];
+    }
+    /**
+     * User
+     */
+    export type User<Preferences extends Models.Preferences> = {
+        /**
+         * User ID.
+         */
+        $id: string;
+        /**
+         * User creation date in ISO 8601 format.
+         */
+        $createdAt: string;
+        /**
+         * User update date in ISO 8601 format.
+         */
+        $updatedAt: string;
+        /**
+         * User name.
+         */
+        name: string;
+        /**
+         * User registration date in ISO 8601 format.
+         */
+        registration: string;
+        /**
+         * User status. Pass `true` for enabled and `false` for disabled.
+         */
+        status: boolean;
+        /**
+         * Labels for the user.
+         */
+        labels: string[];
+        /**
+         * Password update time in ISO 8601 format.
+         */
+        passwordUpdate: string;
+        /**
+         * User email address.
+         */
+        email: string;
+        /**
+         * User phone number in E.164 format.
+         */
+        phone: string;
+        /**
+         * Email verification status.
+         */
+        emailVerification: boolean;
+        /**
+         * Phone verification status.
+         */
+        phoneVerification: boolean;
+        /**
+         * Multi factor authentication status.
+         */
+        mfa: boolean;
+        /**
+         * User preferences as a key-value object
+         */
+        prefs: Preferences;
+        /**
+         * Most recent access date in ISO 8601 format.
+         */
+        accessedAt: string;
+    }
 }
