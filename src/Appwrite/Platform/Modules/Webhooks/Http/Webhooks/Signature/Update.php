@@ -30,6 +30,7 @@ class Update extends Base
     {
         $this->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/webhooks/:webhookId/signature')
+            ->httpAlias('/v1/projects/:projectId/webhooks/:webhookId/signature')
             ->desc('Update webhook signature key')
             ->groups(['api', 'webhooks'])
             ->label('scope', 'webhooks.write')

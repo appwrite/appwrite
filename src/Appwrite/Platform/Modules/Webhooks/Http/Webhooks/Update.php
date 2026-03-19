@@ -37,6 +37,7 @@ class Update extends Base
     {
         $this->setHttpMethod(Action::HTTP_REQUEST_METHOD_PUT)
             ->setHttpPath('/v1/webhooks/:webhookId')
+            ->httpAlias('/v1/projects/:projectId/webhooks/:webhookId')
             ->desc('Update webhook')
             ->groups(['api', 'webhooks'])
             ->label('scope', 'webhooks.write')
