@@ -207,6 +207,46 @@ class State
         return sys_get_temp_dir() . '/appwrite-install-' . $installId . '.json';
     }
 
+    public function clearStaleLock(): void
+    {
+        $this->withGlobalLock(function ($handle, $lock) {
+            if (!$handle) {
+                return;
+            }
+            if ($lock === null) {
+                return;
+            }
+            if ($this->isGlobalLockActive($lock)) {
+                return;
+            }
+            ftruncate($handle, 0);
+            rewind($handle);
+        });
+
+        $tempDir = sys_get_temp_dir();
+        foreach ((array) glob($tempDir . '/appwrite-install-*.json') as $file) {
+            $contents = @file_get_contents($file);
+            if ($contents === false) {
+                continue;
+            }
+            $data = json_decode($contents, true);
+            if (!is_array($data)) {
+                @unlink($file);
+                continue;
+            }
+            $status = $data['steps'][Server::STATUS_ERROR]['status']
+                ?? $data['steps'][Server::STATUS_COMPLETED]['status']
+                ?? null;
+            $updatedAt = $data['updatedAt'] ?? 0;
+            $age = time() - (int) $updatedAt;
+            if ($age > self::GLOBAL_LOCK_TIMEOUT_SECONDS) {
+                @unlink($file);
+            } elseif (in_array($status, [Server::STATUS_COMPLETED, Server::STATUS_ERROR], true) && $age > 60) {
+                @unlink($file);
+            }
+        }
+    }
+
     public function reserveGlobalLock(string $installId): string
     {
         return (string) $this->withGlobalLock(function ($handle, $lock) use ($installId) {

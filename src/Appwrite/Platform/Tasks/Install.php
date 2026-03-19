@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Env;
+use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server as InstallerServer;
 use Appwrite\Utopia\View;
 use Utopia\Auth\Proofs\Password;
@@ -301,6 +302,9 @@ class Install extends Action
         $port = InstallerServer::INSTALLER_WEB_PORT;
 
         @unlink(InstallerServer::INSTALLER_COMPLETE_FILE);
+
+        $state = new State([]);
+        $state->clearStaleLock();
 
         $installerConfig = $this->readInstallerConfig();
         $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['mongodb', 'mariadb'];
