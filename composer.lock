@@ -4834,12 +4834,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "0467c190f0f73f9a3170f2ee21b393a04edaa588"
+                "reference": "21b6e385d022631cc45f252186b0610254393e69"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/0467c190f0f73f9a3170f2ee21b393a04edaa588",
-                "reference": "0467c190f0f73f9a3170f2ee21b393a04edaa588",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/21b6e385d022631cc45f252186b0610254393e69",
+                "reference": "21b6e385d022631cc45f252186b0610254393e69",
                 "shasum": ""
             },
             "require": {
@@ -4854,9 +4854,9 @@
             },
             "require-dev": {
                 "ext-redis": "*",
-                "laravel/pint": "^0.2.3",
+                "laravel/pint": "^1.0",
                 "phpstan/phpstan": "^1.8",
-                "phpunit/phpunit": "^9.5.5",
+                "phpunit/phpunit": "^11.0",
                 "swoole/ide-helper": "4.8.8",
                 "workerman/workerman": "^4.0"
             },
@@ -4893,7 +4893,7 @@
                 "issues": "https://github.com/utopia-php/queue/issues",
                 "source": "https://github.com/utopia-php/queue/tree/feat/di-container-refactor"
             },
-            "time": "2026-03-17T15:20:45+00:00"
+            "time": "2026-03-19T04:36:39+00:00"
         },
         {
             "name": "utopia-php/registry",
