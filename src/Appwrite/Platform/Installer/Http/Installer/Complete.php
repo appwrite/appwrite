@@ -48,6 +48,16 @@ class Complete extends Action
 
         @touch(Server::INSTALLER_COMPLETE_FILE);
 
+        if (!$sessionSecret && $installId !== '') {
+            $data = $state->readProgressFile($installId);
+            $details = $data['details'][Server::STEP_ACCOUNT_SETUP] ?? [];
+            if (!empty($details['sessionSecret'])) {
+                $sessionSecret = $details['sessionSecret'];
+                $sessionId = $sessionId ?: ($details['sessionId'] ?? '');
+                $sessionExpire = $sessionExpire ?: ($details['sessionExpire'] ?? '');
+            }
+        }
+
         if ($sessionSecret) {
             $isHttps = $request->getProtocol() === 'https';
             $sameSite = $isHttps ? Response::COOKIE_SAMESITE_NONE : Response::COOKIE_SAMESITE_LAX;
