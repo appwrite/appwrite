@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9d6f4cd0560bc899692de1a1ed248e2c",
+    "content-hash": "1404c8821e43b3fe92e06a8ed658ed26",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3850,16 +3850,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-fix-shared-table-reconciliation",
+            "version": "5.3.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "3be72b7b6fa25743b53ec41a037b672bee22bad9"
+                "reference": "f121418c4dc7169576735620fd8c17093c3b851d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/3be72b7b6fa25743b53ec41a037b672bee22bad9",
-                "reference": "3be72b7b6fa25743b53ec41a037b672bee22bad9",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/f121418c4dc7169576735620fd8c17093c3b851d",
+                "reference": "f121418c4dc7169576735620fd8c17093c3b851d",
                 "shasum": ""
             },
             "require": {
@@ -3933,10 +3933,10 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/database/tree/fix-shared-table-reconciliation",
+                "source": "https://github.com/utopia-php/database/tree/5.3.16",
                 "issues": "https://github.com/utopia-php/database/issues"
             },
-            "time": "2026-03-19T06:49:33+00:00"
+            "time": "2026-03-19T10:10:02+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -8463,18 +8463,9 @@
             "time": "2024-11-07T12:36:22+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-fix-shared-table-reconciliation",
-            "alias": "5.3.15",
-            "alias_normalized": "5.3.15.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "utopia-php/database": 20
-    },
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
