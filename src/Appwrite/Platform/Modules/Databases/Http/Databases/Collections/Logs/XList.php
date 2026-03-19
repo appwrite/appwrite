@@ -123,6 +123,7 @@ class XList extends Action
                 'userEmail' => $log['data']['userEmail'] ?? null,
                 'userName' => $log['data']['userName'] ?? null,
                 'mode' => $log['data']['mode'] ?? null,
+                'userType' => $log['data']['userType'] ?? null,
                 'ip' => $log['ip']  ?? null,
                 'time' => $log['time'] ?? null,
                 'osCode' => $os['osCode'] ?? null,

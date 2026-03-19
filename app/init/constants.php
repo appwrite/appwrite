@@ -155,9 +155,12 @@ const SESSION_PROVIDER_SERVER = 'server';
 /**
  * Activity associated with user or the app.
  */
-const ACTIVITY_TYPE_APP = 'app';
 const ACTIVITY_TYPE_USER = 'user';
+const ACTIVITY_TYPE_ADMIN = 'admin';
 const ACTIVITY_TYPE_GUEST = 'guest';
+const ACTIVITY_TYPE_KEY_PROJECT = 'keyProject';
+const ACTIVITY_TYPE_KEY_ACCOUNT = 'keyAccount';
+const ACTIVITY_TYPE_KEY_ORGANIZATION = 'keyOrganization';
 
 /**
  * MFA
