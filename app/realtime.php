@@ -628,12 +628,14 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     $container->set('pools', fn () => $pools);
 
     $connectionContainer = new Container($container);
-    registerRequestResources($connectionContainer);
 
     $adapter = new HttpServer($connectionContainer);
     $app = new Http($adapter, 'UTC');
-    $app->setResource('request', fn () => $request);
-    $app->setResource('response', fn () => $response);
+    $connectionContainer->set('utopia', fn () => $app);
+    $connectionContainer->set('request', fn () => $request);
+    $connectionContainer->set('response', fn () => $response);
+
+    registerRequestResources($connectionContainer);
 
     $project = null;
     $logUser = null;
