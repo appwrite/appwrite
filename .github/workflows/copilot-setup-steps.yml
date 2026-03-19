@@ -64,4 +64,7 @@ jobs:
             VERSION=dev
 
       - name: Pull docker-compose dependency images
-        run: docker compose pull --ignore-buildable
+        run: |
+          docker compose config --format json \
+            | python3 -c "import json,sys; [print(k) for k,v in json.load(sys.stdin)['services'].items() if v.get('image','') != 'appwrite-dev']" \
+            | xargs docker compose pull
