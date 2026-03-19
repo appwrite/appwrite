@@ -2,8 +2,6 @@
 
 namespace Appwrite\Platform\Installer;
 
-require_once __DIR__ . '/../../../../vendor/autoload.php';
-
 use Appwrite\Platform\Installer\Http\Installer\Error;
 use Appwrite\Platform\Installer\Runtime\State;
 use Swoole\Http\Server as SwooleServer;
@@ -129,6 +127,8 @@ class Server
 
     private function startSwooleServer(string $host, int $port, ?string $readyFile = null): void
     {
+        $this->state->clearStaleLock();
+
         // Preload static files into memory
         $files = new Files();
         $files->load($this->paths['views']);
@@ -311,6 +311,7 @@ function shouldRunInstallerServer(): bool
 }
 
 if (shouldRunInstallerServer()) {
+    require_once __DIR__ . '/../../../../vendor/autoload.php';
     $server = new Server();
     $server->run();
 }

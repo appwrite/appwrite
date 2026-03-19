@@ -1711,6 +1711,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
+            'X-Appwrite-Response-Format' => '1.8.0'
         ], [
             'name' => 'Webhook Test',
             'enabled' => true,
@@ -1740,6 +1741,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
+            'X-Appwrite-Response-Format' => '1.8.0'
         ], [
             'name' => 'Webhook Test',
             'enabled' => true,
@@ -1779,6 +1781,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
+            'X-Appwrite-Response-Format' => '1.8.0'
         ], [
             'name' => 'Webhook Test',
             'enabled' => true,
@@ -1824,6 +1827,7 @@ trait WebhooksBase
                 'content-type' => 'application/json',
                 'cookie' => 'a_session_console=' . $this->getRoot()['session'],
                 'x-appwrite-project' => 'console',
+                'X-Appwrite-Response-Format' => '1.8.0'
             ]));
 
             // assert that the webhook is now disabled after 10 consecutive failures

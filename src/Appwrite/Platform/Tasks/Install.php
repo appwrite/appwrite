@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Env;
+use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server as InstallerServer;
 use Appwrite\Utopia\View;
 use Utopia\Auth\Proofs\Password;
@@ -23,7 +24,7 @@ class Install extends Action
     private const int WEB_SERVER_CHECK_DELAY_SECONDS = 1;
 
     private const int HEALTH_CHECK_ATTEMPTS = 30;
-    private const int HEALTH_CHECK_DELAY_SECONDS = 3;
+    private const int HEALTH_CHECK_DELAY_SECONDS = 1;
 
     private const string PATTERN_ENV_VAR_NAME = '/^[A-Z0-9_]+$/';
     private const string PATTERN_DB_PASSWORD_VAR = '/^_APP_DB_.*_PASS$/';
@@ -176,6 +177,13 @@ class Install extends Action
             }
         }
 
+        $installerConfig = $this->readInstallerConfig();
+        $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['mongodb', 'mariadb'];
+        if (!in_array($database, $enabledDatabases, true)) {
+            Console::error("Database '{$database}' is not available. Available options: " . implode(', ', $enabledDatabases));
+            Console::exit(1);
+        }
+
         // If interactive and web mode enabled, start web server
         if ($interactive === 'Y' && Console::isInteractive()) {
             Console::success('Starting web installer...');
@@ -295,6 +303,12 @@ class Install extends Action
 
         @unlink(InstallerServer::INSTALLER_COMPLETE_FILE);
 
+        $state = new State([]);
+        $state->clearStaleLock();
+
+        $installerConfig = $this->readInstallerConfig();
+        $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['mongodb', 'mariadb'];
+
         $this->setInstallerConfig([
             'defaultHttpPort' => $defaultHttpPort,
             'defaultHttpsPort' => $defaultHttpsPort,
@@ -304,6 +318,7 @@ class Install extends Action
             'vars' => $vars,
             'isUpgrade' => $isUpgrade,
             'lockedDatabase' => $lockedDatabase,
+            'enabledDatabases' => $enabledDatabases,
             'isLocal' => $this->isLocalInstall(),
             'hostPath' => $this->hostPath ?: null,
         ]);
@@ -734,8 +749,8 @@ class Install extends Action
     {
         $client = new Client();
         $client
-            ->setTimeout(5000)
-            ->setConnectTimeout(5000)
+            ->setTimeout(2000)
+            ->setConnectTimeout(2000)
             ->addHeader('Host', $domain);
 
         $healthPath = '/v1/health/version';
