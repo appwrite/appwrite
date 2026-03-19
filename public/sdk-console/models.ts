@@ -820,6 +820,18 @@ export namespace Models {
          */
         status: boolean;
         /**
+         * Hashed user password.
+         */
+        password?: string;
+        /**
+         * Password hashing algorithm.
+         */
+        hash?: string;
+        /**
+         * Password hashing algorithm configuration.
+         */
+        hashOptions?: object;
+        /**
          * Labels for the user.
          */
         labels: string[];
@@ -852,8 +864,49 @@ export namespace Models {
          */
         prefs: Preferences;
         /**
+         * A user-owned message receiver. A single user may have multiple e.g. emails, phones, and a browser. Each target is registered with a single provider.
+         */
+        targets: Target[];
+        /**
          * Most recent access date in ISO 8601 format.
          */
         accessedAt: string;
+    }
+    /**
+     * Target
+     */
+    export type Target = {
+        /**
+         * Target ID.
+         */
+        $id: string;
+        /**
+         * Target creation time in ISO 8601 format.
+         */
+        $createdAt: string;
+        /**
+         * Target update date in ISO 8601 format.
+         */
+        $updatedAt: string;
+        /**
+         * Target Name.
+         */
+        name: string;
+        /**
+         * User ID.
+         */
+        userId: string;
+        /**
+         * Provider ID.
+         */
+        providerId?: string;
+        /**
+         * The target provider type. Can be one of the following: `email`, `sms` or `push`.
+         */
+        providerType: string;
+        /**
+         * The target identifier.
+         */
+        identifier: string;
     }
 }

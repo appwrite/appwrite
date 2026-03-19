@@ -110,9 +110,7 @@ export class Users extends Service {
             let path = '/users/{userId}/status'.replace('{userId}', userId);
             let payload: Payload = {};
 
-            if (typeof status !== 'undefined') {
-                payload['status'] = status;
-            }
+            payload['status'] = status;
 
             const uri = new URL(this.client.config.endpoint + path);
             return await this.client.call('patch', uri, {
