@@ -85,7 +85,7 @@ class Create extends Action
                         new Parameter('documentId', optional: false),
                         new Parameter('data', optional: false),
                         new Parameter('permissions', optional: true),
-                        new Parameter('transactionId', optional: true)
+                        new Parameter('transactionId', optional: true),
                     ],
                     deprecated: new Deprecated(
                         since: '1.8.0',
@@ -110,7 +110,7 @@ class Create extends Action
                         new Parameter('databaseId', optional: false),
                         new Parameter('collectionId', optional: false),
                         new Parameter('documents', optional: false),
-                        new Parameter('transactionId', optional: true)
+                        new Parameter('transactionId', optional: true),
                     ],
                     deprecated: new Deprecated(
                         since: '1.8.0',
@@ -127,7 +127,6 @@ class Create extends Action
             ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('getDatabasesDB')
             ->inject('user')
             ->inject('queueForEvents')
             ->inject('usage')
@@ -139,7 +138,7 @@ class Create extends Action
             ->inject('eventProcessor')
             ->callback($this->action(...));
     }
-    public function action(string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, ?array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Document $user, Event $queueForEvents, Context $usage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan, Authorization $authorization, EventProcessor $eventProcessor): void
+    public function action(string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, ?array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, Document $user, Event $queueForEvents, Context $usage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan, Authorization $authorization, EventProcessor $eventProcessor): void
     {
         $data = \is_string($data)
             ? \json_decode($data, true)
@@ -448,12 +447,11 @@ class Create extends Action
             return;
         }
 
-        $dbForDatabases = $getDatabasesDB($database);
         try {
             $created = [];
-            $dbForDatabases->withPreserveDates(
-                function () use (&$created, $dbForDatabases, $database, $collection, $documents) {
-                    $dbForDatabases->createDocuments(
+            $dbForProject->withPreserveDates(
+                function () use (&$created, $dbForProject, $database, $collection, $documents) {
+                    $dbForProject->createDocuments(
                         'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                         $documents,
                         onNext: function ($doc) use (&$created) {
@@ -492,15 +490,15 @@ class Create extends Action
         }
 
         $usage
-            ->addMetric($this->getDatabasesOperationWriteMetric(), \max(1, $operations))
-            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationWriteMetric()), \max(1, $operations)); // per collection
+            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, \max(1, $operations))
+            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), \max(1, $operations)); // per collection
 
         $response->setStatusCode(SwooleResponse::STATUS_CODE_CREATED);
 
         if ($isBulk) {
             $response->dynamic(new Document([
                 'total' => count($created),
-                $this->getSDKGroup() => $created
+                $this->getSdkGroup() => $created
             ]), $this->getBulkResponseModel());
 
             $this->triggerBulk(

@@ -83,7 +83,6 @@ class Update extends Action
             ->inject('requestTimestamp')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('getDatabasesDB')
             ->inject('queueForEvents')
             ->inject('usage')
             ->inject('transactionState')
@@ -92,7 +91,7 @@ class Update extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?string $transactionId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Context $usage, TransactionState $transactionState, array $plan, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?string $transactionId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, Context $usage, TransactionState $transactionState, array $plan, Authorization $authorization): void
     {
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -119,16 +118,15 @@ class Update extends Action
             $data = $this->parseOperators($data, $collection);
         }
 
-        $dbForDatabases = $getDatabasesDB($database);
         // Read permission should not be required for update
         /** @var Document $document */
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
         if ($transactionId !== null) {
             // Use transaction-aware document retrieval to see changes from same transaction
-            $document = $transactionState->getDocument($database, $collectionTableId, $documentId, $transactionId);
+            $document = $transactionState->getDocument($collectionTableId, $documentId, $transactionId);
         } else {
-            $document = $authorization->skip(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId));
+            $document = $authorization->skip(fn () => $dbForProject->getDocument($collectionTableId, $documentId));
         }
 
         if ($document->isEmpty()) {
@@ -249,8 +247,8 @@ class Update extends Action
         $setCollection($collection, $newDocument);
 
         $usage
-            ->addMetric($this->getDatabasesOperationWriteMetric(), max($operations, 1))
-            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationWriteMetric()), $operations);
+            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, max($operations, 1))
+            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_WRITES), $operations);
 
         // Handle transaction staging
         if ($transactionId !== null) {
@@ -321,9 +319,9 @@ class Update extends Action
 
 
         try {
-            $document = $dbForDatabases->withRequestTimestamp(
+            $document = $dbForProject->withRequestTimestamp(
                 $requestTimestamp,
-                fn () => $dbForDatabases->withPreserveDates(fn () => $dbForDatabases->updateDocument(
+                fn () => $dbForProject->withPreserveDates(fn () => $dbForProject->updateDocument(
                     'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                     $document->getId(),
                     $newDocument

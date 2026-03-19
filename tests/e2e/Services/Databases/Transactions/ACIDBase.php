@@ -47,20 +47,18 @@ trait ACIDBase
 
         $collectionId = $collection['body']['$id'];
 
-        if ($this->getSupportForAttributes()) {
-            // Add unique attribute
-            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, 'string'), array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
-            ]), [
-                'key' => 'email',
-                'size' => 256,
-                'required' => true,
-            ]);
+        // Add unique attribute
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, 'string'), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'email',
+            'size' => 256,
+            'required' => true,
+        ]);
 
-            $this->waitForAllAttributes($databaseId, $collectionId);
-        }
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Add unique index
         $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), array_merge([
@@ -176,11 +174,6 @@ trait ACIDBase
      */
     public function testConsistency(): void
     {
-        if (!$this->getSupportForAttributes()) {
-            $this->markTestSkipped('This adapter does not support attributes; schema constraint consistency cannot be tested.');
-            return;
-        }
-
         // Create database
         $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), array_merge([
             'content-type' => 'application/json',
@@ -343,21 +336,19 @@ trait ACIDBase
 
         $collectionId = $collection['body']['$id'];
 
-        if ($this->getSupportForAttributes()) {
-            // Add counter attribute
-            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, 'integer'), array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
-            ]), [
-                'key' => 'counter',
-                'required' => true,
-                'min' => 0,
-                'max' => 1000000
-            ]);
+        // Add counter attribute
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, 'integer'), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'counter',
+            'required' => true,
+            'min' => 0,
+            'max' => 1000000
+        ]);
 
-            $this->waitForAllAttributes($databaseId, $collectionId);
-        }
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create initial document with counter
         $doc = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
@@ -503,20 +494,18 @@ trait ACIDBase
 
         $collectionId = $collection['body']['$id'];
 
-        if ($this->getSupportForAttributes()) {
-            // Add attribute
-            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, 'string'), array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
-            ]), [
-                'key' => 'data',
-                'size' => 256,
-                'required' => true,
-            ]);
+        // Add attribute
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, 'string'), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'data',
+            'size' => 256,
+            'required' => true,
+        ]);
 
-            $this->waitForAllAttributes($databaseId, $collectionId);
-        }
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create and commit transaction with multiple operations
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
