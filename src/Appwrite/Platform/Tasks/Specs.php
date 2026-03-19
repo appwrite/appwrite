@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Network\Validator\Redirect;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Specification\Format\OpenAPI3;
@@ -18,6 +19,7 @@ use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\DI\Container;
 use Utopia\Http\Adapter\FPM\Server as FPMServer;
 use Utopia\Http\Http;
@@ -284,13 +286,17 @@ class Specs extends Action
 
         $mocks = ($mode === 'mocks');
 
-        // Mock dependencies
+        // Mock dependencies needed by param validator injections in route definitions
         $specsContainer = new Container();
-        registerRequestResources($specsContainer);
         $specsContainer->set('request', fn () => $this->getRequest());
         $specsContainer->set('response', fn () => $response);
         $specsContainer->set('dbForPlatform', fn () => new Database(new MySQL(''), new Cache(new None())));
         $specsContainer->set('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
+        $specsContainer->set('redirectValidator', fn () => new Redirect([], []));
+        $specsContainer->set('project', fn () => new Document([]));
+        $specsContainer->set('passwordsDictionary', fn () => []);
+        $specsContainer->set('localeCodes', fn () => \array_map(fn ($locale) => $locale['code'], Config::getParam('locale-codes', [])));
+        $specsContainer->set('plan', fn () => []);
 
         $platforms = static::getPlatforms();
         $authCounts = $this->getAuthCounts();
