@@ -37,7 +37,7 @@ jobs:
           coverage: none
 
       - name: Install PHP dependencies
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+        run: composer install --ignore-platform-reqs --optimize-autoloader --no-interaction --no-plugins --no-scripts --prefer-dist
 
       # -----------------------------------------------------------------------
       # Docker — build the appwrite-dev image and pull all other dependency
