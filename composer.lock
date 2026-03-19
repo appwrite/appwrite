@@ -3854,12 +3854,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "10cf13d0dcfcd2aee13880945e5bc04fbbdbfcf1"
+                "reference": "3be72b7b6fa25743b53ec41a037b672bee22bad9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/10cf13d0dcfcd2aee13880945e5bc04fbbdbfcf1",
-                "reference": "10cf13d0dcfcd2aee13880945e5bc04fbbdbfcf1",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/3be72b7b6fa25743b53ec41a037b672bee22bad9",
+                "reference": "3be72b7b6fa25743b53ec41a037b672bee22bad9",
                 "shasum": ""
             },
             "require": {
@@ -3936,7 +3936,7 @@
                 "source": "https://github.com/utopia-php/database/tree/fix-shared-table-reconciliation",
                 "issues": "https://github.com/utopia-php/database/issues"
             },
-            "time": "2026-03-19T04:40:36+00:00"
+            "time": "2026-03-19T06:49:33+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4306,12 +4306,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "01c863fbc3f911e6a8e6e0aaa703213257153767"
+                "reference": "578cdec596c8aa8fda16752ba024fef36c6ca127"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/01c863fbc3f911e6a8e6e0aaa703213257153767",
-                "reference": "01c863fbc3f911e6a8e6e0aaa703213257153767",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/578cdec596c8aa8fda16752ba024fef36c6ca127",
+                "reference": "578cdec596c8aa8fda16752ba024fef36c6ca127",
                 "shasum": ""
             },
             "require": {
@@ -4351,7 +4351,7 @@
                 "issues": "https://github.com/utopia-php/http/issues",
                 "source": "https://github.com/utopia-php/http/tree/feat/swoole-adapters-and-compression"
             },
-            "time": "2026-03-19T04:49:45+00:00"
+            "time": "2026-03-19T08:35:00+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -5478,16 +5478,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.11.9",
+            "version": "1.11.10",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "2f0f6ec54736ba7efdff188a9451b56f1665f25a"
+                "reference": "96e6b79a241fc615627a820107ca64bbd1b550a6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/2f0f6ec54736ba7efdff188a9451b56f1665f25a",
-                "reference": "2f0f6ec54736ba7efdff188a9451b56f1665f25a",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/96e6b79a241fc615627a820107ca64bbd1b550a6",
+                "reference": "96e6b79a241fc615627a820107ca64bbd1b550a6",
                 "shasum": ""
             },
             "require": {
@@ -5523,9 +5523,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.11.9"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.11.10"
             },
-            "time": "2026-03-17T08:16:49+00:00"
+            "time": "2026-03-19T05:27:36+00:00"
         },
         {
             "name": "brianium/paratest",
