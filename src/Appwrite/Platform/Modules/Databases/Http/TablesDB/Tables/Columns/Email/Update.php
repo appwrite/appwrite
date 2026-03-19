@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Email;
 
-use Appwrite\Network\Validator\Email;
+use Utopia\Emails\Validator\Email;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Email\Update as EmailUpdate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;

@@ -7,7 +7,7 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Extend\Exception;
-use Appwrite\Network\Validator\Email as EmailValidator;
+use Utopia\Emails\Validator\Email as EmailValidator;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
