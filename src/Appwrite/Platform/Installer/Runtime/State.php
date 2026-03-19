@@ -234,14 +234,21 @@ class State
                 @unlink($file);
                 continue;
             }
-            $status = $data['steps'][Server::STATUS_ERROR]['status']
-                ?? $data['steps'][Server::STATUS_COMPLETED]['status']
-                ?? null;
             $updatedAt = $data['updatedAt'] ?? 0;
             $age = time() - (int) $updatedAt;
+            $isTerminal = isset($data['error']);
+            if (!$isTerminal && !empty($data['steps'])) {
+                $isTerminal = true;
+                foreach ($data['steps'] as $step) {
+                    if (($step['status'] ?? '') !== Server::STATUS_COMPLETED) {
+                        $isTerminal = false;
+                        break;
+                    }
+                }
+            }
             if ($age > self::GLOBAL_LOCK_TIMEOUT_SECONDS) {
                 @unlink($file);
-            } elseif (in_array($status, [Server::STATUS_COMPLETED, Server::STATUS_ERROR], true) && $age > 60) {
+            } elseif ($isTerminal && $age > 60) {
                 @unlink($file);
             }
         }
