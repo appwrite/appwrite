@@ -252,6 +252,8 @@ $stats->column('teamId', Table::TYPE_STRING, 64);
 $stats->column('connections', Table::TYPE_INT);
 $stats->column('connectionsTotal', Table::TYPE_INT);
 $stats->column('messages', Table::TYPE_INT);
+$stats->column('inbound', Table::TYPE_INT);
+$stats->column('outbound', Table::TYPE_INT);
 $stats->create();
 
 $containerId = uniqid();
@@ -396,7 +398,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     $attempts = 0;
     $start = time();
 
-    Timer::tick(5000, function () use ($server, $register, $realtime, $stats) {
+    Timer::tick(5000, function () use ($server, $register, $realtime, $stats, $workerId) {
         /**
          * Sending current connections to project channels on the console project every 5 seconds.
          */
@@ -483,6 +485,56 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     'type' => 'event',
                     'data' => $data
                 ]));
+            }
+        }
+
+        /** Push only deltas to usage queue (messages, inbound, outbound). Reset after so next tick sends only new activity. */
+        $consoleDatabase = getConsoleDB();
+
+        foreach ($stats as $projectId => $row) {
+            $messages = (int) ($row['messages'] ?? 0);
+            $inbound = (int) ($row['inbound'] ?? 0);
+            $outbound = (int) ($row['outbound'] ?? 0);
+
+            if ($messages === 0 && $inbound === 0 && $outbound === 0) {
+                continue;
+            }
+
+            $project = $consoleDatabase
+                ->getAuthorization()
+                ->skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
+
+            if ($project->isEmpty()) {
+                continue;
+            }
+
+            $queueForStatsUsage = getQueueForStatsUsageForProject($project);
+
+            if ($messages > 0) {
+                $queueForStatsUsage->addMetric(METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT, $messages);
+            }
+            if ($inbound > 0) {
+                $queueForStatsUsage->addMetric(METRIC_REALTIME_INBOUND, $inbound);
+            }
+            if ($outbound > 0) {
+                $queueForStatsUsage->addMetric(METRIC_REALTIME_OUTBOUND, $outbound);
+            }
+
+            if (Http::isDevelopment()) {
+                Console::info("[Debug][Worker {$workerId}] Project: {$projectId}, Inbound: {$inbound}, Outbound: {$outbound}, Messages: {$messages}");
+            }
+
+            $queueForStatsUsage->trigger();
+
+            // Reset so next tick only sends new deltas (avoids double-counting)
+            if ($messages > 0) {
+                $stats->decr($projectId, 'messages', $messages);
+            }
+            if ($inbound > 0) {
+                $stats->decr($projectId, 'inbound', $inbound);
+            }
+            if ($outbound > 0) {
+                $stats->decr($projectId, 'outbound', $outbound);
             }
         }
     });
@@ -798,7 +850,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     }
 });
 
-$server->onMessage(function (int $connection, string $message) use ($server, $register, $realtime, $containerId) {
+$server->onMessage(function (int $connection, string $message) use ($server, $register, $realtime, $containerId, $stats) {
     $project = null;
     $authorization = null;
 
