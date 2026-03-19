@@ -161,6 +161,8 @@ trait ProjectCustom
                     'migrations.read',
                     'tokens.read',
                     'tokens.write',
+                    'webhooks.read',
+                    'webhooks.write',
                 ],
             ]);
 
@@ -191,12 +193,14 @@ trait ProjectCustom
         $this->assertNotEmpty($devKey['body']);
         $this->assertNotEmpty($devKey['body']['secret']);
 
-        $webhook = $this->client->call(Client::METHOD_POST, '/projects/' . $project['body']['$id'] . '/webhooks', [
+        $webhook = $this->client->call(Client::METHOD_POST, '/webhooks', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-            'x-appwrite-project' => 'console',
+            'x-appwrite-project' => $project['body']['$id'],
+            'x-appwrite-mode' => 'admin'
         ], [
+            'webhookId' => 'unique()',
             'name' => 'Webhook Test',
             'events' => [
                 'databases.*',

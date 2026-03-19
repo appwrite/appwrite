@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "685d2d49e6e9b92df4084e091a16ca6a",
+    "content-hash": "ac1fc33956cf079ee41f314a0bea7f5f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3854,12 +3854,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "0fdc9afb5302503090d858a8a40d3c38844b27f2"
+                "reference": "5acd59fdc5710919e697ced8049d4be0f7195fd5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/0fdc9afb5302503090d858a8a40d3c38844b27f2",
-                "reference": "0fdc9afb5302503090d858a8a40d3c38844b27f2",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/5acd59fdc5710919e697ced8049d4be0f7195fd5",
+                "reference": "5acd59fdc5710919e697ced8049d4be0f7195fd5",
                 "shasum": ""
             },
             "require": {
@@ -3889,38 +3889,7 @@
                     "Utopia\\Database\\": "src/Database"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Tests\\E2E\\": "tests/e2e",
-                    "Tests\\Unit\\": "tests/unit"
-                }
-            },
-            "scripts": {
-                "build": [
-                    "Composer\\Config::disableProcessTimeout",
-                    "docker compose build"
-                ],
-                "start": [
-                    "Composer\\Config::disableProcessTimeout",
-                    "docker compose up -d"
-                ],
-                "test": [
-                    "Composer\\Config::disableProcessTimeout",
-                    "docker compose exec tests vendor/bin/phpunit --configuration phpunit.xml"
-                ],
-                "lint": [
-                    "php -d memory_limit=2G ./vendor/bin/pint --test"
-                ],
-                "format": [
-                    "php -d memory_limit=2G ./vendor/bin/pint"
-                ],
-                "check": [
-                    "./vendor/bin/phpstan analyse --level 7 src tests --memory-limit 2G"
-                ],
-                "coverage": [
-                    "./vendor/bin/coverage-check ./tmp/clover.xml 90"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -3933,10 +3902,10 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/database/tree/joins8",
-                "issues": "https://github.com/utopia-php/database/issues"
+                "issues": "https://github.com/utopia-php/database/issues",
+                "source": "https://github.com/utopia-php/database/tree/joins8"
             },
-            "time": "2026-03-19T07:32:29+00:00"
+            "time": "2026-03-19T12:59:22+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4553,12 +4522,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "63df4ddb1a4ac58628fc94bb9d1473ee444c8dc4"
+                "reference": "7b1750f951f82ed773c1588d25efe4c35a54eadc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/63df4ddb1a4ac58628fc94bb9d1473ee444c8dc4",
-                "reference": "63df4ddb1a4ac58628fc94bb9d1473ee444c8dc4",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/7b1750f951f82ed773c1588d25efe4c35a54eadc",
+                "reference": "7b1750f951f82ed773c1588d25efe4c35a54eadc",
                 "shasum": ""
             },
             "require": {
@@ -4600,7 +4569,7 @@
                 "issues": "https://github.com/utopia-php/migration/issues",
                 "source": "https://github.com/utopia-php/migration/tree/joins"
             },
-            "time": "2026-03-18T08:44:13+00:00"
+            "time": "2026-03-19T14:11:10+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8473,8 +8442,8 @@
         {
             "package": "utopia-php/migration",
             "version": "dev-joins",
-            "alias": "1.7.0",
-            "alias_normalized": "1.7.0.0"
+            "alias": "1.8.0",
+            "alias_normalized": "1.8.0.0"
         }
     ],
     "minimum-stability": "dev",
@@ -8501,9 +8470,6 @@
     },
     "platform-dev": {
         "ext-fileinfo": "*"
-    },
-    "platform-overrides": {
-        "php": "8.3"
     },
     "plugin-api-version": "2.6.0"
 }

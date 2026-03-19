@@ -7,8 +7,12 @@ $defaultHttpsPort = $defaultHttpsPort ?? '443';
 $defaultEmailCertificates = $defaultEmailCertificates ?? '';
 $defaultAssistantOpenAIKey = $defaultAssistantOpenAIKey ?? '';
 $defaultDatabase = $defaultDatabase ?? 'mongodb';
+$enabledDatabases = $enabledDatabases ?? ['mongodb', 'mariadb', 'postgresql'];
 $selectedDatabase = $lockedDatabase ?: $defaultDatabase;
 $isDatabaseLocked = !empty($lockedDatabase);
+$mongoEnabled = in_array('mongodb', $enabledDatabases, true);
+$mariaEnabled = in_array('mariadb', $enabledDatabases, true);
+$postgresEnabled = in_array('postgresql', $enabledDatabases, true);
 $mongoDisabled = $isDatabaseLocked && $selectedDatabase !== 'mongodb';
 $mariaDisabled = $isDatabaseLocked && $selectedDatabase !== 'mariadb';
 $postgresDisabled = $isDatabaseLocked && $selectedDatabase !== 'postgresql';
@@ -43,6 +47,7 @@ $assistantOpenAIKeyValue = htmlspecialchars((string) $defaultAssistantOpenAIKey,
             <div class="input-group stack-xs">
                 <label class="label-text typography-text-m-500 text-neutral-secondary">Database</label>
                 <div class="selector-group<?php echo $isDatabaseLocked ? ' is-locked' : ''; ?>">
+                    <?php if ($mongoEnabled) { ?>
                     <label class="selector-card <?php echo ($selectedDatabase === 'mongodb') ? 'selected' : ''; ?><?php echo $mongoDisabled ? ' is-disabled has-tooltip' : ''; ?>"<?php echo $mongoDisabled ? ' aria-disabled="true"' : ''; ?>>
                         <input type="radio" name="database" value="mongodb" <?php echo ($selectedDatabase === 'mongodb') ? 'checked' : ''; ?> class="sr-only" <?php echo $mongoDisabled ? 'disabled' : ''; ?>>
                         <div class="selector-content">
@@ -54,7 +59,9 @@ $assistantOpenAIKeyValue = htmlspecialchars((string) $defaultAssistantOpenAIKey,
                             <span class="tooltip tooltip-db-locked typography-text-m-400 text-on-invert" role="tooltip" data-tooltip-portal="true">Database cannot be changed after initial setup.</span>
                         <?php } ?>
                     </label>
+                    <?php } ?>
 
+                    <?php if ($mariaEnabled) { ?>
                     <label class="selector-card <?php echo ($selectedDatabase === 'mariadb') ? 'selected' : ''; ?><?php echo $mariaDisabled ? ' is-disabled has-tooltip' : ''; ?>"<?php echo $mariaDisabled ? ' aria-disabled="true"' : ''; ?>>
                         <input type="radio" name="database" value="mariadb" <?php echo ($selectedDatabase === 'mariadb') ? 'checked' : ''; ?> class="sr-only" <?php echo $mariaDisabled ? 'disabled' : ''; ?>>
                         <div class="selector-content">
@@ -66,7 +73,9 @@ $assistantOpenAIKeyValue = htmlspecialchars((string) $defaultAssistantOpenAIKey,
                             <span class="tooltip tooltip-db-locked typography-text-m-400 text-on-invert" role="tooltip" data-tooltip-portal="true">Database cannot be changed after initial setup.</span>
                         <?php } ?>
                     </label>
+                    <?php } ?>
 
+                    <?php if ($postgresEnabled) { ?>
                     <label class="selector-card <?php echo ($selectedDatabase === 'postgresql') ? 'selected' : ''; ?><?php echo $postgresDisabled ? ' is-disabled has-tooltip' : ''; ?>"<?php echo $postgresDisabled ? ' aria-disabled="true"' : ''; ?>>
                         <input type="radio" name="database" value="postgresql" <?php echo ($selectedDatabase === 'postgresql') ? 'checked' : ''; ?> class="sr-only" <?php echo $postgresDisabled ? 'disabled' : ''; ?>>
                         <div class="selector-content">
@@ -78,6 +87,7 @@ $assistantOpenAIKeyValue = htmlspecialchars((string) $defaultAssistantOpenAIKey,
                             <span class="tooltip tooltip-db-locked typography-text-m-400 text-on-invert" role="tooltip" data-tooltip-portal="true">Database cannot be changed after initial setup.</span>
                         <?php } ?>
                     </label>
+                    <?php } ?>
                 </div>
             </div>
 
