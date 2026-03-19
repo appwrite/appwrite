@@ -52,6 +52,18 @@ class Migrations extends Action
     protected ?Device $deviceForMigrations;
     protected ?Device $deviceForFiles;
     protected ?Document $project;
+
+    protected Document $sourceProject;
+
+    /**
+     * @var callable
+     */
+    protected mixed $getDatabasesDB;
+
+    /**
+     * @var callable(Document $databaseDSN): Database
+     */
+    protected mixed $getProjectDB;
     protected array $plan = [];
 
     /**
@@ -81,6 +93,8 @@ class Migrations extends Action
             ->inject('project')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
+            ->inject('getDatabasesDB')
+            ->inject('getProjectDB')
             ->inject('logError')
             ->inject('queueForRealtime')
             ->inject('deviceForMigrations')
@@ -101,6 +115,8 @@ class Migrations extends Action
         Document $project,
         Database $dbForProject,
         Database $dbForPlatform,
+        callable $getDatabasesDB,
+        callable $getProjectDB,
         callable $logError,
         Realtime $queueForRealtime,
         Device $deviceForMigrations,
@@ -112,6 +128,9 @@ class Migrations extends Action
         Authorization $authorization,
     ): void {
         $payload = $message->getPayload() ?? [];
+        $this->getDatabasesDB = $getDatabasesDB;
+        $this->getProjectDB = $getProjectDB;
+
         $this->deviceForMigrations = $deviceForMigrations;
         $this->deviceForFiles = $deviceForFiles;
         $this->plan = $plan;
@@ -180,13 +199,16 @@ class Migrations extends Action
         $resourceId = $migration->getAttribute('resourceId');
         $credentials = $migration->getAttribute('credentials');
         $migrationOptions = $migration->getAttribute('options');
-        $dataSource = SourceAppwrite::SOURCE_API;
-        $database = null;
+        /** @var Database|null $projectDB */
+        $projectDB = null;
+        if ($credentials['projectId']) {
+            $this->sourceProject = $this->dbForPlatform->getDocument('projects', $credentials['projectId']);
+            $projectDB = call_user_func($this->getProjectDB, $this->sourceProject);
+        }
+        $getDatabasesDB = fn (Document $database): Database =>
+                $this->getDatabasesDBForProject($database);
         $queries = [];
-
         if ($source === SourceAppwrite::getName() && $destination === DestinationCSV::getName()) {
-            $dataSource = SourceAppwrite::SOURCE_DATABASE;
-            $database = $this->dbForProject;
             $queries = Query::parseQueries($migrationOptions['queries']);
         }
 
@@ -216,15 +238,17 @@ class Migrations extends Action
                 $credentials['projectId'],
                 $credentials['endpoint'],
                 $credentials['apiKey'],
-                $dataSource,
-                $database,
-                $queries,
+                $getDatabasesDB,
+                SourceAppwrite::SOURCE_DATABASE,
+                $projectDB,
+                $queries
             ),
             CSV::getName() => new CSV(
                 $resourceId,
                 $migrationOptions['path'],
                 $this->deviceForMigrations,
-                $this->dbForProject
+                $this->dbForProject,
+                $getDatabasesDB
             ),
             default => throw new \Exception('Invalid source type'),
         };
@@ -250,6 +274,7 @@ class Migrations extends Action
                 $credentials['destinationEndpoint'],
                 $credentials['destinationApiKey'],
                 $this->dbForProject,
+                $this->getDatabasesDB,
                 Config::getParam('collections', [])['databases']['collections'],
             ),
             DestinationCSV::getName() => new DestinationCSV(
@@ -303,6 +328,10 @@ class Migrations extends Action
             'disabledMetrics' => [
                 METRIC_DATABASES_OPERATIONS_READS,
                 METRIC_DATABASES_OPERATIONS_WRITES,
+                METRIC_DATABASES_OPERATIONS_READS_DOCUMENTSDB,
+                METRIC_DATABASES_OPERATIONS_WRITES_DOCUMENTSDB,
+                METRIC_DATABASES_OPERATIONS_READS_VECTORSDB,
+                METRIC_DATABASES_OPERATIONS_WRITES_VECTORSDB,
                 METRIC_NETWORK_REQUESTS,
                 METRIC_NETWORK_INBOUND,
                 METRIC_NETWORK_OUTBOUND,
@@ -520,11 +549,9 @@ class Migrations extends Action
                     }
                     $destination?->success();
                     $source?->success();
-
-                    // TODO: Move to CSV hook
-                    if ($migration->getAttribute('destination') === DestinationCSV::getName()) {
-                        $this->handleCSVExportComplete($project, $migration, $queueForMails, $queueForRealtime, $platform, $authorization);
-                    }
+                }
+                if ($migration->getAttribute('destination') === DestinationCSV::getName()) {
+                    $this->handleCSVExportComplete($project, $migration, $queueForMails, $queueForRealtime, $platform, $authorization);
                 }
             } finally {
                 $source?->cleanup();
@@ -535,6 +562,14 @@ class Migrations extends Action
                 $destination = null;
             }
         }
+    }
+
+    protected function getDatabasesDBForProject(Document $database)
+    {
+        if ($this->sourceProject) {
+            return ($this->getDatabasesDB)($database, $this->sourceProject);
+        }
+        return ($this->getDatabasesDB)($database);
     }
 
     /**

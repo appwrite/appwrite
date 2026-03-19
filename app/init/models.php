@@ -22,6 +22,7 @@ use Appwrite\Utopia\Response\Model\AttributeLine;
 use Appwrite\Utopia\Response\Model\AttributeList;
 use Appwrite\Utopia\Response\Model\AttributeLongtext;
 use Appwrite\Utopia\Response\Model\AttributeMediumtext;
+use Appwrite\Utopia\Response\Model\AttributeObject;
 use Appwrite\Utopia\Response\Model\AttributePoint;
 use Appwrite\Utopia\Response\Model\AttributePolygon;
 use Appwrite\Utopia\Response\Model\AttributeRelationship;
@@ -29,6 +30,7 @@ use Appwrite\Utopia\Response\Model\AttributeString;
 use Appwrite\Utopia\Response\Model\AttributeText;
 use Appwrite\Utopia\Response\Model\AttributeURL;
 use Appwrite\Utopia\Response\Model\AttributeVarchar;
+use Appwrite\Utopia\Response\Model\AttributeVector;
 use Appwrite\Utopia\Response\Model\AuthProvider;
 use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Branch;
@@ -65,6 +67,7 @@ use Appwrite\Utopia\Response\Model\DetectionRuntime;
 use Appwrite\Utopia\Response\Model\DetectionVariable;
 use Appwrite\Utopia\Response\Model\DevKey;
 use Appwrite\Utopia\Response\Model\Document as ModelDocument;
+use Appwrite\Utopia\Response\Model\Embedding;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\Execution;
@@ -136,6 +139,8 @@ use Appwrite\Utopia\Response\Model\UsageBuckets;
 use Appwrite\Utopia\Response\Model\UsageCollection;
 use Appwrite\Utopia\Response\Model\UsageDatabase;
 use Appwrite\Utopia\Response\Model\UsageDatabases;
+use Appwrite\Utopia\Response\Model\UsageDocumentsDB;
+use Appwrite\Utopia\Response\Model\UsageDocumentsDBs;
 use Appwrite\Utopia\Response\Model\UsageFunction;
 use Appwrite\Utopia\Response\Model\UsageFunctions;
 use Appwrite\Utopia\Response\Model\UsageProject;
@@ -144,9 +149,12 @@ use Appwrite\Utopia\Response\Model\UsageSites;
 use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageTable;
 use Appwrite\Utopia\Response\Model\UsageUsers;
+use Appwrite\Utopia\Response\Model\UsageVectorsDB;
+use Appwrite\Utopia\Response\Model\UsageVectorsDBs;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Variable;
 use Appwrite\Utopia\Response\Model\VcsContent;
+use Appwrite\Utopia\Response\Model\VectorsDBCollection;
 use Appwrite\Utopia\Response\Model\Webhook;
 
 // General
@@ -185,7 +193,7 @@ Response::setModel(new BaseList('Runtimes List', Response::MODEL_RUNTIME_LIST, '
 Response::setModel(new BaseList('Deployments List', Response::MODEL_DEPLOYMENT_LIST, 'deployments', Response::MODEL_DEPLOYMENT));
 Response::setModel(new BaseList('Executions List', Response::MODEL_EXECUTION_LIST, 'executions', Response::MODEL_EXECUTION));
 Response::setModel(new BaseList('Projects List', Response::MODEL_PROJECT_LIST, 'projects', Response::MODEL_PROJECT, true, false));
-Response::setModel(new BaseList('Webhooks List', Response::MODEL_WEBHOOK_LIST, 'webhooks', Response::MODEL_WEBHOOK, true, false));
+Response::setModel(new BaseList('Webhooks List', Response::MODEL_WEBHOOK_LIST, 'webhooks', Response::MODEL_WEBHOOK, true, true));
 Response::setModel(new BaseList('API Keys List', Response::MODEL_KEY_LIST, 'keys', Response::MODEL_KEY, true, true));
 Response::setModel(new BaseList('Dev Keys List', Response::MODEL_DEV_KEY_LIST, 'devKeys', Response::MODEL_DEV_KEY, true, false));
 Response::setModel(new BaseList('Auth Providers List', Response::MODEL_AUTH_PROVIDER_LIST, 'platforms', Response::MODEL_AUTH_PROVIDER, true, false));
@@ -211,9 +219,12 @@ Response::setModel(new BaseList('Migrations List', Response::MODEL_MIGRATION_LIS
 Response::setModel(new BaseList('Migrations Firebase Projects List', Response::MODEL_MIGRATION_FIREBASE_PROJECT_LIST, 'projects', Response::MODEL_MIGRATION_FIREBASE_PROJECT));
 Response::setModel(new BaseList('Specifications List', Response::MODEL_SPECIFICATION_LIST, 'specifications', Response::MODEL_SPECIFICATION));
 Response::setModel(new BaseList('VCS Content List', Response::MODEL_VCS_CONTENT_LIST, 'contents', Response::MODEL_VCS_CONTENT));
+Response::setModel(new BaseList('VectorsDB Collections List', Response::MODEL_VECTORSDB_COLLECTION_LIST, 'collections', Response::MODEL_VECTORSDB_COLLECTION));
+Response::setModel(new BaseList('Embedding list', Response::MODEL_EMBEDDING_LIST, 'embeddings', Response::MODEL_EMBEDDING));
 
 // Entities
 Response::setModel(new Database());
+Response::setModel(new Embedding());
 
 // Collection API Models
 Response::setModel(new Collection());
@@ -236,6 +247,17 @@ Response::setModel(new AttributeVarchar());
 Response::setModel(new AttributeText());
 Response::setModel(new AttributeMediumtext());
 Response::setModel(new AttributeLongtext());
+
+// DocumentsDB API Models
+Response::setModel(new UsageDocumentsDBs());
+Response::setModel(new UsageDocumentsDB());
+
+// VectorsDB API Models
+Response::setModel(new VectorsDBCollection());
+Response::setModel(new AttributeObject());
+Response::setModel(new AttributeVector());
+Response::setModel(new UsageVectorsDBs());
+Response::setModel(new UsageVectorsDB());
 
 // Table API Models
 Response::setModel(new Table());

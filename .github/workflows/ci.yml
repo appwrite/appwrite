@@ -7,7 +7,6 @@ concurrency:
 env:
   COMPOSE_FILE: docker-compose.yml
   IMAGE: appwrite-dev
-  CACHE_KEY: appwrite-dev-${{ github.event.pull_request.head.sha }}
 
 on:
   pull_request:
@@ -248,11 +247,12 @@ jobs:
             TESTING=true
             VERSION=dev
 
-      - name: Cache Docker Image
-        uses: actions/cache@v5
+      - name: Upload Docker Image
+        uses: actions/upload-artifact@v7
         with:
-          key: ${{ env.CACHE_KEY }}
+          name: ${{ env.IMAGE }}
           path: /tmp/${{ env.IMAGE }}.tar
+          retention-days: 1
 
   unit:
     name: Tests / Unit
@@ -265,12 +265,11 @@ jobs:
       - name: checkout
         uses: actions/checkout@v6
 
-      - name: Load Cache
-        uses: actions/cache@v5
+      - name: Download Docker Image
+        uses: actions/download-artifact@v7
         with:
-          key: ${{ env.CACHE_KEY }}
-          path: /tmp/${{ env.IMAGE }}.tar
-          fail-on-cache-miss: true
+          name: ${{ env.IMAGE }}
+          path: /tmp
 
       - name: Login to Docker Hub
         uses: docker/login-action@v4
@@ -313,12 +312,11 @@ jobs:
       - name: checkout
         uses: actions/checkout@v6
 
-      - name: Load Cache
-        uses: actions/cache@v5
+      - name: Download Docker Image
+        uses: actions/download-artifact@v7
         with:
-          key: ${{ env.CACHE_KEY }}
-          path: /tmp/${{ env.IMAGE }}.tar
-          fail-on-cache-miss: true
+          name: ${{ env.IMAGE }}
+          path: /tmp
 
       - name: Login to Docker Hub
         uses: docker/login-action@v4
@@ -363,7 +361,7 @@ jobs:
 
   e2e_service:
     name: Tests / E2E / ${{ matrix.database }} (${{ matrix.mode }}) / ${{ matrix.service }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner || 'ubuntu-latest' }}
     needs: [build, matrix]
     permissions:
       contents: read
@@ -399,16 +397,28 @@ jobs:
           Migrations,
           Project
         ]
+        include:
+          - service: Databases
+            runner: blacksmith-4vcpu-ubuntu-2404
+          - service: Sites
+            runner: blacksmith-4vcpu-ubuntu-2404
+          - service: Functions
+            runner: blacksmith-4vcpu-ubuntu-2404
+          - service: Avatars
+            runner: blacksmith-4vcpu-ubuntu-2404
+          - service: Realtime
+            runner: blacksmith-4vcpu-ubuntu-2404
+          - service: TablesDB
+            runner: blacksmith-4vcpu-ubuntu-2404
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Load Cache
-        uses: actions/cache@v5
+      - name: Download Docker Image
+        uses: actions/download-artifact@v7
         with:
-          key: ${{ env.CACHE_KEY }}
-          path: /tmp/${{ env.IMAGE }}.tar
-          fail-on-cache-miss: true
+          name: ${{ env.IMAGE }}
+          path: /tmp
 
       - name: Set database environment
         run: |
@@ -497,12 +507,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Load Cache
-        uses: actions/cache@v5
+      - name: Download Docker Image
+        uses: actions/download-artifact@v7
         with:
-          key: ${{ env.CACHE_KEY }}
-          path: /tmp/${{ env.IMAGE }}.tar
-          fail-on-cache-miss: true
+          name: ${{ env.IMAGE }}
+          path: /tmp
 
       - name: Login to Docker Hub
         uses: docker/login-action@v4
@@ -556,12 +565,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Load Cache
-        uses: actions/cache@v5
+      - name: Download Docker Image
+        uses: actions/download-artifact@v7
         with:
-          key: ${{ env.CACHE_KEY }}
-          path: /tmp/${{ env.IMAGE }}.tar
-          fail-on-cache-miss: true
+          name: ${{ env.IMAGE }}
+          path: /tmp
 
       - name: Login to Docker Hub
         uses: docker/login-action@v4
@@ -617,12 +625,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Load Cache
-        uses: actions/cache@v5
+      - name: Download Docker Image
+        uses: actions/download-artifact@v7
         with:
-          key: ${{ env.CACHE_KEY }}
-          path: /tmp/${{ env.IMAGE }}.tar
-          fail-on-cache-miss: true
+          name: ${{ env.IMAGE }}
+          path: /tmp
 
       - name: Login to Docker Hub
         uses: docker/login-action@v4
