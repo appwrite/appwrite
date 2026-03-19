@@ -160,29 +160,13 @@ $register->set('pools', function () {
         'pass' => System::getEnv('_APP_DB_PASS', ''),
         'path' => System::getEnv('_APP_DB_SCHEMA', ''),
     ]);
+
     $fallbackForRedis = 'redis_main=' . AppwriteURL::unparse([
         'scheme' => 'redis',
         'host' => System::getEnv('_APP_REDIS_HOST', 'redis'),
         'port' => System::getEnv('_APP_REDIS_PORT', '6379'),
         'user' => System::getEnv('_APP_REDIS_USER', ''),
         'pass' => System::getEnv('_APP_REDIS_PASS', ''),
-    ]);
-
-    $fallbackForDocumentsDB = 'db_main=' . AppwriteURL::unparse([
-        'scheme' => System::getEnv('_APP_DB_ADAPTER_DOCUMENTSDB', 'mongodb'),
-        'host' => System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb'),
-        'port' => System::getEnv('_APP_DB_PORT_DOCUMENTSDB', '27017'),
-        'user' => System::getEnv('_APP_DB_USER', ''),
-        'pass' => System::getEnv('_APP_DB_PASS', ''),
-        'path' => System::getEnv('_APP_DB_SCHEMA', ''),
-    ]);
-    $fallbackForVectorsDB = 'db_main=' . AppwriteURL::unparse([
-        'scheme' => System::getEnv('_APP_DB_ADAPTER_VECTORSDB', 'postgresql'),
-        'host' => System::getEnv('_APP_DB_HOST_VECTORSDB', 'postgresql'),
-        'port' => System::getEnv('_APP_DB_PORT_VECTORSDB', '5432'),
-        'user' => System::getEnv('_APP_DB_USER', ''),
-        'pass' => System::getEnv('_APP_DB_PASS', ''),
-        'path' => System::getEnv('_APP_DB_SCHEMA', ''),
     ]);
 
     $connections = [
@@ -196,25 +180,13 @@ $register->set('pools', function () {
             'type' => 'database',
             'dsns' => $fallbackForDB,
             'multiple' => true,
-            'schemes' => ['mongodb','mariadb', 'mysql','postgresql'],
-        ],
-        'documentsdb' => [
-            'type' => 'database',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_DATABASE_DOCUMENTSDB', $fallbackForDocumentsDB),
-            'multiple' => true,
-            'schemes' => ['mongodb'],
-        ],
-        'vectorsdb' => [
-            'type' => 'database',
-            'dsns' => System::getEnv('_APP_CONNECTIONS_DATABASE_VECTORSDB', $fallbackForVectorsDB),
-            'multiple' => true,
-            'schemes' => ['postgresql'],
+            'schemes' => ['mariadb', 'mongodb', 'mysql', 'postgresql'],
         ],
         'logs' => [
             'type' => 'database',
             'dsns' => System::getEnv('_APP_CONNECTIONS_DB_LOGS', $fallbackForDB),
             'multiple' => false,
-            'schemes' => ['mongodb','mariadb', 'mysql','postgresql'],
+            'schemes' => ['mariadb', 'mongodb', 'mysql', 'postgresql'],
         ],
         'publisher' => [
             'type' => 'publisher',

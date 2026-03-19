@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3416a116f2912385f16498aea77ce6a3",
+    "content-hash": "1404c8821e43b3fe92e06a8ed658ed26",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3889,7 +3889,38 @@
                     "Utopia\\Database\\": "src/Database"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Tests\\E2E\\": "tests/e2e",
+                    "Tests\\Unit\\": "tests/unit"
+                }
+            },
+            "scripts": {
+                "build": [
+                    "Composer\\Config::disableProcessTimeout",
+                    "docker compose build"
+                ],
+                "start": [
+                    "Composer\\Config::disableProcessTimeout",
+                    "docker compose up -d"
+                ],
+                "test": [
+                    "Composer\\Config::disableProcessTimeout",
+                    "docker compose exec tests vendor/bin/phpunit --configuration phpunit.xml"
+                ],
+                "lint": [
+                    "php -d memory_limit=2G ./vendor/bin/pint --test"
+                ],
+                "format": [
+                    "php -d memory_limit=2G ./vendor/bin/pint"
+                ],
+                "check": [
+                    "./vendor/bin/phpstan analyse --level 7 src tests --memory-limit 2G"
+                ],
+                "coverage": [
+                    "./vendor/bin/coverage-check ./tmp/clover.xml 90"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -3902,8 +3933,8 @@
                 "utopia"
             ],
             "support": {
-                "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/5.3.16"
+                "source": "https://github.com/utopia-php/database/tree/5.3.16",
+                "issues": "https://github.com/utopia-php/database/issues"
             },
             "time": "2026-03-19T10:10:02+00:00"
         },
@@ -4518,16 +4549,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.8.3",
+            "version": "1.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "8633523b3343d492427331b6eec53f020f6ab7a7"
+                "reference": "97583ae502e40621ea91a71de19d053c5ae2e558"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/8633523b3343d492427331b6eec53f020f6ab7a7",
-                "reference": "8633523b3343d492427331b6eec53f020f6ab7a7",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/97583ae502e40621ea91a71de19d053c5ae2e558",
+                "reference": "97583ae502e40621ea91a71de19d053c5ae2e558",
                 "shasum": ""
             },
             "require": {
@@ -4567,9 +4598,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.8.3"
+                "source": "https://github.com/utopia-php/migration/tree/1.7.0"
             },
-            "time": "2026-03-19T09:18:47+00:00"
+            "time": "2026-03-10T06:36:27+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8454,6 +8485,9 @@
     },
     "platform-dev": {
         "ext-fileinfo": "*"
+    },
+    "platform-overrides": {
+        "php": "8.3"
     },
     "plugin-api-version": "2.9.0"
 }

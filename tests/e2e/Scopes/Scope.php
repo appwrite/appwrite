@@ -145,14 +145,6 @@ abstract class Scope extends TestCase
     }
 
     /**
-     * Check if the database adapter supports attributes
-     */
-    protected function getSupportForAttributes(): bool
-    {
-        return $this->getConsoleVariables()['supportForAttributes'] ?? true;
-    }
-
-    /**
      * Get the maximum index length supported by the database adapter
      */
     protected function getMaxIndexLength(): int

@@ -54,7 +54,6 @@ class Get extends CollectionUsageGet
             ->inject('response')
             ->inject('dbForProject')
             ->inject('authorization')
-            ->inject('getDatabasesDB')
             ->callback($this->action(...));
     }
 }
