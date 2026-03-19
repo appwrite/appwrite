@@ -2,8 +2,6 @@
 
 namespace Appwrite\Platform\Installer;
 
-require_once __DIR__ . '/../../../../vendor/autoload.php';
-
 use Appwrite\Platform\Installer\Http\Installer\Error;
 use Appwrite\Platform\Installer\Runtime\State;
 use Swoole\Http\Server as SwooleServer;
@@ -313,6 +311,7 @@ function shouldRunInstallerServer(): bool
 }
 
 if (shouldRunInstallerServer()) {
+    require_once __DIR__ . '/../../../../vendor/autoload.php';
     $server = new Server();
     $server->run();
 }

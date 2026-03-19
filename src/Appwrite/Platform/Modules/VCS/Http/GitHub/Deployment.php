@@ -431,7 +431,7 @@ trait Deployment
                     }
                 }
 
-                if ($resource->getCollection() === 'sites' && !empty($latestCommentId) && !empty($previewRuleId)) {
+                if ($resource->getCollection() === 'sites' && !empty($latestCommentId)) {
                     $retries = 0;
                     $lockAcquired = false;
 

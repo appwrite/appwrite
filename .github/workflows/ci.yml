@@ -392,6 +392,7 @@ jobs:
           Tokens,
           Teams,
           Users,
+          ProjectWebhooks,
           Webhooks,
           VCS,
           Messaging,

@@ -1,12 +1,6 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Variable \$dbForPlatform might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: app/cli.php
-
-		-
 			message: '#^PHPDoc tag @var above a method has no effect\.$#'
 			identifier: varTag.misplaced
 			count: 1
@@ -125,12 +119,6 @@ parameters:
 			identifier: method.notFound
 			count: 1
 			path: app/controllers/shared/api.php
-
-		-
-			message: '#^Variable \$database might not be defined\.$#'
-			identifier: variable.undefined
-			count: 4
-			path: app/http.php
 
 		-
 			message: '#^Variable \$register might not be defined\.$#'

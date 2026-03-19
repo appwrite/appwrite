@@ -161,6 +161,8 @@ trait ProjectCustom
                     'migrations.read',
                     'tokens.read',
                     'tokens.write',
+                    'webhooks.read',
+                    'webhooks.write',
                 ],
             ]);
 
