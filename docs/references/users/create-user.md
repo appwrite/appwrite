@@ -1,1 +1,1 @@
-Create a new user.
+Create a new user by providing a unique ID, email, password, and optional name and phone number.
