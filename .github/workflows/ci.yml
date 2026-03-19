@@ -363,7 +363,7 @@ jobs:
 
   e2e_service:
     name: Tests / E2E / ${{ matrix.database }} (${{ matrix.mode }}) / ${{ matrix.service }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner || 'ubuntu-latest' }}
     needs: [build, matrix]
     permissions:
       contents: read
@@ -398,6 +398,19 @@ jobs:
           Messaging,
           Migrations
         ]
+        include:
+          - service: Databases
+            runner: blacksmith-4vcpu-ubuntu-2404
+          - service: Sites
+            runner: blacksmith-4vcpu-ubuntu-2404
+          - service: Functions
+            runner: blacksmith-4vcpu-ubuntu-2404
+          - service: Avatars
+            runner: blacksmith-4vcpu-ubuntu-2404
+          - service: Realtime
+            runner: blacksmith-4vcpu-ubuntu-2404
+          - service: TablesDB
+            runner: blacksmith-4vcpu-ubuntu-2404
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
