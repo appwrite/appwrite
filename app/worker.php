@@ -1,7 +1,7 @@
 <?php
 
 require_once __DIR__ . '/init.php';
-require_once __DIR__ . '/init/worker/job.php';
+require_once __DIR__ . '/init/worker/message.php';
 
 use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Platform\Appwrite;
@@ -90,10 +90,9 @@ try {
     );
 
     $worker = new Server($adapter, $container);
-    $worker->setCoroutines(true);
 
     $worker->init()->action(function () use ($worker) {
-        registerWorkerJobResources($worker->getContainer());
+        registerWorkerMessageResources($worker->getContainer());
     });
 
     $container->set('bus', function ($register) use ($worker) {
