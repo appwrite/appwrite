@@ -4,7 +4,6 @@ namespace Appwrite\Tests\Async;
 
 use Appwrite\Tests\Async\Exceptions\Critical;
 use PHPUnit\Framework\Constraint\Constraint;
-use Utopia\Console;
 
 final class Eventually extends Constraint
 {
