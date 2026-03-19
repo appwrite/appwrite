@@ -84,6 +84,7 @@ trait ProjectsBase
         $response = $this->client->call(Client::METHOD_POST, '/webhooks', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
             'webhookId' => 'unique()',
             'name' => 'Webhook Test',
