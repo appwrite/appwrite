@@ -125,7 +125,7 @@ class MessagingChannelsTest extends TestCase
 
     public function tearDown(): void
     {
-        unset($this->realtime);
+        $this->realtime = null;
         $this->connectionsCount = 0;
     }
 

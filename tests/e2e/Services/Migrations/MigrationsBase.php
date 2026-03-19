@@ -2777,7 +2777,7 @@ trait MigrationsBase
                 return true;
             }, 30_000, 500);
 
-            $this->assertEventually(function () use ($migrationId) {
+            $this->assertEventually(function () {
                 $email = $this->getLastEmail(1, function (array $email) {
                     $this->assertEquals('Your CSV export is ready', $email['subject']);
                 });

@@ -2810,6 +2810,10 @@ trait DatabasesBase
         $this->assertEquals(204, $document['headers']['status-code']);
 
         // relationship behaviour - only test on databases that support relationships
+        /** @var array<string, mixed>|null $person */
+        $person = null;
+        /** @var array<string, mixed>|null $library */
+        $library = null;
         if ($this->getSupportForRelationships()) {
             $person = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
                 'content-type' => 'application/json',
@@ -3131,7 +3135,7 @@ trait DatabasesBase
             $this->assertEquals(204, $deleteResponse['headers']['status-code']);
 
             // upsertion for the related document without passing permissions - only for databases that support relationships
-            if ($this->getSupportForRelationships()) {
+            if ($this->getSupportForRelationships() && $person !== null && $library !== null) {
                 // data should get added
                 $newPersonId = ID::unique();
                 $personNoPerm = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $person['body']['$id'], $newPersonId), array_merge([

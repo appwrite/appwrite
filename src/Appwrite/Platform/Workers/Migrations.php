@@ -56,7 +56,7 @@ class Migrations extends Action
     protected Document $sourceProject;
 
     /**
-     * @var callable(Document $databaseDSN): Database
+     * @var callable(Document $database, ?Document $projectDocument = null): Database
      */
     protected mixed $getDatabasesDB;
 
@@ -199,6 +199,8 @@ class Migrations extends Action
         $resourceId = $migration->getAttribute('resourceId');
         $credentials = $migration->getAttribute('credentials');
         $migrationOptions = $migration->getAttribute('options');
+        /** @var Database|null $projectDB */
+        $projectDB = null;
         if ($credentials['projectId']) {
             $this->sourceProject = $this->dbForPlatform->getDocument('projects', $credentials['projectId']);
             $projectDB = call_user_func($this->getProjectDB, $this->sourceProject);
