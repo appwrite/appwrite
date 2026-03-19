@@ -3854,12 +3854,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "602f8deef7c07e224573eb7e7ef22d9cfd9588b2"
+                "reference": "10cf13d0dcfcd2aee13880945e5bc04fbbdbfcf1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/602f8deef7c07e224573eb7e7ef22d9cfd9588b2",
-                "reference": "602f8deef7c07e224573eb7e7ef22d9cfd9588b2",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/10cf13d0dcfcd2aee13880945e5bc04fbbdbfcf1",
+                "reference": "10cf13d0dcfcd2aee13880945e5bc04fbbdbfcf1",
                 "shasum": ""
             },
             "require": {
@@ -3936,7 +3936,7 @@
                 "source": "https://github.com/utopia-php/database/tree/fix-shared-table-reconciliation",
                 "issues": "https://github.com/utopia-php/database/issues"
             },
-            "time": "2026-03-19T02:40:25+00:00"
+            "time": "2026-03-19T04:40:36+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4306,12 +4306,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "57fc53774a21c9ea78e407ad3f1c144cdccff5fa"
+                "reference": "01c863fbc3f911e6a8e6e0aaa703213257153767"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/57fc53774a21c9ea78e407ad3f1c144cdccff5fa",
-                "reference": "57fc53774a21c9ea78e407ad3f1c144cdccff5fa",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/01c863fbc3f911e6a8e6e0aaa703213257153767",
+                "reference": "01c863fbc3f911e6a8e6e0aaa703213257153767",
                 "shasum": ""
             },
             "require": {
@@ -4351,7 +4351,7 @@
                 "issues": "https://github.com/utopia-php/http/issues",
                 "source": "https://github.com/utopia-php/http/tree/feat/swoole-adapters-and-compression"
             },
-            "time": "2026-03-19T04:32:54+00:00"
+            "time": "2026-03-19T04:49:45+00:00"
         },
         {
             "name": "utopia-php/image",
