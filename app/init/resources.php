@@ -489,22 +489,15 @@ Http::setResource('project', function ($dbForPlatform, $request, $console, $auth
     // Backwards compatibility for new services, originally project resources
     // These endpoints moved from /v1/projects/:projectId/<resource> to /v1/<resource>
     // When accessed via the old alias path, extract projectId from the URI
-    $isService = false;
+    $deprecatedProjectPathPrefix = '/v1/projects/';
     $route = $utopia->match($request);
     if (!empty($route)) {
-        foreach ([
-            '/v1/webhooks'
-        ] as $path) {
-            if (\str_starts_with($route->getPath(), $path)) {
-                $isService = true;
-                break;
-            }
-        }
-    }
-    $isDeprecatedProjectEndpoint = \str_starts_with($request->getURI(), '/v1/projects/');
+        $isDeprecatedAlias = \str_starts_with($request->getURI(), $deprecatedProjectPathPrefix) &&
+            !\str_starts_with($route->getPath(), $deprecatedProjectPathPrefix);
 
-    if ($isService && $isDeprecatedProjectEndpoint) {
-        $projectId = \explode('/', $request->getURI(), 5)[3] ?? '';
+        if ($isDeprecatedAlias) {
+            $projectId = \explode('/', $request->getURI(), 5)[3] ?? '';
+        }
     }
 
     if (empty($projectId) || $projectId === 'console') {
@@ -1102,7 +1095,7 @@ Http::setResource('mode', function (Request $request, Document $project) {
     $mode = $request->getParam('mode', $request->getHeader('x-appwrite-mode', APP_MODE_DEFAULT));
 
     $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', ''));
-    if ($project->getId() !== $projectId) {
+    if (!empty($projectId) && $project->getId() !== $projectId) {
         $mode = APP_MODE_ADMIN;
     }
 

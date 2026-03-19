@@ -54,7 +54,7 @@ class V21 extends Filter
 
     protected function fillWebhookid(array $content): array
     {
-        $content['webhookId'] = 'unique()';
+        $content['webhookId'] = $content['webhookId'] ?? 'unique()';
         return $content;
     }
 }
