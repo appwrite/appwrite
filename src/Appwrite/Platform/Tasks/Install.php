@@ -176,6 +176,13 @@ class Install extends Action
             }
         }
 
+        $installerConfig = $this->readInstallerConfig();
+        $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['mongodb', 'mariadb'];
+        if (!in_array($database, $enabledDatabases, true)) {
+            Console::error("Database '{$database}' is not available. Available options: " . implode(', ', $enabledDatabases));
+            Console::exit(1);
+        }
+
         // If interactive and web mode enabled, start web server
         if ($interactive === 'Y' && Console::isInteractive()) {
             Console::success('Starting web installer...');
@@ -295,6 +302,9 @@ class Install extends Action
 
         @unlink(InstallerServer::INSTALLER_COMPLETE_FILE);
 
+        $installerConfig = $this->readInstallerConfig();
+        $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['mongodb', 'mariadb'];
+
         $this->setInstallerConfig([
             'defaultHttpPort' => $defaultHttpPort,
             'defaultHttpsPort' => $defaultHttpsPort,
@@ -304,6 +314,7 @@ class Install extends Action
             'vars' => $vars,
             'isUpgrade' => $isUpgrade,
             'lockedDatabase' => $lockedDatabase,
+            'enabledDatabases' => $enabledDatabases,
             'isLocal' => $this->isLocalInstall(),
             'hostPath' => $this->hostPath ?: null,
         ]);
