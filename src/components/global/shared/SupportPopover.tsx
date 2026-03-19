@@ -144,9 +144,7 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
   const { plan: organizationPlan } = useOrganizationPlan(orgId)
   const { features } = useConsoleProfile()
   const { mockCloudStatusAlert } = useDebugOverrides()
-  const { data: statusData, isLoading: statusLoading } = useAppwriteCloudStatus(
-    features.systemStatus,
-  )
+  const { data: statusData } = useAppwriteCloudStatus(features.systemStatus)
 
   // Check if the plan supports premium support
   const hasPremiumSupport = organizationPlan?.premiumSupport === true
@@ -397,11 +395,6 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
                     >
                       {statusMeta.badgeLabel}
                     </Badge>
-                    {statusLoading && mockCloudStatusAlert === 'live' ? (
-                      <span className="text-[11px] text-muted-foreground">
-                        Updating...
-                      </span>
-                    ) : null}
                   </div>
                   {statusDetail ? (
                     <p className="mt-0.5 line-clamp-2 text-[12px] text-muted-foreground">
