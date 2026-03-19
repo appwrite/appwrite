@@ -290,6 +290,7 @@ class Specs extends Action
         $specsContainer->set('response', fn () => $response);
         $specsContainer->set('dbForPlatform', fn () => new Database(new MySQL(''), new Cache(new None())));
         $specsContainer->set('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
+        registerRequestResources($specsContainer);
 
         $platforms = static::getPlatforms();
         $authCounts = $this->getAuthCounts();
