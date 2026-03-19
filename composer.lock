@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f2035503cd8a83da2b41a975311d41f7",
+    "content-hash": "23dd96af7065dd3f35083db63b756224",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -686,23 +686,23 @@
         },
         {
             "name": "google/protobuf",
-            "version": "v4.33.5",
+            "version": "v4.33.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/protocolbuffers/protobuf-php.git",
-                "reference": "ebe8010a61b2ae0cff0d246fe1c4d44e9f7dfa6d"
+                "reference": "84b008c23915ed94536737eae46f41ba3bccfe67"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/ebe8010a61b2ae0cff0d246fe1c4d44e9f7dfa6d",
-                "reference": "ebe8010a61b2ae0cff0d246fe1c4d44e9f7dfa6d",
+                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/84b008c23915ed94536737eae46f41ba3bccfe67",
+                "reference": "84b008c23915ed94536737eae46f41ba3bccfe67",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.1.0"
             },
             "require-dev": {
-                "phpunit/phpunit": ">=5.0.0 <8.5.27"
+                "phpunit/phpunit": ">=10.5.62 <11.0.0"
             },
             "suggest": {
                 "ext-bcmath": "Need to support JSON deserialization"
@@ -724,9 +724,9 @@
                 "proto"
             ],
             "support": {
-                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.33.5"
+                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.33.6"
             },
-            "time": "2026-01-29T20:49:00+00:00"
+            "time": "2026-03-18T17:32:05+00:00"
         },
         {
             "name": "halaxa/json-machine",
@@ -1996,16 +1996,16 @@
         },
         {
             "name": "phpseclib/phpseclib",
-            "version": "3.0.49",
+            "version": "3.0.50",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpseclib/phpseclib.git",
-                "reference": "6233a1e12584754e6b5daa69fe1289b47775c1b9"
+                "reference": "aa6ad8321ed103dc3624fb600a25b66ebf78ec7b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/6233a1e12584754e6b5daa69fe1289b47775c1b9",
-                "reference": "6233a1e12584754e6b5daa69fe1289b47775c1b9",
+                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/aa6ad8321ed103dc3624fb600a25b66ebf78ec7b",
+                "reference": "aa6ad8321ed103dc3624fb600a25b66ebf78ec7b",
                 "shasum": ""
             },
             "require": {
@@ -2086,7 +2086,7 @@
             ],
             "support": {
                 "issues": "https://github.com/phpseclib/phpseclib/issues",
-                "source": "https://github.com/phpseclib/phpseclib/tree/3.0.49"
+                "source": "https://github.com/phpseclib/phpseclib/tree/3.0.50"
             },
             "funding": [
                 {
@@ -2102,7 +2102,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-01-27T09:17:28+00:00"
+            "time": "2026-03-19T02:57:58+00:00"
         },
         {
             "name": "psr/clock",
@@ -3850,16 +3850,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "5.3.15",
+            "version": "dev-fix-shared-table-reconciliation",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "bb89e8c4a5d534fc7e650c4438aa796667fe160a"
+                "reference": "602f8deef7c07e224573eb7e7ef22d9cfd9588b2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/bb89e8c4a5d534fc7e650c4438aa796667fe160a",
-                "reference": "bb89e8c4a5d534fc7e650c4438aa796667fe160a",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/602f8deef7c07e224573eb7e7ef22d9cfd9588b2",
+                "reference": "602f8deef7c07e224573eb7e7ef22d9cfd9588b2",
                 "shasum": ""
             },
             "require": {
@@ -3933,10 +3933,10 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/database/tree/5.3.15",
+                "source": "https://github.com/utopia-php/database/tree/fix-shared-table-reconciliation",
                 "issues": "https://github.com/utopia-php/database/issues"
             },
-            "time": "2026-03-16T11:41:45+00:00"
+            "time": "2026-03-19T02:40:25+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4302,16 +4302,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "dev-feat/coroutines-option",
+            "version": "dev-feat/swoole-adapters-and-compression",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "8420a83e4e21f606da34897a07589db247b90acf"
+                "reference": "57fc53774a21c9ea78e407ad3f1c144cdccff5fa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/8420a83e4e21f606da34897a07589db247b90acf",
-                "reference": "8420a83e4e21f606da34897a07589db247b90acf",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/57fc53774a21c9ea78e407ad3f1c144cdccff5fa",
+                "reference": "57fc53774a21c9ea78e407ad3f1c144cdccff5fa",
                 "shasum": ""
             },
             "require": {
@@ -4349,9 +4349,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/feat/coroutines-option"
+                "source": "https://github.com/utopia-php/http/tree/feat/swoole-adapters-and-compression"
             },
-            "time": "2026-03-18T11:08:21+00:00"
+            "time": "2026-03-19T04:32:54+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -8474,8 +8474,14 @@
     ],
     "aliases": [
         {
+            "package": "utopia-php/database",
+            "version": "dev-fix-shared-table-reconciliation",
+            "alias": "5.3.15",
+            "alias_normalized": "5.3.15.0"
+        },
+        {
             "package": "utopia-php/framework",
-            "version": "dev-feat/coroutines-option",
+            "version": "dev-feat/swoole-adapters-and-compression",
             "alias": "0.34.15",
             "alias_normalized": "0.34.15.0"
         },
@@ -8488,6 +8494,7 @@
     ],
     "minimum-stability": "dev",
     "stability-flags": {
+        "utopia-php/database": 20,
         "utopia-php/framework": 20,
         "utopia-php/queue": 20
     },
