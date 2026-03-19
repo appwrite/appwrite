@@ -27,6 +27,7 @@
 
     let activeInstall = null;
     let unloadGuard = null;
+    let sseSessionDetails = null;
     const csrfToken = document.querySelector('meta[name="appwrite-installer-csrf"]')?.getAttribute('content') || '';
 
     const withCsrfHeader = (headers = {}) => {
@@ -524,6 +525,9 @@
                 inProgress: payload.message || payload.step,
                 done: payload.message || payload.step
             };
+            if (step.id === STEP_IDS.ACCOUNT_SETUP && payload.details?.sessionSecret) {
+                sseSessionDetails = payload.details;
+            }
             progressState.set(step.id, {
                 status: payload.status || STATUS.IN_PROGRESS,
                 message: payload.message,
@@ -599,7 +603,7 @@
             });
             if (!allDone) return;
             const accountState = progressState.get(STEP_IDS.ACCOUNT_SETUP);
-            const sessionDetails = accountState?.details;
+            const sessionDetails = sseSessionDetails || accountState?.details;
             finalizeInstall();
             notifyInstallComplete(activeInstall?.installId, sessionDetails).finally(() => {
                 setTimeout(() => redirectToApp(), TIMINGS?.redirectDelay ?? 0);
@@ -740,7 +744,7 @@
                         }
 
                         const accountState = progressState.get(STEP_IDS.ACCOUNT_SETUP);
-                        const sessionDetails = accountState?.details;
+                        const sessionDetails = sseSessionDetails || accountState?.details;
                         finalizeInstall();
                         notifyInstallComplete(activeInstall?.installId, sessionDetails).finally(() => {
                             setTimeout(() => redirectToApp(), TIMINGS?.redirectDelay ?? 0);

@@ -501,7 +501,7 @@ Http::setResource('user', function (string $mode, Document $project, Document $c
     return $user;
 }, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForPlatform', 'store', 'proofForToken', 'authorization']);
 
-Http::setResource('project', function ($dbForPlatform, $request, $console, $authorization) {
+Http::setResource('project', function ($dbForPlatform, $request, $console, $authorization, Http $utopia) {
     /** @var Appwrite\Utopia\Request $request */
     /** @var Utopia\Database\Database $dbForPlatform */
     /** @var Utopia\Database\Document $console */
@@ -511,6 +511,20 @@ Http::setResource('project', function ($dbForPlatform, $request, $console, $auth
         $projectId = $request->getHeader('x-appwrite-project', '');
     }
 
+    // Backwards compatibility for new services, originally project resources
+    // These endpoints moved from /v1/projects/:projectId/<resource> to /v1/<resource>
+    // When accessed via the old alias path, extract projectId from the URI
+    $deprecatedProjectPathPrefix = '/v1/projects/';
+    $route = $utopia->match($request);
+    if (!empty($route)) {
+        $isDeprecatedAlias = \str_starts_with($request->getURI(), $deprecatedProjectPathPrefix) &&
+            !\str_starts_with($route->getPath(), $deprecatedProjectPathPrefix);
+
+        if ($isDeprecatedAlias) {
+            $projectId = \explode('/', $request->getURI(), 5)[3] ?? '';
+        }
+    }
+
     if (empty($projectId) || $projectId === 'console') {
         return $console;
     }
@@ -518,7 +532,7 @@ Http::setResource('project', function ($dbForPlatform, $request, $console, $auth
     $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
 
     return $project;
-}, ['dbForPlatform', 'request', 'console', 'authorization']);
+}, ['dbForPlatform', 'request', 'console', 'authorization', 'utopia']);
 
 Http::setResource('session', function (User $user, Store $store, Token $proofForToken) {
     if ($user->isEmpty()) {
@@ -1097,16 +1111,21 @@ function getDevice(string $root, string $connection = ''): Device
     }
 }
 
-Http::setResource('mode', function ($request) {
-    /** @var Appwrite\Utopia\Request $request */
-
+Http::setResource('mode', function (Request $request, Document $project) {
     /**
      * Defines the mode for the request:
      * - 'default' => Requests for Client and Server Side
      * - 'admin' => Request from the Console on non-console projects
      */
-    return $request->getParam('mode', $request->getHeader('x-appwrite-mode', APP_MODE_DEFAULT));
-}, ['request']);
+    $mode = $request->getParam('mode', $request->getHeader('x-appwrite-mode', APP_MODE_DEFAULT));
+
+    $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', ''));
+    if (!empty($projectId) && $project->getId() !== $projectId) {
+        $mode = APP_MODE_ADMIN;
+    }
+
+    return $mode;
+}, ['request', 'project']);
 
 Http::setResource('geodb', function ($register) {
     /** @var Utopia\Registry\Registry $register */
