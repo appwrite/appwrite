@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attribu
 
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
-use Utopia\Emails\Validator\Email;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Deprecated;
@@ -16,6 +15,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
+use Utopia\Emails\Validator\Email;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
