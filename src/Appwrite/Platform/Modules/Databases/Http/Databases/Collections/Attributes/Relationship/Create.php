@@ -93,8 +93,8 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_FEATURE_UNSUPPORTED, 'Relationships are not supported by this database.');
         }
 
-        $key ??= $relatedCollectionId;
         $twoWayKeyWasProvided = $twoWayKey !== null;
+        $key ??= $relatedCollectionId;
         $twoWayKey ??= $collectionId;
 
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
@@ -114,6 +114,10 @@ class Create extends Action
             throw new Exception($this->getParentNotFoundException(), params: [$relatedCollectionId]);
         }
 
+        if (!$twoWay) {
+            $twoWayKey = '';
+        }
+
         $attributes = $collection->getAttribute('attributes', []);
         foreach ($attributes as $attribute) {
             if ($attribute->getAttribute('type') !== Database::VAR_RELATIONSHIP) {
@@ -125,6 +129,7 @@ class Create extends Action
             }
 
             if (
+                $twoWay &&
                 \strtolower($attribute->getAttribute('options')['twoWayKey']) === \strtolower($twoWayKey) &&
                 $attribute->getAttribute('options')['relatedCollection'] === $relatedCollection->getId()
             ) {
