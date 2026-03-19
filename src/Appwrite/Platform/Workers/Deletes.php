@@ -54,6 +54,7 @@ class Deletes extends Action
             ->inject('project')
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
+            ->inject('getDatabasesDB')
             ->inject('getLogsDB')
             ->inject('deviceForFiles')
             ->inject('deviceForFunctions')
@@ -80,6 +81,7 @@ class Deletes extends Action
         Document $project,
         Database $dbForPlatform,
         callable $getProjectDB,
+        callable $getDatabasesDB,
         callable $getLogsDB,
         Device $deviceForFiles,
         Device $deviceForFunctions,
@@ -115,7 +117,7 @@ class Deletes extends Action
             case DELETE_TYPE_DOCUMENT:
                 switch ($document->getCollection()) {
                     case DELETE_TYPE_PROJECTS:
-                        $this->deleteProject($dbForPlatform, $getProjectDB, $deviceForFiles, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $document);
+                        $this->deleteProject($dbForPlatform, $getProjectDB, $getDatabasesDB, $deviceForFiles, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $document);
                         break;
                     case DELETE_TYPE_SITES:
                         $this->deleteSite($dbForPlatform, $getProjectDB, $deviceForSites, $deviceForBuilds, $deviceForFiles, $document, $certificates, $project);
@@ -150,7 +152,7 @@ class Deletes extends Action
                 }
                 break;
             case DELETE_TYPE_TEAM_PROJECTS:
-                $this->deleteProjectsByTeam($dbForPlatform, $getProjectDB, $certificates, $document);
+                $this->deleteProjectsByTeam($dbForPlatform, $getProjectDB, $getDatabasesDB, $certificates, $document);
                 break;
             case DELETE_TYPE_EXECUTIONS:
                 $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention);
@@ -218,6 +220,50 @@ class Deletes extends Action
             default:
                 throw new \Exception('No delete operation for type: ' . \strval($type));
         }
+    }
+
+    private function cleanDatabase(
+        Document $databaseDoc,
+        callable $executionActionPerDatabase,
+        bool $projectTables,
+        array $projectCollectionIds
+    ): void {
+        $executionActionPerDatabase(
+            $databaseDoc,
+            fn (Database $dbForDatabases) => $this->cleanDatabaseCollections(
+                $dbForDatabases,
+                $projectTables,
+                $projectCollectionIds
+            )
+        );
+    }
+
+    private function cleanDatabaseCollections(
+        Database $dbForDatabases,
+        bool $projectTables,
+        array $projectCollectionIds
+    ): void {
+        $dbForDatabases->foreach(
+            Database::METADATA,
+            function (Document $collection) use ($dbForDatabases, $projectTables, $projectCollectionIds) {
+                $collectionId = $collection->getId();
+
+                try {
+                    if ($projectTables || !\in_array($collectionId, $projectCollectionIds, true)) {
+                        $dbForDatabases->deleteCollection($collectionId);
+                        return;
+                    }
+
+                    $this->deleteByGroup(
+                        $collectionId,
+                        [Query::orderAsc()],
+                        database: $dbForDatabases
+                    );
+                } catch (Throwable $e) {
+                    Console::error('Error deleting ' . $collectionId . ' ' . $e->getMessage());
+                }
+            }
+        );
     }
 
     /**
@@ -564,7 +610,7 @@ class Deletes extends Action
      * @throws Structure
      * @throws Exception
      */
-    protected function deleteProjectsByTeam(Database $dbForPlatform, callable $getProjectDB, CertificatesAdapter $certificates, Document $document): void
+    protected function deleteProjectsByTeam(Database $dbForPlatform, callable $getProjectDB, callable $getDatabasesDB, CertificatesAdapter $certificates, Document $document): void
     {
 
         $projects = $dbForPlatform->find('projects', [
@@ -579,7 +625,7 @@ class Deletes extends Action
             $deviceForBuilds = getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
             $deviceForCache = getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
 
-            $this->deleteProject($dbForPlatform, $getProjectDB, $deviceForFiles, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $project);
+            $this->deleteProject($dbForPlatform, $getProjectDB, $getDatabasesDB, $deviceForFiles, $deviceForSites, $deviceForFunctions, $deviceForBuilds, $deviceForCache, $certificates, $project);
             $dbForPlatform->deleteDocument('projects', $project->getId());
         }
     }
@@ -597,7 +643,7 @@ class Deletes extends Action
      * @throws Authorization
      * @throws DatabaseException
      */
-    protected function deleteProject(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFiles, Device $deviceForSites, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, Document $document): void
+    protected function deleteProject(Database $dbForPlatform, callable $getProjectDB, callable $getDatabasesDB, Device $deviceForFiles, Device $deviceForSites, Device $deviceForFunctions, Device $deviceForBuilds, Device $deviceForCache, CertificatesAdapter $certificates, Document $document): void
     {
         $projectInternalId = $document->getSequence();
         $projectId = $document->getId();
@@ -634,23 +680,44 @@ class Deletes extends Action
             $sharedTablesV1 = \in_array($dsn->getHost(), $sharedTablesV1);
             $sharedTablesV2 = !$projectTables && !$sharedTablesV1;
 
-            $dbForProject->foreach(Database::METADATA, function (Document $collection) use ($dbForProject, $projectTables, $projectCollectionIds) {
-                try {
-                    if ($projectTables || !\in_array($collection->getId(), $projectCollectionIds)) {
-                        $dbForProject->deleteCollection($collection->getId());
-                    } else {
-                        $this->deleteByGroup(
-                            $collection->getId(),
-                            [
-                                Query::orderAsc()
-                            ],
-                            database: $dbForProject
-                        );
-                    }
-                } catch (Throwable $e) {
-                    Console::error('Error deleting ' . $collection->getId() . ' ' . $e->getMessage());
+            $allDatabases = [
+                new Document([
+                    'database' => $document->getAttribute('database')
+                ]),
+                ...$dbForProject->find('databases', [
+                    Query::equal('type', [DATABASE_TYPE_DOCUMENTSDB, DATABASE_TYPE_VECTORSDB]),
+                    Query::limit(5000),
+                ]),
+            ];
+            $databasesToClean = [];
+
+            foreach ($allDatabases as $db) {
+                $key = $db->getAttribute('database');
+
+                if ($key) {
+                    $databasesToClean[$key] ??= $db;
                 }
-            });
+            }
+
+            $databasesToClean = array_values($databasesToClean);
+
+            $executionActionPerDatabase = function (Document $databaseDoc, $callback) use ($getDatabasesDB, $document) {
+                /**
+                * @var Database $dbForDatabases
+                */
+                $dbForDatabases = $getDatabasesDB($databaseDoc, $document);
+                $callback($dbForDatabases);
+            };
+
+            batch(array_map(
+                fn ($databaseDoc) => fn () => $this->cleanDatabase(
+                    $databaseDoc,
+                    $executionActionPerDatabase,
+                    $projectTables,
+                    $projectCollectionIds
+                ),
+                $databasesToClean
+            ));
 
             // Delete Platforms
             $this->deleteByGroup('platforms', [
@@ -705,7 +772,15 @@ class Deletes extends Action
 
             // Delete metadata table
             if ($projectTables) {
-                $dbForProject->deleteCollection(Database::METADATA);
+                batch(array_map(
+                    fn ($databaseDoc) => fn () =>
+                        $executionActionPerDatabase(
+                            $databaseDoc,
+                            fn (Database $dbForDatabases) =>
+                                $dbForDatabases->deleteCollection(Database::METADATA)
+                        ),
+                    $databasesToClean
+                ));
             } elseif ($sharedTablesV1) {
                 $this->deleteByGroup(
                     Database::METADATA,
@@ -1053,7 +1128,6 @@ class Deletes extends Action
          */
         Console::info("Deleting rules for site " . $siteId);
         $this->deleteByGroup('rules', [
-            Query::equal('type', ['deployment']),
             Query::equal('deploymentResourceType', ['site']),
             Query::equal('deploymentResourceInternalId', [$siteInternalId]),
             Query::equal('projectInternalId', [$project->getSequence()])
@@ -1145,7 +1219,6 @@ class Deletes extends Action
          */
         Console::info("Deleting rules for function " . $functionId);
         $this->deleteByGroup('rules', [
-            Query::equal('type', ['deployment']),
             Query::equal('deploymentResourceType', ['function']),
             Query::equal('deploymentResourceInternalId', [$functionInternalId]),
             Query::equal('projectInternalId', [$project->getSequence()]),

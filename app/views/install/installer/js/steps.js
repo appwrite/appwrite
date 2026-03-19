@@ -9,7 +9,8 @@
     const {
         INSTALLATION_STEPS,
         clampStep,
-        isUpgradeMode
+        isUpgradeMode,
+        getEnabledDatabases
     } = Context;
 
     const {
@@ -79,6 +80,19 @@
         }
     };
 
+    const applyEnabledDatabases = (root) => {
+        const enabled = getEnabledDatabases?.() || [];
+        const radios = root.querySelectorAll('input[name="database"]');
+        radios.forEach((radio) => {
+            if (!enabled.includes(radio.value)) {
+                const card = radio.closest('.selector-card');
+                if (card) {
+                    card.remove();
+                }
+            }
+        });
+    };
+
     const bindDatabaseSelection = (root) => {
         const radios = root.querySelectorAll('input[name="database"]');
         radios.forEach((radio) => {
@@ -138,6 +152,8 @@
             disableControls?.(root);
             return;
         }
+
+        applyEnabledDatabases(root);
 
         const lockedDatabase = getLockedDatabase?.() || '';
         if (lockedDatabase) {

@@ -1144,6 +1144,11 @@ return [
         'description' => 'Webhook with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::WEBHOOK_ALREADY_EXISTS => [
+        'name' => Exception::WEBHOOK_ALREADY_EXISTS,
+        'description' => 'Webhook with the same ID already exists. Try again with a different ID.',
+        'code' => 409,
+    ],
     Exception::KEY_NOT_FOUND => [
         'name' => Exception::KEY_NOT_FOUND,
         'description' => 'Key with the requested ID could not be found.',
@@ -1200,6 +1205,11 @@ return [
         'name' => Exception::MIGRATION_IN_PROGRESS,
         'description' => 'Migration is already in progress. You can check the status of the migration in your Appwrite Console\'s "Settings" > "Migrations".',
         'code' => 409,
+    ],
+    Exception::MIGRATION_DATABASE_TYPE_UNSUPPORTED => [
+        'name' => Exception::MIGRATION_DATABASE_TYPE_UNSUPPORTED,
+        'description' => 'The specified database type is not supported for CSV import or export operations.',
+        'code' => 400,
     ],
 
     /** Realtime */

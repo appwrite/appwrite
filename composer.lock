@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "685d2d49e6e9b92df4084e091a16ca6a",
+    "content-hash": "3416a116f2912385f16498aea77ce6a3",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3850,16 +3850,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-joins8",
+            "version": "5.3.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "0fdc9afb5302503090d858a8a40d3c38844b27f2"
+                "reference": "f121418c4dc7169576735620fd8c17093c3b851d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/0fdc9afb5302503090d858a8a40d3c38844b27f2",
-                "reference": "0fdc9afb5302503090d858a8a40d3c38844b27f2",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/f121418c4dc7169576735620fd8c17093c3b851d",
+                "reference": "f121418c4dc7169576735620fd8c17093c3b851d",
                 "shasum": ""
             },
             "require": {
@@ -3889,38 +3889,7 @@
                     "Utopia\\Database\\": "src/Database"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Tests\\E2E\\": "tests/e2e",
-                    "Tests\\Unit\\": "tests/unit"
-                }
-            },
-            "scripts": {
-                "build": [
-                    "Composer\\Config::disableProcessTimeout",
-                    "docker compose build"
-                ],
-                "start": [
-                    "Composer\\Config::disableProcessTimeout",
-                    "docker compose up -d"
-                ],
-                "test": [
-                    "Composer\\Config::disableProcessTimeout",
-                    "docker compose exec tests vendor/bin/phpunit --configuration phpunit.xml"
-                ],
-                "lint": [
-                    "php -d memory_limit=2G ./vendor/bin/pint --test"
-                ],
-                "format": [
-                    "php -d memory_limit=2G ./vendor/bin/pint"
-                ],
-                "check": [
-                    "./vendor/bin/phpstan analyse --level 7 src tests --memory-limit 2G"
-                ],
-                "coverage": [
-                    "./vendor/bin/coverage-check ./tmp/clover.xml 90"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -3933,10 +3902,10 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/database/tree/joins8",
-                "issues": "https://github.com/utopia-php/database/issues"
+                "issues": "https://github.com/utopia-php/database/issues",
+                "source": "https://github.com/utopia-php/database/tree/5.3.16"
             },
-            "time": "2026-03-19T07:32:29+00:00"
+            "time": "2026-03-19T10:10:02+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4549,16 +4518,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "dev-joins",
+            "version": "1.8.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "63df4ddb1a4ac58628fc94bb9d1473ee444c8dc4"
+                "reference": "8633523b3343d492427331b6eec53f020f6ab7a7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/63df4ddb1a4ac58628fc94bb9d1473ee444c8dc4",
-                "reference": "63df4ddb1a4ac58628fc94bb9d1473ee444c8dc4",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/8633523b3343d492427331b6eec53f020f6ab7a7",
+                "reference": "8633523b3343d492427331b6eec53f020f6ab7a7",
                 "shasum": ""
             },
             "require": {
@@ -4567,7 +4536,7 @@
                 "ext-openssl": "*",
                 "halaxa/json-machine": "^1.2",
                 "php": ">=8.1",
-                "utopia-php/database": "dev-joins8 as 5.3.1",
+                "utopia-php/database": "5.*",
                 "utopia-php/dsn": "0.2.*",
                 "utopia-php/storage": "1.0.*"
             },
@@ -4598,9 +4567,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/joins"
+                "source": "https://github.com/utopia-php/migration/tree/1.8.3"
             },
-            "time": "2026-03-18T08:44:13+00:00"
+            "time": "2026-03-19T09:18:47+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8463,25 +8432,9 @@
             "time": "2024-11-07T12:36:22+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-joins8",
-            "alias": "5.3.15",
-            "alias_normalized": "5.3.15.0"
-        },
-        {
-            "package": "utopia-php/migration",
-            "version": "dev-joins",
-            "alias": "1.7.0",
-            "alias_normalized": "1.7.0.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "utopia-php/database": 20,
-        "utopia-php/migration": 20
-    },
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
@@ -8502,8 +8455,5 @@
     "platform-dev": {
         "ext-fileinfo": "*"
     },
-    "platform-overrides": {
-        "php": "8.3"
-    },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }

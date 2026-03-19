@@ -1727,6 +1727,70 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(404, $function['headers']['status-code']);
     }
 
+    public function testDeleteFunctionRulesCleanup(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test Rules Cleanup Function',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 15,
+        ]);
+
+        $this->assertNotEmpty($functionId);
+
+        // Create a manual deployment rule (type = 'deployment')
+        $domain = $this->setupFunctionDomain($functionId);
+        $this->assertNotEmpty($domain);
+
+        // Create a redirect rule (type = 'redirect')
+        $redirectDomain = \uniqid() . '-redirect-cleanup.custom.localhost';
+        $redirectRule = $this->client->call(Client::METHOD_POST, '/proxy/rules/redirect', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'domain' => $redirectDomain,
+            'url' => 'https://appwrite.io',
+            'statusCode' => 301,
+            'resourceType' => 'function',
+            'resourceId' => $functionId,
+        ]);
+
+        $this->assertEquals(201, $redirectRule['headers']['status-code']);
+        $this->assertNotEmpty($redirectRule['body']['$id']);
+
+        // Verify both rules exist (no type filter — catches all rule types)
+        $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('deploymentResourceId', [$functionId])->toString()
+            ]
+        ]);
+
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(2, $rules['body']['total']);
+
+        // Delete the function
+        $this->cleanupFunction($functionId);
+
+        // Verify ALL rules (deployment + redirect) are cleaned up
+        $this->assertEventually(function () use ($functionId) {
+            $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => [
+                    Query::equal('deploymentResourceId', [$functionId])->toString()
+                ]
+            ]);
+
+            $this->assertEquals(200, $rules['headers']['status-code']);
+            $this->assertEquals(0, $rules['body']['total']);
+        }, 5000, 500);
+    }
+
     public function testExecutionTimeout()
     {
         $functionId = $this->setupFunction([

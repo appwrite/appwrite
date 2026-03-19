@@ -68,6 +68,7 @@ class XList extends Action
             ->param('queries', [], new Types([Query::TYPE_LIMIT, Query::TYPE_OFFSET]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('locale')
             ->inject('geodb')
             ->inject('authorization')
@@ -75,7 +76,7 @@ class XList extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, array $queries, UtopiaResponse $response, Database $dbForProject, Locale $locale, Reader $geodb, Authorization $authorization, Audit $audit): void
+    public function action(string $databaseId, string $collectionId, string $documentId, array $queries, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Locale $locale, Reader $geodb, Authorization $authorization, Audit $audit): void
     {
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
@@ -87,7 +88,8 @@ class XList extends Action
             throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
-        $document = $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId);
+        $dbForDatabases = $getDatabasesDB($database);
+        $document = $dbForDatabases->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId);
         if ($document->isEmpty()) {
             throw new Exception($this->getNotFoundException(), params: [$documentId]);
         }
