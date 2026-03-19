@@ -201,7 +201,7 @@ class Create extends Action
                 'enabled' => $enabled,
                 'search' => implode(' ', [$databaseId, $name]),
                 'type' => $this->getDatabaseType(),
-                'database' => $this->getDatabaseDSN($project)
+                // 'database' => $this->getDatabaseDSN($project) // TODO: remove it, currently commented to check if test passing or not
             ]));
         } catch (DuplicateException) {
             throw new Exception(Exception::DATABASE_ALREADY_EXISTS, params: [$databaseId]);

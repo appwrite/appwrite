@@ -223,7 +223,7 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache, Authoriza
 Server::setResource('getDatabasesDB', function (Cache $cache, Registry $register, Document $project, Authorization $authorization) {
     return function (Document $database, ?Document $projectDocument = null) use ($cache, $register, $project, $authorization): Database {
         $projectDocument ??= $project;
-        $databaseDSN = $database->getAttribute('database', '');
+        $databaseDSN = $database->getAttribute('database', $project->getAttribute('database',''));
         $databaseType = $database->getAttribute('type', '');
 
         // Backwards‑compatibility: older or seeded legacy databases may not have a DSN stored

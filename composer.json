@@ -60,7 +60,7 @@
         "utopia-php/compression": "0.1.*",
         "utopia-php/config": "1.*",
         "utopia-php/console": "0.1.*",
-        "utopia-php/database": "5.3.*",
+        "utopia-php/database": "dev-fix-shared-table-reconciliation as 5.3.16",
         "utopia-php/agents": "1.*",
         "utopia-php/detector": "0.2.*",
         "utopia-php/domains": "1.*",
