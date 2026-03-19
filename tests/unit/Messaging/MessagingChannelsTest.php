@@ -16,7 +16,7 @@ class MessagingChannelsTest extends TestCase
      */
     public $connectionsPerChannel = 10;
 
-    public Realtime $realtime;
+    public ?Realtime $realtime = null;
     public $connectionsCount = 0;
     public $connectionsAuthenticated = 0;
     public $connectionsGuest = 0;

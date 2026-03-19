@@ -211,12 +211,6 @@ parameters:
 			path: src/Appwrite/Auth/Validator/PersonalData.php
 
 		-
-			message: '#^PHPDoc tag @var above a method has no effect\.$#'
-			identifier: varTag.misplaced
-			count: 1
-			path: src/Appwrite/Databases/TransactionState.php
-
-		-
 			message: '#^PHPDoc tag @param has invalid value \(DeviceDetector\)\: Unexpected token "\\n     ", expected variable at offset 32 on line 2$#'
 			identifier: phpDoc.parseError
 			count: 1

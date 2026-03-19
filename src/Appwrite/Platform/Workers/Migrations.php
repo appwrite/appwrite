@@ -56,7 +56,7 @@ class Migrations extends Action
     protected Document $sourceProject;
 
     /**
-     * @var callable(Document $database, ?Document $projectDocument = null): Database
+     * @var callable
      */
     protected mixed $getDatabasesDB;
 

@@ -76,7 +76,6 @@ class HeadersTest extends TestCase
         ];
         $this->assertFalse($this->object->isValid($headers));
 
-        // @phpstan-ignore-next-line
         $headers = [
             null => 'value',
         ];
