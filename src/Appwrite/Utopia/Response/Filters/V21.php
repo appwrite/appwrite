@@ -61,21 +61,36 @@ class V21 extends Filter
 
     protected function parseDocument(array $content): array
     {
-        if (isset($content['$sequence'])) {
-            $content['$sequence'] = \is_numeric($content['$sequence'])
-                ? (int)$content['$sequence']
-                : 0;
-        }
-        return $content;
+        return $this->castSequence($content);
     }
 
     protected function parseRow(array $content): array
+    {
+        return $this->castSequence($content);
+    }
+
+    protected function castSequence(array $content): array
     {
         if (isset($content['$sequence'])) {
             $content['$sequence'] = \is_numeric($content['$sequence'])
                 ? (int)$content['$sequence']
                 : 0;
         }
+
+        foreach ($content as $key => $value) {
+            if (\is_array($value)) {
+                if (isset($value['$id'])) {
+                    $content[$key] = $this->castSequence($value);
+                } else {
+                    foreach ($value as $i => $item) {
+                        if (\is_array($item) && isset($item['$id'])) {
+                            $content[$key][$i] = $this->castSequence($item);
+                        }
+                    }
+                }
+            }
+        }
+
         return $content;
     }
 }

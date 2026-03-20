@@ -317,6 +317,130 @@ class V21Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
+    public static function documentProvider(): array
+    {
+        return [
+            'cast $sequence to int' => [
+                [
+                    '$id' => 'doc1',
+                    '$sequence' => '123',
+                    'name' => 'test',
+                ],
+                [
+                    '$id' => 'doc1',
+                    '$sequence' => 123,
+                    'name' => 'test',
+                ]
+            ],
+            'non-numeric $sequence becomes 0' => [
+                [
+                    '$id' => 'doc1',
+                    '$sequence' => 'abc',
+                ],
+                [
+                    '$id' => 'doc1',
+                    '$sequence' => 0,
+                ]
+            ],
+            'nested relationship document' => [
+                [
+                    '$id' => 'doc1',
+                    '$sequence' => '1',
+                    'author' => [
+                        '$id' => 'doc2',
+                        '$sequence' => '2',
+                        'name' => 'John',
+                    ],
+                ],
+                [
+                    '$id' => 'doc1',
+                    '$sequence' => 1,
+                    'author' => [
+                        '$id' => 'doc2',
+                        '$sequence' => 2,
+                        'name' => 'John',
+                    ],
+                ]
+            ],
+            'nested array of relationship documents' => [
+                [
+                    '$id' => 'doc1',
+                    '$sequence' => '1',
+                    'comments' => [
+                        [
+                            '$id' => 'doc2',
+                            '$sequence' => '2',
+                            'text' => 'hello',
+                        ],
+                        [
+                            '$id' => 'doc3',
+                            '$sequence' => '3',
+                            'text' => 'world',
+                        ],
+                    ],
+                ],
+                [
+                    '$id' => 'doc1',
+                    '$sequence' => 1,
+                    'comments' => [
+                        [
+                            '$id' => 'doc2',
+                            '$sequence' => 2,
+                            'text' => 'hello',
+                        ],
+                        [
+                            '$id' => 'doc3',
+                            '$sequence' => 3,
+                            'text' => 'world',
+                        ],
+                    ],
+                ]
+            ],
+            'deeply nested relationships' => [
+                [
+                    '$id' => 'doc1',
+                    '$sequence' => '1',
+                    'author' => [
+                        '$id' => 'doc2',
+                        '$sequence' => '2',
+                        'profile' => [
+                            '$id' => 'doc3',
+                            '$sequence' => '3',
+                        ],
+                    ],
+                ],
+                [
+                    '$id' => 'doc1',
+                    '$sequence' => 1,
+                    'author' => [
+                        '$id' => 'doc2',
+                        '$sequence' => 2,
+                        'profile' => [
+                            '$id' => 'doc3',
+                            '$sequence' => 3,
+                        ],
+                    ],
+                ]
+            ],
+        ];
+    }
+
+    #[DataProvider('documentProvider')]
+    public function testDocument(array $content, array $expected): void
+    {
+        $result = $this->filter->parse($content, Response::MODEL_DOCUMENT);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    #[DataProvider('documentProvider')]
+    public function testRow(array $content, array $expected): void
+    {
+        $result = $this->filter->parse($content, Response::MODEL_ROW);
+
+        $this->assertEquals($expected, $result);
+    }
+
     public static function defaultPassthroughProvider(): array
     {
         return [
