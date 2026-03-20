@@ -508,7 +508,7 @@ class Install extends Action
         $this->applyLocalPaths($isLocalInstall, false);
 
         $isCLI = php_sapi_name() === 'cli';
-        if ($isLocalInstall) {
+        if ($isLocalInstall || $isUpgrade) {
             $useExistingConfig = false;
         } else {
             $useExistingConfig = file_exists($this->path . '/' . $this->getComposeFileName())
