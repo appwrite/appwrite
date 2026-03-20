@@ -42,6 +42,7 @@ class Upgrade extends Install
         bool $noStart,
         string $database
     ): void {
+        $this->isUpgrade = true;
         $isLocalInstall = $this->isLocalInstall();
         $this->applyLocalPaths($isLocalInstall, true);
 
