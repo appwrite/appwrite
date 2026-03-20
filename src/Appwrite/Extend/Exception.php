@@ -310,6 +310,7 @@ class Exception extends \Exception
 
     /** Webhooks */
     public const string WEBHOOK_NOT_FOUND = 'webhook_not_found';
+    public const string WEBHOOK_ALREADY_EXISTS = 'webhook_already_exists';
 
     /** Router */
     public const string ROUTER_HOST_NOT_FOUND = 'router_host_not_found';

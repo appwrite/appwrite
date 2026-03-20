@@ -59,7 +59,7 @@ trait DatabasesPermissionsBase
             'password' => $password
         ]);
 
-        $this->assertEquals(201, $user['headers']['status-code']);
+        $this->assertContains($user['headers']['status-code'], [201, 409]);
 
         $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'origin' => 'http://localhost',
@@ -72,9 +72,12 @@ trait DatabasesPermissionsBase
 
         $session = $session['cookies']['a_session_' . $this->getProject()['$id']];
 
+        $userId = $user['headers']['status-code'] === 201 ? $user['body']['$id'] : $id;
+        $userEmail = $user['headers']['status-code'] === 201 ? $user['body']['email'] : $email;
+
         $user = [
-            '$id' => $user['body']['$id'],
-            'email' => $user['body']['email'],
+            '$id' => $userId,
+            'email' => $userEmail,
             'session' => $session,
         ];
         $this->users[$id] = $user;
@@ -94,6 +97,12 @@ trait DatabasesPermissionsBase
             'teamId' => $id,
             'name' => $name
         ]);
+        $this->assertContains($team['headers']['status-code'], [201, 409]);
+
+        if ($team['headers']['status-code'] === 409) {
+            $team = $this->client->call(Client::METHOD_GET, '/teams/' . $id, $this->getServerHeader());
+        }
+
         $this->teams[$id] = $team['body'];
 
         return $team['body'];

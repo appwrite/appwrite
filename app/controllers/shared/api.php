@@ -215,7 +215,7 @@ Http::init()
                     );
                 }
 
-                if (! $dbKey) {
+                if (!$dbKey) {
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
 

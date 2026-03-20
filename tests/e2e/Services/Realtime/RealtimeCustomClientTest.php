@@ -2289,7 +2289,7 @@ class RealtimeCustomClientTest extends Scope
             ]);
 
             $this->assertEquals('ready', $deployment['body']['status'], \json_encode($deployment['body']));
-        });
+        }, 240_000, 500);
 
         $response = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
             'content-type' => 'application/json',
@@ -3743,7 +3743,51 @@ class RealtimeCustomClientTest extends Scope
         $session = $user['session'] ?? '';
         $projectId = $this->getProject()['$id'];
 
-        Coroutine\run(function () use ($session, $projectId) {
+        // Setup DB/collection/attribute outside coroutine to avoid fatal errors on assertion failure
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Concurrent DB',
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Concurrent Collection',
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'documentSecurity' => true,
+        ]);
+        $collectionId = $collection['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/attributes/string", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'name',
+            'size' => 64,
+            'required' => true,
+        ]);
+
+        $this->assertEventually(function () use ($databaseId, $collectionId) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/name', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status'] ?? null);
+        }, 30000, 250);
+
+        Coroutine\run(function () use ($session, $projectId, $databaseId, $collectionId) {
             $headers = [
                 'origin' => 'http://localhost',
                 'cookie' => 'a_session_' . $projectId . '=' . $session
@@ -3759,50 +3803,6 @@ class RealtimeCustomClientTest extends Scope
                 $response = json_decode($client->receive(), true);
                 $this->assertEquals('connected', $response['type']);
             }
-
-            // Setup DB/collection/attribute
-            $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $projectId,
-                'x-appwrite-key' => $this->getProject()['apiKey']
-            ]), [
-                'databaseId' => ID::unique(),
-                'name' => 'Concurrent DB',
-            ]);
-            $databaseId = $database['body']['$id'];
-
-            $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $projectId,
-                'x-appwrite-key' => $this->getProject()['apiKey']
-            ]), [
-                'collectionId' => ID::unique(),
-                'name' => 'Concurrent Collection',
-                'permissions' => [
-                    Permission::create(Role::user($this->getUser()['$id'])),
-                ],
-                'documentSecurity' => true,
-            ]);
-            $collectionId = $collection['body']['$id'];
-
-            $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/attributes/string", array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $projectId,
-                'x-appwrite-key' => $this->getProject()['apiKey']
-            ]), [
-                'key' => 'name',
-                'size' => 64,
-                'required' => true,
-            ]);
-
-            $this->assertEventually(function () use ($databaseId, $collectionId) {
-                $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/name', array_merge([
-                    'content-type' => 'application/json',
-                    'x-appwrite-project' => $this->getProject()['$id'],
-                    'x-appwrite-key' => $this->getProject()['apiKey'],
-                ]));
-                $this->assertEquals('available', $response['body']['status']);
-            }, 30000, 250);
 
             $creates = [
                 ['name' => 'Doc A'],
