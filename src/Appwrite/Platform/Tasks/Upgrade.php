@@ -4,7 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Env;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
@@ -80,7 +80,9 @@ class Upgrade extends Install
         }
 
         if ($database === null) {
-            throw new \Exception('Database type not found, can not upgrade. Ensure `_APP_DB_ADAPTER` is set in your environment.');
+            // Pre-1.9.0 installations only supported MariaDB
+            $database = 'mariadb';
+            Console::info('No _APP_DB_ADAPTER found in existing configuration, defaulting to mariadb.');
         }
 
         $this->lockedDatabase = $database;
