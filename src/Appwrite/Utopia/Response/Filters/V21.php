@@ -23,6 +23,18 @@ class V21 extends Filter
                 "functions",
                 fn ($item) => $this->parseFunction($item),
             ),
+            Response::MODEL_DOCUMENT => $this->parseDocument($content),
+            Response::MODEL_DOCUMENT_LIST => $this->handleList(
+                $content,
+                "documents",
+                fn ($item) => $this->parseDocument($item),
+            ),
+            Response::MODEL_ROW => $this->parseRow($content),
+            Response::MODEL_ROW_LIST => $this->handleList(
+                $content,
+                "rows",
+                fn ($item) => $this->parseRow($item),
+            ),
             default => $content,
         };
     }
@@ -44,6 +56,41 @@ class V21 extends Filter
         $content['specification'] = $content['buildSpecification'] ?? $content['specification'] ?? null;
         unset($content['buildSpecification']);
         unset($content['runtimeSpecification']);
+        return $content;
+    }
+
+    protected function parseDocument(array $content): array
+    {
+        return $this->castSequence($content);
+    }
+
+    protected function parseRow(array $content): array
+    {
+        return $this->castSequence($content);
+    }
+
+    protected function castSequence(array $content): array
+    {
+        if (isset($content['$sequence'])) {
+            $content['$sequence'] = \is_numeric($content['$sequence'])
+                ? (int)$content['$sequence']
+                : 0;
+        }
+
+        foreach ($content as $key => $value) {
+            if (\is_array($value)) {
+                if (isset($value['$id'])) {
+                    $content[$key] = $this->castSequence($value);
+                } else {
+                    foreach ($value as $i => $item) {
+                        if (\is_array($item) && isset($item['$id'])) {
+                            $content[$key][$i] = $this->castSequence($item);
+                        }
+                    }
+                }
+            }
+        }
+
         return $content;
     }
 }

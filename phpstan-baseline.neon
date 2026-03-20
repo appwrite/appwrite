@@ -901,18 +901,6 @@ parameters:
 			path: src/Appwrite/Platform/Tasks/StatsResources.php
 
 		-
-			message: '#^Call to static method error\(\) on an unknown class Utopia\\CLI\\Console\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Appwrite/Platform/Tasks/Upgrade.php
-
-		-
-			message: '#^Call to static method log\(\) on an unknown class Utopia\\CLI\\Console\.$#'
-			identifier: class.notFound
-			count: 5
-			path: src/Appwrite/Platform/Tasks/Upgrade.php
-
-		-
 			message: '#^PHPDoc tag @param references unknown parameter\: \$getProjectDB$#'
 			identifier: parameter.notFound
 			count: 1
