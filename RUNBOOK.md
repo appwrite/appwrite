@@ -24,10 +24,6 @@ composer update --ignore-platform-reqs --optimize-autoloader --no-plugins --no-s
 
 3) Exit the container, update the CHANGELOG.md
 
-```sh
-giut a
-```
-
 4) Commit and Push
 
 ```sh

@@ -621,8 +621,9 @@ In settings, go to **Languages & Frameworks** > **PHP** > **Debug**, under **Xde
 
 Appwrite uses XDebug [Profiler](https://xdebug.org/docs/profiler) for generating **CacheGrind** files. The generated file would be located in each of the `appwrite` containers inside the `/tmp/xdebug` folder.
 
-To disable the profiler while debugging remove the `,profiler` mode from the `xdebug.ini` file
-```diff
+To disable the profiler while debugging remove the `,profile` mode from the `xdebug.ini` file
+
+```ini
 zend_extension=xdebug
 
 [xdebug]

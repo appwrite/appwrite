@@ -56,7 +56,7 @@ services:
       context: .
       target: development
       args:
-        DEBUG: false
+        DEBUG: true
         TESTING: true
         VERSION: dev
     ports:
