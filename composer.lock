@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3416a116f2912385f16498aea77ce6a3",
+    "content-hash": "e1c001eaa080868252d810b483cb8a1e",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3850,16 +3850,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "5.3.16",
+            "version": "dev-fix-metadata-reconciliation",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "f121418c4dc7169576735620fd8c17093c3b851d"
+                "reference": "b6c7176c13bcc115f9d2616cccc7298eba6574c7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/f121418c4dc7169576735620fd8c17093c3b851d",
-                "reference": "f121418c4dc7169576735620fd8c17093c3b851d",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/b6c7176c13bcc115f9d2616cccc7298eba6574c7",
+                "reference": "b6c7176c13bcc115f9d2616cccc7298eba6574c7",
                 "shasum": ""
             },
             "require": {
@@ -3889,7 +3889,38 @@
                     "Utopia\\Database\\": "src/Database"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Tests\\E2E\\": "tests/e2e",
+                    "Tests\\Unit\\": "tests/unit"
+                }
+            },
+            "scripts": {
+                "build": [
+                    "Composer\\Config::disableProcessTimeout",
+                    "docker compose build"
+                ],
+                "start": [
+                    "Composer\\Config::disableProcessTimeout",
+                    "docker compose up -d"
+                ],
+                "test": [
+                    "Composer\\Config::disableProcessTimeout",
+                    "docker compose exec tests vendor/bin/phpunit --configuration phpunit.xml"
+                ],
+                "lint": [
+                    "php -d memory_limit=2G ./vendor/bin/pint --test"
+                ],
+                "format": [
+                    "php -d memory_limit=2G ./vendor/bin/pint"
+                ],
+                "check": [
+                    "./vendor/bin/phpstan analyse --level 7 src tests --memory-limit 2G"
+                ],
+                "coverage": [
+                    "./vendor/bin/coverage-check ./tmp/clover.xml 90"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -3902,10 +3933,10 @@
                 "utopia"
             ],
             "support": {
-                "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/5.3.16"
+                "source": "https://github.com/utopia-php/database/tree/fix-metadata-reconciliation",
+                "issues": "https://github.com/utopia-php/database/issues"
             },
-            "time": "2026-03-19T10:10:02+00:00"
+            "time": "2026-03-19T14:48:40+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -8432,9 +8463,18 @@
             "time": "2024-11-07T12:36:22+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-fix-metadata-reconciliation",
+            "alias": "5.3.17",
+            "alias_normalized": "5.3.17.0"
+        }
+    ],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
