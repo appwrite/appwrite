@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5f6b2ff189450ecb10c5c198e403fb82",
+    "content-hash": "1404c8821e43b3fe92e06a8ed658ed26",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3850,16 +3850,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-fix-metadata-reconciliation",
+            "version": "5.3.17",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "b6c7176c13bcc115f9d2616cccc7298eba6574c7"
+                "reference": "cff2b6ed63d3291b74110d086e16ff089fe05993"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/b6c7176c13bcc115f9d2616cccc7298eba6574c7",
-                "reference": "b6c7176c13bcc115f9d2616cccc7298eba6574c7",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/cff2b6ed63d3291b74110d086e16ff089fe05993",
+                "reference": "cff2b6ed63d3291b74110d086e16ff089fe05993",
                 "shasum": ""
             },
             "require": {
@@ -3933,10 +3933,10 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/database/tree/fix-metadata-reconciliation",
+                "source": "https://github.com/utopia-php/database/tree/5.3.17",
                 "issues": "https://github.com/utopia-php/database/issues"
             },
-            "time": "2026-03-19T14:48:40+00:00"
+            "time": "2026-03-20T01:18:52+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -8463,18 +8463,9 @@
             "time": "2024-11-07T12:36:22+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-fix-metadata-reconciliation",
-            "alias": "5.3.17",
-            "alias_normalized": "5.3.17.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "utopia-php/database": 20
-    },
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
