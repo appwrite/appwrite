@@ -15,8 +15,6 @@ abstract class Action extends UtopiaAction
      */
     private ?string $context = COLLECTIONS;
 
-    private ?string $databaseType = LEGACY;
-
     /**
      * Get the response model used in the SDK and HTTP responses.
      */
@@ -26,9 +24,6 @@ abstract class Action extends UtopiaAction
     {
         if (\str_contains($path, '/tablesdb')) {
             $this->context = TABLES;
-            $this->databaseType = TABLESDB;
-        } elseif (\str_contains($path, '/vectorsdb')) {
-            $this->databaseType = VECTORSDB;
         }
         return parent::setHttpPath($path);
     }
@@ -39,14 +34,6 @@ abstract class Action extends UtopiaAction
     protected function getContext(): string
     {
         return $this->context;
-    }
-
-    /**
-     * Get the current API database type.
-     */
-    protected function getDatabaseType(): string
-    {
-        return $this->databaseType;
     }
 
     /**

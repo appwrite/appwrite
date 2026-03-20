@@ -1,1 +1,0 @@
-Bulk delete documents using queries, if no queries are passed then all documents are deleted.
