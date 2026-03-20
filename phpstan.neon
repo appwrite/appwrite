@@ -13,6 +13,5 @@ parameters:
   scanDirectories:
     - vendor/swoole/ide-helper
   excludePaths:
-    - app/sdks
     - tests/resources
 
