@@ -9,10 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 class V21Test extends TestCase
 {
-    /**
-     * @var Filter
-     */
-    protected $filter = null;
+    protected ?V21 $filter = null;
 
     public function setUp(): void
     {
