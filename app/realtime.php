@@ -635,7 +635,11 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     $connectionContainer->set('request', fn () => $request);
     $connectionContainer->set('response', fn () => $response);
 
-    registerRequestResources($connectionContainer);
+    if (function_exists('registerCloudRequestResources')) {
+        registerCloudRequestResources($connectionContainer);
+    } else {
+        registerRequestResources($connectionContainer);
+    }
 
     $project = null;
     $logUser = null;
