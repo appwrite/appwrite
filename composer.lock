@@ -3902,8 +3902,8 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/database/tree/5.3.17",
-                "issues": "https://github.com/utopia-php/database/issues"
+                "issues": "https://github.com/utopia-php/database/issues",
+                "source": "https://github.com/utopia-php/database/tree/5.3.17"
             },
             "time": "2026-03-20T01:18:52+00:00"
         },
@@ -5438,16 +5438,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.11.11",
+            "version": "1.11.13",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "cfc37c85161a5515af4cd2f9885a811f51a2483a"
+                "reference": "c97527030060798129f2cb7e1e767671bf09f3bd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/cfc37c85161a5515af4cd2f9885a811f51a2483a",
-                "reference": "cfc37c85161a5515af4cd2f9885a811f51a2483a",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/c97527030060798129f2cb7e1e767671bf09f3bd",
+                "reference": "c97527030060798129f2cb7e1e767671bf09f3bd",
                 "shasum": ""
             },
             "require": {
@@ -5483,9 +5483,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.11.11"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.11.13"
             },
-            "time": "2026-03-19T16:21:03+00:00"
+            "time": "2026-03-20T04:48:54+00:00"
         },
         {
             "name": "brianium/paratest",
