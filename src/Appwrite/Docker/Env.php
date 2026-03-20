@@ -19,7 +19,7 @@ class Env
         foreach ($data as &$row) {
             $row = explode('=', $row, 2);
             $key = (isset($row[0])) ? trim($row[0]) : null;
-            $value = (isset($row[1])) ? trim($row[1]) : null;
+            $value = (isset($row[1])) ? trim(trim($row[1]), '"\'') : null;
 
             if ($key) {
                 $this->vars[$key] = $value;
