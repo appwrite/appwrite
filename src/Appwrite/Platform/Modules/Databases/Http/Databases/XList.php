@@ -27,6 +27,11 @@ class XList extends Action
         return 'listDatabases';
     }
 
+    protected function getDatabaseTypeQueryFilters(): array
+    {
+        return [$this->getDatabaseType()];
+    }
+
     public function __construct()
     {
         $this
@@ -91,7 +96,7 @@ class XList extends Action
             $cursor->setValue($cursorDocument);
         }
 
-        $queries[] = Query::equal('type', [$this->getDatabaseType()]);
+        $queries[] = Query::equal('type', $this->getDatabaseTypeQueryFilters());
 
         try {
             $databases = $dbForProject->find('databases', $queries);

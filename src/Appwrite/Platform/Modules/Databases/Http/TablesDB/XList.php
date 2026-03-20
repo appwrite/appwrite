@@ -20,6 +20,11 @@ class XList extends DatabaseXList
         return 'listTablesDatabases';
     }
 
+    protected function getDatabaseTypeQueryFilters(): array
+    {
+        return [DATABASE_TYPE_TABLESDB, DATABASE_TYPE_LEGACY];
+    }
+
     public function __construct()
     {
         $this
