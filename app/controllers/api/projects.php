@@ -1178,9 +1178,10 @@ App::post('/v1/projects/:projectId/webhooks')
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
+    ->param('headers', [], new ArrayList(new Text(1024), 10), 'Webhook custom HTTP headers in `Key: Value` format. Maximum of 10 headers are allowed.', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, string $name, bool $enabled, array $events, string $url, bool $security, string $httpUser, string $httpPass, Response $response, Database $dbForPlatform) {
+    ->action(function (string $projectId, string $name, bool $enabled, array $events, string $url, bool $security, string $httpUser, string $httpPass, array $headers, Response $response, Database $dbForPlatform) {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -1207,6 +1208,7 @@ App::post('/v1/projects/:projectId/webhooks')
             'httpPass' => $httpPass,
             'signatureKey' => \bin2hex(\random_bytes(64)),
             'enabled' => $enabled,
+            'headers' => $headers,
         ]);
 
         $webhook = $dbForPlatform->createDocument('webhooks', $webhook);
@@ -1325,9 +1327,10 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
+    ->param('headers', [], new ArrayList(new Text(1024), 10), 'Webhook custom HTTP headers in `Key: Value` format. Maximum of 10 headers are allowed.', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, string $webhookId, string $name, bool $enabled, array $events, string $url, bool $security, string $httpUser, string $httpPass, Response $response, Database $dbForPlatform) {
+    ->action(function (string $projectId, string $webhookId, string $name, bool $enabled, array $events, string $url, bool $security, string $httpUser, string $httpPass, array $headers, Response $response, Database $dbForPlatform) {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -1353,7 +1356,8 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
             ->setAttribute('security', $security)
             ->setAttribute('httpUser', $httpUser)
             ->setAttribute('httpPass', $httpPass)
-            ->setAttribute('enabled', $enabled);
+            ->setAttribute('enabled', $enabled)
+            ->setAttribute('headers', $headers);
 
         if ($enabled) {
             $webhook->setAttribute('attempts', 0);

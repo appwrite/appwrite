@@ -96,6 +96,13 @@ class Webhook extends Model
                 'description' => 'Number of consecutive failed webhook attempts.',
                 'default' => 0,
                 'example' => 10,
+            ])
+            ->addRule('headers', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Custom HTTP headers in `Key: Value` format.',
+                'default' => [],
+                'example' => ['X-Custom-Header: value'],
+                'array' => true,
             ]);
     }
 

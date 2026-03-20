@@ -115,19 +115,43 @@ class Webhooks extends Action
             System::getEnv('_APP_VERSION', 'UNKNOWN'),
             System::getEnv('_APP_EMAIL_SECURITY', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY))
         ));
+        $defaultHeaders = [
+            'Content-Type: application/json',
+            'Content-Length: ' . \strlen($payload),
+            'X-' . APP_NAME . '-Webhook-Id: ' . $webhook->getId(),
+            'X-' . APP_NAME . '-Webhook-Events: ' . implode(',', $events),
+            'X-' . APP_NAME . '-Webhook-Name: ' . $webhook->getAttribute('name', ''),
+            'X-' . APP_NAME . '-Webhook-User-Id: ' . $user->getId(),
+            'X-' . APP_NAME . '-Webhook-Project-Id: ' . $project->getId(),
+            'X-' . APP_NAME . '-Webhook-Signature: ' . $signature,
+        ];
+
+        // Append user-defined custom headers
+        $customHeaders = $webhook->getAttribute('headers', []);
+        if (\is_array($customHeaders)) {
+            // Build a set of reserved header names (lowercased) to prevent overrides
+            $reservedNames = [];
+            foreach ($defaultHeaders as $header) {
+                $parts = \explode(':', $header, 2);
+                $reservedNames[] = \strtolower(\trim($parts[0]));
+            }
+
+            foreach ($customHeaders as $customHeader) {
+                if (\is_string($customHeader) && \str_contains($customHeader, ':')) {
+                    $parts = \explode(':', $customHeader, 2);
+                    $name = \strtolower(\trim($parts[0]));
+                    // Only add if it doesn't override a reserved header
+                    if (!\in_array($name, $reservedNames)) {
+                        $defaultHeaders[] = $customHeader;
+                    }
+                }
+            }
+        }
+
         \curl_setopt(
             $ch,
             CURLOPT_HTTPHEADER,
-            [
-                'Content-Type: application/json',
-                'Content-Length: ' . \strlen($payload),
-                'X-' . APP_NAME . '-Webhook-Id: ' . $webhook->getId(),
-                'X-' . APP_NAME . '-Webhook-Events: ' . implode(',', $events),
-                'X-' . APP_NAME . '-Webhook-Name: ' . $webhook->getAttribute('name', ''),
-                'X-' . APP_NAME . '-Webhook-User-Id: ' . $user->getId(),
-                'X-' . APP_NAME . '-Webhook-Project-Id: ' . $project->getId(),
-                'X-' . APP_NAME . '-Webhook-Signature: ' . $signature,
-            ]
+            $defaultHeaders
         );
         curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
 
