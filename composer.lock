@@ -4306,12 +4306,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "578cdec596c8aa8fda16752ba024fef36c6ca127"
+                "reference": "c91012caa001e4cccb1133f13938ae77478b3a28"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/578cdec596c8aa8fda16752ba024fef36c6ca127",
-                "reference": "578cdec596c8aa8fda16752ba024fef36c6ca127",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/c91012caa001e4cccb1133f13938ae77478b3a28",
+                "reference": "c91012caa001e4cccb1133f13938ae77478b3a28",
                 "shasum": ""
             },
             "require": {
@@ -4320,6 +4320,7 @@
                 "utopia-php/compression": "0.1.*",
                 "utopia-php/di": "0.3.*",
                 "utopia-php/servers": "0.3.*",
+                "utopia-php/telemetry": "0.2.*",
                 "utopia-php/validators": "0.2.*"
             },
             "require-dev": {
@@ -4351,7 +4352,7 @@
                 "issues": "https://github.com/utopia-php/http/issues",
                 "source": "https://github.com/utopia-php/http/tree/feat/swoole-adapters-and-compression"
             },
-            "time": "2026-03-19T08:35:00+00:00"
+            "time": "2026-03-19T17:31:18+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -5478,16 +5479,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.11.11",
+            "version": "1.11.13",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "cfc37c85161a5515af4cd2f9885a811f51a2483a"
+                "reference": "c97527030060798129f2cb7e1e767671bf09f3bd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/cfc37c85161a5515af4cd2f9885a811f51a2483a",
-                "reference": "cfc37c85161a5515af4cd2f9885a811f51a2483a",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/c97527030060798129f2cb7e1e767671bf09f3bd",
+                "reference": "c97527030060798129f2cb7e1e767671bf09f3bd",
                 "shasum": ""
             },
             "require": {
@@ -5523,9 +5524,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.11.11"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.11.13"
             },
-            "time": "2026-03-19T16:21:03+00:00"
+            "time": "2026-03-20T04:48:54+00:00"
         },
         {
             "name": "brianium/paratest",
