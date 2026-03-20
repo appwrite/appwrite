@@ -410,7 +410,20 @@ class Builds extends Action
 
                 $exit = Console::execute($gitCloneCommand, '', $stdout, $stderr);
 
-                if ($exit !== 0) {
+                if ($exit !== 0 && !empty($template->getAttribute('repositoryName'))) {
+                    Console::log('Git clone failed, likely empty repository. Initializing...');
+                    $exit = Console::execute('mkdir -p ' . \escapeshellarg($tmpDirectory) . ' && git init ' . \escapeshellarg($tmpDirectory), '', $stdout, $stderr);
+                    if ($exit !== 0) {
+                        throw new \Exception('Unable to initialize code repository: ' . $stderr);
+                    }
+
+                    // Extract URL from clone command to set remote origin
+                    $matches = [];
+                    if (preg_match('/https?:\/\/[^\s]+/', $gitCloneCommand, $matches)) {
+                        $url = trim($matches[0]);
+                        Console::execute('cd ' . \escapeshellarg($tmpDirectory) . ' && git remote add origin ' . \escapeshellarg($url), '', $stdout, $stderr);
+                    }
+                } elseif ($exit !== 0) {
                     throw new \Exception('Unable to clone code repository: ' . $stderr);
                 }
 
