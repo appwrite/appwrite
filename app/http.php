@@ -49,6 +49,9 @@ $certifiedDomains->create();
 global $container;
 $container->set('riskyDomains', fn () => $riskyDomains);
 $container->set('certifiedDomains', fn () => $certifiedDomains);
+$container->set('pools', function ($register) {
+    return $register->get('pools');
+}, ['register']);
 
 $payloadSize = 12 * (1024 * 1024); // 12MB - adding slight buffer for headers and other data that might be sent with the payload - update later with valid testing
 $totalWorkers = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
@@ -286,13 +289,11 @@ function createDatabase(Http $app, string $resourceKey, string $dbName, array $c
     Span::current()?->finish();
 }
 
-$http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorkers, $register, $swooleAdapter) {
-    global $container;
-    $pools = $register->get('pools');
-    /** @var Group $pools */
-    $container->set('pools', fn () => $pools);
-
+$http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorkers, $swooleAdapter) {
     $app = new Http($swooleAdapter, 'UTC');
+
+    /** @var Group $pools */
+    $pools = $app->getResource('pools');
 
     go(function () use ($app, $pools) {
 
@@ -494,7 +495,7 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
     });
 });
 
-$swooleAdapter->onRequest(function ($utopiaRequest, $utopiaResponse) use ($register, $files, $swooleAdapter) {
+$swooleAdapter->onRequest(function ($utopiaRequest, $utopiaResponse) use ($files, $swooleAdapter) {
     Span::init('http.request');
 
     $request = new Request($utopiaRequest->getSwooleRequest());
@@ -513,10 +514,6 @@ $swooleAdapter->onRequest(function ($utopiaRequest, $utopiaResponse) use ($regis
 
         return;
     }
-
-    global $container;
-    $pools = $register->get('pools');
-    $container->set('pools', fn () => $pools);
 
     $requestContainer = $swooleAdapter->getContainer();
     $requestContainer->set('request', fn () => $request);
@@ -637,11 +634,8 @@ $swooleAdapter->onRequest(function ($utopiaRequest, $utopiaResponse) use ($regis
 });
 
 // Fetch domains every `DOMAIN_SYNC_TIMER` seconds and update in the memory
-$http->on(Constant::EVENT_TASK, function () use ($register, $swooleAdapter) {
-    global $container;
+$http->on(Constant::EVENT_TASK, function () use ($swooleAdapter) {
     $lastSyncUpdate = null;
-    $pools = $register->get('pools');
-    $container->set('pools', fn () => $pools);
 
     $app = new Http($swooleAdapter, 'UTC');
 

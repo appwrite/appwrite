@@ -243,6 +243,11 @@ if (!function_exists('triggerStats')) {
     }
 }
 
+global $container;
+$container->set('pools', function ($register) {
+    return $register->get('pools');
+}, ['register']);
+
 $realtime = getRealtime();
 
 /**
@@ -623,9 +628,6 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     $response = new Response(new SwooleResponse());
 
     Console::info("Connection open (user: {$connection})");
-
-    $pools = $register->get('pools');
-    $container->set('pools', fn () => $pools);
 
     $connectionContainer = new Container($container);
 
