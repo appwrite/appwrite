@@ -338,6 +338,19 @@ Http::init()
 
         $scopes = \array_unique($scopes);
 
+        // Intentional: impersonators get users.read so they can discover a target user
+        // before impersonation starts, and keep that access while impersonating.
+        if (
+            !$user->isEmpty()
+            && (
+                $user->getAttribute('impersonator', false)
+                || $user->getAttribute('impersonatorUserId')
+            )
+        ) {
+            $scopes[] = 'users.read';
+            $scopes = \array_unique($scopes);
+        }
+
         $authorization->addRole($role);
         foreach ($user->getRoles($authorization) as $authRole) {
             $authorization->addRole($authRole);
@@ -369,8 +382,11 @@ Http::init()
         }
 
         if (! empty($user->getId())) {
+            $impersonatorUserId = $user->getAttribute('impersonatorUserId');
             $accessedAt = $user->getAttribute('accessedAt', 0);
-            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
+
+            // Skip updating accessedAt for impersonated requests so we don't attribute activity to the target user.
+            if (! $impersonatorUserId && DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
                 $user->setAttribute('accessedAt', DateTime::now());
 
                 if ($project->getId() !== 'console' && $mode !== APP_MODE_ADMIN) {

@@ -1189,18 +1189,6 @@ parameters:
 			path: src/Appwrite/Utopia/Database/Documents/User.php
 
 		-
-			message: '#^Call to method isValid\(\) on an unknown class Utopia\\Validator\\Email\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Appwrite/Utopia/Database/Validator/Attributes.php
-
-		-
-			message: '#^Instantiated class Utopia\\Validator\\Email not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: src/Appwrite/Utopia/Database/Validator/Attributes.php
-
-		-
 			message: '#^Unsafe call to private method Appwrite\\Utopia\\Request\\Filters\\V17\:\:appendSymbol\(\) through static\:\:\.$#'
 			identifier: staticClassAccess.privateMethod
 			count: 4

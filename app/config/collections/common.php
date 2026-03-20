@@ -419,6 +419,17 @@ return [
                 'array' => false,
                 'filters' => [],
             ],
+            [
+                '$id' => ID::custom('impersonator'),
+                'type' => Database::VAR_BOOLEAN,
+                'signed' => true,
+                'size' => 0,
+                'format' => '',
+                'filters' => [],
+                'required' => false,
+                'default' => false,
+                'array' => false,
+            ],
         ],
         'indexes' => [
             [
@@ -488,6 +499,13 @@ return [
                 '$id' => '_key_accessedAt',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['accessedAt'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+            [
+                '$id' => ID::custom('impersonator'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => [ID::custom('impersonator')],
                 'lengths' => [],
                 'orders' => [],
             ],
