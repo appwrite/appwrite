@@ -14,9 +14,8 @@ use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
@@ -53,7 +52,7 @@ class Create extends Base
                 description: <<<EOT
                 Create a new site.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
@@ -61,7 +60,7 @@ class Create extends Base
                     )
                 ],
             ))
-            ->param('siteId', '', new CustomId(), 'Site ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+            ->param('siteId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Site name. Max length: 128 chars.')
             ->param('framework', '', new WhiteList(\array_keys(Config::getParam('frameworks')), true), 'Sites framework.')
             ->param('enabled', true, new Boolean(), 'Is site enabled? When set to \'disabled\', users cannot access the site but Server SDKs with and API key can still access the site. No data is lost when this is toggled.', true)
@@ -69,6 +68,7 @@ class Create extends Base
             ->param('timeout', 30, new Range(1, (int) System::getEnv('_APP_SITES_TIMEOUT', 30)), 'Maximum request time in seconds.', true)
             ->param('installCommand', '', new Text(8192, 0), 'Install Command.', true)
             ->param('buildCommand', '', new Text(8192, 0), 'Build Command.', true)
+            ->param('startCommand', '', new Text(8192, 0), 'Custom start command. Leave empty to use default.', true)
             ->param('outputDirectory', '', new Text(8192, 0), 'Output Directory for site.', true)
             ->param('buildRuntime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Runtime to use during build step.')
             ->param('adapter', '', new WhiteList(['static', 'ssr']), 'Framework adapter defining rendering strategy. Allowed values are: static, ssr', true)
@@ -78,12 +78,19 @@ class Create extends Base
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the site.', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the site? In silent mode, comments will not be made on commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Text(128, 0), 'Path to site code in the linked repo.', true)
-            ->param('specification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+            ->param('buildSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
                 $plan,
                 Config::getParam('specifications', []),
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
-            ), 'Framework specification for the site and builds.', true, ['plan'])
+            ), 'Build specification for the site deployments.', true, ['plan'])
+            ->param('runtimeSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+                $plan,
+                Config::getParam('specifications', []),
+                System::getEnv('_APP_COMPUTE_CPUS', 0),
+                System::getEnv('_APP_COMPUTE_MEMORY', 0)
+            ), 'Runtime specification for the SSR executions.', true, ['plan'])
+            ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 means all deployments will be kept.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
@@ -101,6 +108,7 @@ class Create extends Base
         int $timeout,
         string $installCommand,
         string $buildCommand,
+        string $startCommand,
         string $outputDirectory,
         string $buildRuntime,
         string $adapter,
@@ -110,7 +118,9 @@ class Create extends Base
         string $providerBranch,
         bool $providerSilentMode,
         string $providerRootDirectory,
-        string $specification,
+        string $buildSpecification,
+        string $runtimeSpecification,
+        int $deploymentRetention,
         Response $response,
         Database $dbForProject,
         Document $project,
@@ -138,18 +148,20 @@ class Create extends Base
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS (Version Control System), you need to provide "installationId" and "providerBranch".');
         }
 
-        $site = $dbForProject->createDocument('sites', new Document([
+        $site = new Document([
             '$id' => $siteId,
             'enabled' => $enabled,
             'live' => true,
             'logging' => $logging,
             'name' => $name,
             'framework' => $framework,
+            'deploymentRetention' => $deploymentRetention,
             'deploymentInternalId' => '',
             'deploymentId' => '',
             'timeout' => $timeout,
             'installCommand' => $installCommand,
             'buildCommand' => $buildCommand,
+            'startCommand' => $startCommand,
             'outputDirectory' => $outputDirectory,
             'search' => implode(' ', [$siteId, $name, $framework]),
             'fallbackFile' => $fallbackFile,
@@ -161,24 +173,23 @@ class Create extends Base
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $providerRootDirectory,
             'providerSilentMode' => $providerSilentMode,
-            'specification' => $specification,
+            'buildSpecification' => $buildSpecification,
+            'runtimeSpecification' => $runtimeSpecification,
             'buildRuntime' => $buildRuntime,
             'adapter' => $adapter,
-        ]));
+        ]);
 
-        // Git connect logic
+        try {
+            $site = $dbForProject->createDocument('sites', $site);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::SITE_ALREADY_EXISTS);
+        }
+
         if (!empty($providerRepositoryId)) {
             $teamId = $project->getAttribute('teamId', '');
-
-            $repository = $dbForPlatform->createDocument('repositories', new Document([
+            $repository = new Document([
                 '$id' => ID::unique(),
-                '$permissions' => [
-                    Permission::read(Role::team(ID::custom($teamId))),
-                    Permission::update(Role::team(ID::custom($teamId), 'owner')),
-                    Permission::update(Role::team(ID::custom($teamId), 'developer')),
-                    Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-                    Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-                ],
+                '$permissions' => $this->getPermissions($teamId, $project->getId()),
                 'installationId' => $installation->getId(),
                 'installationInternalId' => $installation->getSequence(),
                 'projectId' => $project->getId(),
@@ -188,13 +199,16 @@ class Create extends Base
                 'resourceInternalId' => $site->getSequence(),
                 'resourceType' => 'site',
                 'providerPullRequestIds' => []
-            ]));
-
+            ]);
+            $repository = $dbForPlatform->createDocument('repositories', $repository);
             $site->setAttribute('repositoryId', $repository->getId());
             $site->setAttribute('repositoryInternalId', $repository->getSequence());
-        }
 
-        $site = $dbForProject->updateDocument('sites', $site->getId(), $site);
+            $site = $dbForProject->updateDocument('sites', $site->getId(), new Document([
+                'repositoryId' => $repository->getId(),
+                'repositoryInternalId' => $repository->getSequence(),
+            ]));
+        }
 
         $queueForEvents->setParam('siteId', $site->getId());
 

@@ -3,12 +3,13 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Model;
 
-class DetectionFramework extends Model
+class DetectionFramework extends Detection
 {
     public function __construct()
     {
+        parent::__construct();
+
         $this
             ->addRule('framework', [
                 'type' => self::TYPE_STRING,

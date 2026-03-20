@@ -19,6 +19,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
+use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
@@ -26,9 +27,9 @@ use Utopia\Storage\Validator\File;
 use Utopia\Storage\Validator\FileExt;
 use Utopia\Storage\Validator\FileSize;
 use Utopia\Storage\Validator\Upload;
-use Utopia\Swoole\Request;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 
 class Create extends Action
@@ -57,9 +58,9 @@ class Create extends Action
                 group: 'deployments',
                 name: 'createDeployment',
                 description: <<<EOT
-                Create a new site code deployment. Use this endpoint to upload a new version of your site code. To activate your newly uploaded code, you'll need to update the function's deployment to use your new deployment ID.
+                Create a new site code deployment. Use this endpoint to upload a new version of your site code. To activate your newly uploaded code, you'll need to update the site's deployment to use your new deployment ID.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_ACCEPTED,
@@ -70,12 +71,12 @@ class Create extends Action
                 type: MethodType::UPLOAD,
                 packaging: true,
             ))
-            ->param('siteId', '', new UID(), 'Site ID.')
-            ->param('installCommand', null, new Text(8192, 0), 'Install Commands.', true)
-            ->param('buildCommand', null, new Text(8192, 0), 'Build Commands.', true)
-            ->param('outputDirectory', null, new Text(8192, 0), 'Output Directory.', true)
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
+            ->param('installCommand', null, new Nullable(new Text(8192, 0)), 'Install Commands.', true)
+            ->param('buildCommand', null, new Nullable(new Text(8192, 0)), 'Build Commands.', true)
+            ->param('outputDirectory', null, new Nullable(new Text(8192, 0)), 'Output Directory.', true)
             ->param('code', [], new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', skipValidation: true)
-            ->param('activate', false, new Boolean(true), 'Automatically activate the deployment when it is finished building.')
+            ->param('activate', false, new Boolean(true), 'Automatically activate the deployment when it is finished building.', true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
@@ -86,6 +87,8 @@ class Create extends Action
             ->inject('deviceForLocal')
             ->inject('queueForBuilds')
             ->inject('plan')
+            ->inject('authorization')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -105,7 +108,9 @@ class Create extends Action
         Device $deviceForSites,
         Device $deviceForLocal,
         Build $queueForBuilds,
-        array $plan
+        array $plan,
+        Authorization $authorization,
+        array $platform,
     ) {
         $activate = \strval($activate) === 'true' || \strval($activate) === '1';
 
@@ -232,7 +237,7 @@ class Create extends Action
 
                 foreach ($activeDeployments as $activeDeployment) {
                     $activeDeployment->setAttribute('activate', false);
-                    $dbForProject->updateDocument('deployments', $activeDeployment->getId(), $activeDeployment);
+                    $dbForProject->updateDocument('deployments', $activeDeployment->getId(), new Document(['activate' => false]));
                 }
             }
 
@@ -250,6 +255,7 @@ class Create extends Action
                     'resourceId' => $site->getId(),
                     'resourceType' => 'sites',
                     'buildCommands' => \implode(' && ', $commands),
+                    'startCommand' => $site->getAttribute('startCommand', ''),
                     'buildOutput' => $outputDirectory,
                     'adapter' => $site->getAttribute('adapter', ''),
                     'fallbackFile' => $site->getAttribute('fallbackFile', ''),
@@ -266,15 +272,21 @@ class Create extends Action
                     ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
                     ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
                     ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-                $dbForProject->updateDocument('sites', $site->getId(), $site);
+                $dbForProject->updateDocument('sites', $site->getId(), new Document([
+                    'latestDeploymentId' => $deployment->getId(),
+                    'latestDeploymentInternalId' => $deployment->getSequence(),
+                    'latestDeploymentCreatedAt' => $deployment->getCreatedAt(),
+                    'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
+                ]));
 
-                $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+                $sitesDomain = $platform['sitesDomain'];
                 $domain = ID::unique() . "." . $sitesDomain;
 
-                // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-                $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
+                // TODO: (@Meldiron) Remove after 1.7.x migration
+                $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
+                $ruleId = $isMd5 ? md5($domain) : ID::unique();
 
-                Authorization::skip(
+                $authorization->skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),
@@ -295,7 +307,10 @@ class Create extends Action
                     ]))
                 );
             } else {
-                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('sourceSize', $fileSize)->setAttribute('sourceMetadata', $metadata));
+                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
+                    'sourceSize' => $fileSize,
+                    'sourceMetadata' => $metadata,
+                ]));
             }
 
             // Start the build
@@ -316,6 +331,7 @@ class Create extends Action
                     'resourceId' => $site->getId(),
                     'resourceType' => 'sites',
                     'buildCommands' => \implode(' && ', $commands),
+                    'startCommand' => $site->getAttribute('startCommand', ''),
                     'buildOutput' => $outputDirectory,
                     'adapter' => $site->getAttribute('adapter', ''),
                     'fallbackFile' => $site->getAttribute('fallbackFile', ''),
@@ -334,12 +350,17 @@ class Create extends Action
                     ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
                     ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
                     ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-                $dbForProject->updateDocument('sites', $site->getId(), $site);
+                $dbForProject->updateDocument('sites', $site->getId(), new Document([
+                    'latestDeploymentId' => $site->getAttribute('latestDeploymentId'),
+                    'latestDeploymentInternalId' => $site->getAttribute('latestDeploymentInternalId'),
+                    'latestDeploymentCreatedAt' => $site->getAttribute('latestDeploymentCreatedAt'),
+                    'latestDeploymentStatus' => $site->getAttribute('latestDeploymentStatus'),
+                ]));
 
-                $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+                $sitesDomain = $platform['sitesDomain'];
                 $domain = ID::unique() . "." . $sitesDomain;
                 $ruleId = md5($domain);
-                Authorization::skip(
+                $authorization->skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),
@@ -360,9 +381,14 @@ class Create extends Action
                     ]))
                 );
             } else {
-                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('sourceChunksUploaded', $chunksUploaded)->setAttribute('sourceMetadata', $metadata));
+                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
+                    'sourceChunksUploaded' => $chunksUploaded,
+                    'sourceMetadata' => $metadata,
+                ]));
             }
         }
+
+
 
         $metadata = null;
 

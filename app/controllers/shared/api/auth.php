@@ -1,17 +1,17 @@
 <?php
 
-use Appwrite\Auth\Auth;
 use Appwrite\Extend\Exception;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use MaxMind\Db\Reader;
-use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Http\Http;
 use Utopia\System\System;
 
-App::init()
+Http::init()
     ->groups(['mfaProtected'])
     ->inject('session')
     ->action(function (Document $session) {
@@ -20,7 +20,7 @@ App::init()
         $lastUpdate = $session->getAttribute('mfaUpdatedAt');
         if (!empty($lastUpdate)) {
             $now = DateTime::now();
-            $maxAllowedDate = DateTime::addSeconds(new \DateTime($lastUpdate), Auth::MFA_RECENT_DURATION); // Maximum date until session is considered safe before asking for another challenge
+            $maxAllowedDate = DateTime::addSeconds(new \DateTime($lastUpdate), MFA_RECENT_DURATION); // Maximum date until session is considered safe before asking for another challenge
 
             $isSessionFresh = DateTime::formatTz($maxAllowedDate) >= DateTime::formatTz($now);
         }
@@ -30,13 +30,14 @@ App::init()
         }
     });
 
-App::init()
+Http::init()
     ->groups(['auth'])
     ->inject('utopia')
     ->inject('request')
     ->inject('project')
     ->inject('geodb')
-    ->action(function (App $utopia, Request $request, Document $project, Reader $geodb) {
+    ->inject('authorization')
+    ->action(function (Http $utopia, Request $request, Document $project, Reader $geodb, Authorization $authorization) {
         $denylist = System::getEnv('_APP_CONSOLE_COUNTRIES_DENYLIST', '');
         if (!empty($denylist && $project->getId() === 'console')) {
             $countries = explode(',', $denylist);
@@ -49,8 +50,8 @@ App::init()
 
         $route = $utopia->match($request);
 
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
-        $isAppUser = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
+        $isAppUser = User::isApp($authorization->getRoles());
 
         if ($isAppUser || $isPrivilegedUser) { // Skip limits for app and console devs
             return;

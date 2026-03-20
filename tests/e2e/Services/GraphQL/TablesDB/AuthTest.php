@@ -140,7 +140,17 @@ class AuthTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $gqlPayload);
 
-        sleep(1);
+        $databaseId = $this->database['body']['data']['databasesCreate']['_id'];
+        $tableId = $this->table['body']['data']['tablesDBCreateTable']['_id'];
+
+        $this->assertEventually(function () use ($databaseId, $tableId) {
+            $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/name', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]));
+            $this->assertEquals('available', $response['body']['status']);
+        }, 30000, 250);
     }
 
     public function testInvalidAuth()
@@ -199,7 +209,8 @@ class AuthTest extends Scope
         ], $gqlPayload);
 
         $this->assertArrayHasKey('errors', $row['body']);
-        $this->assertEquals('Row with the requested ID could not be found.', $row['body']['errors'][0]['message']);
+        $rowId = $gqlPayload['variables']['rowId'];
+        $this->assertEquals("Row with the requested ID '$rowId' could not be found.", $row['body']['errors'][0]['message']);
     }
 
     public function testValidAuth()

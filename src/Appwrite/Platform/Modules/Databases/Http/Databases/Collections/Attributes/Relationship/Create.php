@@ -16,8 +16,9 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\WhiteList;
 
 class Create extends Action
@@ -49,7 +50,7 @@ class Create extends Action
                 group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/create-relationship-attribute.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_ACCEPTED,
@@ -61,9 +62,9 @@ class Create extends Action
                     replaceWith: 'tablesDB.createRelationshipColumn',
                 ),
             ))
-            ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('collectionId', '', new UID(), 'Collection ID.')
-            ->param('relatedCollectionId', '', new UID(), 'Related Collection ID.')
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
+            ->param('relatedCollectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Related Collection ID.', false, ['dbForProject'])
             ->param('type', '', new WhiteList([
                 Database::RELATION_ONE_TO_ONE,
                 Database::RELATION_MANY_TO_ONE,
@@ -71,8 +72,8 @@ class Create extends Action
                 Database::RELATION_ONE_TO_MANY
             ], true), 'Relation type')
             ->param('twoWay', false, new Boolean(), 'Is Two Way?', true)
-            ->param('key', null, new Key(), 'Attribute Key.', true)
-            ->param('twoWayKey', null, new Key(), 'Two Way Attribute Key.', true)
+            ->param('key', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'Attribute Key.', true, ['dbForProject'])
+            ->param('twoWayKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'Two Way Attribute Key.', true, ['dbForProject'])
             ->param('onDelete', Database::RELATION_MUTATE_RESTRICT, new WhiteList([
                 Database::RELATION_MUTATE_CASCADE,
                 Database::RELATION_MUTATE_RESTRICT,
@@ -82,29 +83,35 @@ class Create extends Action
             ->inject('dbForProject')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $relatedCollectionId, string $type, bool $twoWay, ?string $key, ?string $twoWayKey, string $onDelete, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): void
+    public function action(string $databaseId, string $collectionId, string $relatedCollectionId, string $type, bool $twoWay, ?string $key, ?string $twoWayKey, string $onDelete, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
+        if (!$dbForProject->getAdapter()->getSupportForRelationships()) {
+            throw new Exception(Exception::GENERAL_FEATURE_UNSUPPORTED, 'Relationships are not supported by this database.');
+        }
+
         $key ??= $relatedCollectionId;
+        $twoWayKeyWasProvided = $twoWayKey !== null;
         $twoWayKey ??= $collectionId;
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
         $collection = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
         $collection = $dbForProject->getCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
         if ($collection->isEmpty()) {
-            throw new Exception($this->getParentNotFoundException());
+            throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
         $relatedCollectionDocument = $dbForProject->getDocument('database_' . $database->getSequence(), $relatedCollectionId);
         $relatedCollection = $dbForProject->getCollection('database_' . $database->getSequence() . '_collection_' . $relatedCollectionDocument->getSequence());
         if ($relatedCollection->isEmpty()) {
-            throw new Exception($this->getParentNotFoundException());
+            throw new Exception($this->getParentNotFoundException(), params: [$relatedCollectionId]);
         }
 
         $attributes = $collection->getAttribute('attributes', []);
@@ -114,14 +121,17 @@ class Create extends Action
             }
 
             if (\strtolower($attribute->getId()) === \strtolower($key)) {
-                throw new Exception($this->getDuplicateException());
+                throw new Exception($this->getDuplicateException(), params: [$key]);
             }
 
             if (
                 \strtolower($attribute->getAttribute('options')['twoWayKey']) === \strtolower($twoWayKey) &&
                 $attribute->getAttribute('options')['relatedCollection'] === $relatedCollection->getId()
             ) {
-                throw new Exception($this->getDuplicateException(), 'Attribute with the requested key already exists. Attribute keys must be unique, try again with a different key.');
+                // If user explicitly provided twoWayKey, report that.
+                // Otherwise report the key that they're trying to create.
+                $conflictingKey = $twoWayKeyWasProvided ? $twoWayKey : $key;
+                throw new Exception($this->getDuplicateException(), params: [$conflictingKey]);
             }
 
             if (
@@ -149,7 +159,7 @@ class Create extends Action
                 'twoWayKey' => $twoWayKey,
                 'onDelete' => $onDelete,
             ]
-        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents);
+        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents, $authorization);
 
         foreach ($attribute->getAttribute('options', []) as $k => $option) {
             $attribute->setAttribute($k, $option);

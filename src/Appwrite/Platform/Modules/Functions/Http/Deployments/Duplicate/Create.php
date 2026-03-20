@@ -10,6 +10,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -46,7 +47,7 @@ class Create extends Action
                 description: <<<EOT
                 Create a new build for an existing function deployment. This endpoint allows you to rebuild a deployment with the updated function configuration, including its entrypoint and build commands if they have been modified. The build process will be queued and executed asynchronously. The original deployment's code will be preserved and used for the new build.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_ACCEPTED,
@@ -54,9 +55,9 @@ class Create extends Action
                     )
                 ]
             ))
-            ->param('functionId', '', new UID(), 'Function ID.')
-            ->param('deploymentId', '', new UID(), 'Deployment ID.')
-            ->param('buildId', '', new UID(), 'Build unique ID.', true) // added as optional param for backward compatibility
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
+            ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Deployment ID.', false, ['dbForProject'])
+            ->param('buildId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Build unique ID.', true, ['dbForProject']) // added as optional param for backward compatibility
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
@@ -104,6 +105,7 @@ class Create extends Action
             'totalSize' => $deployment->getAttribute('sourceSize', 0),
             'entrypoint' => $function->getAttribute('entrypoint'),
             'buildCommands' => $function->getAttribute('commands', ''),
+            'startCommand' => $function->getAttribute('startCommand', ''),
             'buildStartedAt' => null,
             'buildEndedAt' => null,
             'buildDuration' => null,
@@ -118,7 +120,12 @@ class Create extends Action
             ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
             ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
             ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-        $dbForProject->updateDocument('functions', $function->getId(), $function);
+        $dbForProject->updateDocument('functions', $function->getId(), new Document([
+            'latestDeploymentId' => $function->getAttribute('latestDeploymentId'),
+            'latestDeploymentInternalId' => $function->getAttribute('latestDeploymentInternalId'),
+            'latestDeploymentCreatedAt' => $function->getAttribute('latestDeploymentCreatedAt'),
+            'latestDeploymentStatus' => $function->getAttribute('latestDeploymentStatus'),
+        ]));
 
         $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)

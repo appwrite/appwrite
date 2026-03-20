@@ -10,7 +10,72 @@ use Utopia\Database\Helpers\Role;
 
 trait TokensBase
 {
-    public function testCreateBucketAndFile(): array
+    private static array $bucketAndFileData = [];
+
+    protected function setupBucketAndFile(): array
+    {
+        if (!empty(static::$bucketAndFileData)) {
+            return static::$bucketAndFileData;
+        }
+
+        $bucket = $this->client->call(
+            Client::METHOD_POST,
+            '/storage/buckets',
+            [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ],
+            [
+                'name' => 'Test Bucket',
+                'bucketId' => ID::unique(),
+                'allowedFileExtensions' => ['jpg', 'png', 'jfif'],
+            ]
+        );
+
+        $bucketId = $bucket['body']['$id'];
+
+        $file = $this->client->call(
+            Client::METHOD_POST,
+            '/storage/buckets/' . $bucketId . '/files',
+            [
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ],
+            [
+                'fileId' => ID::unique(),
+                'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            ]
+        );
+
+        $fileId = $file['body']['$id'];
+
+        $token = $this->client->call(
+            Client::METHOD_POST,
+            '/tokens/buckets/' . $bucketId . '/files/' . $fileId,
+            [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]
+        );
+
+        static::$bucketAndFileData = [
+            'fileId' => $fileId,
+            'bucketId' => $bucketId,
+            'token' => $token['body'],
+            'jwtToken' => $token['body']['secret'],
+            'guestHeaders' => [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ],
+        ];
+
+        return static::$bucketAndFileData;
+    }
+
+    public function testCreateBucketAndFile(): void
     {
         $bucket = $this->client->call(
             Client::METHOD_POST,
@@ -64,23 +129,11 @@ trait TokensBase
         $this->assertEquals(201, $token['headers']['status-code']);
         $this->assertEquals($bucketId . ':' . $fileId, $token['body']['resourceId']);
         $this->assertEquals(TOKENS_RESOURCE_TYPE_FILES, $token['body']['resourceType']);
-
-        return [
-            'fileId' => $fileId,
-            'bucketId' => $bucketId,
-            'token' => $token['body'],
-            'guestHeaders' => [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ],
-        ];
     }
 
-    /**
-     * @depends testCreateBucketAndFile
-     */
-    public function testFailuresWithoutToken(array $data): array
+    public function testFailuresWithoutToken(): void
     {
+        $data = $this->setupBucketAndFile();
         $fileId = $data['fileId'];
         $bucketId = $data['bucketId'];
         $guestHeaders = $data['guestHeaders'];
@@ -94,7 +147,7 @@ trait TokensBase
         $this->assertEquals(401, $failedPreview['body']['code']);
         $this->assertEquals(401, $failedPreview['headers']['status-code']);
         $this->assertEquals('user_unauthorized', $failedPreview['body']['type']);
-        $this->assertEquals('The current user is not authorized to perform the requested action.', $failedPreview['body']['message']);
+        $this->assertEquals('No permissions provided for action \'read\'', $failedPreview['body']['message']);
 
         // Extended file preview. Should fail as an anonymous user with no form of any access to the file.
         $failedCustomPreview = $this->client->call(
@@ -113,7 +166,7 @@ trait TokensBase
         $this->assertEquals(401, $failedCustomPreview['body']['code']);
         $this->assertEquals(401, $failedCustomPreview['headers']['status-code']);
         $this->assertEquals('user_unauthorized', $failedCustomPreview['body']['type']);
-        $this->assertEquals('The current user is not authorized to perform the requested action.', $failedCustomPreview['body']['message']);
+        $this->assertEquals('No permissions provided for action \'read\'', $failedCustomPreview['body']['message']);
 
         // File view. Should fail as an anonymous user with no form of any access to the file.
         $failedView = $this->client->call(
@@ -124,7 +177,7 @@ trait TokensBase
         $this->assertEquals(401, $failedView['body']['code']);
         $this->assertEquals(401, $failedView['headers']['status-code']);
         $this->assertEquals('user_unauthorized', $failedView['body']['type']);
-        $this->assertEquals('The current user is not authorized to perform the requested action.', $failedView['body']['message']);
+        $this->assertEquals('No permissions provided for action \'read\'', $failedView['body']['message']);
 
         // File download. Should fail as an anonymous user with no form of any access to the file.
         $failedDownload = $this->client->call(
@@ -135,16 +188,12 @@ trait TokensBase
         $this->assertEquals(401, $failedDownload['body']['code']);
         $this->assertEquals(401, $failedDownload['headers']['status-code']);
         $this->assertEquals('user_unauthorized', $failedDownload['body']['type']);
-        $this->assertEquals('The current user is not authorized to perform the requested action.', $failedDownload['body']['message']);
-
-        return $data;
+        $this->assertEquals('No permissions provided for action \'read\'', $failedDownload['body']['message']);
     }
 
-    /**
-     * @depends testCreateBucketAndFile
-     */
-    public function testPreviewFileWithToken(array $data): array
+    public function testPreviewFileWithToken(): void
     {
+        $data = $this->setupBucketAndFile();
         $token = $data['token'];
         $fileId = $data['fileId'];
         $bucketId = $data['bucketId'];
@@ -172,16 +221,11 @@ trait TokensBase
         $this->assertEquals($image->getImageWidth(), $original->getImageWidth());
         $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
         $this->assertEquals('PNG', $image->getImageFormat());
-
-        $data['jwtToken'] = $tokenJWT;
-        return $data;
     }
 
-    /**
-     * @depends testPreviewFileWithToken
-     */
-    public function testCustomPreviewFileWithToken(array $data): array
+    public function testCustomPreviewFileWithToken(): void
     {
+        $data = $this->setupBucketAndFile();
         $fileId = $data['fileId'];
         $bucketId = $data['bucketId'];
         $jwtToken = $data['jwtToken'];
@@ -214,15 +258,11 @@ trait TokensBase
         $this->assertEquals($image->getImageWidth(), $original->getImageWidth());
         $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
         $this->assertEquals('PNG', $image->getImageFormat());
-
-        return $data;
     }
 
-    /**
-     * @depends testPreviewFileWithToken
-     */
-    public function testViewFileWithToken(array $data): void
+    public function testViewFileWithToken(): void
     {
+        $data = $this->setupBucketAndFile();
         $fileId = $data['fileId'];
         $bucketId = $data['bucketId'];
         $jwtToken = $data['jwtToken'];
@@ -248,29 +288,27 @@ trait TokensBase
         $this->assertEquals('PNG', $image->getImageFormat());
     }
 
-    /**
-     * @depends testPreviewFileWithToken
-     */
-    public function testDownloadFileWithToken(array $data): void
+    public function testDownloadFileWithToken(): void
     {
+        $data = $this->setupBucketAndFile();
         $fileId = $data['fileId'];
         $bucketId = $data['bucketId'];
         $jwtToken = $data['jwtToken'];
         $guestHeaders = $data['guestHeaders'];
 
-        $fileFailedDownload = $this->client->call(
+        $fileDownload = $this->client->call(
             Client::METHOD_GET,
             '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/download',
             $guestHeaders,
             [
-                'token' =>  $jwtToken
+                'token' => $jwtToken
             ]
         );
 
-        $this->assertEquals(200, $fileFailedDownload['headers']['status-code']);
+        $this->assertEquals(200, $fileDownload['headers']['status-code']);
 
         $image = new \Imagick();
-        $image->readImageBlob($fileFailedDownload['body']);
+        $image->readImageBlob($fileDownload['body']);
         $original = new \Imagick(__DIR__ . '/../../../resources/logo.png');
 
         $this->assertEquals($image->getImageWidth(), $original->getImageWidth());

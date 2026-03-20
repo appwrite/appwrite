@@ -16,8 +16,8 @@ use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Query\Cursor;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Platform\Action;
-use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
@@ -43,7 +43,7 @@ class XList extends Action
                     group: 'databases',
                     name: 'list',
                     description: '/docs/references/databases/list.md',
-                    auth: [AuthType::KEY],
+                    auth: [AuthType::ADMIN, AuthType::KEY],
                     responses: [
                         new SDKResponse(
                             code: SwooleResponse::STATUS_CODE_OK,
@@ -73,16 +73,10 @@ class XList extends Action
             $queries[] = Query::search('search', $search);
         }
 
-        /**
-         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
-         */
-        $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
-        });
-        $cursor = reset($cursor);
-        if ($cursor) {
-            /** @var Query $cursor */
+        $cursor = Query::getCursorQueries($queries, false);
+        $cursor = \reset($cursor);
 
+        if ($cursor !== false) {
             $validator = new Cursor();
             if (!$validator->isValid($cursor)) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());

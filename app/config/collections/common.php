@@ -1,6 +1,6 @@
 <?php
 
-use Appwrite\Auth\Auth;
+use Utopia\Auth\Hashes\Argon2;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 
@@ -173,7 +173,7 @@ return [
                 'size' => 256,
                 'signed' => true,
                 'required' => false,
-                'default' => Auth::DEFAULT_ALGO,
+                'default' => (new Argon2())->getName(),
                 'array' => false,
                 'filters' => [],
             ],
@@ -184,7 +184,7 @@ return [
                 'size' => 65535,
                 'signed' => true,
                 'required' => false,
-                'default' => Auth::DEFAULT_ALGO_OPTIONS,
+                'default' => (new Argon2())->getOptions(),
                 'array' => false,
                 'filters' => ['json'],
             ],
@@ -364,6 +364,72 @@ return [
                 'array' => false,
                 'filters' => ['datetime'],
             ],
+            [
+                '$id' => ID::custom('emailCanonical'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 320,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('emailIsFree'),
+                'type' => Database::VAR_BOOLEAN,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('emailIsDisposable'),
+                'type' => Database::VAR_BOOLEAN,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('emailIsCorporate'),
+                'type' => Database::VAR_BOOLEAN,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('emailIsCanonical'),
+                'type' => Database::VAR_BOOLEAN,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('impersonator'),
+                'type' => Database::VAR_BOOLEAN,
+                'signed' => true,
+                'size' => 0,
+                'format' => '',
+                'filters' => [],
+                'required' => false,
+                'default' => false,
+                'array' => false,
+            ],
         ],
         'indexes' => [
             [
@@ -433,6 +499,13 @@ return [
                 '$id' => '_key_accessedAt',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['accessedAt'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+            [
+                '$id' => ID::custom('impersonator'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => [ID::custom('impersonator')],
                 'lengths' => [],
                 'orders' => [],
             ],
@@ -1233,6 +1306,17 @@ return [
                 'array' => false,
                 'filters' => ['json'],
             ],
+            [
+                '$id' => ID::custom('labels'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 128,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => true,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [
@@ -1528,6 +1612,17 @@ return [
                 'array' => false,
             ],
             [
+                '$id' => ID::custom('transformations'),
+                'type' => Database::VAR_BOOLEAN,
+                'signed' => true,
+                'size' => 0,
+                'format' => '',
+                'filters' => [],
+                'required' => false,
+                'array' => false,
+                'default' => true,
+            ],
+            [
                 '$id' => ID::custom('search'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -1540,13 +1635,6 @@ return [
             ],
         ],
         'indexes' => [
-            [
-                '$id' => ID::custom('_fulltext_name'),
-                'type' => Database::INDEX_FULLTEXT,
-                'attributes' => ['name'],
-                'lengths' => [],
-                'orders' => [],
-            ],
             [
                 '$id' => ID::custom('_key_search'),
                 'type' => Database::INDEX_FULLTEXT,
@@ -1773,13 +1861,6 @@ return [
                 '$id' => ID::custom('_key_provider'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['provider'],
-                'lengths' => [],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => ID::custom('_key_name'),
-                'type' => Database::INDEX_FULLTEXT,
-                'attributes' => ['name'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
@@ -2050,14 +2131,8 @@ return [
                 'filters' => ['topicSearch'],
             ],
         ],
+
         'indexes' => [
-            [
-                '$id' => ID::custom('_key_name'),
-                'type' => Database::INDEX_FULLTEXT,
-                'attributes' => ['name'],
-                'lengths' => [],
-                'orders' => [],
-            ],
             [
                 '$id' => ID::custom('_key_search'),
                 'type' => Database::INDEX_FULLTEXT,

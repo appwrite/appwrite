@@ -139,6 +139,20 @@ class User extends Model
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
+            ->addRule('impersonator', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether the user can impersonate other users.',
+                'required' => false,
+                'default' => false,
+                'example' => false,
+            ])
+            ->addRule('impersonatorUserId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'ID of the original actor performing the impersonation. Present only when the current request is impersonating another user. Internal audit logs attribute the action to this user, while the impersonated target is recorded only in internal audit payload data.',
+                'required' => false,
+                'default' => '',
+                'example' => '5e5ea5c16897e',
+            ])
         ;
     }
 

@@ -28,7 +28,7 @@ class Get extends Action
             ->setHttpPath('/v1/projects/:projectId/dev-keys/:keyId')
             ->desc('Get dev key')
             ->groups(['api', 'projects'])
-            ->label('scope', 'projects.read')
+            ->label('scope', 'devKeys.read')
             ->label('sdk', new Method(
                 namespace: 'projects',
                 group: 'devKeys',
@@ -45,8 +45,8 @@ class Get extends Action
                 ],
                 contentType: ContentType::JSON
             ))
-            ->param('projectId', '', new UID(), 'Project unique ID.')
-            ->param('keyId', '', new UID(), 'Key unique ID.')
+            ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
+            ->param('keyId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Key unique ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForPlatform')
             ->callback($this->action(...));
