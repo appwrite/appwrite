@@ -71,6 +71,8 @@ class XList extends Action
 
     public function action(array $queries, string $search, bool $includeTotal, UtopiaResponse $response, Database $dbForProject): void
     {
+        var_dump('queries');
+        var_dump($queries);
         $queries = Query::parseQueries($queries);
 
         if (!empty($search)) {
@@ -96,7 +98,7 @@ class XList extends Action
             $cursor->setValue($cursorDocument);
         }
 
-        $queries[] = Query::equal('type', $this->getDatabaseTypeQueryFilters());
+        // $queries[] = Query::equal('type', $this->getDatabaseTypeQueryFilters());
 
         try {
             $databases = $dbForProject->find('databases', $queries);
