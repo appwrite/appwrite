@@ -2612,9 +2612,7 @@ trait DatabasesBase
         }
         $this->assertTrue(array_key_exists('$sequence', $document1['body']));
 
-        $this->getSupportForIntegerIds()
-            ? $this->assertIsInt($document1['body']['$sequence'])
-            : $this->assertIsString($document1['body']['$sequence']);
+        $this->assertIsString($document1['body']['$sequence']);
 
         $this->assertEquals(201, $document2['headers']['status-code']);
         $this->assertEquals($data['moviesId'], $document2['body'][$this->getContainerIdResponseKey()]);
@@ -2694,9 +2692,7 @@ trait DatabasesBase
         /**
          * Resubmit same document, nothing to update
          */
-        $this->getSupportForIntegerIds()
-            ? $this->assertIsInt($document['body']['$sequence'])
-            : $this->assertIsString($document['body']['$sequence']);
+        $this->assertIsString($document['body']['$sequence']);
 
         $upsertData = [
             'title' => 'Thor: Ragnarok',
