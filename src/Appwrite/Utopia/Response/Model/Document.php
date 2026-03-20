@@ -84,8 +84,7 @@ class Document extends Any
         $document->removeAttribute('$tenant');
 
         if (!$document->isEmpty()) {
-            $sequence = $document->getAttribute('$sequence', '');
-            $document->setAttribute('$sequence', \is_int($sequence) ? $sequence : (string)$sequence);
+            $document->setAttribute('$sequence', (string)$document->getAttribute('$sequence', ''));
         }
 
         foreach ($document->getAttributes() as $attribute) {
