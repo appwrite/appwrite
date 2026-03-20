@@ -19,7 +19,16 @@ class Env
         foreach ($data as &$row) {
             $row = explode('=', $row, 2);
             $key = (isset($row[0])) ? trim($row[0]) : null;
-            $value = (isset($row[1])) ? trim(trim($row[1]), '"\'') : null;
+            $value = (isset($row[1])) ? (function (string $v): string {
+                $v = trim($v);
+                if (
+                    (\str_starts_with($v, '"') && \str_ends_with($v, '"')) ||
+                    (\str_starts_with($v, "'") && \str_ends_with($v, "'"))
+                ) {
+                    return \substr($v, 1, -1);
+                }
+                return $v;
+            })(trim($row[1])) : null;
 
             if ($key) {
                 $this->vars[$key] = $value;
