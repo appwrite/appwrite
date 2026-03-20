@@ -121,12 +121,6 @@ parameters:
 			path: app/controllers/shared/api.php
 
 		-
-			message: '#^Variable \$register might not be defined\.$#'
-			identifier: variable.undefined
-			count: 3
-			path: app/http.php
-
-		-
 			message: '#^Variable \$tag on left side of \?\? always exists and is always null\.$#'
 			identifier: nullCoalesce.variable
 			count: 1

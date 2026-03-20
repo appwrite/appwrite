@@ -2,16 +2,9 @@
 
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
-use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Documents\User;
 use Executor\Executor;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
-use Utopia\Auth\Hashes\Argon2;
-use Utopia\Auth\Hashes\Sha;
-use Utopia\Auth\Proofs\Code;
-use Utopia\Auth\Proofs\Password;
-use Utopia\Auth\Proofs\Token;
-use Utopia\Auth\Store;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -99,39 +92,6 @@ $container->set('platform', function () {
 
 require_once __DIR__ . '/resources/request.php';
 
-
-$container->set('store', function (): Store {
-    return new Store();
-});
-
-$container->set('proofForPassword', function (): Password {
-    $hash = new Argon2();
-    $hash
-        ->setMemoryCost(7168)
-        ->setTimeCost(5)
-        ->setThreads(1);
-
-    $password = new Password();
-    $password
-        ->setHash($hash);
-
-    return $password;
-});
-
-$container->set('proofForToken', function (): Token {
-    $token = new Token();
-    $token->setHash(new Sha());
-
-    return $token;
-});
-
-$container->set('proofForCode', function (): Code {
-    $code = new Code();
-    $code->setHash(new Sha());
-
-    return $code;
-});
-
 $container->set('console', function () {
     return new Document(Config::getParam('console'));
 }, []);
@@ -158,67 +118,6 @@ $container->set('dbForPlatform', function (Group $pools, Cache $cache, Authoriza
 
     return $database;
 }, ['pools', 'cache', 'authorization']);
-
-$container->set('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache, Authorization $authorization) {
-    $databases = [];
-
-    return function (Document $project) use ($pools, $dbForPlatform, $cache, $authorization, &$databases) {
-        if ($project->isEmpty() || $project->getId() === 'console') {
-            return $dbForPlatform;
-        }
-
-        $database = $project->getAttribute('database', '');
-        if (empty($database)) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Project database is not configured');
-        }
-
-        try {
-            $dsn = new DSN($database);
-        } catch (\InvalidArgumentException) {
-            // TODO: Temporary until all projects are using shared tables
-            $dsn = new DSN('mysql://' . $database);
-        }
-
-        $configure = (function (Database $database) use ($project, $dsn, $authorization) {
-            $database
-                ->setDatabase(APP_DATABASE)
-                ->setAuthorization($authorization)
-                ->setMetadata('host', \gethostname())
-                ->setMetadata('project', $project->getId())
-                ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
-                ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES)
-                ->setDocumentType('users', User::class);
-
-            $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-
-            if (\in_array($dsn->getHost(), $sharedTables)) {
-                $database
-                    ->setSharedTables(true)
-                    ->setTenant($project->getSequence())
-                    ->setNamespace($dsn->getParam('namespace'));
-            } else {
-                $database
-                    ->setSharedTables(false)
-                    ->setTenant(null)
-                    ->setNamespace('_' . $project->getSequence());
-            }
-        });
-
-        if (isset($databases[$dsn->getHost()])) {
-            $database = $databases[$dsn->getHost()];
-            $configure($database);
-
-            return $database;
-        }
-
-        $adapter = new DatabasePool($pools->get($dsn->getHost()));
-        $database = new Database($adapter, $cache);
-        $databases[$dsn->getHost()] = $database;
-        $configure($database);
-
-        return $database;
-    };
-}, ['pools', 'dbForPlatform', 'cache', 'authorization']);
 
 $container->set('getLogsDB', function (Group $pools, Cache $cache, Authorization $authorization) {
     $database = null;
