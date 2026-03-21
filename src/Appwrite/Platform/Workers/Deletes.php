@@ -1008,7 +1008,6 @@ class Deletes extends Action
          */
         Console::info("Deleting rules for site " . $siteId);
         $this->deleteByGroup('rules', [
-            Query::equal('type', ['deployment']),
             Query::equal('deploymentResourceType', ['site']),
             Query::equal('deploymentResourceInternalId', [$siteInternalId]),
             Query::equal('projectInternalId', [$project->getSequence()])
@@ -1094,7 +1093,6 @@ class Deletes extends Action
          */
         Console::info("Deleting rules for function " . $functionId);
         $this->deleteByGroup('rules', [
-            Query::equal('type', ['deployment']),
             Query::equal('deploymentResourceType', ['function']),
             Query::equal('deploymentResourceInternalId', [$functionInternalId]),
             Query::equal('projectInternalId', [$project->getSequence()]),

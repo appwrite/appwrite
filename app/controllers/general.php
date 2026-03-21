@@ -586,7 +586,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             }
 
             if (!empty($deployment->getAttribute('startCommand', ''))) {
-                $startCommand = 'cd /usr/local/server/src/function/ && ' . $deployment->getAttribute('startCommand', '');
+                $startCommand = 'cd /usr/local/server/src/function/ && ' . str_replace(['"', '`', '$'], ['\\"', '\\`', '\\$'], $deployment->getAttribute('startCommand', ''));
             }
 
             $runtimeEntrypoint = match ($version) {
