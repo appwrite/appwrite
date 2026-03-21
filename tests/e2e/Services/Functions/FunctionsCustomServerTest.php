@@ -3017,4 +3017,207 @@ class FunctionsCustomServerTest extends Scope
             $this->cleanupFunction($functionId);
         }
     }
+
+    public function testHostExecutionPermissions(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $userId = $this->getUser()['$id'];
+        $userSession = $this->getUser()['session'];
+
+        // Setup function with execute: ['users']
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test Host Auth',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 15,
+            'execute' => ['users'],
+        ]);
+
+        $domain = $this->setupFunctionDomain($functionId);
+
+        $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('basic'),
+            'activate' => true
+        ]);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        // Get a valid JWT for the main user
+        $jwtResponse = $this->client->call(Client::METHOD_POST, '/account/jwts', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $userSession,
+        ]);
+        $this->assertSame(201, $jwtResponse['headers']['status-code']);
+        $validUserJwt = $jwtResponse['body']['jwt'];
+
+        // Case 1: execute: ['users'], no JWT (guest) → denied (401)
+        $response = $proxyClient->call(Client::METHOD_GET, '/', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]);
+        $this->assertSame(401, $response['headers']['status-code']);
+        $this->assertStringContainsString('Execution not permitted', $response['body']);
+
+        // Case 2: execute: ['users'], invalid JWT → denied (401)
+        $response = $proxyClient->call(Client::METHOD_GET, '/', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-user-jwt' => 'invalid-jwt-token',
+        ]);
+        $this->assertSame(401, $response['headers']['status-code']);
+        $this->assertStringContainsString('Execution not permitted', $response['body']);
+
+        // Case 3: execute: ['users'], valid user JWT → allowed
+        $response = $proxyClient->call(Client::METHOD_GET, '/', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-user-jwt' => $validUserJwt,
+        ]);
+        $this->assertNotSame(401, $response['headers']['status-code']);
+
+        // Update function to execute: ['guests']
+        $response = $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'name' => 'Test Host Auth',
+            'execute' => ['guests'],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 15,
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        // Case 4: execute: ['guests'], no JWT → allowed
+        $response = $proxyClient->call(Client::METHOD_GET, '/', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]);
+        $this->assertNotSame(401, $response['headers']['status-code']);
+
+        // Update function to execute: specific user
+        $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'name' => 'Test Host Auth',
+            'execute' => [Role::user($userId)->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 15,
+        ]);
+
+        // Case 5: execute: ['user:{userId}'], correct user JWT → allowed
+        $response = $proxyClient->call(Client::METHOD_GET, '/', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-user-jwt' => $validUserJwt,
+        ]);
+        $this->assertNotSame(401, $response['headers']['status-code']);
+
+        // Create a second user
+        $secondEmail = uniqid('', true) . '@localhost.test';
+        $secondPassword = 'password';
+        $secondUser = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => ID::unique(),
+            'email' => $secondEmail,
+            'password' => $secondPassword,
+            'name' => 'Second User',
+        ]);
+        $this->assertSame(201, $secondUser['headers']['status-code']);
+
+        $secondSession = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $secondEmail,
+            'password' => $secondPassword,
+        ]);
+        $this->assertSame(201, $secondSession['headers']['status-code']);
+        $secondUserSession = $secondSession['cookies']['a_session_' . $projectId];
+
+        $secondJwtResponse = $this->client->call(Client::METHOD_POST, '/account/jwts', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $secondUserSession,
+        ]);
+        $this->assertSame(201, $secondJwtResponse['headers']['status-code']);
+        $secondUserJwt = $secondJwtResponse['body']['jwt'];
+
+        // Case 6: execute: ['user:{userId}'], different user JWT → denied (401)
+        $response = $proxyClient->call(Client::METHOD_GET, '/', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-user-jwt' => $secondUserJwt,
+        ]);
+        $this->assertSame(401, $response['headers']['status-code']);
+        $this->assertStringContainsString('Execution not permitted', $response['body']);
+
+        // Create a team and add the main user as a member
+        $team = $this->client->call(Client::METHOD_POST, '/teams', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'teamId' => ID::unique(),
+            'name' => 'Test Team',
+        ]);
+        $this->assertSame(201, $team['headers']['status-code']);
+        $teamId = $team['body']['$id'];
+
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'userId' => $userId,
+            'roles' => ['member'],
+        ]);
+        $this->assertSame(201, $membership['headers']['status-code']);
+
+        // Update function to execute: team
+        $response = $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'name' => 'Test Host Auth',
+            'execute' => [Role::team($teamId)->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 15,
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        // Case 7: execute: ['team:{teamId}'], user who is a team member → allowed
+        $response = $proxyClient->call(Client::METHOD_GET, '/', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-user-jwt' => $validUserJwt,
+        ]);
+        $this->assertNotSame(401, $response['headers']['status-code']);
+
+        // Case 8: execute: ['team:{teamId}'], user not in the team → denied (401)
+        $response = $proxyClient->call(Client::METHOD_GET, '/', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-user-jwt' => $secondUserJwt,
+        ]);
+        $this->assertSame(401, $response['headers']['status-code']);
+        $this->assertStringContainsString('Execution not permitted', $response['body']);
+
+        $this->cleanupFunction($functionId);
+    }
 }
