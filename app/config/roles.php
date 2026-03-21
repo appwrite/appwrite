@@ -91,6 +91,8 @@ $admins = [
     'subscribers.read',
     'tokens.read',
     'tokens.write',
+    'schedules.read',
+    'schedules.write',
 ];
 
 return [

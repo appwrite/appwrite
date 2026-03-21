@@ -12,7 +12,7 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 
 class Get extends Action
 {
@@ -53,8 +53,8 @@ class Get extends Action
                     replaceWith: 'tablesDB.getTable',
                 ),
             ))
-            ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('collectionId', '', new UID(), 'Collection ID.')
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('authorization')
@@ -74,6 +74,8 @@ class Get extends Action
         if ($collection->isEmpty()) {
             throw new Exception($this->getNotFoundException(), params: [$collectionId]);
         }
+
+        $this->addRowBytesInfo($collection, $dbForProject);
 
         $response->dynamic($collection, $this->getResponseModel());
     }

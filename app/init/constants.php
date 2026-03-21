@@ -5,6 +5,9 @@ use Appwrite\Platform\Modules\Compute\Specification;
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
 
+const APP_VIEWS_DIR = __DIR__ . '/../views';
+const APP_CE_CONFIG_DIR = __DIR__ . '/../config';
+
 // Email
 const APP_EMAIL_TEAM = 'team@localhost.test'; // Default email address
 const APP_EMAIL_SECURITY = ''; // Default security email address
@@ -44,7 +47,7 @@ const APP_RESOURCE_TOKEN_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 4321;
-const APP_VERSION_STABLE = '1.8.0';
+const APP_VERSION_STABLE = '1.9.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -90,6 +93,7 @@ const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite?sub_confirmation=
 const APP_COMPUTE_CPUS_DEFAULT = 0.5;
 const APP_COMPUTE_MEMORY_DEFAULT = 512;
 const APP_COMPUTE_SPECIFICATION_DEFAULT = Specification::S_1VCPU_512MB;
+const APP_COMPUTE_DEPLOYMENT_MAX_RETENTION = 100 * 365; // 100 years
 const APP_SDK_PLATFORM_SERVER = 'server';
 const APP_SDK_PLATFORM_CLIENT = 'client';
 const APP_SDK_PLATFORM_CONSOLE = 'console';
@@ -161,6 +165,9 @@ const ACTIVITY_TYPE_GUEST = 'guest';
 const MFA_RECENT_DURATION = 1800; // 30 mins
 
 
+// Database name
+const APP_DATABASE = 'appwrite';
+
 // Database Reconnect
 const DATABASE_RECONNECT_SLEEP = 2;
 const DATABASE_RECONNECT_MAX_ATTEMPTS = 10;
@@ -178,8 +185,10 @@ const BUILD_TYPE_DEPLOYMENT = 'deployment';
 const BUILD_TYPE_RETRY = 'retry';
 
 // Deletion Types
-const DELETE_TYPE_DATABASES = 'databases';
 
+const ENABLE_EXECUTIONS_LIMIT_ON_ROUTE = false;
+
+const DELETE_TYPE_DATABASES = 'databases';
 const DELETE_TYPE_DOCUMENT = 'document';
 const DELETE_TYPE_COLLECTIONS = 'collections';
 const DELETE_TYPE_TRANSACTION = 'transaction';
@@ -189,8 +198,10 @@ const DELETE_TYPE_SITES = 'sites';
 const DELETE_TYPE_FUNCTIONS = 'functions';
 const DELETE_TYPE_DEPLOYMENTS = 'deployments';
 const DELETE_TYPE_USERS = 'users';
+const DELETE_TYPE_TEAMS = 'teams';
 const DELETE_TYPE_TEAM_PROJECTS = 'teams_projects';
 const DELETE_TYPE_EXECUTIONS = 'executions';
+const DELETE_TYPE_EXECUTIONS_LIMIT = 'executionsLimit';
 const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
 const DELETE_TYPE_USAGE = 'usage';
@@ -243,6 +254,8 @@ const MESSAGE_TYPE_PUSH = 'push';
 // API key types
 const API_KEY_STANDARD = 'standard';
 const API_KEY_DYNAMIC = 'dynamic';
+const API_KEY_ORGANIZATION = 'organization';
+const API_KEY_ACCOUNT = 'account';
 // Usage metrics
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';
@@ -349,6 +362,12 @@ const METRIC_AVATARS_SCREENSHOTS_GENERATED = 'avatars.screenshotsGenerated';
 const METRIC_FUNCTIONS_RUNTIME = 'functions.runtimes.{runtime}';
 const METRIC_SITES_FRAMEWORK = 'sites.frameworks.{framework}';
 
+// Realtime metrics
+const METRIC_REALTIME_CONNECTIONS = 'realtime.connections';
+const METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT = 'realtime.messages.sent';
+const METRIC_REALTIME_INBOUND = 'realtime.inbound';
+const METRIC_REALTIME_OUTBOUND = 'realtime.outbound';
+
 // Resource types
 const RESOURCE_TYPE_PROJECTS = 'projects';
 const RESOURCE_TYPE_FUNCTIONS = 'functions';
@@ -360,6 +379,7 @@ const RESOURCE_TYPE_TOPICS = 'topics';
 const RESOURCE_TYPE_SUBSCRIBERS = 'subscribers';
 const RESOURCE_TYPE_MESSAGES = 'messages';
 const RESOURCE_TYPE_EXECUTIONS = 'executions';
+const RESOURCE_TYPE_VCS = 'vcs';
 
 // Resource types for Tokens
 const TOKENS_RESOURCE_TYPE_FILES = 'files';
@@ -374,3 +394,10 @@ const SCHEDULE_RESOURCE_TYPE_MESSAGE = 'message';
 
 /** Preview cookie */
 const COOKIE_NAME_PREVIEW = 'a_jwt_console';
+
+// Cache Reconnect
+const CACHE_RECONNECT_MAX_RETRIES = 2;
+const CACHE_RECONNECT_RETRY_DELAY = 1000;
+
+// Project status
+const PROJECT_STATUS_ACTIVE = 'active';

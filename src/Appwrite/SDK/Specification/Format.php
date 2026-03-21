@@ -3,13 +3,13 @@
 namespace Appwrite\SDK\Specification;
 
 use Appwrite\Utopia\Response\Model;
-use Utopia\App;
 use Utopia\Config\Config;
-use Utopia\Route;
+use Utopia\Http\Http;
+use Utopia\Http\Route;
 
 abstract class Format
 {
-    protected App $app;
+    protected Http $app;
 
     /**
      * @var array<Route>
@@ -40,18 +40,47 @@ abstract class Format
         'license.url' => '',
     ];
 
-    /*
-     * Blacklist to omit the enum types for the given route's parameter
-     */
-    protected array $enumBlacklist = [
+    private const array OAUTH_PROVIDER_BLACKLIST = [
         [
-            'namespace' => 'users',
-            'method' => 'getUsage',
-            'parameter' => 'provider'
-        ]
+            'namespace' => 'account',
+            'methods' => [
+                'createOAuth2Session',
+                'createOAuth2Token',
+                'updateMagicURLSession'
+            ],
+            'parameter' => 'provider',
+            'excludeKeys' => [
+                'mock',
+                'mock-unverified'
+            ],
+        ],
+        [
+            'namespace' => 'projects',
+            'methods' => [
+                'updateOAuth2'
+            ],
+            'parameter' => 'provider',
+            'excludeKeys' => [
+                'mock',
+                'mock-unverified'
+            ],
+        ],
     ];
 
-    public function __construct(App $app, array $services, array $routes, array $models, array $keys, int $authCount, string $platform)
+    private const array PROVIDER_USAGE_BLACKLIST = [
+        [
+            'namespace' => 'users',
+            'methods' => [
+                'getUsage'
+            ],
+            'parameter' => 'provider',
+            'exclude' => true, /* fully excluded */
+        ],
+    ];
+
+    protected array $enumBlacklist = [];
+
+    public function __construct(Http $app, array $services, array $routes, array $models, array $keys, int $authCount, string $platform)
     {
         $this->app = $app;
         $this->services = $services;
@@ -60,6 +89,49 @@ abstract class Format
         $this->keys = $keys;
         $this->authCount = $authCount;
         $this->platform = $platform;
+
+        $this->enumBlacklist = $this->buildEnumBlacklist();
+    }
+
+    protected function buildEnumBlacklist(): array
+    {
+        $blacklist = [];
+
+        foreach (self::OAUTH_PROVIDER_BLACKLIST as $config) {
+            foreach ($config['methods'] as $method) {
+                $entry = [
+                    'namespace' => $config['namespace'],
+                    'method' => $method,
+                    'parameter' => $config['parameter'],
+                ];
+                if (isset($config['excludeKeys'])) {
+                    $entry['excludeKeys'] = $config['excludeKeys'];
+                }
+                if (isset($config['exclude'])) {
+                    $entry['exclude'] = $config['exclude'];
+                }
+                $blacklist[] = $entry;
+            }
+        }
+
+        foreach (self::PROVIDER_USAGE_BLACKLIST as $config) {
+            foreach ($config['methods'] as $method) {
+                $entry = [
+                    'namespace' => $config['namespace'],
+                    'method' => $method,
+                    'parameter' => $config['parameter'],
+                ];
+                if (isset($config['excludeKeys'])) {
+                    $entry['excludeKeys'] = $config['excludeKeys'];
+                }
+                if (isset($config['exclude'])) {
+                    $entry['exclude'] = $config['exclude'];
+                }
+                $blacklist[] = $entry;
+            }
+        }
+
+        return $blacklist;
     }
 
     /**
@@ -204,6 +276,8 @@ abstract class Format
                         switch ($param) {
                             case 'permissions':
                                 return 'BrowserPermission';
+                            case 'output':
+                                return 'ImageFormat';
                         }
                         break;
                 }
@@ -375,6 +449,38 @@ abstract class Format
                         switch ($param) {
                             case 'encryption':
                                 return 'SmtpEncryption';
+                        }
+                        break;
+                }
+                break;
+            case 'migrations':
+                switch ($method) {
+                    case 'createAppwriteMigration':
+                    case 'getAppwriteReport':
+                        switch ($param) {
+                            case 'resources':
+                                return 'AppwriteMigrationResource';
+                        }
+                        break;
+                    case 'createFirebaseMigration':
+                    case 'getFirebaseReport':
+                        switch ($param) {
+                            case 'resources':
+                                return 'FirebaseMigrationResource';
+                        }
+                        break;
+                    case 'createSupabaseMigration':
+                    case 'getSupabaseReport':
+                        switch ($param) {
+                            case 'resources':
+                                return 'SupabaseMigrationResource';
+                        }
+                        break;
+                    case 'createNHostMigration':
+                    case 'getNHostReport':
+                        switch ($param) {
+                            case 'resources':
+                                return 'NHostMigrationResource';
                         }
                         break;
                 }
@@ -592,171 +698,16 @@ abstract class Format
 
     public function getResponseEnumName(string $model, string $param): ?string
     {
-        switch ($model) {
-            case 'attributeString':
-                switch ($param) {
-                    case 'status':
-                        return 'AttributeStatus';
-                }
-                break;
-            case 'attributeInteger':
-                switch ($param) {
-                    case 'status':
-                        return 'AttributeStatus';
-                }
-                break;
-            case 'attributeFloat':
-                switch ($param) {
-                    case 'status':
-                        return 'AttributeStatus';
-                }
-                break;
-            case 'attributeBoolean':
-                switch ($param) {
-                    case 'status':
-                        return 'AttributeStatus';
-                }
-                break;
-            case 'attributeEmail':
-                switch ($param) {
-                    case 'status':
-                        return 'AttributeStatus';
-                }
-                break;
-            case 'attributeEnum':
-                switch ($param) {
-                    case 'status':
-                        return 'AttributeStatus';
-                }
-                break;
-            case 'attributeIp':
-                switch ($param) {
-                    case 'status':
-                        return 'AttributeStatus';
-                }
-                break;
-            case 'attributeUrl':
-                switch ($param) {
-                    case 'status':
-                        return 'AttributeStatus';
-                }
-                break;
-            case 'attributeDatetime':
-                switch ($param) {
-                    case 'status':
-                        return 'AttributeStatus';
-                }
-                break;
-            case 'attributeRelationship':
-                switch ($param) {
-                    case 'status':
-                        return 'AttributeStatus';
-                }
-                break;
-            case 'attributePoint':
-                switch ($param) {
-                    case 'status':
-                        return 'AttributeStatus';
-                }
-                break;
-            case 'attributeLine':
-                switch ($param) {
-                    case 'status':
-                        return 'AttributeStatus';
-                }
-                break;
-            case 'attributePolygon':
-                switch ($param) {
-                    case 'status':
-                        return 'AttributeStatus';
-                }
-                break;
-            case 'columnString':
-                switch ($param) {
-                    case 'status':
-                        return 'ColumnStatus';
-                }
-                break;
-            case 'columnInteger':
-                switch ($param) {
-                    case 'status':
-                        return 'ColumnStatus';
-                }
-                break;
-            case 'columnFloat':
-                switch ($param) {
-                    case 'status':
-                        return 'ColumnStatus';
-                }
-                break;
-            case 'columnBoolean':
-                switch ($param) {
-                    case 'status':
-                        return 'ColumnStatus';
-                }
-                break;
-            case 'columnEmail':
-                switch ($param) {
-                    case 'status':
-                        return 'ColumnStatus';
-                }
-                break;
-            case 'columnEnum':
-                switch ($param) {
-                    case 'status':
-                        return 'ColumnStatus';
-                }
-                break;
-            case 'columnIp':
-                switch ($param) {
-                    case 'status':
-                        return 'ColumnStatus';
-                }
-                break;
-            case 'columnUrl':
-                switch ($param) {
-                    case 'status':
-                        return 'ColumnStatus';
-                }
-                break;
-            case 'columnDatetime':
-                switch ($param) {
-                    case 'status':
-                        return 'ColumnStatus';
-                }
-                break;
-            case 'columnRelationship':
-                switch ($param) {
-                    case 'status':
-                        return 'ColumnStatus';
-                }
-                break;
-            case 'columnPoint':
-                switch ($param) {
-                    case 'status':
-                        return 'ColumnStatus';
-                }
-                break;
-            case 'columnLine':
-                switch ($param) {
-                    case 'status':
-                        return 'ColumnStatus';
-                }
-                break;
-            case 'columnPolygon':
-                switch ($param) {
-                    case 'status':
-                        return 'ColumnStatus';
-                }
-                break;
-            case 'healthStatus':
-                switch ($param) {
-                    case 'status':
-                        return 'HealthCheckStatus';
-                }
-                break;
+        if ($param !== 'status') {
+            return null;
         }
-        return null;
+
+        return match (true) {
+            $model === 'healthStatus' => 'HealthCheckStatus',
+            str_starts_with($model, 'attribute') => 'AttributeStatus',
+            str_starts_with($model, 'column') => 'ColumnStatus',
+            default => null,
+        };
     }
 
     protected function getNestedModels(Model $model, array &$usedModels): void
@@ -777,5 +728,32 @@ abstract class Format
                 }
             }
         }
+    }
+
+    protected function parseDescription(string $description, array $excludedValues): string
+    {
+        if (empty($excludedValues)) {
+            return $description;
+        }
+
+        foreach ($excludedValues as $excludedValue) {
+            // remove from comma-separated list
+            $description = preg_replace(
+                '/,\s*' . preg_quote($excludedValue, '/') . '(?=\s*[,.]|$)/',
+                '',
+                $description
+            );
+            $description = preg_replace(
+                '/(?<=:\s|,\s)' . preg_quote($excludedValue, '/') . '\s*,\s*/',
+                '',
+                $description
+            );
+        }
+
+        // clean up double commas and extra spaces
+        $description = preg_replace('/,\s*,/', ',', $description);
+        $description = preg_replace('/\s+/', ' ', $description);
+
+        return trim($description);
     }
 }

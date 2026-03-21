@@ -56,7 +56,7 @@ class Update extends Action
             ],
             contentType: ContentType::JSON
         ))
-        ->param('tokenId', '', new UID(), 'Token unique ID.')
+        ->param('tokenId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Token unique ID.', false, ['dbForProject'])
         ->param('expire', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'File token expiry date', true)
         ->inject('response')
         ->inject('dbForProject')

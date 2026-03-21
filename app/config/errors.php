@@ -27,7 +27,7 @@ return [
     Exception::GENERAL_RESOURCE_BLOCKED => [
         'name' => Exception::GENERAL_RESOURCE_BLOCKED,
         'description' => 'Access to this resource is blocked.',
-        'code' => 401,
+        'code' => 403,
     ],
     Exception::GENERAL_UNKNOWN_ORIGIN => [
         'name' => Exception::GENERAL_UNKNOWN_ORIGIN,
@@ -139,6 +139,11 @@ return [
         'description' => 'There was an error processing your request. Please check the inputs and try again.',
         'code' => 400,
     ],
+    Exception::GENERAL_FEATURE_UNSUPPORTED => [
+        'name' => Exception::GENERAL_FEATURE_UNSUPPORTED,
+        'description' => 'This feature is not supported with your current configuration.',
+        'code' => 400,
+    ],
 
     /** User Errors */
     Exception::USER_COUNT_EXCEEDED => [
@@ -163,8 +168,8 @@ return [
     ],
     Exception::USER_BLOCKED => [
         'name' => Exception::USER_BLOCKED,
-        'description' => 'The current user has been blocked. You can unblock the user by making a request to the User API\'s "Update User Status" endpoint or in the Appwrite Console\'s Auth section.',
-        'code' => 401,
+        'description' => 'The current user has been blocked.',
+        'code' => 403,
     ],
     Exception::USER_INVALID_TOKEN => [
         'name' => Exception::USER_INVALID_TOKEN,
@@ -355,6 +360,11 @@ return [
     Exception::USER_API_KEY_AND_SESSION_SET => [
         'name' => Exception::USER_API_KEY_AND_SESSION_SET,
         'description' => 'API key and session used in the same request. Use either `setSession` or `setKey`. Learn about which authentication method to use in the SSR docs: https://appwrite.io/docs/products/auth/server-side-rendering',
+        'code' => 403,
+    ],
+    Exception::USER_JWT_AND_COOKIE_SET => [
+        'name' => Exception::USER_JWT_AND_COOKIE_SET,
+        'description' => 'JWT and cookie used in the same request. Use either `setJWT` or `setCookie`. Learn about which authentication method to use in the SSR docs: https://appwrite.io/docs/products/auth/server-side-rendering',
         'code' => 403,
     ],
     Exception::API_KEY_EXPIRED => [
@@ -619,6 +629,11 @@ return [
         'name' => Exception::SITE_NOT_FOUND,
         'description' => 'Site with the requested ID could not be found.',
         'code' => 404,
+    ],
+    Exception::SITE_ALREADY_EXISTS => [
+        'name' => Exception::SITE_ALREADY_EXISTS,
+        'description' => 'Site with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
     ],
     Exception::SITE_TEMPLATE_NOT_FOUND => [
         'name' => Exception::SITE_TEMPLATE_NOT_FOUND,
@@ -1074,6 +1089,11 @@ return [
         'description' => 'The project key has expired. Please generate a new key using the Appwrite console.',
         'code' => 401,
     ],
+    Exception::ACCOUNT_KEY_EXPIRED => [
+        'name' => Exception::ACCOUNT_KEY_EXPIRED,
+        'description' => 'The account API key has expired. Please generate a new key using the Appwrite console.',
+        'code' => 401,
+    ],
     Exception::ROUTER_HOST_NOT_FOUND => [
         'name' => Exception::ROUTER_HOST_NOT_FOUND,
         'description' => 'Host is not trusted. This could occur because you have not configured a custom domain. Add a custom domain to your project first and try again.',
@@ -1103,7 +1123,6 @@ return [
         'name' => Exception::RULE_VERIFICATION_FAILED,
         'description' => 'Domain verification failed. Please check if your DNS records are correct and try again.',
         'code' => 400,
-        'publish' => true
     ],
     Exception::PROJECT_SMTP_CONFIG_INVALID => [
         'name' => Exception::PROJECT_SMTP_CONFIG_INVALID,
@@ -1125,10 +1144,20 @@ return [
         'description' => 'Webhook with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::WEBHOOK_ALREADY_EXISTS => [
+        'name' => Exception::WEBHOOK_ALREADY_EXISTS,
+        'description' => 'Webhook with the same ID already exists. Try again with a different ID.',
+        'code' => 409,
+    ],
     Exception::KEY_NOT_FOUND => [
         'name' => Exception::KEY_NOT_FOUND,
         'description' => 'Key with the requested ID could not be found.',
         'code' => 404,
+    ],
+    Exception::KEY_ALREADY_EXISTS => [
+        'name' => Exception::KEY_ALREADY_EXISTS,
+        'description' => 'Key with the same ID already exists. Try again with a different ID.',
+        'code' => 409,
     ],
     Exception::PLATFORM_NOT_FOUND => [
         'name' => Exception::PLATFORM_NOT_FOUND,
@@ -1272,6 +1301,11 @@ return [
         'description' => 'Message with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::MESSAGE_ALREADY_EXISTS => [
+        'name' => Exception::MESSAGE_ALREADY_EXISTS,
+        'description' => 'Message with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
+    ],
     Exception::MESSAGE_MISSING_TARGET => [
         'name' => Exception::MESSAGE_MISSING_TARGET,
         'description' => 'Message with the requested ID has no recipients (topics or users or targets).',
@@ -1328,5 +1362,20 @@ return [
         'name' => Exception::TARGET_PROVIDER_INVALID_TYPE,
         'description' => 'Target has an invalid provider type.',
         'code' => 400,
+    ],
+    Exception::USER_ID_MISSING => [
+        'name' => Exception::USER_ID_MISSING,
+        'description' => 'When using account API key, make sure to pass x-appwrite-user header with your user ID.',
+        'code' => 403,
+    ],
+    Exception::ORGANIZATION_ID_MISSING => [
+        'name' => Exception::ORGANIZATION_ID_MISSING,
+        'description' => 'When using organization API key, make sure to pass x-appwrite-organization header with your organization ID.',
+        'code' => 403,
+    ],
+    Exception::PROJECT_ID_MISSING => [
+        'name' => Exception::PROJECT_ID_MISSING,
+        'description' => 'When using project API key, make sure to pass x-appwrite-project header with your project ID.',
+        'code' => 403,
     ],
 ];

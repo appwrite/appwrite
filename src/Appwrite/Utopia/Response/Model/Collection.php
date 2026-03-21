@@ -73,6 +73,10 @@ class Collection extends Model
                     Response::MODEL_ATTRIBUTE_POINT,
                     Response::MODEL_ATTRIBUTE_LINE,
                     Response::MODEL_ATTRIBUTE_POLYGON,
+                    Response::MODEL_ATTRIBUTE_VARCHAR,
+                    Response::MODEL_ATTRIBUTE_TEXT,
+                    Response::MODEL_ATTRIBUTE_MEDIUMTEXT,
+                    Response::MODEL_ATTRIBUTE_LONGTEXT,
                     Response::MODEL_ATTRIBUTE_STRING, // needs to be last, since its condition would dominate any other string attribute
                 ],
                 'description' => 'Collection attributes.',
@@ -86,6 +90,18 @@ class Collection extends Model
                 'default' => [],
                 'example' => new \stdClass(),
                 'array' => true
+            ])
+            ->addRule('bytesMax', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Maximum document size in bytes. Returns 0 when no limit applies.',
+                'default' => 0,
+                'example' => 65535,
+            ])
+            ->addRule('bytesUsed', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Currently used document size in bytes based on defined attributes.',
+                'default' => 0,
+                'example' => 1500,
             ])
         ;
     }

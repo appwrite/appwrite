@@ -3,6 +3,8 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections;
 
 use Appwrite\Extend\Exception;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
 
@@ -164,5 +166,16 @@ abstract class Action extends UtopiaAction
         return $this->isCollectionsAPI()
             ? Exception::ATTRIBUTE_TYPE_INVALID
             : Exception::COLUMN_TYPE_INVALID;
+    }
+
+    /**
+     * Add row bytes information to a collection/table document.
+     */
+    protected function addRowBytesInfo(Document $document, Database $dbForProject): Document
+    {
+        $adapter = $dbForProject->getAdapter();
+        $document->setAttribute('bytesMax', $adapter->getDocumentSizeLimit());
+        $document->setAttribute('bytesUsed', $adapter->getAttributeWidth($document));
+        return $document;
     }
 }

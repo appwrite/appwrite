@@ -16,23 +16,25 @@ use Swoole\Table;
 use Swoole\Timer;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
-use Utopia\App;
 use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
+use Utopia\Http\Http;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
@@ -47,6 +49,16 @@ use Utopia\WebSocket\Server;
 require_once __DIR__ . '/init.php';
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+
+// Log uncaught exceptions in one line instead of relying on Swoole's full backtrace dump
+set_exception_handler(function (\Throwable $e) {
+    Console::error(sprintf(
+        'Realtime uncaught exception: %s in %s:%d',
+        $e->getMessage(),
+        $e->getFile(),
+        $e->getLine()
+    ));
+});
 
 // Allows overriding
 if (!function_exists('getConsoleDB')) {
@@ -66,6 +78,7 @@ if (!function_exists('getConsoleDB')) {
         $adapter = new DatabasePool($pools->get('console'));
         $database = new Database($adapter, getCache());
         $database
+            ->setDatabase(APP_DATABASE)
             ->setNamespace('_console')
             ->setMetadata('host', \gethostname())
             ->setMetadata('project', '_console');
@@ -112,7 +125,7 @@ if (!function_exists('getProjectDB')) {
         if (\in_array($dsn->getHost(), $sharedTables)) {
             $database
                 ->setSharedTables(true)
-                ->setTenant((int)$project->getSequence())
+                ->setTenant($project->getSequence())
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
             $database
@@ -122,6 +135,7 @@ if (!function_exists('getProjectDB')) {
         }
 
         $database
+            ->setDatabase(APP_DATABASE)
             ->setMetadata('host', \gethostname())
             ->setMetadata('project', $project->getId());
 
@@ -220,6 +234,13 @@ if (!function_exists('getTelemetry')) {
     }
 }
 
+if (!function_exists('triggerStats')) {
+    function triggerStats(array $event, string $projectId): void
+    {
+        return;
+    }
+}
+
 $realtime = getRealtime();
 
 /**
@@ -244,48 +265,62 @@ $adapter
 
 $server = new Server($adapter);
 
-$logError = function (Throwable $error, string $action) use ($register) {
-    $logger = $register->get('realtimeLogger');
+// Allows overriding
+if (!function_exists('logError')) {
+    function logError(Throwable $error, string $action, array $tags = [], ?Document $project = null, ?Document $user = null, ?Authorization $authorization = null): void
+    {
+        global $register;
 
-    if ($logger && !$error instanceof Exception) {
-        $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
+        $logger = $register->get('realtimeLogger');
 
-        $log = new Log();
-        $log->setNamespace("realtime");
-        $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-        $log->setVersion($version);
-        $log->setType(Log::TYPE_ERROR);
-        $log->setMessage($error->getMessage());
+        if ($logger && !$error instanceof Exception) {
+            $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
-        $log->addTag('code', $error->getCode());
-        $log->addTag('verboseType', get_class($error));
+            $log = new Log();
+            $log->setNamespace("realtime");
+            $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
+            $log->setVersion($version);
+            $log->setType(Log::TYPE_ERROR);
+            $log->setMessage($error->getMessage());
 
-        $log->addExtra('file', $error->getFile());
-        $log->addExtra('line', $error->getLine());
-        $log->addExtra('trace', $error->getTraceAsString());
+            $log->addTag('code', $error->getCode());
+            $log->addTag('verboseType', get_class($error));
+            $log->addTag('projectId', $project?->getId() ?: 'n/a');
+            $log->addTag('userId', $user?->getId() ?: 'n/a');
 
-        $log->setAction($action);
+            foreach ($tags as $key => $value) {
+                $log->addTag($key, $value ?: 'n/a');
+            }
 
-        $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
-        $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+            $log->addExtra('file', $error->getFile());
+            $log->addExtra('line', $error->getLine());
+            $log->addExtra('trace', $error->getTraceAsString());
+            $log->addExtra('detailedTrace', $error->getTrace());
+            $log->addExtra('roles', $authorization?->getRoles() ?? []);
 
-        try {
-            $responseCode = $logger->addLog($log);
-            Console::info('Error log pushed with status code: ' . $responseCode);
-        } catch (Throwable $th) {
-            Console::error('Error pushing log: ' . $th->getMessage());
+            $log->setAction($action);
+
+            $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
+            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+
+            try {
+                $responseCode = $logger->addLog($log);
+                Console::info('Error log pushed with status code: ' . $responseCode);
+            } catch (Throwable $th) {
+                Console::error('Error pushing log: ' . $th->getMessage());
+            }
         }
+
+        Console::error('[Error] Type: ' . get_class($error));
+        Console::error('[Error] Message: ' . $error->getMessage());
+        Console::error('[Error] File: ' . $error->getFile());
+        Console::error('[Error] Line: ' . $error->getLine());
     }
+}
 
-    Console::error('[Error] Type: ' . get_class($error));
-    Console::error('[Error] Message: ' . $error->getMessage());
-    Console::error('[Error] File: ' . $error->getFile());
-    Console::error('[Error] Line: ' . $error->getLine());
-};
+$server->error(logError(...));
 
-$server->error($logError);
-
-$server->onStart(function () use ($stats, $register, $containerId, &$statsDocument, $logError) {
+$server->onStart(function () use ($stats, $register, $containerId, &$statsDocument) {
     sleep(5); // wait for the initial database schema to be ready
     Console::success('Server started successfully');
 
@@ -322,7 +357,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
      */
     // TODO: Remove this if check once it doesn't cause issues for cloud
     if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
-        Timer::tick(5000, function () use ($register, $stats, &$statsDocument, $logError) {
+        Timer::tick(5000, function () use ($register, $stats, &$statsDocument) {
             $payload = [];
             foreach ($stats as $projectId => $value) {
                 $payload[$projectId] = $stats->get($projectId, 'connectionsTotal');
@@ -338,15 +373,18 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
                     ->setAttribute('timestamp', DateTime::now())
                     ->setAttribute('value', json_encode($payload));
 
-                $database->getAuthorization()->skip(fn () => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
+                $database->getAuthorization()->skip(fn () => $database->updateDocument('realtime', $statsDocument->getId(), new Document([
+                    'timestamp' => $statsDocument->getAttribute('timestamp'),
+                    'value' => $statsDocument->getAttribute('value')
+                ])));
             } catch (Throwable $th) {
-                $logError($th, "updateWorkerDocument");
+                logError($th, "updateWorkerDocument");
             }
         });
     }
 });
 
-$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $logError) {
+$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime) {
     Console::success('Worker ' . $workerId . ' started successfully');
 
     $telemetry = getTelemetry($workerId);
@@ -358,7 +396,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     $attempts = 0;
     $start = time();
 
-    Timer::tick(5000, function () use ($server, $register, $realtime, $stats, $logError) {
+    Timer::tick(5000, function () use ($server, $register, $realtime, $stats) {
         /**
          * Sending current connections to project channels on the console project every 5 seconds.
          */
@@ -428,10 +466,24 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 ]
             ];
 
-            $server->send($realtime->getSubscribers($event), json_encode([
-                'type' => 'event',
-                'data' => $event['data']
-            ]));
+            $subscribers = $realtime->getSubscribers($event);
+
+            $groups = [];
+            foreach ($subscribers as $id => $matched) {
+                $key = implode(',', array_keys($matched));
+                $groups[$key]['ids'][] = $id;
+                $groups[$key]['subscriptions'] = array_keys($matched);
+            }
+
+            foreach ($groups as $group) {
+                $data = $event['data'];
+                $data['subscriptions'] = $group['subscriptions'];
+
+                $server->send($group['ids'], json_encode([
+                    'type' => 'event',
+                    'data' => $data
+                ]));
+            }
         }
     });
 
@@ -470,36 +522,88 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         $user = $database->getDocument('users', $userId);
 
                         $roles = $user->getRoles($database->getAuthorization());
-                        $channels = $realtime->connections[$connection]['channels'];
+                        $authorization = $realtime->connections[$connection]['authorization'] ?? null;
+
+                        $meta = $realtime->getSubscriptionMetadata($connection);
 
                         $realtime->unsubscribe($connection);
-                        $realtime->subscribe($projectId, $connection, $roles, $channels);
+
+                        foreach ($meta as $subscriptionId => $subscription) {
+                            $queries = Query::parseQueries($subscription['queries'] ?? []);
+                            $realtime->subscribe(
+                                $projectId,
+                                $connection,
+                                $subscriptionId,
+                                $roles,
+                                $subscription['channels'] ?? [],
+                                $queries
+                            );
+                        }
+
+                        // Restore authorization after subscribe
+                        if ($authorization !== null) {
+                            $realtime->connections[$connection]['authorization'] = $authorization;
+                        }
                     }
                 }
 
                 $receivers = $realtime->getSubscribers($event);
 
-                if (App::isDevelopment() && !empty($receivers)) {
+                if (Http::isDevelopment() && !empty($receivers)) {
                     Console::log("[Debug][Worker {$workerId}] Receivers: " . count($receivers));
-                    Console::log("[Debug][Worker {$workerId}] Receivers Connection IDs: " . json_encode($receivers));
+                    Console::log("[Debug][Worker {$workerId}] Connection IDs: " . json_encode(array_keys($receivers)));
+                    Console::log("[Debug][Worker {$workerId}] Matched: " . json_encode(array_values($receivers)));
                     Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
                 }
 
-                $server->send(
-                    $receivers,
-                    json_encode([
-                        'type' => 'event',
-                        'data' => $event['data']
-                    ])
-                );
+                // Group connections by matched subscription IDs for batch sending
+                $groups = [];
+                foreach ($receivers as $id => $matched) {
+                    $key = implode(',', array_keys($matched));
+                    $groups[$key]['ids'][] = $id;
+                    $groups[$key]['subscriptions'] = array_keys($matched);
+                }
 
-                if (($num = count($receivers)) > 0) {
-                    $register->get('telemetry.messageSentCounter')->add($num);
-                    $stats->incr($event['project'], 'messages', $num);
+                $total = 0;
+                $outboundBytes = 0;
+
+                foreach ($groups as $group) {
+                    $data = $event['data'];
+                    $data['subscriptions'] = $group['subscriptions'];
+
+                    $payloadJson = json_encode([
+                        'type' => 'event',
+                        'data' => $data
+                    ]);
+
+                    $server->send($group['ids'], $payloadJson);
+
+                    $count = count($group['ids']);
+                    $total += $count;
+                    $outboundBytes += strlen($payloadJson) * $count;
+                }
+
+                if ($total > 0) {
+                    $register->get('telemetry.messageSentCounter')->add($total);
+                    $stats->incr($event['project'], 'messages', $total);
+
+                    $projectId = $event['project'] ?? null;
+
+                    if (!empty($projectId)) {
+                        $metrics = [
+                            METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT => $total,
+                        ];
+
+                        if ($outboundBytes > 0) {
+                            $metrics[METRIC_REALTIME_OUTBOUND] = $outboundBytes;
+                        }
+
+                        triggerStats($metrics, $projectId);
+                    }
                 }
             });
         } catch (Throwable $th) {
-            $logError($th, "pubSubConnection");
+            logError($th, "pubSubConnection");
 
             Console::error('Pub/sub error: ' . $th->getMessage());
             $attempts++;
@@ -511,16 +615,20 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     Console::error('Failed to restart pub/sub...');
 });
 
-$server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime, $logError) {
-    $app = new App('UTC');
+$server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime) {
+    $app = new Http('UTC');
     $request = new Request($request);
     $response = new Response(new SwooleResponse());
 
     Console::info("Connection open (user: {$connection})");
 
-    App::setResource('pools', fn () => $register->get('pools'));
-    App::setResource('request', fn () => $request);
-    App::setResource('response', fn () => $response);
+    Http::setResource('pools', fn () => $register->get('pools'));
+    Http::setResource('request', fn () => $request);
+    Http::setResource('response', fn () => $response);
+
+    $project = null;
+    $logUser = null;
+    $authorization = null;
 
     try {
         /** @var Document $project */
@@ -542,8 +650,15 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
 
+        $projectRegion = $project->getAttribute('region', '');
+        $currentRegion = System::getEnv('_APP_REGION', 'default');
+        if (!empty($projectRegion) && $projectRegion !== $currentRegion) {
+            throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'Project is not accessible in this region. Please make sure you are using the correct endpoint');
+        }
+
         $timelimit = $app->getResource('timelimit');
         $user = $app->getResource('user'); /** @var User $user */
+        $logUser = $user;
 
         /*
          * Abuse Check
@@ -560,6 +675,12 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled' && $abuse->check()) {
             throw new Exception(Exception::REALTIME_TOO_MANY_MESSAGES, 'Too many requests');
         }
+
+        $rawSize = $request->getSize();
+
+        triggerStats([
+            METRIC_REALTIME_INBOUND => $rawSize,
+        ], $project->getId());
 
         /*
          * Validate Client Domain - Check to avoid CSRF attack.
@@ -584,19 +705,47 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Missing channels');
         }
 
-        $realtime->subscribe($project->getId(), $connection, $roles, $channels);
+        $names = array_keys($channels);
+
+        try {
+            $subscriptions = Realtime::constructSubscriptions(
+                $names,
+                fn ($channel) => $request->getQuery($channel, null)
+            );
+        } catch (QueryException $e) {
+            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $e->getMessage());
+        }
+
+        $mapping = [];
+        foreach ($subscriptions as $index => $subscription) {
+            $subscriptionId = ID::unique();
+
+            $realtime->subscribe(
+                $project->getId(),
+                $connection,
+                $subscriptionId,
+                $roles,
+                $subscription['channels'],
+                $subscription['queries']
+            );
+
+            $mapping[$index] = $subscriptionId;
+        }
 
         $realtime->connections[$connection]['authorization'] = $authorization;
 
         $user = empty($user->getId()) ? null : $response->output($user, Response::MODEL_ACCOUNT);
 
-        $server->send([$connection], json_encode([
+        $connectedPayloadJson = json_encode([
             'type' => 'connected',
             'data' => [
-                'channels' => array_keys($channels),
+                'channels' => $names,
+                'subscriptions' => $mapping,
                 'user' => $user
             ]
-        ]));
+        ]);
+
+        $server->send([$connection], $connectedPayloadJson);
 
         $register->get('telemetry.connectionCounter')->add(1);
         $register->get('telemetry.connectionCreatedCounter')->add(1);
@@ -607,20 +756,26 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         ]);
         $stats->incr($project->getId(), 'connections');
         $stats->incr($project->getId(), 'connectionsTotal');
+
+        $connectedOutboundBytes = \strlen($connectedPayloadJson);
+
+        triggerStats([METRIC_REALTIME_CONNECTIONS => 1, METRIC_REALTIME_OUTBOUND => $connectedOutboundBytes], $project->getId());
+
+
     } catch (Throwable $th) {
-        $logError($th, "initServer");
+        logError($th, 'realtime', project: $project, user: $logUser, authorization: $authorization);
 
         // Handle SQL error code is 'HY000'
         $code = $th->getCode();
-        if (!is_int($code)) {
+        if (!\is_int($code)) {
             $code = 500;
         }
-
 
         $message = $th->getMessage();
 
         // sanitize 0 && 5xx errors
-        if (($code === 0 || $code >= 500) && !App::isDevelopment()) {
+        $realtimeViolation = $th instanceof AppwriteException && $th->getType() === AppwriteException::REALTIME_POLICY_VIOLATION;
+        if (($code === 0 || $code >= 500) && !$realtimeViolation && !Http::isDevelopment()) {
             $message = 'Error: Server Error';
         }
 
@@ -635,7 +790,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $server->send([$connection], json_encode($response));
         $server->close($connection, $code);
 
-        if (App::isDevelopment()) {
+        if (Http::isDevelopment()) {
             Console::error('[Error] Connection Error');
             Console::error('[Error] Code: ' . $response['data']['code']);
             Console::error('[Error] Message: ' . $response['data']['message']);
@@ -644,17 +799,24 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 });
 
 $server->onMessage(function (int $connection, string $message) use ($server, $register, $realtime, $containerId) {
+    $project = null;
+    $authorization = null;
+
     try {
+        $rawSize = \strlen($message);
         $response = new Response(new SwooleResponse());
         $projectId = $realtime->connections[$connection]['projectId'] ?? null;
 
         // Get authorization from connection (stored during onOpen)
         $authorization = $realtime->connections[$connection]['authorization'] ?? null;
+        if ($authorization === null) {
+            $authorization = new Authorization('');
+        }
 
         $database = getConsoleDB();
         $database->setAuthorization($authorization);
 
-        if ($projectId !== 'console') {
+        if (!empty($projectId) && $projectId !== 'console') {
             $project = $authorization->skip(fn () => $database->getDocument('projects', $projectId));
 
             $database = getProjectDB($project);
@@ -680,17 +842,41 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
             throw new Exception(Exception::REALTIME_TOO_MANY_MESSAGES, 'Too many messages.');
         }
 
+        // Record realtime inbound bytes for this project
+        if ($project !== null && !$project->isEmpty()) {
+            triggerStats([
+                METRIC_REALTIME_INBOUND => $rawSize,
+            ], $project->getId());
+        }
+
         $message = json_decode($message, true);
 
         if (is_null($message) || (!array_key_exists('type', $message) && !array_key_exists('data', $message))) {
             throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Message format is not valid.');
         }
 
+        // Ping does not require project context; other messages do (e.g. after unsubscribe during auth)
+        if (empty($projectId) && ($message['type'] ?? '') !== 'ping') {
+            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Missing project context. Reconnect to the project first.');
+        }
+
         switch ($message['type']) {
             case 'ping':
-                $server->send([$connection], json_encode([
+                $pongPayloadJson = json_encode([
                     'type' => 'pong'
-                ]));
+                ]);
+
+                $server->send([$connection], $pongPayloadJson);
+
+                if ($project !== null && !$project->isEmpty()) {
+                    $pongOutboundBytes = \strlen($pongPayloadJson);
+
+                    if ($pongOutboundBytes > 0) {
+                        triggerStats([
+                            METRIC_REALTIME_OUTBOUND => $pongOutboundBytes,
+                        ], $project->getId());
+                    }
+                }
 
                 break;
             case 'authentication':
@@ -723,27 +909,55 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 }
 
                 $roles = $user->getRoles($database->getAuthorization());
-                $channels = Realtime::convertChannels(array_flip($realtime->connections[$connection]['channels']), $user->getId());
 
-                // Preserve authorization before subscribe overwrites the connection array
                 $authorization = $realtime->connections[$connection]['authorization'] ?? null;
+                $projectId = $realtime->connections[$connection]['projectId'] ?? null;
 
-                $realtime->subscribe($realtime->connections[$connection]['projectId'], $connection, $roles, $channels);
+                $meta = $realtime->getSubscriptionMetadata($connection);
 
-                // Restore authorization after subscribe
+                $realtime->unsubscribe($connection);
+
+                if (!empty($projectId)) {
+                    foreach ($meta as $subscriptionId => $subscription) {
+                        $queries = Query::parseQueries($subscription['queries'] ?? []);
+
+                        $realtime->subscribe(
+                            $projectId,
+                            $connection,
+                            $subscriptionId,
+                            $roles,
+                            $subscription['channels'] ?? [],
+                            $queries
+                        );
+                    }
+                }
+
                 if ($authorization !== null) {
                     $realtime->connections[$connection]['authorization'] = $authorization;
                 }
 
                 $user = $response->output($user, Response::MODEL_ACCOUNT);
-                $server->send([$connection], json_encode([
+
+                $authResponsePayloadJson = json_encode([
                     'type' => 'response',
                     'data' => [
                         'to' => 'authentication',
                         'success' => true,
                         'user' => $user
                     ]
-                ]));
+                ]);
+
+                $server->send([$connection], $authResponsePayloadJson);
+
+                if ($project !== null && !$project->isEmpty()) {
+                    $authOutboundBytes = \strlen($authResponsePayloadJson);
+
+                    if ($authOutboundBytes > 0) {
+                        triggerStats([
+                            METRIC_REALTIME_OUTBOUND => $authOutboundBytes,
+                        ], $project->getId());
+                    }
+                }
 
                 break;
 
@@ -751,6 +965,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Message type is not valid.');
         }
     } catch (Throwable $th) {
+        logError($th, 'realtimeMessage', project: $project, authorization: $authorization);
         $code = $th->getCode();
         if (!is_int($code)) {
             $code = 500;
@@ -759,7 +974,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         $message = $th->getMessage();
 
         // sanitize 0 && 5xx errors
-        if (($code === 0 || $code >= 500) && !App::isDevelopment()) {
+        if (($code === 0 || $code >= 500) && !Http::isDevelopment()) {
             $message = 'Error: Server Error';
         }
 
@@ -780,9 +995,21 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
 });
 
 $server->onClose(function (int $connection) use ($realtime, $stats, $register) {
-    if (array_key_exists($connection, $realtime->connections)) {
-        $stats->decr($realtime->connections[$connection]['projectId'], 'connectionsTotal');
-        $register->get('telemetry.connectionCounter')->add(-1);
+    try {
+        if (array_key_exists($connection, $realtime->connections)) {
+            $stats->decr($realtime->connections[$connection]['projectId'], 'connectionsTotal');
+            $register->get('telemetry.connectionCounter')->add(-1);
+
+            $projectId = $realtime->connections[$connection]['projectId'];
+
+            triggerStats([
+                METRIC_REALTIME_CONNECTIONS => -1,
+            ], $projectId);
+        }
+    } catch (\Throwable $th) {
+        // Log only; do not rethrow. If we let this bubble, Swoole dumps full coroutine
+        // backtraces and unsubscribe() below would never run (connection cleanup would fail).
+        Console::error('Realtime onClose error: ' . $th->getMessage());
     }
     $realtime->unsubscribe($connection);
 

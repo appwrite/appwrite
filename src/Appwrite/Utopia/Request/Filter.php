@@ -3,7 +3,6 @@
 namespace Appwrite\Utopia\Request;
 
 use Utopia\Database\Database;
-use Utopia\Route;
 
 abstract class Filter
 {

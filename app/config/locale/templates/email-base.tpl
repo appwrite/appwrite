@@ -50,17 +50,12 @@
                 font-style: normal;
                 font-display: swap;
             }
-            
-            @font-face {
-                font-family: 'Poppins';
-                src: url('https://assets.appwrite.io/fonts/poppins/poppins-v23-latin-regular.woff2') format('woff2');
-                font-weight: 400;
-                font-style: normal;
-                font-display: swap;
-            }
         </style>
         <style>
-            body {
+            .main {
+                max-width: 650px;
+                margin: 0 auto;
+                margin-top: 32px;
                 padding: 32px;
                 line-height: 1.5;
                 color: #616b7c;
@@ -68,15 +63,12 @@
                 font-weight: 400;
                 font-family: "Inter", sans-serif;
                 background-color: #ffffff;
-                margin: 0;
-                padding: 0;
-                line-height: 150%;
             }
-            a {
+            .main a {
                 color: currentColor;
                 word-break: break-all;
             }
-            a.button {
+            .main a.button {
                 box-sizing: border-box;
                 display: inline-block;
                 text-align: center;
@@ -87,8 +79,8 @@
                 border: 1px solid #414146;
                 border-radius: 8px;
             }
-            a.button:hover,
-            a.button:focus {
+            .main a.button:hover,
+            .main a.button:focus {
                 opacity: 0.8;
             }
             table {
@@ -101,11 +93,6 @@
             }
             td {
                 vertical-align: top;
-            }
-            .main {
-                max-width: 650px;
-                margin: 0 auto;
-                margin-top: 32px;
             }
             h1 {
                 font-size: 22px;
@@ -138,9 +125,6 @@
                 border: none;
                 border-top: 1px solid #e8e9f0;
             }
-            h* {
-                font-family: 'Poppins', sans-serif;
-            }
             p {
                 margin-bottom: 10px;
             }
@@ -155,21 +139,20 @@
 
 <body style="direction: {{direction}}">
 
-<div style="display: none; overflow: hidden; max-height: 0; max-width: 0; opacity: 0; line-height: 1px;">
-    {{preview}}
-    <div>{{previewWhitespace}}</div>
-</div>
+    <div style="display: none; overflow: hidden; max-height: 0; max-width: 0; opacity: 0; line-height: 1px;">
+        {{preview}}
+        <div>{{previewWhitespace}}</div>
+    </div>
 
-<div style="max-width:650px; word-wrap: break-word; overflow-wrap: break-word;
-  word-break: normal; margin:0 auto;">
-    <table style="margin-top: 32px">
-        <tr>
-            <td>
-                {{body}}
-            </td>
-        </tr>
-    </table>
-</div>
+    <div class="main" style="max-width:650px; word-wrap: break-word; overflow-wrap: break-word; word-break: normal; margin:0 auto;">
+        <table style="margin-top: 32px">
+            <tr>
+                <td>
+                    {{body}}
+                </td>
+            </tr>
+        </table>
+    </div>
 
 </body>
 </html>

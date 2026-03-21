@@ -4,6 +4,7 @@ namespace Tests\Unit\Utopia\Request\Filters;
 
 use Appwrite\Utopia\Request\Filter;
 use Appwrite\Utopia\Request\Filters\V19;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class V19Test extends TestCase
@@ -22,7 +23,7 @@ class V19Test extends TestCase
     {
     }
 
-    public function functionsCreateProvider()
+    public static function functionsCreateProvider(): array
     {
         return [
             'remove template fields' => [
@@ -42,7 +43,7 @@ class V19Test extends TestCase
         ];
     }
 
-    public function functionsListExecutionsProvider()
+    public static function functionsListExecutionsProvider(): array
     {
         return [
             'remove search field' => [
@@ -59,9 +60,7 @@ class V19Test extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider functionsCreateProvider
-     */
+    #[DataProvider('functionsCreateProvider')]
     public function testFunctionsCreate(array $content, array $expected): void
     {
         $model = 'functions.create';
@@ -71,9 +70,7 @@ class V19Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    /**
-     * @dataProvider functionsListExecutionsProvider
-     */
+    #[DataProvider('functionsListExecutionsProvider')]
     public function testFunctionsListExecutions(array $content, array $expected): void
     {
         $model = 'functions.listExecutions';

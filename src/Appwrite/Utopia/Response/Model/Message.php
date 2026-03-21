@@ -98,7 +98,7 @@ class Message extends Model
                 'type' => self::TYPE_ENUM,
                 'description' => 'Status of delivery.',
                 'default' => 'draft',
-                'example' => 'Message status can be one of the following: draft, processing, scheduled, sent, or failed.',
+                'example' => 'processing',
                 'enum' => ['draft', 'processing', 'scheduled', 'sent', 'failed'],
             ]);
     }

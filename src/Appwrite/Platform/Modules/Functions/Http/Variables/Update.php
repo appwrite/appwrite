@@ -10,6 +10,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
@@ -54,8 +55,8 @@ class Update extends Base
                     )
                 ]
             ))
-            ->param('functionId', '', new UID(), 'Function unique ID.', false)
-            ->param('variableId', '', new UID(), 'Variable unique ID.', false)
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function unique ID.', false, ['dbForProject'])
+            ->param('variableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Variable unique ID.', false, ['dbForProject'])
             ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', false)
             ->param('value', null, new Nullable(new Text(8192, 0)), 'Variable value. Max length: 8192 chars.', true)
             ->param('secret', null, new Nullable(new Boolean()), 'Secret variables can be updated or deleted, but only functions can read them during build and runtime.', true)
@@ -99,12 +100,18 @@ class Update extends Base
             ->setAttribute('search', implode(' ', [$variableId, $function->getId(), $key, 'function']));
 
         try {
-            $dbForProject->updateDocument('variables', $variable->getId(), $variable);
+            $dbForProject->updateDocument('variables', $variable->getId(), new Document([
+                'key' => $key,
+                'value' => $value ?? $variable->getAttribute('value'),
+                'secret' => $secret ?? $variable->getAttribute('secret'),
+                'search' => implode(' ', [$variableId, $function->getId(), $key, 'function']),
+            ]));
         } catch (DuplicateException $th) {
             throw new Exception(Exception::VARIABLE_ALREADY_EXISTS);
         }
 
-        $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('live', false));
+        $function->setAttribute('live', false);
+        $dbForProject->updateDocument('functions', $function->getId(), new Document(['live' => false]));
 
         // Inform scheduler to pull the latest changes
         $schedule = $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId'));
@@ -112,7 +119,11 @@ class Update extends Base
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deploymentId')));
-        $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
+        $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document([
+            'resourceUpdatedAt' => $schedule->getAttribute('resourceUpdatedAt'),
+            'schedule' => $schedule->getAttribute('schedule'),
+            'active' => $schedule->getAttribute('active'),
+        ])));
 
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     }

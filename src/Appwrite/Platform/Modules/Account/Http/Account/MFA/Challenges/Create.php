@@ -7,7 +7,6 @@ use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
-use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -15,10 +14,11 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Template\Template;
+use Appwrite\Usage\Context;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use libphonenumber\NumberParseException;
 use libphonenumber\PhoneNumberUtil;
-use Utopia\Abuse\Abuse;
 use Utopia\Auth\Proofs\Code as ProofsCode;
 use Utopia\Auth\Proofs\Token as ProofsToken;
 use Utopia\Database\Database;
@@ -104,7 +104,7 @@ class Create extends Action
             ->inject('queueForMessaging')
             ->inject('queueForMails')
             ->inject('timelimit')
-            ->inject('queueForStatsUsage')
+            ->inject('usage')
             ->inject('plan')
             ->inject('proofForToken')
             ->inject('proofForCode')
@@ -124,7 +124,7 @@ class Create extends Action
         Messaging $queueForMessaging,
         Mail $queueForMails,
         callable $timelimit,
-        StatsUsage $queueForStatsUsage,
+        Context $usage,
         array $plan,
         ProofsToken $proofForToken,
         ProofsCode $proofForCode
@@ -196,26 +196,17 @@ class Create extends Action
                     ->setRecipients([$phone])
                     ->setProviderType(MESSAGE_TYPE_SMS);
 
-                if (isset($plan['authPhone'])) {
-                    $timelimit = $timelimit('organization:{organizationId}', $plan['authPhone'], 30 * 24 * 60 * 60); // 30 days
-                    $timelimit
-                        ->setParam('{organizationId}', $project->getAttribute('teamId'));
+                $helper = PhoneNumberUtil::getInstance();
+                try {
+                    $countryCode = $helper->parse($phone)->getCountryCode();
 
-                    $abuse = new Abuse($timelimit);
-                    if ($abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
-                        $helper = PhoneNumberUtil::getInstance();
-                        $countryCode = $helper->parse($phone)->getCountryCode();
-
-                        if (!empty($countryCode)) {
-                            $queueForStatsUsage
-                                ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
-                        }
+                    if (!empty($countryCode)) {
+                        $usage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                     }
-                    $queueForStatsUsage
-                        ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
-                        ->setProject($project)
-                        ->trigger();
+                } catch (NumberParseException $e) {
+                    // Ignore invalid phone number for country code stats
                 }
+                $usage->addMetric(METRIC_AUTH_METHOD_PHONE, 1);
                 break;
             case Type::EMAIL:
                 if (empty(System::getEnv('_APP_SMTP_HOST'))) {
@@ -332,7 +323,7 @@ class Create extends Action
                     ->setPreview($preview)
                     ->setBody($body)
                     ->setBodyTemplate($bodyTemplate)
-                    ->setVariables($emailVariables)
+                    ->appendVariables($emailVariables)
                     ->setRecipient($user->getAttribute('email'));
 
                 // since this is console project, set email sender name!

@@ -4,7 +4,9 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documen
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Functions\EventProcessor;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction;
+use Appwrite\Utopia\Database\Validator\CustomId;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -250,6 +252,35 @@ abstract class Action extends DatabasesAction
     }
 
     /**
+     * Validate relationship values.
+     * Handles Document objects, ID strings, and associative arrays.
+     */
+    protected function validateRelationship(mixed $relation): void
+    {
+        $relationId = null;
+
+        if ($relation instanceof Document) {
+            $relationId = $relation->getId();
+        } elseif (\is_string($relation)) {
+            $relationId = $relation;
+        } elseif (\is_array($relation) && !\array_is_list($relation)) {
+            $relationId = $relation['$id'] ?? null;
+        } else {
+            throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, 'Relationship value must be an object, document ID string, or associative array');
+        }
+
+        if ($relationId !== null) {
+            if (!\is_string($relationId)) {
+                throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, 'Relationship $id must be a string');
+            }
+            $validator = new CustomId();
+            if (!$validator->isValid($relationId)) {
+                throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $validator->getDescription());
+            }
+        }
+    }
+
+    /**
      * Resolves relationships in a document and attaches metadata.
      */
     protected function processDocument(
@@ -262,8 +293,8 @@ abstract class Action extends DatabasesAction
         array &$collectionsCache,
         Authorization $authorization,
         ?int &$operations = null,
+        int $depth = 0,
     ): bool {
-
         if ($operations !== null && $document->isEmpty()) {
             return false;
         }
@@ -276,6 +307,11 @@ abstract class Action extends DatabasesAction
         $document->removeAttribute('$collection');
         $document->setAttribute('$databaseId', $database->getId());
         $document->setAttribute('$' . $this->getCollectionsEventsContext() . 'Id', $collectionId);
+
+        // Stop processing relationships if max depth reached
+        if ($depth >= Database::RELATION_MAX_DEPTH) {
+            return true;
+        }
 
         $relationships = $collectionsCache[$collectionId] ??= \array_filter(
             $collection->getAttribute('attributes', []),
@@ -323,8 +359,9 @@ abstract class Action extends DatabasesAction
                         document: $relation,
                         dbForProject: $dbForProject,
                         collectionsCache: $collectionsCache,
+                        authorization: $authorization,
                         operations: $operations,
-                        authorization: $authorization
+                        depth: $depth + 1
                     );
                 }
             }
@@ -349,6 +386,8 @@ abstract class Action extends DatabasesAction
      * @param Event $queueForRealtime
      * @param Event $queueForFunctions
      * @param Event $queueForWebhooks
+     * @param Database $dbForProject
+     * @param EventProcessor $eventProcessor
      * @return void
      */
     protected function triggerBulk(
@@ -359,7 +398,9 @@ abstract class Action extends DatabasesAction
         Event $queueForEvents,
         Event $queueForRealtime,
         Event $queueForFunctions,
-        Event $queueForWebhooks
+        Event $queueForWebhooks,
+        Database $dbForProject,
+        EventProcessor $eventProcessor
     ): void {
         $queueForEvents
             ->setEvent($event)
@@ -368,6 +409,11 @@ abstract class Action extends DatabasesAction
             ->setParam('collectionId', $collection->getId())
             ->setParam('tableId', $collection->getId())
             ->setContext($this->getCollectionsEventsContext(), $collection);
+
+        // Get project and function events (cached)
+        $project = $queueForEvents->getProject();
+        $functionsEvents = $eventProcessor->getFunctionsEvents($project, $dbForProject);
+        $webhooksEvents = $eventProcessor->getWebhooksEvents($project);
 
         foreach ($documents as $document) {
             $queueForEvents
@@ -379,13 +425,34 @@ abstract class Action extends DatabasesAction
                 ->from($queueForEvents)
                 ->trigger();
 
-            $queueForFunctions
-                ->from($queueForEvents)
-                ->trigger();
+            // Generate events for this document operation
+            $generatedEvents = Event::generateEvents(
+                $queueForEvents->getEvent(),
+                $queueForEvents->getParams()
+            );
 
-            $queueForWebhooks
-                ->from($queueForEvents)
-                ->trigger();
+
+            if (!empty($functionsEvents)) {
+                foreach ($generatedEvents as $event) {
+                    if (isset($functionsEvents[$event])) {
+                        $queueForFunctions
+                            ->from($queueForEvents)
+                            ->trigger();
+                        break;
+                    }
+                }
+            }
+
+            if (!empty($webhooksEvents)) {
+                foreach ($generatedEvents as $event) {
+                    if (isset($webhooksEvents[$event])) {
+                        $queueForWebhooks
+                            ->from($queueForEvents)
+                            ->trigger();
+                        break;
+                    }
+                }
+            }
         }
 
         $queueForEvents->reset();
