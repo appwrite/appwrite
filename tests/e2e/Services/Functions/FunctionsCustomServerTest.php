@@ -3077,7 +3077,8 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-user-jwt' => $validUserJwt,
         ]);
-        $this->assertNotSame(401, $response['headers']['status-code']);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertArrayHasKey('x-appwrite-execution-id', $response['headers']);
 
         // Update function to execute: ['guests']
         $response = $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId, [
@@ -3098,10 +3099,11 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ]);
-        $this->assertNotSame(401, $response['headers']['status-code']);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertArrayHasKey('x-appwrite-execution-id', $response['headers']);
 
         // Update function to execute: specific user
-        $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId, [
+        $response = $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -3112,6 +3114,7 @@ class FunctionsCustomServerTest extends Scope
             'entrypoint' => 'index.js',
             'timeout' => 15,
         ]);
+        $this->assertSame(200, $response['headers']['status-code']);
 
         // Case 5: execute: ['user:{userId}'], correct user JWT → allowed
         $response = $proxyClient->call(Client::METHOD_GET, '/', [
@@ -3119,7 +3122,8 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-user-jwt' => $validUserJwt,
         ]);
-        $this->assertNotSame(401, $response['headers']['status-code']);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertArrayHasKey('x-appwrite-execution-id', $response['headers']);
 
         // Create a second user
         $secondEmail = uniqid('', true) . '@localhost.test';
@@ -3207,7 +3211,8 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-user-jwt' => $validUserJwt,
         ]);
-        $this->assertNotSame(401, $response['headers']['status-code']);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertArrayHasKey('x-appwrite-execution-id', $response['headers']);
 
         // Case 8: execute: ['team:{teamId}'], user not in the team → denied (401)
         $response = $proxyClient->call(Client::METHOD_GET, '/', [
