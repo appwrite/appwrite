@@ -10,6 +10,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -133,6 +134,39 @@ class Update extends Action
         $providerCommitAuthor = $commitDetails["commitAuthor"] ?? '';
         $providerCommitAuthorUrl = $commitDetails["commitAuthorUrl"] ?? '';
 
+        // Check if there's already a waiting deployment for this PR to avoid duplicates
+        $existingDeployments = $authorization->skip(fn () => $dbForProject->find('deployments', [
+            Query::equal('providerPullRequestId', [$providerPullRequestId]),
+            Query::equal('status', ['waiting']),
+            Query::limit(1)
+        ]));
+
+        if (!$existingDeployments->isEmpty()) {
+            // Re-trigger the existing deployment instead of creating a new one
+            $existingDeployment = $existingDeployments[0];
+            $resourceId = $existingDeployment->getAttribute('resourceId');
+            $resourceType = $existingDeployment->getAttribute('resourceType');
+            $resourceCollection = $resourceType === "function" ? 'functions' : 'sites';
+            $resource = $authorization->skip(fn () => $dbForProject->getDocument($resourceCollection, $resourceId));
+            
+            if (!$resource->isEmpty()) {
+                Console::info("Re-triggering existing deployment '{$existingDeployment->getId()}' for authorized PR #{$providerPullRequestId}");
+                
+                $queueName = System::getEnv('_APP_BUILDS_QUEUE_NAME', 'builds');
+                $queueForBuilds
+                    ->setQueue($queueName)
+                    ->setType('deployment')
+                    ->setResource($resource)
+                    ->setDeployment($existingDeployment)
+                    ->setProject($project);
+                
+                $queueForBuilds->trigger();
+                $response->noContent();
+                return;
+            }
+        }
+
+        // If no existing waiting deployment, create a new one
         $this->createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, true, $dbForPlatform, $authorization, $queueForBuilds, $getProjectDB, $platform);
 
         $response->noContent();
