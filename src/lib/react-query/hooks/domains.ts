@@ -14,7 +14,8 @@ import {
   keepPreviousData,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { Query } from '@appwrite.io/console'
+import { Query, RegistrationType } from '@appwrite.io/console'
+import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { DEFAULT_STALE_TIME, DEFAULT_PAGE_SIZE } from './constants'
 import { Dependencies } from './dependencies'
@@ -86,17 +87,184 @@ export async function fetchDomain(domainId: string) {
 }
 
 /**
- * Query function to fetch price for a single domain (getPrice API).
+ * Registration quote from getPrice plus optional renewal quote (same period rules).
+ * Renewal uses registrationType `renewal`; if the API returns an error, renewal fields are omitted.
+ */
+export type DomainPriceQuote = Models.DomainPrice & {
+  renewalPrice?: number
+  renewalPeriodYears?: number
+}
+
+/**
+ * Query function to fetch new-registration and renewal prices (getPrice API).
  * For .ai TLD always requests 2-year price; otherwise uses API default (typically 1 year).
  */
-export async function fetchDomainPrice(domain: string) {
+export async function fetchDomainPrice(domain: string): Promise<DomainPriceQuote> {
   const normalized = domain.toLowerCase()
   const periodYears = normalized.endsWith('.ai') ? 2 : undefined
-  const response = await sdk.forConsole.domains.getPrice({
+  const params = {
     domain: normalized,
     ...(periodYears != null && { periodYears }),
+  }
+  const [registration, renewal] = await Promise.all([
+    sdk.forConsole.domains.getPrice({
+      ...params,
+      registrationType: RegistrationType.New,
+    }),
+    sdk.forConsole.domains
+      .getPrice({
+        ...params,
+        registrationType: RegistrationType.Renewal,
+      })
+      .catch(() => null),
+  ])
+
+  return {
+    ...registration,
+    renewalPrice: renewal?.price,
+    renewalPeriodYears: renewal?.periodYears,
+  }
+}
+
+/**
+ * Transfer-in quote from getPrice (registrationType transfer) plus optional renewal quote.
+ */
+export type DomainTransferPriceQuote = Models.DomainPrice & {
+  renewalPrice?: number
+  renewalPeriodYears?: number
+}
+
+/**
+ * Fetches transfer and renewal prices for an inbound transfer (same period rules as registration).
+ */
+export async function fetchDomainTransferPriceQuote(
+  domain: string,
+): Promise<DomainTransferPriceQuote> {
+  const normalized = domain.toLowerCase().trim()
+  const periodYears = normalized.endsWith('.ai') ? 2 : undefined
+  const params = {
+    domain: normalized,
+    ...(periodYears != null && { periodYears }),
+  }
+  const [transfer, renewal] = await Promise.all([
+    sdk.forConsole.domains.getPrice({
+      ...params,
+      registrationType: RegistrationType.Transfer,
+    }),
+    sdk.forConsole.domains
+      .getPrice({
+        ...params,
+        registrationType: RegistrationType.Renewal,
+      })
+      .catch(() => null),
+  ])
+
+  return {
+    ...transfer,
+    renewalPrice: renewal?.price,
+    renewalPeriodYears: renewal?.periodYears,
+  }
+}
+
+/**
+ * Query options for transfer-in price preview (wizard sidebar).
+ */
+export function domainTransferPriceQueryOptions(
+  domain: string | null | undefined,
+) {
+  const normalized = domain?.trim().toLowerCase() ?? ''
+  const enabled =
+    normalized.length > 0 &&
+    normalized.includes('.') &&
+    !normalized.startsWith('.') &&
+    !normalized.endsWith('.')
+
+  return queryOptions({
+    queryKey: ['domain-price', 'transfer', normalized],
+    queryFn: () => fetchDomainTransferPriceQuote(normalized),
+    enabled,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
   })
-  return response
+}
+
+export async function createDomainPurchase(params: {
+  domain: string
+  organizationId: string
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  billingAddressId: string
+  paymentMethodId: string
+  addressLine3?: string
+  companyName?: string
+  periodYears?: number
+}) {
+  return await sdk.forConsole.domains.createPurchase({
+    domain: params.domain.toLowerCase(),
+    organizationId: params.organizationId,
+    firstName: params.firstName,
+    lastName: params.lastName,
+    email: params.email,
+    phone: params.phone,
+    billingAddressId: params.billingAddressId,
+    paymentMethodId: params.paymentMethodId,
+    addressLine3: params.addressLine3,
+    companyName: params.companyName,
+    periodYears: params.periodYears,
+  })
+}
+
+export async function finalizeDomainPurchase(params: {
+  domainId: string
+  organizationId: string
+}) {
+  return await sdk.forConsole.domains.updatePurchase({
+    domainId: params.domainId,
+    organizationId: params.organizationId,
+  })
+}
+
+export async function createDomainTransferIn(params: {
+  domain: string
+  organizationId: string
+  authCode: string
+  paymentMethodId: string
+}) {
+  return await sdk.forConsole.domains.createTransferIn({
+    domain: params.domain.toLowerCase(),
+    organizationId: params.organizationId,
+    authCode: params.authCode,
+    paymentMethodId: params.paymentMethodId,
+  })
+}
+
+export async function finalizeDomainTransferIn(params: {
+  domainId: string
+  organizationId: string
+}) {
+  return await sdk.forConsole.domains.updateTransferIn({
+    domainId: params.domainId,
+    organizationId: params.organizationId,
+  })
+}
+
+export async function createDomainTransferOut(params: {
+  domainId: string
+  organizationId: string
+}) {
+  return await sdk.forConsole.domains.createTransferOut({
+    domainId: params.domainId,
+    organizationId: params.organizationId,
+  })
+}
+
+export async function fetchDomainTransferStatus(domainId: string) {
+  if (!domainId) {
+    throw new Error('Domain ID is required')
+  }
+  return await sdk.forConsole.domains.getTransferStatus({ domainId })
 }
 
 // ============================================================================
@@ -520,7 +688,7 @@ export function domainQueryOptions(domainId: string | null | undefined) {
  */
 export function domainPriceQueryOptions(domain: string | null | undefined) {
   return queryOptions({
-    queryKey: ['domain-price', domain],
+    queryKey: ['domain-price', domain, 'renewal'],
     queryFn: () => fetchDomainPrice(domain!),
     enabled: !!domain && domain.length >= 4,
     staleTime: 60 * 1000,
@@ -640,7 +808,7 @@ export function useOrganizationDomains(
  *
  * @param baseName - Base name (e.g. "myapp")
  * @param tlds - TLDs to fetch prices for
- * @returns Map of domain -> { price, available, periodYears?, premium? }, loading/error state.
+ * @returns Map of domain -> { price, available, periodYears?, premium?, renewalPrice?, renewalPeriodYears? }, loading/error state.
  *   price is total cost; periodYears is 1+ (price covers that many years).
  */
 export function useDomainPrices(
@@ -667,19 +835,22 @@ export function useDomainPrices(
         available: boolean
         periodYears?: number
         premium?: boolean
+        renewalPrice?: number
+        renewalPeriodYears?: number
       }
     >()
     for (let i = 0; i < domains.length; i++) {
       const { data } = queries[i]
       if (data) {
+        const quote = data as DomainPriceQuote
         map.set(domains[i], {
-          price: data.price,
-          available: data.available,
+          price: quote.price,
+          available: quote.available,
           periodYears:
-            typeof (data as { periodYears?: number }).periodYears === 'number'
-              ? (data as { periodYears: number }).periodYears
-              : 1,
-          premium: (data as { premium?: boolean }).premium,
+            typeof quote.periodYears === 'number' ? quote.periodYears : 1,
+          premium: quote.premium,
+          renewalPrice: quote.renewalPrice,
+          renewalPeriodYears: quote.renewalPeriodYears,
         })
       }
     }

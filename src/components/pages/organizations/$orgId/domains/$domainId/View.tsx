@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useMutation } from '@tanstack/react-query'
+import { createDomainTransferOut } from '@/lib/react-query/hooks/domains'
 import { cn } from '@/lib/utils'
 import {
   Globe,
@@ -152,6 +153,11 @@ export function View({ initialData }: ViewProps = {}) {
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [selectedOrgId, setSelectedOrgId] = useState('')
   const [transferDialogOpen, setTransferDialogOpen] = useState(false)
+  const [registrarTransferDialogOpen, setRegistrarTransferDialogOpen] =
+    useState(false)
+  const [registrarTransferAuthCode, setRegistrarTransferAuthCode] = useState<
+    string | null
+  >(null)
   const [deleteConfirmation, setDeleteConfirmation] = useState('')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedRecords, setSelectedRecords] = useState<Set<string>>(new Set())
@@ -745,6 +751,25 @@ export function View({ initialData }: ViewProps = {}) {
 
   // Transfer domain mutation
   const transferDomainMutation = useUpdateDomainTeam(orgId)
+
+  const createTransferOutMutation = useMutation({
+    mutationFn: async () => {
+      if (!domainId || !orgId) {
+        throw new Error('Missing domain or organization')
+      }
+      return createDomainTransferOut({
+        domainId,
+        organizationId: orgId,
+      })
+    },
+    onSuccess: (data) => {
+      setRegistrarTransferAuthCode(data.authCode)
+      toast.success('Transfer authorization code generated')
+    },
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error) || 'Failed to start transfer out')
+    },
+  })
 
   const handleTransferDomain = () => {
     if (!domainId || !selectedOrgId) return
@@ -1697,6 +1722,118 @@ export function View({ initialData }: ViewProps = {}) {
                     </div>
                   </DialogContent>
                 </Dialog>
+              )}
+
+              {domain?.registrar?.toLowerCase() === 'appwrite' && (
+                <>
+                  <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                    <div className="px-6 py-4">
+                      <h3 className="text-[15px] font-semibold text-foreground">
+                        Transfer to another registrar
+                      </h3>
+                      <p className="text-[13px] text-muted-foreground mt-2">
+                        Generate an authorization code to move this domain to a
+                        different registrar. You will provide this code at the
+                        receiving registrar.
+                      </p>
+                    </div>
+                    <div className="px-6 py-4 border-t border-border bg-muted/30">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-9 text-[13px]"
+                        onClick={() => {
+                          setRegistrarTransferAuthCode(null)
+                          setRegistrarTransferDialogOpen(true)
+                        }}
+                      >
+                        Get transfer code
+                      </Button>
+                    </div>
+                  </div>
+
+                  <Dialog
+                    open={registrarTransferDialogOpen}
+                    onOpenChange={(open) => {
+                      setRegistrarTransferDialogOpen(open)
+                      if (!open) {
+                        setRegistrarTransferAuthCode(null)
+                      }
+                    }}
+                  >
+                    <DialogContent className="sm:max-w-md p-0">
+                      <DialogHeader className="px-6 pt-6 pb-4 text-left">
+                        <DialogTitle>
+                          {registrarTransferAuthCode
+                            ? 'Your transfer code'
+                            : 'Transfer to another registrar'}
+                        </DialogTitle>
+                        <DialogDescription className="text-[13px] mt-2">
+                          {registrarTransferAuthCode
+                            ? 'Copy this code and submit it at your new registrar to complete the transfer out.'
+                            : 'This will generate a transfer authorization code for your domain. Keep it private until you use it at the receiving registrar.'}
+                        </DialogDescription>
+                      </DialogHeader>
+                      {registrarTransferAuthCode ? (
+                        <>
+                          <div className="border-t border-border" />
+                          <div className="px-6 py-4">
+                            <Input
+                              readOnly
+                              value={registrarTransferAuthCode}
+                              className="h-10 font-mono text-[13px]"
+                            />
+                          </div>
+                          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-9 text-[13px]"
+                              onClick={() =>
+                                handleCopy(
+                                  registrarTransferAuthCode,
+                                  'transfer-code',
+                                )
+                              }
+                            >
+                              Copy code
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="h-9 text-[13px]"
+                              onClick={() =>
+                                setRegistrarTransferDialogOpen(false)
+                              }
+                            >
+                              Close
+                            </Button>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-9 text-[13px]"
+                            onClick={() =>
+                              setRegistrarTransferDialogOpen(false)
+                            }
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="h-9 text-[13px]"
+                            disabled={createTransferOutMutation.isPending}
+                            onClick={() => createTransferOutMutation.mutate()}
+                          >
+                            Generate code
+                          </Button>
+                        </div>
+                      )}
+                    </DialogContent>
+                  </Dialog>
+                </>
               )}
 
               {/* Delete Domain Section */}

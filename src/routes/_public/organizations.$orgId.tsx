@@ -130,19 +130,18 @@ function OrganizationLayout() {
       match.routeId.startsWith('/_public/organizations/$orgId/support'),
   )
 
-  // Check if we're on the buy domain route (fullscreen wizard)
-  const isBuyDomainRoute = matches.some(
-    (match) =>
-      match.routeId?.includes('/domains/buy') ||
-      match.routeId === '/_public/organizations/$orgId/domains/buy',
-  )
+  // Buy / transfer-in wizards: must bypass OrgOverview — it only mounts <Outlet> on the domains
+  // index, so nested routes like .../domains/buy would never render (blank page).
+  const isOrgDomainsWizardRoute =
+    pathname.includes('/domains/buy') ||
+    pathname.includes('/domains/transfer-in')
 
   return (
     <RequireAuth>
       {isDomainDetailRoute ||
       isSupportRoute ||
-      isBuyDomainRoute ? (
-        // For domain detail and support routes, render outlet directly (they have their own layout)
+      isOrgDomainsWizardRoute ? (
+        // Domain detail, support, and domain wizards: outlet only (fullscreen / own chrome)
         <Outlet />
       ) : isChangePlanRoute ? (
         // Change-plan: fullscreen wrapper so the wizard looks identical from header upgrade or billing upgrade

@@ -7,6 +7,7 @@ import {
   Search,
   Plus,
   ShoppingCart,
+  ArrowLeftRight,
 } from 'lucide-react'
 import {
   useOrganizationDomains,
@@ -613,6 +614,19 @@ export function View() {
           />
         </div>
         <div className="ml-auto flex items-center gap-2">
+          <Button
+            variant="outline"
+            asChild
+            className="h-9 gap-1.5 text-[13px] font-medium"
+          >
+            <Link
+              to="/organizations/$orgId/domains/transfer-in"
+              params={{ orgId: orgId! }}
+            >
+              <ArrowLeftRight className="h-4 w-4" />
+              Transfer in
+            </Link>
+          </Button>
           <Button
             variant="outline"
             asChild

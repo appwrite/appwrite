@@ -141,3 +141,58 @@ export function formatCardExpiry(month: number, year: number): string {
   const yearStr = year.toString().slice(-2)
   return `${monthStr}/${yearStr}`
 }
+
+const CARD_BRAND_LABELS: Record<string, string> = {
+  visa: 'Visa',
+  mastercard: 'Mastercard',
+  amex: 'American Express',
+  american_express: 'American Express',
+  discover: 'Discover',
+  diners: 'Diners Club',
+  diners_club: 'Diners Club',
+  jcb: 'JCB',
+  unionpay: 'UnionPay',
+}
+
+/**
+ * Human-readable card network from API `brand` (often Stripe-style slugs).
+ */
+export function formatPaymentCardBrand(brand: string | undefined): string {
+  const b = brand?.trim().toLowerCase() || ''
+  if (CARD_BRAND_LABELS[b]) return CARD_BRAND_LABELS[b]
+  if (!b) return 'Card'
+  return b
+    .split(/[\s_]+/)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ')
+}
+
+export type PaymentMethodCardSummaryInput = {
+  brand?: string
+  last4?: string
+  name?: string
+  expiryMonth?: number
+  expiryYear?: number
+}
+
+/**
+ * Label for payment method selects: card type, last four, optional expiry.
+ */
+export function formatPaymentMethodSummary(
+  method: PaymentMethodCardSummaryInput,
+  options?: { includeExpiry?: boolean },
+): string {
+  if (!method.last4?.trim()) {
+    return method.name?.trim() || 'Card'
+  }
+  const typeLabel = formatPaymentCardBrand(method.brand)
+  let out = `${typeLabel} ending in ${method.last4}`
+  if (
+    options?.includeExpiry &&
+    method.expiryMonth &&
+    method.expiryYear
+  ) {
+    out += ` · Expires ${formatCardExpiry(method.expiryMonth, method.expiryYear)}`
+  }
+  return out
+}

@@ -1,12 +1,14 @@
 /**
  * Buy Domain Wizard
  *
- * Full-screen wizard for buying a domain. Shows all TLDs; fetches prices only
- * for those visible (initial batch + when scrolled into view).
+ * Full-screen wizard for buying a domain. Renders the configured TLD list and
+ * fetches prices only for cards that enter the viewport (initial batch + scroll).
  */
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
+import { useQueryClient } from '@tanstack/react-query'
+import { DomainPurchaseStatus } from '@appwrite.io/console'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,7 +18,12 @@ import { Search, ArrowRight, XCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
-import { useDomainPrices } from '@/lib/react-query/hooks/domains'
+import {
+  useDomainPrices,
+  finalizeDomainPurchase,
+} from '@/lib/react-query/hooks/domains'
+import { BuyDomainCheckout, type BuyDomainSelection } from './BuyDomainCheckout'
+import type { BuyDomainWizardSearch } from '@/routes/_public/organizations.$orgId.domains.buy'
 
 /** Number of TLDs to fetch on first paint (above the fold) */
 const INITIAL_VISIBLE_COUNT = 24
@@ -197,19 +204,78 @@ type DomainSuggestion = {
   price?: number
   /** Number of years the price covers (from getPrice periodYears; default 1) */
   periodYears?: number
-  renewal?: number
+  renewalPrice?: number
+  renewalPeriodYears?: number
   taken?: boolean
   premium?: boolean
   isPerfectMatch?: boolean
 }
 
-export function BuyDomainWizard() {
+export function BuyDomainWizard({
+  routeSearch,
+}: {
+  routeSearch: BuyDomainWizardSearch
+}) {
   const { orgId } = useParams({ strict: false })
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [searchValue, setSearchValue] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [stage, setStage] = useState<'search' | 'checkout'>('search')
+  const [checkoutSelection, setCheckoutSelection] =
+    useState<BuyDomainSelection | null>(null)
+  const paymentReturnHandled = useRef(false)
 
   const fallbackPath = `/organizations/${orgId}/domains/`
+
+  useEffect(() => {
+    if (
+      routeSearch.payment !== 'purchase' ||
+      !routeSearch.domainId ||
+      !orgId ||
+      paymentReturnHandled.current
+    ) {
+      return
+    }
+    paymentReturnHandled.current = true
+    ;(async () => {
+      try {
+        const result = await finalizeDomainPurchase({
+          domainId: routeSearch.domainId!,
+          organizationId: orgId,
+        })
+        if (result.status === DomainPurchaseStatus.Succeeded) {
+          await queryClient.refetchQueries({
+            queryKey: ['domains', 'organization', orgId],
+          })
+          toast.success('Payment confirmed')
+          navigate({
+            to: '/organizations/$orgId/domains/$domainId',
+            params: { orgId, domainId: routeSearch.domainId! },
+            replace: true,
+          })
+        } else {
+          toast.error('Purchase could not be completed')
+          navigate({
+            to: '/organizations/$orgId/domains/buy',
+            params: { orgId },
+            search: {},
+            replace: true,
+          })
+        }
+      } catch (e) {
+        toast.error(
+          e instanceof Error ? e.message : 'Failed to complete purchase',
+        )
+        navigate({
+          to: '/organizations/$orgId/domains/buy',
+          params: { orgId },
+          search: {},
+          replace: true,
+        })
+      }
+    })()
+  }, [routeSearch.payment, routeSearch.domainId, orgId, navigate, queryClient])
 
   // Only fetch prices for TLDs that have been visible (initial batch + when scrolled into view)
   const [requestedTlds, setRequestedTlds] = useState<string[]>(() =>
@@ -263,7 +329,7 @@ export function BuyDomainWizard() {
     requestedTlds,
   )
 
-  // API data map: domain -> { price, available, periodYears, premium } from getPrice
+  // API data map: domain -> quotes from getPrice (new + renewal)
   const apiDataByDomain = useMemo(() => {
     const map = new Map<
       string,
@@ -272,6 +338,8 @@ export function BuyDomainWizard() {
         available: boolean
         periodYears?: number
         premium?: boolean
+        renewalPrice?: number
+        renewalPeriodYears?: number
       }
     >()
     pricesByDomain.forEach((data, domain) => {
@@ -280,6 +348,8 @@ export function BuyDomainWizard() {
         available: data.available,
         periodYears: data.periodYears ?? 1,
         premium: data.premium,
+        renewalPrice: data.renewalPrice,
+        renewalPeriodYears: data.renewalPeriodYears,
       })
     })
     return map
@@ -317,6 +387,8 @@ export function BuyDomainWizard() {
         priceLoaded: apiData != null,
         price: apiData?.price ?? undefined,
         periodYears: apiData?.periodYears ?? 1,
+        renewalPrice: apiData?.renewalPrice,
+        renewalPeriodYears: apiData?.renewalPeriodYears,
         taken: apiData ? !apiData.available : undefined,
         premium: apiData?.premium,
         isPerfectMatch: isExactMatch || isPreferredCom,
@@ -332,15 +404,51 @@ export function BuyDomainWizard() {
       const bCom = b.tld === 'com' ? 1 : 0
       return bCom - aCom
     })
-  }, [baseName, normalizedSearch, apiDataByDomain, typedTld, tldRank])
+  }, [
+    baseName,
+    normalizedSearch,
+    apiDataByDomain,
+    typedTld,
+    tldRank,
+    showSuggestions,
+  ])
 
-  const handleSelectDomain = (_full: string) => {
-    toast.info(
-      'Domain purchase will be available soon. The API integration is coming this week.',
-    )
+  const handleSelectDomain = (
+    full: string,
+    opts?: {
+      price?: number
+      periodYears?: number
+      premium?: boolean
+      renewalPrice?: number
+      renewalPeriodYears?: number
+    },
+  ) => {
+    setCheckoutSelection({
+      domain: full.toLowerCase(),
+      price: opts?.price,
+      periodYears: opts?.periodYears ?? 1,
+      premium: opts?.premium,
+      renewalPrice: opts?.renewalPrice,
+      renewalPeriodYears: opts?.renewalPeriodYears,
+    })
+    setStage('checkout')
   }
 
   const hasContent = searchValue.trim().length > 0
+
+  if (stage === 'checkout' && checkoutSelection && orgId) {
+    return (
+      <BuyDomainCheckout
+        orgId={orgId}
+        selection={checkoutSelection}
+        fallbackPath={fallbackPath}
+        onBackToSearch={() => {
+          setStage('search')
+          setCheckoutSelection(null)
+        }}
+      />
+    )
+  }
 
   return (
     <WizardLayout
@@ -386,12 +494,20 @@ export function BuyDomainWizard() {
         {hasContent && (
           <div className="mt-6 flex-1 min-h-0">
             {suggestions.length > 0 ? (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+              <div className="grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                 {suggestions.map((s) => (
                   <DomainCard
                     key={s.full}
                     suggestion={s}
-                    onSelect={handleSelectDomain}
+                    onSelect={(full) =>
+                      handleSelectDomain(full, {
+                        price: s.price,
+                        periodYears: s.periodYears,
+                        premium: s.premium,
+                        renewalPrice: s.renewalPrice,
+                        renewalPeriodYears: s.renewalPeriodYears,
+                      })
+                    }
                     onVisible={() => addRequestedTld(s.tld)}
                   />
                 ))}
@@ -417,6 +533,12 @@ function formatPricePeriod(periodYears: number): string {
   return `/${periodYears} yrs`
 }
 
+/**
+ * Reserved height for registration + renewal line so loading → loaded does not shift
+ * card layout.
+ */
+const DOMAIN_CARD_PRICE_BLOCK_MIN_H = 'min-h-[4.25rem]'
+
 function DomainCard({
   suggestion,
   onSelect,
@@ -432,12 +554,19 @@ function DomainCard({
     priceLoaded,
     price,
     periodYears = 1,
+    renewalPrice,
+    renewalPeriodYears,
     taken,
     premium,
     isPerfectMatch,
   } = suggestion
-  const cardRef = useRef<HTMLDivElement>(null)
+  const cardRef = useRef<HTMLButtonElement>(null)
   const hasReportedVisible = useRef(false)
+
+  const canSelect =
+    !taken &&
+    priceLoaded &&
+    !(premium && (price == null || price <= 0))
 
   useEffect(() => {
     if (!onVisible || hasReportedVisible.current) return
@@ -458,18 +587,34 @@ function DomainCard({
   }, [onVisible])
 
   return (
-    <div
+    <button
       ref={cardRef}
+      type="button"
+      disabled={!canSelect}
+      aria-label={
+        taken
+          ? `${full} is taken`
+          : canSelect
+            ? `Add ${full} to cart`
+            : `Loading price for ${full}`
+      }
+      onClick={() => {
+        if (canSelect) onSelect(full)
+      }}
       className={cn(
-        'group flex min-w-0 flex-col gap-3 rounded-xl border px-4 py-3.5 backdrop-blur-sm',
+        'group flex h-full min-h-[8.75rem] w-full min-w-0 flex-col rounded-xl border px-4 py-3.5 text-left backdrop-blur-sm',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+        'disabled:pointer-events-none',
         taken
           ? 'border-border/40 bg-muted/20 opacity-75'
           : isPerfectMatch
-            ? 'border-blue-500/25 bg-blue-500/5 dark:bg-blue-500/10 ring-1 ring-blue-500/20 shadow-sm transition-all duration-150 hover:border-blue-500/35 hover:bg-blue-500/10 dark:hover:bg-blue-500/15'
-            : 'border-border/60 bg-card/40 transition-all duration-150 hover:border-foreground/15 hover:bg-muted/30',
+            ? 'border-blue-500/25 bg-blue-500/5 dark:bg-blue-500/10 ring-1 ring-blue-500/20 shadow-sm transition-all duration-150 enabled:hover:border-blue-500/35 enabled:hover:bg-blue-500/10 dark:enabled:hover:bg-blue-500/15 enabled:cursor-pointer'
+            : 'border-border/60 bg-card/40 transition-all duration-150 enabled:hover:border-foreground/15 enabled:hover:bg-muted/30 enabled:cursor-pointer',
+        !canSelect && !taken && 'cursor-wait',
+        taken && 'cursor-not-allowed',
       )}
     >
-      <div className="flex items-baseline gap-1.5 min-w-0">
+      <div className="flex shrink-0 items-baseline gap-1.5 min-w-0">
         <span
           className={cn(
             'font-mono text-[14px] font-medium tracking-tight truncate',
@@ -495,47 +640,79 @@ function DomainCard({
           </Badge>
         )}
       </div>
-      <div className="flex min-w-0 items-center justify-between gap-2 min-h-8">
-        <div className="min-h-5 flex min-w-0 items-center overflow-hidden">
+
+      <div className="mt-2 flex min-h-0 w-full min-w-0 flex-1 flex-row items-end justify-between gap-2">
+        <div
+          className={cn(
+            'flex min-h-0 min-w-0 flex-1 flex-col items-start justify-end gap-1 text-left',
+            DOMAIN_CARD_PRICE_BLOCK_MIN_H,
+          )}
+        >
           {priceLoaded ? (
             taken ? (
               <span className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground animate-in fade-in-0 slide-in-from-bottom-1 duration-200">
-                <XCircle className="h-3.5 w-3.5" />
+                <XCircle className="h-3.5 w-3.5 shrink-0" />
                 Taken
               </span>
-            ) : price != null && price > 0 ? (
-              <span className="truncate font-mono text-[13px] font-semibold tabular-nums text-foreground animate-in fade-in-0 slide-in-from-bottom-1 duration-200">
-                $
-                {price.toLocaleString('en-US', {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-                <span className="font-normal text-[11px] text-muted-foreground">
-                  {formatPricePeriod(periodYears)}
-                </span>
-              </span>
             ) : (
-              <span className="text-[12px] text-muted-foreground animate-in fade-in-0 slide-in-from-bottom-1 duration-200">
-                {premium ? 'Contact for price' : '—'}
-              </span>
+              <>
+                {price != null && price > 0 ? (
+                  <span className="truncate font-mono text-[13px] font-semibold tabular-nums text-foreground animate-in fade-in-0 slide-in-from-bottom-1 duration-200">
+                    $
+                    {price.toLocaleString('en-US', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                    <span className="font-normal text-[11px] text-muted-foreground">
+                      {formatPricePeriod(periodYears)}
+                    </span>
+                  </span>
+                ) : (
+                  <span className="text-[12px] text-muted-foreground animate-in fade-in-0 slide-in-from-bottom-1 duration-200">
+                    {premium ? 'Contact for price' : '—'}
+                  </span>
+                )}
+                {renewalPrice != null && renewalPrice > 0 ? (
+                  <span className="truncate text-[11px] leading-snug text-muted-foreground tabular-nums animate-in fade-in-0 slide-in-from-bottom-1 duration-200">
+                    Renewal{' '}
+                    <span className="font-mono font-medium text-foreground/90">
+                      $
+                      {renewalPrice.toLocaleString('en-US', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
+                    <span className="font-normal text-muted-foreground">
+                      {formatPricePeriod(
+                        renewalPeriodYears ?? periodYears ?? 1,
+                      )}
+                    </span>
+                  </span>
+                ) : null}
+              </>
             )
           ) : (
-            <Skeleton className="h-4 w-14 rounded bg-muted/60" />
+            <div className="flex w-full flex-col items-start justify-end gap-2">
+              <Skeleton className="h-4 w-20 rounded bg-muted/60" />
+              <Skeleton className="h-3 w-28 rounded bg-muted/50" />
+            </div>
           )}
         </div>
-        {!taken && (
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-8 shrink-0 gap-1 text-[12px] -mr-1 opacity-70 group-hover:opacity-100 transition-opacity"
-            onClick={() => onSelect(full)}
-            disabled={!priceLoaded}
-          >
-            Add
-            <ArrowRight className="h-3.5 w-3.5" />
-          </Button>
-        )}
+
+        {!taken ? (
+          <div className="flex min-h-8 shrink-0 items-center">
+            <span
+              className={cn(
+                'flex items-center gap-1 text-[12px] font-medium text-muted-foreground transition-colors group-hover:text-foreground',
+                !canSelect && 'opacity-50 group-hover:text-muted-foreground',
+              )}
+            >
+              Add
+              <ArrowRight className="h-3.5 w-3.5" />
+            </span>
+          </div>
+        ) : null}
       </div>
-    </div>
+    </button>
   )
 }
