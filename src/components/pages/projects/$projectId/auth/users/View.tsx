@@ -28,6 +28,7 @@ import {
   Tablet,
   Monitor,
   UserRound,
+  ExternalLink,
 } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
 import { AuthenticatorType, MessagingProviderType } from '@appwrite.io/console'
@@ -805,10 +806,36 @@ function UserImpersonationCapabilityCard({
           User impersonation
         </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          When enabled, this user can act as other users in this project using
-          impersonation. Audit logs still attribute actions to the original
-          account.
+          When enabled, this user may use the Appwrite client SDK&apos;s
+          impersonation support in your app: you designate which other project
+          user a session should run as, and the SDK applies that context on
+          outgoing requests so the API treats each call like it came from the
+          impersonated user—permissions, data access, and limits follow that
+          identity.{' '}
+          <a
+            href="https://appwrite.io/docs/products/auth/impersonation"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline inline-flex items-center gap-1"
+          >
+            Documentation
+            <ExternalLink className="h-3 w-3 shrink-0" />
+          </a>
         </p>
+        <Alert
+          variant="default"
+          className="mt-4 border-border bg-muted/30 [&>svg]:text-muted-foreground"
+        >
+          <Info className="h-4 w-4" />
+          <AlertTitle className="text-[13px] font-medium text-foreground">
+            Note
+          </AlertTitle>
+          <AlertDescription className="text-[12px] text-muted-foreground">
+            Grant this only for trusted operator or support-style accounts.
+            Audit logs still attribute actions to the account that started
+            impersonation, not only the impersonated user.
+          </AlertDescription>
+        </Alert>
       </div>
       <div className="border-t border-border" />
       <div className="px-6 py-4">
@@ -1601,9 +1628,18 @@ function UpdateMFASection({
           <h3 className="text-[15px] font-semibold text-foreground">
             Multi-factor authentication
           </h3>
-          <p className="text-[13px] text-muted-foreground mt-1">
-            Enhance the user's account security by requiring a second sign-in
-            method
+          <p className="text-[13px] text-muted-foreground mt-2">
+            Enhance the user&apos;s account security by requiring a second
+            sign-in method.{' '}
+            <a
+              href="https://appwrite.io/docs/products/auth/mfa"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline inline-flex items-center gap-1"
+            >
+              Documentation
+              <ExternalLink className="h-3 w-3 shrink-0" />
+            </a>
           </p>
         </div>
         <div className="border-t border-border" />
