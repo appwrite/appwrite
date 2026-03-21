@@ -63,6 +63,7 @@ import { Button } from '@/components/ui/button'
 import { useOrganizationPlan } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useDebugOverrides } from '@/lib/debug-overrides'
+import { ImpersonateConsoleUserPopover } from '@/components/global/shared/ImpersonateConsoleUserPopover'
 
 interface ConsoleHeaderProps {
   onMenuClick?: () => void
@@ -614,6 +615,11 @@ export function ConsoleHeader({
           {/* Support - hidden on small containers */}
           <div className="hidden @[900px]:flex shrink-0">
             <SupportPopover orgId={orgId} />
+          </div>
+
+          {/* Console impersonation (operators) — same control style as Support / Assistant */}
+          <div className="hidden @[900px]:flex shrink-0">
+            <ImpersonateConsoleUserPopover />
           </div>
 
           {/* Help/Assistant - hidden on small containers; enabled by profile or experimental override */}

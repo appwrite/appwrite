@@ -37,6 +37,9 @@ import {
   subscribeToDebugEndpointChange,
 } from '@/lib/debug-endpoint'
 import { wrapServiceObject } from '@/lib/appwrite/slow-call-reporting'
+import {
+  CONSOLE_IMPERSONATION_TARGET_KEY,
+} from '@/lib/console-impersonation'
 
 /**
  * True when the endpoint host is a known multi-region Appwrite cloud host
@@ -193,6 +196,85 @@ if (typeof window !== 'undefined') {
 // so the project client has the correct project ID.
 const realtimeConsole = new Realtime(clientConsole)
 const realtimeProject = new Realtime(clientProject)
+
+const IMPERSONATION_HEADER_KEYS = [
+  'X-Appwrite-Impersonate-User-Id',
+  'X-Appwrite-Impersonate-User-Email',
+  'X-Appwrite-Impersonate-User-Phone',
+] as const
+
+function clearImpersonationHeaders(client: Client) {
+  for (const key of IMPERSONATION_HEADER_KEYS) {
+    delete client.headers[key]
+  }
+  const cfg = client.config as {
+    impersonateuserid?: string
+    impersonateuseremail?: string
+    impersonateuserphone?: string
+  }
+  cfg.impersonateuserid = ''
+  cfg.impersonateuseremail = ''
+  cfg.impersonateuserphone = ''
+}
+
+/**
+ * Some installs resolve an older `dist` build where `Client.prototype.setImpersonateUserId`
+ * is missing even though newer sources include it. Mirror the SDK implementation so
+ * impersonation always works when `headers` / `config` are present.
+ */
+function applyImpersonateUserIdToClient(client: Client, userId: string) {
+  const id = userId.trim()
+  if (!id) return
+
+  const c = client as Client & {
+    setImpersonateUserId?: (value: string) => Client
+  }
+
+  if (typeof c.setImpersonateUserId === 'function') {
+    c.setImpersonateUserId(id)
+    return
+  }
+
+  c.headers['X-Appwrite-Impersonate-User-Id'] = id
+  const cfg = c.config as { impersonateuserid?: string }
+  cfg.impersonateuserid = id
+}
+
+/**
+ * Apply Console user impersonation on the main console client (and mirror on the
+ * shared project client so project-scoped Console API calls use the same effective user).
+ * Callers should persist session via `persistConsoleImpersonationSession` when starting.
+ */
+export function applyConsoleImpersonateUserId(targetUserId: string) {
+  const id = String(targetUserId ?? '').trim()
+  if (!id) return
+  for (const client of [clientConsole, clientProject]) {
+    clearImpersonationHeaders(client)
+    applyImpersonateUserIdToClient(client, id)
+  }
+}
+
+/** Remove impersonation headers from console and project clients. */
+export function clearConsoleImpersonateUser() {
+  for (const client of [clientConsole, clientProject]) {
+    clearImpersonationHeaders(client)
+  }
+}
+
+function restoreConsoleImpersonationFromSession() {
+  try {
+    const id = sessionStorage.getItem(CONSOLE_IMPERSONATION_TARGET_KEY)?.trim()
+    if (id) {
+      applyConsoleImpersonateUserId(id)
+    }
+  } catch {
+    /* private mode / SSR */
+  }
+}
+
+if (typeof window !== 'undefined') {
+  restoreConsoleImpersonationFromSession()
+}
 
 // Create Project SDK instance (raw), then wrap for slow-call reporting
 const sdkForProjectRaw = {

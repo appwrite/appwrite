@@ -20,7 +20,7 @@ export function getStatusPresentation(state: CloudStatusState) {
     case 'downtime':
       return {
         containerClassName:
-          'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400',
+          'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400 border-b border-red-600/12 dark:border-red-400/18',
         buttonClassName:
           'border border-red-500 bg-transparent text-red-600 hover:bg-red-500/10 hover:text-red-700 dark:border-red-400 dark:text-red-400 dark:hover:bg-red-500/20 dark:hover:text-red-300',
         title: 'We’re currently experiencing an outage.',
@@ -28,7 +28,7 @@ export function getStatusPresentation(state: CloudStatusState) {
     case 'maintenance':
       return {
         containerClassName:
-          'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400',
+          'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 border-b border-blue-600/12 dark:border-blue-400/18',
         buttonClassName:
           'border border-blue-500 bg-transparent text-blue-600 hover:bg-blue-500/10 hover:text-blue-700 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-500/20 dark:hover:text-blue-300',
         title: 'Scheduled maintenance is in progress.',
@@ -36,7 +36,7 @@ export function getStatusPresentation(state: CloudStatusState) {
     default:
       return {
         containerClassName:
-          'bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400',
+          'bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 border-b border-amber-700/14 dark:border-amber-400/22',
         buttonClassName:
           'border border-amber-500 bg-transparent text-amber-600 hover:bg-amber-500/10 hover:text-amber-700 dark:border-amber-400 dark:text-amber-400 dark:hover:bg-amber-500/20 dark:hover:text-amber-300',
         title: 'We’re experiencing issues with some services.',

@@ -47,9 +47,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import {
-  useOrganizationMemberships,
   organizationsQueryOptions,
   activeProjectsQueryOptions,
+  organizationMembershipsQueryOptions,
+  mapOrganizationMembershipsToTeamMembers,
   useConsoleTeam,
   useUpdateConsoleTeamPrefs,
   pinnedProjectsQueryOptions,
@@ -247,26 +248,12 @@ function ProjectCardFooter({
 
 import { ProjectSelector } from '@/components/global/shared/ProjectSelector'
 
-/** Data from org layout loader to avoid layout shift on first paint */
-export type OrgOverviewInitialData = {
-  organizationsData?: { teams?: unknown[] }
-  organizationPlan?: unknown
-  membershipsData?: { memberships: unknown[]; total: number }
-  scopesData?: { roles: string[]; scopes: string[] }
-}
-
 interface OrgOverviewProps {
   tab?: 'projects' | 'domains' | 'settings'
   children?: React.ReactNode
-  /** Prefetched data from route loader so org selector, tabs, and avatars render without layout shift */
-  initialData?: OrgOverviewInitialData
 }
 
-export function OrgOverview({
-  tab: tabProp,
-  children,
-  initialData,
-}: OrgOverviewProps) {
+export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const { account } = useAuth()
   const queryClient = useQueryClient()
   const { orgId } = useParams({ from: '/_public/organizations/$orgId' })
@@ -276,7 +263,7 @@ export function OrgOverview({
   const matches = useMatches()
   const [searchQuery, setSearchQuery] = useState('')
   const { features, isCloud } = useConsoleProfile()
-  const { access } = useOrganizationScopes(orgId, initialData?.scopesData)
+  const { access } = useOrganizationScopes(orgId)
   const { showSuccessTeamCard: debugShowSuccessTeamCard } = useDebugOverrides()
 
   // Check if we're on a domain detail route using route matches and pathname (for navigation transitions)
@@ -503,12 +490,11 @@ export function OrgOverview({
   const [membershipsSearchQuery, setMembershipsSearchQuery] = useState('')
   const [settingsNavSearch, setSettingsNavSearch] = useState('')
 
-  // Fetch organizations from Console SDK (prefetched by route loader)
+  // Same pattern as projects list: cache filled by org layout loader; keepPreviousData on org switch
   const { data: organizationsData, isLoading: organizationsLoading } = useQuery(
     {
       ...organizationsQueryOptions(),
-      initialData: initialData?.organizationsData,
-      initialDataUpdatedAt: initialData?.organizationsData ? 1 : 0,
+      placeholderData: keepPreviousData,
     },
   )
 
@@ -974,10 +960,7 @@ export function OrgOverview({
   const totalProjectsCount = totalProjectsData?.total || 0
 
   // Fetch organization plan to check if additional members are supported
-  const { plan: organizationPlan } = useOrganizationPlan(
-    orgId,
-    initialData?.organizationPlan,
-  )
+  const { plan: organizationPlan } = useOrganizationPlan(orgId)
 
   // Check if the plan supports additional members
   // Only disable if seats addon is explicitly disabled with supported = false
@@ -1024,39 +1007,53 @@ export function OrgOverview({
     return planName === 'custom' || selectedOrg?.plan === 'custom'
   }, [organizationPlan, selectedOrg])
 
-  // Fetch requested memberships page (drives load when user changes page)
-  const { isFetching: membershipsRequestedFetching } =
-    useOrganizationMemberships(
+  // Memberships table + header avatars: mirror projects list (two queries, keepPreviousData, loader fills cache)
+  const {
+    data: requestedMembershipsRaw,
+    isFetching: membershipsRequestedFetching,
+  } = useQuery({
+    ...organizationMembershipsQueryOptions(
       orgId,
       requestedMembershipsPage - 1,
       membershipsPageSize,
       membershipsSearchQuery,
-      undefined,
-      { placeholderData: keepPreviousData },
-    )
+    ),
+    placeholderData: keepPreviousData,
+  })
 
-  // Fetch displayed memberships page (what we show - stays until new page is ready)
   const {
-    memberships,
-    total: membershipsTotal,
-    isLoading: membershipsLoading,
+    data: displayedMembershipsRaw,
+    isLoading: displayedMembershipsLoading,
     error: membershipsError,
-  } = useOrganizationMemberships(
-    orgId,
-    displayedMembershipsPage - 1,
-    membershipsPageSize,
-    membershipsSearchQuery,
-    displayedMembershipsPage === 1 && !membershipsSearchQuery
-      ? initialData?.membershipsData
-      : undefined,
-    { placeholderData: keepPreviousData },
+  } = useQuery({
+    ...organizationMembershipsQueryOptions(
+      orgId,
+      displayedMembershipsPage - 1,
+      membershipsPageSize,
+      membershipsSearchQuery,
+    ),
+    placeholderData: keepPreviousData,
+  })
+
+  const memberships = useMemo(
+    () =>
+      mapOrganizationMembershipsToTeamMembers(
+        displayedMembershipsRaw,
+        orgId,
+      ),
+    [displayedMembershipsRaw, orgId],
   )
+  const membershipsTotal = displayedMembershipsRaw?.total ?? 0
+
+  const membershipsLoading =
+    displayedMembershipsLoading && displayedMembershipsRaw === undefined
 
   // Update displayed memberships page only when requested page data is ready (no flash)
   useEffect(() => {
     if (
+      requestedMembershipsPage !== displayedMembershipsPage &&
       !membershipsRequestedFetching &&
-      requestedMembershipsPage !== displayedMembershipsPage
+      requestedMembershipsRaw != null
     ) {
       setDisplayedMembershipsPage(requestedMembershipsPage)
     }
@@ -1064,6 +1061,7 @@ export function OrgOverview({
     membershipsRequestedFetching,
     requestedMembershipsPage,
     displayedMembershipsPage,
+    requestedMembershipsRaw,
   ])
 
   // Resend invitation mutation
@@ -1195,25 +1193,28 @@ export function OrgOverview({
       >
         {/* Org Header with Switcher */}
         <div>
-          {/* Title Row with Org Switcher */}
-          <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
-            {/* Left: Org Switcher */}
-            <div className="flex items-center gap-2">
-              {selectedOrg && (
+          {/* Title Row: fixed h-16 so padding + toolbar never grows (h1 margins, badges, etc.) */}
+          <div className="mx-auto flex h-16 min-h-16 w-full max-w-7xl shrink-0 items-center justify-between gap-3 px-4 sm:px-6">
+            {/* Left: Org Switcher — h-8 control; overflow-hidden contains h1 (no UA margin shift) */}
+            <div className="flex h-8 min-h-8 max-h-8 shrink-0 items-center gap-2">
+              {selectedOrg ? (
                 <Popover
                   open={orgSwitcherOpen}
                   onOpenChange={setOrgSwitcherOpen}
                 >
                   <PopoverTrigger asChild>
-                    <button className="group flex min-w-0 h-8 cursor-pointer items-center gap-2 rounded-lg px-2 -ml-2 transition-colors hover:bg-accent">
+                    <button
+                      type="button"
+                      className="group flex h-8 max-h-8 min-h-8 min-w-0 cursor-pointer items-center gap-2 overflow-hidden rounded-lg px-2 -ml-2 transition-colors hover:bg-accent"
+                    >
                       <InitialsAvatar name={selectedOrg.name} size="sm" />
-                      <h1 className="truncate text-[13px] font-semibold text-foreground">
+                      <h1 className="m-0 truncate text-[13px] font-semibold leading-none text-foreground">
                         {selectedOrg.name}
                       </h1>
                       {isCloud && (
                         <Badge
                           className={cn(
-                            'rounded px-1.5 py-0.5 text-[10px] font-medium capitalize shrink-0',
+                            'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium capitalize leading-none',
                             getPlanBadgeColor(selectedOrg.plan),
                           )}
                         >
@@ -1284,7 +1285,19 @@ export function OrgOverview({
                     </div>
                   </PopoverContent>
                 </Popover>
-              )}
+              ) : orgId ? (
+                <div
+                  className="flex h-8 max-h-8 min-h-8 min-w-[200px] items-center gap-2 overflow-hidden px-2 -ml-2"
+                  aria-hidden
+                >
+                  <div className="h-6 w-6 shrink-0 animate-pulse rounded-full bg-muted" />
+                  <div className="h-4 min-h-4 min-w-0 flex-1 max-w-[160px] animate-pulse rounded bg-muted" />
+                  {isCloud && (
+                    <div className="h-5 max-h-5 min-h-5 w-14 shrink-0 animate-pulse rounded bg-muted" />
+                  )}
+                  <div className="h-3.5 w-3.5 shrink-0 animate-pulse rounded bg-muted" />
+                </div>
+              ) : null}
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
@@ -1302,25 +1315,23 @@ export function OrgOverview({
               </Tooltip>
             </div>
 
-            {/* Right: Organization Member Avatars + Invite Button */}
-            <div className="flex shrink-0 items-center gap-3">
-              {/* Stacked Organization Member Avatars - Reserve space even when loading */}
-              {selectedOrg && (
-                <div className="flex items-center">
-                  {membershipsLoading ? (
-                    // Placeholder skeleton to reserve space while loading - match exact structure of actual avatars
-                    <div className="flex -space-x-2">
+            {/* Right: same fixed h-8 band as left */}
+            <div className="flex h-8 min-h-8 max-h-8 shrink-0 items-center gap-3">
+              {orgId && (
+                <div className="flex h-8 min-h-8 w-[5.5rem] shrink-0 items-center justify-start">
+                  {!selectedOrg || membershipsLoading ? (
+                    <div className="flex -space-x-2" aria-hidden>
                       <div
                         className="relative rounded-full border-2 border-background"
                         style={{ zIndex: 2 }}
                       >
-                        <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+                        <div className="h-8 w-8 shrink-0 rounded-full bg-muted animate-pulse" />
                       </div>
                       <div
                         className="relative rounded-full border-2 border-background"
                         style={{ zIndex: 1 }}
                       >
-                        <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+                        <div className="h-8 w-8 shrink-0 rounded-full bg-muted animate-pulse" />
                       </div>
                     </div>
                   ) : memberships.length > 0 ? (
@@ -1332,7 +1343,7 @@ export function OrgOverview({
                         <Link
                           to="/organizations/$orgId/settings/members"
                           params={{ orgId: orgId! }}
-                          className="flex -space-x-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer hover:opacity-90 transition-opacity"
+                          className="flex h-8 min-h-8 -space-x-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer hover:opacity-90 transition-opacity"
                           title="View members"
                         >
                           {displayMembers.map(
@@ -1364,9 +1375,9 @@ export function OrgOverview({
                       )
                     })()
                   ) : (
-                    // Empty state - still reserve space with invisible placeholder
-                    <div className="flex -space-x-2">
-                      <div className="relative h-8 w-8 rounded-full border-2 border-transparent" />
+                    <div className="flex -space-x-2" aria-hidden>
+                      <div className="relative h-8 w-8 shrink-0 rounded-full border-2 border-transparent" />
+                      <div className="relative h-8 w-8 shrink-0 rounded-full border-2 border-transparent" />
                     </div>
                   )}
                 </div>
@@ -1388,34 +1399,45 @@ export function OrgOverview({
             </div>
           </div>
 
-          {/* Tabs Row */}
+          {/* Tabs row: min height matches tab links (py-2.5 + text) so it doesn’t collapse before orgTabs render */}
           <div className="border-b border-border">
             <div
-              className="mx-auto flex w-full max-w-7xl gap-0 overflow-x-auto px-4 sm:px-6"
+              className="mx-auto flex min-h-[2.75rem] w-full max-w-7xl items-end gap-0 overflow-x-auto px-4 sm:px-6"
               role="tablist"
             >
-              {orgTabs.map((tab) => (
-                <Link
-                  key={tab.id}
-                  to={tab.to as unknown}
-                  params={{ orgId: orgId! } as unknown}
-                  replace
-                  role="tab"
-                  aria-selected={activeTab === tab.id}
-                  className={cn(
-                    'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
-                    'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
-                    activeTab === tab.id
-                      ? 'text-foreground'
-                      : 'text-muted-foreground hover:text-foreground/80',
-                  )}
+              {orgTabs.length > 0 ? (
+                orgTabs.map((tab) => (
+                  <Link
+                    key={tab.id}
+                    to={tab.to as unknown}
+                    params={{ orgId: orgId! } as unknown}
+                    replace
+                    role="tab"
+                    aria-selected={activeTab === tab.id}
+                    className={cn(
+                      'relative flex h-[2.75rem] shrink-0 items-center gap-1.5 px-3 text-[13px] font-medium leading-none transition-colors rounded-sm',
+                      'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                      activeTab === tab.id
+                        ? 'text-foreground'
+                        : 'text-muted-foreground hover:text-foreground/80',
+                    )}
+                  >
+                    {tab.label}
+                    {activeTab === tab.id && (
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground" />
+                    )}
+                  </Link>
+                ))
+              ) : orgId ? (
+                <div
+                  className="flex h-[2.75rem] w-full items-center gap-6 px-3"
+                  aria-hidden
                 >
-                  {tab.label}
-                  {activeTab === tab.id && (
-                    <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground" />
-                  )}
-                </Link>
-              ))}
+                  <div className="h-4 w-16 animate-pulse rounded bg-muted" />
+                  <div className="h-4 w-14 animate-pulse rounded bg-muted" />
+                  <div className="h-4 w-16 animate-pulse rounded bg-muted" />
+                </div>
+              ) : null}
             </div>
           </div>
         </div>

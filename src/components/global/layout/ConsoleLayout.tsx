@@ -4,6 +4,7 @@ import { ConsoleSidebar } from './Sidebar'
 import { ConsoleFooter } from './Footer'
 import { ConsoleBanner } from './ConsoleBanner'
 import { CloudStatusBanner } from './CloudStatusBanner'
+import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
 import { SkipToContent } from './SkipToContent'
 import { NativeAppBar } from './NativeAppBar'
 import { PaymentAlert } from '@/components/pages/projects/$projectId/shared/PaymentAlert'
@@ -110,6 +111,7 @@ export function ConsoleLayout({
       <div className="flex-shrink-0 sticky top-0 z-30 flex flex-col bg-background">
         {showNativeAppBar && <NativeAppBar />}
         <CloudStatusBanner />
+        <ConsoleImpersonationBanner />
         <PaymentAlert />
         <ConsoleHeader
           onMenuClick={sidebar?.onMenuClick}

@@ -76,6 +76,10 @@ export function ProjectSelector({
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [teamSearch, setTeamSearch] = useState('')
 
+  // Sync UI with prefetched route data on first paint (state starts null; effects run after paint)
+  const resolvedTeam = selectedTeam ?? initialTeam
+  const resolvedProject = selectedProject ?? currentProject ?? null
+
   // Note: Infinite query automatically resets when team or search changes
 
   // Initialize selected team when data loads
@@ -106,17 +110,17 @@ export function ProjectSelector({
   // Reset project search when team (organization) changes
   useEffect(() => {
     setProjectSearch('')
-  }, [selectedTeam?.$id])
+  }, [resolvedTeam?.$id])
 
   // Pinned projects for selected team (from team prefs)
-  const { data: consoleTeam } = useConsoleTeam(selectedTeam?.$id)
+  const { data: consoleTeam } = useConsoleTeam(resolvedTeam?.$id)
   const pinnedIds = useMemo(
     () => parsePinnedProjectIds(consoleTeam?.prefs),
     [consoleTeam?.prefs],
   )
   const { data: pinnedProjectsData, isPlaceholderData: isPinnedPlaceholder } =
     useQuery({
-      ...pinnedProjectsQueryOptions(selectedTeam?.$id ?? null, pinnedIds),
+      ...pinnedProjectsQueryOptions(resolvedTeam?.$id ?? null, pinnedIds),
       placeholderData: keepPreviousData,
     })
 
@@ -129,7 +133,7 @@ export function ProjectSelector({
     fetchNextPage,
     isPlaceholderData: isInfinitePlaceholder,
   } = useProjectsForTeamInfinite(
-    selectedTeam?.$id,
+    resolvedTeam?.$id,
     projectsPageSize,
     projectSearch,
     pinnedIds,
@@ -140,7 +144,7 @@ export function ProjectSelector({
   // Handle team selection - ensure data is ready before switching (loads team once, then pinned + unpinned in parallel)
   const handleSelectTeam = useCallback(
     async (team: Team) => {
-      if (team.$id === selectedTeam?.$id) return
+      if (team.$id === resolvedTeam?.$id) return
 
       let excludeIds: string[] = []
       try {
@@ -198,7 +202,7 @@ export function ProjectSelector({
         setSelectedTeam(team)
       }
     },
-    [queryClient, selectedTeam?.$id, projectsPageSize],
+    [queryClient, resolvedTeam?.$id, projectsPageSize],
   )
 
   // Find the team for the current project (for display in trigger)
@@ -217,9 +221,9 @@ export function ProjectSelector({
 
   // Organization for selected team (for display); plan is fetched in CreateProjectDialog when open
   const selectedTeamOrg = useMemo(() => {
-    if (!selectedTeam) return null
-    return organizations.find((org) => org.$id === selectedTeam.orgId) || null
-  }, [selectedTeam, organizations])
+    if (!resolvedTeam) return null
+    return organizations.find((org) => org.$id === resolvedTeam.orgId) || null
+  }, [resolvedTeam, organizations])
 
   // Total project count = pinned + unpinned (from infinite query); no separate list call
   const projectsCount = pinnedIds.length + (infiniteTotal ?? 0)
@@ -234,7 +238,7 @@ export function ProjectSelector({
 
   // Pinned projects in Project shape (order from pinnedIds), filtered by search
   const pinnedProjects = useMemo(() => {
-    if (!pinnedProjectsData?.projects?.length || !selectedTeam) return []
+    if (!pinnedProjectsData?.projects?.length || !resolvedTeam) return []
     const raw = pinnedProjectsData.projects as Array<{
       $id: string
       name: string
@@ -259,16 +263,16 @@ export function ProjectSelector({
     if (!projectSearch.trim()) return list
     const q = projectSearch.toLowerCase()
     return list.filter((p) => p.name?.toLowerCase().includes(q))
-  }, [pinnedProjectsData, pinnedIds, selectedTeam, projectSearch])
+  }, [pinnedProjectsData, pinnedIds, resolvedTeam, projectSearch])
 
   // Combine: current (if same team), then pinned, then paginated (excluding current and pinned)
   const displayProjects = useMemo(() => {
-    if (!selectedTeam) return []
+    if (!resolvedTeam) return []
 
     const otherProjects = paginatedProjects.filter((p) => p.$id !== projectId)
     const pinnedFiltered = pinnedProjects.filter((p) => p.$id !== projectId)
 
-    if (currentProject && currentProject.teamId === selectedTeam.$id) {
+    if (currentProject && currentProject.teamId === resolvedTeam.$id) {
       return [currentProject, ...pinnedFiltered, ...otherProjects]
     }
     return [...pinnedFiltered, ...otherProjects]
@@ -277,7 +281,7 @@ export function ProjectSelector({
     pinnedProjects,
     paginatedProjects,
     projectId,
-    selectedTeam,
+    resolvedTeam,
   ])
 
   // Show list only when both pinned and unpinned have real data (not placeholder).
@@ -286,7 +290,7 @@ export function ProjectSelector({
   const lastStablePinnedIdsRef = useRef<string[]>([])
   const bothQueriesReady = !isPinnedPlaceholder && !isInfinitePlaceholder
   const stableDisplayProjects =
-    bothQueriesReady && selectedTeam
+    bothQueriesReady && resolvedTeam
       ? (() => {
           lastStableDisplayRef.current = displayProjects
           lastStablePinnedIdsRef.current = pinnedIds
@@ -294,7 +298,7 @@ export function ProjectSelector({
         })()
       : lastStableDisplayRef.current
   const stablePinnedIds =
-    bothQueriesReady && selectedTeam
+    bothQueriesReady && resolvedTeam
       ? pinnedIds
       : lastStablePinnedIdsRef.current
 
@@ -317,8 +321,8 @@ export function ProjectSelector({
   if (
     orgsLoading ||
     currentProjectLoading ||
-    !selectedProject ||
-    !selectedTeam
+    !resolvedProject ||
+    !resolvedTeam
   ) {
     return (
       <div
@@ -344,9 +348,7 @@ export function ProjectSelector({
                 className,
               )}
             >
-              {(currentProject?.name || selectedProject.name)
-                .charAt(0)
-                .toUpperCase()}
+              {resolvedProject.name.charAt(0).toUpperCase()}
             </button>
           </PopoverTrigger>
           <PopoverContent
@@ -356,9 +358,9 @@ export function ProjectSelector({
             className="w-[520px] border-border bg-popover p-0"
           >
             <ProjectSelectorContent
-              selectedTeam={selectedTeam}
+              selectedTeam={resolvedTeam}
               onSelectTeam={handleSelectTeam}
-              selectedProject={selectedProject}
+              selectedProject={resolvedProject}
               handleSelectProject={handleSelectProject}
               teamSearch={teamSearch}
               setTeamSearch={setTeamSearch}
@@ -381,7 +383,7 @@ export function ProjectSelector({
         <CreateProjectDialog
           open={createProjectDialogOpen}
           onOpenChange={setCreateProjectDialogOpen}
-          teamId={selectedTeam?.$id}
+          teamId={resolvedTeam.$id}
           currentProjectsCount={projectsCount}
         />
       </>
@@ -400,25 +402,25 @@ export function ProjectSelector({
           )}
         >
           <InitialsAvatar
-            name={currentProject?.name || selectedProject.name}
+            name={resolvedProject.name}
             size="sm"
           />
           <div className="min-w-0 flex-1">
             <p
               className="truncate text-[13px] font-medium text-foreground"
-              title={currentProject?.name || selectedProject.name}
+              title={resolvedProject.name}
             >
               {truncateMiddle(
-                currentProject?.name || selectedProject.name,
+                resolvedProject.name,
                 30,
               )}
             </p>
             <p
               className="truncate text-[11px] text-muted-foreground"
-              title={currentProjectTeam?.name || selectedTeam.name}
+              title={currentProjectTeam?.name || resolvedTeam.name}
             >
               {truncateMiddle(
-                currentProjectTeam?.name || selectedTeam.name,
+                currentProjectTeam?.name || resolvedTeam.name,
                 30,
               )}
             </p>
@@ -457,9 +459,9 @@ export function ProjectSelector({
 
             {/* Content */}
             <MobileProjectSelectorContent
-              selectedTeam={selectedTeam}
+              selectedTeam={resolvedTeam}
               onSelectTeam={handleSelectTeam}
-              selectedProject={selectedProject}
+              selectedProject={resolvedProject}
               handleSelectProject={handleSelectProject}
               teamSearch={teamSearch}
               setTeamSearch={setTeamSearch}
@@ -480,7 +482,7 @@ export function ProjectSelector({
         <CreateProjectDialog
           open={createProjectDialogOpen}
           onOpenChange={setCreateProjectDialogOpen}
-          teamId={selectedTeam?.$id}
+          teamId={resolvedTeam.$id}
           currentProjectsCount={projectsCount}
         />
       </>
@@ -498,21 +500,21 @@ export function ProjectSelector({
             )}
           >
             <InitialsAvatar
-              name={currentProject?.name || selectedProject.name}
+              name={resolvedProject.name}
               size="sm"
             />
             <div className="min-w-0 flex items-center gap-2">
               <p
                 className="truncate text-[13px] font-medium text-foreground"
-                title={`${currentProjectTeam?.name || selectedTeam.name} / ${currentProject?.name || selectedProject.name}`}
+                title={`${currentProjectTeam?.name || resolvedTeam.name} / ${resolvedProject.name}`}
               >
                 {truncateMiddle(
-                  currentProjectTeam?.name || selectedTeam.name,
+                  currentProjectTeam?.name || resolvedTeam.name,
                   20,
                 )}{' '}
                 /{' '}
                 {truncateMiddle(
-                  currentProject?.name || selectedProject.name,
+                  resolvedProject.name,
                   22,
                 )}
               </p>
@@ -537,9 +539,9 @@ export function ProjectSelector({
           className="w-[520px] border-border bg-popover p-0"
         >
           <ProjectSelectorContent
-            selectedTeam={selectedTeam}
+            selectedTeam={resolvedTeam}
             onSelectTeam={handleSelectTeam}
-            selectedProject={selectedProject}
+            selectedProject={resolvedProject}
             handleSelectProject={handleSelectProject}
             teamSearch={teamSearch}
             setTeamSearch={setTeamSearch}
@@ -563,7 +565,7 @@ export function ProjectSelector({
       <CreateProjectDialog
         open={createProjectDialogOpen}
         onOpenChange={setCreateProjectDialogOpen}
-        teamId={selectedTeam?.$id}
+        teamId={resolvedTeam.$id}
         currentProjectsCount={projectsCount}
       />
     </>

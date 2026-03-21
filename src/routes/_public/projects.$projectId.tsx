@@ -12,6 +12,7 @@ import {
   fetchProject,
   organizationPlanQueryOptions,
   organizationScopesQueryOptions,
+  organizationsQueryOptions,
   useProject,
 } from '@/lib/react-query/hooks'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
@@ -40,11 +41,15 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
     // Fetch project data (needed for header/sidebar and paused curtain) - CRITICAL: blocks navigation until ready
     // Use ensureQueryData to avoid duplicate calls and handle auth errors gracefully
     try {
-      const projectData = await queryClient.ensureQueryData({
-        queryKey: ['project', projectId],
-        queryFn: () => fetchProject(projectId),
-        staleTime: 5 * 60 * 1000, // 5 minutes
-      })
+      const [projectData] = await Promise.all([
+        queryClient.ensureQueryData({
+          queryKey: ['project', projectId],
+          queryFn: () => fetchProject(projectId),
+          staleTime: 5 * 60 * 1000, // 5 minutes
+        }),
+        // Header ProjectSelector uses useOrganizations; prefetch so navigation does not flash skeleton
+        queryClient.ensureQueryData(organizationsQueryOptions()).catch(() => {}),
+      ])
 
       // Fetch organization plan if we have a teamId (critical for header/limit checking)
       if (projectData?.teamId) {

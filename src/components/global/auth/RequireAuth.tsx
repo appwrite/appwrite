@@ -1,8 +1,10 @@
 import { useLoaderData, useNavigate, useLocation } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { sdk } from '@/lib/appwrite/sdk'
+import { clearConsoleImpersonateUser, sdk } from '@/lib/appwrite/sdk'
 import { AppwriteException } from '@appwrite.io/console'
 import { ReactNode, useEffect } from 'react'
+import { useConsoleImpersonationRevision } from '@/hooks/use-console-impersonation-revision'
+import { clearConsoleImpersonationSession } from '@/lib/console-impersonation'
 
 // Helper function to check if we're on an auth page
 function isAuthPage(pathname: string): boolean {
@@ -109,6 +111,9 @@ export interface AuthData {
 // Client-side sign out function - deletes only the current session
 async function signOut(navigate?: (options: { to: string }) => void) {
   try {
+    clearConsoleImpersonateUser()
+    clearConsoleImpersonationSession()
+
     // Get all sessions to find the current one
     const sessionsResponse = await sdk.forConsole.account.listSessions()
     const sessions = sessionsResponse.sessions || []
@@ -187,6 +192,7 @@ export function RequireAuth({
   const { currentUser } = useLoaderData({ from: '__root__' })
   const navigate = useNavigate()
   const location = useLocation()
+  const consoleImpersonationRevision = useConsoleImpersonationRevision()
 
   // Client-side authentication check using Console SDK
   const {
@@ -194,7 +200,7 @@ export function RequireAuth({
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['account', 'console'],
+    queryKey: ['account', 'console', consoleImpersonationRevision],
     queryFn: async () => {
       try {
         const accountData = await sdk.forConsole.account.get()
@@ -315,13 +321,14 @@ export function useAuth(): AuthData {
   const { currentUser } = useLoaderData({ from: '__root__' })
   const navigate = useNavigate()
   const location = useLocation()
+  const consoleImpersonationRevision = useConsoleImpersonationRevision()
 
   const {
     data: account,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['account', 'console'],
+    queryKey: ['account', 'console', consoleImpersonationRevision],
     queryFn: async () => {
       try {
         return await sdk.forConsole.account.get()

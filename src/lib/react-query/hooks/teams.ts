@@ -82,6 +82,107 @@ export async function fetchOrganizationMemberships(
   }
 }
 
+/** Map memberships API payload to TeamMember rows (shared by hooks and org overview queries). */
+export function mapOrganizationMembershipsToTeamMembers(
+  membershipsData:
+    | Awaited<ReturnType<typeof fetchOrganizationMemberships>>
+    | undefined,
+  organizationId: string | null | undefined,
+): TeamMember[] {
+  if (!membershipsData?.memberships) return []
+
+  return membershipsData.memberships.map((membership: unknown) => {
+    const m = membership as {
+      userName?: string
+      name?: string
+      userEmail?: string
+      email?: string
+      roles?: string[]
+      role?: string
+      user?: {
+        avatar?: string
+        mfa?: boolean
+        twoFactorAuthenticatorEnabled?: boolean
+      }
+      avatar?: string
+      confirm?: boolean
+      mfa?: boolean
+      $id?: string
+      id?: string
+      $createdAt?: string
+      joinedAt?: string
+    }
+
+    const name = m.userName || m.name || ''
+    const email = m.userEmail || m.email || ''
+
+    let role:
+      | 'owner'
+      | 'admin'
+      | 'member'
+      | 'developer'
+      | 'editor'
+      | 'analyst'
+      | 'billing' = 'member'
+    if (m.roles && m.roles.length > 0) {
+      const firstRole = m.roles[0]
+      if (
+        [
+          'owner',
+          'admin',
+          'member',
+          'developer',
+          'editor',
+          'analyst',
+          'billing',
+        ].includes(firstRole)
+      ) {
+        role = firstRole as typeof role
+      } else if (firstRole === 'owner') role = 'owner'
+      else if (firstRole === 'admin') role = 'admin'
+    } else if (m.role) {
+      const roleValue = m.role
+      if (
+        [
+          'owner',
+          'admin',
+          'member',
+          'developer',
+          'editor',
+          'analyst',
+          'billing',
+        ].includes(roleValue)
+      ) {
+        role = roleValue as typeof role
+      }
+    }
+
+    const avatar = m.user?.avatar || m.avatar || undefined
+    const status: 'pending' | 'active' =
+      m.confirm === false ? 'pending' : 'active'
+    const roles = m.roles || (m.role ? [m.role] : [])
+    const mfaEnabled =
+      m.user?.mfa === true ||
+      m.user?.twoFactorAuthenticatorEnabled === true ||
+      m.mfa === true ||
+      false
+
+    return {
+      $id: m.$id || m.id,
+      userName: name,
+      userEmail: email,
+      avatar,
+      role,
+      roles,
+      orgId: organizationId || '',
+      joinedAt: m.$createdAt || m.joinedAt || new Date().toISOString(),
+      status,
+      membershipId: m.$id || m.id,
+      mfaEnabled,
+    } as TeamMember
+  })
+}
+
 /**
  * Fetch a single console team (organization) by ID.
  * Used to read team.prefs (e.g. pinned project IDs).
@@ -257,96 +358,11 @@ export function useOrganizationMemberships(
     }),
   })
 
-  // Map memberships to our TeamMember type
-  const memberships = useMemo(() => {
-    if (!membershipsData?.memberships) return []
-
-    return membershipsData.memberships.map((membership: unknown) => {
-      // Extract user info from membership attributes
-      // The API provides userName and userEmail as attributes
-      const name = membership.userName || membership.name || ''
-      const email = membership.userEmail || membership.email || ''
-
-      // Map role - Appwrite uses roles like 'owner', 'admin', 'member', 'developer', 'editor', 'analyst', 'billing'
-      // Use the first role from the roles array, or fallback to the role property
-      let role:
-        | 'owner'
-        | 'admin'
-        | 'member'
-        | 'developer'
-        | 'editor'
-        | 'analyst'
-        | 'billing' = 'member'
-      if (membership.roles && membership.roles.length > 0) {
-        // Use the first role from the array
-        const firstRole = membership.roles[0]
-        if (
-          [
-            'owner',
-            'admin',
-            'member',
-            'developer',
-            'editor',
-            'analyst',
-            'billing',
-          ].includes(firstRole)
-        ) {
-          role = firstRole as typeof role
-        } else if (firstRole === 'owner') role = 'owner'
-        else if (firstRole === 'admin') role = 'admin'
-      } else if (membership.role) {
-        const roleValue = membership.role
-        if (
-          [
-            'owner',
-            'admin',
-            'member',
-            'developer',
-            'editor',
-            'analyst',
-            'billing',
-          ].includes(roleValue)
-        ) {
-          role = roleValue as typeof role
-        }
-      }
-
-      // Try to get avatar from user object if it exists, otherwise undefined
-      const avatar = membership.user?.avatar || membership.avatar || undefined
-
-      // Determine membership status - pending if confirm is false
-      const status: 'pending' | 'active' =
-        membership.confirm === false ? 'pending' : 'active'
-
-      // Get roles array from membership (for resending invitations)
-      const roles =
-        membership.roles || (membership.role ? [membership.role] : [])
-
-      // Extract MFA status from user object or membership
-      const mfaEnabled =
-        membership.user?.mfa === true ||
-        membership.user?.twoFactorAuthenticatorEnabled === true ||
-        membership.mfa === true ||
-        false
-
-      return {
-        $id: membership.$id || membership.id,
-        userName: name,
-        userEmail: email,
-        avatar,
-        role,
-        roles,
-        orgId: organizationId || '',
-        joinedAt:
-          membership.$createdAt ||
-          membership.joinedAt ||
-          new Date().toISOString(),
-        status,
-        membershipId: membership.$id || membership.id,
-        mfaEnabled,
-      } as TeamMember
-    })
-  }, [membershipsData, organizationId])
+  const memberships = useMemo(
+    () =>
+      mapOrganizationMembershipsToTeamMembers(membershipsData, organizationId),
+    [membershipsData, organizationId],
+  )
 
   const totalPages = useMemo(() => {
     if (!membershipsData?.total) return 0
