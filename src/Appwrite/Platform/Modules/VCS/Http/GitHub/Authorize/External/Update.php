@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\VCS\Http\GitHub\Authorize\External;
 
 use Appwrite\Event\Build;
+use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
@@ -10,7 +11,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Utopia\Console\Console;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -25,6 +26,8 @@ class Update extends Action
 {
     use HTTP;
     use Deployment;
+
+    private const BUILD_TYPE_DEPLOYMENT = 'deployment';
 
     public static function getName()
     {
@@ -94,6 +97,36 @@ class Update extends Action
             throw new Exception(Exception::REPOSITORY_NOT_FOUND);
         }
 
+        // Initialize project database
+        $dbForProject = $getProjectDB();
+
+        // Add lock mechanism to prevent race conditions during authorization
+        $lockId = "vcs-auth-{$repositoryId}-{$providerPullRequestId}";
+        $lockAcquired = false;
+        $retries = 0;
+        
+        while ($retries < 10) {
+            try {
+                $dbForProject->createDocument('vcsCommentLocks', new Document([
+                    '$id' => $lockId
+                ]));
+                $lockAcquired = true;
+                break;
+            } catch (\Throwable $err) {
+                if ($retries >= 9) {
+                    Console::warning("Error creating authorization lock for PR #{$providerPullRequestId}: " . $err->getMessage());
+                }
+                \sleep(1);
+                $retries++;
+            }
+        }
+
+        if (!$lockAcquired) {
+            throw new Exception(Exception::GENERAL_UNKNOWN, 'Could not acquire authorization lock, please try again');
+        }
+
+        try {
+
         if (\in_array($providerPullRequestId, $repository->getAttribute('providerPullRequestIds', []))) {
             throw new Exception(Exception::PROVIDER_CONTRIBUTION_CONFLICT);
         }
@@ -146,21 +179,22 @@ class Update extends Action
             $existingDeployment = $existingDeployments[0];
             $resourceId = $existingDeployment->getAttribute('resourceId');
             $resourceType = $existingDeployment->getAttribute('resourceType');
-            $resourceCollection = $resourceType === "function" ? 'functions' : 'sites';
+            $resourceCollection = $resourceType === "functions" ? 'functions' : 'sites';
             $resource = $authorization->skip(fn () => $dbForProject->getDocument($resourceCollection, $resourceId));
             
             if (!$resource->isEmpty()) {
                 Console::info("Re-triggering existing deployment '{$existingDeployment->getId()}' for authorized PR #{$providerPullRequestId}");
                 
-                $queueName = System::getEnv('_APP_BUILDS_QUEUE_NAME', 'builds');
+                $queueName = System::getEnv('_APP_BUILDS_QUEUE_NAME', Event::BUILDS_QUEUE_NAME);
                 $queueForBuilds
                     ->setQueue($queueName)
-                    ->setType('deployment')
+                    ->setType(self::BUILD_TYPE_DEPLOYMENT)
                     ->setResource($resource)
                     ->setDeployment($existingDeployment)
                     ->setProject($project);
                 
                 $queueForBuilds->trigger();
+                $queueForBuilds->reset(); // prevent shutdown hook from triggering again
                 $response->noContent();
                 return;
             }
@@ -168,6 +202,11 @@ class Update extends Action
 
         // If no existing waiting deployment, create a new one
         $this->createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, true, $dbForPlatform, $authorization, $queueForBuilds, $getProjectDB, $platform);
+
+        } finally {
+            // Always release the lock
+            $authorization->skip(fn () => $dbForProject->deleteDocument('vcsCommentLocks', $lockId));
+        }
 
         $response->noContent();
     }
