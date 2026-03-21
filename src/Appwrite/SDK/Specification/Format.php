@@ -221,8 +221,8 @@ abstract class Format
                 switch ($method) {
                     case 'createRedirectRule':
                         switch ($param) {
-                           case 'resourceType':
-                                    return 'string';
+                            case 'resourceType':
+                                return null;
                         }
                         break;
                 }
