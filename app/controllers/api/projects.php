@@ -32,6 +32,7 @@ use Utopia\Emails\Validator\Email;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
@@ -1409,7 +1410,8 @@ Http::patch('/v1/projects/:projectId/smtp')
     ->param('secure', '', new WhiteList(['tls', 'ssl'], true), 'Does SMTP server use secure connection', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, bool $enabled, string $senderName, string $senderEmail, string $replyTo, string $host, int $port, string $username, string $password, string $secure, Response $response, Database $dbForPlatform) {
+    ->inject('telemetry')
+    ->action(function (string $projectId, bool $enabled, string $senderName, string $senderEmail, string $replyTo, string $host, int $port, string $username, string $password, string $secure, Response $response, Database $dbForPlatform, Telemetry $telemetry) {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -1443,6 +1445,8 @@ Http::patch('/v1/projects/:projectId/smtp')
             $mail->SMTPAutoTLS = false;
             $mail->Timeout = 5;
 
+            $validationStartTime = microtime(true);
+            $smtpVerificationDuration = $telemetry->createHistogram('project.smtp.validation.duration', 's');
             try {
                 $valid = $mail->SmtpConnect();
 
@@ -1451,6 +1455,9 @@ Http::patch('/v1/projects/:projectId/smtp')
                 }
             } catch (Throwable $error) {
                 throw new Exception(Exception::PROJECT_SMTP_CONFIG_INVALID, $error->getMessage());
+            } finally {
+                $duration = microtime(true) - $validationStartTime;
+                $smtpVerificationDuration->record($duration, ['projectId' => $projectId]);
             }
         }
 
