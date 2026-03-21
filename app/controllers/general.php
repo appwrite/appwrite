@@ -382,21 +382,16 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                     // isExecutionAllowed remains false
                 }
 
-                $userExists = false;
                 $userId = $payload['userId'] ?? '';
                 if (!empty($userId)) {
                     /** @var \Appwrite\Utopia\Database\Documents\User */
                     $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
                     if (!$user->isEmpty() && $user->getAttribute('status', false)) {
-                        $userExists = true;
+                        foreach ($user->getRoles($authorization) as $role) {
+                            $authorization->addRole($role);
+                        }
+                        $isExecutionAllowed = $authorization->isValid(new Input('execute', $permissions));
                     }
-                }
-
-                if ($userExists) {
-                    foreach ($user->getRoles($authorization) as $role) {
-                        $authorization->addRole($role);
-                    }
-                    $isExecutionAllowed = $authorization->isValid(new Input('execute', $permissions));
                 }
             }
 
