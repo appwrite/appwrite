@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Certificates\Adapter as CertificatesAdapter;
 use Appwrite\Deletes\Identities;
 use Appwrite\Deletes\Targets;
+use Appwrite\Event\Delete as EventDelete;
 use Appwrite\Extend\Exception;
 use Executor\Executor;
 use Throwable;
@@ -21,6 +22,7 @@ use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
@@ -60,6 +62,7 @@ class Deletes extends Action
             ->inject('executionRetention')
             ->inject('auditRetention')
             ->inject('log')
+            ->inject('queueForDeletes')
             ->callback($this->action(...));
     }
 
@@ -82,7 +85,8 @@ class Deletes extends Action
         Executor $executor,
         string $executionRetention,
         string $auditRetention,
-        Log $log
+        Log $log,
+        EventDelete $queueForDeletes
     ): void {
         $payload = $message->getPayload() ?? [];
 
@@ -131,7 +135,7 @@ class Deletes extends Action
                         $this->deleteTransactionLogs($getProjectDB, $document, $project);
                         break;
                     default:
-                        Console::error('No lazy delete operation available for document of type: ' . $document->getCollection());
+                        $this->deleteDocumentCascade($getProjectDB($project), $document, $queueForDeletes);
                         break;
                 }
                 break;
@@ -1376,5 +1380,57 @@ class Deletes extends Action
         ], onError: function (Throwable $th) use ($project) {
             // Swallow errors to avoid breaking the cleanup process
         });
+    }
+
+    /**
+     * @param Database $dbForProject
+     * @param Document $document
+     * @param EventDelete $queueForDeletes
+     * @return void
+     * @throws Exception
+     */
+    protected function deleteDocumentCascade(Database $dbForProject, Document $document, EventDelete $queueForDeletes): void
+    {
+        $collectionId = $document->getCollection();
+        if (empty($collectionId)) {
+            return;
+        }
+
+        $collection = $dbForProject->getDocument(Database::METADATA, $collectionId);
+        if ($collection->isEmpty()) {
+            return;
+        }
+
+        $relationships = \array_filter(
+            $collection->getAttribute('attributes', []),
+            fn ($attr) => $attr->getAttribute('type') === Database::VAR_RELATIONSHIP &&
+                          $attr->getAttribute('onDelete') === Database::RELATION_MUTATE_CASCADE
+        );
+
+        foreach ($relationships as $relationship) {
+            $key = $relationship->getAttribute('key');
+            $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+            $relatedId = $document->getAttribute($key);
+
+            if (empty($relatedId)) {
+                continue;
+            }
+
+            $relatedIds = \is_array($relatedId) ? $relatedId : [$relatedId];
+
+            foreach ($relatedIds as $id) {
+                // If it's a Document already (populated), get ID
+                $id = ($id instanceof Document) ? $id->getId() : $id;
+
+                // Enqueue the related document for deletion
+                $queueForDeletes
+                    ->setType(DELETE_TYPE_DOCUMENT)
+                    ->setDocument(new Document([
+                        '$id' => $id,
+                        '$collection' => $relatedCollectionId,
+                    ]))
+                    ->trigger();
+            }
+        }
     }
 }

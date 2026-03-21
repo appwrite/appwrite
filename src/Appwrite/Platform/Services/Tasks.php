@@ -3,6 +3,8 @@
 namespace Appwrite\Platform\Services;
 
 use Appwrite\Platform\Tasks\Doctor;
+use Appwrite\Platform\Tasks\Export;
+use Appwrite\Platform\Tasks\Import;
 use Appwrite\Platform\Tasks\Install;
 use Appwrite\Platform\Tasks\Maintenance;
 use Appwrite\Platform\Tasks\Migrate;
@@ -30,6 +32,8 @@ class Tasks extends Service
             ->addAction(Install::getName(), new Install())
             ->addAction(Maintenance::getName(), new Maintenance())
             ->addAction(Migrate::getName(), new Migrate())
+            ->addAction(Export::getName(), new Export())
+            ->addAction(Import::getName(), new Import())
             ->addAction(QueueRetry::getName(), new QueueRetry())
             ->addAction(SDKs::getName(), new SDKs())
             ->addAction(SSL::getName(), new SSL())
