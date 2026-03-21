@@ -264,13 +264,14 @@ export function View() {
     }
   }, [isDeploymentsListPage, location.pathname, location.search])
 
+  // Prefer parsed search (TanStack Router object) so page=2 in URL is read correctly after navigate()
   const urlPage = useMemo(() => {
-    if (deploymentsListParams?.page != null) return deploymentsListParams.page
     const search = location.search
     if (search && typeof search === 'object' && 'page' in search) {
       const p = (search as { page?: number }).page
       if (typeof p === 'number' && p >= 1) return p
     }
+    if (deploymentsListParams?.page != null) return deploymentsListParams.page
     const searchParams = new URLSearchParams(
       typeof search === 'string' ? search : '',
     )
