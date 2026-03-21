@@ -58,6 +58,7 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Create as CreateDatabase;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Delete as DeleteDatabase;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Get as GetDatabase;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Logs\XList as ListDatabaseLogs;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Search as SearchDocuments;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Create as CreateTransaction;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Delete as DeleteTransaction;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Get as GetTransaction;
@@ -102,6 +103,7 @@ class Legacy extends Base
         $service->addAction(ListDatabaseLogs::getName(), new ListDatabaseLogs());
         $service->addAction(GetDatabaseUsage::getName(), new GetDatabaseUsage());
         $service->addAction(ListDatabaseUsage::getName(), new ListDatabaseUsage());
+        $service->addAction(SearchDocuments::getName(), new SearchDocuments());
     }
 
     private function registerCollectionActions(Service $service): void
