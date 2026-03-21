@@ -186,6 +186,73 @@ class Builds extends Action
         $startTime = DateTime::now();
         $durationStart = \microtime(true);
 
+        // Check PR authorization before proceeding with build
+        $providerPullRequestId = $deployment->getAttribute('providerPullRequestId', '');
+        $providerRepositoryId = $deployment->getAttribute('providerRepositoryId', '');
+        
+        if (!empty($providerPullRequestId)) {
+            Console::info("[BUILD WORKER] Processing PR deployment #{$providerPullRequestId}");
+            
+            // Validate required fields for PR deployments
+            if (empty($providerRepositoryId)) {
+                Console::warning("[BUILD WORKER] Empty repository ID for PR #{$providerPullRequestId}, marking as failed");
+                $deployment->setAttribute('status', 'failed');
+                $deployment->setAttribute('buildCompletedAt', DateTime::now());
+                $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+                return;
+            }
+            
+            // Check if this PR is authorized
+            try {
+                $repository = $dbForPlatform->findOne('repositories', [
+                    Query::equal('providerRepositoryId', [$providerRepositoryId]),
+                    Query::limit(1)
+                ]);
+                
+                $isAuthorized = false;
+                if (!$repository->isEmpty()) {
+                    $authorizedPrIds = $repository->getAttribute('providerPullRequestIds', []);
+                    $isAuthorized = in_array($providerPullRequestId, $authorizedPrIds);
+                }
+                
+                if (!$isAuthorized) {
+                    Console::info("[BUILD WORKER] PR #{$providerPullRequestId} not authorized, keeping status as waiting");
+                    // Don't update status - it's already 'waiting' from deployment creation
+                    // Just update realtime to reflect current state
+                    $queueForRealtime
+                        ->setSubscribers(['console'])
+                        ->setProject($project)
+                        ->setEvent("{$resource->getCollection()}.[{$resourceKey}].deployments.[deploymentId].update")
+                        ->setParam($resourceKey, $resource->getId())
+                        ->setParam('deploymentId', $deployment->getId())
+                        ->trigger();
+                    
+                    return;
+                }
+                
+                // PR is authorized, update status to 'processing' and proceed with build
+                Console::info("[BUILD WORKER] PR #{$providerPullRequestId} is authorized, updating status to processing");
+                $deployment->setAttribute('status', 'processing');
+                $deployment->setAttribute('buildStartedAt', DateTime::now());
+                $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+                
+                // Update realtime to show build is starting
+                $queueForRealtime
+                    ->setSubscribers(['console'])
+                    ->setProject($project)
+                    ->setEvent("{$resource->getCollection()}.[{$resourceKey}].deployments.[deploymentId].update")
+                    ->setParam($resourceKey, $resource->getId())
+                    ->setParam('deploymentId', $deployment->getId())
+                    ->trigger();
+            } catch (\Throwable $e) {
+                Console::error("[BUILD WORKER] Error checking authorization for PR #{$providerPullRequestId}: " . $e->getMessage());
+                $deployment->setAttribute('status', 'failed');
+                $deployment->setAttribute('buildCompletedAt', DateTime::now());
+                $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+                return;
+            }
+        }
+
         $resourceKey = match ($resource->getCollection()) {
             'functions' => 'functionId',
             'sites' => 'siteId',

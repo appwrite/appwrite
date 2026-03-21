@@ -10,6 +10,7 @@ use Appwrite\Vcs\Comment;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
@@ -254,23 +255,23 @@ trait Deployment
                     }
                 }
 
-                if (!$isAuthorized) {
-                    $resourceName = $resource->getAttribute('name');
-                    $projectName = $project->getAttribute('name');
-                    $name = "{$resourceName} ({$projectName})";
-                    $message = 'Authorization required for external contributor.';
+                // Always create deployment regardless of authorization status
+                // External PRs will show "waiting" status until authorized
+                Console::info("[PR DEBUG] Creating deployment for PR #{$providerPullRequestId} on branch '{$providerBranch}' - Authorized: " . ($isAuthorized ? 'true' : 'false'));
+                Span::add("{$logBase}.deployment.creating", 'true');
+                Span::add("{$logBase}.deployment.authorized", $isAuthorized);
+                Span::add("{$logBase}.deployment.external", $external);
 
-                    $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
-                    try {
-                        $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
-                        if (empty($repositoryName)) {
-                            throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
-                        }
-                    } catch (RepositoryNotFound $e) {
-                        throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
-                    }
-                    $owner = $github->getOwnerName($providerInstallationId);
-                    $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $authorizeUrl, $name);
+                // Additional validation for required fields
+                if (empty($providerBranch)) {
+                    Console::warning("[PR DEBUG] Empty branch for PR #{$providerPullRequestId}, skipping deployment");
+                    Span::add("{$logBase}.error", 'Empty branch');
+                    continue;
+                }
+
+                if (empty($providerCommitHash)) {
+                    Console::warning("[PR DEBUG] Empty commit hash for PR #{$providerPullRequestId}, skipping deployment");
+                    Span::add("{$logBase}.error", 'Empty commit hash');
                     continue;
                 }
 
@@ -318,8 +319,16 @@ trait Deployment
                     'providerCommitUrl' => $providerCommitUrl,
                     'providerCommentId' => \strval($latestCommentId),
                     'providerBranch' => $providerBranch,
+                    'providerPullRequestId' => $providerPullRequestId,
                     'activate' => $activate,
+                    'status' => 'waiting', // Always start as 'waiting', build worker will update to 'processing' if authorized
+                    'buildStartedAt' => null, // Build worker will set this when starting
+                    'buildCompletedAt' => null, // Build worker will set this when completed
                 ])));
+
+                Console::info("[PR DEBUG] Deployment '{$deploymentId}' created successfully with initial status: waiting");
+                Span::add("{$logBase}.deployment.created", 'true');
+                Span::add("{$logBase}.deployment.status", 'waiting');
 
                 $resource = $resource
                     ->setAttribute('latestDeploymentId', $deployment->getId())
@@ -497,6 +506,10 @@ trait Deployment
 
                 $queueName = $this->getBuildQueueName($project, $dbForPlatform, $authorization);
 
+                Console::info("[PR DEBUG] Queueing build job for deployment '{$deploymentId}' on queue '{$queueName}'");
+                Span::add("{$logBase}.build.queueing", 'true');
+                Span::add("{$logBase}.build.queue.name", $queueName);
+
                 $queueForBuilds
                     ->setQueue($queueName)
                     ->setType(BUILD_TYPE_DEPLOYMENT)
@@ -506,8 +519,57 @@ trait Deployment
 
                 $queueForBuilds->trigger(); // must trigger here so that we create a build for each function/site
 
+                Console::info("[PR DEBUG] Build job triggered successfully for deployment '{$deploymentId}'");
                 Span::add("{$logBase}.build.triggered", 'true');
                 //TODO: Add event?
+
+                // Handle authorization after deployment is created and queued
+                if (!$isAuthorized) {
+                    Console::info("[PR DEBUG] Handling authorization for external PR #{$providerPullRequestId}");
+                    Span::add("{$logBase}.authorization.required", 'true');
+                    
+                    $resourceName = $resource->getAttribute('name');
+                    $projectName = $project->getAttribute('name');
+                    $name = "{$resourceName} ({$projectName})";
+                    $message = 'Authorization required for external contributor.';
+
+                    $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
+                    try {
+                        $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+                        if (empty($repositoryName)) {
+                            throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+                        }
+                    } catch (RepositoryNotFound $e) {
+                        throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+                    }
+                    $owner = $github->getOwnerName($providerInstallationId);
+                    $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $authorizeUrl, $name);
+                    Console::info("[PR DEBUG] Updated commit status to 'pending' for external PR #{$providerPullRequestId}");
+                    // Note: Deployment is already created and queued with 'waiting' status, will show "waiting" until authorized
+                } else {
+                    Console::info("[PR DEBUG] PR #{$providerPullRequestId} is authorized, deployment will proceed");
+                    Span::add("{$logBase}.authorization.approved", 'true');
+                    
+                    // For authorized PRs, update commit status to 'pending' to indicate build is starting
+                    $resourceName = $resource->getAttribute('name');
+                    $projectName = $project->getAttribute('name');
+                    $name = "{$resourceName} ({$projectName})";
+                    $message = 'Build starting...';
+                    
+                    $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
+                    try {
+                        $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+                        if (empty($repositoryName)) {
+                            throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+                        }
+                    } catch (RepositoryNotFound $e) {
+                        throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+                    }
+                    $owner = $github->getOwnerName($providerInstallationId);
+                    $providerTargetUrl = $protocol . '://' . $hostname . "/console/project-" . $project->getAttribute('region', 'default') . "-{$projectId}/{$resourceCollection}/{$resourceType}-{$resourceId}";
+                    $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
+                    Console::info("[PR DEBUG] Updated commit status to 'pending' for authorized PR #{$providerPullRequestId}");
+                }
             } catch (\Throwable $e) {
                 Span::add("{$logBase}.error", $e->getMessage());
                 $errors[] = $e->getMessage();
