@@ -10,6 +10,7 @@ import {
 import Editor, { type OnMount, type OnChange } from '@monaco-editor/react'
 import type { editor } from 'monaco-editor'
 import { cn } from '@/lib/utils'
+import { isHtmlDarkChrome } from '@/lib/html-theme'
 
 /** Editor dark background (--editor-bg in .dark); use #09090b so Monaco --vscode-editor-background matches */
 const APP_DARK_BG_HEX = '#09090b'
@@ -67,8 +68,7 @@ export interface CodeEditorProps {
 }
 
 function isDarkMode(): boolean {
-  if (typeof document === 'undefined') return false
-  return document.documentElement.classList.contains('dark')
+  return isHtmlDarkChrome()
 }
 
 export const CodeEditor = forwardRef<CodeEditorRef, CodeEditorProps>(
@@ -94,9 +94,7 @@ export const CodeEditor = forwardRef<CodeEditorRef, CodeEditorProps>(
 
     const handleBeforeMount = useCallback(
       (monaco: typeof import('monaco-editor')) => {
-        const isDark =
-          typeof document !== 'undefined' &&
-          document.documentElement.classList.contains('dark')
+        const isDark = isHtmlDarkChrome()
         if (isDark) {
           const bg = getAppBackgroundHex()
           monaco.editor.defineTheme(APP_DARK_THEME_ID, {

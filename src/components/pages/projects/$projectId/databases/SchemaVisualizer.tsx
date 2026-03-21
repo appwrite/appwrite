@@ -59,6 +59,7 @@ import {
   formatSchemaAsJSON,
 } from '@/lib/utils/database-schema-export'
 import { useQuery } from '@tanstack/react-query'
+import { isHtmlDarkChrome } from '@/lib/html-theme'
 
 interface SchemaVisualizerProps {
   databaseId: string
@@ -139,7 +140,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window === 'undefined') return false
     return (
-      document.documentElement.classList.contains('dark') ||
+      isHtmlDarkChrome() ||
       window.matchMedia('(prefers-color-scheme: dark)').matches
     )
   })
@@ -148,7 +149,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
   useEffect(() => {
     const checkDarkMode = () => {
       setIsDarkMode(
-        document.documentElement.classList.contains('dark') ||
+        isHtmlDarkChrome() ||
           window.matchMedia('(prefers-color-scheme: dark)').matches,
       )
     }
@@ -665,7 +666,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
     try {
       // Detect if dark mode for proper color selection
       const isDark =
-        document.documentElement.classList.contains('dark') ||
+        isHtmlDarkChrome() ||
         window.matchMedia('(prefers-color-scheme: dark)').matches
 
       // Get computed color values with fallbacks for better contrast

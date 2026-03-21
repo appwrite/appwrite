@@ -27,6 +27,7 @@ import {
   Globe,
   Tablet,
   Monitor,
+  UserRound,
 } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
 import { AuthenticatorType, MessagingProviderType } from '@appwrite.io/console'
@@ -97,6 +98,7 @@ import {
   useDeleteUserSession,
   useDeleteAllUserSessions,
   useDeleteProjectUser,
+  useUpdateUserImpersonator,
 } from '@/lib/react-query/hooks/users'
 import { useProject } from '@/lib/react-query/hooks'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
@@ -560,6 +562,11 @@ function OverviewTab({
           userId={userId}
         />
       </div>
+      <UserImpersonationCapabilityCard
+        user={user}
+        projectId={projectId}
+        userId={userId}
+      />
       <UpdateMFASection
         user={user}
         mfaFactors={mfaFactors}
@@ -753,6 +760,84 @@ function UserStatusCard({
         >
           {isBlocked ? 'Unblock' : 'Block'} Account
         </Button>
+      </div>
+    </div>
+  )
+}
+
+function UserImpersonationCapabilityCard({
+  user,
+  projectId,
+  userId,
+}: {
+  user: Models.User
+  projectId: string
+  userId: string
+}) {
+  const [canImpersonate, setCanImpersonate] = useState(!!user.impersonator)
+  const updateImpersonator = useUpdateUserImpersonator(projectId, userId)
+
+  useEffect(() => {
+    setCanImpersonate(!!user.impersonator)
+  }, [user.impersonator])
+
+  const handleToggle = (checked: boolean) => {
+    setCanImpersonate(checked)
+    updateImpersonator.mutate(checked, {
+      onSuccess: () => {
+        toast.success(
+          checked
+            ? 'User impersonation has been enabled for this account'
+            : 'User impersonation has been disabled for this account',
+        )
+      },
+      onError: (error: Error) => {
+        toast.error(error.message || 'Failed to update impersonation setting')
+        setCanImpersonate(!!user.impersonator)
+      },
+    })
+  }
+
+  return (
+    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div className="px-6 py-4">
+        <h3 className="text-[15px] font-semibold text-foreground">
+          User impersonation
+        </h3>
+        <p className="text-[13px] text-muted-foreground mt-2">
+          When enabled, this user can act as other users in this project using
+          impersonation. Audit logs still attribute actions to the original
+          account.
+        </p>
+      </div>
+      <div className="border-t border-border" />
+      <div className="px-6 py-4">
+        <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-muted/30 p-4">
+          <div className="flex items-start gap-3 min-w-0">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted">
+              <UserRound className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <div className="space-y-0.5 min-w-0">
+              <Label
+                htmlFor="user-impersonation-toggle"
+                className="text-[13px] font-semibold text-foreground cursor-pointer"
+              >
+                Impersonation capability
+              </Label>
+              <p className="text-[12px] text-muted-foreground">
+                {canImpersonate
+                  ? 'This user may impersonate others in this project'
+                  : 'This user cannot impersonate others'}
+              </p>
+            </div>
+          </div>
+          <Switch
+            id="user-impersonation-toggle"
+            checked={canImpersonate}
+            onCheckedChange={handleToggle}
+            disabled={updateImpersonator.isPending}
+          />
+        </div>
       </div>
     </div>
   )

@@ -127,6 +127,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       { label: 'System', themeValue: 'system' },
       { label: '🎨 Crazy', themeValue: 'crazy' },
       { label: '🥷 Stealth', themeValue: 'stealth' },
+      { label: 'Classic console', themeValue: 'classic' },
     ].map((opt) => ({
       label: opt.label,
       onClick: () => {

@@ -2,7 +2,11 @@
 
 @import 'tw-animate-css';
 
-@custom-variant dark (&:is(.dark *));
+/* Match default dark + debug-only themes that omit .dark but use dark surfaces (see html-theme.ts). */
+@custom-variant dark (&:is(.dark *, .classic *, .crazy *, .stealth *));
+
+/** Debug-only classic theme (html.classic); use for heading weight etc. without affecting default UI. */
+@custom-variant classic (&:is(.classic *));
 
 body {
   @apply m-0;
@@ -166,6 +170,50 @@ code {
   --sidebar-ring: oklch(0.75 0.4 200);
 }
 
+/*
+ * Classic — legacy Appwrite cloud console (Pink) palette: neutral surfaces + brand pink (#fd366e)
+ * and purple secondary; Inter body / Poppins headings. Debug menu only.
+ * Tokens aligned with console/src/themes/dark-cloud.json
+ */
+.classic {
+  color-scheme: dark;
+  --editor-bg: #141416;
+  --background: rgb(25 25 28);
+  --foreground: rgb(237 237 240);
+  --card: rgb(29 29 33);
+  --card-foreground: rgb(237 237 240);
+  --popover: rgb(29 29 33);
+  --popover-foreground: rgb(237 237 240);
+  --primary: rgb(253 54 110);
+  --primary-foreground: rgb(255 255 255);
+  --secondary: rgb(45 45 49);
+  --secondary-foreground: rgb(237 237 240);
+  --muted: rgb(45 45 49);
+  --muted-foreground: rgb(129 129 134);
+  --accent: rgb(45 45 49);
+  --accent-foreground: rgb(237 237 240);
+  --destructive: rgb(255 69 58);
+  --destructive-foreground: rgb(255 255 255);
+  --border: rgb(45 45 49);
+  --input: rgb(45 45 49);
+  --ring: rgb(253 54 110);
+  --chart-1: rgb(124 103 254);
+  --chart-2: rgb(133 219 216);
+  --chart-3: rgb(104 163 254);
+  --chart-4: rgb(254 149 103);
+  --chart-5: rgb(254 211 103);
+  --chart-brand: rgb(253 54 110);
+  --radius: 0.5rem;
+  --sidebar: rgb(20 20 22);
+  --sidebar-foreground: rgb(237 237 240);
+  --sidebar-primary: rgb(253 54 110);
+  --sidebar-primary-foreground: rgb(255 255 255);
+  --sidebar-accent: rgb(45 45 49);
+  --sidebar-accent-foreground: rgb(237 237 240);
+  --sidebar-border: rgb(45 45 49);
+  --sidebar-ring: rgb(253 54 110);
+}
+
 .stealth {
   /* Secret stealth theme - tactical colors, olive greens, khaki, dark earth tones */
   --background: oklch(0.18 0.04 110);
@@ -249,6 +297,37 @@ code {
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  html.classic body {
+    font-family:
+      'Inter',
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      'Roboto',
+      'Oxygen',
+      'Ubuntu',
+      sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    letter-spacing: -0.01em;
+  }
+
+  html.classic :where(h1, h2, h3) {
+    font-family: 'Poppins', 'Inter', sans-serif;
+    letter-spacing: -0.02em;
+    font-weight: 400;
+  }
+
+  /*
+   * Classic: Tailwind font-semibold maps to --font-weight-semibold and wins over base alone.
+   * Force page <h1> titles (account name, service headers, etc.) to body weight + Inter.
+   */
+  html.classic h1 {
+    font-weight: 400 !important;
+    font-family: inherit !important;
+    letter-spacing: -0.02em;
   }
 
   /* Mobile touch scrolling improvements.

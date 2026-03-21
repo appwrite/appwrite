@@ -1,6 +1,10 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { useParams, Link } from '@tanstack/react-router'
 import { useTheme } from 'next-themes'
+import {
+  isHtmlDarkChrome,
+  isResolvedThemeDarkChrome,
+} from '@/lib/html-theme'
 import Editor from '@monaco-editor/react'
 import {
   ArrowLeft,
@@ -379,7 +383,7 @@ function defineAppThemes(monaco: typeof import('monaco-editor')) {
   })
   // Dark: use --editor-bg (#09090b) so Monaco --vscode-editor-background matches.
   const root = typeof document !== 'undefined' ? document.documentElement : null
-  const isDark = root?.classList.contains('dark')
+  const isDark = root ? isHtmlDarkChrome() : false
   const editorBgVar = root
     ? getComputedStyle(root).getPropertyValue('--editor-bg').trim()
     : ''
@@ -420,7 +424,7 @@ function defineAppThemes(monaco: typeof import('monaco-editor')) {
 export function View() {
   const { projectId } = useParams({ strict: false })
   const { resolvedTheme } = useTheme()
-  const isDark = resolvedTheme === 'dark'
+  const isDark = isResolvedThemeDarkChrome(resolvedTheme)
   const [files, setFiles] = useState<Record<string, string>>(DEFAULT_FILES)
   const [activeFile, setActiveFile] = useState<string>(ENTRY_FILE)
   const [isCompressing, setIsCompressing] = useState(false)

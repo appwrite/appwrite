@@ -9,7 +9,7 @@ import appCss from '../styles.css?url'
 import type { QueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { Toaster } from '@/components/ui/sonner'
-import { ThemeProvider } from 'next-themes'
+import { ThemeProvider, useTheme } from 'next-themes'
 import {
   AIChatProvider,
   AIChatPanel,
@@ -47,7 +47,7 @@ const THEME_SCRIPT = `(function(){
     var t = localStorage.getItem('theme') || 'system';
     var r = t === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : t;
     var e = document.documentElement;
-    ['light','dark','system','crazy','stealth'].forEach(function(c){e.classList.remove(c);});
+    ['light','dark','system','crazy','stealth','classic'].forEach(function(c){e.classList.remove(c);});
     e.classList.add(r);
   } catch (e) {}
 })()`
@@ -108,6 +108,29 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
   shellComponent: RootDocument,
 })
 
+const CLASSIC_CONSOLE_FONTS_ID = 'classic-console-fonts'
+const CLASSIC_CONSOLE_FONTS_HREF =
+  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap'
+
+/** Loads Inter + Poppins only while the debug-only classic theme is active. */
+function ClassicConsoleFonts() {
+  const { theme } = useTheme()
+  useEffect(() => {
+    if (theme === 'classic') {
+      if (!document.getElementById(CLASSIC_CONSOLE_FONTS_ID)) {
+        const link = document.createElement('link')
+        link.id = CLASSIC_CONSOLE_FONTS_ID
+        link.rel = 'stylesheet'
+        link.href = CLASSIC_CONSOLE_FONTS_HREF
+        document.head.appendChild(link)
+      }
+    } else {
+      document.getElementById(CLASSIC_CONSOLE_FONTS_ID)?.remove()
+    }
+  }, [theme])
+  return null
+}
+
 /**
  * Renders ThemeProvider only after client mount. next-themes uses React context
  * in a way that can fail during SSR (renderToPipeableStream) with "Cannot read
@@ -127,8 +150,9 @@ function ClientThemeProvider({ children }: { children: React.ReactNode }) {
       defaultTheme="system"
       enableSystem
       disableTransitionOnChange
-      themes={['light', 'dark', 'system', 'crazy', 'stealth']}
+      themes={['light', 'dark', 'system', 'crazy', 'stealth', 'classic']}
     >
+      <ClassicConsoleFonts />
       {children}
     </ThemeProvider>
   )

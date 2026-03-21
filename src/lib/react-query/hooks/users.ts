@@ -820,6 +820,22 @@ export async function updateUserStatus(
 }
 
 /**
+ * Enable or disable whether the user may impersonate other project users.
+ */
+export async function updateUserImpersonator(
+  projectId: string,
+  userId: string,
+  impersonator: boolean,
+) {
+  if (!projectId || !userId) {
+    throw new Error('Project ID and User ID are required')
+  }
+
+  const projectSdk = sdk.forProject(projectId)
+  return await projectSdk.users.updateImpersonator({ userId, impersonator })
+}
+
+/**
  * Mutation function to update user email verification
  */
 export async function updateUserEmailVerification(
@@ -1278,6 +1294,33 @@ export function useUpdateUserStatus(
         throw new Error('Project ID and User ID are required')
       }
       return updateUserStatus(projectId, userId, status)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['user', 'project', projectId, userId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['users', 'project', projectId],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to update whether the user may impersonate other project users.
+ */
+export function useUpdateUserImpersonator(
+  projectId: string | null | undefined,
+  userId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (impersonator: boolean) => {
+      if (!projectId || !userId) {
+        throw new Error('Project ID and User ID are required')
+      }
+      return updateUserImpersonator(projectId, userId, impersonator)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
