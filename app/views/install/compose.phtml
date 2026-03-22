@@ -11,6 +11,8 @@ $httpsPort = $this->getParam('httpsPort', '');
 $version = $this->getParam('version', '');
 $organization = $this->getParam('organization', '');
 $image = $this->getParam('image', '');
+$appwriteImage = $this->getParam('appwriteImage', '');
+$useHostSourceMount = $this->getParam('useHostSourceMount', false);
 $enableAssistant = $this->getParam('enableAssistant', false);
 $dbService = $this->getParam('database', 'mongodb');
 $allowedDbServices = ['mariadb', 'mongodb', 'postgresql'];
@@ -18,6 +20,9 @@ if (!\in_array($dbService, $allowedDbServices, true)) {
     $dbService = 'mongodb';
 }
 $hostPath = rtrim($this->getParam('hostPath', ''), '/');
+if ($appwriteImage === '') {
+    $appwriteImage = $organization . '/' . $image . ':' . $version;
+}
 ?>services:
   traefik:
     image: traefik:3.6
@@ -46,7 +51,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - appwrite
 
   appwrite:
-    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
+    image: <?php echo $appwriteImage."\n"; ?>
     container_name: appwrite
     <<: *x-logging
     restart: unless-stopped
@@ -67,7 +72,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - traefik.http.routers.appwrite_api_https.service=appwrite_api
       - traefik.http.routers.appwrite_api_https.tls=true
     volumes:
-<?php if ($version === 'local' && !empty($hostPath)): ?>
+<?php if ($useHostSourceMount && !empty($hostPath)): ?>
       - "<?php echo $hostPath; ?>:/usr/src/code:rw"
 <?php endif; ?>
       - appwrite-uploads:/storage/uploads:rw
@@ -214,7 +219,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - traefik.http.routers.appwrite_console_https.tls=true
 
   appwrite-realtime:
-    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
+    image: <?php echo $appwriteImage."\n"; ?>
     entrypoint: realtime
     container_name: appwrite-realtime
     <<: *x-logging
@@ -261,7 +266,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_LOGGING_CONFIG
 
   appwrite-worker-audits:
-    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
+    image: <?php echo $appwriteImage."\n"; ?>
     entrypoint: worker-audits
     <<: *x-logging
     container_name: appwrite-worker-audits
@@ -291,7 +296,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_LOGGING_CONFIG
 
   appwrite-worker-webhooks:
-    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
+    image: <?php echo $appwriteImage."\n"; ?>
     entrypoint: worker-webhooks
     <<: *x-logging
     container_name: appwrite-worker-webhooks
@@ -323,7 +328,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_LOGGING_CONFIG
 
   appwrite-worker-deletes:
-    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
+    image: <?php echo $appwriteImage."\n"; ?>
     entrypoint: worker-deletes
     <<: *x-logging
     container_name: appwrite-worker-deletes
@@ -390,7 +395,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_EMAIL_CERTIFICATES
 
   appwrite-worker-databases:
-    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
+    image: <?php echo $appwriteImage."\n"; ?>
     entrypoint: worker-databases
     <<: *x-logging
     container_name: appwrite-worker-databases
@@ -420,7 +425,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_LOGGING_CONFIG
 
   appwrite-worker-builds:
-    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
+    image: <?php echo $appwriteImage."\n"; ?>
     entrypoint: worker-builds
     <<: *x-logging
     container_name: appwrite-worker-builds
@@ -492,7 +497,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_DOMAIN_SITES
 
   appwrite-worker-certificates:
-    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
+    image: <?php echo $appwriteImage."\n"; ?>
     entrypoint: worker-certificates
     <<: *x-logging
     container_name: appwrite-worker-certificates
@@ -533,7 +538,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_LOGGING_CONFIG
 
   appwrite-worker-functions:
-    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
+    image: <?php echo $appwriteImage."\n"; ?>
     entrypoint: worker-functions
     <<: *x-logging
     container_name: appwrite-worker-functions
@@ -577,7 +582,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_LOGGING_CONFIG
 
   appwrite-worker-mails:
-    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
+    image: <?php echo $appwriteImage."\n"; ?>
     entrypoint: worker-mails
     <<: *x-logging
     container_name: appwrite-worker-mails
@@ -616,7 +621,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_OPTIONS_FORCE_HTTPS
 
   appwrite-worker-messaging:
-    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
+    image: <?php echo $appwriteImage."\n"; ?>
     entrypoint: worker-messaging
     <<: *x-logging
     container_name: appwrite-worker-messaging
@@ -672,7 +677,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_STORAGE_WASABI_BUCKET
 
   appwrite-worker-migrations:
-    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
+    image: <?php echo $appwriteImage."\n"; ?>
     entrypoint: worker-migrations
     <<: *x-logging
     container_name: appwrite-worker-migrations
@@ -711,7 +716,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
 
   appwrite-task-maintenance:
-    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
+    image: <?php echo $appwriteImage."\n"; ?>
     entrypoint: maintenance
     <<: *x-logging
     container_name: appwrite-task-maintenance
@@ -755,7 +760,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
 
   appwrite-task-stats-resources:
-    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
+    image: <?php echo $appwriteImage."\n"; ?>
     container_name: appwrite-task-stats-resources
     entrypoint: stats-resources
     <<: *x-logging
@@ -788,7 +793,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_STATS_RESOURCES_INTERVAL
 
   appwrite-worker-stats-resources:
-    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
+    image: <?php echo $appwriteImage."\n"; ?>
     entrypoint: worker-stats-resources
     container_name: appwrite-worker-stats-resources
     <<: *x-logging
@@ -820,7 +825,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_STATS_RESOURCES_INTERVAL
 
   appwrite-worker-stats-usage:
-    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
+    image: <?php echo $appwriteImage."\n"; ?>
     entrypoint: worker-stats-usage
     container_name: appwrite-worker-stats-usage
     <<: *x-logging
@@ -852,7 +857,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_USAGE_AGGREGATION_INTERVAL
 
   appwrite-task-scheduler-functions:
-    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
+    image: <?php echo $appwriteImage."\n"; ?>
     entrypoint: schedule-functions
     container_name: appwrite-task-scheduler-functions
     <<: *x-logging
@@ -881,7 +886,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_DB_ADAPTER
 
   appwrite-task-scheduler-executions:
-    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
+    image: <?php echo $appwriteImage."\n"; ?>
     entrypoint: schedule-executions
     container_name: appwrite-task-scheduler-executions
     <<: *x-logging
@@ -910,7 +915,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_DB_ADAPTER
 
   appwrite-task-scheduler-messages:
-    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
+    image: <?php echo $appwriteImage."\n"; ?>
     entrypoint: schedule-messages
     container_name: appwrite-task-scheduler-messages
     <<: *x-logging
