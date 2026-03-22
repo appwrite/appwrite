@@ -14,7 +14,7 @@ return [
                 'default' => 'production',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_LOCALE',
@@ -23,7 +23,7 @@ return [
                 'default' => 'en',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_OPTIONS_ABUSE',
@@ -32,7 +32,7 @@ return [
                 'default' => 'enabled',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_OPTIONS_FORCE_HTTPS',
@@ -41,7 +41,7 @@ return [
                 'default' => 'disabled',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_OPTIONS_FUNCTIONS_FORCE_HTTPS',
@@ -50,7 +50,7 @@ return [
                 'default' => 'disabled',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_OPTIONS_ROUTER_FORCE_HTTPS',
@@ -59,7 +59,7 @@ return [
                 'default' => 'disabled',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_OPTIONS_ROUTER_PROTECTION',
@@ -68,7 +68,7 @@ return [
                 'default' => 'disabled',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_OPENSSL_KEY_V1',
@@ -77,7 +77,7 @@ return [
                 'default' => 'your-secret-key',
                 'required' => true,
                 'question' => 'Choose a secret API key, make sure to make a backup of your key in a secure location',
-                'filter' => 'token'
+                'filter' => 'token',
             ],
             [
                 'name' => '_APP_DOMAIN',
@@ -86,7 +86,7 @@ return [
                 'default' => 'localhost',
                 'required' => true,
                 'question' => 'Enter your Appwrite hostname',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_CUSTOM_DOMAIN_DENY_LIST',
@@ -95,7 +95,7 @@ return [
                 'default' => 'example.com,test.com,app.example.com',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_DOMAIN_FUNCTIONS',
@@ -104,7 +104,7 @@ return [
                 'default' => 'functions.localhost',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_DOMAIN_SITES',
@@ -113,7 +113,7 @@ return [
                 'default' => 'sites.localhost',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_DOMAIN_TARGET',
@@ -121,8 +121,8 @@ return [
                 'introduction' => '',
                 'default' => 'localhost',
                 'required' => true,
-                'question' => 'Enter a DNS A record hostname to serve as a CNAME for your custom domains.' . PHP_EOL . 'You can use the same value as used for the Appwrite hostname.',
-                'filter' => 'domainTarget'
+                'question' => 'Enter a DNS A record hostname to serve as a CNAME for your custom domains.'.PHP_EOL.'You can use the same value as used for the Appwrite hostname.',
+                'filter' => 'domainTarget',
             ],
             [
                 'name' => '_APP_DOMAIN_TARGET_CNAME',
@@ -131,7 +131,7 @@ return [
                 'default' => 'localhost',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_DOMAIN_TARGET_AAAA',
@@ -140,7 +140,7 @@ return [
                 'default' => '::1',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_DOMAIN_TARGET_A',
@@ -149,7 +149,7 @@ return [
                 'default' => '127.0.0.1',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_DOMAIN_TARGET_CAA',
@@ -158,7 +158,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_DNS',
@@ -167,7 +167,7 @@ return [
                 'default' => '8.8.8.8',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_CONSOLE_WHITELIST_ROOT',
@@ -176,7 +176,7 @@ return [
                 'default' => 'enabled',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_CONSOLE_WHITELIST_EMAILS',
@@ -185,7 +185,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_CONSOLE_WHITELIST_IPS',
@@ -194,7 +194,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_CONSOLE_HOSTNAMES',
@@ -203,7 +203,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_SYSTEM_EMAIL_NAME',
@@ -212,7 +212,7 @@ return [
                 'default' => 'Appwrite',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_SYSTEM_EMAIL_ADDRESS',
@@ -221,7 +221,7 @@ return [
                 'default' => 'noreply@appwrite.io',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_SYSTEM_TEAM_EMAIL',
@@ -230,7 +230,7 @@ return [
                 'default' => 'team@appwrite.io',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_SYSTEM_RESPONSE_FORMAT',
@@ -239,7 +239,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_SYSTEM_SECURITY_EMAIL_ADDRESS',
@@ -248,7 +248,7 @@ return [
                 'default' => 'certs@appwrite.io',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_EMAIL_SECURITY',
@@ -257,7 +257,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_EMAIL_CERTIFICATES',
@@ -266,7 +266,7 @@ return [
                 'default' => '',
                 'required' => true,
                 'question' => 'Enter an email that will be used when registering for SSL certificates',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_USAGE_STATS',
@@ -275,7 +275,7 @@ return [
                 'default' => 'enabled',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_LOGGING_PROVIDER',
@@ -284,7 +284,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_LOGGING_CONFIG',
@@ -293,7 +293,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_USAGE_AGGREGATION_INTERVAL',
@@ -302,7 +302,7 @@ return [
                 'default' => '30',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_USAGE_TIMESERIES_INTERVAL',
@@ -311,7 +311,7 @@ return [
                 'default' => '30',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_USAGE_DATABASE_INTERVAL',
@@ -320,7 +320,7 @@ return [
                 'default' => '900',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_WORKER_PER_CORE',
@@ -329,7 +329,7 @@ return [
                 'default' => 6,
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_CONSOLE_SESSION_ALERTS',
@@ -338,7 +338,7 @@ return [
                 'default' => 'disabled',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_COMPRESSION_ENABLED',
@@ -347,7 +347,7 @@ return [
                 'default' => 'enabled',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_COMPRESSION_MIN_SIZE_BYTES',
@@ -356,7 +356,7 @@ return [
                 'default' => 1024,
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_TRUSTED_HEADERS',
@@ -365,8 +365,8 @@ return [
                 'default' => 'x-forwarded-for',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
-            ]
+                'filter' => '',
+            ],
         ],
     ],
     [
@@ -380,7 +380,7 @@ return [
                 'default' => 'mongodb',
                 'required' => true,
                 'question' => 'Choose your database (mariadb|mongodb|postgresql)',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_DB_HOST',
@@ -389,7 +389,7 @@ return [
                 'default' => 'mongodb',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_DB_PORT',
@@ -398,7 +398,7 @@ return [
                 'default' => '27017',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_DB_SCHEMA',
@@ -407,7 +407,7 @@ return [
                 'default' => 'appwrite',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_DB_USER',
@@ -416,7 +416,7 @@ return [
                 'default' => 'user',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_DB_PASS',
@@ -425,7 +425,7 @@ return [
                 'default' => 'password',
                 'required' => false,
                 'question' => '',
-                'filter' => 'password'
+                'filter' => 'password',
             ],
             [
                 'name' => '_APP_DB_ROOT_PASS',
@@ -434,7 +434,7 @@ return [
                 'default' => 'rootsecretpassword',
                 'required' => false,
                 'question' => '',
-                'filter' => 'password'
+                'filter' => 'password',
             ],
         ],
     ],
@@ -449,7 +449,7 @@ return [
                 'default' => 'redis',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_REDIS_PORT',
@@ -458,7 +458,7 @@ return [
                 'default' => '6379',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_REDIS_USER',
@@ -467,7 +467,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_REDIS_PASS',
@@ -476,7 +476,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
         ],
     ],
@@ -491,7 +491,7 @@ return [
                 'default' => 'influxdb',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_INFLUXDB_PORT',
@@ -500,7 +500,7 @@ return [
                 'default' => '8086',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
         ],
     ],
@@ -515,7 +515,7 @@ return [
                 'default' => 'telegraf',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_STATSD_PORT',
@@ -524,7 +524,7 @@ return [
                 'default' => '8125',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
         ],
     ],
@@ -539,7 +539,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_SMTP_PORT',
@@ -548,7 +548,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_SMTP_SECURE',
@@ -557,7 +557,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_SMTP_USERNAME',
@@ -566,7 +566,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_SMTP_PASSWORD',
@@ -575,7 +575,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
         ],
     ],
@@ -585,12 +585,12 @@ return [
         'variables' => [
             [
                 'name' => '_APP_SMS_PROVIDER',
-                'description' => "Provider used for delivering SMS for Phone authentication. Use the following format: 'sms://[USER]:[SECRET]@[PROVIDER]'.\n\nEnsure `[USER]` and `[SECRET]` are URL encoded if they contain any non-alphanumeric characters.\n\nAvailable providers are twilio, Textmagic, telesign, msg91, and vonage.",
+                'description' => "Provider used for delivering SMS for Phone authentication. Use the following format: 'sms://[USER]:[SECRET]@[PROVIDER]'.\n\nEnsure `[USER]` and `[SECRET]` are URL encoded if they contain any non-alphanumeric characters.\n\nAvailable providers are twilio, Textmagic, telesign, msg91, vonage, and telnyx.",
                 'introduction' => '0.15.0',
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_SMS_FROM',
@@ -599,7 +599,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
         ],
     ],
@@ -614,7 +614,7 @@ return [
                 'default' => '30000000',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_STORAGE_PREVIEW_LIMIT',
@@ -623,7 +623,7 @@ return [
                 'default' => '20000000',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_STORAGE_ANTIVIRUS',
@@ -632,7 +632,7 @@ return [
                 'default' => 'disabled',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_STORAGE_ANTIVIRUS_HOST',
@@ -641,7 +641,7 @@ return [
                 'default' => 'clamav',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_STORAGE_ANTIVIRUS_PORT',
@@ -650,7 +650,7 @@ return [
                 'default' => '3310',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_STORAGE_DEVICE',
@@ -841,7 +841,7 @@ return [
                 'default' => '30000000',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_COMPUTE_SIZE_LIMIT',
@@ -850,7 +850,7 @@ return [
                 'default' => '30000000',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_FUNCTIONS_BUILD_SIZE_LIMIT',
@@ -859,7 +859,7 @@ return [
                 'default' => '2000000000',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_FUNCTIONS_TIMEOUT',
@@ -868,7 +868,7 @@ return [
                 'default' => '900',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_FUNCTIONS_BUILD_TIMEOUT',
@@ -877,7 +877,7 @@ return [
                 'default' => '900',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_COMPUTE_BUILD_TIMEOUT',
@@ -886,7 +886,7 @@ return [
                 'default' => '900',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_FUNCTIONS_CONTAINERS',
@@ -895,7 +895,7 @@ return [
                 'default' => '10',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_FUNCTIONS_CPUS',
@@ -904,7 +904,7 @@ return [
                 'default' => '0',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_COMPUTE_CPUS',
@@ -913,7 +913,7 @@ return [
                 'default' => '0',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_FUNCTIONS_MEMORY',
@@ -922,7 +922,7 @@ return [
                 'default' => '0',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_COMPUTE_MEMORY',
@@ -931,7 +931,7 @@ return [
                 'default' => '0',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_FUNCTIONS_MEMORY_SWAP',
@@ -940,16 +940,16 @@ return [
                 'default' => '0',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_FUNCTIONS_RUNTIMES',
-                'description' => "This option allows you to enable or disable runtime environments for cloud functions. Disable unused runtimes to save disk space.\n\nTo enable cloud function runtimes, pass a list of enabled environments separated by a comma.\n\nCurrently, supported environments are: " . \implode(', ', \array_keys(Config::getParam('runtimes'))),
+                'description' => "This option allows you to enable or disable runtime environments for cloud functions. Disable unused runtimes to save disk space.\n\nTo enable cloud function runtimes, pass a list of enabled environments separated by a comma.\n\nCurrently, supported environments are: ".\implode(', ', \array_keys(Config::getParam('runtimes'))),
                 'introduction' => '0.8.0',
                 'default' => 'node-16.0,php-8.0,python-3.9,ruby-3.0',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_EXECUTOR_SECRET',
@@ -958,7 +958,7 @@ return [
                 'default' => 'your-secret-key',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_EXECUTOR_HOST',
@@ -968,7 +968,7 @@ return [
                 'required' => false,
                 'overwrite' => true,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_BROWSER_HOST',
@@ -978,7 +978,7 @@ return [
                 'required' => false,
                 'overwrite' => true,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_EXECUTOR_RUNTIME_NETWORK',
@@ -987,7 +987,7 @@ return [
                 'default' => 'appwrite_runtimes',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_FUNCTIONS_ENVS',
@@ -996,7 +996,7 @@ return [
                 'default' => 'node-16.0,php-7.4,python-3.9,ruby-3.0',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_FUNCTIONS_INACTIVE_THRESHOLD',
@@ -1005,7 +1005,7 @@ return [
                 'default' => '60',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_COMPUTE_INACTIVE_THRESHOLD',
@@ -1014,7 +1014,7 @@ return [
                 'default' => '60',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => 'DOCKERHUB_PULL_USERNAME',
@@ -1023,7 +1023,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => 'DOCKERHUB_PULL_PASSWORD',
@@ -1032,7 +1032,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => 'DOCKERHUB_PULL_EMAIL',
@@ -1041,7 +1041,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => 'OPEN_RUNTIMES_NETWORK',
@@ -1050,7 +1050,7 @@ return [
                 'default' => 'appwrite_runtimes',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_FUNCTIONS_RUNTIMES_NETWORK',
@@ -1059,7 +1059,7 @@ return [
                 'default' => 'runtimes',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_COMPUTE_RUNTIMES_NETWORK',
@@ -1068,7 +1068,7 @@ return [
                 'default' => 'runtimes',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_DOCKER_HUB_USERNAME',
@@ -1077,7 +1077,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_DOCKER_HUB_PASSWORD',
@@ -1086,7 +1086,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_FUNCTIONS_MAINTENANCE_INTERVAL',
@@ -1096,7 +1096,7 @@ return [
                 'required' => false,
                 'overwrite' => true,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_COMPUTE_MAINTENANCE_INTERVAL',
@@ -1106,7 +1106,7 @@ return [
                 'required' => false,
                 'overwrite' => true,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
         ],
     ],
@@ -1121,18 +1121,18 @@ return [
                 'default' => '900',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_SITES_RUNTIMES',
-                'description' => "This option allows you to enable or disable runtime environments for Sites. Disable unused runtimes to save disk space.\n\nTo enable cloud site runtimes, pass a list of enabled environments separated by a comma.\n\nCurrently, supported environments are: " . \implode(', ', \array_keys(Config::getParam('runtimes'))),
+                'description' => "This option allows you to enable or disable runtime environments for Sites. Disable unused runtimes to save disk space.\n\nTo enable cloud site runtimes, pass a list of enabled environments separated by a comma.\n\nCurrently, supported environments are: ".\implode(', ', \array_keys(Config::getParam('runtimes'))),
                 'introduction' => '1.7.0',
                 'default' => 'static-1,node-22,flutter-3.29',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
-        ]
+        ],
     ],
     [
         'category' => 'VCS (Version Control System)',
@@ -1145,7 +1145,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_VCS_GITHUB_PRIVATE_KEY',
@@ -1154,7 +1154,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_VCS_GITHUB_APP_ID',
@@ -1163,7 +1163,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_VCS_GITHUB_CLIENT_ID',
@@ -1172,7 +1172,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_VCS_GITHUB_CLIENT_SECRET',
@@ -1181,7 +1181,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_VCS_GITHUB_WEBHOOK_SECRET',
@@ -1190,7 +1190,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
         ],
     ],
@@ -1205,7 +1205,7 @@ return [
                 'default' => '86400',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_MAINTENANCE_DELAY',
@@ -1214,7 +1214,7 @@ return [
                 'default' => '0',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_MAINTENANCE_START_TIME',
@@ -1223,7 +1223,7 @@ return [
                 'default' => '00:00',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_MAINTENANCE_RETENTION_CACHE',
@@ -1232,7 +1232,7 @@ return [
                 'default' => '2592000',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_MAINTENANCE_RETENTION_EXECUTION',
@@ -1241,7 +1241,7 @@ return [
                 'default' => '1209600',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_MAINTENANCE_RETENTION_AUDIT',
@@ -1250,7 +1250,7 @@ return [
                 'default' => '1209600',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE',
@@ -1259,7 +1259,7 @@ return [
                 'default' => '15778800',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_MAINTENANCE_RETENTION_ABUSE',
@@ -1268,7 +1268,7 @@ return [
                 'default' => '86400',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_MAINTENANCE_RETENTION_USAGE_HOURLY',
@@ -1277,7 +1277,7 @@ return [
                 'default' => '8640000',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_MAINTENANCE_RETENTION_SCHEDULES',
@@ -1286,8 +1286,8 @@ return [
                 'default' => '86400',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
-            ]
+                'filter' => '',
+            ],
         ],
     ],
     [
@@ -1301,7 +1301,7 @@ return [
                 'default' => 'enabled',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_GRAPHQL_MAX_BATCH_SIZE',
@@ -1310,7 +1310,7 @@ return [
                 'default' => '10',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_GRAPHQL_MAX_COMPLEXITY',
@@ -1319,7 +1319,7 @@ return [
                 'default' => '250',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_GRAPHQL_MAX_DEPTH',
@@ -1328,7 +1328,7 @@ return [
                 'default' => '3',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
         ],
     ],
@@ -1343,7 +1343,7 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => '',
             ],
             [
                 'name' => '_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET',
@@ -1352,9 +1352,9 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
-            ]
-        ]
+                'filter' => '',
+            ],
+        ],
     ],
     [
         'category' => 'Assistant',
@@ -1367,8 +1367,8 @@ return [
                 'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
-            ]
-        ]
-    ]
+                'filter' => '',
+            ],
+        ],
+    ],
 ];

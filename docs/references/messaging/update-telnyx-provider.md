@@ -1,0 +1,1 @@
+Update a Telnyx provider by its unique ID.

@@ -75,19 +75,19 @@ Http::post('/v1/messaging/providers/mailgun')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_PROVIDER,
-            )
+            ),
         ]
     ))
     ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('apiKey', '', new Text(0), 'Mailgun API Key.', true)
     ->param('domain', '', new Text(0), 'Mailgun Domain.', true)
-    ->param('isEuRegion', null, new Nullable(new Boolean()), 'Set as EU region.', true)
+    ->param('isEuRegion', null, new Nullable(new Boolean), 'Set as EU region.', true)
     ->param('fromName', '', new Text(128, 0), 'Sender Name.', true)
-    ->param('fromEmail', '', new Email(), 'Sender email address.', true)
+    ->param('fromEmail', '', new Email, 'Sender email address.', true)
     ->param('replyToName', '', new Text(128, 0), 'Name set in the reply to field for the mail. Default value is sender name. Reply to name must have reply to email as well.', true)
-    ->param('replyToEmail', '', new Email(), 'Email set in the reply to field for the mail. Default value is sender email. Reply to email must have reply to name as well.', true)
-    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->param('replyToEmail', '', new Email, 'Email set in the reply to field for the mail. Default value is sender email. Reply to email must have reply to name as well.', true)
+    ->param('enabled', null, new Nullable(new Boolean), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -96,15 +96,15 @@ Http::post('/v1/messaging/providers/mailgun')
 
         $credentials = [];
 
-        if (!\is_null($isEuRegion)) {
+        if (! \is_null($isEuRegion)) {
             $credentials['isEuRegion'] = $isEuRegion;
         }
 
-        if (!empty($apiKey)) {
+        if (! empty($apiKey)) {
             $credentials['apiKey'] = $apiKey;
         }
 
-        if (!empty($domain)) {
+        if (! empty($domain)) {
             $credentials['domain'] = $domain;
         }
 
@@ -117,7 +117,7 @@ Http::post('/v1/messaging/providers/mailgun')
 
         if (
             $enabled === true
-            && !empty($fromEmail)
+            && ! empty($fromEmail)
             && \array_key_exists('isEuRegion', $credentials)
             && \array_key_exists('apiKey', $credentials)
             && \array_key_exists('domain', $credentials)
@@ -169,17 +169,17 @@ Http::post('/v1/messaging/providers/sendgrid')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_PROVIDER,
-            )
+            ),
         ]
     ))
     ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('apiKey', '', new Text(0), 'Sendgrid API key.', true)
     ->param('fromName', '', new Text(128, 0), 'Sender Name.', true)
-    ->param('fromEmail', '', new Email(), 'Sender email address.', true)
+    ->param('fromEmail', '', new Email, 'Sender email address.', true)
     ->param('replyToName', '', new Text(128, 0), 'Name set in the reply to field for the mail. Default value is sender name.', true)
-    ->param('replyToEmail', '', new Email(), 'Email set in the reply to field for the mail. Default value is sender email.', true)
-    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->param('replyToEmail', '', new Email, 'Email set in the reply to field for the mail. Default value is sender email.', true)
+    ->param('enabled', null, new Nullable(new Boolean), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -188,7 +188,7 @@ Http::post('/v1/messaging/providers/sendgrid')
 
         $credentials = [];
 
-        if (!empty($apiKey)) {
+        if (! empty($apiKey)) {
             $credentials['apiKey'] = $apiKey;
         }
 
@@ -201,7 +201,7 @@ Http::post('/v1/messaging/providers/sendgrid')
 
         if (
             $enabled === true
-            && !empty($fromEmail)
+            && ! empty($fromEmail)
             && \array_key_exists('apiKey', $credentials)
         ) {
             $enabled = true;
@@ -251,17 +251,17 @@ Http::post('/v1/messaging/providers/resend')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_PROVIDER,
-            )
+            ),
         ]
     ))
     ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('apiKey', '', new Text(0), 'Resend API key.', true)
     ->param('fromName', '', new Text(128, 0), 'Sender Name.', true)
-    ->param('fromEmail', '', new Email(), 'Sender email address.', true)
+    ->param('fromEmail', '', new Email, 'Sender email address.', true)
     ->param('replyToName', '', new Text(128, 0), 'Name set in the reply to field for the mail. Default value is sender name.', true)
-    ->param('replyToEmail', '', new Email(), 'Email set in the reply to field for the mail. Default value is sender email.', true)
-    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->param('replyToEmail', '', new Email, 'Email set in the reply to field for the mail. Default value is sender email.', true)
+    ->param('enabled', null, new Nullable(new Boolean), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -270,7 +270,7 @@ Http::post('/v1/messaging/providers/resend')
 
         $credentials = [];
 
-        if (!empty($apiKey)) {
+        if (! empty($apiKey)) {
             $credentials['apiKey'] = $apiKey;
         }
 
@@ -283,7 +283,7 @@ Http::post('/v1/messaging/providers/resend')
 
         if (
             $enabled === true
-            && !empty($fromEmail)
+            && ! empty($fromEmail)
             && \array_key_exists('apiKey', $credentials)
         ) {
             $enabled = true;
@@ -334,7 +334,7 @@ Http::post('/v1/messaging/providers/smtp')
                 new SDKResponse(
                     code: Response::STATUS_CODE_CREATED,
                     model: Response::MODEL_PROVIDER,
-                )
+                ),
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
@@ -352,9 +352,9 @@ Http::post('/v1/messaging/providers/smtp')
                 new SDKResponse(
                     code: Response::STATUS_CODE_CREATED,
                     model: Response::MODEL_PROVIDER,
-                )
+                ),
             ]
-        )
+        ),
     ])
     ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.')
@@ -363,13 +363,13 @@ Http::post('/v1/messaging/providers/smtp')
     ->param('username', '', new Text(0), 'Authentication username.', true)
     ->param('password', '', new Text(0), 'Authentication password.', true)
     ->param('encryption', '', new WhiteList(['none', 'ssl', 'tls']), 'Encryption type. Can be omitted, \'ssl\', or \'tls\'', true)
-    ->param('autoTLS', true, new Boolean(), 'Enable SMTP AutoTLS feature.', true)
+    ->param('autoTLS', true, new Boolean, 'Enable SMTP AutoTLS feature.', true)
     ->param('mailer', '', new Text(0), 'The value to use for the X-Mailer header.', true)
     ->param('fromName', '', new Text(128, 0), 'Sender Name.', true)
-    ->param('fromEmail', '', new Email(), 'Sender email address.', true)
+    ->param('fromEmail', '', new Email, 'Sender email address.', true)
     ->param('replyToName', '', new Text(128, 0), 'Name set in the reply to field for the mail. Default value is sender name.', true)
-    ->param('replyToEmail', '', new Email(), 'Email set in the reply to field for the mail. Default value is sender email.', true)
-    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->param('replyToEmail', '', new Email, 'Email set in the reply to field for the mail. Default value is sender email.', true)
+    ->param('enabled', null, new Nullable(new Boolean), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -382,7 +382,7 @@ Http::post('/v1/messaging/providers/smtp')
             'password' => $password,
         ];
 
-        if (!empty($host)) {
+        if (! empty($host)) {
             $credentials['host'] = $host;
         }
 
@@ -398,7 +398,7 @@ Http::post('/v1/messaging/providers/smtp')
 
         if (
             $enabled === true
-            && !empty($fromEmail)
+            && ! empty($fromEmail)
             && \array_key_exists('host', $credentials)
         ) {
             $enabled = true;
@@ -448,7 +448,7 @@ Http::post('/v1/messaging/providers/msg91')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_PROVIDER,
-            )
+            ),
         ]
     ))
     ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
@@ -456,7 +456,7 @@ Http::post('/v1/messaging/providers/msg91')
     ->param('templateId', '', new Text(0), 'Msg91 template ID', true)
     ->param('senderId', '', new Text(0), 'Msg91 sender ID.', true)
     ->param('authKey', '', new Text(0), 'Msg91 auth key.', true)
-    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -466,15 +466,15 @@ Http::post('/v1/messaging/providers/msg91')
         $options = [];
         $credentials = [];
 
-        if (!empty($templateId)) {
+        if (! empty($templateId)) {
             $credentials['templateId'] = $templateId;
         }
 
-        if (!empty($senderId)) {
+        if (! empty($senderId)) {
             $credentials['senderId'] = $senderId;
         }
 
-        if (!empty($authKey)) {
+        if (! empty($authKey)) {
             $credentials['authKey'] = $authKey;
         }
 
@@ -531,15 +531,15 @@ Http::post('/v1/messaging/providers/telesign')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_PROVIDER,
-            )
+            ),
         ]
     ))
     ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
+    ->param('from', '', new Phone, 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('customerId', '', new Text(0), 'Telesign customer ID.', true)
     ->param('apiKey', '', new Text(0), 'Telesign API key.', true)
-    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -548,17 +548,17 @@ Http::post('/v1/messaging/providers/telesign')
 
         $options = [];
 
-        if (!empty($from)) {
+        if (! empty($from)) {
             $options['from'] = $from;
         }
 
         $credentials = [];
 
-        if (!empty($customerId)) {
+        if (! empty($customerId)) {
             $credentials['customerId'] = $customerId;
         }
 
-        if (!empty($apiKey)) {
+        if (! empty($apiKey)) {
             $credentials['apiKey'] = $apiKey;
         }
 
@@ -615,15 +615,15 @@ Http::post('/v1/messaging/providers/textmagic')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_PROVIDER,
-            )
+            ),
         ]
     ))
     ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
+    ->param('from', '', new Phone, 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('username', '', new Text(0), 'Textmagic username.', true)
     ->param('apiKey', '', new Text(0), 'Textmagic apiKey.', true)
-    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -632,17 +632,17 @@ Http::post('/v1/messaging/providers/textmagic')
 
         $options = [];
 
-        if (!empty($from)) {
+        if (! empty($from)) {
             $options['from'] = $from;
         }
 
         $credentials = [];
 
-        if (!empty($username)) {
+        if (! empty($username)) {
             $credentials['username'] = $username;
         }
 
-        if (!empty($apiKey)) {
+        if (! empty($apiKey)) {
             $credentials['apiKey'] = $apiKey;
         }
 
@@ -699,15 +699,15 @@ Http::post('/v1/messaging/providers/twilio')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_PROVIDER,
-            )
+            ),
         ]
     ))
     ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
+    ->param('from', '', new Phone, 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('accountSid', '', new Text(0), 'Twilio account secret ID.', true)
     ->param('authToken', '', new Text(0), 'Twilio authentication token.', true)
-    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -716,17 +716,17 @@ Http::post('/v1/messaging/providers/twilio')
 
         $options = [];
 
-        if (!empty($from)) {
+        if (! empty($from)) {
             $options['from'] = $from;
         }
 
         $credentials = [];
 
-        if (!empty($accountSid)) {
+        if (! empty($accountSid)) {
             $credentials['accountSid'] = $accountSid;
         }
 
-        if (!empty($authToken)) {
+        if (! empty($authToken)) {
             $credentials['authToken'] = $authToken;
         }
 
@@ -783,15 +783,15 @@ Http::post('/v1/messaging/providers/vonage')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_PROVIDER,
-            )
+            ),
         ]
     ))
     ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
+    ->param('from', '', new Phone, 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('apiKey', '', new Text(0), 'Vonage API key.', true)
     ->param('apiSecret', '', new Text(0), 'Vonage API secret.', true)
-    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -800,17 +800,17 @@ Http::post('/v1/messaging/providers/vonage')
 
         $options = [];
 
-        if (!empty($from)) {
+        if (! empty($from)) {
             $options['from'] = $from;
         }
 
         $credentials = [];
 
-        if (!empty($apiKey)) {
+        if (! empty($apiKey)) {
             $credentials['apiKey'] = $apiKey;
         }
 
-        if (!empty($apiSecret)) {
+        if (! empty($apiSecret)) {
             $credentials['apiSecret'] = $apiSecret;
         }
 
@@ -829,6 +829,84 @@ Http::post('/v1/messaging/providers/vonage')
             '$id' => $providerId,
             'name' => $name,
             'provider' => 'vonage',
+            'type' => MESSAGE_TYPE_SMS,
+            'enabled' => $enabled,
+            'credentials' => $credentials,
+            'options' => $options,
+        ]);
+
+        try {
+            $provider = $dbForProject->createDocument('providers', $provider);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS);
+        }
+
+        $queueForEvents
+            ->setParam('providerId', $provider->getId());
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($provider, Response::MODEL_PROVIDER);
+    });
+
+Http::post('/v1/messaging/providers/telnyx')
+    ->desc('Create Telnyx provider')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'provider.create')
+    ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[providerId].create')
+    ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        group: 'providers',
+        name: 'createTelnyxProvider',
+        description: '/docs/references/messaging/create-telnyx-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_CREATED,
+                model: Response::MODEL_PROVIDER,
+            ),
+        ]
+    ))
+    ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
+    ->param('name', '', new Text(128), 'Provider name.')
+    ->param('from', '', new Phone, 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
+    ->param('apiKey', '', new Text(0), 'Telnyx API key.', true)
+    ->param('enabled', null, new Nullable(new Boolean), 'Set as enabled.', true)
+    ->inject('queueForEvents')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $providerId, string $name, string $from, string $apiKey, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+
+        $options = [];
+
+        if (! empty($from)) {
+            $options['from'] = $from;
+        }
+
+        $credentials = [];
+
+        if (! empty($apiKey)) {
+            $credentials['apiKey'] = $apiKey;
+        }
+
+        if (
+            $enabled === true
+            && \array_key_exists('apiKey', $credentials)
+            && \array_key_exists('from', $options)
+        ) {
+            $enabled = true;
+        } else {
+            $enabled = false;
+        }
+
+        $provider = new Document([
+            '$id' => $providerId,
+            'name' => $name,
+            'provider' => 'telnyx',
             'type' => MESSAGE_TYPE_SMS,
             'enabled' => $enabled,
             'credentials' => $credentials,
@@ -868,7 +946,7 @@ Http::post('/v1/messaging/providers/fcm')
                 new SDKResponse(
                     code: Response::STATUS_CODE_CREATED,
                     model: Response::MODEL_PROVIDER,
-                )
+                ),
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
@@ -886,14 +964,14 @@ Http::post('/v1/messaging/providers/fcm')
                 new SDKResponse(
                     code: Response::STATUS_CODE_CREATED,
                     model: Response::MODEL_PROVIDER,
-                )
+                ),
             ]
-        )
+        ),
     ])
     ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('serviceAccountJSON', null, new Nullable(new JSON()), 'FCM service account JSON.', true)
-    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->param('serviceAccountJSON', null, new Nullable(new JSON), 'FCM service account JSON.', true)
+    ->param('enabled', null, new Nullable(new Boolean), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -906,7 +984,7 @@ Http::post('/v1/messaging/providers/fcm')
 
         $credentials = [];
 
-        if (!\is_null($serviceAccountJSON)) {
+        if (! \is_null($serviceAccountJSON)) {
             $credentials['serviceAccountJSON'] = $serviceAccountJSON;
         }
 
@@ -922,7 +1000,7 @@ Http::post('/v1/messaging/providers/fcm')
             'provider' => 'fcm',
             'type' => MESSAGE_TYPE_PUSH,
             'enabled' => $enabled,
-            'credentials' => $credentials
+            'credentials' => $credentials,
         ]);
 
         try {
@@ -958,7 +1036,7 @@ Http::post('/v1/messaging/providers/apns')
                 new SDKResponse(
                     code: Response::STATUS_CODE_CREATED,
                     model: Response::MODEL_PROVIDER,
-                )
+                ),
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
@@ -976,9 +1054,9 @@ Http::post('/v1/messaging/providers/apns')
                 new SDKResponse(
                     code: Response::STATUS_CODE_CREATED,
                     model: Response::MODEL_PROVIDER,
-                )
+                ),
             ]
-        )
+        ),
     ])
     ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.')
@@ -986,8 +1064,8 @@ Http::post('/v1/messaging/providers/apns')
     ->param('authKeyId', '', new Text(0), 'APNS authentication key ID.', true)
     ->param('teamId', '', new Text(0), 'APNS team ID.', true)
     ->param('bundleId', '', new Text(0), 'APNS bundle ID.', true)
-    ->param('sandbox', false, new Boolean(), 'Use APNS sandbox environment.', true)
-    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->param('sandbox', false, new Boolean, 'Use APNS sandbox environment.', true)
+    ->param('enabled', null, new Nullable(new Boolean), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -996,19 +1074,19 @@ Http::post('/v1/messaging/providers/apns')
 
         $credentials = [];
 
-        if (!empty($authKey)) {
+        if (! empty($authKey)) {
             $credentials['authKey'] = $authKey;
         }
 
-        if (!empty($authKeyId)) {
+        if (! empty($authKeyId)) {
             $credentials['authKeyId'] = $authKeyId;
         }
 
-        if (!empty($teamId)) {
+        if (! empty($teamId)) {
             $credentials['teamId'] = $teamId;
         }
 
-        if (!empty($bundleId)) {
+        if (! empty($bundleId)) {
             $credentials['bundleId'] = $bundleId;
         }
 
@@ -1025,7 +1103,7 @@ Http::post('/v1/messaging/providers/apns')
         }
 
         $options = [
-            'sandbox' => $sandbox
+            'sandbox' => $sandbox,
         ];
 
         $provider = new Document([
@@ -1035,7 +1113,7 @@ Http::post('/v1/messaging/providers/apns')
             'type' => MESSAGE_TYPE_PUSH,
             'enabled' => $enabled,
             'credentials' => $credentials,
-            'options' => $options
+            'options' => $options,
         ]);
 
         try {
@@ -1067,10 +1145,10 @@ Http::get('/v1/messaging/providers')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PROVIDER_LIST,
-            )
+            ),
         ]
     ))
-    ->param('queries', [], new Providers(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Providers::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Providers, 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of '.APP_LIMIT_ARRAY_PARAMS_SIZE.' queries are allowed, each '.APP_LIMIT_ARRAY_ELEMENT_SIZE.' characters long. You may filter on the following attributes: '.implode(', ', Providers::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('dbForProject')
@@ -1083,7 +1161,7 @@ Http::get('/v1/messaging/providers')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        if (!empty($search)) {
+        if (! empty($search)) {
             $queries[] = Query::search('search', $search);
         }
 
@@ -1091,8 +1169,8 @@ Http::get('/v1/messaging/providers')
         $cursor = \reset($cursor);
 
         if ($cursor !== false) {
-            $validator = new Cursor();
-            if (!$validator->isValid($cursor)) {
+            $validator = new Cursor;
+            if (! $validator->isValid($cursor)) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
             }
 
@@ -1132,11 +1210,11 @@ Http::get('/v1/messaging/providers/:providerId/logs')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_LOG_LIST,
-            )
+            ),
         ]
     ))
     ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
-    ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->param('queries', [], new Queries([new Limit, new Offset]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -1160,12 +1238,12 @@ Http::get('/v1/messaging/providers/:providerId/logs')
         $limit = $grouped['limit'] ?? 25;
         $offset = $grouped['offset'] ?? 0;
 
-        $resource = 'provider/' . $providerId;
+        $resource = 'provider/'.$providerId;
         $logs = $audit->getLogsByResource($resource, offset: $offset, limit: $limit);
         $output = [];
 
         foreach ($logs as $i => &$log) {
-            $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
+            $log['userAgent'] = (! empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
 
             $detector = new Detector($log['userAgent']);
             $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
@@ -1193,14 +1271,14 @@ Http::get('/v1/messaging/providers/:providerId/logs')
                 'clientEngineVersion' => $client['clientEngineVersion'],
                 'deviceName' => $device['deviceName'],
                 'deviceBrand' => $device['deviceBrand'],
-                'deviceModel' => $device['deviceModel']
+                'deviceModel' => $device['deviceModel'],
             ]);
 
             $record = $geodb->get($log['ip']);
 
             if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
+                $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
             } else {
                 $output[$i]['countryCode'] = '--';
                 $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
@@ -1228,7 +1306,7 @@ Http::get('/v1/messaging/providers/:providerId')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PROVIDER,
-            )
+            ),
         ]
     ))
     ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
@@ -1262,17 +1340,17 @@ Http::patch('/v1/messaging/providers/mailgun/:providerId')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PROVIDER,
-            )
+            ),
         ]
     ))
     ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('apiKey', '', new Text(0), 'Mailgun API Key.', true)
     ->param('domain', '', new Text(0), 'Mailgun Domain.', true)
-    ->param('isEuRegion', null, new Nullable(new Boolean()), 'Set as EU region.', true)
-    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->param('isEuRegion', null, new Nullable(new Boolean), 'Set as EU region.', true)
+    ->param('enabled', null, new Nullable(new Boolean), 'Set as enabled.', true)
     ->param('fromName', '', new Text(128), 'Sender Name.', true)
-    ->param('fromEmail', '', new Email(), 'Sender email address.', true)
+    ->param('fromEmail', '', new Email, 'Sender email address.', true)
     ->param('replyToName', '', new Text(128), 'Name set in the reply to field for the mail. Default value is sender name.', true)
     ->param('replyToEmail', '', new Text(128), 'Email set in the reply to field for the mail. Default value is sender email.', true)
     ->inject('queueForEvents')
@@ -1291,25 +1369,25 @@ Http::patch('/v1/messaging/providers/mailgun/:providerId')
             throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 
-        if (!empty($name)) {
+        if (! empty($name)) {
             $provider->setAttribute('name', $name);
         }
 
         $options = $provider->getAttribute('options');
 
-        if (!empty($fromName)) {
+        if (! empty($fromName)) {
             $options['fromName'] = $fromName;
         }
 
-        if (!empty($fromEmail)) {
+        if (! empty($fromEmail)) {
             $options['fromEmail'] = $fromEmail;
         }
 
-        if (!empty($replyToName)) {
+        if (! empty($replyToName)) {
             $options['replyToName'] = $replyToName;
         }
 
-        if (!empty($replyToEmail)) {
+        if (! empty($replyToEmail)) {
             $options['replyToEmail'] = $replyToEmail;
         }
 
@@ -1317,21 +1395,21 @@ Http::patch('/v1/messaging/providers/mailgun/:providerId')
 
         $credentials = $provider->getAttribute('credentials');
 
-        if (!\is_null($isEuRegion)) {
+        if (! \is_null($isEuRegion)) {
             $credentials['isEuRegion'] = $isEuRegion;
         }
 
-        if (!empty($apiKey)) {
+        if (! empty($apiKey)) {
             $credentials['apiKey'] = $apiKey;
         }
 
-        if (!empty($domain)) {
+        if (! empty($domain)) {
             $credentials['domain'] = $domain;
         }
 
         $provider->setAttribute('credentials', $credentials);
 
-        if (!\is_null($enabled)) {
+        if (! \is_null($enabled)) {
             if ($enabled) {
                 if (
                     \array_key_exists('isEuRegion', $credentials) &&
@@ -1375,15 +1453,15 @@ Http::patch('/v1/messaging/providers/sendgrid/:providerId')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PROVIDER,
-            )
+            ),
         ]
     ))
     ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean), 'Set as enabled.', true)
     ->param('apiKey', '', new Text(0), 'Sendgrid API key.', true)
     ->param('fromName', '', new Text(128), 'Sender Name.', true)
-    ->param('fromEmail', '', new Email(), 'Sender email address.', true)
+    ->param('fromEmail', '', new Email, 'Sender email address.', true)
     ->param('replyToName', '', new Text(128), 'Name set in the Reply To field for the mail. Default value is Sender Name.', true)
     ->param('replyToEmail', '', new Text(128), 'Email set in the Reply To field for the mail. Default value is Sender Email.', true)
     ->inject('queueForEvents')
@@ -1401,37 +1479,37 @@ Http::patch('/v1/messaging/providers/sendgrid/:providerId')
             throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 
-        if (!empty($name)) {
+        if (! empty($name)) {
             $provider->setAttribute('name', $name);
         }
 
         $options = $provider->getAttribute('options');
 
-        if (!empty($fromName)) {
+        if (! empty($fromName)) {
             $options['fromName'] = $fromName;
         }
 
-        if (!empty($fromEmail)) {
+        if (! empty($fromEmail)) {
             $options['fromEmail'] = $fromEmail;
         }
 
-        if (!empty($replyToName)) {
+        if (! empty($replyToName)) {
             $options['replyToName'] = $replyToName;
         }
 
-        if (!empty($replyToEmail)) {
+        if (! empty($replyToEmail)) {
             $options['replyToEmail'] = $replyToEmail;
         }
 
         $provider->setAttribute('options', $options);
 
-        if (!empty($apiKey)) {
+        if (! empty($apiKey)) {
             $provider->setAttribute('credentials', [
                 'apiKey' => $apiKey,
             ]);
         }
 
-        if (!\is_null($enabled)) {
+        if (! \is_null($enabled)) {
             if ($enabled) {
                 if (
                     \array_key_exists('apiKey', $provider->getAttribute('credentials')) &&
@@ -1473,15 +1551,15 @@ Http::patch('/v1/messaging/providers/resend/:providerId')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PROVIDER,
-            )
+            ),
         ]
     ))
     ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean), 'Set as enabled.', true)
     ->param('apiKey', '', new Text(0), 'Resend API key.', true)
     ->param('fromName', '', new Text(128), 'Sender Name.', true)
-    ->param('fromEmail', '', new Email(), 'Sender email address.', true)
+    ->param('fromEmail', '', new Email, 'Sender email address.', true)
     ->param('replyToName', '', new Text(128), 'Name set in the Reply To field for the mail. Default value is Sender Name.', true)
     ->param('replyToEmail', '', new Text(128), 'Email set in the Reply To field for the mail. Default value is Sender Email.', true)
     ->inject('queueForEvents')
@@ -1499,37 +1577,37 @@ Http::patch('/v1/messaging/providers/resend/:providerId')
             throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 
-        if (!empty($name)) {
+        if (! empty($name)) {
             $provider->setAttribute('name', $name);
         }
 
         $options = $provider->getAttribute('options');
 
-        if (!empty($fromName)) {
+        if (! empty($fromName)) {
             $options['fromName'] = $fromName;
         }
 
-        if (!empty($fromEmail)) {
+        if (! empty($fromEmail)) {
             $options['fromEmail'] = $fromEmail;
         }
 
-        if (!empty($replyToName)) {
+        if (! empty($replyToName)) {
             $options['replyToName'] = $replyToName;
         }
 
-        if (!empty($replyToEmail)) {
+        if (! empty($replyToEmail)) {
             $options['replyToEmail'] = $replyToEmail;
         }
 
         $provider->setAttribute('options', $options);
 
-        if (!empty($apiKey)) {
+        if (! empty($apiKey)) {
             $provider->setAttribute('credentials', [
                 'apiKey' => $apiKey,
             ]);
         }
 
-        if (!\is_null($enabled)) {
+        if (! \is_null($enabled)) {
             if ($enabled) {
                 if (
                     \array_key_exists('apiKey', $provider->getAttribute('credentials')) &&
@@ -1572,7 +1650,7 @@ Http::patch('/v1/messaging/providers/smtp/:providerId')
                 new SDKResponse(
                     code: Response::STATUS_CODE_OK,
                     model: Response::MODEL_PROVIDER,
-                )
+                ),
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
@@ -1590,9 +1668,9 @@ Http::patch('/v1/messaging/providers/smtp/:providerId')
                 new SDKResponse(
                     code: Response::STATUS_CODE_OK,
                     model: Response::MODEL_PROVIDER,
-                )
+                ),
             ]
-        )
+        ),
     ])
     ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.', true)
@@ -1601,13 +1679,13 @@ Http::patch('/v1/messaging/providers/smtp/:providerId')
     ->param('username', '', new Text(0), 'Authentication username.', true)
     ->param('password', '', new Text(0), 'Authentication password.', true)
     ->param('encryption', '', new WhiteList(['none', 'ssl', 'tls']), 'Encryption type. Can be \'ssl\' or \'tls\'', true)
-    ->param('autoTLS', null, new Nullable(new Boolean()), 'Enable SMTP AutoTLS feature.', true)
+    ->param('autoTLS', null, new Nullable(new Boolean), 'Enable SMTP AutoTLS feature.', true)
     ->param('mailer', '', new Text(0), 'The value to use for the X-Mailer header.', true)
     ->param('fromName', '', new Text(128), 'Sender Name.', true)
-    ->param('fromEmail', '', new Email(), 'Sender email address.', true)
+    ->param('fromEmail', '', new Email, 'Sender email address.', true)
     ->param('replyToName', '', new Text(128), 'Name set in the Reply To field for the mail. Default value is Sender Name.', true)
     ->param('replyToEmail', '', new Text(128), 'Email set in the Reply To field for the mail. Default value is Sender Email.', true)
-    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -1622,37 +1700,37 @@ Http::patch('/v1/messaging/providers/smtp/:providerId')
             throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 
-        if (!empty($name)) {
+        if (! empty($name)) {
             $provider->setAttribute('name', $name);
         }
 
         $options = $provider->getAttribute('options');
 
-        if (!empty($encryption)) {
+        if (! empty($encryption)) {
             $options['encryption'] = $encryption === 'none' ? '' : $encryption;
         }
 
-        if (!\is_null($autoTLS)) {
+        if (! \is_null($autoTLS)) {
             $options['autoTLS'] = $autoTLS;
         }
 
-        if (!empty($mailer)) {
+        if (! empty($mailer)) {
             $options['mailer'] = $mailer;
         }
 
-        if (!empty($fromName)) {
+        if (! empty($fromName)) {
             $options['fromName'] = $fromName;
         }
 
-        if (!empty($fromEmail)) {
+        if (! empty($fromEmail)) {
             $options['fromEmail'] = $fromEmail;
         }
 
-        if (!empty($replyToName)) {
+        if (! empty($replyToName)) {
             $options['replyToName'] = $replyToName;
         }
 
-        if (!empty($replyToEmail)) {
+        if (! empty($replyToEmail)) {
             $options['replyToEmail'] = $replyToEmail;
         }
 
@@ -1660,28 +1738,28 @@ Http::patch('/v1/messaging/providers/smtp/:providerId')
 
         $credentials = $provider->getAttribute('credentials');
 
-        if (!empty($host)) {
+        if (! empty($host)) {
             $credentials['host'] = $host;
         }
 
-        if (!\is_null($port)) {
+        if (! \is_null($port)) {
             $credentials['port'] = $port;
         }
 
-        if (!empty($username)) {
+        if (! empty($username)) {
             $credentials['username'] = $username;
         }
 
-        if (!empty($password)) {
+        if (! empty($password)) {
             $credentials['password'] = $password;
         }
 
         $provider->setAttribute('credentials', $credentials);
 
-        if (!\is_null($enabled)) {
+        if (! \is_null($enabled)) {
             if ($enabled) {
                 if (
-                    !empty($options['fromEmail'])
+                    ! empty($options['fromEmail'])
                     && \array_key_exists('host', $credentials)
                 ) {
                     $provider->setAttribute('enabled', true);
@@ -1720,12 +1798,12 @@ Http::patch('/v1/messaging/providers/msg91/:providerId')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PROVIDER,
-            )
+            ),
         ]
     ))
     ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean), 'Set as enabled.', true)
     ->param('templateId', '', new Text(0), 'Msg91 template ID.', true)
     ->param('senderId', '', new Text(0), 'Msg91 sender ID.', true)
     ->param('authKey', '', new Text(0), 'Msg91 auth key.', true)
@@ -1744,27 +1822,27 @@ Http::patch('/v1/messaging/providers/msg91/:providerId')
             throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 
-        if (!empty($name)) {
+        if (! empty($name)) {
             $provider->setAttribute('name', $name);
         }
 
         $credentials = $provider->getAttribute('credentials');
 
-        if (!empty($templateId)) {
+        if (! empty($templateId)) {
             $credentials['templateId'] = $templateId;
         }
 
-        if (!empty($senderId)) {
+        if (! empty($senderId)) {
             $credentials['senderId'] = $senderId;
         }
 
-        if (!empty($authKey)) {
+        if (! empty($authKey)) {
             $credentials['authKey'] = $authKey;
         }
 
         $provider->setAttribute('credentials', $credentials);
 
-        if (!\is_null($enabled)) {
+        if (! \is_null($enabled)) {
             if ($enabled) {
                 if (
                     \array_key_exists('senderId', $credentials) &&
@@ -1807,12 +1885,12 @@ Http::patch('/v1/messaging/providers/telesign/:providerId')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PROVIDER,
-            )
+            ),
         ]
     ))
     ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean), 'Set as enabled.', true)
     ->param('customerId', '', new Text(0), 'Telesign customer ID.', true)
     ->param('apiKey', '', new Text(0), 'Telesign API key.', true)
     ->param('from', '', new Text(256), 'Sender number.', true)
@@ -1831,11 +1909,11 @@ Http::patch('/v1/messaging/providers/telesign/:providerId')
             throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 
-        if (!empty($name)) {
+        if (! empty($name)) {
             $provider->setAttribute('name', $name);
         }
 
-        if (!empty($from)) {
+        if (! empty($from)) {
             $provider->setAttribute('options', [
                 'from' => $from,
             ]);
@@ -1843,17 +1921,17 @@ Http::patch('/v1/messaging/providers/telesign/:providerId')
 
         $credentials = $provider->getAttribute('credentials');
 
-        if (!empty($customerId)) {
+        if (! empty($customerId)) {
             $credentials['customerId'] = $customerId;
         }
 
-        if (!empty($apiKey)) {
+        if (! empty($apiKey)) {
             $credentials['apiKey'] = $apiKey;
         }
 
         $provider->setAttribute('credentials', $credentials);
 
-        if (!\is_null($enabled)) {
+        if (! \is_null($enabled)) {
             if ($enabled) {
                 if (
                     \array_key_exists('customerId', $credentials) &&
@@ -1896,12 +1974,12 @@ Http::patch('/v1/messaging/providers/textmagic/:providerId')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PROVIDER,
-            )
+            ),
         ]
     ))
     ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean), 'Set as enabled.', true)
     ->param('username', '', new Text(0), 'Textmagic username.', true)
     ->param('apiKey', '', new Text(0), 'Textmagic apiKey.', true)
     ->param('from', '', new Text(256), 'Sender number.', true)
@@ -1920,11 +1998,11 @@ Http::patch('/v1/messaging/providers/textmagic/:providerId')
             throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 
-        if (!empty($name)) {
+        if (! empty($name)) {
             $provider->setAttribute('name', $name);
         }
 
-        if (!empty($from)) {
+        if (! empty($from)) {
             $provider->setAttribute('options', [
                 'from' => $from,
             ]);
@@ -1932,17 +2010,17 @@ Http::patch('/v1/messaging/providers/textmagic/:providerId')
 
         $credentials = $provider->getAttribute('credentials');
 
-        if (!empty($username)) {
+        if (! empty($username)) {
             $credentials['username'] = $username;
         }
 
-        if (!empty($apiKey)) {
+        if (! empty($apiKey)) {
             $credentials['apiKey'] = $apiKey;
         }
 
         $provider->setAttribute('credentials', $credentials);
 
-        if (!\is_null($enabled)) {
+        if (! \is_null($enabled)) {
             if ($enabled) {
                 if (
                     \array_key_exists('username', $credentials) &&
@@ -1985,12 +2063,12 @@ Http::patch('/v1/messaging/providers/twilio/:providerId')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PROVIDER,
-            )
+            ),
         ]
     ))
     ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean), 'Set as enabled.', true)
     ->param('accountSid', '', new Text(0), 'Twilio account secret ID.', true)
     ->param('authToken', '', new Text(0), 'Twilio authentication token.', true)
     ->param('from', '', new Text(256), 'Sender number.', true)
@@ -2009,11 +2087,11 @@ Http::patch('/v1/messaging/providers/twilio/:providerId')
             throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 
-        if (!empty($name)) {
+        if (! empty($name)) {
             $provider->setAttribute('name', $name);
         }
 
-        if (!empty($from)) {
+        if (! empty($from)) {
             $provider->setAttribute('options', [
                 'from' => $from,
             ]);
@@ -2021,17 +2099,17 @@ Http::patch('/v1/messaging/providers/twilio/:providerId')
 
         $credentials = $provider->getAttribute('credentials');
 
-        if (!empty($accountSid)) {
+        if (! empty($accountSid)) {
             $credentials['accountSid'] = $accountSid;
         }
 
-        if (!empty($authToken)) {
+        if (! empty($authToken)) {
             $credentials['authToken'] = $authToken;
         }
 
         $provider->setAttribute('credentials', $credentials);
 
-        if (!\is_null($enabled)) {
+        if (! \is_null($enabled)) {
             if ($enabled) {
                 if (
                     \array_key_exists('accountSid', $credentials) &&
@@ -2074,12 +2152,12 @@ Http::patch('/v1/messaging/providers/vonage/:providerId')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_PROVIDER,
-            )
+            ),
         ]
     ))
     ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean), 'Set as enabled.', true)
     ->param('apiKey', '', new Text(0), 'Vonage API key.', true)
     ->param('apiSecret', '', new Text(0), 'Vonage API secret.', true)
     ->param('from', '', new Text(256), 'Sender number.', true)
@@ -2098,11 +2176,11 @@ Http::patch('/v1/messaging/providers/vonage/:providerId')
             throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 
-        if (!empty($name)) {
+        if (! empty($name)) {
             $provider->setAttribute('name', $name);
         }
 
-        if (!empty($from)) {
+        if (! empty($from)) {
             $provider->setAttribute('options', [
                 'from' => $from,
             ]);
@@ -2110,21 +2188,104 @@ Http::patch('/v1/messaging/providers/vonage/:providerId')
 
         $credentials = $provider->getAttribute('credentials');
 
-        if (!empty($apiKey)) {
+        if (! empty($apiKey)) {
             $credentials['apiKey'] = $apiKey;
         }
 
-        if (!empty($apiSecret)) {
+        if (! empty($apiSecret)) {
             $credentials['apiSecret'] = $apiSecret;
         }
 
         $provider->setAttribute('credentials', $credentials);
 
-        if (!\is_null($enabled)) {
+        if (! \is_null($enabled)) {
             if ($enabled) {
                 if (
                     \array_key_exists('apiKey', $credentials) &&
                     \array_key_exists('apiSecret', $credentials) &&
+                    \array_key_exists('from', $provider->getAttribute('options'))
+                ) {
+                    $provider->setAttribute('enabled', true);
+                } else {
+                    throw new Exception(Exception::PROVIDER_MISSING_CREDENTIALS);
+                }
+            } else {
+                $provider->setAttribute('enabled', false);
+            }
+        }
+
+        $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
+
+        $queueForEvents
+            ->setParam('providerId', $provider->getId());
+
+        $response
+            ->dynamic($provider, Response::MODEL_PROVIDER);
+    });
+
+Http::patch('/v1/messaging/providers/telnyx/:providerId')
+    ->desc('Update Telnyx provider')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'provider.update')
+    ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[providerId].update')
+    ->label('scope', 'providers.write')
+    ->label('resourceType', RESOURCE_TYPE_PROVIDERS)
+    ->label('sdk', new Method(
+        namespace: 'messaging',
+        group: 'providers',
+        name: 'updateTelnyxProvider',
+        description: '/docs/references/messaging/update-telnyx-provider.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROVIDER,
+            ),
+        ]
+    ))
+    ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
+    ->param('name', '', new Text(128), 'Provider name.', true)
+    ->param('enabled', null, new Nullable(new Boolean), 'Set as enabled.', true)
+    ->param('apiKey', '', new Text(0), 'Telnyx API key.', true)
+    ->param('from', '', new Text(256), 'Sender number.', true)
+    ->inject('queueForEvents')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $apiKey, string $from, Event $queueForEvents, Database $dbForProject, Response $response) {
+        $provider = $dbForProject->getDocument('providers', $providerId);
+
+        if ($provider->isEmpty()) {
+            throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        }
+        $providerAttr = $provider->getAttribute('provider');
+
+        if ($providerAttr !== 'telnyx') {
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
+        }
+
+        if (! empty($name)) {
+            $provider->setAttribute('name', $name);
+        }
+
+        if (! empty($from)) {
+            $provider->setAttribute('options', [
+                'from' => $from,
+            ]);
+        }
+
+        $credentials = $provider->getAttribute('credentials');
+
+        if (! empty($apiKey)) {
+            $credentials['apiKey'] = $apiKey;
+        }
+
+        $provider->setAttribute('credentials', $credentials);
+
+        if (! \is_null($enabled)) {
+            if ($enabled) {
+                if (
+                    \array_key_exists('apiKey', $credentials) &&
                     \array_key_exists('from', $provider->getAttribute('options'))
                 ) {
                     $provider->setAttribute('enabled', true);
@@ -2164,7 +2325,7 @@ Http::patch('/v1/messaging/providers/fcm/:providerId')
                 new SDKResponse(
                     code: Response::STATUS_CODE_OK,
                     model: Response::MODEL_PROVIDER,
-                )
+                ),
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
@@ -2182,14 +2343,14 @@ Http::patch('/v1/messaging/providers/fcm/:providerId')
                 new SDKResponse(
                     code: Response::STATUS_CODE_OK,
                     model: Response::MODEL_PROVIDER,
-                )
+                ),
             ]
-        )
+        ),
     ])
     ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
-    ->param('serviceAccountJSON', null, new Nullable(new JSON()), 'FCM service account JSON.', true)
+    ->param('enabled', null, new Nullable(new Boolean), 'Set as enabled.', true)
+    ->param('serviceAccountJSON', null, new Nullable(new JSON), 'FCM service account JSON.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -2205,21 +2366,21 @@ Http::patch('/v1/messaging/providers/fcm/:providerId')
             throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 
-        if (!empty($name)) {
+        if (! empty($name)) {
             $provider->setAttribute('name', $name);
         }
 
-        if (!\is_null($serviceAccountJSON)) {
+        if (! \is_null($serviceAccountJSON)) {
             $serviceAccountJSON = \is_string($serviceAccountJSON)
                 ? \json_decode($serviceAccountJSON, true)
                 : $serviceAccountJSON;
 
             $provider->setAttribute('credentials', [
-                'serviceAccountJSON' => $serviceAccountJSON
+                'serviceAccountJSON' => $serviceAccountJSON,
             ]);
         }
 
-        if (!\is_null($enabled)) {
+        if (! \is_null($enabled)) {
             if ($enabled) {
                 if (\array_key_exists('serviceAccountJSON', $provider->getAttribute('credentials'))) {
                     $provider->setAttribute('enabled', true);
@@ -2240,7 +2401,6 @@ Http::patch('/v1/messaging/providers/fcm/:providerId')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-
 Http::patch('/v1/messaging/providers/apns/:providerId')
     ->desc('Update APNS provider')
     ->groups(['api', 'messaging'])
@@ -2260,7 +2420,7 @@ Http::patch('/v1/messaging/providers/apns/:providerId')
                 new SDKResponse(
                     code: Response::STATUS_CODE_OK,
                     model: Response::MODEL_PROVIDER,
-                )
+                ),
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
@@ -2278,18 +2438,18 @@ Http::patch('/v1/messaging/providers/apns/:providerId')
                 new SDKResponse(
                     code: Response::STATUS_CODE_OK,
                     model: Response::MODEL_PROVIDER,
-                )
+                ),
             ]
-        )
+        ),
     ])
     ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
+    ->param('enabled', null, new Nullable(new Boolean), 'Set as enabled.', true)
     ->param('authKey', '', new Text(0), 'APNS authentication key.', true)
     ->param('authKeyId', '', new Text(0), 'APNS authentication key ID.', true)
     ->param('teamId', '', new Text(0), 'APNS team ID.', true)
     ->param('bundleId', '', new Text(0), 'APNS bundle ID.', true)
-    ->param('sandbox', null, new Nullable(new Boolean()), 'Use APNS sandbox environment.', true)
+    ->param('sandbox', null, new Nullable(new Boolean), 'Use APNS sandbox environment.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -2305,25 +2465,25 @@ Http::patch('/v1/messaging/providers/apns/:providerId')
             throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 
-        if (!empty($name)) {
+        if (! empty($name)) {
             $provider->setAttribute('name', $name);
         }
 
         $credentials = $provider->getAttribute('credentials');
 
-        if (!empty($authKey)) {
+        if (! empty($authKey)) {
             $credentials['authKey'] = $authKey;
         }
 
-        if (!empty($authKeyId)) {
+        if (! empty($authKeyId)) {
             $credentials['authKeyId'] = $authKeyId;
         }
 
-        if (!empty($teamId)) {
+        if (! empty($teamId)) {
             $credentials['teamId'] = $teamId;
         }
 
-        if (!empty($bundleId)) {
+        if (! empty($bundleId)) {
             $credentials['bundle'] = $bundleId;
         }
 
@@ -2331,13 +2491,13 @@ Http::patch('/v1/messaging/providers/apns/:providerId')
 
         $options = $provider->getAttribute('options');
 
-        if (!\is_null($sandbox)) {
+        if (! \is_null($sandbox)) {
             $options['sandbox'] = $sandbox;
         }
 
         $provider->setAttribute('options', $options);
 
-        if (!\is_null($enabled)) {
+        if (! \is_null($enabled)) {
             if ($enabled) {
                 if (
                     \array_key_exists('authKey', $credentials) &&
@@ -2381,7 +2541,7 @@ Http::delete('/v1/messaging/providers/:providerId')
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
-            )
+            ),
         ],
         contentType: ContentType::NONE
     ))
@@ -2424,12 +2584,12 @@ Http::post('/v1/messaging/topics')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_TOPIC,
-            )
+            ),
         ]
     ))
     ->param('topicId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Topic ID. Choose a custom Topic ID or a new Topic ID.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Topic Name.')
-    ->param('subscribe', [Role::users()], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with subscribe permission. By default all users are granted with any subscribe permission. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
+    ->param('subscribe', [Role::users()], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with subscribe permission. By default all users are granted with any subscribe permission. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of '.APP_LIMIT_ARRAY_PARAMS_SIZE.' roles are allowed, each 64 characters long.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -2471,10 +2631,10 @@ Http::get('/v1/messaging/topics')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_TOPIC_LIST,
-            )
+            ),
         ]
     ))
-    ->param('queries', [], new Topics(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Topics::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Topics, 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of '.APP_LIMIT_ARRAY_PARAMS_SIZE.' queries are allowed, each '.APP_LIMIT_ARRAY_ELEMENT_SIZE.' characters long. You may filter on the following attributes: '.implode(', ', Topics::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('dbForProject')
@@ -2487,7 +2647,7 @@ Http::get('/v1/messaging/topics')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        if (!empty($search)) {
+        if (! empty($search)) {
             $queries[] = Query::search('search', $search);
         }
 
@@ -2495,8 +2655,8 @@ Http::get('/v1/messaging/topics')
         $cursor = \reset($cursor);
 
         if ($cursor !== false) {
-            $validator = new Cursor();
-            if (!$validator->isValid($cursor)) {
+            $validator = new Cursor;
+            if (! $validator->isValid($cursor)) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
             }
 
@@ -2536,11 +2696,11 @@ Http::get('/v1/messaging/topics/:topicId/logs')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_LOG_LIST,
-            )
+            ),
         ]
     ))
     ->param('topicId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Topic ID.', false, ['dbForProject'])
-    ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->param('queries', [], new Queries([new Limit, new Offset]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -2564,13 +2724,13 @@ Http::get('/v1/messaging/topics/:topicId/logs')
         $limit = $grouped['limit'] ?? 25;
         $offset = $grouped['offset'] ?? 0;
 
-        $resource = 'topic/' . $topicId;
+        $resource = 'topic/'.$topicId;
         $logs = $audit->getLogsByResource($resource, offset: $offset, limit: $limit);
 
         $output = [];
 
         foreach ($logs as $i => &$log) {
-            $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
+            $log['userAgent'] = (! empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
 
             $detector = new Detector($log['userAgent']);
             $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
@@ -2598,14 +2758,14 @@ Http::get('/v1/messaging/topics/:topicId/logs')
                 'clientEngineVersion' => $client['clientEngineVersion'],
                 'deviceName' => $device['deviceName'],
                 'deviceBrand' => $device['deviceBrand'],
-                'deviceModel' => $device['deviceModel']
+                'deviceModel' => $device['deviceModel'],
             ]);
 
             $record = $geodb->get($log['ip']);
 
             if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
+                $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
             } else {
                 $output[$i]['countryCode'] = '--';
                 $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
@@ -2633,7 +2793,7 @@ Http::get('/v1/messaging/topics/:topicId')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_TOPIC,
-            )
+            ),
         ]
     ))
     ->param('topicId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Topic ID.', false, ['dbForProject'])
@@ -2668,12 +2828,12 @@ Http::patch('/v1/messaging/topics/:topicId')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_TOPIC,
-            )
+            ),
         ]
     ))
     ->param('topicId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Topic ID.', false, ['dbForProject'])
     ->param('name', null, new Nullable(new Text(128)), 'Topic Name.', true)
-    ->param('subscribe', null, new Nullable(new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE)), 'An array of role strings with subscribe permission. By default all users are granted with any subscribe permission. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
+    ->param('subscribe', null, new Nullable(new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE)), 'An array of role strings with subscribe permission. By default all users are granted with any subscribe permission. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of '.APP_LIMIT_ARRAY_PARAMS_SIZE.' roles are allowed, each 64 characters long.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -2684,11 +2844,11 @@ Http::patch('/v1/messaging/topics/:topicId')
             throw new Exception(Exception::TOPIC_NOT_FOUND);
         }
 
-        if (!\is_null($name)) {
+        if (! \is_null($name)) {
             $topic->setAttribute('name', $name);
         }
 
-        if (!\is_null($subscribe)) {
+        if (! \is_null($subscribe)) {
             $topic->setAttribute('subscribe', $subscribe);
         }
 
@@ -2719,7 +2879,7 @@ Http::delete('/v1/messaging/topics/:topicId')
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
-            )
+            ),
         ],
         contentType: ContentType::NONE
     ))
@@ -2767,7 +2927,7 @@ Http::post('/v1/messaging/topics/:topicId/subscribers')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_SUBSCRIBER,
-            )
+            ),
         ]
     ))
     ->param('subscriberId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Subscriber ID. Choose a custom Subscriber ID or a new Subscriber ID.', false, ['dbForProject'])
@@ -2785,7 +2945,7 @@ Http::post('/v1/messaging/topics/:topicId/subscribers')
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
         }
-        if (!$authorization->isValid(new Input('subscribe', $topic->getAttribute('subscribe')))) {
+        if (! $authorization->isValid(new Input('subscribe', $topic->getAttribute('subscribe')))) {
             throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
 
@@ -2865,11 +3025,11 @@ Http::get('/v1/messaging/topics/:topicId/subscribers')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_SUBSCRIBER_LIST,
-            )
+            ),
         ]
     ))
     ->param('topicId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Topic ID. The topic ID subscribed to.', false, ['dbForProject'])
-    ->param('queries', [], new Subscribers(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Subscribers::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Subscribers, 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of '.APP_LIMIT_ARRAY_PARAMS_SIZE.' queries are allowed, each '.APP_LIMIT_ARRAY_ELEMENT_SIZE.' characters long. You may filter on the following attributes: '.implode(', ', Subscribers::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('dbForProject')
@@ -2882,7 +3042,7 @@ Http::get('/v1/messaging/topics/:topicId/subscribers')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        if (!empty($search)) {
+        if (! empty($search)) {
             $queries[] = Query::search('search', $search);
         }
 
@@ -2898,8 +3058,8 @@ Http::get('/v1/messaging/topics/:topicId/subscribers')
         $cursor = \reset($cursor);
 
         if ($cursor !== false) {
-            $validator = new Cursor();
-            if (!$validator->isValid($cursor)) {
+            $validator = new Cursor;
+            if (! $validator->isValid($cursor)) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
             }
 
@@ -2951,11 +3111,11 @@ Http::get('/v1/messaging/subscribers/:subscriberId/logs')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_LOG_LIST,
-            )
+            ),
         ]
     ))
     ->param('subscriberId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Subscriber ID.', false, ['dbForProject'])
-    ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->param('queries', [], new Queries([new Limit, new Offset]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -2979,13 +3139,13 @@ Http::get('/v1/messaging/subscribers/:subscriberId/logs')
         $limit = $grouped['limit'] ?? 25;
         $offset = $grouped['offset'] ?? 0;
 
-        $resource = 'subscriber/' . $subscriberId;
+        $resource = 'subscriber/'.$subscriberId;
         $logs = $audit->getLogsByResource($resource, limit: $limit, offset: $offset);
 
         $output = [];
 
         foreach ($logs as $i => &$log) {
-            $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
+            $log['userAgent'] = (! empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
 
             $detector = new Detector($log['userAgent']);
             $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
@@ -3013,14 +3173,14 @@ Http::get('/v1/messaging/subscribers/:subscriberId/logs')
                 'clientEngineVersion' => $client['clientEngineVersion'],
                 'deviceName' => $device['deviceName'],
                 'deviceBrand' => $device['deviceBrand'],
-                'deviceModel' => $device['deviceModel']
+                'deviceModel' => $device['deviceModel'],
             ]);
 
             $record = $geodb->get($log['ip']);
 
             if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
+                $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
             } else {
                 $output[$i]['countryCode'] = '--';
                 $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
@@ -3048,7 +3208,7 @@ Http::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_SUBSCRIBER,
-            )
+            ),
         ]
     ))
     ->param('topicId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Topic ID. The topic ID subscribed to.', false, ['dbForProject'])
@@ -3098,7 +3258,7 @@ Http::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
-            )
+            ),
         ],
         contentType: ContentType::NONE
     ))
@@ -3166,7 +3326,7 @@ Http::post('/v1/messaging/messages/email')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_MESSAGE,
-            )
+            ),
         ]
     ))
     ->param('messageId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
@@ -3177,9 +3337,9 @@ Http::post('/v1/messaging/messages/email')
     ->param('targets', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of Targets IDs.', true, ['dbForProject'])
     ->param('cc', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Array of target IDs to be added as CC.', true, ['dbForProject'])
     ->param('bcc', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Array of target IDs to be added as BCC.', true, ['dbForProject'])
-    ->param('attachments', [], new ArrayList(new CompoundUID()), 'Array of compound ID strings of bucket IDs and file IDs to be attached to the email. They should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
-    ->param('draft', false, new Boolean(), 'Is message a draft', true)
-    ->param('html', false, new Boolean(), 'Is content of type HTML', true)
+    ->param('attachments', [], new ArrayList(new CompoundUID), 'Array of compound ID strings of bucket IDs and file IDs to be attached to the email. They should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
+    ->param('draft', false, new Boolean, 'Is message a draft', true)
+    ->param('html', false, new Boolean, 'Is content of type HTML', true)
     ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
@@ -3210,7 +3370,7 @@ Http::post('/v1/messaging/messages/email')
 
         $mergedTargets = \array_merge($targets, $cc, $bcc);
 
-        if (!empty($mergedTargets)) {
+        if (! empty($mergedTargets)) {
             $foundTargets = $dbForProject->find('targets', [
                 Query::equal('$id', $mergedTargets),
                 Query::equal('providerType', [MESSAGE_TYPE_EMAIL]),
@@ -3228,7 +3388,7 @@ Http::post('/v1/messaging/messages/email')
             }
         }
 
-        if (!empty($attachments)) {
+        if (! empty($attachments)) {
             foreach ($attachments as &$attachment) {
                 [$bucketId, $fileId] = CompoundUID::parse($attachment);
 
@@ -3238,7 +3398,7 @@ Http::post('/v1/messaging/messages/email')
                     throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
                 }
 
-                $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
+                $file = $dbForProject->getDocument('bucket_'.$bucket->getSequence(), $fileId);
 
                 if ($file->isEmpty()) {
                     throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
@@ -3331,7 +3491,7 @@ Http::post('/v1/messaging/messages/sms')
                 new SDKResponse(
                     code: Response::STATUS_CODE_CREATED,
                     model: Response::MODEL_MESSAGE,
-                )
+                ),
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
@@ -3349,16 +3509,16 @@ Http::post('/v1/messaging/messages/sms')
                 new SDKResponse(
                     code: Response::STATUS_CODE_CREATED,
                     model: Response::MODEL_MESSAGE,
-                )
+                ),
             ]
-        )
+        ),
     ])
     ->param('messageId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('content', '', new Text(64230), 'SMS Content.')
     ->param('topics', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of Topic IDs.', true, ['dbForProject'])
     ->param('users', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of User IDs.', true, ['dbForProject'])
     ->param('targets', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of Targets IDs.', true, ['dbForProject'])
-    ->param('draft', false, new Boolean(), 'Is message a draft', true)
+    ->param('draft', false, new Boolean, 'Is message a draft', true)
     ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
@@ -3387,7 +3547,7 @@ Http::post('/v1/messaging/messages/sms')
             throw new Exception(Exception::MESSAGE_MISSING_SCHEDULE);
         }
 
-        if (!empty($targets)) {
+        if (! empty($targets)) {
             $foundTargets = $dbForProject->find('targets', [
                 Query::equal('$id', $targets),
                 Query::equal('providerType', [MESSAGE_TYPE_SMS]),
@@ -3478,7 +3638,7 @@ Http::post('/v1/messaging/messages/push')
             new SDKResponse(
                 code: Response::STATUS_CODE_CREATED,
                 model: Response::MODEL_MESSAGE,
-            )
+            ),
         ]
     ))
     ->param('messageId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
@@ -3487,18 +3647,18 @@ Http::post('/v1/messaging/messages/push')
     ->param('topics', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of Topic IDs.', true, ['dbForProject'])
     ->param('users', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of User IDs.', true, ['dbForProject'])
     ->param('targets', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of Targets IDs.', true, ['dbForProject'])
-    ->param('data', null, new Nullable(new JSON()), 'Additional key-value pair data for push notification.', true)
+    ->param('data', null, new Nullable(new JSON), 'Additional key-value pair data for push notification.', true)
     ->param('action', '', new Text(256), 'Action for push notification.', true)
-    ->param('image', '', new CompoundUID(), 'Image for push notification. Must be a compound bucket ID to file ID of a jpeg, png, or bmp image in Appwrite Storage. It should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
+    ->param('image', '', new CompoundUID, 'Image for push notification. Must be a compound bucket ID to file ID of a jpeg, png, or bmp image in Appwrite Storage. It should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
     ->param('icon', '', new Text(256), 'Icon for push notification. Available only for Android and Web Platform.', true)
     ->param('sound', '', new Text(256), 'Sound for push notification. Available only for Android and iOS Platform.', true)
     ->param('color', '', new Text(256), 'Color for push notification. Available only for Android Platform.', true)
     ->param('tag', '', new Text(256), 'Tag for push notification. Available only for Android Platform.', true)
-    ->param('badge', -1, new Integer(), 'Badge for push notification. Available only for iOS Platform.', true)
-    ->param('draft', false, new Boolean(), 'Is message a draft', true)
+    ->param('badge', -1, new Integer, 'Badge for push notification. Available only for iOS Platform.', true)
+    ->param('draft', false, new Boolean, 'Is message a draft', true)
     ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
-    ->param('contentAvailable', false, new Boolean(), 'If set to true, the notification will be delivered in the background. Available only for iOS Platform.', true)
-    ->param('critical', false, new Boolean(), 'If set to true, the notification will be marked as critical. This requires the app to have the critical notification entitlement. Available only for iOS Platform.', true)
+    ->param('contentAvailable', false, new Boolean, 'If set to true, the notification will be delivered in the background. Available only for iOS Platform.', true)
+    ->param('critical', false, new Boolean, 'If set to true, the notification will be marked as critical. This requires the app to have the critical notification entitlement. Available only for iOS Platform.', true)
     ->param('priority', 'high', new WhiteList(['normal', 'high']), 'Set the notification priority. "normal" will consider device state and may not deliver notifications immediately. "high" will always attempt to immediately deliver the notification.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
@@ -3528,7 +3688,7 @@ Http::post('/v1/messaging/messages/push')
             throw new Exception(Exception::MESSAGE_MISSING_SCHEDULE);
         }
 
-        if (!empty($targets)) {
+        if (! empty($targets)) {
             $foundTargets = $dbForProject->find('targets', [
                 Query::equal('$id', $targets),
                 Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
@@ -3546,7 +3706,7 @@ Http::post('/v1/messaging/messages/push')
             }
         }
 
-        if (!empty($image)) {
+        if (! empty($image)) {
             [$bucketId, $fileId] = CompoundUID::parse($image);
 
             $bucket = $dbForProject->getDocument('buckets', $bucketId);
@@ -3554,12 +3714,12 @@ Http::post('/v1/messaging/messages/push')
                 throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
             }
 
-            $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
+            $file = $dbForProject->getDocument('bucket_'.$bucket->getSequence(), $fileId);
             if ($file->isEmpty()) {
                 throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
             }
 
-            if (!\in_array($file->getAttribute('mimeType'), ['image/png', 'image/jpeg'])) {
+            if (! \in_array($file->getAttribute('mimeType'), ['image/png', 'image/jpeg'])) {
                 throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
             }
 
@@ -3567,10 +3727,10 @@ Http::post('/v1/messaging/messages/push')
             $endpoint = "$protocol://{$platform['apiHostname']}/v1";
 
             $scheduleTime = $currentScheduledAt ?? $scheduledAt;
-            if (!\is_null($scheduleTime)) {
-                $expiry = (new \DateTime($scheduleTime))->add(new \DateInterval('P15D'))->format('U');
+            if (! \is_null($scheduleTime)) {
+                $expiry = (new \DateTime($scheduleTime))->add(new DateInterval('P15D'))->format('U');
             } else {
-                $expiry = (new \DateTime())->add(new \DateInterval('P15D'))->format('U');
+                $expiry = (new \DateTime)->add(new DateInterval('P15D'))->format('U');
             }
 
             $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', \intval($expiry), 0);
@@ -3590,31 +3750,31 @@ Http::post('/v1/messaging/messages/push')
 
         $pushData = [];
 
-        if (!empty($title)) {
+        if (! empty($title)) {
             $pushData['title'] = $title;
         }
-        if (!empty($body)) {
+        if (! empty($body)) {
             $pushData['body'] = $body;
         }
-        if (!empty($data)) {
+        if (! empty($data)) {
             $pushData['data'] = $data;
         }
-        if (!empty($action)) {
+        if (! empty($action)) {
             $pushData['action'] = $action;
         }
-        if (!empty($image)) {
+        if (! empty($image)) {
             $pushData['image'] = $image;
         }
-        if (!empty($icon)) {
+        if (! empty($icon)) {
             $pushData['icon'] = $icon;
         }
-        if (!empty($sound)) {
+        if (! empty($sound)) {
             $pushData['sound'] = $sound;
         }
-        if (!empty($color)) {
+        if (! empty($color)) {
             $pushData['color'] = $color;
         }
-        if (!empty($tag)) {
+        if (! empty($tag)) {
             $pushData['tag'] = $tag;
         }
         if ($badge >= 0) {
@@ -3626,7 +3786,7 @@ Http::post('/v1/messaging/messages/push')
         if ($critical) {
             $pushData['critical'] = true;
         }
-        if (!empty($priority)) {
+        if (! empty($priority)) {
             $pushData['priority'] = $priority;
         }
 
@@ -3699,10 +3859,10 @@ Http::get('/v1/messaging/messages')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_MESSAGE_LIST,
-            )
+            ),
         ],
     ))
-    ->param('queries', [], new Messages(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Messages::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Messages, 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of '.APP_LIMIT_ARRAY_PARAMS_SIZE.' queries are allowed, each '.APP_LIMIT_ARRAY_ELEMENT_SIZE.' characters long. You may filter on the following attributes: '.implode(', ', Messages::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('dbForProject')
@@ -3715,7 +3875,7 @@ Http::get('/v1/messaging/messages')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        if (!empty($search)) {
+        if (! empty($search)) {
             $queries[] = Query::search('search', $search);
         }
 
@@ -3723,8 +3883,8 @@ Http::get('/v1/messaging/messages')
         $cursor = \reset($cursor);
 
         if ($cursor !== false) {
-            $validator = new Cursor();
-            if (!$validator->isValid($cursor)) {
+            $validator = new Cursor;
+            if (! $validator->isValid($cursor)) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
             }
 
@@ -3764,11 +3924,11 @@ Http::get('/v1/messaging/messages/:messageId/logs')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_LOG_LIST,
-            )
+            ),
         ],
     ))
     ->param('messageId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Message ID.', false, ['dbForProject'])
-    ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->param('queries', [], new Queries([new Limit, new Offset]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -3792,13 +3952,13 @@ Http::get('/v1/messaging/messages/:messageId/logs')
         $limit = $grouped['limit'] ?? 25;
         $offset = $grouped['offset'] ?? 0;
 
-        $resource = 'message/' . $messageId;
+        $resource = 'message/'.$messageId;
         $logs = $audit->getLogsByResource($resource, limit: $limit, offset: $offset);
 
         $output = [];
 
         foreach ($logs as $i => &$log) {
-            $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
+            $log['userAgent'] = (! empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
 
             $detector = new Detector($log['userAgent']);
             $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
@@ -3826,14 +3986,14 @@ Http::get('/v1/messaging/messages/:messageId/logs')
                 'clientEngineVersion' => $client['clientEngineVersion'],
                 'deviceName' => $device['deviceName'],
                 'deviceBrand' => $device['deviceBrand'],
-                'deviceModel' => $device['deviceModel']
+                'deviceModel' => $device['deviceModel'],
             ]);
 
             $record = $geodb->get($log['ip']);
 
             if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
+                $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
             } else {
                 $output[$i]['countryCode'] = '--';
                 $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
@@ -3861,11 +4021,11 @@ Http::get('/v1/messaging/messages/:messageId/targets')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_TARGET_LIST,
-            )
+            ),
         ],
     ))
     ->param('messageId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Message ID.', false, ['dbForProject'])
-    ->param('queries', [], new Targets(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Targets::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Targets, 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of '.APP_LIMIT_ARRAY_PARAMS_SIZE.' queries are allowed, each '.APP_LIMIT_ARRAY_ELEMENT_SIZE.' characters long. You may filter on the following attributes: '.implode(', ', Targets::ALLOWED_ATTRIBUTES), true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -3883,6 +4043,7 @@ Http::get('/v1/messaging/messages/:messageId/targets')
                 'targets' => [],
                 'total' => 0,
             ]), Response::MODEL_TARGET_LIST);
+
             return;
         }
 
@@ -3898,8 +4059,8 @@ Http::get('/v1/messaging/messages/:messageId/targets')
         $cursor = \reset($cursor);
 
         if ($cursor !== false) {
-            $validator = new Cursor();
-            if (!$validator->isValid($cursor)) {
+            $validator = new Cursor;
+            if (! $validator->isValid($cursor)) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
             }
 
@@ -3939,7 +4100,7 @@ Http::get('/v1/messaging/messages/:messageId')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_MESSAGE,
-            )
+            ),
         ]
     ))
     ->param('messageId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Message ID.', false, ['dbForProject'])
@@ -3973,7 +4134,7 @@ Http::patch('/v1/messaging/messages/email/:messageId')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_MESSAGE,
-            )
+            ),
         ]
     ))
     ->param('messageId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Message ID.', false, ['dbForProject'])
@@ -3982,12 +4143,12 @@ Http::patch('/v1/messaging/messages/email/:messageId')
     ->param('targets', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of Targets IDs.', true, ['dbForProject'])
     ->param('subject', null, new Nullable(new Text(998)), 'Email Subject.', true)
     ->param('content', null, new Nullable(new Text(64230)), 'Email Content.', true)
-    ->param('draft', null, new Nullable(new Boolean()), 'Is message a draft', true)
-    ->param('html', null, new Nullable(new Boolean()), 'Is content of type HTML', true)
+    ->param('draft', null, new Nullable(new Boolean), 'Is message a draft', true)
+    ->param('html', null, new Nullable(new Boolean), 'Is content of type HTML', true)
     ->param('cc', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'Array of target IDs to be added as CC.', true, ['dbForProject'])
     ->param('bcc', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'Array of target IDs to be added as BCC.', true, ['dbForProject'])
     ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
-    ->param('attachments', null, new Nullable(new ArrayList(new CompoundUID())), 'Array of compound ID strings of bucket IDs and file IDs to be attached to the email. They should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
+    ->param('attachments', null, new Nullable(new ArrayList(new CompoundUID)), 'Array of compound ID strings of bucket IDs and file IDs to be attached to the email. They should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('dbForPlatform')
@@ -4001,7 +4162,7 @@ Http::patch('/v1/messaging/messages/email/:messageId')
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
         }
 
-        if (!\is_null($draft) || !\is_null($scheduledAt)) {
+        if (! \is_null($draft) || ! \is_null($scheduledAt)) {
             if ($draft) {
                 $status = MessageStatus::DRAFT;
             } else {
@@ -4041,11 +4202,11 @@ Http::patch('/v1/messaging/messages/email/:messageId')
             throw new Exception(Exception::MESSAGE_MISSING_SCHEDULE);
         }
 
-        if (!\is_null($currentScheduledAt) && new \DateTime($currentScheduledAt) < new \DateTime()) {
+        if (! \is_null($currentScheduledAt) && new \DateTime($currentScheduledAt) < new \DateTime) {
             throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
         }
 
-        if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
+        if (\is_null($currentScheduledAt) && ! \is_null($scheduledAt)) {
             $schedule = $dbForPlatform->createDocument('schedules', new Document([
                 'region' => $project->getAttribute('region'),
                 'resourceType' => SCHEDULE_RESOURCE_TYPE_MESSAGE,
@@ -4060,7 +4221,7 @@ Http::patch('/v1/messaging/messages/email/:messageId')
             $message->setAttribute('scheduleId', $schedule->getId());
         }
 
-        if (!\is_null($currentScheduledAt)) {
+        if (! \is_null($currentScheduledAt)) {
             $schedule = $dbForPlatform->getDocument('schedules', $message->getAttribute('scheduleId'));
             $scheduledStatus = ($status ?? $message->getAttribute('status')) === MessageStatus::SCHEDULED;
 
@@ -4072,40 +4233,40 @@ Http::patch('/v1/messaging/messages/email/:messageId')
                 ->setAttribute('resourceUpdatedAt', DateTime::now())
                 ->setAttribute('active', $scheduledStatus);
 
-            if (!\is_null($scheduledAt)) {
+            if (! \is_null($scheduledAt)) {
                 $schedule->setAttribute('schedule', $scheduledAt);
             }
 
             $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule);
         }
 
-        if (!\is_null($scheduledAt)) {
+        if (! \is_null($scheduledAt)) {
             $message->setAttribute('scheduledAt', $scheduledAt);
         }
 
-        if (!\is_null($topics)) {
+        if (! \is_null($topics)) {
             $message->setAttribute('topics', $topics);
         }
 
-        if (!\is_null($users)) {
+        if (! \is_null($users)) {
             $message->setAttribute('users', $users);
         }
 
-        if (!\is_null($targets)) {
+        if (! \is_null($targets)) {
             $message->setAttribute('targets', $targets);
         }
 
         $data = $message->getAttribute('data');
 
-        if (!\is_null($subject)) {
+        if (! \is_null($subject)) {
             $data['subject'] = $subject;
         }
 
-        if (!\is_null($content)) {
+        if (! \is_null($content)) {
             $data['content'] = $content;
         }
 
-        if (!is_null($attachments)) {
+        if (! is_null($attachments)) {
             foreach ($attachments as &$attachment) {
                 [$bucketId, $fileId] = CompoundUID::parse($attachment);
 
@@ -4115,7 +4276,7 @@ Http::patch('/v1/messaging/messages/email/:messageId')
                     throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
                 }
 
-                $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
+                $file = $dbForProject->getDocument('bucket_'.$bucket->getSequence(), $fileId);
 
                 if ($file->isEmpty()) {
                     throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
@@ -4129,21 +4290,21 @@ Http::patch('/v1/messaging/messages/email/:messageId')
             $data['attachments'] = $attachments;
         }
 
-        if (!\is_null($html)) {
+        if (! \is_null($html)) {
             $data['html'] = $html;
         }
 
-        if (!\is_null($cc)) {
+        if (! \is_null($cc)) {
             $data['cc'] = $cc;
         }
 
-        if (!\is_null($bcc)) {
+        if (! \is_null($bcc)) {
             $data['bcc'] = $bcc;
         }
 
         $message->setAttribute('data', $data);
 
-        if (!\is_null($status)) {
+        if (! \is_null($status)) {
             $message->setAttribute('status', $status);
         }
 
@@ -4181,7 +4342,7 @@ Http::patch('/v1/messaging/messages/sms/:messageId')
                 new SDKResponse(
                     code: Response::STATUS_CODE_OK,
                     model: Response::MODEL_MESSAGE,
-                )
+                ),
             ],
             deprecated: new Deprecated(
                 since: '1.8.0',
@@ -4199,16 +4360,16 @@ Http::patch('/v1/messaging/messages/sms/:messageId')
                 new SDKResponse(
                     code: Response::STATUS_CODE_OK,
                     model: Response::MODEL_MESSAGE,
-                )
+                ),
             ]
-        )
+        ),
     ])
     ->param('messageId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Message ID.', false, ['dbForProject'])
     ->param('topics', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of Topic IDs.', true, ['dbForProject'])
     ->param('users', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of User IDs.', true, ['dbForProject'])
     ->param('targets', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of Targets IDs.', true, ['dbForProject'])
     ->param('content', null, new Nullable(new Text(64230)), 'Email Content.', true)
-    ->param('draft', null, new Nullable(new Boolean()), 'Is message a draft', true)
+    ->param('draft', null, new Nullable(new Boolean), 'Is message a draft', true)
     ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
@@ -4223,7 +4384,7 @@ Http::patch('/v1/messaging/messages/sms/:messageId')
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
         }
 
-        if (!\is_null($draft) || !\is_null($scheduledAt)) {
+        if (! \is_null($draft) || ! \is_null($scheduledAt)) {
             if ($draft) {
                 $status = MessageStatus::DRAFT;
             } else {
@@ -4263,11 +4424,11 @@ Http::patch('/v1/messaging/messages/sms/:messageId')
             throw new Exception(Exception::MESSAGE_MISSING_SCHEDULE);
         }
 
-        if (!\is_null($currentScheduledAt) && new \DateTime($currentScheduledAt) < new \DateTime()) {
+        if (! \is_null($currentScheduledAt) && new \DateTime($currentScheduledAt) < new \DateTime) {
             throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
         }
 
-        if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
+        if (\is_null($currentScheduledAt) && ! \is_null($scheduledAt)) {
             $schedule = $dbForPlatform->createDocument('schedules', new Document([
                 'region' => $project->getAttribute('region'),
                 'resourceType' => SCHEDULE_RESOURCE_TYPE_MESSAGE,
@@ -4282,7 +4443,7 @@ Http::patch('/v1/messaging/messages/sms/:messageId')
             $message->setAttribute('scheduleId', $schedule->getId());
         }
 
-        if (!\is_null($currentScheduledAt)) {
+        if (! \is_null($currentScheduledAt)) {
             $schedule = $dbForPlatform->getDocument('schedules', $message->getAttribute('scheduleId'));
             $scheduledStatus = ($status ?? $message->getAttribute('status')) === MessageStatus::SCHEDULED;
 
@@ -4294,38 +4455,38 @@ Http::patch('/v1/messaging/messages/sms/:messageId')
                 ->setAttribute('resourceUpdatedAt', DateTime::now())
                 ->setAttribute('active', $scheduledStatus);
 
-            if (!\is_null($scheduledAt)) {
+            if (! \is_null($scheduledAt)) {
                 $schedule->setAttribute('schedule', $scheduledAt);
             }
 
             $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule);
         }
 
-        if (!\is_null($scheduledAt)) {
+        if (! \is_null($scheduledAt)) {
             $message->setAttribute('scheduledAt', $scheduledAt);
         }
 
-        if (!\is_null($topics)) {
+        if (! \is_null($topics)) {
             $message->setAttribute('topics', $topics);
         }
 
-        if (!\is_null($users)) {
+        if (! \is_null($users)) {
             $message->setAttribute('users', $users);
         }
 
-        if (!\is_null($targets)) {
+        if (! \is_null($targets)) {
             $message->setAttribute('targets', $targets);
         }
 
         $data = $message->getAttribute('data');
 
-        if (!\is_null($content)) {
+        if (! \is_null($content)) {
             $data['content'] = $content;
         }
 
         $message->setAttribute('data', $data);
 
-        if (!\is_null($status)) {
+        if (! \is_null($status)) {
             $message->setAttribute('status', $status);
         }
 
@@ -4362,7 +4523,7 @@ Http::patch('/v1/messaging/messages/push/:messageId')
             new SDKResponse(
                 code: Response::STATUS_CODE_OK,
                 model: Response::MODEL_MESSAGE,
-            )
+            ),
         ]
     ))
     ->param('messageId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Message ID.', false, ['dbForProject'])
@@ -4371,18 +4532,18 @@ Http::patch('/v1/messaging/messages/push/:messageId')
     ->param('targets', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of Targets IDs.', true, ['dbForProject'])
     ->param('title', null, new Nullable(new Text(256)), 'Title for push notification.', true)
     ->param('body', null, new Nullable(new Text(64230)), 'Body for push notification.', true)
-    ->param('data', null, new Nullable(new JSON()), 'Additional Data for push notification.', true)
+    ->param('data', null, new Nullable(new JSON), 'Additional Data for push notification.', true)
     ->param('action', null, new Nullable(new Text(256)), 'Action for push notification.', true)
-    ->param('image', null, new Nullable(new CompoundUID()), 'Image for push notification. Must be a compound bucket ID to file ID of a jpeg, png, or bmp image in Appwrite Storage. It should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
+    ->param('image', null, new Nullable(new CompoundUID), 'Image for push notification. Must be a compound bucket ID to file ID of a jpeg, png, or bmp image in Appwrite Storage. It should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
     ->param('icon', null, new Nullable(new Text(256)), 'Icon for push notification. Available only for Android and Web platforms.', true)
     ->param('sound', null, new Nullable(new Text(256)), 'Sound for push notification. Available only for Android and iOS platforms.', true)
     ->param('color', null, new Nullable(new Text(256)), 'Color for push notification. Available only for Android platforms.', true)
     ->param('tag', null, new Nullable(new Text(256)), 'Tag for push notification. Available only for Android platforms.', true)
-    ->param('badge', null, new Nullable(new Integer()), 'Badge for push notification. Available only for iOS platforms.', true)
-    ->param('draft', null, new Nullable(new Boolean()), 'Is message a draft', true)
+    ->param('badge', null, new Nullable(new Integer), 'Badge for push notification. Available only for iOS platforms.', true)
+    ->param('draft', null, new Nullable(new Boolean), 'Is message a draft', true)
     ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
-    ->param('contentAvailable', null, new Nullable(new Boolean()), 'If set to true, the notification will be delivered in the background. Available only for iOS Platform.', true)
-    ->param('critical', null, new Nullable(new Boolean()), 'If set to true, the notification will be marked as critical. This requires the app to have the critical notification entitlement. Available only for iOS Platform.', true)
+    ->param('contentAvailable', null, new Nullable(new Boolean), 'If set to true, the notification will be delivered in the background. Available only for iOS Platform.', true)
+    ->param('critical', null, new Nullable(new Boolean), 'If set to true, the notification will be marked as critical. This requires the app to have the critical notification entitlement. Available only for iOS Platform.', true)
     ->param('priority', null, new Nullable(new WhiteList(['normal', 'high'])), 'Set the notification priority. "normal" will consider device battery state and may send notifications later. "high" will always attempt to immediately deliver the notification.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
@@ -4398,7 +4559,7 @@ Http::patch('/v1/messaging/messages/push/:messageId')
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
         }
 
-        if (!\is_null($draft) || !\is_null($scheduledAt)) {
+        if (! \is_null($draft) || ! \is_null($scheduledAt)) {
             if ($draft) {
                 $status = MessageStatus::DRAFT;
             } else {
@@ -4438,11 +4599,11 @@ Http::patch('/v1/messaging/messages/push/:messageId')
             throw new Exception(Exception::MESSAGE_MISSING_SCHEDULE);
         }
 
-        if (!\is_null($currentScheduledAt) && new \DateTime($currentScheduledAt) < new \DateTime()) {
+        if (! \is_null($currentScheduledAt) && new \DateTime($currentScheduledAt) < new \DateTime) {
             throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
         }
 
-        if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
+        if (\is_null($currentScheduledAt) && ! \is_null($scheduledAt)) {
             $schedule = $dbForPlatform->createDocument('schedules', new Document([
                 'region' => $project->getAttribute('region'),
                 'resourceType' => SCHEDULE_RESOURCE_TYPE_MESSAGE,
@@ -4457,7 +4618,7 @@ Http::patch('/v1/messaging/messages/push/:messageId')
             $message->setAttribute('scheduleId', $schedule->getId());
         }
 
-        if (!\is_null($currentScheduledAt)) {
+        if (! \is_null($currentScheduledAt)) {
             $schedule = $dbForPlatform->getDocument('schedules', $message->getAttribute('scheduleId'));
             $scheduledStatus = ($status ?? $message->getAttribute('status')) === MessageStatus::SCHEDULED;
 
@@ -4469,80 +4630,80 @@ Http::patch('/v1/messaging/messages/push/:messageId')
                 ->setAttribute('resourceUpdatedAt', DateTime::now())
                 ->setAttribute('active', $scheduledStatus);
 
-            if (!\is_null($scheduledAt)) {
+            if (! \is_null($scheduledAt)) {
                 $schedule->setAttribute('schedule', $scheduledAt);
             }
 
             $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule);
         }
 
-        if (!\is_null($scheduledAt)) {
+        if (! \is_null($scheduledAt)) {
             $message->setAttribute('scheduledAt', $scheduledAt);
         }
 
-        if (!\is_null($topics)) {
+        if (! \is_null($topics)) {
             $message->setAttribute('topics', $topics);
         }
 
-        if (!\is_null($users)) {
+        if (! \is_null($users)) {
             $message->setAttribute('users', $users);
         }
 
-        if (!\is_null($targets)) {
+        if (! \is_null($targets)) {
             $message->setAttribute('targets', $targets);
         }
 
         $pushData = $message->getAttribute('data');
 
-        if (!\is_null($title)) {
+        if (! \is_null($title)) {
             $pushData['title'] = $title;
         }
 
-        if (!\is_null($body)) {
+        if (! \is_null($body)) {
             $pushData['body'] = $body;
         }
 
-        if (!\is_null($data)) {
+        if (! \is_null($data)) {
             $pushData['data'] = $data;
         }
 
-        if (!\is_null($action)) {
+        if (! \is_null($action)) {
             $pushData['action'] = $action;
         }
 
-        if (!\is_null($icon)) {
+        if (! \is_null($icon)) {
             $pushData['icon'] = $icon;
         }
 
-        if (!\is_null($sound)) {
+        if (! \is_null($sound)) {
             $pushData['sound'] = $sound;
         }
 
-        if (!\is_null($color)) {
+        if (! \is_null($color)) {
             $pushData['color'] = $color;
         }
 
-        if (!\is_null($tag)) {
+        if (! \is_null($tag)) {
             $pushData['tag'] = $tag;
         }
 
-        if (!\is_null($badge)) {
+        if (! \is_null($badge)) {
             $pushData['badge'] = $badge;
         }
 
-        if (!\is_null($contentAvailable)) {
+        if (! \is_null($contentAvailable)) {
             $pushData['contentAvailable'] = $contentAvailable;
         }
 
-        if (!\is_null($critical)) {
+        if (! \is_null($critical)) {
             $pushData['critical'] = $critical;
         }
 
-        if (!\is_null($priority)) {
+        if (! \is_null($priority)) {
             $pushData['priority'] = $priority;
         }
 
-        if (!\is_null($image)) {
+        if (! \is_null($image)) {
             [$bucketId, $fileId] = CompoundUID::parse($image);
 
             $bucket = $dbForProject->getDocument('buckets', $bucketId);
@@ -4550,20 +4711,20 @@ Http::patch('/v1/messaging/messages/push/:messageId')
                 throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
             }
 
-            $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
+            $file = $dbForProject->getDocument('bucket_'.$bucket->getSequence(), $fileId);
             if ($file->isEmpty()) {
                 throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
             }
 
-            if (!\in_array($file->getAttribute('mimeType'), ['image/png', 'image/jpeg'])) {
+            if (! \in_array($file->getAttribute('mimeType'), ['image/png', 'image/jpeg'])) {
                 throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
             }
 
             $scheduleTime = $currentScheduledAt ?? $scheduledAt;
-            if (!\is_null($scheduleTime)) {
-                $expiry = (new \DateTime($scheduleTime))->add(new \DateInterval('P15D'))->format('U');
+            if (! \is_null($scheduleTime)) {
+                $expiry = (new \DateTime($scheduleTime))->add(new DateInterval('P15D'))->format('U');
             } else {
-                $expiry = (new \DateTime())->add(new \DateInterval('P15D'))->format('U');
+                $expiry = (new \DateTime)->add(new DateInterval('P15D'))->format('U');
             }
 
             $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', \intval($expiry), 0);
@@ -4586,7 +4747,7 @@ Http::patch('/v1/messaging/messages/push/:messageId')
 
         $message->setAttribute('data', $pushData);
 
-        if (!\is_null($status)) {
+        if (! \is_null($status)) {
             $message->setAttribute('status', $status);
         }
 
@@ -4623,7 +4784,7 @@ Http::delete('/v1/messaging/messages/:messageId')
             new SDKResponse(
                 code: Response::STATUS_CODE_NOCONTENT,
                 model: Response::MODEL_NONE,
-            )
+            ),
         ],
         contentType: ContentType::NONE
     ))
@@ -4653,7 +4814,7 @@ Http::delete('/v1/messaging/messages/:messageId')
                     throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
                 }
 
-                if (!empty($scheduleId)) {
+                if (! empty($scheduleId)) {
                     try {
                         $dbForPlatform->deleteDocument('schedules', $scheduleId);
                     } catch (Exception) {

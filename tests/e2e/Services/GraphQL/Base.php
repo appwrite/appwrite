@@ -9,340 +9,586 @@ trait Base
 {
     // Databases
     public const string CREATE_DATABASE = 'create_database';
+
     public const string GET_DATABASES = 'get_databases';
+
     public const string GET_DATABASE = 'get_database';
+
     public const string UPDATE_DATABASE = 'update_database';
+
     public const string DELETE_DATABASE = 'delete_database';
 
     // Collections
     public const string CREATE_COLLECTION = 'create_collection';
+
     public const string GET_COLLECTION = 'get_collection';
+
     public const string GET_COLLECTIONS = 'list_collections';
+
     public const string UPDATE_COLLECTION = 'update_collection';
+
     public const string DELETE_COLLECTION = 'delete_collection';
 
     // Grid databases
     public const string TABLESDB_CREATE_DATABASE = 'tablesdb_create_database';
+
     public const string TABLESDB_GET_DATABASES = 'tablesdb_get_databases';
+
     public const string TABLESDB_GET_DATABASE = 'tablesdb_get_database';
+
     public const string TABLESDB_UPDATE_DATABASE = 'tablesdb_update_database';
+
     public const string TABLESDB_DELETE_DATABASE = 'tablesdb_delete_database';
 
     // Grid tables
     public const string CREATE_TABLE = 'create_table';
+
     public const string GET_TABLE = 'get_table';
+
     public const string GET_TABLES = 'list_tables';
+
     public const string UPDATE_TABLE = 'update_table';
+
     public const string DELETE_TABLE = 'delete_table';
 
     // Attributes
     public const string CREATE_STRING_ATTRIBUTE = 'create_string_attribute';
+
     public const string CREATE_INTEGER_ATTRIBUTE = 'create_integer_attribute';
+
     public const string CREATE_FLOAT_ATTRIBUTE = 'create_float_attribute';
+
     public const string CREATE_BOOLEAN_ATTRIBUTE = 'create_boolean_attribute';
+
     public const string CREATE_URL_ATTRIBUTE = 'create_url_attribute';
+
     public const string CREATE_EMAIL_ATTRIBUTE = 'create_email_attribute';
+
     public const string CREATE_IP_ATTRIBUTE = 'create_ip_attribute';
+
     public const string CREATE_ENUM_ATTRIBUTE = 'create_enum_attribute';
+
     public const string CREATE_DATETIME_ATTRIBUTE = 'create_datetime_attribute';
+
     public const string CREATE_POINT_ATTRIBUTE = 'create_point_attribute';
+
     public const string CREATE_LINE_ATTRIBUTE = 'create_line_attribute';
+
     public const string CREATE_POLYGON_ATTRIBUTE = 'create_polygon_attribute';
 
     public const string CREATE_RELATIONSHIP_ATTRIBUTE = 'create_relationship_attribute';
+
     public const string UPDATE_STRING_ATTRIBUTE = 'update_string_attribute';
+
     public const string UPDATE_INTEGER_ATTRIBUTE = 'update_integer_attribute';
+
     public const string UPDATE_FLOAT_ATTRIBUTE = 'update_float_attribute';
+
     public const string UPDATE_BOOLEAN_ATTRIBUTE = 'update_boolean_attribute';
+
     public const string UPDATE_URL_ATTRIBUTE = 'update_url_attribute';
+
     public const string UPDATE_EMAIL_ATTRIBUTE = 'update_email_attribute';
+
     public const string UPDATE_IP_ATTRIBUTE = 'update_ip_attribute';
+
     public const string UPDATE_ENUM_ATTRIBUTE = 'update_enum_attribute';
+
     public const string UPDATE_DATETIME_ATTRIBUTE = 'update_datetime_attribute';
+
     public const string UPDATE_POINT_ATTRIBUTE = 'update_point_attribute';
+
     public const string UPDATE_LINE_ATTRIBUTE = 'update_line_attribute';
+
     public const string UPDATE_POLYGON_ATTRIBUTE = 'update_polygon_attribute';
 
     public const string UPDATE_RELATIONSHIP_ATTRIBUTE = 'update_relationship_attribute';
+
     public const string GET_ATTRIBUTES = 'get_attributes';
+
     public const string GET_ATTRIBUTE = 'get_attribute';
+
     public const string DELETE_ATTRIBUTE = 'delete_attribute';
 
     // TablesDB columns
     public const string CREATE_STRING_COLUMN = 'create_string_column';
+
     public const string CREATE_INTEGER_COLUMN = 'create_integer_column';
+
     public const string CREATE_FLOAT_COLUMN = 'create_float_column';
+
     public const string CREATE_BOOLEAN_COLUMN = 'create_boolean_column';
+
     public const string CREATE_URL_COLUMN = 'create_url_column';
+
     public const string CREATE_EMAIL_COLUMN = 'create_email_column';
+
     public const string CREATE_IP_COLUMN = 'create_ip_column';
+
     public const string CREATE_ENUM_COLUMN = 'create_enum_column';
+
     public const string CREATE_DATETIME_COLUMN = 'create_datetime_column';
+
     public const string CREATE_POINT_COLUMN = 'create_point_column';
+
     public const string CREATE_LINE_COLUMN = 'create_line_column';
+
     public const string CREATE_POLYGON_COLUMN = 'create_polygon_column';
 
     public const string CREATE_RELATIONSHIP_COLUMN = 'create_relationship_column';
+
     public const string UPDATE_STRING_COLUMN = 'update_string_column';
+
     public const string UPDATE_INTEGER_COLUMN = 'update_integer_column';
+
     public const string UPDATE_FLOAT_COLUMN = 'update_float_column';
+
     public const string UPDATE_BOOLEAN_COLUMN = 'update_boolean_column';
+
     public const string UPDATE_URL_COLUMN = 'update_url_column';
+
     public const string UPDATE_EMAIL_COLUMN = 'update_email_column';
+
     public const string UPDATE_IP_COLUMN = 'update_ip_column';
+
     public const string UPDATE_ENUM_COLUMN = 'update_enum_column';
+
     public const string UPDATE_DATETIME_COLUMN = 'update_datetime_column';
+
     public const string UPDATE_POINT_COLUMN = 'update_point_column';
+
     public const string UPDATE_LINE_COLUMN = 'update_line_column';
+
     public const string UPDATE_POLYGON_COLUMN = 'update_polygon_column';
 
     public const string UPDATE_RELATIONSHIP_COLUMN = 'update_relationship_column';
+
     public const string GET_COLUMNS = 'get_columns';
+
     public const string GET_COLUMN = 'get_column';
+
     public const string DELETE_COLUMN = 'delete_column';
 
     // Attribute Indexes
     public const string CREATE_INDEX = 'create_attribute_index';
+
     public const string GET_INDEXES = 'get_attribute_indexes';
+
     public const string GET_INDEX = 'get_attribute_index';
+
     public const string DELETE_INDEX = 'delete_attribute_index';
 
     // Grid column indexes
     public const string CREATE_COLUMN_INDEX = 'create_column_index';
+
     public const string GET_COLUMN_INDEXES = 'get_column_indexes';
+
     public const string GET_COLUMN_INDEX = 'get_column_index';
+
     public const string DELETE_COLUMN_INDEX = 'delete_column_index';
 
     // Documents
     public const string CREATE_DOCUMENT = 'create_document_rest';
+
     public const string GET_DOCUMENTS = 'list_documents';
+
     public const string GET_DOCUMENT = 'get_document';
+
     public const string UPDATE_DOCUMENT = 'update_document';
-    public const string UPSERT_DOCUMENT  = 'upsert_document';
+
+    public const string UPSERT_DOCUMENT = 'upsert_document';
+
     public const string DELETE_DOCUMENT = 'delete_document';
 
     // Documents - Bulk APIs
     public const string CREATE_DOCUMENTS = 'create_documents_rest';
+
     public const string UPDATE_DOCUMENTS = 'update_documents';
+
     public const string UPSERT_DOCUMENTS = 'upsert_documents';
+
     public const string DELETE_DOCUMENTS = 'delete_documents';
 
     // Grid rows
     public const string CREATE_ROW = 'create_row_rest';
+
     public const string GET_ROWS = 'list_rows';
+
     public const string GET_ROW = 'get_row';
+
     public const string UPDATE_ROW = 'update_row';
-    public const string UPSERT_ROW  = 'upsert_row';
+
+    public const string UPSERT_ROW = 'upsert_row';
+
     public const string DELETE_ROW = 'delete_row';
 
     // Grid rows - Bulk APIs
     public const string CREATE_ROWS = 'create_rows_rest';
+
     public const string UPDATE_ROWS = 'update_rows';
+
     public const string UPSERT_ROWS = 'upsert_rows';
+
     public const string DELETE_ROWS = 'delete_rows';
 
     // Custom Entities
     public const string CREATE_CUSTOM_ENTITY = 'create_custom_entity';
+
     public const string GET_CUSTOM_ENTITIES = 'get_custom_entities';
+
     public const string GET_CUSTOM_ENTITY = 'get_custom_entity';
+
     public const string UPDATE_CUSTOM_ENTITY = 'update_custom_entity';
+
     public const string DELETE_CUSTOM_ENTITY = 'delete_custom_entity';
 
     // Account
     public const string CREATE_ACCOUNT = 'create_account';
+
     public const string CREATE_ACCOUNT_SESSION = 'create_account_session';
+
     public const string CREATE_ANONYMOUS_SESSION = 'create_anonymous_session';
+
     public const string CREATE_ACCOUNT_JWT = 'create_account_jwt';
+
     public const string CREATE_MAGIC_URL = 'create_magic_url';
+
     public const string CREATE_PASSWORD_RECOVERY = 'create_password_recovery';
+
     public const string CREATE_EMAIL_VERIFICATION = 'create_email_verification';
+
     public const string CREATE_PHONE_VERIFICATION = 'create_phone_verification';
+
     public const string GET_ACCOUNT = 'get_account';
+
     public const string GET_ACCOUNT_SESSION = 'get_account_session';
+
     public const string GET_ACCOUNT_SESSIONS = 'get_account_sessions';
+
     public const string GET_ACCOUNT_PREFS = 'get_account_preferences';
+
     public const string GET_ACCOUNT_LOGS = 'get_account_logs';
+
     public const string UPDATE_ACCOUNT_NAME = 'update_account_name';
+
     public const string UPDATE_ACCOUNT_EMAIL = 'update_account_email';
+
     public const string UPDATE_ACCOUNT_PASSWORD = 'update_account_password';
+
     public const string UPDATE_ACCOUNT_PREFS = 'update_account_prefs';
+
     public const string UPDATE_ACCOUNT_PHONE = 'update_account_phone';
+
     public const string UPDATE_ACCOUNT_STATUS = 'update_account_status';
+
     public const string UPDATE_MAGIC_URL = 'confirm_magic_url';
+
     public const string UPDATE_PASSWORD_RECOVERY = 'confirm_password_recovery';
+
     public const string UPDATE_EMAIL_VERIFICATION = 'confirm_email_verification';
+
     public const string UPDATE_PHONE_VERIFICATION = 'confirm_phone_verification';
+
     public const string DELETE_ACCOUNT_SESSION = 'delete_account_session';
+
     public const string DELETE_ACCOUNT_SESSIONS = 'delete_account_sessions';
 
     // Users
     public const string CREATE_USER = 'create_user';
+
     public const string GET_USER = 'get_user';
+
     public const string GET_USERS = 'list_user';
+
     public const string GET_USER_PREFERENCES = 'get_user_preferences';
+
     public const string GET_USER_SESSIONS = 'get_user_sessions';
+
     public const string GET_USER_MEMBERSHIPS = 'get_user_memberships';
+
     public const string GET_USER_LOGS = 'get_user_logs';
+
     public const string UPDATE_USER_STATUS = 'update_user_status';
+
     public const string UPDATE_USER_NAME = 'update_user_name';
+
     public const string UPDATE_USER_EMAIL = 'update_user_email';
+
     public const string UPDATE_USER_EMAIL_VERIFICATION = 'update_email_verification';
+
     public const string UPDATE_USER_PHONE_VERIFICATION = 'update_phone_verification';
+
     public const string UPDATE_USER_PASSWORD = 'update_user_password';
+
     public const string UPDATE_USER_PHONE = 'update_user_phone';
+
     public const string UPDATE_USER_PREFS = 'update_user_prefs';
+
     public const string DELETE_USER_SESSIONS = 'delete_user_sessions';
+
     public const string DELETE_USER_SESSION = 'delete_user_session';
+
     public const string DELETE_USER = 'delete_user';
+
     public const string CREATE_USER_TARGET = 'create_user_target';
+
     public const string LIST_USER_TARGETS = 'list_user_targets';
+
     public const string GET_USER_TARGET = 'get_user_target';
+
     public const string UPDATE_USER_TARGET = 'update_user_target';
+
     public const string DELETE_USER_TARGET = 'delete_user_target';
 
     // Teams
     public const string GET_TEAM = 'get_team';
+
     public const string GET_TEAM_PREFERENCES = 'get_team_preferences';
+
     public const string GET_TEAMS = 'list_teams';
+
     public const string CREATE_TEAM = 'create_team';
+
     public const string UPDATE_TEAM_NAME = 'update_team_name';
+
     public const string UPDATE_TEAM_PREFERENCES = 'update_team_preferences';
 
     public const string DELETE_TEAM = 'delete_team';
+
     public const string GET_TEAM_MEMBERSHIP = 'get_team_membership';
+
     public const string GET_TEAM_MEMBERSHIPS = 'list_team_memberships';
+
     public const string CREATE_TEAM_MEMBERSHIP = 'create_team_membership';
+
     public const string UPDATE_TEAM_MEMBERSHIP = 'update_team_membership';
+
     public const string UPDATE_TEAM_MEMBERSHIP_STATUS = 'update_membership_status';
+
     public const string DELETE_TEAM_MEMBERSHIP = 'delete_team_membership';
 
     // Functions
     public const string CREATE_FUNCTION = 'create_function';
+
     public const string GET_FUNCTIONS = 'list_functions';
+
     public const string GET_FUNCTION = 'get_function';
+
     public const string GET_RUNTIMES = 'list_runtimes';
+
     public const string UPDATE_FUNCTION = 'update_function';
+
     public const string DELETE_FUNCTION = 'delete_function';
+
     // Variables
     public const string CREATE_VARIABLE = 'create_variable';
+
     public const string GET_VARIABLES = 'list_variables';
+
     public const string GET_VARIABLE = 'get_variable';
+
     public const string UPDATE_VARIABLE = 'update_variable';
+
     public const string DELETE_VARIABLE = 'delete_variable';
 
-    //Deployments
+    // Deployments
     public const string CREATE_DEPLOYMENT = 'create_deployment';
+
     public const string GET_DEPLOYMENTS = 'list_deployments';
+
     public const string GET_DEPLOYMENT = 'get_deployment';
+
     public const string UPDATE_DEPLOYMENT = 'update_deployment';
+
     public const string DELETE_DEPLOYMENT = 'delete_deployment';
+
     // Executions
     public const string GET_EXECUTIONS = 'list_executions';
+
     public const string GET_EXECUTION = 'get_execution';
+
     public const string CREATE_EXECUTION = 'create_execution';
+
     public const string DELETE_EXECUTION = 'delete_execution';
+
     public const string RETRY_BUILD = 'retry_build';
 
     // Buckets
     public const string CREATE_BUCKET = 'create_bucket';
+
     public const string GET_BUCKETS = 'list_buckets';
+
     public const string GET_BUCKET = 'get_bucket';
+
     public const string UPDATE_BUCKET = 'update_bucket';
+
     public const string DELETE_BUCKET = 'delete_bucket';
+
     // Files
     public const string CREATE_FILE = 'create_file';
+
     public const string GET_FILES = 'list_files';
+
     public const string GET_FILE = 'get_file';
+
     public const string GET_FILE_PREVIEW = 'get_file_preview';
+
     public const string GET_FILE_DOWNLOAD = 'get_file_download';
+
     public const string GET_FILE_VIEW = 'get_file_view';
+
     public const string UPDATE_FILE = 'update_file';
+
     public const string DELETE_FILE = 'delete_file';
 
     // Health
     public const string GET_HTTP_HEALTH = 'get_http_health';
+
     public const string GET_DB_HEALTH = 'get_db_health';
+
     public const string GET_CACHE_HEALTH = 'get_cache_health';
+
     public const string GET_TIME_HEALTH = 'get_time_health';
+
     public const string GET_WEBHOOKS_QUEUE_HEALTH = 'get_webhooks_queue_health';
+
     public const string GET_LOGS_QUEUE_HEALTH = 'get_logs_queue_health';
+
     public const string GET_CERTIFICATES_QUEUE_HEALTH = 'get_certificates_queue_health';
+
     public const string GET_FUNCTION_QUEUE_HEALTH = 'get_functions_queue_health';
+
     public const string GET_LOCAL_STORAGE_HEALTH = 'get_local_storage_health';
+
     public const string GET_ANITVIRUS_HEALTH = 'get_antivirus_health';
 
     // Localization
     public const string GET_LOCALE = 'get_locale';
+
     public const string LIST_COUNTRIES = 'list_countries';
+
     public const string LIST_EU_COUNTRIES = 'list_eu_countries';
+
     public const string LIST_COUNTRY_PHONE_CODES = 'list_country_phone_codes';
+
     public const string LIST_CONTINENTS = 'list_continents';
+
     public const string LIST_CURRENCIES = 'list_currencies';
+
     public const string LIST_LANGUAGES = 'list_languages';
 
     // Avatars
     public const string GET_CREDIT_CARD_ICON = 'get_credit_card_icon';
+
     public const string GET_BROWSER_ICON = 'get_browser_icon';
+
     public const string GET_COUNTRY_FLAG = 'get_country_flag';
+
     public const string GET_IMAGE_FROM_URL = 'get_image_from_url';
+
     public const string GET_FAVICON = 'get_favicon';
+
     public const string GET_QRCODE = 'get_qrcode';
+
     public const string GET_USER_INITIALS = 'get_user_initials';
+
     public const string GET_SCREENSHOT = 'get_screenshot';
 
     // Providers
     public const string CREATE_MAILGUN_PROVIDER = 'create_mailgun_provider';
+
     public const string CREATE_SENDGRID_PROVIDER = 'create_sendgrid_provider';
+
     public const string CREATE_RESEND_PROVIDER = 'create_resend_provider';
+
     public const string CREATE_SMTP_PROVIDER = 'create_smtp_provider';
+
     public const string CREATE_TWILIO_PROVIDER = 'create_twilio_provider';
+
     public const string CREATE_TELESIGN_PROVIDER = 'create_telesign_provider';
+
     public const string CREATE_TEXTMAGIC_PROVIDER = 'create_textmagic_provider';
+
     public const string CREATE_MSG91_PROVIDER = 'create_msg91_provider';
+
     public const string CREATE_VONAGE_PROVIDER = 'create_vonage_provider';
+
+    public const string CREATE_TELNYX_PROVIDER = 'create_telnyx_provider';
+
     public const string CREATE_FCM_PROVIDER = 'create_fcm_provider';
+
     public const string CREATE_APNS_PROVIDER = 'create_apns_provider';
+
     public const string LIST_PROVIDERS = 'list_providers';
+
     public const string GET_PROVIDER = 'get_provider';
+
     public const string UPDATE_MAILGUN_PROVIDER = 'update_mailgun_provider';
+
     public const string UPDATE_SENDGRID_PROVIDER = 'update_sendgrid_provider';
+
     public const string UPDATE_RESEND_PROVIDER = 'update_resend_provider';
+
     public const string UPDATE_SMTP_PROVIDER = 'update_smtp_provider';
+
     public const string UPDATE_TWILIO_PROVIDER = 'update_twilio_provider';
+
     public const string UPDATE_TELESIGN_PROVIDER = 'update_telesign_provider';
+
     public const string UPDATE_TEXTMAGIC_PROVIDER = 'update_textmagic_provider';
+
     public const string UPDATE_MSG91_PROVIDER = 'update_msg91_provider';
+
     public const string UPDATE_VONAGE_PROVIDER = 'update_vonage_provider';
+
+    public const string UPDATE_TELNYX_PROVIDER = 'update_telnyx_provider';
+
     public const string UPDATE_FCM_PROVIDER = 'update_fcm_provider';
+
     public const string UPDATE_APNS_PROVIDER = 'update_apns_provider';
+
     public const string DELETE_PROVIDER = 'delete_provider';
 
     // Topics
     public const string CREATE_TOPIC = 'create_topic';
+
     public const string LIST_TOPICS = 'list_topics';
+
     public const string GET_TOPIC = 'get_topic';
+
     public const string UPDATE_TOPIC = 'update_topic';
+
     public const string DELETE_TOPIC = 'delete_topic';
 
     // Subscriptions
     public const string CREATE_SUBSCRIBER = 'create_subscriber';
+
     public const string LIST_SUBSCRIBERS = 'list_subscribers';
+
     public const string GET_SUBSCRIBER = 'get_subscriber';
+
     public const string DELETE_SUBSCRIBER = 'delete_subscriber';
 
     // Messages
     public const string CREATE_EMAIL = 'create_email';
+
     public const string CREATE_SMS = 'create_sms';
+
     public const string CREATE_PUSH_NOTIFICATION = 'create_push_notification';
+
     public const string LIST_MESSAGES = 'list_messages';
+
     public const string GET_MESSAGE = 'get_message';
 
     public const string UPDATE_EMAIL = 'update_email';
+
     public const string UPDATE_SMS = 'update_sms';
+
     public const string UPDATE_PUSH_NOTIFICATION = 'update_push_notification';
 
     // Complex queries
     public const string COMPLEX_QUERY_TABLE = 'complex_query_table';
+
     public const string COMPLEX_QUERY_COLLECTION = 'complex_query_collection';
 
     // Attribute Fragments
@@ -1159,13 +1405,13 @@ trait Base
                             ...attributeProperties
                         }
                     }
-                }' . PHP_EOL . self::FRAGMENT_ATTRIBUTES;
+                }'.PHP_EOL.self::FRAGMENT_ATTRIBUTES;
             case self::GET_ATTRIBUTE:
                 return 'query getAttribute($databaseId: String!, $collectionId: String!, $key: String!) {
                     databasesGetAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key) {
                         ...attributeProperties
                     }
-                }' . PHP_EOL . self::FRAGMENT_ATTRIBUTES;
+                }'.PHP_EOL.self::FRAGMENT_ATTRIBUTES;
             case self::DELETE_ATTRIBUTE:
                 return 'mutation deleteAttribute($databaseId: String!, $collectionId: String!, $key: String!) {
                     databasesDeleteAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key) {
@@ -1180,13 +1426,13 @@ trait Base
                             ...columnProperties
                         }
                     }
-                }' . PHP_EOL . self::FRAGMENT_COLUMNS;
+                }'.PHP_EOL.self::FRAGMENT_COLUMNS;
             case self::GET_COLUMN:
                 return 'query getColumn($databaseId: String!, $tableId: String!, $key: String!) {
                     tablesDBGetColumn(databaseId: $databaseId, tableId: $tableId, key: $key) {
                         ...columnProperties
                     }
-                }' . PHP_EOL . self::FRAGMENT_COLUMNS;
+                }'.PHP_EOL.self::FRAGMENT_COLUMNS;
             case self::DELETE_COLUMN:
                 return 'mutation deleteColumn($databaseId: String!, $tableId: String!, $key: String!) {
                     tablesDBDeleteColumn(databaseId: $databaseId, tableId: $tableId, key: $key) {
@@ -1470,7 +1716,7 @@ trait Base
                             ...options
                         }
                     }
-                }' . PHP_EOL . self::FRAGMENT_HASH_OPTIONS;
+                }'.PHP_EOL.self::FRAGMENT_HASH_OPTIONS;
             case self::GET_USER_PREFERENCES:
                 return 'query getUserPreferences($userId : String!) {
                     usersGetPrefs(userId : $userId) {
@@ -2581,6 +2827,16 @@ trait Base
                         enabled
                     }
                 }';
+            case self::CREATE_TELNYX_PROVIDER:
+                return 'mutation createTelnyxProvider($providerId: String!, $name: String!, $from: String!, $apiKey: String!) {
+                    messagingCreateTelnyxProvider(providerId: $providerId, name: $name, from: $from, apiKey: $apiKey) {
+                        _id
+                        name
+                        provider
+                        type
+                        enabled
+                    }
+                }';
             case self::CREATE_FCM_PROVIDER:
                 return 'mutation createFcmProvider($providerId: String!, $name: String!, $serviceAccountJSON: Json) {
                     messagingCreateFcmProvider(providerId: $providerId, name: $name, serviceAccountJSON: $serviceAccountJSON) {
@@ -2708,6 +2964,16 @@ trait Base
             case self::UPDATE_VONAGE_PROVIDER:
                 return 'mutation updateVonageProvider($providerId: String!, $name: String!, $apiKey: String!, $apiSecret: String!) {
                     messagingUpdateVonageProvider(providerId: $providerId, name: $name, apiKey: $apiKey, apiSecret: $apiSecret) {
+                        _id
+                        name
+                        provider
+                        type
+                        enabled
+                    }
+                }';
+            case self::UPDATE_TELNYX_PROVIDER:
+                return 'mutation updateTelnyxProvider($providerId: String!, $name: String!, $apiKey: String!) {
+                    messagingUpdateTelnyxProvider(providerId: $providerId, name: $name, apiKey: $apiKey) {
                         _id
                         name
                         provider
@@ -3206,7 +3472,7 @@ trait Base
                             data
                         }
                     }
-                }' . PHP_EOL . self::FRAGMENT_ATTRIBUTES;
+                }'.PHP_EOL.self::FRAGMENT_ATTRIBUTES;
             case self::COMPLEX_QUERY_TABLE:
                 return 'mutation complex($databaseId: String!, $databaseName: String!, $tableId: String!, $tableName: String!, $rowSecurity: Boolean!, $tablePermissions: [String!]!) {
                     databasesCreate(databaseId: $databaseId, name: $databaseName) {
@@ -3449,7 +3715,7 @@ trait Base
                             data
                         }
                     }
-                }' . PHP_EOL . self::FRAGMENT_COLUMNS;
+                }'.PHP_EOL.self::FRAGMENT_COLUMNS;
         }
 
         throw new \InvalidArgumentException('Invalid query type');
@@ -3457,11 +3723,12 @@ trait Base
 
     // Function-related methods
     protected string $stdout = '';
+
     protected string $stderr = '';
 
     protected function packageFunction(string $function): CURLFile
     {
-        $folderPath = realpath(__DIR__ . '/../../../resources/functions') . "/$function";
+        $folderPath = realpath(__DIR__.'/../../../resources/functions')."/$function";
         $tarPath = "$folderPath/code.tar.gz";
 
         Console::execute("cd $folderPath && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
