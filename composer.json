@@ -114,6 +114,12 @@
         "czproject/git-php": "4.*",
         "laravel/pint": "1.*"
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/database"
+        }
+    ],
     "provide": {
         "ext-phpiredis": "*"
     },

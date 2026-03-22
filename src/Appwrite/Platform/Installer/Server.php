@@ -127,6 +127,8 @@ class Server
 
     private function startSwooleServer(string $host, int $port, ?string $readyFile = null): void
     {
+        $this->state->clearStaleLock();
+
         // Preload static files into memory
         $files = new Files();
         $files->load($this->paths['views']);

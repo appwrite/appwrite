@@ -2,6 +2,11 @@
     const getBodyDataset = () => document.body?.dataset ?? {};
     const isUpgradeMode = () => getBodyDataset().upgrade === 'true';
     const getLockedDatabase = () => getBodyDataset().lockedDatabase || '';
+    const getEnabledDatabases = () => {
+        const raw = getBodyDataset().enabledDatabases;
+        if (!raw) return ['mongodb', 'mariadb', 'postgresql'];
+        try { return JSON.parse(raw); } catch (e) { return ['mongodb', 'mariadb', 'postgresql']; }
+    };
 
     const STEP_IDS = Object.freeze({
         CONFIG_FILES: 'config-files',
@@ -95,6 +100,7 @@
         getBodyDataset,
         isUpgradeMode,
         getLockedDatabase,
+        getEnabledDatabases,
         STEP_IDS,
         STATUS,
         SSE_EVENTS,

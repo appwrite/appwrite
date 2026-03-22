@@ -11,9 +11,13 @@
     --neutral-300: rgba(173, 173, 176, 1);
     --neutral-400: rgba(151, 151, 155, 1);
     --neutral-500: rgba(129, 129, 134, 1);
+    --neutral-600: rgba(108, 108, 113, 1);
     --neutral-700: rgba(86, 86, 92, 1);
+    --neutral-750: rgba(65, 65, 70, 1);
     --neutral-800: rgba(45, 45, 49, 1);
+    --neutral-850: rgba(29, 29, 33, 1);
     --neutral-900: rgba(25, 25, 28, 1);
+    --neutral-250: rgba(195, 195, 198, 1);
 
     /* Warning colors */
     --web-orange-200: rgba(255, 213, 194, 1);
@@ -172,6 +176,44 @@
     --fgColor-neutral-weak: var(--fgcolor-neutral-weak);
     --fgColor-accent: var(--fgcolor-accent);
     --fgColor-on-accent: var(--fgcolor-on-accent);
+
+    color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bgcolor-neutral-default: var(--neutral-900);
+        --bgcolor-neutral-primary: var(--neutral-850);
+        --bgcolor-neutral-secondary: var(--neutral-800);
+        --bgcolor-neutral-tertiary: var(--neutral-800);
+        --bgcolor-neutral-invert-weaker: var(--neutral-400);
+        --bgcolor-neutral-invert-weak: var(--neutral-300);
+        --bgcolor-success-weak: rgba(16, 185, 129, 0.12);
+        --bgcolor-warning-weaker: rgba(254, 124, 67, 0.08);
+        --bgcolor-warning-weak: rgba(254, 124, 67, 0.12);
+        --bgcolor-error-weaker: rgba(255, 69, 58, 0.08);
+
+        --fgcolor-neutral-primary: var(--neutral-50);
+        --fgcolor-neutral-secondary: var(--neutral-250);
+        --fgcolor-neutral-tertiary: var(--neutral-500);
+        --fgcolor-neutral-weak: var(--neutral-600);
+        --fgcolor-on-accent: var(--neutral-0);
+        --fgcolor-on-invert: var(--neutral-900);
+        --fgcolor-on-success-weak: rgba(52, 211, 153, 1);
+        --fgcolor-warning: var(--web-orange-500);
+        --fgcolor-on-warning-weak: var(--web-orange-500);
+        --fgcolor-error: var(--web-red-500);
+        --fgcolor-on-error: var(--neutral-0);
+
+        --border-neutral: var(--neutral-800);
+        --border-neutral-strong: var(--neutral-750);
+        --border-neutral-stronger: var(--neutral-600);
+        --border-focus: var(--neutral-600);
+
+        --overlay-neutral-hover: rgba(255, 255, 255, 0.04);
+        --overlay-neutral-pressed: rgba(255, 255, 255, 0.08);
+        --overlay-scrim: rgba(0, 0, 0, 0.48);
+    }
 }
 
 .installer-toast-stack {
@@ -1354,6 +1396,7 @@ body {
     align-items: center;
     justify-content: center;
     line-height: 0;
+    color: var(--fgcolor-neutral-weak);
 }
 
 .step-indicator svg {

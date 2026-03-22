@@ -44,6 +44,7 @@ class View extends Action
         $defaultHttpsPort = $config->getDefaultHttpsPort();
         $isUpgrade = $config->isUpgrade();
         $lockedDatabase = $config->getLockedDatabase();
+        $enabledDatabases = $config->getEnabledDatabases();
         $isLocalInstall = $config->isLocal();
 
         $defaultEmailCertificates = $vars['_APP_EMAIL_CERTIFICATES']['default'] ?? '';
