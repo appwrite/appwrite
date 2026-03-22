@@ -478,8 +478,7 @@ class Messaging extends Action
                 $credentials['apiSecret'] ?? ''
             ),
             'telnyx' => new Telnyx(
-                $credentials['apiKey'] ?? '',
-                $provider->getAttribute('options')['from'] ?? null
+                $credentials['apiKey'] ?? ''
             ),
             'fast2sms' => new Fast2SMS(
                 $credentials['apiKey'] ?? '',
