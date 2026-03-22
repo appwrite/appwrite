@@ -820,7 +820,7 @@ class Messaging extends Action
                     'apiSecret' => $password,
                 ],
                 'telnyx' => [
-                    'apiKey' => $password ?: $user,
+                    'apiKey' => $password,
                 ],
                 'fast2sms' => [
                     'senderId' => $user,
