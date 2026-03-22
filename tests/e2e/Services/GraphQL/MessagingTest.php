@@ -901,7 +901,7 @@ class MessagingTest extends Scope
     public function test_create_providers(): void
     {
         $providers = $this->setupProviders();
-        $this->assertCount(10, $providers);
+        $this->assertCount(11, $providers);
     }
 
     public function test_update_providers(): void

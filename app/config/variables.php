@@ -585,7 +585,7 @@ return [
         'variables' => [
             [
                 'name' => '_APP_SMS_PROVIDER',
-                'description' => "Provider used for delivering SMS for Phone authentication. Use the following format: 'sms://[USER]:[SECRET]@[PROVIDER]'.\n\nEnsure `[USER]` and `[SECRET]` are URL encoded if they contain any non-alphanumeric characters.\n\nAvailable providers are twilio, Textmagic, telesign, msg91, vonage, and telnyx.",
+                'description' => "Provider used for delivering SMS for Phone authentication. Use the following format: 'sms://[USER]:[SECRET]@[PROVIDER]'.\n\nEnsure `[USER]` and `[SECRET]` are URL encoded if they contain any non-alphanumeric characters.\n\nSupported providers: twilio, textmagic, telesign, msg91, vonage, fast2sms, inforu, and telnyx.\n\nCredential mapping by provider: twilio (`[USER]=accountSid`, `[SECRET]=authToken`), textmagic (`[USER]=username`, `[SECRET]=apiKey`), telesign (`[USER]=customerId`, `[SECRET]=apiKey`), msg91 (`[USER]=senderId`, `[SECRET]=authKey`), vonage (`[USER]=apiKey`, `[SECRET]=apiSecret`), fast2sms (`[USER]=senderId`, `[SECRET]=apiKey`), inforu (`[USER]=senderId`, `[SECRET]=apiKey`).\n\nTelnyx uses a single API key. You can provide it as either `[SECRET]` or `[USER]` in the DSN. Example: `sms://unused:TELNYX_API_KEY@telnyx` or `sms://TELNYX_API_KEY@telnyx`.",
                 'introduction' => '0.15.0',
                 'default' => '',
                 'required' => false,

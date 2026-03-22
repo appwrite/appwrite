@@ -1021,7 +1021,7 @@ trait MessagingBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         // Count may vary due to other tests creating providers
-        $this->assertGreaterThanOrEqual(11, \count($response['body']['providers']));
+        $this->assertGreaterThanOrEqual(12, \count($response['body']['providers']));
 
         return $providers;
     }

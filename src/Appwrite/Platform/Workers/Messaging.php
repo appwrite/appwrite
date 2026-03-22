@@ -180,7 +180,7 @@ class Messaging extends Action
         }
 
         if (empty($allTargets)) {
-            $dbForProject->updateDocument('messages', $message->getId(), $message->setAttributes([
+            $dbForProject->updateDocument('messages', $message->getId(), new Document([
                 'status' => MessageStatus::FAILED,
                 'deliveryErrors' => ['No valid recipients found.'],
             ]));
@@ -196,7 +196,7 @@ class Messaging extends Action
         ]);
 
         if ($default->isEmpty()) {
-            $dbForProject->updateDocument('messages', $message->getId(), $message->setAttributes([
+            $dbForProject->updateDocument('messages', $message->getId(), new Document([
                 'status' => MessageStatus::FAILED,
                 'deliveryErrors' => ['No enabled provider found.'],
             ]));
