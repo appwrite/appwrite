@@ -297,7 +297,9 @@ class Messaging extends Action
                                         $dbForProject->updateDocument(
                                             'targets',
                                             $target->getId(),
-                                            $target->setAttribute('expired', true)
+                                            new Document([
+                                                'expired' => true,
+                                            ])
                                         );
                                     }
                                 }
