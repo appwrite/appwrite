@@ -590,7 +590,9 @@ Http::init()
         if (! $user->isEmpty()) {
             $userClone = clone $user;
             // $user doesn't support `type` and can cause unintended effects.
-            $userClone->setAttribute('type', $mode === APP_MODE_ADMIN ? ACTIVITY_TYPE_ADMIN : ACTIVITY_TYPE_USER);
+            if (empty($user->getAttribute('type'))) {
+                $userClone->setAttribute('type', $mode === APP_MODE_ADMIN ? ACTIVITY_TYPE_ADMIN : ACTIVITY_TYPE_USER);
+            }
             $queueForAudits->setUser($userClone);
         }
 
@@ -875,7 +877,9 @@ Http::shutdown()
         if (! $user->isEmpty()) {
             $userClone = clone $user;
             // $user doesn't support `type` and can cause unintended effects.
-            $userClone->setAttribute('type', $mode === APP_MODE_ADMIN ? ACTIVITY_TYPE_ADMIN : ACTIVITY_TYPE_USER);
+            if (empty($user->getAttribute('type'))) {
+                $userClone->setAttribute('type', $mode === APP_MODE_ADMIN ? ACTIVITY_TYPE_ADMIN : ACTIVITY_TYPE_USER);
+            }
             $queueForAudits->setUser($userClone);
         } elseif ($queueForAudits->getUser() === null || $queueForAudits->getUser()->isEmpty()) {
             /**
