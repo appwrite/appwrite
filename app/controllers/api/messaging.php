@@ -2438,6 +2438,7 @@ Http::post('/v1/messaging/topics')
             '$id' => $topicId,
             'name' => $name,
             'subscribe' => $subscribe,
+            'targets' => null,
         ]);
 
         try {
