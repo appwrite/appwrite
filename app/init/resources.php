@@ -1152,10 +1152,9 @@ Http::setResource('geoRecord', function (Reader $geodb, Request $request, Locale
         try {
             $client = new Client();
             $client->addHeader('Authorization', 'Bearer ' . $geoSecret);
-            $client->setBaseUrl($geoEndpoint);
             $client->setTimeout(3000);
 
-            $response = $client->fetch("/ips/{$ip}", Client::METHOD_GET);
+            $response = $client->fetch(\rtrim($geoEndpoint, '/') . "/ips/{$ip}", Client::METHOD_GET);
             if ($response->getStatusCode() === 200) {
                 $record = $response->json();
             }
