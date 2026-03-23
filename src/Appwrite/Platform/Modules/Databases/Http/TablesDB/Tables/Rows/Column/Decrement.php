@@ -65,7 +65,6 @@ class Decrement extends DecrementDocumentAttribute
             ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('getDatabasesDB')
             ->inject('queueForEvents')
             ->inject('usage')
             ->inject('plan')

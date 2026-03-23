@@ -33,6 +33,7 @@ class Install extends Action
     private const string APPWRITE_API_URL = 'http://appwrite';
     private const string GROWTH_API_URL = 'https://growth.appwrite.io/v1';
 
+    protected bool $isUpgrade = false;
     protected string $hostPath = '';
     protected ?bool $isLocalInstall = null;
     protected ?array $installerConfig = null;
@@ -66,7 +67,7 @@ class Install extends Action
         bool $noStart,
         string $database
     ): void {
-        $isUpgrade = false;
+        $isUpgrade = $this->isUpgrade;
         $defaultHttpPort = '80';
         $defaultHttpsPort = '443';
         $config = Config::getParam('variables');
@@ -168,8 +169,27 @@ class Install extends Action
                 }
             }
 
-            // Block database type changes on existing installations
-            $existingDatabase = $vars['_APP_DB_ADAPTER']['default'] ?? null;
+            // Block database type changes on existing installations.
+            // Only enforce if the existing config explicitly set _APP_DB_ADAPTER
+            // (pre-1.9.0 installs never had this variable).
+            $existingDatabase = null;
+            foreach ($compose->getServices() as $service) {
+                if (!$service) {
+                    continue;
+                }
+                $svcEnv = $service->getEnvironment()->list();
+                if (isset($svcEnv['_APP_DB_ADAPTER'])) {
+                    $existingDatabase = $svcEnv['_APP_DB_ADAPTER'];
+                    break;
+                }
+            }
+            if ($existingDatabase === null) {
+                $envFilePath = $this->path . '/' . $this->getEnvFileName();
+                $rawEnv = @file_get_contents($envFilePath);
+                if ($rawEnv !== false) {
+                    $existingDatabase = (new Env($rawEnv))->list()['_APP_DB_ADAPTER'] ?? null;
+                }
+            }
             if ($existingDatabase !== null && $existingDatabase !== $database) {
                 Console::error("Cannot change database type from '{$existingDatabase}' to '{$database}'.");
                 Console::error('Changing database types on an existing installation is not supported.');
@@ -279,7 +299,8 @@ class Install extends Action
                 Console::warning("\nUse 'AAAA' if you're using an IPv6 address and 'A' if you're using an IPv4 address.\n");
             }
         }
-        $database = $userInput['_APP_DB_ADAPTER'] ?? $database;
+        $userInput['_APP_DB_ADAPTER'] = $userInput['_APP_DB_ADAPTER'] ?? $database;
+        $database = $userInput['_APP_DB_ADAPTER'];
         if ($database === 'postgresql') {
             $userInput['_APP_DB_HOST'] = 'postgresql';
             $userInput['_APP_DB_PORT'] = 5432;
@@ -488,7 +509,7 @@ class Install extends Action
         $this->applyLocalPaths($isLocalInstall, false);
 
         $isCLI = php_sapi_name() === 'cli';
-        if ($isLocalInstall) {
+        if ($isLocalInstall || $isUpgrade) {
             $useExistingConfig = false;
         } else {
             $useExistingConfig = file_exists($this->path . '/' . $this->getComposeFileName())

@@ -5,8 +5,8 @@ namespace Appwrite\Utopia\Database\Validator;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Key;
+use Utopia\Emails\Validator\Email;
 use Utopia\Validator;
-use Utopia\Validator\Email;
 use Utopia\Validator\IP;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
@@ -45,12 +45,10 @@ class Attributes extends Validator
     /**
      * @param int $maxAttributes Maximum number of attributes allowed
      * @param bool $supportForSpatialAttributes Whether DB supports spatial attributes
-     * @param bool $supportForAttributes Whether DB supports attributes or not
      */
     public function __construct(
         int $maxAttributes = APP_LIMIT_ARRAY_PARAMS_SIZE,
         protected bool $supportForSpatialAttributes = true,
-        protected bool $supportForAttributes = true
     ) {
         $this->maxAttributes = $maxAttributes;
     }
@@ -77,11 +75,6 @@ class Attributes extends Validator
     {
         if (!\is_array($value)) {
             $this->message = 'Attributes must be an array';
-            return false;
-        }
-
-        if (\count($value) && !$this->supportForAttributes) {
-            $this->message = 'Attributes are not supported by the current database';
             return false;
         }
 

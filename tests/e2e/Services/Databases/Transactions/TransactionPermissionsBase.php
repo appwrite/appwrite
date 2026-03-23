@@ -88,20 +88,18 @@ trait TransactionPermissionsBase
 
         $this->assertEquals(201, $collection['headers']['status-code']);
 
-        if ($this->getSupportForAttributes()) {
-            $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
-            ]), [
-                'key' => 'title',
-                'size' => 255,
-                'required' => true,
-            ]);
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'title',
+            'size' => 255,
+            'required' => true,
+        ]);
 
-            $this->assertEquals(202, $attribute['headers']['status-code']);
-            $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
-        }
+        $this->assertEquals(202, $attribute['headers']['status-code']);
+        $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
 
         // Create transaction
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
@@ -152,20 +150,18 @@ trait TransactionPermissionsBase
 
         $this->assertEquals(201, $collection['headers']['status-code']);
 
-        if ($this->getSupportForAttributes()) {
-            $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
-            ]), [
-                'key' => 'title',
-                'size' => 255,
-                'required' => true,
-            ]);
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'title',
+            'size' => 255,
+            'required' => true,
+        ]);
 
-            $this->assertEquals(202, $attribute['headers']['status-code']);
-            $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
-        }
+        $this->assertEquals(202, $attribute['headers']['status-code']);
+        $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
 
         // Create a document first with API key
         $doc = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $collection['body']['$id']), array_merge([
@@ -228,20 +224,18 @@ trait TransactionPermissionsBase
 
         $this->assertEquals(201, $collection['headers']['status-code']);
 
-        if ($this->getSupportForAttributes()) {
-            $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
-            ]), [
-                'key' => 'title',
-                'size' => 255,
-                'required' => true,
-            ]);
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'title',
+            'size' => 255,
+            'required' => true,
+        ]);
 
-            $this->assertEquals(202, $attribute['headers']['status-code']);
-            $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
-        }
+        $this->assertEquals(202, $attribute['headers']['status-code']);
+        $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
 
         $doc = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $collection['body']['$id']), array_merge([
             'content-type' => 'application/json',
@@ -303,20 +297,18 @@ trait TransactionPermissionsBase
 
         $this->assertEquals(201, $collection['headers']['status-code']);
 
-        if ($this->getSupportForAttributes()) {
-            $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
-            ]), [
-                'key' => 'title',
-                'size' => 255,
-                'required' => true,
-            ]);
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'title',
+            'size' => 255,
+            'required' => true,
+        ]);
 
-            $this->assertEquals(202, $attribute['headers']['status-code']);
-            $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
-        }
+        $this->assertEquals(202, $attribute['headers']['status-code']);
+        $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
 
         // Create a document with update permission at document level
         $doc = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $collection['body']['$id']), array_merge([
@@ -384,20 +376,18 @@ trait TransactionPermissionsBase
 
         $this->assertEquals(201, $collection['headers']['status-code']);
 
-        if ($this->getSupportForAttributes()) {
-            $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
-            ]), [
-                'key' => 'title',
-                'size' => 255,
-                'required' => true,
-            ]);
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'title',
+            'size' => 255,
+            'required' => true,
+        ]);
 
-            $this->assertEquals(202, $attribute['headers']['status-code']);
-            $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
-        }
+        $this->assertEquals(202, $attribute['headers']['status-code']);
+        $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
 
         // Create a document with delete permission at document level
         $doc = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $collection['body']['$id']), array_merge([
@@ -467,20 +457,18 @@ trait TransactionPermissionsBase
         $this->assertEquals(201, $collection['headers']['status-code']);
 
         // Add attribute
-        if ($this->getSupportForAttributes()) {
-            $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
-            ]), [
-                'key' => 'title',
-                'size' => 255,
-                'required' => true,
-            ]);
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'title',
+            'size' => 255,
+            'required' => true,
+        ]);
 
-            $this->assertEquals(202, $attribute['headers']['status-code']);
-            $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
-        }
+        $this->assertEquals(202, $attribute['headers']['status-code']);
+        $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
 
         // Create transaction
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
@@ -539,20 +527,18 @@ trait TransactionPermissionsBase
 
         $this->assertEquals(201, $collection['headers']['status-code']);
 
-        if ($this->getSupportForAttributes()) {
-            $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
-            ]), [
-                'key' => 'title',
-                'size' => 255,
-                'required' => true,
-            ]);
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'title',
+            'size' => 255,
+            'required' => true,
+        ]);
 
-            $this->assertEquals(202, $attribute['headers']['status-code']);
-            $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
-        }
+        $this->assertEquals(202, $attribute['headers']['status-code']);
+        $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
 
         // Create transaction
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
@@ -611,20 +597,18 @@ trait TransactionPermissionsBase
 
         $this->assertEquals(201, $collection['headers']['status-code']);
 
-        if ($this->getSupportForAttributes()) {
-            $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
-            ]), [
-                'key' => 'title',
-                'size' => 255,
-                'required' => true,
-            ]);
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'title',
+            'size' => 255,
+            'required' => true,
+        ]);
 
-            $this->assertEquals(202, $attribute['headers']['status-code']);
-            $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
-        }
+        $this->assertEquals(202, $attribute['headers']['status-code']);
+        $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
 
         // Create transaction
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
@@ -676,20 +660,18 @@ trait TransactionPermissionsBase
 
         $this->assertEquals(201, $collection['headers']['status-code']);
 
-        if ($this->getSupportForAttributes()) {
-            $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
-            ]), [
-                'key' => 'title',
-                'size' => 255,
-                'required' => true,
-            ]);
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'title',
+            'size' => 255,
+            'required' => true,
+        ]);
 
-            $this->assertEquals(202, $attribute['headers']['status-code']);
-            $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
-        }
+        $this->assertEquals(202, $attribute['headers']['status-code']);
+        $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
 
         // Create transaction
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
@@ -741,20 +723,18 @@ trait TransactionPermissionsBase
 
         $this->assertEquals(201, $collection['headers']['status-code']);
 
-        if ($this->getSupportForAttributes()) {
-            $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
-            ]), [
-                'key' => 'title',
-                'size' => 255,
-                'required' => true,
-            ]);
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'title',
+            'size' => 255,
+            'required' => true,
+        ]);
 
-            $this->assertEquals(202, $attribute['headers']['status-code']);
-            $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
-        }
+        $this->assertEquals(202, $attribute['headers']['status-code']);
+        $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
 
         // Create transaction
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), array_merge([
@@ -1080,20 +1060,18 @@ trait TransactionPermissionsBase
 
         $this->assertEquals(201, $collection['headers']['status-code']);
 
-        if ($this->getSupportForAttributes()) {
-            $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey']
-            ]), [
-                'key' => 'title',
-                'size' => 255,
-                'required' => true,
-            ]);
+        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $collection['body']['$id'], 'string'), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'title',
+            'size' => 255,
+            'required' => true,
+        ]);
 
-            $this->assertEquals(202, $attribute['headers']['status-code']);
-            $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
-        }
+        $this->assertEquals(202, $attribute['headers']['status-code']);
+        $this->waitForAllAttributes($this->getPermissionsDatabase(), $collection['body']['$id']);
 
         // Create user 1 (fresh) and their transaction
         $user1 = $this->getUser(true);
