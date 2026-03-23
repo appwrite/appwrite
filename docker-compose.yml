@@ -112,6 +112,8 @@ services:
         condition: service_healthy
       coredns:
         condition: service_started
+      appwrite-geo:
+        condition: service_started
     entrypoint:
       - php
       - -e
@@ -241,6 +243,7 @@ services:
       - _APP_TRUSTED_HEADERS
       - _APP_MIGRATION_HOST
       - _APP_GEO_SECRET
+      - _APP_GEO_ENDPOINT
     extra_hosts:
       - "host.docker.internal:host-gateway"
 

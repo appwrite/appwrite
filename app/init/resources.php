@@ -1141,68 +1141,67 @@ Http::setResource('geoRecord', function (Reader $geodb, Request $request, Locale
 
     if (!filter_var($ip, FILTER_VALIDATE_IP)) {
         Console::warning("Invalid IP address: {$ip}");
-        $ip = '0.0.0.0'; // Use fallback IP
+        $ip = '0.0.0.0';
     }
-    $eu = Config::getParam('locale-eu');
-    $currencies = Config::getParam('locale-currencies');
-
-    $client = new Client();
-    $client->addHeader('Authorization', 'Bearer ' . System::getEnv('_APP_GEO_SECRET'));
-
-    $client->setBaseUrl('http://appwrite-geo/v1');
 
     $record = null;
-    try {
-        $record = $client->fetch("/ips/{$ip}", Client::METHOD_GET);
-        if ($record->getStatusCode() !== 200) {
-            $error = $record->json();
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, $error['message'] ?? 'Failed to fetch geo data');
+    $geoEndpoint = System::getEnv('_APP_GEO_ENDPOINT', '');
+    $geoSecret = System::getEnv('_APP_GEO_SECRET', '');
+
+    if (!empty($geoEndpoint) && !empty($geoSecret)) {
+        try {
+            $client = new Client();
+            $client->addHeader('Authorization', 'Bearer ' . $geoSecret);
+            $client->setBaseUrl($geoEndpoint);
+            $client->setTimeout(3000);
+
+            $response = $client->fetch("/ips/{$ip}", Client::METHOD_GET);
+            if ($response->getStatusCode() === 200) {
+                $record = $response->json();
+            }
+        } catch (Throwable $th) {
+            Console::warning('Geo service unavailable: ' . $th->getMessage());
         }
-        $record = $record->json();
-    } catch (Throwable $th) {
-        Console::error($th->getMessage());
-        Console::error($th->getTraceAsString());
-        $record = null;
     }
 
     if (empty($record)) {
-        // Fallback
-        $dbRecord = $geodb->get($ip);
-        if ($dbRecord) {
-            $record = [];
-            $record['countryCode'] = $dbRecord['country']['iso_code'] ?? '--';
-            $record['country'] = $dbRecord['country']['names'] ?? [];
-            $record['continent'] = $dbRecord['continent']['names'] ?? [];
-            $record['continentCode'] = $dbRecord['continent']['code'] ?? '--';
-        }
-    }
-
-    $output = [];
-    $output['ip'] = $ip;
-    $currency = null;
-    if (!empty($record)) {
-        $output['countryCode'] = $record['countryCode'];
-        $output['countryName'] = $locale->getText('countries.' . strtolower($record['countryCode']), $locale->getText('locale.country.unknown'));
-        $output['continent'] = $locale->getText('continents.' . strtolower($record['continentCode']), $locale->getText('locale.country.unknown'));
-        $output['continentCode'] = $record['continentCode'];
-        $output['eu'] = (\in_array($record['countryCode'], $eu)) ? true : false;
-
-        foreach ($currencies as $code => $element) {
-            if (isset($element['locations']) && isset($element['code']) && \in_array($record['countryCode'], $element['locations'])) {
-                $currency = $element['code'];
+        try {
+            $dbRecord = $geodb->get($ip);
+            if ($dbRecord) {
+                $record = [
+                    'countryCode' => $dbRecord['country']['iso_code'] ?? '--',
+                    'continentCode' => $dbRecord['continent']['code'] ?? '--',
+                ];
             }
+        } catch (Throwable $th) {
+            Console::warning('Geodb fallback failed: ' . $th->getMessage());
         }
-
-        $output['currency'] = $currency;
-    } else {
-        $output['countryCode'] = '--';
-        $output['countryName'] = $locale->getText('locale.country.unknown');
-        $output['continent'] = $locale->getText('locale.country.unknown');
-        $output['continentCode'] = '--';
-        $output['eu'] = false;
-        $output['currency'] = $currency;
     }
-    return new GeoRecord($output);
+
+    $countryCode = $record['countryCode'] ?? '--';
+    $continentCode = $record['continentCode'] ?? '--';
+    $unknownCountry = $locale->getText('locale.country.unknown');
+
+    $eu = Config::getParam('locale-eu');
+    $currencies = Config::getParam('locale-currencies');
+    $currency = null;
+
+    foreach ($currencies as $element) {
+        if (isset($element['locations'], $element['code']) && \in_array($countryCode, $element['locations'])) {
+            $currency = $element['code'];
+            break;
+        }
+    }
+
+    return new GeoRecord([
+        'ip' => $ip,
+        'countryCode' => $locale->getText('countries.' . strtolower($countryCode), false) ? strtolower($countryCode) : '--',
+        'countryName' => $locale->getText('countries.' . strtolower($countryCode), $unknownCountry),
+        'continent' => $locale->getText('continents.' . strtolower($continentCode), $unknownCountry),
+        'continentCode' => $continentCode,
+        'eu' => \in_array($countryCode, $eu),
+        'currency' => $currency,
+    ]);
 }, ['geodb', 'request', 'locale']);
 
 Http::setResource('passwordsDictionary', function ($register) {

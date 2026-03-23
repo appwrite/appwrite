@@ -49,7 +49,6 @@ class XList extends CollectionLogXList
             ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('locale')
             ->inject('geoRecord')
             ->inject('authorization')
             ->inject('audit')

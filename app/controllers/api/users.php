@@ -939,9 +939,8 @@ Http::get('/v1/users/:userId/logs')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('geoRecord')
-    ->inject('locale')
     ->inject('audit')
-    ->action(function (string $userId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, GeoRecord $geoRecord, Locale $locale, Audit $audit) {
+    ->action(function (string $userId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, GeoRecord $geoRecord, Audit $audit) {
 
         $user = $dbForProject->getDocument('users', $userId);
 

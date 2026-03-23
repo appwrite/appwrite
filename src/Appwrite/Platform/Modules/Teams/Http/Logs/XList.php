@@ -4,12 +4,12 @@ namespace Appwrite\Platform\Modules\Teams\Http\Logs;
 
 use Appwrite\Detector\Detector;
 use Appwrite\Extend\Exception;
+use Appwrite\Locale\GeoRecord;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use Appwrite\Locale\GeoRecord;
 use Utopia\Audit\Audit;
 use Utopia\Database\Database;
 use Utopia\Database\Document;

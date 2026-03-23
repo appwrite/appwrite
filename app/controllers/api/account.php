@@ -3078,11 +3078,10 @@ Http::get('/v1/account/logs')
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('user')
-    ->inject('locale')
     ->inject('geoRecord')
     ->inject('dbForProject')
     ->inject('audit')
-    ->action(function (array $queries, bool $includeTotal, Response $response, Document $user, Locale $locale, GeoRecord $geoRecord, Database $dbForProject, Audit $audit) {
+    ->action(function (array $queries, bool $includeTotal, Response $response, Document $user, GeoRecord $geoRecord, Database $dbForProject, Audit $audit) {
 
         try {
             $queries = Query::parseQueries($queries);

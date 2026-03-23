@@ -13,7 +13,7 @@ class GeoRecord extends Document
 
     public function getCountryCode(): string
     {
-        return $this->getAttribute('countryCode', '');
+        return $this->getAttribute('countryCode', '--');
     }
 
     public function getCountryName(): string
@@ -28,7 +28,7 @@ class GeoRecord extends Document
 
     public function getContinentCode(): string
     {
-        return $this->getAttribute('continentCode', '');
+        return $this->getAttribute('continentCode', '--');
     }
 
     public function isEu(): bool
