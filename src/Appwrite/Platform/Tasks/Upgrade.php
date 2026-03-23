@@ -42,6 +42,7 @@ class Upgrade extends Install
         bool $noStart,
         string $database
     ): void {
+        $this->isUpgrade = true;
         $isLocalInstall = $this->isLocalInstall();
         $this->applyLocalPaths($isLocalInstall, true);
 
@@ -72,7 +73,7 @@ class Upgrade extends Install
         }
 
         if ($database === null) {
-            $envData = @file_get_contents($this->path . '/.env');
+            $envData = @file_get_contents($this->path . '/' . $this->getEnvFileName());
             if ($envData !== false) {
                 $envFile = new Env($envData);
                 $database = $envFile->list()['_APP_DB_ADAPTER'] ?? null;
