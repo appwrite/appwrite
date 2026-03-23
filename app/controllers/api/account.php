@@ -1377,7 +1377,7 @@ Http::get('/v1/account/sessions/oauth2/:provider')
 
         $loginURL = $oauth2->getLoginURL();
 
-        if ($provider === 'x' && \method_exists($oauth2, 'getPKCEVerifier')) {
+        if ($oauth2->usesPKCE()) {
             $response->addCookie(
                 'a_oauth2_pkce_' . $project->getId() . '_' . $provider,
                 $oauth2->getPKCEVerifier(),
@@ -1526,7 +1526,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         /** @var Appwrite\Auth\OAuth2 $oauth2 */
         $oauth2 = new $className($appId, $appSecret, $callback);
 
-        if ($provider === 'x' && \method_exists($oauth2, 'setPKCEVerifier')) {
+        if ($oauth2->usesPKCE()) {
             $oauth2->setPKCEVerifier($request->getCookie('a_oauth2_pkce_' . $project->getId() . '_' . $provider, ''));
             $response->addCookie(
                 'a_oauth2_pkce_' . $project->getId() . '_' . $provider,
@@ -2110,7 +2110,7 @@ Http::get('/v1/account/tokens/oauth2/:provider')
 
         $loginURL = $oauth2->getLoginURL();
 
-        if ($provider === 'x' && \method_exists($oauth2, 'getPKCEVerifier')) {
+        if ($oauth2->usesPKCE()) {
             $response->addCookie(
                 'a_oauth2_pkce_' . $project->getId() . '_' . $provider,
                 $oauth2->getPKCEVerifier(),

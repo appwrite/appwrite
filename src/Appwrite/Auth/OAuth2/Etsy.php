@@ -35,28 +35,19 @@ class Etsy extends OAuth2
     ];
 
     /**
-     * @var string
-     */
-    private string $pkce = '';
-
-    /**
-     * @return string
-     */
-    private function getPKCE(): string
-    {
-        if (empty($this->pkce)) {
-            $this->pkce = \bin2hex(\random_bytes(rand(43, 128)));
-        }
-
-        return $this->pkce;
-    }
-
-    /**
      * @return string
      */
     public function getName(): string
     {
         return 'etsy';
+    }
+
+    /**
+     * @return bool
+     */
+    public function usesPKCE(): bool
+    {
+        return true;
     }
 
     /**
@@ -70,7 +61,7 @@ class Etsy extends OAuth2
             'response_type' => 'code',
             'state' => \json_encode($this->state),
             'scope' => $this->scopes,
-            'code_challenge' => $this->getPKCE(),
+            'code_challenge' => $this->getPKCEChallenge(),
             'code_challenge_method' => 'S256',
         ]);
     }
@@ -94,7 +85,7 @@ class Etsy extends OAuth2
                     'client_id' => $this->appID,
                     'redirect_uri' => $this->callback,
                     'code' => $code,
-                    'code_verifier' => $this->getPKCE(),
+                    'code_verifier' => $this->getPKCEVerifier(),
                 ])
             ), true);
         }

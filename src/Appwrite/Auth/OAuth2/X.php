@@ -30,16 +30,19 @@ class X extends OAuth2
     ];
 
     /**
-     * @var string
-     */
-    private string $pkceVerifier = '';
-
-    /**
      * @return string
      */
     public function getName(): string
     {
         return 'x';
+    }
+
+    /**
+     * @return bool
+     */
+    public function usesPKCE(): bool
+    {
+        return true;
     }
 
     /**
@@ -53,31 +56,9 @@ class X extends OAuth2
             'redirect_uri' => $this->callback,
             'scope' => \implode(' ', $this->getScopes()),
             'state' => \json_encode($this->state),
-            'code_challenge' => $this->getCodeChallenge(),
+            'code_challenge' => $this->getPKCEChallenge(),
             'code_challenge_method' => 'S256',
         ]);
-    }
-
-    /**
-     * @return string
-     */
-    public function getPKCEVerifier(): string
-    {
-        if (empty($this->pkceVerifier)) {
-            $this->pkceVerifier = $this->base64UrlEncode(\random_bytes(32));
-        }
-
-        return $this->pkceVerifier;
-    }
-
-    /**
-     * @param string $pkceVerifier
-     *
-     * @return void
-     */
-    public function setPKCEVerifier(string $pkceVerifier): void
-    {
-        $this->pkceVerifier = $pkceVerifier;
     }
 
     /**
@@ -216,21 +197,4 @@ class X extends OAuth2
         return $this->user;
     }
 
-    /**
-     * @return string
-     */
-    private function getCodeChallenge(): string
-    {
-        return $this->base64UrlEncode(\hash('sha256', $this->getPKCEVerifier(), true));
-    }
-
-    /**
-     * @param string $value
-     *
-     * @return string
-     */
-    private function base64UrlEncode(string $value): string
-    {
-        return \rtrim(\strtr(\base64_encode($value), '+/', '-_'), '=');
-    }
 }

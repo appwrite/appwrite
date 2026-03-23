@@ -32,6 +32,11 @@ abstract class OAuth2
     protected array $scopes;
 
     /**
+     * @var string
+     */
+    protected string $pkceVerifier = '';
+
+    /**
      * OAuth2 constructor.
      *
      * @param string $appId
@@ -106,6 +111,14 @@ abstract class OAuth2
     abstract public function getUserName(string $accessToken): string;
 
     /**
+     * @return bool
+     */
+    public function usesPKCE(): bool
+    {
+        return false;
+    }
+
+    /**
      * @param $scope
      *
      * @return $this
@@ -126,6 +139,36 @@ abstract class OAuth2
     protected function getScopes(): array
     {
         return $this->scopes;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPKCEVerifier(): string
+    {
+        if (empty($this->pkceVerifier)) {
+            $this->pkceVerifier = $this->base64UrlEncode(\random_bytes(32));
+        }
+
+        return $this->pkceVerifier;
+    }
+
+    /**
+     * @param string $pkceVerifier
+     *
+     * @return void
+     */
+    public function setPKCEVerifier(string $pkceVerifier): void
+    {
+        $this->pkceVerifier = $pkceVerifier;
+    }
+
+    /**
+     * @return string
+     */
+    protected function getPKCEChallenge(): string
+    {
+        return $this->base64UrlEncode(\hash('sha256', $this->getPKCEVerifier(), true));
     }
 
     /**
@@ -213,5 +256,15 @@ abstract class OAuth2
         }
 
         return (string)$response;
+    }
+
+    /**
+     * @param string $value
+     *
+     * @return string
+     */
+    protected function base64UrlEncode(string $value): string
+    {
+        return \rtrim(\strtr(\base64_encode($value), '+/', '-_'), '=');
     }
 }
