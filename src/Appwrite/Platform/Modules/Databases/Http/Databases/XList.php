@@ -96,7 +96,7 @@ class XList extends Action
             $cursor->setValue($cursorDocument);
         }
 
-        // $queries[] = Query::equal('type', $this->getDatabaseTypeQueryFilters());
+        $queries[] = Query::equal('type', $this->getDatabaseTypeQueryFilters());
 
         try {
             $databases = $dbForProject->find('databases', $queries);
