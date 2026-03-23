@@ -61,7 +61,6 @@ class XList extends DocumentXList
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
-            ->inject('getDatabasesDB')
             ->inject('usage')
             ->inject('transactionState')
             ->inject('authorization')
