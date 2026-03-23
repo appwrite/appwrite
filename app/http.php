@@ -31,7 +31,6 @@ use Utopia\Http\Files;
 use Utopia\Http\Http;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
-use Utopia\Pools\Group;
 use Utopia\Span\Span;
 use Utopia\System\System;
 
@@ -294,7 +293,7 @@ function createDatabase(Http $app, string $resourceKey, string $dbName, array $c
 $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorkers, $swooleAdapter) {
     $app = new Http($swooleAdapter, 'UTC');
 
-    /** @var Group $pools */
+    /** @var \Utopia\Pools\Group $pools */
     $pools = $app->getResource('pools');
 
     go(function () use ($app, $pools) {
@@ -644,7 +643,7 @@ $http->on(Constant::EVENT_TASK, function () use ($swooleAdapter) {
     /** @var Utopia\Database\Database $dbForPlatform */
     $dbForPlatform = $app->getResource('dbForPlatform');
 
-    /** @var Table $riskyDomains */
+    /** @var \Swoole\Table $riskyDomains */
     $riskyDomains = $app->getResource('riskyDomains');
 
     Timer::tick(DOMAIN_SYNC_TIMER * 1000, function () use ($dbForPlatform, $riskyDomains, &$lastSyncUpdate, $app) {

@@ -80,7 +80,7 @@ if (\str_starts_with($workerName, 'databases')) {
     $queueName = System::getEnv('_APP_QUEUE_NAME', 'v1-' . strtolower($workerName));
 }
 
-/** @var Group $pools */
+/** @var \Utopia\Pools\Group $pools */
 $pools = $container->get('pools');
 
 $adapter = new Swoole(
