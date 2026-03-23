@@ -9,7 +9,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
-use MaxMind\Db\Reader;
+use Appwrite\Locale\GeoRecord;
 use Utopia\Audit\Audit;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -19,7 +19,6 @@ use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
-use Utopia\Locale\Locale;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 
@@ -58,13 +57,12 @@ class XList extends Action
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('locale')
-            ->inject('geodb')
+            ->inject('geoRecord')
             ->inject('audit')
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audit)
+    public function action(string $teamId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, GeoRecord $geoRecord, Audit $audit)
     {
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -119,15 +117,8 @@ class XList extends Action
                 'deviceModel' => $device['deviceModel']
             ]);
 
-            $record = $geodb->get($log['ip']);
-
-            if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
-            } else {
-                $output[$i]['countryCode'] = '--';
-                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
-            }
+            $output[$i]['countryCode'] = $geoRecord->getCountryCode();
+            $output[$i]['countryName'] = $geoRecord->getCountryName();
         }
         $response->dynamic(new Document([
             'total' => $includeTotal ? $audit->countLogsByResource($resource) : 0,

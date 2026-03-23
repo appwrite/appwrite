@@ -28,7 +28,6 @@ use Appwrite\Utopia\Database\Validator\Queries\Targets;
 use Appwrite\Utopia\Database\Validator\Queries\Users;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use MaxMind\Db\Reader;
 use Utopia\Audit\Audit;
 use Utopia\Auth\Hash;
 use Utopia\Auth\Hashes\Argon2;
@@ -941,9 +940,8 @@ Http::get('/v1/users/:userId/logs')
     ->inject('dbForProject')
     ->inject('geoRecord')
     ->inject('locale')
-    ->inject('geodb')
     ->inject('audit')
-    ->action(function (string $userId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, GeoRecord $geoRecord, Locale $locale, Reader $geodb, Audit $audit) {
+    ->action(function (string $userId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, GeoRecord $geoRecord, Locale $locale, Audit $audit) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -990,14 +988,8 @@ Http::get('/v1/users/:userId/logs')
                 'deviceModel' => $device['deviceModel']
             ]);
 
-            $record = $geodb->get($log['ip']);
-            if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
-            } else {
-                $output[$i]['countryCode'] = '--';
-                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
-            }
+            $output[$i]['countryCode'] = $geoRecord->getCountryCode();
+            $output[$i]['countryName'] = $geoRecord->getCountryName();
         }
 
         $response->dynamic(new Document([
