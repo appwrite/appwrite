@@ -24,6 +24,7 @@ class X extends OAuth2
      * @var array
      */
     protected array $scopes = [
+        'tweet.read',
         'users.read',
         'users.email',
         'offline.access',

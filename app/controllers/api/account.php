@@ -1397,12 +1397,17 @@ Http::get('/v1/account/sessions/oauth2/:provider')
             'token' => false,
         ], $scopes);
 
+        $pkceVerifier = '';
+        if ($oauth2->usesPKCE()) {
+            $pkceVerifier = $oauth2->getPKCEVerifier();
+        }
+
         $loginURL = $oauth2->getLoginURL();
 
         if ($oauth2->usesPKCE()) {
             $response->addCookie(
                 'a_oauth2_pkce_' . $project->getId() . '_' . $provider,
-                $oauth2->getPKCEVerifier(),
+                $pkceVerifier,
                 \time() + 300,
                 '/',
                 Config::getParam('cookieDomain'),
@@ -2135,12 +2140,17 @@ Http::get('/v1/account/tokens/oauth2/:provider')
             'token' => true,
         ], $scopes);
 
+        $pkceVerifier = '';
+        if ($oauth2->usesPKCE()) {
+            $pkceVerifier = $oauth2->getPKCEVerifier();
+        }
+
         $loginURL = $oauth2->getLoginURL();
 
         if ($oauth2->usesPKCE()) {
             $response->addCookie(
                 'a_oauth2_pkce_' . $project->getId() . '_' . $provider,
-                $oauth2->getPKCEVerifier(),
+                $pkceVerifier,
                 \time() + 300,
                 '/',
                 Config::getParam('cookieDomain'),
