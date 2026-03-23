@@ -1457,7 +1457,7 @@ Http::patch('/v1/projects/:projectId/smtp')
                 throw new Exception(Exception::PROJECT_SMTP_CONFIG_INVALID, $error->getMessage());
             } finally {
                 $duration = microtime(true) - $validationStartTime;
-                $smtpVerificationDuration->record($duration, ['projectId' => $projectId, 'success' => isset($valid) && $valid]);
+                $smtpVerificationDuration->record($duration, ['success' => isset($valid) && $valid]);
             }
         }
 
