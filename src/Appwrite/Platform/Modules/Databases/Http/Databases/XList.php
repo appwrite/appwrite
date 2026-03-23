@@ -71,8 +71,6 @@ class XList extends Action
 
     public function action(array $queries, string $search, bool $includeTotal, UtopiaResponse $response, Database $dbForProject): void
     {
-        var_dump('queries');
-        var_dump($queries);
         $queries = Query::parseQueries($queries);
 
         if (!empty($search)) {
