@@ -1174,7 +1174,7 @@ services:
   
   appwrite-geo:
     container_name: appwrite-geo
-    image: appwrite/geo:0.1.0
+    image: appwrite/geo:0.2.0
     networks:
       - appwrite
     environment:
