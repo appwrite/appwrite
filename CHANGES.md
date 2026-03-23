@@ -1,3 +1,17 @@
+# Version 1.8.1
+
+### Changes
+
+* Enable DEBUG build arg in docker-compose.yml for development builds
+* Sort XDebug configuration directives alphabetically in dev/xdebug.ini
+
+### Fixes
+
+* Fix VS Code XDebug pathMappings to use `${workspaceFolder}` instead of deprecated `${workspaceRoot}` in CONTRIBUTING.md
+* Fix XDebug port to 9003 for XDebug 3 compatibility in CONTRIBUTING.md
+
+### Removals
+
 # Version 1.8.0
 
 ## What's Changed
@@ -337,10 +351,6 @@
 * Fix txn API scope backwards compat in [#10640](https://github.com/appwrite/appwrite/pull/10640)
 * Fix block schedules in [#10620](https://github.com/appwrite/appwrite/pull/10620)
 * Update .NET SDK to 0.21.2 and improve release detection in [#10641](https://github.com/appwrite/appwrite/pull/10641)
-* Enable DEBUG build arg in docker-compose.yml for development builds
-* Fix VS Code XDebug pathMappings to use `${workspaceFolder}` instead of deprecated `${workspaceRoot}` in CONTRIBUTING.md
-* Fix XDebug port to 9003 for XDebug 3 compatibility in CONTRIBUTING.md
-* Sort XDebug configuration directives alphabetically in dev/xdebug.ini
 * Make methods protected for extending in [#10617](https://github.com/appwrite/appwrite/pull/10617)
 
 # Version 1.7.4
