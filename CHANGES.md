@@ -337,6 +337,9 @@
 * Fix txn API scope backwards compat in [#10640](https://github.com/appwrite/appwrite/pull/10640)
 * Fix block schedules in [#10620](https://github.com/appwrite/appwrite/pull/10620)
 * Update .NET SDK to 0.21.2 and improve release detection in [#10641](https://github.com/appwrite/appwrite/pull/10641)
+* Enable DEBUG build arg in docker-compose.yml for development builds
+* Fix VS Code XDebug pathMappings to use `${workspaceFolder}` instead of deprecated `${workspaceRoot}` in CONTRIBUTING.md
+* Fix XDebug port to 9003 for XDebug 3 compatibility in CONTRIBUTING.md
 * Make methods protected for extending in [#10617](https://github.com/appwrite/appwrite/pull/10617)
 
 # Version 1.7.4

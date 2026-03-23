@@ -564,7 +564,7 @@ Appwrite uses [XDebug](https://github.com/xdebug/xdebug) debugger, which can be 
 
 If you are in PHP Storm you don't need any plugin. Below are the settings required for remote debugger connection:
 
-1. Set **DEBUG** build arg in **appwrite** service in **docker-compose.yml** file.
+1. The **DEBUG** build arg is already set to `true` in the **appwrite** service in **docker-compose.yml** for development builds.
 2. If needed edit the **dev/xdebug.ini** file to your needs.
 3. Launch your Appwrite instance while your debugger is listening for connections.
 
@@ -587,16 +587,16 @@ zend_extension=xdebug
   "name": "Listen for Xdebug",
   "type": "php",
   "request": "launch",
-  "port": 9005,
+  "port": 9003,
   "pathMappings": {
-    "/usr/src/code": "${workspaceRoot}"
+    "/usr/src/code": "${workspaceFolder}"
   }
 }
 ```
 
 ### PHPStorm Setup
 
-In settings, go to **Languages & Frameworks** > **PHP** > **Debug**, under **Xdebug** set the debug port to **9005** and enable the **can accept external connections** checkbox.
+In settings, go to **Languages & Frameworks** > **PHP** > **Debug**, under **Xdebug** set the debug port to **9003** and enable the **can accept external connections** checkbox.
 
 ## Tests
 
