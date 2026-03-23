@@ -50,7 +50,7 @@ use Utopia\WebSocket\Server;
  */
 require_once __DIR__ . '/init.php';
 
-$registerRequestResources = require __DIR__ . '/init/resources/request.php';
+$registerRequestResources ??= require __DIR__ . '/init/resources/request.php';
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
