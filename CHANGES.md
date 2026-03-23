@@ -1,12 +1,12 @@
 # Version 1.8.1
 
-### Changes
+## Changes
 
-* Add data types and example values to .env.dist for all environment variables
+* Reformat .env.dist to use `VAR=value # TYPE` convention, with default values sourced from .env
 * Enable DEBUG build arg in docker-compose.yml for development builds
 * Sort XDebug configuration directives alphabetically in dev/xdebug.ini
 
-### Fixes
+## Fixes
 
 * Fix XDebug port to 9003 for XDebug 3 compatibility in CONTRIBUTING.md
 
