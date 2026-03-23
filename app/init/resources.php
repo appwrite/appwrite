@@ -22,6 +22,7 @@ use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\GraphQL\Schema;
+use Appwrite\Locale\GeoRecord;
 use Appwrite\Network\Cors;
 use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
@@ -31,6 +32,7 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Executor\Executor;
+use MaxMind\Db\Reader;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit;
@@ -52,6 +54,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
+use Utopia\Fetch\Client;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
@@ -545,6 +548,7 @@ Http::setResource('session', function (User $user, Store $store, Token $proofFor
     if (! $sessionId) {
         return;
     }
+
     foreach ($sessions as $session) {
         /** @var Document $session */
         if ($sessionId === $session->getId()) {
@@ -1131,6 +1135,73 @@ Http::setResource('geodb', function ($register) {
     /** @var Utopia\Registry\Registry $register */
     return $register->get('geodb');
 }, ['register']);
+
+Http::setResource('geoRecord', function (Reader $geodb, Request $request, Locale $locale) {
+    $ip = $request->getIp();
+
+    if (!filter_var($ip, FILTER_VALIDATE_IP)) {
+        Console::warning("Invalid IP address: {$ip}");
+        $ip = '0.0.0.0';
+    }
+
+    $record = null;
+    $geoEndpoint = System::getEnv('_APP_GEO_ENDPOINT', '');
+    $geoSecret = System::getEnv('_APP_GEO_SECRET', '');
+
+    if (!empty($geoEndpoint) && !empty($geoSecret)) {
+        try {
+            $client = new Client();
+            $client->addHeader('Authorization', 'Bearer ' . $geoSecret);
+            $client->setTimeout(3000);
+
+            $response = $client->fetch(\rtrim($geoEndpoint, '/') . "/ips/{$ip}", Client::METHOD_GET);
+            if ($response->getStatusCode() === 200) {
+                $record = $response->json();
+            }
+        } catch (Throwable $th) {
+            Console::warning('Geo service unavailable: ' . $th->getMessage());
+        }
+    }
+
+    if (empty($record)) {
+        try {
+            $dbRecord = $geodb->get($ip);
+            if ($dbRecord) {
+                $record = [
+                    'countryCode' => $dbRecord['country']['iso_code'] ?? '--',
+                    'continentCode' => $dbRecord['continent']['code'] ?? '--',
+                ];
+            }
+        } catch (Throwable $th) {
+            Console::warning('Geodb fallback failed: ' . $th->getMessage());
+        }
+    }
+
+    $countryCode = $record['countryCode'] ?? '--';
+    $continentCode = $record['continentCode'] ?? '--';
+    $unknownCountry = $locale->getText('locale.country.unknown');
+
+    $eu = Config::getParam('locale-eu');
+    $currencies = Config::getParam('locale-currencies');
+    $currency = null;
+
+    foreach ($currencies as $element) {
+        if (isset($element['locations'], $element['code']) && \in_array($countryCode, $element['locations'])) {
+            $currency = $element['code'];
+            break;
+        }
+    }
+
+    return new GeoRecord([
+        'ip' => $ip,
+        'countryCode' => $locale->getText('countries.' . strtolower($countryCode), false) ? strtolower($countryCode) : '--',
+        'countryName' => $locale->getText('countries.' . strtolower($countryCode), $unknownCountry),
+        'continent' => $locale->getText('continents.' . strtolower($continentCode), $unknownCountry),
+        'continentCode' => $continentCode,
+        'eu' => \in_array($countryCode, $eu),
+        'currency' => $currency,
+    ]);
+}, ['geodb', 'request', 'locale']);
 
 Http::setResource('passwordsDictionary', function ($register) {
     /** @var Utopia\Registry\Registry $register */

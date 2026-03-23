@@ -9,6 +9,7 @@ use Appwrite\Event\Func;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\Validator\Headers;
+use Appwrite\Locale\GeoRecord;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -18,7 +19,6 @@ use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Executor\Executor;
-use MaxMind\Db\Reader;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
 use Utopia\Config\Config;
@@ -95,7 +95,7 @@ class Create extends Base
             ->inject('queueForEvents')
             ->inject('usage')
             ->inject('queueForFunctions')
-            ->inject('geodb')
+            ->inject('geoRecord')
             ->inject('store')
             ->inject('proofForToken')
             ->inject('executor')
@@ -123,7 +123,7 @@ class Create extends Base
         Event $queueForEvents,
         Context $usage,
         Func $queueForFunctions,
-        Reader $geodb,
+        GeoRecord $geoRecord,
         Store $store,
         Token $proofForToken,
         Executor $executor,
@@ -249,14 +249,12 @@ class Create extends Base
         $headers['x-appwrite-client-ip'] = $ip;
 
         if (!empty($ip)) {
-            $record = $geodb->get($ip);
-
-            if ($record) {
+            if ($geoRecord) {
                 $eu = Config::getParam('locale-eu');
 
-                $headers['x-appwrite-country-code'] = $record['country']['iso_code'] ?? '';
-                $headers['x-appwrite-continent-code'] = $record['continent']['code'] ?? '';
-                $headers['x-appwrite-continent-eu'] = (\in_array($record['country']['iso_code'], $eu)) ? 'true' : 'false';
+                $headers['x-appwrite-country-code'] = $geoRecord->getCountryCode();
+                $headers['x-appwrite-continent-code'] = $geoRecord->getContinentCode();
+                $headers['x-appwrite-continent-eu'] = (\in_array(($geoRecord->getCountryCode()), $eu)) ? 'true' : 'false';
             }
         }
 
@@ -266,8 +264,6 @@ class Create extends Base
                 $headersFiltered[] = ['name' => $key, 'value' => $value];
             }
         }
-
-
 
         $status = $async ? 'waiting' : 'processing';
 
