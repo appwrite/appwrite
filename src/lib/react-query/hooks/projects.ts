@@ -938,12 +938,20 @@ export function useUpdatePlatform(projectId: string | null | undefined) {
         hostname: data.hostname,
       })
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
+    onSuccess: async (_, variables) => {
+      // refetchType: 'all' so list cache refreshes even when no observer is mounted
+      // (e.g. user edits from Overview — Apps query is inactive, default 'active' skips refetch).
+      await queryClient.invalidateQueries({
         queryKey: ['platforms', projectId],
+        refetchType: 'all',
+      })
+      await queryClient.invalidateQueries({
+        queryKey: ['project', projectId],
+        refetchType: 'all',
       })
       queryClient.invalidateQueries({
         queryKey: ['platform', 'project', projectId, variables.platformId],
+        refetchType: 'all',
       })
     },
   })
@@ -967,9 +975,14 @@ export function useDeletePlatform(projectId: string | null | undefined) {
         platformId,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: ['platforms', projectId],
+        refetchType: 'all',
+      })
+      await queryClient.invalidateQueries({
+        queryKey: ['project', projectId],
+        refetchType: 'all',
       })
     },
   })

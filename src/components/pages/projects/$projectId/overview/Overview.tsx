@@ -1,4 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
+import { endOfDay, startOfDay, subDays } from 'date-fns'
+import type { DateRange } from 'react-day-picker'
 import {
   TrendingUp,
   TrendingDown,
@@ -48,6 +50,7 @@ import type { Models } from '@appwrite.io/console'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { ConnectProject } from '../shared/ConnectProject'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { DateRangePicker } from '../analytics/DateRangePicker'
 
 interface OverviewTab {
   id: string
@@ -138,8 +141,18 @@ interface ViewProps {
   initialData?: OverviewInitialData
 }
 
+function getDefaultDashboardChartRange(): DateRange {
+  return {
+    from: startOfDay(subDays(new Date(), 29)),
+    to: endOfDay(new Date()),
+  }
+}
+
 export function View({ projectId, initialData }: ViewProps) {
   const [activeTab, setActiveTab] = useState('bandwidth')
+  const [dashboardChartDateRange, setDashboardChartDateRange] = useState<
+    DateRange | undefined
+  >(() => getDefaultDashboardChartRange())
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false)
   const [updateDrawerOpen, setUpdateDrawerOpen] = useState(false)
@@ -442,108 +455,117 @@ export function View({ projectId, initialData }: ViewProps) {
         {/* Charts card - usage stats (cloud only) */}
         {features.usageStats && (
           <div className="@container rounded-xl border border-border bg-card/50">
-            {/* Metric Tabs Row - inside the card */}
+            {/* Metric tabs + date range — same row */}
             <div className="border-b border-border px-5">
-              <div
-                className="-mx-5 overflow-x-auto px-5"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-              >
-                <div className="flex min-w-max" role="tablist">
-                  {overviewTabs.map((tab, index) => {
-                    const isActive = activeTab === tab.id
-                    const isPositive = tab.change > 0
-                    const isNegative = tab.change < 0
+              <div className="flex min-w-0 items-center gap-3">
+                <div
+                  className="min-w-0 flex-1 overflow-x-auto"
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
+                  <div className="flex min-w-max" role="tablist">
+                    {overviewTabs.map((tab, index) => {
+                      const isActive = activeTab === tab.id
+                      const isPositive = tab.change > 0
+                      const isNegative = tab.change < 0
 
-                    return (
-                      <div key={tab.id} className="flex">
-                        {/* Separator */}
-                        {index > 0 && <div className="my-2.5 w-px bg-border" />}
+                      return (
+                        <div key={tab.id} className="flex">
+                          {/* Separator */}
+                          {index > 0 && <div className="my-2.5 w-px bg-border" />}
 
-                        {/* Tab Button */}
-                        <button
-                          role="tab"
-                          aria-selected={isActive}
-                          onClick={() => setActiveTab(tab.id)}
-                          className={cn(
-                            'relative flex min-w-[150px] flex-col gap-0.5 px-4 py-3 text-left cursor-pointer focus:cursor-pointer focus-visible:cursor-pointer transition-colors first:pl-0 rounded-sm',
-                            'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
-                            isActive
-                              ? 'text-foreground'
-                              : 'text-muted-foreground hover:text-foreground/80',
-                          )}
-                        >
-                          <div className="flex items-baseline gap-2">
-                            <span
-                              className={cn(
-                                'text-[18px] font-semibold tracking-tight sm:text-[20px]',
-                                isActive
-                                  ? 'text-foreground'
-                                  : 'text-muted-foreground',
-                              )}
-                            >
-                              {tab.value}
-                            </span>
-                            <div className="flex items-center gap-1">
-                              {isPositive && (
-                                <TrendingUp
-                                  className={cn(
-                                    'h-3 w-3',
-                                    isActive
-                                      ? 'text-emerald-500'
-                                      : 'text-emerald-500/60',
-                                  )}
-                                />
-                              )}
-                              {isNegative && (
-                                <TrendingDown
-                                  className={cn(
-                                    'h-3 w-3',
-                                    isActive
-                                      ? 'text-red-500'
-                                      : 'text-red-500/60',
-                                  )}
-                                />
-                              )}
-                              <span
-                                className={cn(
-                                  'text-[11px] font-medium',
-                                  isPositive &&
-                                    (isActive
-                                      ? 'text-emerald-500'
-                                      : 'text-emerald-500/60'),
-                                  isNegative &&
-                                    (isActive
-                                      ? 'text-red-500'
-                                      : 'text-red-500/60'),
-                                  !isPositive &&
-                                    !isNegative &&
-                                    'text-muted-foreground',
-                                )}
-                              >
-                                {isPositive && '+'}
-                                {tab.change}%
-                              </span>
-                            </div>
-                          </div>
-                          <span
+                          {/* Tab Button */}
+                          <button
+                            role="tab"
+                            aria-selected={isActive}
+                            onClick={() => setActiveTab(tab.id)}
                             className={cn(
-                              'text-[12px]',
+                              'relative flex min-w-[150px] flex-col gap-0.5 px-4 py-3 text-left cursor-pointer focus:cursor-pointer focus-visible:cursor-pointer transition-colors first:pl-0 rounded-sm',
+                              'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                               isActive
-                                ? 'text-muted-foreground'
-                                : 'text-muted-foreground/70',
+                                ? 'text-foreground'
+                                : 'text-muted-foreground hover:text-foreground/80',
                             )}
                           >
-                            {tab.label}
-                          </span>
+                            <div className="flex items-baseline gap-2">
+                              <span
+                                className={cn(
+                                  'text-[18px] font-semibold tracking-tight sm:text-[20px]',
+                                  isActive
+                                    ? 'text-foreground'
+                                    : 'text-muted-foreground',
+                                )}
+                              >
+                                {tab.value}
+                              </span>
+                              <div className="flex items-center gap-1">
+                                {isPositive && (
+                                  <TrendingUp
+                                    className={cn(
+                                      'h-3 w-3',
+                                      isActive
+                                        ? 'text-emerald-500'
+                                        : 'text-emerald-500/60',
+                                    )}
+                                  />
+                                )}
+                                {isNegative && (
+                                  <TrendingDown
+                                    className={cn(
+                                      'h-3 w-3',
+                                      isActive
+                                        ? 'text-red-500'
+                                        : 'text-red-500/60',
+                                    )}
+                                  />
+                                )}
+                                <span
+                                  className={cn(
+                                    'text-[11px] font-medium',
+                                    isPositive &&
+                                      (isActive
+                                        ? 'text-emerald-500'
+                                        : 'text-emerald-500/60'),
+                                    isNegative &&
+                                      (isActive
+                                        ? 'text-red-500'
+                                        : 'text-red-500/60'),
+                                    !isPositive &&
+                                      !isNegative &&
+                                      'text-muted-foreground',
+                                  )}
+                                >
+                                  {isPositive && '+'}
+                                  {tab.change}%
+                                </span>
+                              </div>
+                            </div>
+                            <span
+                              className={cn(
+                                'text-[12px]',
+                                isActive
+                                  ? 'text-muted-foreground'
+                                  : 'text-muted-foreground/70',
+                              )}
+                            >
+                              {tab.label}
+                            </span>
 
-                          {/* Active indicator */}
-                          {isActive && (
-                            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground" />
-                          )}
-                        </button>
-                      </div>
-                    )
-                  })}
+                            {/* Active indicator */}
+                            {isActive && (
+                              <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground" />
+                            )}
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+                <div className="shrink-0 py-3">
+                  <DateRangePicker
+                    dateRange={dashboardChartDateRange}
+                    onDateRangeChange={setDashboardChartDateRange}
+                    className="h-9"
+                  />
                 </div>
               </div>
             </div>
@@ -555,6 +577,7 @@ export function View({ projectId, initialData }: ViewProps) {
                   <RequestsChart
                     title="Bandwidth over time"
                     metric="bandwidth"
+                    dateRange={dashboardChartDateRange}
                   />
                 </div>
                 <div className="w-full p-5 @[700px]:w-[320px]">
@@ -569,7 +592,11 @@ export function View({ projectId, initialData }: ViewProps) {
             {activeTab === 'requests' && (
               <div className="flex flex-col @[700px]:flex-row">
                 <div className="flex-1 border-b border-border p-5 @[700px]:border-b-0 @[700px]:border-r">
-                  <RequestsChart title="Requests over time" metric="requests" />
+                  <RequestsChart
+                    title="Requests over time"
+                    metric="requests"
+                    dateRange={dashboardChartDateRange}
+                  />
                 </div>
                 <div className="w-full p-5 @[700px]:w-[320px]">
                   <TopRequests
@@ -586,6 +613,7 @@ export function View({ projectId, initialData }: ViewProps) {
                   <RequestsChart
                     title="Storage usage over time"
                     metric="storage"
+                    dateRange={dashboardChartDateRange}
                   />
                 </div>
                 <div className="w-full p-5 @[700px]:w-[320px]">
@@ -600,6 +628,7 @@ export function View({ projectId, initialData }: ViewProps) {
                   <RequestsChart
                     title="Executions over time"
                     metric="executions"
+                    dateRange={dashboardChartDateRange}
                   />
                 </div>
                 <div className="w-full p-5 @[700px]:w-[320px]">
@@ -614,7 +643,11 @@ export function View({ projectId, initialData }: ViewProps) {
             {activeTab === 'gbhours' && (
               <div className="flex flex-col @[700px]:flex-row">
                 <div className="flex-1 border-b border-border p-5 @[700px]:border-b-0 @[700px]:border-r">
-                  <RequestsChart title="GB-hours over time" metric="gbhours" />
+                  <RequestsChart
+                    title="GB-hours over time"
+                    metric="gbhours"
+                    dateRange={dashboardChartDateRange}
+                  />
                 </div>
                 <div className="w-full p-5 @[700px]:w-[320px]">
                   <TopRequests
