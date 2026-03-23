@@ -568,6 +568,29 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 'site' => '',
             };
 
+            $streamingDetected = false;
+            $streamCallback = function (?string $streamData, ?array $streamHeaders) use ($response, &$streamingDetected, $execution, $deployment): void {
+                if ($streamHeaders !== null) {
+                    // Headers signal — fired once before body, only when SSE detected
+                    $streamingDetected = true;
+                    $statusCode = \intval($streamHeaders['x-open-runtimes-status-code'] ?? 200);
+                    $response->setStatusCode($statusCode);
+                    foreach ($streamHeaders as $key => $value) {
+                        if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_RESPONSE)) {
+                            $response->addHeader($key, \is_array($value) ? \implode(', ', $value) : $value);
+                        }
+                    }
+                    if ($deployment->getAttribute('resourceType') === 'functions') {
+                        $response->addHeader('x-appwrite-execution-id', $execution->getId());
+                    } elseif ($deployment->getAttribute('resourceType') === 'sites') {
+                        $response->addHeader('x-appwrite-log-id', $execution->getId());
+                    }
+                }
+                if ($streamData !== null) {
+                    $response->chunk($streamData);
+                }
+            };
+
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),
                 deploymentId: $deployment->getId(),
@@ -586,8 +609,25 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 memory: $spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT,
                 logging: $resource->getAttribute('logging', true),
                 requestTimeout: 30,
-                responseFormat: Executor::RESPONSE_FORMAT_ARRAY_HEADERS
+                responseFormat: Executor::RESPONSE_FORMAT_ARRAY_HEADERS,
+                streamCallback: $streamCallback,
             );
+
+            // If SSE streaming was detected, body was already forwarded chunk by chunk.
+            // Close the response and populate execution metadata from what we have.
+            // Note: logs/errors are not available for streaming responses (the executor
+            // streams the body and does not send metadata back over the same channel).
+            if ($streamingDetected) {
+                $response->chunk('', true);
+
+                $execution->setAttribute('status', 'completed');
+                $execution->setAttribute('logs', '');
+                $execution->setAttribute('errors', '');
+                $execution->setAttribute('responseStatusCode', 200);
+                $execution->setAttribute('responseHeaders', []);
+                $execution->setAttribute('duration', \microtime(true) - $durationStart);
+                return true;
+            }
 
             $headerOverrides = [];
 
