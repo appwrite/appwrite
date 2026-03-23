@@ -1,7 +1,8 @@
 <?php
 
 require_once __DIR__ . '/init.php';
-require_once __DIR__ . '/init/worker/message.php';
+
+$registerWorkerMessageResources = require __DIR__ . '/init/worker/message.php';
 
 use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Platform\Appwrite;
@@ -91,8 +92,8 @@ $adapter = new Swoole(
 $worker = new Server($adapter, $container);
 
 try {
-    $worker->init()->action(function () use ($worker) {
-        registerWorkerMessageResources($worker->getContainer());
+    $worker->init()->action(function () use ($worker, $registerWorkerMessageResources) {
+        $registerWorkerMessageResources($worker->getContainer());
     });
 
     $container->set('bus', function ($register) use ($worker) {

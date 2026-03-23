@@ -3985,16 +3985,16 @@
         },
         {
             "name": "utopia-php/di",
-            "version": "0.3.1",
+            "version": "0.3.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/di.git",
-                "reference": "68873b7267842315d01d82a83b988bae525eab31"
+                "reference": "07025d721ed5d9be27932e8e640acf1467fc4b9d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/di/zipball/68873b7267842315d01d82a83b988bae525eab31",
-                "reference": "68873b7267842315d01d82a83b988bae525eab31",
+                "url": "https://api.github.com/repos/utopia-php/di/zipball/07025d721ed5d9be27932e8e640acf1467fc4b9d",
+                "reference": "07025d721ed5d9be27932e8e640acf1467fc4b9d",
                 "shasum": ""
             },
             "require": {
@@ -4030,9 +4030,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/di/issues",
-                "source": "https://github.com/utopia-php/di/tree/0.3.1"
+                "source": "https://github.com/utopia-php/di/tree/0.3.2"
             },
-            "time": "2026-03-13T05:47:23+00:00"
+            "time": "2026-03-21T07:42:10+00:00"
         },
         {
             "name": "utopia-php/dns",
@@ -5479,16 +5479,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.11.13",
+            "version": "1.11.14",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "c97527030060798129f2cb7e1e767671bf09f3bd"
+                "reference": "ed4faf10fafa1930ed0be3dfe43e41561f2de75b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/c97527030060798129f2cb7e1e767671bf09f3bd",
-                "reference": "c97527030060798129f2cb7e1e767671bf09f3bd",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/ed4faf10fafa1930ed0be3dfe43e41561f2de75b",
+                "reference": "ed4faf10fafa1930ed0be3dfe43e41561f2de75b",
                 "shasum": ""
             },
             "require": {
@@ -5524,9 +5524,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.11.13"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.11.14"
             },
-            "time": "2026-03-20T04:48:54+00:00"
+            "time": "2026-03-20T10:55:13+00:00"
         },
         {
             "name": "brianium/paratest",

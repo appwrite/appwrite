@@ -90,8 +90,6 @@ $container->set('platform', function () {
     return Config::getParam('platform', []);
 }, []);
 
-require_once __DIR__ . '/resources/request.php';
-
 $container->set('console', function () {
     return new Document(Config::getParam('console'));
 }, []);

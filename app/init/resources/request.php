@@ -63,8 +63,7 @@ use Utopia\Validator\WhiteList;
  * These resources depend (directly or transitively) on request/response
  * and must be fresh for each HTTP request.
  */
-function registerRequestResources(Container $container): void
-{
+return function (Container $container): void {
     $container->set('utopia:graphql', function ($utopia) {
         return $utopia;
     }, ['utopia']);
@@ -1234,4 +1233,4 @@ function registerRequestResources(Container $container): void
     $container->set('deviceForBuilds', function ($project, Telemetry $telemetry) {
         return new Device\Telemetry($telemetry, getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId()));
     }, ['project', 'telemetry']);
-}
+};

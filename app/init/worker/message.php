@@ -39,8 +39,7 @@ use Utopia\Telemetry\Adapter as Telemetry;
  * These resources depend on the queue message or keep mutable state and
  * must be fresh for each worker job.
  */
-function registerWorkerMessageResources(Container $container): void
-{
+return function (Container $container): void {
     $container->set('log', fn () => new Log(), []);
 
     $container->set('usage', fn () => new Context(), []);
@@ -379,4 +378,4 @@ function registerWorkerMessageResources(Container $container): void
 
         return (int) ($plan['executionsRetentionCount'] ?? 100);
     }, ['project', 'plan']);
-}
+};

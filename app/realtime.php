@@ -50,6 +50,8 @@ use Utopia\WebSocket\Server;
  */
 require_once __DIR__ . '/init.php';
 
+$registerRequestResources = require __DIR__ . '/init/resources/request.php';
+
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
 // Log uncaught exceptions in one line instead of relying on Swoole's full backtrace dump
@@ -622,7 +624,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     Console::error('Failed to restart pub/sub...');
 });
 
-$server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime) {
+$server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime, $registerRequestResources) {
     global $container;
     $request = new Request($request);
     $response = new Response(new SwooleResponse());
@@ -637,11 +639,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     $connectionContainer->set('request', fn () => $request);
     $connectionContainer->set('response', fn () => $response);
 
-    if (function_exists('registerCloudRequestResources')) {
-        registerCloudRequestResources($connectionContainer);
-    } else {
-        registerRequestResources($connectionContainer);
-    }
+    $registerRequestResources($connectionContainer);
 
     $project = null;
     $logUser = null;
