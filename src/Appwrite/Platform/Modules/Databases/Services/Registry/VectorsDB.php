@@ -10,9 +10,9 @@ use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Bul
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Create as CreateDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Delete as DeleteDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Get as GetDocument;
+use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Logs\XList as ListDocumentLogs;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Update as UpdateDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Upsert as UpsertDocument;
-use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Logs\XList as ListDocumentLogs;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\XList as ListDocuments;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Get as GetCollection;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Indexes\Create as CreateIndex;
