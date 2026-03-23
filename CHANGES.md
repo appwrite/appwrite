@@ -2,12 +2,12 @@
 
 ### Changes
 
+* Add data types and example values to .env.dist for all environment variables
 * Enable DEBUG build arg in docker-compose.yml for development builds
 * Sort XDebug configuration directives alphabetically in dev/xdebug.ini
 
 ### Fixes
 
-* Fix VS Code XDebug pathMappings to use `${workspaceFolder}` instead of deprecated `${workspaceRoot}` in CONTRIBUTING.md
 * Fix XDebug port to 9003 for XDebug 3 compatibility in CONTRIBUTING.md
 
 ### Removals
