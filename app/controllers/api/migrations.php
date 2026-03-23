@@ -1,5 +1,6 @@
 <?php
 
+use Ahc\Jwt\JWT;
 use Appwrite\Event\Event;
 use Appwrite\Event\Migration;
 use Appwrite\Extend\Exception;
@@ -14,7 +15,9 @@ use Appwrite\Utopia\Response;
 use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
 use Utopia\Compression\Compression;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
@@ -689,6 +692,59 @@ Http::get('/v1/migrations/:migrationId')
         }
 
         $response->dynamic($migration, Response::MODEL_MIGRATION);
+    });
+
+Http::post('/v1/migrations/appwrite/console-key')
+    ->groups(['api', 'migrations'])
+    ->desc('Create console API key for migration')
+    ->label('scope', 'migrations.write')
+    ->label('sdk', new Method(
+        namespace: 'migrations',
+        group: null,
+        name: 'createAppwriteConsoleKey',
+        description: '/docs/references/migrations/migration-appwrite-console-key.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_MIGRATION_KEY,
+            )
+        ]
+    ))
+    ->param('resources', [], new ArrayList(new WhiteList(\array_keys(Config::getParam('consoleProjectScopes')))), 'List of resource types to request access for.', true)
+    ->inject('response')
+    ->inject('project')
+    ->action(function (array $resources, Response $response, Document $project) {
+        $consoleProjectScopes = Config::getParam('consoleProjectScopes');
+
+        $scopes = empty($resources)
+            ? \array_values($consoleProjectScopes)
+            : \array_values(\array_intersect_key($consoleProjectScopes, \array_flip($resources)));
+
+        if (empty($scopes)) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE);
+        }
+
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', APP_CONSOLE_KEY_TTL, 0);
+        $consoleKey = $jwt->encode([
+            'projectId' => 'console',
+            'name' => 'Migration Settings Key',
+            'source' => KEY_SOURCE_MIGRATION,
+            'scopes' => $scopes,
+            'disabledMetrics' => [
+                METRIC_DATABASES_OPERATIONS_READS,
+                METRIC_DATABASES_OPERATIONS_WRITES,
+                METRIC_NETWORK_REQUESTS,
+                METRIC_NETWORK_INBOUND,
+                METRIC_NETWORK_OUTBOUND,
+            ],
+            'scopedProjectId' => $project->getId(),
+        ]);
+
+        $response->dynamic(new Document([
+            'key'    => API_KEY_DYNAMIC . '_' . $consoleKey,
+            'expire' => DateTime::addSeconds(new \DateTime(), APP_CONSOLE_KEY_TTL),
+        ]), Response::MODEL_MIGRATION_KEY);
     });
 
 Http::get('/v1/migrations/appwrite/report')

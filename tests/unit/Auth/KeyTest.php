@@ -49,6 +49,7 @@ class KeyTest extends TestCase
             'projectCheckDisabled' => true,
             'previewAuthDisabled' => true,
             'deploymentStatusIgnored' => true,
+            'source' => KEY_SOURCE_MIGRATION,
         ];
         $key = static::generateKey($projectId, $usage, $scopes, extra: $extra);
         $decoded = Key::decode(
@@ -70,6 +71,28 @@ class KeyTest extends TestCase
         $this->assertEquals(true, $decoded->isProjectCheckDisabled());
         $this->assertEquals(true, $decoded->isPreviewAuthDisabled());
         $this->assertEquals(true, $decoded->isDeploymentStatusIgnored());
+        $this->assertEquals(KEY_SOURCE_MIGRATION, $decoded->getSource());
+
+        // Decode dynamic key with scopedProjectId — scopes must NOT be merged with role scopes
+        $scopedProjectId = 'scoped-project-123';
+        $extra = [
+            'scopedProjectId' => $scopedProjectId,
+            'source' => KEY_SOURCE_MIGRATION,
+        ];
+        $key = static::generateKey('console', $usage, $scopes, extra: $extra);
+        $decoded = Key::decode(
+            project: new Document(['$id' => 'console']),
+            team: new Document(),
+            user: new Document(),
+            key: $key,
+        );
+        $this->assertEquals('console', $decoded->getProjectId());
+        $this->assertEquals(API_KEY_DYNAMIC, $decoded->getType());
+        $this->assertEquals(User::ROLE_APPS, $decoded->getRole());
+        $this->assertEquals($scopes, $decoded->getScopes());
+        $this->assertNotEquals(\array_merge($scopes, $roleScopes), $decoded->getScopes());
+        $this->assertEquals($scopedProjectId, $decoded->getScopedProjectId());
+        $this->assertEquals(KEY_SOURCE_MIGRATION, $decoded->getSource());
 
         // Decode invalid dynamic key
         $invalidKey = API_KEY_DYNAMIC . '_invalid_jwt_token';

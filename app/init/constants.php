@@ -41,6 +41,7 @@ const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return 
 const APP_LIMIT_DATABASE_BATCH = 100; // Default maximum batch size for database operations
 const APP_LIMIT_DATABASE_TRANSACTION = 100; // Default maximum operations per transaction
 const APP_KEY_ACCESS = 24 * 60 * 60; // 24 hours
+const APP_CONSOLE_KEY_TTL = 120; // 2 minutes
 const APP_USER_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_PROJECT_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_RESOURCE_TOKEN_ACCESS = 24 * 60 * 60; // 24 hours
@@ -256,6 +257,8 @@ const API_KEY_STANDARD = 'standard';
 const API_KEY_DYNAMIC = 'dynamic';
 const API_KEY_ORGANIZATION = 'organization';
 const API_KEY_ACCOUNT = 'account';
+// API key source identifiers
+const KEY_SOURCE_MIGRATION = 'migration';
 // Usage metrics
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';
