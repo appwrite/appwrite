@@ -301,9 +301,49 @@ class Response extends SwooleResponse
      *
      * @param SwooleHTTPResponse $response Native response to be passed to parent constructor
      */
+    private bool $chunking = false;
+
     public function __construct(SwooleHTTPResponse $response)
     {
         parent::__construct($response);
+    }
+
+    /**
+     * Override the parent chunk() to flush HTTP headers only once.
+     *
+     * The parent implementation calls appendHeaders() on every chunk()
+     * call, which triggers Swoole warnings for setting headers/status
+     * after the first write(). This corrupts the response and prevents
+     * body data from reaching the client on large file downloads.
+     */
+    public function chunk(string $body = '', bool $end = false): void
+    {
+        if ($this->sent) {
+            return;
+        }
+
+        if ($end) {
+            $this->sent = true;
+        }
+
+        $this->addHeader('X-Debug-Speed', (string) (microtime(true) - $this->startTime), override: true);
+
+        if (!$this->chunking) {
+            $this->chunking = true;
+            $this
+                ->appendCookies()
+                ->appendHeaders();
+        }
+
+        if (!$this->disablePayload) {
+            $this->write($body);
+            if ($end) {
+                $this->disablePayload();
+                $this->end();
+            }
+        } else {
+            $this->end();
+        }
     }
 
     /**
