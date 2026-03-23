@@ -1,5 +1,6 @@
 import { PUBLIC_ICON_MUTED_CLASSES } from '@/lib/public-icon-classes'
 import { cn } from '@/lib/utils'
+import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
 import { getColumnIcon } from '@/lib/utils/column-icons'
 import { isTextType } from '@/lib/utils/database-columns'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -867,7 +868,10 @@ export function View() {
             <PlanLimitWarning
               currentCount={totalDatabasesCount}
               limit={databasesLimit}
-              planName={organizationPlan?.name}
+              planName={resolveOrganizationPlanDisplayLabel({
+                planName: organizationPlan?.name ?? null,
+                planId: organizationPlan?.$id,
+              })}
               resourceName="databases"
               orgId={project?.teamId}
             />

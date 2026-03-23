@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Eye, Users, Loader2 } from 'lucide-react'
 import { AppwriteException, type Models } from '@appwrite.io/console'
@@ -15,6 +15,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
+  CommandSeparator,
 } from '@/components/ui/command'
 import {
   Popover,
@@ -36,12 +37,32 @@ import {
   persistConsoleImpersonationSession,
   readConsoleImpersonationOperatorSnapshot,
 } from '@/lib/console-impersonation'
+import { flushRecentImpersonationUsersToAccountPrefs, updateAccountPrefs } from '@/lib/react-query/hooks/auth'
 import { consoleUsersImpersonationSearchQueryOptions } from '@/lib/react-query/hooks/console-user-search'
+import {
+  appendRecentImpersonationUser,
+  mergeRecentImpersonationIntoAccountPrefs,
+  mergeRecentImpersonationLists,
+  parseRecentImpersonationUsers,
+  readRecentImpersonationSessionList,
+  writeRecentImpersonationSessionList,
+  type RecentImpersonationUser,
+} from '@/lib/user-prefs-keys'
 import { cn } from '@/lib/utils'
 
 type ConsoleAccount = Models.User & {
   impersonator?: boolean
   impersonatorUserId?: string
+}
+
+function recentImpersonationUserToModel(
+  r: RecentImpersonationUser,
+): Models.User {
+  return {
+    $id: r.$id,
+    name: r.name ?? '',
+    email: r.email ?? '',
+  } as Models.User
 }
 
 export function ImpersonateConsoleUserPopover() {
@@ -79,7 +100,48 @@ export function ImpersonateConsoleUserPopover() {
     ? operatorSnapshot?.$id
     : account?.$id
 
-  const handleSelectUser = (user: Models.User) => {
+  const recentImpersonationUsers = useMemo((): RecentImpersonationUser[] => {
+    if (!operatorId?.trim()) return []
+    if (isImpersonating) {
+      return readRecentImpersonationSessionList(operatorId)
+    }
+    const fromPrefs = parseRecentImpersonationUsers(
+      (account as { prefs?: Record<string, unknown> } | undefined)?.prefs,
+    )
+    const fromSession = readRecentImpersonationSessionList(operatorId)
+    return mergeRecentImpersonationLists(fromPrefs, fromSession)
+  }, [account, isImpersonating, operatorId])
+
+  const showRecentSection =
+    !debouncedSearch.trim() && recentImpersonationUsers.length > 0
+
+  const persistRecentImpersonation = async (user: Models.User) => {
+    if (!operatorId?.trim()) return
+    const currentList = isImpersonating
+      ? readRecentImpersonationSessionList(operatorId)
+      : mergeRecentImpersonationLists(
+          parseRecentImpersonationUsers(
+            (account as { prefs?: Record<string, unknown> } | undefined)?.prefs,
+          ),
+          readRecentImpersonationSessionList(operatorId),
+        )
+    const next = appendRecentImpersonationUser(currentList, user)
+    try {
+      if (!isImpersonating) {
+        const prefs = (account as { prefs?: Record<string, unknown> } | undefined)
+          ?.prefs
+        await updateAccountPrefs(
+          mergeRecentImpersonationIntoAccountPrefs(prefs, next),
+        )
+      }
+      writeRecentImpersonationSessionList(operatorId, next)
+    } catch (e) {
+      console.error(e)
+      writeRecentImpersonationSessionList(operatorId, next)
+    }
+  }
+
+  const handleSelectUser = async (user: Models.User) => {
     const targetId = user?.$id
     if (!targetId?.trim()) {
       toast.error('This user has no valid ID; pick another user.')
@@ -118,6 +180,7 @@ export function ImpersonateConsoleUserPopover() {
     if (!operator) return
 
     try {
+      await persistRecentImpersonation(user)
       applyConsoleImpersonateUserId(targetId)
       persistConsoleImpersonationSession(targetId, operator)
       setOpen(false)
@@ -136,11 +199,19 @@ export function ImpersonateConsoleUserPopover() {
     }
   }
 
-  const handleStop = () => {
+  const handleStop = async () => {
+    const opId = readConsoleImpersonationOperatorSnapshot()?.$id
     clearConsoleImpersonateUser()
     clearConsoleImpersonationSession()
     setOpen(false)
     queryClient.clear()
+    if (opId) {
+      try {
+        await flushRecentImpersonationUsersToAccountPrefs(opId)
+      } catch (e) {
+        console.error(e)
+      }
+    }
     hardNavigateToAccountAfterImpersonation()
   }
 
@@ -217,6 +288,67 @@ export function ImpersonateConsoleUserPopover() {
             </div>
           </div>
           <CommandList className="max-h-[280px]">
+            {showRecentSection && (
+              <CommandGroup heading="Recent">
+                {recentImpersonationUsers.map((recent) => {
+                  const disabled =
+                    recent.$id === account?.$id ||
+                    (!!operatorId && recent.$id === operatorId)
+                  const label =
+                    recent.name || recent.email || recent.$id
+                  const cmdkValue = [
+                    recent.$id,
+                    recent.name,
+                    recent.email,
+                    'recent',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')
+                  return (
+                    <CommandItem
+                      key={`recent-${recent.$id}`}
+                      value={cmdkValue}
+                      disabled={disabled}
+                      onSelect={() =>
+                        void handleSelectUser(
+                          recentImpersonationUserToModel(recent),
+                        )
+                      }
+                      className="cursor-pointer gap-2 px-3 py-2.5 aria-disabled:opacity-50"
+                    >
+                      <InitialsAvatar
+                        name={label}
+                        size="sm"
+                        className="shrink-0"
+                      />
+                      <div className="min-w-0 flex-1 text-left">
+                        <p className="truncate text-[13px] font-medium text-foreground">
+                          {recent.name || '—'}
+                        </p>
+                        <p className="truncate text-[12px] text-muted-foreground">
+                          {recent.email || '—'}
+                        </p>
+                        <div
+                          className="mt-1"
+                          onClick={(e) => e.stopPropagation()}
+                          onPointerDown={(e) => e.stopPropagation()}
+                        >
+                          <CopyableId
+                            id={recent.$id}
+                            size="xs"
+                            maxWidth={200}
+                            className="max-w-full"
+                          />
+                        </div>
+                      </div>
+                    </CommandItem>
+                  )
+                })}
+              </CommandGroup>
+            )}
+            {showRecentSection && users.length > 0 && (
+              <CommandSeparator className="mx-0" />
+            )}
             <CommandEmpty className="p-0">
               {isFetching ? (
                 <div className="flex items-center justify-center px-6 py-10">

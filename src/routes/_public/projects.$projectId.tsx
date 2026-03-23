@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, useLocation } from '@tanstack/react-router'
 import { useState, useEffect, useRef } from 'react'
+import { CloudStatusBanner } from '@/components/global/layout/CloudStatusBanner'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { PausedProjectCurtain } from '@/components/global/layout/PausedProjectCurtain'
 import { KeyboardShortcutsProvider } from '@/components/global/providers/KeyboardShortcuts'
@@ -18,6 +19,7 @@ import {
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { consoleVariablesQueryOptions } from '@/lib/react-query/hooks/console-variables'
 import { ErrorComponent } from '@/components/error/Component'
+import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
 import { reportConsoleAccess } from '@/lib/appwrite/console-access'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 
@@ -220,14 +222,21 @@ function ProjectLayout() {
         : new Error(errorMessage || 'Project error occurred')
 
     return (
-      <ErrorComponent
-        error={errorObj}
-        info={undefined}
-        reset={() => {
-          // Refetch project on reset
-          window.location.reload()
-        }}
-      />
+      <div className="org-layout-container flex h-full flex-col bg-background">
+        <div className="sticky top-0 z-[110] flex shrink-0 flex-col bg-background">
+          <CloudStatusBanner />
+          <ConsoleImpersonationBanner />
+        </div>
+        <main className="min-h-0 flex-1 overflow-y-auto">
+          <ErrorComponent
+            error={errorObj}
+            info={undefined}
+            reset={() => {
+              window.location.reload()
+            }}
+          />
+        </main>
+      </div>
     )
   }
 

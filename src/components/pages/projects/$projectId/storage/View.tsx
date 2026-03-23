@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { cn } from '@/lib/utils'
+import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
 import { FolderOpen, List, LayoutGrid, Lock, Folder } from 'lucide-react'
 import { formatBytes } from '@/lib/utils/mock-data'
 import {
@@ -700,7 +701,10 @@ export function View() {
             <PlanLimitWarning
               currentCount={totalBucketsCount}
               limit={bucketsLimit}
-              planName={organizationPlan?.name}
+              planName={resolveOrganizationPlanDisplayLabel({
+                planName: organizationPlan?.name ?? null,
+                planId: organizationPlan?.$id,
+              })}
               resourceName="buckets"
               orgId={project?.teamId}
             />

@@ -1,4 +1,5 @@
 import { Organization } from '@/lib/utils/mock-data'
+import { getCanonicalPlanDisplayLabel } from '@/lib/utils/plan-filter'
 import {
   getPlanBadgeColor as getPlanBadgeColorUtil,
   type PlanType,
@@ -14,10 +15,8 @@ export function getPlanBadgeColor(plan: Organization['plan']): string {
 }
 
 /**
- * Get the display name for a plan
- * @param plan - The organization plan
- * @returns The capitalized plan name
+ * Display label for a canonical org plan (same rules as {@link getCanonicalPlanDisplayLabel}).
  */
 export function getPlanDisplayName(plan: Organization['plan']): string {
-  return plan.charAt(0).toUpperCase() + plan.slice(1)
+  return getCanonicalPlanDisplayLabel(plan)
 }

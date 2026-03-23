@@ -52,6 +52,7 @@ import {
 } from '@/components/ui/tooltip'
 import { TemplatesView } from './Templates'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
+import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
 import { formatCronExpression } from './CronScheduleEditor'
 import { FunctionContextMenu } from './_components/FunctionContextMenu'
 
@@ -740,7 +741,10 @@ export function View() {
             <PlanLimitWarning
               currentCount={totalFunctionsCount}
               limit={functionsLimit}
-              planName={organizationPlan?.name}
+              planName={resolveOrganizationPlanDisplayLabel({
+                planName: organizationPlan?.name ?? null,
+                planId: organizationPlan?.$id,
+              })}
               resourceName="functions"
               orgId={project?.teamId}
             />

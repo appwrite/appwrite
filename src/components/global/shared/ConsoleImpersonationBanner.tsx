@@ -13,6 +13,7 @@ import {
   readConsoleImpersonationOperatorSnapshot,
   readConsoleImpersonationTargetUserId,
 } from '@/lib/console-impersonation'
+import { flushRecentImpersonationUsersToAccountPrefs } from '@/lib/react-query/hooks/auth'
 
 export function ConsoleImpersonationBanner({ className }: { className?: string }) {
   const { account: accountRaw } = useAuth()
@@ -40,10 +41,18 @@ export function ConsoleImpersonationBanner({ className }: { className?: string }
 
   const summary = `Impersonation active. Operating as ${targetLabel}. Operator ${operatorLabel}.`
 
-  const handleExit = () => {
+  const handleExit = async () => {
+    const opId = readConsoleImpersonationOperatorSnapshot()?.$id
     clearConsoleImpersonateUser()
     clearConsoleImpersonationSession()
     queryClient.clear()
+    if (opId) {
+      try {
+        await flushRecentImpersonationUsersToAccountPrefs(opId)
+      } catch (e) {
+        console.error(e)
+      }
+    }
     hardNavigateToAccountAfterImpersonation()
   }
 

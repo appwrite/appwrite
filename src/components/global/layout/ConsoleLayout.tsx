@@ -7,7 +7,6 @@ import { CloudStatusBanner } from './CloudStatusBanner'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
 import { SkipToContent } from './SkipToContent'
 import { NativeAppBar } from './NativeAppBar'
-import { PaymentAlert } from '@/components/pages/projects/$projectId/shared/PaymentAlert'
 import { cn } from '@/lib/utils'
 import {
   loadDebugOverrides,
@@ -48,7 +47,7 @@ interface ConsoleLayoutProps {
  * ConsoleLayout - Reusable layout component for all console pages
  *
  * Provides consistent layout structure with:
- * - Sticky header (PaymentAlert + ConsoleHeader)
+ * - Sticky header (ConsoleHeader)
  * - Optional sidebar
  * - Scrollable main content area
  * - Optional footer
@@ -108,11 +107,11 @@ export function ConsoleLayout({
     >
       <SkipToContent />
       {/* Sticky header section - takes space in flex layout */}
-      <div className="flex-shrink-0 sticky top-0 z-30 flex flex-col bg-background">
+      {/* z-[110]: above PausedProjectCurtain (z-100) so alerts / exit impersonation stay reachable */}
+      <div className="sticky top-0 z-[110] flex shrink-0 flex-col bg-background">
         {showNativeAppBar && <NativeAppBar />}
         <CloudStatusBanner />
         <ConsoleImpersonationBanner />
-        <PaymentAlert />
         <ConsoleHeader
           onMenuClick={sidebar?.onMenuClick}
           projectId={header?.projectId}

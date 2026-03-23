@@ -16,6 +16,12 @@ import {
   buildSavedFiltersPrefs,
   parseSavedFilters,
   MAX_SAVED_FILTER_NAME_LENGTH,
+  clearRecentImpersonationSessionList,
+  mergeRecentImpersonationIntoAccountPrefs,
+  mergeRecentImpersonationLists,
+  parseRecentImpersonationUsers,
+  readRecentImpersonationSessionList,
+  type UserPrefs,
 } from '@/lib/user-prefs-keys'
 import type { SavedFilter } from '@/lib/user-prefs-keys'
 import { DEFAULT_STALE_TIME } from './constants'
@@ -544,6 +550,28 @@ export function useAccountSessions() {
  */
 export async function updateAccountPrefs(prefs: Record<string, unknown>) {
   return await sdk.forConsole.account.updatePrefs({ prefs })
+}
+
+/**
+ * Merge session-stored recent impersonation targets (while operator was impersonating)
+ * into the operator account prefs. Call after impersonation headers are cleared so
+ * `account.get()` resolves to the operator.
+ */
+export async function flushRecentImpersonationUsersToAccountPrefs(
+  operatorId: string,
+) {
+  const list = readRecentImpersonationSessionList(operatorId)
+  if (list.length === 0) return
+  clearRecentImpersonationSessionList(operatorId)
+  const account = await sdk.forConsole.account.get()
+  const fromPrefs = parseRecentImpersonationUsers(account.prefs as UserPrefs)
+  const merged = mergeRecentImpersonationLists(fromPrefs, list)
+  await updateAccountPrefs(
+    mergeRecentImpersonationIntoAccountPrefs(
+      account.prefs as UserPrefs,
+      merged,
+    ),
+  )
 }
 
 /**

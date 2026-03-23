@@ -1,11 +1,13 @@
 // Mock data for Appwrite Console UI
 
+import type { CanonicalPlanId } from '@/lib/utils/plan-filter'
+
 export interface Organization {
   $id: string
   name: string
   slug: string
   avatar?: string
-  plan: 'free' | 'pro' | 'custom'
+  plan: CanonicalPlanId
   members: number
 }
 

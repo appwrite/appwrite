@@ -421,7 +421,7 @@ export function Templates({ projectId }: TemplatesProps) {
                     key={templateConfig.type}
                     onClick={() => setSelectedType(templateConfig.type)}
                     className={cn(
-                      'w-full px-4 py-3 text-left transition-colors hover:bg-muted/50',
+                      'w-full cursor-pointer px-4 py-3 text-left transition-colors hover:bg-muted/50',
                       isSelected && 'bg-muted',
                     )}
                   >

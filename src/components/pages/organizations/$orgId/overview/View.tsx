@@ -131,8 +131,12 @@ import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { cn } from '@/lib/utils'
-import { getPlanBadgeColor } from '@/lib/utils/plan-badge'
-import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
+import { getPlanBadgeColor, getPlanDisplayName } from '@/lib/utils/plan-badge'
+import {
+  getPlanNameFromTier,
+  resolveOrganizationPlanDisplayLabel,
+  type CanonicalPlanId,
+} from '@/lib/utils/plan-filter'
 import { BillingTab } from '../billing/BillingTab'
 import { ComplianceTab } from '../settings/ComplianceTab'
 import { View as DomainsView } from '../domains/View'
@@ -515,7 +519,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         const planName = getPlanNameFromTier(
           org.billingPlan ?? (org.prefs as { tier?: string })?.tier ?? 'free',
         )
-        const plan = planName as Organization['plan']
+        const plan = planName as CanonicalPlanId
 
         return {
           $id: org.$id,
@@ -1214,11 +1218,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                       {isCloud && (
                         <Badge
                           className={cn(
-                            'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium capitalize leading-none',
+                            'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium leading-none',
                             getPlanBadgeColor(selectedOrg.plan),
                           )}
                         >
-                          {selectedOrg.plan}
+                          {getPlanDisplayName(selectedOrg.plan)}
                         </Badge>
                       )}
                       <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
@@ -1252,11 +1256,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               {isCloud && (
                                 <span
                                   className={cn(
-                                    'rounded px-1.5 py-0.5 text-[10px] font-medium capitalize',
+                                    'rounded px-1.5 py-0.5 text-[10px] font-medium',
                                     getPlanBadgeColor(org.plan),
                                   )}
                                 >
-                                  {org.plan}
+                                  {getPlanDisplayName(org.plan)}
                                 </span>
                               )}
                               <span className="text-[11px] text-muted-foreground">
@@ -1452,7 +1456,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
             const planIncluded = organizationPlan?.addons?.seats?.planIncluded
             const limitNum = Number(seatsLimit ?? planIncluded)
             const limit = isNaN(limitNum) ? null : limitNum
-            const planName = organizationPlan?.name || 'plan'
+            const planName =
+              resolveOrganizationPlanDisplayLabel({
+                planName: organizationPlan?.name ?? null,
+                planId: organizationPlan?.$id,
+              }) || 'plan'
 
             // Only show if limit exists and is greater than 0
             if (limit !== null && limit > 0) {
@@ -1545,7 +1553,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               organizationPlan?.addons?.projects?.planIncluded
             const limitNum = Number(projectLimit ?? planIncluded)
             const limit = isNaN(limitNum) ? null : limitNum
-            const planName = organizationPlan?.name || 'plan'
+            const planName =
+              resolveOrganizationPlanDisplayLabel({
+                planName: organizationPlan?.name ?? null,
+                planId: organizationPlan?.$id,
+              }) || 'plan'
 
             // Only show if limit exists, is greater than 0, and user has reached it
             if (limit !== null && limit > 0) {

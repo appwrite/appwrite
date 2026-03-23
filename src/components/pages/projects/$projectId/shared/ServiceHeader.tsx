@@ -201,6 +201,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                 to={tab.to as unknown}
                 params={tab.params}
                 replace
+                onMouseDown={(e) => e.preventDefault()}
                 role="tab"
                 aria-selected={isActive}
                 className={cn(
@@ -219,8 +220,10 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
           return (
             <button
               key={tab.id}
+              type="button"
               role="tab"
               aria-selected={isActive}
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => onTabChange?.(tab.id)}
               className={cn(
                 'relative flex shrink-0 cursor-pointer focus:cursor-pointer focus-visible:cursor-pointer items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
@@ -307,6 +310,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                         to={tab.to as unknown}
                         params={tab.params}
                         replace
+                        onMouseDown={(e) => e.preventDefault()}
                         role="tab"
                         aria-selected={isActive}
                         className={cn(
@@ -325,8 +329,10 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                   return (
                     <button
                       key={tab.id}
+                      type="button"
                       role="tab"
                       aria-selected={isActive}
+                      onMouseDown={(e) => e.preventDefault()}
                       onClick={() => onTabChange?.(tab.id)}
                       className={cn(
                         'relative flex shrink-0 cursor-pointer items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',

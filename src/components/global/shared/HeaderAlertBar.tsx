@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 
 /**
  * Shared layout and colors for top-of-console alerts (billing, impersonation, etc.).
- * Matches {@link CloudStatusBanner} and {@link PaymentAlert}: min-h-14, padding, responsive row.
+ * Matches {@link CloudStatusBanner}: min-h-14, padding, responsive row.
  */
 export type HeaderAlertVariant = 'warning' | 'danger' | 'info'
 

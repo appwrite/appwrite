@@ -50,6 +50,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
+import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
 import type { Models } from '@appwrite.io/console'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
 import { SiteContextMenu } from './_components/SiteContextMenu'
@@ -670,7 +671,10 @@ export function View() {
             <PlanLimitWarning
               currentCount={totalSitesCount}
               limit={sitesLimit}
-              planName={organizationPlan?.name}
+              planName={resolveOrganizationPlanDisplayLabel({
+                planName: organizationPlan?.name ?? null,
+                planId: organizationPlan?.$id,
+              })}
               resourceName="sites"
               orgId={project?.teamId}
             />

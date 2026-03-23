@@ -27,7 +27,10 @@ import {
   FULL_ACCESS,
 } from '@/lib/console-roles'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
-import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
+import {
+  getPlanNameFromTier,
+  type CanonicalPlanId,
+} from '@/lib/utils/plan-filter'
 import {
   DEFAULT_STALE_TIME,
   LONG_STALE_TIME,
@@ -1202,7 +1205,7 @@ export function useOrganizations() {
 
     return organizationsData.teams.map((org: unknown) => {
       // Map billingPlan to plan name using the filter
-      const plan = getPlanNameFromTier(org.billingPlan) as Organization['plan']
+      const plan = getPlanNameFromTier(org.billingPlan) as CanonicalPlanId
 
       return {
         $id: org.$id,
@@ -1261,7 +1264,7 @@ export function useOrganizationById(orgId: string | null | undefined) {
     if (!orgData) return null
 
     const planName = getPlanNameFromTier(orgData.billingPlan)
-    const plan = planName as Organization['plan']
+    const plan = planName as CanonicalPlanId
 
     return {
       ...orgData,

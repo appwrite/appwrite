@@ -30,7 +30,7 @@ import {
   useQueryClient,
   keepPreviousData,
 } from '@tanstack/react-query'
-import { getPlanBadgeColor } from '@/lib/utils/plan-badge'
+import { getPlanBadgeColor, getPlanDisplayName } from '@/lib/utils/plan-badge'
 import { truncateMiddle } from '@/lib/utils'
 import { CreateProjectDialog } from '@/components/pages/organizations/$orgId/overview/CreateProjectDialog'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -432,7 +432,7 @@ export function ProjectSelector({
                 getPlanBadgeColor(currentProjectOrg.plan),
               )}
             >
-              {currentProjectOrg.plan}
+              {getPlanDisplayName(currentProjectOrg.plan)}
             </span>
           )}
           <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -525,7 +525,7 @@ export function ProjectSelector({
                     getPlanBadgeColor(currentProjectOrg.plan),
                   )}
                 >
-                  {currentProjectOrg.plan}
+                  {getPlanDisplayName(currentProjectOrg.plan)}
                 </span>
               )}
             </div>
@@ -708,7 +708,7 @@ function ProjectSelectorContent({
                             getPlanBadgeColor(teamOrg.plan),
                           )}
                         >
-                          {teamOrg.plan}
+                          {getPlanDisplayName(teamOrg.plan)}
                         </span>
                       )}
                     </div>
@@ -989,7 +989,7 @@ function MobileProjectSelectorContent({
                             getPlanBadgeColor(teamOrg.plan),
                           )}
                         >
-                          {teamOrg.plan}
+                          {getPlanDisplayName(teamOrg.plan)}
                         </span>
                       )}
                       {selectedTeam.$id === team.$id && (

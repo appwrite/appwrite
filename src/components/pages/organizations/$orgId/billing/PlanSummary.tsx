@@ -32,7 +32,7 @@ import {
   organizationBillingAggregationQueryOptions,
 } from '@/lib/react-query/hooks'
 import { DEFAULT_BILLING_PROJECTS_LIMIT } from '@/lib/react-query/hooks/constants'
-import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
+import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
 import { Link } from '@tanstack/react-router'
 import { Pagination } from '@/components/global/shared/Pagination'
 
@@ -138,11 +138,12 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
 
   // Get plan name from plan object
   const planName = useMemo(() => {
-    if (!plan || !plan.name) {
-      if (!organization) return 'Free'
-      return getPlanNameFromTier(organization.billingPlan)
-    }
-    return plan.name
+    if (!organization) return 'Free'
+    return resolveOrganizationPlanDisplayLabel({
+      billingPlan: organization.billingPlan,
+      planName: plan?.name ?? null,
+      planId: plan?.$id,
+    })
   }, [plan, organization])
 
   // Get next plan if downgrade is scheduled
