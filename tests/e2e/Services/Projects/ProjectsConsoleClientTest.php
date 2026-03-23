@@ -4787,18 +4787,6 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains("APP_TEST_UPDATE", $variableKeys);
         $this->assertContains("APP_TEST_UPDATE_1", $variableKeys);
 
-        /**
-         * Test for FAILURE
-         */
-
-        $response = $this->client->call(Client::METHOD_PUT, '/project/variables/' . $data['variableId'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $data['projectId'],
-            'x-appwrite-mode' => 'admin',
-        ], $this->getHeaders()));
-
-        $this->assertEquals(400, $response['headers']['status-code']);
-
         $response = $this->client->call(Client::METHOD_PUT, '/project/variables/' . $data['variableId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $data['projectId'],
@@ -4806,6 +4794,19 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'value' => 'TESTINGVALUEUPDATED_2'
         ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSame('TESTINGVALUEUPDATED_2', $response['body']['value']);
+        $this->assertSame('APP_TEST_UPDATE', $response['body']['key']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/project/variables/' . $data['variableId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectId'],
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()));
 
         $this->assertEquals(400, $response['headers']['status-code']);
 

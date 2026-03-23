@@ -335,21 +335,10 @@ trait VariablesBase
         $this->assertSame(201, $variable['headers']['status-code']);
         $variableId = $variable['body']['$id'];
 
-        // Update with no parameters (no-op)
+        // Update with no parameters should fail with 400
         $updated = $this->updateVariable($variableId);
 
-        $this->assertSame(200, $updated['headers']['status-code']);
-        $this->assertSame($variableId, $updated['body']['$id']);
-        $this->assertSame('NOOP_KEY', $updated['body']['key']);
-        $this->assertSame('noop-value', $updated['body']['value']);
-        $this->assertSame(false, $updated['body']['secret']);
-
-        // Verify variable is unchanged via GET
-        $get = $this->getVariable($variableId);
-        $this->assertSame(200, $get['headers']['status-code']);
-        $this->assertSame('NOOP_KEY', $get['body']['key']);
-        $this->assertSame('noop-value', $get['body']['value']);
-        $this->assertSame(false, $get['body']['secret']);
+        $this->assertSame(400, $updated['headers']['status-code']);
 
         // Cleanup
         $this->deleteVariable($variableId);
