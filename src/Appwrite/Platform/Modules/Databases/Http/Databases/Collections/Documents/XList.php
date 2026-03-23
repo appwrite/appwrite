@@ -105,10 +105,10 @@ class XList extends Action
 
         $joins = Query::getJoinQueries($queries, false);
         foreach ($joins as $join) {
-            $col = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $join->getCollection()));
+            $col = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $join->getCollectionId()));
 
             if ($col->isEmpty() || (!$col->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-                throw new Exception($this->getParentNotFoundException(), params: [$join->getCollection()]);
+                throw new Exception($this->getParentNotFoundException(), params: [$join->getCollectionId()]);
             }
 
             $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $col->getSequence();
