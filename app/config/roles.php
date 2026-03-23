@@ -62,6 +62,8 @@ $admins = [
     'devKeys.write',
     'webhooks.read',
     'webhooks.write',
+    'project.read',
+    'project.write',
     'locale.read',
     'avatars.read',
     'health.read',
