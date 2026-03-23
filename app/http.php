@@ -633,11 +633,8 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
             'trace' => $th->getTrace(),
             'version' => $version,
         ] : [
-            'message' => 'Error: ' . $th->getMessage(),
+            'message' => 'Error: Server Error',
             'code' => 500,
-            'file' => $th->getFile(),
-            'line' => $th->getLine(),
-            'trace' => $th->getTrace(),
             'version' => $version,
         ];
 
