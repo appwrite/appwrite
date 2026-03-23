@@ -1375,10 +1375,25 @@ Http::get('/v1/account/sessions/oauth2/:provider')
             'token' => false,
         ], $scopes);
 
+        $loginURL = $oauth2->getLoginURL();
+
+        if ($provider === 'x' && \method_exists($oauth2, 'getPKCEVerifier')) {
+            $response->addCookie(
+                'a_oauth2_pkce_' . $project->getId() . '_' . $provider,
+                $oauth2->getPKCEVerifier(),
+                \time() + 300,
+                '/',
+                Config::getParam('cookieDomain'),
+                ('https' === $protocol),
+                true,
+                Response::COOKIE_SAMESITE_LAX
+            );
+        }
+
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
-            ->redirect($oauth2->getLoginURL());
+            ->redirect($loginURL);
     });
 
 Http::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
@@ -1510,6 +1525,20 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         /** @var Appwrite\Auth\OAuth2 $oauth2 */
         $oauth2 = new $className($appId, $appSecret, $callback);
+
+        if ($provider === 'x' && \method_exists($oauth2, 'setPKCEVerifier')) {
+            $oauth2->setPKCEVerifier($request->getCookie('a_oauth2_pkce_' . $project->getId() . '_' . $provider, ''));
+            $response->addCookie(
+                'a_oauth2_pkce_' . $project->getId() . '_' . $provider,
+                '',
+                \time() - 3600,
+                '/',
+                Config::getParam('cookieDomain'),
+                ('https' === $protocol),
+                true,
+                Response::COOKIE_SAMESITE_LAX
+            );
+        }
 
         if (!empty($state)) {
             try {
@@ -2079,10 +2108,25 @@ Http::get('/v1/account/tokens/oauth2/:provider')
             'token' => true,
         ], $scopes);
 
+        $loginURL = $oauth2->getLoginURL();
+
+        if ($provider === 'x' && \method_exists($oauth2, 'getPKCEVerifier')) {
+            $response->addCookie(
+                'a_oauth2_pkce_' . $project->getId() . '_' . $provider,
+                $oauth2->getPKCEVerifier(),
+                \time() + 300,
+                '/',
+                Config::getParam('cookieDomain'),
+                ('https' === $protocol),
+                true,
+                Response::COOKIE_SAMESITE_LAX
+            );
+        }
+
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
-            ->redirect($oauth2->getLoginURL());
+            ->redirect($loginURL);
     });
 
 Http::post('/v1/account/tokens/magic-url')
