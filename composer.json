@@ -74,11 +74,11 @@
         "utopia-php/logger": "0.6.*",
         "utopia-php/messaging": "0.20.*",
         "utopia-php/migration": "1.7.*",
-        "utopia-php/platform": "0.9.*",
+        "utopia-php/platform": "0.11.*",
         "utopia-php/pools": "1.*",
         "utopia-php/span": "1.1.*",
         "utopia-php/preloader": "0.2.*",
-        "utopia-php/queue": "dev-feat/di-container-refactor as 0.16.0",
+        "utopia-php/queue": "0.17.*",
         "utopia-php/servers": "0.3.*",
         "utopia-php/registry": "0.5.*",
         "utopia-php/storage": "1.0.*",
@@ -96,12 +96,6 @@
         "league/csv": "9.14.*",
         "enshrined/svg-sanitize": "0.22.*"
     },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/utopia-php/database"
-        }
-    ],
     "require-dev": {
         "ext-fileinfo": "*",
         "appwrite/sdk-generator": "*",
@@ -113,12 +107,6 @@
         "czproject/git-php": "4.*",
         "laravel/pint": "1.*"
     },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/utopia-php/database"
-        }
-    ],
     "provide": {
         "ext-phpiredis": "*"
     },
