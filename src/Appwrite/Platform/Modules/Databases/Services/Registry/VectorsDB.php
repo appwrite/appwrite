@@ -10,6 +10,7 @@ use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Bul
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Create as CreateDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Delete as DeleteDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Get as GetDocument;
+use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Logs\XList as ListDocumentLogs;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Update as UpdateDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Upsert as UpsertDocument;
 use Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\XList as ListDocuments;
@@ -91,6 +92,7 @@ class VectorsDB extends Base
         $service->addAction(UpdateDocuments::getName(), new UpdateDocuments());
         $service->addAction(UpsertDocuments::getName(), new UpsertDocuments());
         $service->addAction(DeleteDocuments::getName(), new DeleteDocuments());
+        $service->addAction(ListDocumentLogs::getName(), new ListDocumentLogs());
     }
 
     private function registerTransactionActions(Service $service): void
