@@ -97,15 +97,9 @@
         "enshrined/svg-sanitize": "0.22.*",
         "utopia-php/di": "0.1.0"
     },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/utopia-php/database"
-        }
-    ],
     "require-dev": {
         "ext-fileinfo": "*",
-        "appwrite/sdk-generator": "*",
+        "appwrite/sdk-generator": "dev-rust",
         "brianium/paratest": "7.*",
         "phpunit/phpunit": "12.*",
         "swoole/ide-helper": "6.*",
@@ -114,12 +108,6 @@
         "czproject/git-php": "4.*",
         "laravel/pint": "1.*"
     },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/utopia-php/database"
-        }
-    ],
     "provide": {
         "ext-phpiredis": "*"
     },
