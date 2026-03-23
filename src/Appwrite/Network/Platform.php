@@ -20,6 +20,7 @@ class Platform
     public const TYPE_UNITY = 'unity';
     public const TYPE_REACT_NATIVE_IOS = 'react-native-ios';
     public const TYPE_REACT_NATIVE_ANDROID = 'react-native-android';
+    public const TYPE_REACT_NATIVE_WEB = 'react-native-web';
     public const TYPE_SCHEME = 'scheme';
 
     public const SCHEME_HTTP = 'http';

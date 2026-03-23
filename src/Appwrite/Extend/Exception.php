@@ -330,6 +330,7 @@ class Exception extends \Exception
 
     /** Platform */
     public const string PLATFORM_NOT_FOUND = 'platform_not_found';
+    public const string PLATFORM_ALREADY_EXISTS = 'platform_already_exists';
 
     /** GraphqQL */
     public const string GRAPHQL_NO_QUERY = 'graphql_no_query';

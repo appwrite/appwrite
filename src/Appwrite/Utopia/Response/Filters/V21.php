@@ -11,6 +11,13 @@ class V21 extends Filter
     public function parse(array $content, string $model): array
     {
         return match ($model) {
+            Response::MODEL_PLATFORM_WEB => $this->parsePlatform($content),
+            Response::MODEL_PLATFORM_APP => $this->parsePlatform($content),
+            Response::MODEL_PLATFORM_LIST => $this->handleList(
+                $content,
+                "platforms",
+                fn ($item) => $this->parsePlatform($item),
+            ),
             Response::MODEL_SITE => $this->parseSite($content),
             Response::MODEL_SITE_LIST => $this->handleList(
                 $content,
@@ -42,6 +49,17 @@ class V21 extends Filter
     protected function parseSite(array $content): array
     {
         $content = $this->parseSpecs($content);
+        return $content;
+    }
+
+    protected function parsePlatform(array $content): array
+    {
+        // httpUser, httpPass, store removed
+
+        // identifier -> key
+        $content['key'] = $content['identifier'] ?? $content['key'] ?? null;
+        unset($content['identifier']);
+
         return $content;
     }
 

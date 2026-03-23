@@ -246,7 +246,8 @@ class Response extends SwooleResponse
     public const MODEL_MOCK_NUMBER = 'mockNumber';
     public const MODEL_AUTH_PROVIDER = 'authProvider';
     public const MODEL_AUTH_PROVIDER_LIST = 'authProviderList';
-    public const MODEL_PLATFORM = 'platform';
+    public const MODEL_PLATFORM_APP = 'platformApp';
+    public const MODEL_PLATFORM_WEB = 'platformWeb';
     public const MODEL_PLATFORM_LIST = 'platformList';
     public const MODEL_VARIABLE = 'variable';
     public const MODEL_VARIABLE_LIST = 'variableList';

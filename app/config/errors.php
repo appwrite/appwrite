@@ -1164,6 +1164,11 @@ return [
         'description' => 'Platform with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::PLATFORM_ALREADY_EXISTS => [
+        'name' => Exception::PLATFORM_ALREADY_EXISTS,
+        'description' => 'Platform with the same ID already exists in this project. Try again with a different ID.',
+        'code' => 409,
+    ],
     Exception::VARIABLE_NOT_FOUND => [
         'name' => Exception::VARIABLE_NOT_FOUND,
         'description' => 'Variable with the requested ID could not be found.',

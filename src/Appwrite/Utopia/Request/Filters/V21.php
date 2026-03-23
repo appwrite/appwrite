@@ -11,6 +11,31 @@ class V21 extends Filter
     public function parse(array $content, string $model): array
     {
         switch ($model) {
+            case 'project.createWebPlatform':
+            case 'project.createAppPlatform':
+                $content = $this->fillPlatformId($content);
+
+                // Remove store ID
+                unset($content['store']);
+
+                // key -> identifier
+                $content['identifier'] = $content['identifier'] ?? $content['key'] ?? null;
+                unset($content['key']);
+
+                break;
+            case 'project.updateWebPlatform':
+            case 'project.updateAppPlatform':
+                // Remove store ID
+                unset($content['store']);
+
+                // key -> identifier
+                $content['identifier'] = $content['identifier'] ?? $content['key'] ?? null;
+                unset($content['key']);
+
+                break;
+            case 'project.listPlatforms':
+                $content = $this->preservePlatformsQueries($content);
+                break;
             case 'webhooks.create':
                 $content = $this->fillWebhookid($content);
                 break;
@@ -65,6 +90,12 @@ class V21 extends Filter
         return $content;
     }
 
+    protected function fillPlatformId(array $content): array
+    {
+        $content['platformId'] = $content['platformId'] ?? 'unique()';
+        return $content;
+    }
+
     protected function fillVariableId(array $content): array
     {
         $content['variableId'] = $content['variableId'] ?? 'unique()';
@@ -75,6 +106,15 @@ class V21 extends Filter
     {
         $content['queries'] = $content['queries'] ?? [
             Query::limit(APP_LIMIT_SUBQUERY)
+        ];
+
+        return $content;
+    }
+
+    protected function preservePlatformsQueries(array $content): array
+    {
+        $content['queries'] = $content['queries'] ?? [
+            Query::limit(5000)
         ];
 
         return $content;
