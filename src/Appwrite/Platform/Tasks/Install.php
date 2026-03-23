@@ -33,6 +33,7 @@ class Install extends Action
     private const string APPWRITE_API_URL = 'http://appwrite';
     private const string GROWTH_API_URL = 'https://growth.appwrite.io/v1';
 
+    protected bool $isUpgrade = false;
     protected string $hostPath = '';
     protected ?bool $isLocalInstall = null;
     protected ?array $installerConfig = null;
@@ -66,7 +67,7 @@ class Install extends Action
         bool $noStart,
         string $database
     ): void {
-        $isUpgrade = false;
+        $isUpgrade = $this->isUpgrade;
         $defaultHttpPort = '80';
         $defaultHttpsPort = '443';
         $config = Config::getParam('variables');
@@ -508,7 +509,7 @@ class Install extends Action
         $this->applyLocalPaths($isLocalInstall, false);
 
         $isCLI = php_sapi_name() === 'cli';
-        if ($isLocalInstall) {
+        if ($isLocalInstall || $isUpgrade) {
             $useExistingConfig = false;
         } else {
             $useExistingConfig = file_exists($this->path . '/' . $this->getComposeFileName())
