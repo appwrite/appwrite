@@ -113,8 +113,8 @@ class XList extends Action
 
             $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $col->getSequence();
 
-            $join->setCollection($collectionTableId);
-            $dbForProject->addJoinCollection($collectionTableId);
+            $join->setCollectionId($collectionTableId);
+            $dbForProject->addJoinCollectionId($collectionTableId);
         }
 
         $cursor = Query::getCursorQueries($queries, false);
