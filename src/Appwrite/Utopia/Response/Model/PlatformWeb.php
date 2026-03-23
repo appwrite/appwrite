@@ -10,7 +10,7 @@ class PlatformWeb extends PlatformBase
     /**
      * @return array<string>
      */
-    protected function getSupportedTypes(): array
+    public static function getSupportedTypes(): array
     {
         return [
             NetworkPlatform::TYPE_WEB,
@@ -19,6 +19,10 @@ class PlatformWeb extends PlatformBase
         ];
     }
 
+    public array $conditions = [
+        'type' => self::getSupportedTypes(),
+    ];
+
     public function __construct()
     {
         parent::__construct();
@@ -26,10 +30,10 @@ class PlatformWeb extends PlatformBase
         $this
             ->addRule('type', [
                 'type' => self::TYPE_ENUM,
-                'description' => 'Platform type. Possible values are: ' . implode(', ', $this->getSupportedTypes()) . '.',
+                'description' => 'Platform type. Possible values are: ' . implode(', ', self::getSupportedTypes()) . '.',
                 'default' => '',
                 'example' => NetworkPlatform::TYPE_WEB,
-                'enum' => $this->getSupportedTypes(),
+                'enum' => self::getSupportedTypes(),
             ])
             ->addRule('hostname', [
                 'type' => self::TYPE_STRING,

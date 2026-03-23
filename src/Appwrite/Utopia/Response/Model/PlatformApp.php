@@ -11,7 +11,7 @@ class PlatformApp extends PlatformBase
     /**
      * @return array<string>
      */
-    protected function getSupportedTypes(): array
+    public static function getSupportedTypes(): array
     {
         return [
             NetworkPlatform::TYPE_FLUTTER_IOS,
@@ -30,6 +30,10 @@ class PlatformApp extends PlatformBase
         ];
     }
 
+    public array $conditions = [
+        'type' => self::getSupportedTypes(),
+    ];
+
     public function __construct()
     {
         parent::__construct();
@@ -37,10 +41,10 @@ class PlatformApp extends PlatformBase
         $this
             ->addRule('type', [
                 'type' => self::TYPE_ENUM,
-                'description' => 'Platform type. Possible values are: ' . implode(', ', $this->getSupportedTypes()) . '.',
+                'description' => 'Platform type. Possible values are: ' . implode(', ', self::getSupportedTypes()) . '.',
                 'default' => '',
                 'example' => NetworkPlatform::TYPE_APPLE_IOS,
-                'enum' => $this->getSupportedTypes(),
+                'enum' => self::getSupportedTypes(),
             ])
             ->addRule('identifier', [
                 'type' => self::TYPE_STRING,

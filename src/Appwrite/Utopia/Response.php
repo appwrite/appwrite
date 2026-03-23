@@ -467,7 +467,13 @@ class Response extends SwooleResponse
                             foreach ($rule['type'] as $type) {
                                 $condition = false;
                                 foreach ($this->getModel($type)->conditions as $attribute => $val) {
-                                    $condition = $item->getAttribute($attribute) === $val;
+
+                                    if (\is_array($val)) {
+                                        $condition = \in_array($item->getAttribute($attribute), $val);
+                                    } else {
+                                        $condition = $item->getAttribute($attribute) === $val;
+                                    }
+
                                     if (!$condition) {
                                         break;
                                     }

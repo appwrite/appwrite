@@ -2,23 +2,10 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
-use Appwrite\Network\Platform as NetworkPlatform;
 use Appwrite\Utopia\Response\Model;
 
 abstract class PlatformBase extends Model
 {
-    /**
-     * @return array<string>
-     */
-    protected function getSupportedTypes(): array
-    {
-        return [
-            NetworkPlatform::TYPE_WEB,
-            NetworkPlatform::TYPE_FLUTTER_WEB,
-            NetworkPlatform::TYPE_REACT_NATIVE_WEB,
-        ];
-    }
-
     public function __construct()
     {
         $this
