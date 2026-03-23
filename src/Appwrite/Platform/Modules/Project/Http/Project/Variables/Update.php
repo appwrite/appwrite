@@ -84,8 +84,7 @@ class Update extends Base
         }
 
         if (\is_null($key) && \is_null($value) && \is_null($secret)) {
-            $response->dynamic($variable, Response::MODEL_VARIABLE);
-            return;
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID);
         }
 
         $updates = new Document();
