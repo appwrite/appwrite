@@ -430,7 +430,7 @@ class V21Test extends TestCase
     {
         $result = $this->filter->parse($content, Response::MODEL_DOCUMENT);
 
-        $this->assertEquals($expected, $result);
+        $this->assertSame($expected, $result);
     }
 
     #[DataProvider('documentProvider')]
@@ -438,7 +438,76 @@ class V21Test extends TestCase
     {
         $result = $this->filter->parse($content, Response::MODEL_ROW);
 
-        $this->assertEquals($expected, $result);
+        $this->assertSame($expected, $result);
+    }
+
+    public static function documentListProvider(): array
+    {
+        return [
+            'cast $sequence in document list' => [
+                [
+                    'total' => 2,
+                    'documents' => [
+                        [
+                            '$id' => 'doc1',
+                            '$sequence' => '10',
+                            'name' => 'first',
+                        ],
+                        [
+                            '$id' => 'doc2',
+                            '$sequence' => '20',
+                            'name' => 'second',
+                        ],
+                    ],
+                ],
+                [
+                    'total' => 2,
+                    'documents' => [
+                        [
+                            '$id' => 'doc1',
+                            '$sequence' => 10,
+                            'name' => 'first',
+                        ],
+                        [
+                            '$id' => 'doc2',
+                            '$sequence' => 20,
+                            'name' => 'second',
+                        ],
+                    ],
+                ]
+            ],
+            'handle empty document list' => [
+                [
+                    'total' => 0,
+                    'documents' => [],
+                ],
+                [
+                    'total' => 0,
+                    'documents' => [],
+                ]
+            ],
+        ];
+    }
+
+    #[DataProvider('documentListProvider')]
+    public function testDocumentList(array $content, array $expected): void
+    {
+        $result = $this->filter->parse($content, Response::MODEL_DOCUMENT_LIST);
+
+        $this->assertSame($expected, $result);
+    }
+
+    #[DataProvider('documentListProvider')]
+    public function testRowList(array $content, array $expected): void
+    {
+        $content['rows'] = $content['documents'];
+        unset($content['documents']);
+        $expected['rows'] = $expected['documents'];
+        unset($expected['documents']);
+
+        $result = $this->filter->parse($content, Response::MODEL_ROW_LIST);
+
+        $this->assertSame($expected, $result);
     }
 
     public static function defaultPassthroughProvider(): array
