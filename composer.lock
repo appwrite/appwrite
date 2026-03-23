@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5b7f63ff3136da1b7db44c6e5f8da030",
+    "content-hash": "bd82f1acdc462cbe9f3e87769e435ea8",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4302,16 +4302,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "dev-feat/swoole-adapters-and-compression",
+            "version": "0.34.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "c91012caa001e4cccb1133f13938ae77478b3a28"
+                "reference": "2b4021ba3f9d476264ce9fd6703d6c79de9add7f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/c91012caa001e4cccb1133f13938ae77478b3a28",
-                "reference": "c91012caa001e4cccb1133f13938ae77478b3a28",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/2b4021ba3f9d476264ce9fd6703d6c79de9add7f",
+                "reference": "2b4021ba3f9d476264ce9fd6703d6c79de9add7f",
                 "shasum": ""
             },
             "require": {
@@ -4350,9 +4350,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/feat/swoole-adapters-and-compression"
+                "source": "https://github.com/utopia-php/http/tree/0.34.16"
             },
-            "time": "2026-03-19T17:31:18+00:00"
+            "time": "2026-03-20T10:39:07+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -8475,12 +8475,6 @@
     ],
     "aliases": [
         {
-            "package": "utopia-php/framework",
-            "version": "dev-feat/swoole-adapters-and-compression",
-            "alias": "0.34.15",
-            "alias_normalized": "0.34.15.0"
-        },
-        {
             "package": "utopia-php/queue",
             "version": "dev-feat/di-container-refactor",
             "alias": "0.16.0",
@@ -8489,7 +8483,6 @@
     ],
     "minimum-stability": "dev",
     "stability-flags": {
-        "utopia-php/framework": 20,
         "utopia-php/queue": 20
     },
     "prefer-stable": true,

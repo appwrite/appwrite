@@ -67,7 +67,7 @@
         "utopia-php/emails": "0.6.*",
         "utopia-php/dns": "1.6.*",
         "utopia-php/dsn": "0.2.1",
-        "utopia-php/framework": "dev-feat/swoole-adapters-and-compression as 0.34.15",
+        "utopia-php/framework": "0.34.*",
         "utopia-php/fetch": "0.5.*",
         "utopia-php/image": "0.8.*",
         "utopia-php/locale": "0.8.*",
