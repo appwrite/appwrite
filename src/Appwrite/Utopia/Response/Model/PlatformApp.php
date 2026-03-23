@@ -40,7 +40,7 @@ class PlatformApp extends PlatformBase
                 'description' => 'Platform type. Possible values are: ' . implode(', ', $this->getSupportedTypes()) . '.',
                 'default' => '',
                 'example' => NetworkPlatform::TYPE_APPLE_IOS,
-                'enum' => [$this->getSupportedTypes()],
+                'enum' => $this->getSupportedTypes(),
             ])
             ->addRule('identifier', [
                 'type' => self::TYPE_STRING,

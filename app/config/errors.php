@@ -1164,6 +1164,11 @@ return [
         'description' => 'Platform with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::PLATFORM_METHOD_UNSUPPORTED => [
+        'name' => Exception::PLATFORM_METHOD_UNSUPPORTED,
+        'description' => 'The requested platform has invalid type. Please use coresponding update method for the platform type.',
+        'code' => 400,
+    ],
     Exception::PLATFORM_ALREADY_EXISTS => [
         'name' => Exception::PLATFORM_ALREADY_EXISTS,
         'description' => 'Platform with the same ID already exists in this project. Try again with a different ID.',

@@ -29,7 +29,7 @@ class PlatformWeb extends PlatformBase
                 'description' => 'Platform type. Possible values are: ' . implode(', ', $this->getSupportedTypes()) . '.',
                 'default' => '',
                 'example' => NetworkPlatform::TYPE_WEB,
-                'enum' => [$this->getSupportedTypes()],
+                'enum' => $this->getSupportedTypes(),
             ])
             ->addRule('hostname', [
                 'type' => self::TYPE_STRING,

@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Project\Http\Project\Platforms\Web;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Web\Create as WebPlatformCreate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -55,7 +56,7 @@ class Update extends Base
             ))
             ->param('platformId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Platform ID.', false, ['dbForPlatform'])
             ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
-            ->param('hostname', '', new Hostname(), 'Platform client hostname. Max length: 256 chars.', true)
+            ->param('hostname', '', new Hostname(), 'Platform client hostname. Max length: 256 chars.')
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
@@ -78,6 +79,11 @@ class Update extends Base
 
         if ($platform->isEmpty() || $platform->getAttribute('projectInternalId', '') !== $project->getSequence()) {
             throw new Exception(Exception::PLATFORM_NOT_FOUND);
+        }
+
+        $webPlatforms = WebPlatformCreate::getSupportedTypes();
+        if (!\in_array($platform->getAttribute('type', ''), $webPlatforms)) {
+            throw new Exception(Exception::PLATFORM_METHOD_UNSUPPORTED);
         }
 
         $updates = new Document([

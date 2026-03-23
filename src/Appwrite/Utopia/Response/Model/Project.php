@@ -182,7 +182,10 @@ class Project extends Model
                 'array' => true,
             ])
             ->addRule('platforms', [
-                'type' => Response::MODEL_PLATFORM,
+                'type' => [
+                    Response::MODEL_PLATFORM_WEB,
+                    Response::MODEL_PLATFORM_APP,
+                ],
                 'description' => 'List of Platforms.',
                 'default' => [],
                 'example' => new \stdClass(),

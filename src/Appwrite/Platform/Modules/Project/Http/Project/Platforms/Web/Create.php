@@ -77,7 +77,7 @@ class Create extends Base
                 new WhiteList($this->getSupportedTypes(), true),
                 'Platform type. Possible values are: ' . implode(', ', $this->getSupportedTypes())
             )
-            ->param('hostname', '', new Hostname(), 'Platform web hostname. Max length: 256 chars.', true)
+            ->param('hostname', '', new Hostname(), 'Platform web hostname. Max length: 256 chars.')
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('project')
@@ -100,7 +100,7 @@ class Create extends Base
         $platformId = ($platformId == 'unique()') ? ID::unique() : $platformId;
 
         $platform = new Document([
-            '$id' => ID::unique(),
+            '$id' => $platformId,
             '$permissions' => [],
             'projectInternalId' => $project->getSequence(),
             'projectId' => $project->getId(),

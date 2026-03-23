@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Project\Http\Project\Platforms\App;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\Platform\Modules\Project\Http\Project\Platforms\App\Create as AppPlatformCreate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -54,7 +55,7 @@ class Update extends Base
             ))
             ->param('platformId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Platform ID.', false, ['dbForPlatform'])
             ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
-            ->param('identifier', '', new Text(256), 'Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.', true)
+            ->param('identifier', '', new Text(256), 'Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.')
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
@@ -79,9 +80,14 @@ class Update extends Base
             throw new Exception(Exception::PLATFORM_NOT_FOUND);
         }
 
+        $appPlatforms = AppPlatformCreate::getSupportedTypes();
+        if (!\in_array($platform->getAttribute('type', ''), $appPlatforms)) {
+            throw new Exception(Exception::PLATFORM_METHOD_UNSUPPORTED);
+        }
+
         $updates = new Document([
             'name' => $name,
-            'identifier' => $identifier,
+            'key' => $identifier,
         ]);
 
         try {

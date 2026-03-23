@@ -12,7 +12,7 @@ class PlatformList extends Model
         $this
             ->addRule('total', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Total number of platforms in the given table.',
+                'description' => 'Total number of platforms in the given project.',
                 'default' => 0,
                 'example' => 5,
             ])

@@ -86,7 +86,7 @@ class Create extends Base
                 new WhiteList($this->getSupportedTypes(), true),
                 'Platform type. Possible values are: ' . implode(', ', $this->getSupportedTypes())
             )
-            ->param('identifier', '', new Text(256), 'Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.', true)
+            ->param('identifier', '', new Text(256), 'Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.')
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('project')
@@ -109,7 +109,7 @@ class Create extends Base
         $platformId = ($platformId == 'unique()') ? ID::unique() : $platformId;
 
         $platform = new Document([
-            '$id' => ID::unique(),
+            '$id' => $platformId,
             '$permissions' => [],
             'projectInternalId' => $project->getSequence(),
             'projectId' => $project->getId(),
