@@ -340,6 +340,7 @@
 * Enable DEBUG build arg in docker-compose.yml for development builds
 * Fix VS Code XDebug pathMappings to use `${workspaceFolder}` instead of deprecated `${workspaceRoot}` in CONTRIBUTING.md
 * Fix XDebug port to 9003 for XDebug 3 compatibility in CONTRIBUTING.md
+* Sort XDebug configuration directives alphabetically in dev/xdebug.ini
 * Make methods protected for extending in [#10617](https://github.com/appwrite/appwrite/pull/10617)
 
 # Version 1.7.4
