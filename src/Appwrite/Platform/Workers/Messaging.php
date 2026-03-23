@@ -31,8 +31,8 @@ use Utopia\Messaging\Adapter\SMS\GEOSMS;
 use Utopia\Messaging\Adapter\SMS\Inforu;
 use Utopia\Messaging\Adapter\SMS\Mock;
 use Utopia\Messaging\Adapter\SMS\Msg91;
-use Utopia\Messaging\Adapter\SMS\Telesign;
 use Utopia\Messaging\Adapter\SMS\Telnyx;
+use Utopia\Messaging\Adapter\SMS\Telesign;
 use Utopia\Messaging\Adapter\SMS\TextMagic;
 use Utopia\Messaging\Adapter\SMS\Twilio;
 use Utopia\Messaging\Adapter\SMS\Vonage;
@@ -79,6 +79,13 @@ class Messaging extends Action
     }
 
     /**
+     * @param Message $message
+     * @param Document $project
+     * @param Log $log
+     * @param Database $dbForProject
+     * @param Device $deviceForFiles
+     * @param UsagePublisher $publisherForUsage
+     * @return void
      * @throws \Exception
      */
     public function action(
@@ -114,7 +121,7 @@ class Messaging extends Action
                     $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $project, $publisherForUsage);
                     break;
                 default:
-                    throw new \Exception('Unknown message type: '.$type);
+                    throw new \Exception('Unknown message type: ' . $type);
             }
         } catch (\Throwable $e) {
             Span::error($e);
@@ -182,11 +189,10 @@ class Messaging extends Action
         if (empty($allTargets)) {
             $dbForProject->updateDocument('messages', $message->getId(), new Document([
                 'status' => MessageStatus::FAILED,
-                'deliveryErrors' => ['No valid recipients found.'],
+                'deliveryErrors' => ['No valid recipients found.']
             ]));
 
             Span::add('message.skipped', 'no_valid_recipients');
-
             return;
         }
 
@@ -198,11 +204,10 @@ class Messaging extends Action
         if ($default->isEmpty()) {
             $dbForProject->updateDocument('messages', $message->getId(), new Document([
                 'status' => MessageStatus::FAILED,
-                'deliveryErrors' => ['No enabled provider found.'],
+                'deliveryErrors' => ['No enabled provider found.']
             ]));
 
             Span::add('message.skipped', 'no_enabled_provider');
-
             return;
         }
 
@@ -215,18 +220,18 @@ class Messaging extends Action
          * @var array<Document> $providers
          */
         $providers = [
-            $default->getId() => $default,
+            $default->getId() => $default
         ];
 
         foreach ($allTargets as $target) {
             $providerId = $target->getAttribute('providerId');
 
-            if (! $providerId) {
+            if (!$providerId) {
                 $providerId = $default->getId();
             }
 
             if ($providerId) {
-                if (! \array_key_exists($providerId, $identifiers)) {
+                if (!\array_key_exists($providerId, $identifiers)) {
                     $identifiers[$providerId] = [];
                 }
                 // Use null as value to avoid duplicate keys
@@ -244,7 +249,7 @@ class Messaging extends Action
                 } else {
                     $provider = $dbForProject->getDocument('providers', $providerId);
 
-                    if ($provider->isEmpty() || ! $provider->getAttribute('enabled')) {
+                    if ($provider->isEmpty() || !$provider->getAttribute('enabled')) {
                         $provider = $default;
                     } else {
                         $providers[$providerId] = $provider;
@@ -288,12 +293,12 @@ class Messaging extends Action
                                 }
 
                                 // Deleting push targets when token has expired.
-                                if (($result['error'] ?? '') === 'Expired device token') {
+                                if (($result['error'] ??  '') === 'Expired device token') {
                                     $target = $dbForProject->findOne('targets', [
-                                        Query::equal('identifier', [$result['recipient']]),
+                                        Query::equal('identifier', [$result['recipient']])
                                     ]);
 
-                                    if (! $target->isEmpty()) {
+                                    if (!$target->isEmpty()) {
                                         $dbForProject->updateDocument(
                                             'targets',
                                             $target->getId(),
@@ -305,10 +310,10 @@ class Messaging extends Action
                                 }
                             }
                         } catch (\Throwable $e) {
-                            $deliveryErrors[] = 'Failed sending to targets with error: '.$e->getMessage();
+                            $deliveryErrors[] = 'Failed sending to targets with error: ' . $e->getMessage();
                         } finally {
                             $errorTotal = \count($deliveryErrors);
-                            $usage = new UsageContext;
+                            $usage = new UsageContext();
                             $usage
                                 ->addMetric(METRIC_MESSAGES, ($deliveredTotal + $errorTotal))
                                 ->addMetric(METRIC_MESSAGES_SENT, $deliveredTotal)
@@ -395,7 +400,7 @@ class Messaging extends Action
                     throw new \Exception('Storage bucket with the requested ID could not be found');
                 }
 
-                $file = $dbForProject->getDocument('bucket_'.$bucket->getSequence(), $fileId);
+                $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
                 if ($file->isEmpty()) {
                     throw new \Exception('Storage file with the requested ID could not be found');
                 }
@@ -427,7 +432,6 @@ class Messaging extends Action
         $denyList = explode(',', $denyList);
         if (\in_array($project->getId(), $denyList)) {
             Span::add('message.skipped', 'project_denied');
-
             return;
         }
 
@@ -449,6 +453,7 @@ class Messaging extends Action
 
         $this->adapter->send($sms);
     }
+
 
     private function getSmsAdapter(Document $provider): ?SMSAdapter
     {
@@ -477,7 +482,7 @@ class Messaging extends Action
             ),
             'vonage' => new Vonage(
                 $credentials['apiKey'] ?? '',
-                $credentials['apiSecret'] ?? ''
+                $credentials['apiSecret'] ??  ''
             ),
             'telnyx' => new Telnyx(
                 $credentials['apiKey'] ?? ''
@@ -524,13 +529,13 @@ class Messaging extends Action
         return match ($provider->getAttribute('provider')) {
             'mock' => new Mock('username', 'password'),
             'smtp' => new SMTP(
-                $credentials['host'] ?? '',
+                $credentials['host'] ??  '',
                 $credentials['port'] ?? 25,
                 $credentials['username'] ?? '',
                 $credentials['password'] ?? '',
                 $options['encryption'] ?? '',
-                $options['autoTLS'] ?? false,
-                $options['mailer'] ?? '',
+                $options['autoTLS'] ??  false,
+                $options['mailer'] ??  '',
             ),
             'mailgun' => new Mailgun(
                 $apiKey,
@@ -561,7 +566,7 @@ class Messaging extends Action
         $bcc = [];
         $attachments = $data['attachments'] ?? [];
 
-        if (! empty($ccTargets)) {
+        if (!empty($ccTargets)) {
             $ccTargets = $dbForProject->find('targets', [
                 Query::equal('$id', $ccTargets),
                 Query::limit(\count($ccTargets)),
@@ -571,7 +576,7 @@ class Messaging extends Action
             }
         }
 
-        if (! empty($bccTargets)) {
+        if (!empty($bccTargets)) {
             $bccTargets = $dbForProject->find('targets', [
                 Query::equal('$id', $bccTargets),
                 Query::limit(\count($bccTargets)),
@@ -581,7 +586,7 @@ class Messaging extends Action
             }
         }
 
-        if (! empty($attachments)) {
+        if (!empty($attachments)) {
             foreach ($attachments as &$attachment) {
                 $bucketId = $attachment['bucketId'];
                 $fileId = $attachment['fileId'];
@@ -591,7 +596,7 @@ class Messaging extends Action
                     throw new \Exception('Storage bucket with the requested ID could not be found');
                 }
 
-                $file = $dbForProject->getDocument('bucket_'.$bucket->getSequence(), $fileId);
+                $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
                 if ($file->isEmpty()) {
                     throw new \Exception('Storage file with the requested ID could not be found');
                 }
@@ -599,8 +604,8 @@ class Messaging extends Action
                 $mimes = Config::getParam('storage-mimes');
                 $path = $file->getAttribute('path', '');
 
-                if (! $deviceForFiles->exists($path)) {
-                    throw new \Exception('File not found in '.$path);
+                if (!$deviceForFiles->exists($path)) {
+                    throw new \Exception('File not found in ' . $path);
                 }
 
                 $contentType = 'text/plain';
@@ -712,7 +717,7 @@ class Messaging extends Action
     private function getLocalDevice($project): Local
     {
         if ($this->localDevice === null) {
-            $this->localDevice = new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId());
+            $this->localDevice = new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
         }
 
         return $this->localDevice;
@@ -727,7 +732,7 @@ class Messaging extends Action
         $providers = System::getEnv('_APP_SMS_PROVIDER', '');
 
         $dsns = [];
-        if (! empty($providers)) {
+        if (!empty($providers)) {
             $providers = explode(',', $providers);
             foreach ($providers as $provider) {
                 $dsns[] = new DSN($provider);
@@ -737,7 +742,6 @@ class Messaging extends Action
         if (count($dsns) === 1) {
             $provider = $this->createProviderFromDSN($dsns[0]);
             $adapter = $this->getSmsAdapter($provider);
-
             return $adapter;
         }
 
@@ -777,7 +781,6 @@ class Messaging extends Action
 
             $geosms->setLocal($callingCode, $adapter);
         }
-
         return $geosms;
     }
 
@@ -800,15 +803,15 @@ class Messaging extends Action
                     'authToken' => $password,
                     // Twilio Messaging Service SIDs always start with MG
                     // https://www.twilio.com/docs/messaging/services
-                    'messagingServiceSid' => \str_starts_with($from, 'MG') ? $from : null,
+                    'messagingServiceSid' => \str_starts_with($from, 'MG') ? $from : null
                 ],
                 'textmagic' => [
                     'username' => $user,
-                    'apiKey' => $password,
+                    'apiKey' => $password
                 ],
                 'telesign' => [
                     'customerId' => $user,
-                    'apiKey' => $password,
+                    'apiKey' => $password
                 ],
                 'msg91' => [
                     'senderId' => $user,
@@ -817,7 +820,7 @@ class Messaging extends Action
                 ],
                 'vonage' => [
                     'apiKey' => $user,
-                    'apiSecret' => $password,
+                    'apiSecret' => $password
                 ],
                 'telnyx' => [
                     'apiKey' => $password,
@@ -836,12 +839,12 @@ class Messaging extends Action
             },
             'options' => match ($host) {
                 'twilio' => [
-                    'from' => \str_starts_with($from, 'MG') ? null : $from,
+                    'from' => \str_starts_with($from, 'MG') ? null : $from
                 ],
                 default => [
-                    'from' => $from,
+                    'from' => $from
                 ]
-            },
+            }
         ]);
 
         return $provider;

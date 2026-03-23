@@ -12,26 +12,21 @@ use Utopia\System\System;
 
 class MessagingTest extends Scope
 {
-    use Base;
     use ProjectCustom;
     use SideServer;
+    use Base;
 
     private static array $cachedProviders = [];
-
     private static array $cachedTopic = [];
-
     private static array $cachedSubscriber = [];
-
     private static array $cachedEmail = [];
-
     private static array $cachedSms = [];
-
     private static array $cachedPush = [];
 
     protected function setupProviders(): array
     {
         $key = $this->getProject()['$id'];
-        if (! empty(static::$cachedProviders[$key])) {
+        if (!empty(static::$cachedProviders[$key])) {
             return static::$cachedProviders[$key];
         }
 
@@ -85,7 +80,7 @@ class MessagingTest extends Scope
                 'name' => 'Ms91-1',
                 'senderId' => 'my-senderid',
                 'authKey' => 'my-authkey',
-                'templateId' => '123456',
+                'templateId' => '123456'
             ],
             'Vonage' => [
                 'providerId' => ID::unique(),
@@ -99,10 +94,10 @@ class MessagingTest extends Scope
                 'name' => 'FCM1',
                 'serviceAccountJSON' => [
                     'type' => 'service_account',
-                    'project_id' => 'test-project',
-                    'private_key_id' => 'test-private-key-id',
-                    'private_key' => 'test-private-key',
-                ],
+                    "project_id" => "test-project",
+                    "private_key_id" => "test-private-key-id",
+                    "private_key" => "test-private-key",
+                ]
             ],
             'Apns' => [
                 'providerId' => ID::unique(),
@@ -123,7 +118,7 @@ class MessagingTest extends Scope
         $providers = [];
 
         foreach (\array_keys($providersParams) as $providerKey) {
-            $query = $this->getQuery('create_'.\strtolower($providerKey).'_provider');
+            $query = $this->getQuery('create_' . \strtolower($providerKey) . '_provider');
             $graphQLPayload = [
                 'query' => $query,
                 'variables' => $providersParams[$providerKey],
@@ -134,20 +129,19 @@ class MessagingTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]), $graphQLPayload);
 
-            $providers[] = $response['body']['data']['messagingCreate'.$providerKey.'Provider'];
+            $providers[] = $response['body']['data']['messagingCreate' . $providerKey . 'Provider'];
             $this->assertEquals(200, $response['headers']['status-code']);
-            $this->assertEquals($providersParams[$providerKey]['name'], $response['body']['data']['messagingCreate'.$providerKey.'Provider']['name']);
+            $this->assertEquals($providersParams[$providerKey]['name'], $response['body']['data']['messagingCreate' . $providerKey . 'Provider']['name']);
         }
 
         static::$cachedProviders[$key] = $providers;
-
         return $providers;
     }
 
     protected function setupUpdatedProviders(): array
     {
-        $key = $this->getProject()['$id'].'_updated';
-        if (! empty(static::$cachedProviders[$key])) {
+        $key = $this->getProject()['$id'] . '_updated';
+        if (!empty(static::$cachedProviders[$key])) {
             return static::$cachedProviders[$key];
         }
 
@@ -208,8 +202,8 @@ class MessagingTest extends Scope
                     'type' => 'service_account',
                     'project_id' => 'test-project',
                     'private_key_id' => 'test-project-id',
-                    'private_key' => 'test-private-key',
-                ],
+                    'private_key' => "test-private-key",
+                ]
             ],
             'Apns' => [
                 'providerId' => $providers[9]['_id'],
@@ -226,7 +220,7 @@ class MessagingTest extends Scope
             ],
         ];
         foreach (\array_keys($providersParams) as $index => $providerKey) {
-            $query = $this->getQuery('update_'.\strtolower($providerKey).'_provider');
+            $query = $this->getQuery('update_' . \strtolower($providerKey) . '_provider');
 
             $graphQLPayload = [
                 'query' => $query,
@@ -239,9 +233,9 @@ class MessagingTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ], $graphQLPayload);
 
-            $providers[$index] = $response['body']['data']['messagingUpdate'.$providerKey.'Provider'];
+            $providers[$index] = $response['body']['data']['messagingUpdate' . $providerKey . 'Provider'];
             $this->assertEquals(200, $response['headers']['status-code']);
-            $this->assertEquals($providersParams[$providerKey]['name'], $response['body']['data']['messagingUpdate'.$providerKey.'Provider']['name']);
+            $this->assertEquals($providersParams[$providerKey]['name'], $response['body']['data']['messagingUpdate' . $providerKey . 'Provider']['name']);
         }
 
         $response = $this->client->call(Client::METHOD_POST, '/graphql', [
@@ -257,7 +251,7 @@ class MessagingTest extends Scope
                 'domain' => 'my-domain',
                 'isEuRegion' => true,
                 'enabled' => false,
-            ],
+            ]
         ]);
         $providers[2] = $response['body']['data']['messagingUpdateMailgunProvider'];
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -265,14 +259,13 @@ class MessagingTest extends Scope
         $this->assertEquals(false, $response['body']['data']['messagingUpdateMailgunProvider']['enabled']);
 
         static::$cachedProviders[$key] = $providers;
-
         return $providers;
     }
 
     protected function setupTopic(): array
     {
         $key = $this->getProject()['$id'];
-        if (! empty(static::$cachedTopic[$key])) {
+        if (!empty(static::$cachedTopic[$key])) {
             return static::$cachedTopic[$key];
         }
 
@@ -294,14 +287,13 @@ class MessagingTest extends Scope
         $this->assertEquals('topic1', $response['body']['data']['messagingCreateTopic']['name']);
 
         static::$cachedTopic[$key] = $response['body']['data']['messagingCreateTopic'];
-
         return static::$cachedTopic[$key];
     }
 
     protected function setupUpdatedTopic(): string
     {
-        $key = $this->getProject()['$id'].'_updated';
-        if (! empty(static::$cachedTopic[$key])) {
+        $key = $this->getProject()['$id'] . '_updated';
+        if (!empty(static::$cachedTopic[$key])) {
             return static::$cachedTopic[$key];
         }
 
@@ -326,14 +318,13 @@ class MessagingTest extends Scope
         $this->assertEquals('topic2', $response['body']['data']['messagingUpdateTopic']['name']);
 
         static::$cachedTopic[$key] = $topicId;
-
         return $topicId;
     }
 
     protected function setupSubscriber(): array
     {
         $key = $this->getProject()['$id'];
-        if (! empty(static::$cachedSubscriber[$key])) {
+        if (!empty(static::$cachedSubscriber[$key])) {
             return static::$cachedSubscriber[$key];
         }
 
@@ -349,7 +340,7 @@ class MessagingTest extends Scope
                 'apiKey' => 'my-apikey',
                 'fromName' => 'Sender',
                 'fromEmail' => 'sender-email@my-domain.com',
-            ],
+            ]
         ];
         $query = $this->getQuery(self::CREATE_SENDGRID_PROVIDER);
         $graphQLPayload = [
@@ -407,14 +398,13 @@ class MessagingTest extends Scope
         $this->assertEquals($response['body']['data']['messagingCreateSubscriber']['target']['userId'], $userId);
 
         static::$cachedSubscriber[$key] = $response['body']['data']['messagingCreateSubscriber'];
-
         return static::$cachedSubscriber[$key];
     }
 
     protected function setupEmail(): array
     {
         $key = $this->getProject()['$id'];
-        if (! empty(static::$cachedEmail[$key])) {
+        if (!empty(static::$cachedEmail[$key])) {
             return static::$cachedEmail[$key];
         }
 
@@ -481,7 +471,7 @@ class MessagingTest extends Scope
                 'email' => 'random1-mail@mail.org',
                 'password' => 'password',
                 'name' => 'Messaging User',
-            ],
+            ]
         ];
         $user = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
@@ -546,7 +536,7 @@ class MessagingTest extends Scope
 
         $emailMessageId = $email['body']['data']['messagingCreateEmail']['_id'];
         $this->assertEventually(function () use ($emailMessageId) {
-            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/'.$emailMessageId, array_merge([
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $emailMessageId, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -572,14 +562,13 @@ class MessagingTest extends Scope
         $this->assertEquals(0, \count($message['body']['data']['messagingGetMessage']['deliveryErrors']));
 
         static::$cachedEmail[$key] = $message['body']['data']['messagingGetMessage'];
-
         return static::$cachedEmail[$key];
     }
 
     protected function setupSms(): array
     {
         $key = $this->getProject()['$id'];
-        if (! empty(static::$cachedSms[$key])) {
+        if (!empty(static::$cachedSms[$key])) {
             return static::$cachedSms[$key];
         }
 
@@ -642,7 +631,7 @@ class MessagingTest extends Scope
                 'email' => 'random3-email@mail.org',
                 'password' => 'password',
                 'name' => 'Messaging User',
-            ],
+            ]
         ];
         $user = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
@@ -706,7 +695,7 @@ class MessagingTest extends Scope
 
         $smsMessageId = $sms['body']['data']['messagingCreateSMS']['_id'];
         $this->assertEventually(function () use ($smsMessageId) {
-            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/'.$smsMessageId, array_merge([
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $smsMessageId, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -732,14 +721,13 @@ class MessagingTest extends Scope
         $this->assertEquals(0, \count($message['body']['data']['messagingGetMessage']['deliveryErrors']));
 
         static::$cachedSms[$key] = $message['body']['data']['messagingGetMessage'];
-
         return static::$cachedSms[$key];
     }
 
     protected function setupPush(): array
     {
         $key = $this->getProject()['$id'];
-        if (! empty(static::$cachedPush[$key])) {
+        if (!empty(static::$cachedPush[$key])) {
             return static::$cachedPush[$key];
         }
 
@@ -763,10 +751,10 @@ class MessagingTest extends Scope
                 'name' => 'FCM1',
                 'serviceAccountJSON' => [
                     'type' => 'service_account',
-                    'project_id' => 'test-project',
-                    'private_key_id' => 'test-private-key-id',
-                    'private_key' => 'test-private-key',
-                ],
+                    "project_id" => "test-project",
+                    "private_key_id" => "test-private-key-id",
+                    "private_key" => "test-private-key",
+                ]
             ],
         ];
         $provider = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -803,7 +791,7 @@ class MessagingTest extends Scope
                 'email' => 'random5-mail@mail.org',
                 'password' => 'password',
                 'name' => 'Messaging User',
-            ],
+            ]
         ];
         $user = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
@@ -868,7 +856,7 @@ class MessagingTest extends Scope
 
         $pushMessageId = $push['body']['data']['messagingCreatePushNotification']['_id'];
         $this->assertEventually(function () use ($pushMessageId) {
-            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/'.$pushMessageId, array_merge([
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $pushMessageId, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -894,23 +882,22 @@ class MessagingTest extends Scope
         $this->assertEquals(0, \count($message['body']['data']['messagingGetMessage']['deliveryErrors']));
 
         static::$cachedPush[$key] = $message['body']['data']['messagingGetMessage'];
-
         return static::$cachedPush[$key];
     }
 
-    public function test_create_providers(): void
+    public function testCreateProviders(): void
     {
         $providers = $this->setupProviders();
         $this->assertCount(11, $providers);
     }
 
-    public function test_update_providers(): void
+    public function testUpdateProviders(): void
     {
         $providers = $this->setupUpdatedProviders();
         $this->assertEquals('Sengrid2', $providers[0]['name']);
     }
 
-    public function test_list_providers()
+    public function testListProviders()
     {
         $providers = $this->setupUpdatedProviders();
 
@@ -927,7 +914,7 @@ class MessagingTest extends Scope
         $this->assertEquals(\count($providers), \count($response['body']['data']['messagingListProviders']['providers']));
     }
 
-    public function test_get_provider()
+    public function testGetProvider()
     {
         $providers = $this->setupUpdatedProviders();
 
@@ -936,7 +923,7 @@ class MessagingTest extends Scope
             'query' => $query,
             'variables' => [
                 'providerId' => $providers[0]['_id'],
-            ],
+            ]
         ];
         $response = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
@@ -947,7 +934,7 @@ class MessagingTest extends Scope
         $this->assertEquals($providers[0]['name'], $response['body']['data']['messagingGetProvider']['name']);
     }
 
-    public function test_delete_provider()
+    public function testDeleteProvider()
     {
         $providers = $this->setupUpdatedProviders();
 
@@ -957,7 +944,7 @@ class MessagingTest extends Scope
                 'query' => $query,
                 'variables' => [
                     'providerId' => $provider['_id'],
-                ],
+                ]
             ];
             $response = $this->client->call(Client::METHOD_POST, '/graphql', [
                 'content-type' => 'application/json',
@@ -970,22 +957,22 @@ class MessagingTest extends Scope
         // Clear cache after deletion
         $key = $this->getProject()['$id'];
         static::$cachedProviders[$key] = [];
-        static::$cachedProviders[$key.'_updated'] = [];
+        static::$cachedProviders[$key . '_updated'] = [];
     }
 
-    public function test_create_topic(): void
+    public function testCreateTopic(): void
     {
         $topic = $this->setupTopic();
         $this->assertEquals('topic1', $topic['name']);
     }
 
-    public function test_update_topic(): void
+    public function testUpdateTopic(): void
     {
         $topicId = $this->setupUpdatedTopic();
         $this->assertNotEmpty($topicId);
     }
 
-    public function test_list_topics()
+    public function testListTopics()
     {
         $this->setupTopic();
 
@@ -1003,7 +990,7 @@ class MessagingTest extends Scope
         $this->assertEquals(1, \count($response['body']['data']['messagingListTopics']['topics']));
     }
 
-    public function test_get_topic()
+    public function testGetTopic()
     {
         $topicId = $this->setupUpdatedTopic();
 
@@ -1024,13 +1011,13 @@ class MessagingTest extends Scope
         $this->assertEquals('topic2', $response['body']['data']['messagingGetTopic']['name']);
     }
 
-    public function test_create_subscriber(): void
+    public function testCreateSubscriber(): void
     {
         $subscriber = $this->setupSubscriber();
         $this->assertNotEmpty($subscriber['_id']);
     }
 
-    public function test_list_subscribers()
+    public function testListSubscribers()
     {
         $subscriber = $this->setupSubscriber();
 
@@ -1054,7 +1041,7 @@ class MessagingTest extends Scope
         $this->assertEquals(1, \count($response['body']['data']['messagingListSubscribers']['subscribers']));
     }
 
-    public function test_get_subscriber()
+    public function testGetSubscriber()
     {
         $subscriber = $this->setupSubscriber();
         $topicId = $subscriber['topicId'];
@@ -1082,7 +1069,7 @@ class MessagingTest extends Scope
         $this->assertEquals($subscriber['target']['userId'], $response['body']['data']['messagingGetSubscriber']['target']['userId']);
     }
 
-    public function test_delete_subscriber()
+    public function testDeleteSubscriber()
     {
         $subscriber = $this->setupSubscriber();
         $topicId = $subscriber['topicId'];
@@ -1108,7 +1095,7 @@ class MessagingTest extends Scope
         static::$cachedSubscriber[$key] = [];
     }
 
-    public function test_delete_topic()
+    public function testDeleteTopic()
     {
         $topicId = $this->setupUpdatedTopic();
 
@@ -1130,16 +1117,16 @@ class MessagingTest extends Scope
         // Clear cache after deletion
         $key = $this->getProject()['$id'];
         static::$cachedTopic[$key] = [];
-        static::$cachedTopic[$key.'_updated'] = [];
+        static::$cachedTopic[$key . '_updated'] = [];
     }
 
-    public function test_send_email(): void
+    public function testSendEmail(): void
     {
         $email = $this->setupEmail();
         $this->assertEquals(1, $email['deliveredTotal']);
     }
 
-    public function test_update_email()
+    public function testUpdateEmail()
     {
         $email = $this->setupEmail();
 
@@ -1180,7 +1167,7 @@ class MessagingTest extends Scope
 
         $updatedEmailId = $email['body']['data']['messagingUpdateEmail']['_id'];
         $this->assertEventually(function () use ($updatedEmailId) {
-            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/'.$updatedEmailId, array_merge([
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $updatedEmailId, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -1206,13 +1193,13 @@ class MessagingTest extends Scope
         $this->assertEquals(0, \count($message['body']['data']['messagingGetMessage']['deliveryErrors']));
     }
 
-    public function test_send_sms(): void
+    public function testSendSMS(): void
     {
         $sms = $this->setupSms();
         $this->assertEquals(1, $sms['deliveredTotal']);
     }
 
-    public function test_update_sms()
+    public function testUpdateSMS()
     {
         $sms = $this->setupSms();
 
@@ -1252,7 +1239,7 @@ class MessagingTest extends Scope
 
         $updatedSmsId = $sms['body']['data']['messagingUpdateSMS']['_id'];
         $this->assertEventually(function () use ($updatedSmsId) {
-            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/'.$updatedSmsId, array_merge([
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $updatedSmsId, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -1278,13 +1265,13 @@ class MessagingTest extends Scope
         $this->assertEquals(0, \count($message['body']['data']['messagingGetMessage']['deliveryErrors']));
     }
 
-    public function test_send_push_notification(): void
+    public function testSendPushNotification(): void
     {
         $push = $this->setupPush();
         $this->assertEquals(1, $push['deliveredTotal']);
     }
 
-    public function test_update_push_notification()
+    public function testUpdatePushNotification()
     {
         $push = $this->setupPush();
 
@@ -1325,7 +1312,7 @@ class MessagingTest extends Scope
 
         $updatedPushId = $push['body']['data']['messagingUpdatePushNotification']['_id'];
         $this->assertEventually(function () use ($updatedPushId) {
-            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/'.$updatedPushId, array_merge([
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $updatedPushId, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
