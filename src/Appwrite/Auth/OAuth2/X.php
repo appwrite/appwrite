@@ -209,7 +209,7 @@ class X extends OAuth2
             $this->user = \json_decode($this->request(
                 'GET',
                 'https://api.x.com/2/users/me?user.fields=confirmed_email',
-                ['Authorization: Bearer ' . \urlencode($accessToken)]
+                ['Authorization: Bearer ' . $accessToken]
             ), true);
         }
 
