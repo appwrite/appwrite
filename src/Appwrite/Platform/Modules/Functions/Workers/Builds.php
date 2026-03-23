@@ -186,11 +186,84 @@ class Builds extends Action
         $startTime = DateTime::now();
         $durationStart = \microtime(true);
 
+        // Define resourceKey BEFORE using it
         $resourceKey = match ($resource->getCollection()) {
             'functions' => 'functionId',
             'sites' => 'siteId',
             default => throw new \Exception('Invalid resource type')
         };
+
+        // Check PR authorization before proceeding with build
+        $providerPullRequestId = $deployment->getAttribute('providerPullRequestId', '');
+        $providerRepositoryId = $deployment->getAttribute('providerRepositoryId', '');
+        $external = $deployment->getAttribute('external', true); // Get external flag from deployment
+        
+        if (!empty($providerPullRequestId)) {
+            Console::info("Processing PR deployment #{$providerPullRequestId}");
+            
+            // Validate required fields for PR deployments
+            if (empty($providerRepositoryId)) {
+                Console::warning("Empty repository ID for PR #{$providerPullRequestId}, marking as failed");
+                $deployment->setAttribute('status', 'failed');
+                $deployment->setAttribute('buildCompletedAt', DateTime::now());
+                $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+                return;
+            }
+            
+            // Check authorization based on external flag
+            try {
+                $isAuthorized = !$external; // Internal PRs are always authorized
+                
+                if ($external) {
+                    // For external PRs, check if this PR is in the authorized list
+                    $repository = $dbForPlatform->findOne('repositories', [
+                        Query::equal('providerRepositoryId', [$providerRepositoryId]),
+                        Query::limit(1)
+                    ]);
+                    
+                    if (!$repository->isEmpty()) {
+                        $authorizedPrIds = $repository->getAttribute('providerPullRequestIds', []);
+                        $isAuthorized = in_array($providerPullRequestId, $authorizedPrIds);
+                    }
+                }
+                
+                if (!$isAuthorized) {
+                    Console::info("PR #{$providerPullRequestId} not authorized, keeping status as waiting");
+                    // Don't update status - it's already 'waiting' from deployment creation
+                    // Just update realtime to reflect current state
+                    $queueForRealtime
+                        ->setSubscribers(['console'])
+                        ->setProject($project)
+                        ->setEvent("{$resource->getCollection()}.[{$resourceKey}].deployments.[deploymentId].update")
+                        ->setParam($resourceKey, $resource->getId())
+                        ->setParam('deploymentId', $deployment->getId())
+                        ->trigger();
+                    
+                    return;
+                }
+                
+                // PR is authorized, update status to 'processing' and proceed with build
+                Console::info("PR #{$providerPullRequestId} is authorized, updating status to processing");
+                $deployment->setAttribute('status', 'processing');
+                $deployment->setAttribute('buildStartedAt', DateTime::now());
+                $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+                
+                // Update realtime to show build is starting
+                $queueForRealtime
+                    ->setSubscribers(['console'])
+                    ->setProject($project)
+                    ->setEvent("{$resource->getCollection()}.[{$resourceKey}].deployments.[deploymentId].update")
+                    ->setParam($resourceKey, $resource->getId())
+                    ->setParam('deploymentId', $deployment->getId())
+                    ->trigger();
+            } catch (\Throwable $e) {
+                Console::error("Error checking authorization for PR #{$providerPullRequestId}: " . $e->getMessage());
+                $deployment->setAttribute('status', 'failed');
+                $deployment->setAttribute('buildCompletedAt', DateTime::now());
+                $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+                return;
+            }
+        }
 
         $device = match ($resource->getCollection()) {
             'sites' => $deviceForSites,

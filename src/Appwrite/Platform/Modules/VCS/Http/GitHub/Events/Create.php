@@ -8,6 +8,7 @@ use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\VCS\Http\GitHub\Deployment;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -180,18 +181,23 @@ class Create extends Action
         array $platform,
     ) {
         $action = $parsedPayload["action"] ?? '';
+        $providerPullRequestId = $parsedPayload["pullRequestNumber"] ?? '';
+        $providerBranch = $parsedPayload["branch"] ?? '';
+        $external = $parsedPayload["external"] ?? true;
+
+        Console::info("Received pull request event: action='{$action}', PR=#{$providerPullRequestId}, branch='{$providerBranch}', external=" . ($external ? 'true' : 'false'));
+        Span::add('vcs.github.event.pr.action', $action);
+        Span::add('vcs.github.event.pr.number', $providerPullRequestId);
+        Span::add('vcs.github.event.pr.external', $external);
 
         if ($action == "opened" || $action == "reopened" || $action == "synchronize") {
-            $providerBranch = $parsedPayload["branch"] ?? '';
             $providerBranchUrl = $parsedPayload["branchUrl"] ?? '';
             $providerRepositoryId = $parsedPayload["repositoryId"] ?? '';
             $providerRepositoryName = $parsedPayload["repositoryName"] ?? '';
             $providerInstallationId = $parsedPayload["installationId"] ?? '';
             $providerRepositoryUrl = $parsedPayload["repositoryUrl"] ?? '';
-            $providerPullRequestId = $parsedPayload["pullRequestNumber"] ?? '';
             $providerCommitHash = $parsedPayload["commitHash"] ?? '';
             $providerRepositoryOwner = $parsedPayload["owner"] ?? '';
-            $external = $parsedPayload["external"] ?? true;
             $providerCommitUrl = $parsedPayload["headCommitUrl"] ?? '';
             $providerCommitAuthorUrl = $parsedPayload["authorUrl"] ?? '';
 
@@ -202,19 +208,25 @@ class Create extends Action
 
             // Ignore sync for non-external. We handle it in push webhook
             if (!$external && $parsedPayload["action"] == "synchronize") {
+                Console::info("Ignoring synchronize event for non-external PR");
                 return;
             }
 
+            Console::info("Processing PR event - initializing GitHub connection");
             $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
             $commitDetails = $github->getCommit($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash);
             $providerCommitAuthor = $commitDetails["commitAuthor"] ?? '';
             $providerCommitMessage = $commitDetails["commitMessage"] ?? '';
 
+            Console::info("Found repositories for providerRepositoryId: {$providerRepositoryId}");
             $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', [
                 Query::equal('providerRepositoryId', [$providerRepositoryId]),
                 Query::orderDesc('$createdAt')
             ]));
+
+            Console::info("Found " . count($repositories) . " repositories connected");
+            Span::add('vcs.github.event.repositories.count', count($repositories));
 
             $this->createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $external, $dbForPlatform, $authorization, $queueForBuilds, $getProjectDB, $platform);
         } elseif ($action == "closed") {
