@@ -2,8 +2,10 @@
 
 namespace Appwrite\Platform\Workers;
 
-use Appwrite\Event\StatsUsage;
+use Appwrite\Event\Message\Usage;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Messaging\Status as MessageStatus;
+use Appwrite\Usage\Context as UsageContext;
 use libphonenumber\NumberParseException;
 use libphonenumber\PhoneNumberUtil;
 use Swoole\Runtime;
@@ -71,7 +73,7 @@ class Messaging extends Action
             ->inject('log')
             ->inject('dbForProject')
             ->inject('deviceForFiles')
-            ->inject('queueForStatsUsage')
+            ->inject('publisherForUsage')
             ->callback($this->action(...));
     }
 
@@ -81,7 +83,7 @@ class Messaging extends Action
      * @param Log $log
      * @param Database $dbForProject
      * @param Device $deviceForFiles
-     * @param StatsUsage $queueForStatsUsage
+     * @param UsagePublisher $publisherForUsage
      * @return void
      * @throws \Exception
      */
@@ -91,7 +93,7 @@ class Messaging extends Action
         Log $log,
         Database $dbForProject,
         Device $deviceForFiles,
-        StatsUsage $queueForStatsUsage
+        UsagePublisher $publisherForUsage
     ): void {
         Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
         $payload = $message->getPayload() ?? [];
@@ -115,7 +117,7 @@ class Messaging extends Action
                 case MESSAGE_SEND_TYPE_EXTERNAL:
                     $message = $dbForProject->getDocument('messages', $payload['messageId']);
 
-                    $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $project, $queueForStatsUsage);
+                    $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $project, $publisherForUsage);
                     break;
                 default:
                     throw new \Exception('Unknown message type: ' . $type);
@@ -133,7 +135,7 @@ class Messaging extends Action
         Document $message,
         Device $deviceForFiles,
         Document $project,
-        StatsUsage $queueForStatsUsage
+        UsagePublisher $publisherForUsage
     ): void {
         $topicIds = $message->getAttribute('topics', []);
         $targetIds = $message->getAttribute('targets', []);
@@ -239,8 +241,8 @@ class Messaging extends Action
         /**
          * @var array<array> $results
          */
-        $results = batch(\array_map(function ($providerId) use ($identifiers, &$providers, $default, $message, $dbForProject, $deviceForFiles, $project, $queueForStatsUsage) {
-            return function () use ($providerId, $identifiers, &$providers, $default, $message, $dbForProject, $deviceForFiles, $project, $queueForStatsUsage) {
+        $results = batch(\array_map(function ($providerId) use ($identifiers, &$providers, $default, $message, $dbForProject, $deviceForFiles, $project, $publisherForUsage) {
+            return function () use ($providerId, $identifiers, &$providers, $default, $message, $dbForProject, $deviceForFiles, $project, $publisherForUsage) {
                 if (\array_key_exists($providerId, $providers)) {
                     $provider = $providers[$providerId];
                 } else {
@@ -267,8 +269,8 @@ class Messaging extends Action
                     $adapter->getMaxMessagesPerRequest()
                 );
 
-                return batch(\array_map(function ($batch) use ($message, $provider, $adapter, $dbForProject, $deviceForFiles, $project, $queueForStatsUsage) {
-                    return function () use ($batch, $message, $provider, $adapter, $dbForProject, $deviceForFiles, $project, $queueForStatsUsage) {
+                return batch(\array_map(function ($batch) use ($message, $provider, $adapter, $dbForProject, $deviceForFiles, $project, $publisherForUsage) {
+                    return function () use ($batch, $message, $provider, $adapter, $dbForProject, $deviceForFiles, $project, $publisherForUsage) {
                         $deliveredTotal = 0;
                         $deliveryErrors = [];
                         $messageData = clone $message;
@@ -308,8 +310,8 @@ class Messaging extends Action
                             $deliveryErrors[] = 'Failed sending to targets with error: ' . $e->getMessage();
                         } finally {
                             $errorTotal = \count($deliveryErrors);
-                            $queueForStatsUsage
-                                ->setProject($project)
+                            $usage = new UsageContext();
+                            $usage
                                 ->addMetric(METRIC_MESSAGES, ($deliveredTotal + $errorTotal))
                                 ->addMetric(METRIC_MESSAGES_SENT, $deliveredTotal)
                                 ->addMetric(METRIC_MESSAGES_FAILED, $errorTotal)
@@ -318,8 +320,12 @@ class Messaging extends Action
                                 ->addMetric(str_replace('{type}', $provider->getAttribute('type'), METRIC_MESSAGES_TYPE_FAILED), $errorTotal)
                                 ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $provider->getAttribute('provider')], METRIC_MESSAGES_TYPE_PROVIDER), ($deliveredTotal + $errorTotal))
                                 ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $provider->getAttribute('provider')], METRIC_MESSAGES_TYPE_PROVIDER_SENT), $deliveredTotal)
-                                ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $provider->getAttribute('provider')], METRIC_MESSAGES_TYPE_PROVIDER_FAILED), $errorTotal)
-                                ->trigger();
+                                ->addMetric(str_replace(['{type}', '{provider}'], [$provider->getAttribute('type'), $provider->getAttribute('provider')], METRIC_MESSAGES_TYPE_PROVIDER_FAILED), $errorTotal);
+
+                            $publisherForUsage->enqueue(new Usage(
+                                project: $project,
+                                metrics: $usage->getMetrics(),
+                            ));
 
                             return [
                                 'deliveredTotal' => $deliveredTotal,
@@ -365,7 +371,13 @@ class Messaging extends Action
         $message->setAttribute('deliveredTotal', $deliveredTotal);
         $message->setAttribute('deliveredAt', DateTime::now());
 
-        $dbForProject->updateDocument('messages', $message->getId(), $message);
+        $dbForProject->updateDocument('messages', $message->getId(), new Document([
+            'deliveryErrors' => $message->getAttribute('deliveryErrors'),
+            'status' => $message->getAttribute('status'),
+            'search' => $message->getAttribute('search'),
+            'deliveredTotal' => $message->getAttribute('deliveredTotal'),
+            'deliveredAt' => $message->getAttribute('deliveredAt'),
+        ]));
 
         // Delete any attachments that were downloaded to local storage
         if ($provider->getAttribute('type') === MESSAGE_TYPE_EMAIL) {

@@ -6,6 +6,7 @@ const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
 
 const APP_VIEWS_DIR = __DIR__ . '/../views';
+const APP_CE_CONFIG_DIR = __DIR__ . '/../config';
 
 // Email
 const APP_EMAIL_TEAM = 'team@localhost.test'; // Default email address
@@ -46,7 +47,7 @@ const APP_RESOURCE_TOKEN_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 4321;
-const APP_VERSION_STABLE = '1.8.1';
+const APP_VERSION_STABLE = '1.9.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -92,6 +93,7 @@ const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite?sub_confirmation=
 const APP_COMPUTE_CPUS_DEFAULT = 0.5;
 const APP_COMPUTE_MEMORY_DEFAULT = 512;
 const APP_COMPUTE_SPECIFICATION_DEFAULT = Specification::S_1VCPU_512MB;
+const APP_COMPUTE_DEPLOYMENT_MAX_RETENTION = 100 * 365; // 100 years
 const APP_SDK_PLATFORM_SERVER = 'server';
 const APP_SDK_PLATFORM_CLIENT = 'client';
 const APP_SDK_PLATFORM_CONSOLE = 'console';
@@ -359,6 +361,12 @@ const METRIC_SITES_ID_OUTBOUND = 'sites.{siteInternalId}.outbound';
 const METRIC_AVATARS_SCREENSHOTS_GENERATED = 'avatars.screenshotsGenerated';
 const METRIC_FUNCTIONS_RUNTIME = 'functions.runtimes.{runtime}';
 const METRIC_SITES_FRAMEWORK = 'sites.frameworks.{framework}';
+
+// Realtime metrics
+const METRIC_REALTIME_CONNECTIONS = 'realtime.connections';
+const METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT = 'realtime.messages.sent';
+const METRIC_REALTIME_INBOUND = 'realtime.inbound';
+const METRIC_REALTIME_OUTBOUND = 'realtime.outbound';
 
 // Resource types
 const RESOURCE_TYPE_PROJECTS = 'projects';

@@ -55,6 +55,7 @@ class Exception extends \Exception
     public const string GENERAL_CURSOR_NOT_FOUND = 'general_cursor_not_found';
     public const string GENERAL_SERVER_ERROR = 'general_server_error';
     public const string GENERAL_PROTOCOL_UNSUPPORTED = 'general_protocol_unsupported';
+    public const string GENERAL_FEATURE_UNSUPPORTED = 'general_feature_unsupported';
     public const string GENERAL_CODES_DISABLED = 'general_codes_disabled';
     public const string GENERAL_USAGE_DISABLED = 'general_usage_disabled';
     public const string GENERAL_NOT_IMPLEMENTED = 'general_not_implemented';
@@ -165,6 +166,7 @@ class Exception extends \Exception
 
     /** Sites */
     public const string SITE_NOT_FOUND = 'site_not_found';
+    public const string SITE_ALREADY_EXISTS = 'site_already_exists';
     public const string SITE_TEMPLATE_NOT_FOUND = 'site_template_not_found';
 
     /** Functions */
@@ -305,6 +307,7 @@ class Exception extends \Exception
 
     /** Webhooks */
     public const string WEBHOOK_NOT_FOUND = 'webhook_not_found';
+    public const string WEBHOOK_ALREADY_EXISTS = 'webhook_already_exists';
 
     /** Router */
     public const string ROUTER_HOST_NOT_FOUND = 'router_host_not_found';
@@ -364,6 +367,7 @@ class Exception extends \Exception
 
     /** Message */
     public const string MESSAGE_NOT_FOUND = 'message_not_found';
+    public const string MESSAGE_ALREADY_EXISTS = 'message_already_exists';
     public const string MESSAGE_MISSING_TARGET = 'message_missing_target';
     public const string MESSAGE_ALREADY_SENT = 'message_already_sent';
     public const string MESSAGE_ALREADY_PROCESSING = 'message_already_processing';

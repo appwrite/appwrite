@@ -1,3 +1,0 @@
-```bash
-appwrite projects list
-```

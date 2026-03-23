@@ -1,7 +1,0 @@
-appwrite databases list \
-
-
-
-
-
-

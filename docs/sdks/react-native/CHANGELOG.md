@@ -1,5 +1,9 @@
 # Change log
 
+## 0.24.0
+
+* Added Query.contains, Query.containsAny, and Query.containsAll for enhanced filtering capabilities.
+
 ## 0.23.1
 
 * Add `upsert` method to Realtime `Channels` helper class

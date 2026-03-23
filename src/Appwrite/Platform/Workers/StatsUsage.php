@@ -160,7 +160,7 @@ class StatsUsage extends Action
         }
 
         $this->stats[$projectId]['project'] = $project;
-        $this->stats[$projectId]['receivedAt'] = DateTime::now();
+        $this->stats[$projectId]['receivedAt'] = DateTime::format(new \DateTime('@' . $message->getTimestamp()));
         foreach ($payload['metrics'] ?? [] as $metric) {
             $this->keys++;
             if (!isset($this->stats[$projectId]['keys'][$metric['key']])) {
@@ -479,7 +479,8 @@ class StatsUsage extends Action
             }
         }
         $documentClone = clone $stat;
-        $documentClone->setAttribute('$tenant', (int) $project->getSequence());
+        $dbForLogs = ($this->getLogsDB)();
+        $documentClone->setAttribute('$tenant', $project->getSequence());
         $this->statDocuments[] = $documentClone;
     }
 

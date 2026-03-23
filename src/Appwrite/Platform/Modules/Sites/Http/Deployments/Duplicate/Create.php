@@ -55,8 +55,8 @@ class Create extends Action
                     )
                 ]
             ))
-            ->param('siteId', '', new UID(), 'Site ID.')
-            ->param('deploymentId', '', new UID(), 'Deployment ID.')
+            ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
+            ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Deployment ID.', false, ['dbForProject'])
             ->inject('request')
             ->inject('response')
             ->inject('project')
@@ -142,7 +142,12 @@ class Create extends Action
             ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
             ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
             ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-        $dbForProject->updateDocument('sites', $site->getId(), $site);
+        $dbForProject->updateDocument('sites', $site->getId(), new Document([
+            'latestDeploymentId' => $site->getAttribute('latestDeploymentId'),
+            'latestDeploymentInternalId' => $site->getAttribute('latestDeploymentInternalId'),
+            'latestDeploymentCreatedAt' => $site->getAttribute('latestDeploymentCreatedAt'),
+            'latestDeploymentStatus' => $site->getAttribute('latestDeploymentStatus'),
+        ]));
 
         // Preview deployments for sites
         $sitesDomain = $platform['sitesDomain'];

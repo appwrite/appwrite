@@ -64,7 +64,7 @@ Http::post('/v1/migrations/appwrite')
     ))
     ->param('resources', [], new ArrayList(new WhiteList(Appwrite::getSupportedResources())), 'List of resources to migrate')
     ->param('endpoint', '', new URL(), 'Source Appwrite endpoint')
-    ->param('projectId', '', new UID(), 'Source Project ID')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Source Project ID', false, ['dbForProject'])
     ->param('apiKey', '', new Text(512), 'Source API Key')
     ->inject('response')
     ->inject('dbForProject')
@@ -335,8 +335,8 @@ Http::post('/v1/migrations/csv/imports')
             )
         ]
     ))
-    ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
-    ->param('fileId', '', new UID(), 'File ID.')
+    ->param('bucketId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).', false, ['dbForProject'])
+    ->param('fileId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'File ID.', false, ['dbForProject'])
     ->param('resourceId', null, new CompoundUID(), 'Composite ID in the format {databaseId:collectionId}, identifying a collection within a database.')
     ->param('internalFile', false, new Boolean(), 'Is the file stored in an internal bucket?', true)
     ->inject('response')
@@ -678,7 +678,7 @@ Http::get('/v1/migrations/:migrationId')
             )
         ]
     ))
-    ->param('migrationId', '', new UID(), 'Migration unique ID.')
+    ->param('migrationId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Migration unique ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $migrationId, Response $response, Database $dbForProject) {
@@ -717,22 +717,14 @@ Http::get('/v1/migrations/appwrite/report')
     ->inject('project')
     ->inject('user')
     ->action(function (array $resources, string $endpoint, string $projectID, string $key, Response $response) {
-
-        $appwrite = new Appwrite($projectID, $endpoint, $key);
-
         try {
+            $appwrite = new Appwrite($projectID, $endpoint, $key);
             $report = $appwrite->report($resources);
         } catch (\Throwable $e) {
-            switch ($e->getCode()) {
-                case 401:
-                    throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Source Error: ' . $e->getMessage());
-                case 429:
-                    throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Source Error: Rate Limit Exceeded, Is your Cloud Provider blocking Appwrite\'s IP?');
-                case 500:
-                    throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Source Error: ' . $e->getMessage());
-            }
-
-            throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Source Error: ' . $e->getMessage());
+            throw new Exception(
+                Exception::MIGRATION_PROVIDER_ERROR,
+                'Unable to connect to the migration source. Please verify your credentials and ensure the source is reachable from this server. Check for network restrictions such as firewalls, IP allowlists, or outbound connectivity limits.'
+            );
         }
 
         $response
@@ -771,21 +763,14 @@ Http::get('/v1/migrations/firebase/report')
             throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Invalid Service Account JSON');
         }
 
-        $firebase = new Firebase($serviceAccount);
-
         try {
+            $firebase = new Firebase($serviceAccount);
             $report = $firebase->report($resources);
         } catch (\Throwable $e) {
-            switch ($e->getCode()) {
-                case 401:
-                    throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Source Error: ' . $e->getMessage());
-                case 429:
-                    throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Source Error: Rate Limit Exceeded, Is your Cloud Provider blocking Appwrite\'s IP?');
-                case 500:
-                    throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Source Error: ' . $e->getMessage());
-            }
-
-            throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Source Error: ' . $e->getMessage());
+            throw new Exception(
+                Exception::MIGRATION_PROVIDER_ERROR,
+                'Unable to connect to the migration source. Please verify your credentials and ensure the source is reachable from this server. Check for network restrictions such as firewalls, IP allowlists, or outbound connectivity limits.'
+            );
         }
 
         $response
@@ -820,21 +805,14 @@ Http::get('/v1/migrations/supabase/report')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (array $resources, string $endpoint, string $apiKey, string $databaseHost, string $username, string $password, int $port, Response $response) {
-        $supabase = new Supabase($endpoint, $apiKey, $databaseHost, 'postgres', $username, $password, $port);
-
         try {
+            $supabase = new Supabase($endpoint, $apiKey, $databaseHost, 'postgres', $username, $password, $port);
             $report = $supabase->report($resources);
         } catch (\Throwable $e) {
-            switch ($e->getCode()) {
-                case 401:
-                    throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Source Error: ' . $e->getMessage());
-                case 429:
-                    throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Source Error: Rate Limit Exceeded, Is your Cloud Provider blocking Appwrite\'s IP?');
-                case 500:
-                    throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Source Error: ' . $e->getMessage());
-            }
-
-            throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Source Error: ' . $e->getMessage());
+            throw new Exception(
+                Exception::MIGRATION_PROVIDER_ERROR,
+                'Unable to connect to the migration source. Please verify your credentials and ensure the source is reachable from this server. Check for network restrictions such as firewalls, IP allowlists, or outbound connectivity limits.'
+            );
         }
 
         $response
@@ -869,21 +847,14 @@ Http::get('/v1/migrations/nhost/report')
     ->param('port', 5432, new Integer(true), 'Source\'s Database Port.', true)
     ->inject('response')
     ->action(function (array $resources, string $subdomain, string $region, string $adminSecret, string $database, string $username, string $password, int $port, Response $response) {
-        $nhost = new NHost($subdomain, $region, $adminSecret, $database, $username, $password, $port);
-
         try {
+            $nhost = new NHost($subdomain, $region, $adminSecret, $database, $username, $password, $port);
             $report = $nhost->report($resources);
         } catch (\Throwable $e) {
-            switch ($e->getCode()) {
-                case 401:
-                    throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Source Error: ' . $e->getMessage());
-                case 429:
-                    throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Source Error: Rate Limit Exceeded, Is your Cloud Provider blocking Appwrite\'s IP?');
-                case 500:
-                    throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Source Error: ' . $e->getMessage());
-            }
-
-            throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Source Error: ' . $e->getMessage());
+            throw new Exception(
+                Exception::MIGRATION_PROVIDER_ERROR,
+                'Unable to connect to the migration source. Please verify your credentials and ensure the source is reachable from this server. Check for network restrictions such as firewalls, IP allowlists, or outbound connectivity limits.'
+            );
         }
 
         $response
@@ -911,7 +882,7 @@ Http::patch('/v1/migrations/:migrationId')
             )
         ]
     ))
-    ->param('migrationId', '', new UID(), 'Migration unique ID.')
+    ->param('migrationId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Migration unique ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
@@ -965,7 +936,7 @@ Http::delete('/v1/migrations/:migrationId')
         ],
         contentType: ContentType::NONE
     ))
-    ->param('migrationId', '', new UID(), 'Migration ID.')
+    ->param('migrationId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Migration ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')

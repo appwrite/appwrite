@@ -4,13 +4,12 @@ namespace Appwrite\Platform\Modules\VCS\Http\GitHub\Callback;
 
 use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Permission as AppwritePermission;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -21,6 +20,7 @@ use Utopia\VCS\Adapter\Git\GitHub;
 class Get extends Action
 {
     use HTTP;
+    use AppwritePermission;
 
     public static function getName()
     {
@@ -132,13 +132,7 @@ class Get extends Action
 
                 $installation = new Document([
                     '$id' => ID::unique(),
-                    '$permissions' => [
-                        Permission::read(Role::team(ID::custom($teamId))),
-                        Permission::update(Role::team(ID::custom($teamId), 'owner')),
-                        Permission::update(Role::team(ID::custom($teamId), 'developer')),
-                        Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-                        Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-                    ],
+                    '$permissions' => $this->getPermissions($teamId, $projectId),
                     'providerInstallationId' => $providerInstallationId,
                     'projectId' => $projectId,
                     'projectInternalId' => $projectInternalId,
@@ -158,7 +152,13 @@ class Get extends Action
                     ->setAttribute('personalRefreshToken', $refreshToken)
                     ->setAttribute('personalAccessToken', $accessToken)
                     ->setAttribute('personalAccessTokenExpiry', $accessTokenExpiry);
-                $installation = $dbForPlatform->updateDocument('installations', $installation->getId(), $installation);
+                $installation = $dbForPlatform->updateDocument('installations', $installation->getId(), new Document([
+                    'organization' => $installation->getAttribute('organization'),
+                    'personal' => $installation->getAttribute('personal'),
+                    'personalRefreshToken' => $installation->getAttribute('personalRefreshToken'),
+                    'personalAccessToken' => $installation->getAttribute('personalAccessToken'),
+                    'personalAccessTokenExpiry' => $installation->getAttribute('personalAccessTokenExpiry'),
+                ]));
             }
         } else {
             $error = 'Installation of the Appwrite GitHub App on organization accounts is restricted to organization owners. As a member of the organization, you do not have the necessary permissions to install this GitHub App. Please contact the organization owner to create the installation from the Appwrite console.';

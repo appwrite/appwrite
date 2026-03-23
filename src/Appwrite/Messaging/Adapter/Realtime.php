@@ -491,6 +491,7 @@ class Realtime extends MessagingAdapter
                 $roles = [Role::team(ID::custom($parts[1]))->toString()];
                 break;
             case 'databases':
+            case 'tablesdb':
                 $resource = $parts[4] ?? '';
                 if (in_array($resource, ['columns', 'attributes', 'indexes'])) {
                     $channels[] = 'console';
@@ -508,14 +509,14 @@ class Realtime extends MessagingAdapter
                     $tableId = $payload->getAttribute('$tableId', '');
                     $collectionId = $payload->getAttribute('$collectionId', '');
                     $resourceId = $tableId ?: $collectionId;
+                    $channels = [];
 
-                    $channels[] = 'rows';
-                    $channels[] = 'databases.' . $database->getId() .  '.tables.' . $resourceId . '.rows';
-                    $channels[] = 'databases.' . $database->getId() . '.tables.' . $resourceId . '.rows.' . $payload->getId();
-
-                    $channels[] = 'documents';
-                    $channels[] = 'databases.' . $database->getId() .  '.collections.' . $resourceId . '.documents';
-                    $channels[] = 'databases.' . $database->getId() . '.collections.' . $resourceId . '.documents.' . $payload->getId();
+                    // sending legacy + tablesdb events to both legacy and tablesdb
+                    $channels = array_values(array_unique(array_merge(
+                        self::getDatabaseChannels('legacy', $database->getId(), $resourceId, $payload->getId(), 'databases'),
+                        self::getDatabaseChannels('tablesdb', $database->getId(), $resourceId, $payload->getId(), 'databases'),
+                        self::getDatabaseChannels('tablesdb', $database->getId(), $resourceId, $payload->getId())
+                    )));
 
                     $roles = $collection->getAttribute('documentSecurity', false)
                         ? \array_merge($collection->getRead(), $payload->getRead())
@@ -571,5 +572,57 @@ class Realtime extends MessagingAdapter
             'permissionsChanged' => $permissionsChanged,
             'projectId' => $projectId
         ];
+    }
+
+    /**
+     * Generate realtime channels for database events
+     *
+     * @param string $type The database API type
+     * @param string $databaseId The database ID
+     * @param string $resourceId The collection/table ID
+     * @param string $payloadId The document/row ID
+     * @param string $prefixOverride Override the channel prefix when different API types share the same terminology but need different prefixes
+     * @return array Array of channel names
+     */
+    private static function getDatabaseChannels(
+        string $type = 'databases',
+        string $databaseId = '',
+        string $resourceId = '',
+        string $payloadId = '',
+        string $prefixOverride = '',
+    ): array {
+        $basePrefix = $prefixOverride ?: $type;
+
+        if (!$databaseId || !$resourceId || !$payloadId) {
+            return [];
+        }
+
+        $channels = [];
+
+        switch ($type) {
+            case 'legacy':
+                if (empty($prefixOverride)) {
+                    $basePrefix = 'databases';
+                }
+                $channels[] = 'documents';
+                $channels[] = "{$basePrefix}.{$databaseId}.collections.{$resourceId}.documents";
+                $channels[] = "{$basePrefix}.{$databaseId}.collections.{$resourceId}.documents.{$payloadId}";
+                break;
+
+            case 'tablesdb':
+                $channels[] = 'rows';
+                $channels[] = "{$basePrefix}.{$databaseId}.tables.{$resourceId}.rows";
+                $channels[] = "{$basePrefix}.{$databaseId}.tables.{$resourceId}.rows.{$payloadId}";
+                break;
+
+            default:
+                $basePrefix = 'databases';
+                $channels[] = 'documents';
+                $channels[] = "{$basePrefix}.{$databaseId}.collections.{$resourceId}.documents";
+                $channels[] = "{$basePrefix}.{$databaseId}.collections.{$resourceId}.documents.{$payloadId}";
+                break;
+
+        }
+        return $channels;
     }
 }

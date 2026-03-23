@@ -63,7 +63,7 @@ class Create extends Base
                     )
                 ],
             ))
-            ->param('functionId', '', new UID(), 'Function ID.')
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
             ->param('repository', '', new Text(128, 0), 'Repository name of the template.')
             ->param('owner', '', new Text(128, 0), 'The name of the owner of the template.')
             ->param('rootDirectory', '', new Text(128, 0), 'Path to function code in the template repo.')
@@ -174,7 +174,12 @@ class Create extends Base
             ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
             ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
             ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-        $dbForProject->updateDocument('functions', $function->getId(), $function);
+        $dbForProject->updateDocument('functions', $function->getId(), new Document([
+            'latestDeploymentId' => $function->getAttribute('latestDeploymentId'),
+            'latestDeploymentInternalId' => $function->getAttribute('latestDeploymentInternalId'),
+            'latestDeploymentCreatedAt' => $function->getAttribute('latestDeploymentCreatedAt'),
+            'latestDeploymentStatus' => $function->getAttribute('latestDeploymentStatus'),
+        ]));
 
 
         $this->updateEmptyManualRule($project, $function, $deployment, $dbForPlatform, $authorization);

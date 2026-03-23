@@ -5,11 +5,11 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Platform\Action;
 use Exception;
 use Throwable;
-use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Queue\Message;
+use Utopia\Span\Span;
 
 class StatsResources extends Action
 {
@@ -76,29 +76,15 @@ class StatsResources extends Action
         // Reset documents for each job
         $this->documents = [];
 
-        $startTime = microtime(true);
         $this->countForProject($dbForPlatform, $getLogsDB, $getProjectDB, $project);
-        $endTime = microtime(true);
-        $executionTime = $endTime - $startTime;
-        Console::info('Project: ' . $project->getId() . '(' . $project->getSequence() . ') aggregated in ' . $executionTime .' seconds');
     }
 
     protected function countForProject(Database $dbForPlatform, callable $getLogsDB, callable $getProjectDB, Document $project): void
     {
-        Console::info('Begining count for: ' . $project->getId());
-
-        $dbForLogs = null;
-        $dbForProject = null;
-        try {
-            /** @var \Utopia\Database\Database $dbForLogs */
-            $dbForLogs = call_user_func($getLogsDB, $project);
-            /** @var \Utopia\Database\Database $dbForProject */
-            $dbForProject = call_user_func($getProjectDB, $project);
-        } catch (Throwable $th) {
-            Console::error('Unable to get database');
-            Console::error($th->getMessage());
-            return;
-        }
+        /** @var \Utopia\Database\Database $dbForLogs */
+        $dbForLogs = call_user_func($getLogsDB, $project);
+        /** @var \Utopia\Database\Database $dbForProject */
+        $dbForProject = call_user_func($getProjectDB, $project);
 
         try {
 
@@ -189,7 +175,7 @@ class StatsResources extends Action
             try {
                 $this->countImageTransformations($dbForProject, $dbForLogs, $region);
             } catch (Throwable $th) {
-                call_user_func_array($this->logError, [$th, "StatsResources", "count_for_buckets_{$project->getId()}"]);
+                call_user_func_array($this->logError, [$th, "StatsResources", "count_for_image_transformations_{$project->getId()}"]);
             }
 
             try {
@@ -209,7 +195,6 @@ class StatsResources extends Action
             call_user_func_array($this->logError, [$th, "StatsResources", "count_for_project_{$project->getId()}"]);
         }
 
-        Console::info('End of count for: ' . $project->getId());
     }
 
     protected function countForBuckets(Database $dbForProject, Database $dbForLogs, string $region)
@@ -217,12 +202,23 @@ class StatsResources extends Action
         $totalFiles = 0;
         $totalStorage = 0;
         $this->foreachDocument($dbForProject, 'buckets', [], function ($bucket) use ($dbForProject, $dbForLogs, $region, &$totalFiles, &$totalStorage) {
-            $files = $dbForProject->count('bucket_' . $bucket->getSequence());
+            try {
+                $files = $dbForProject->count('bucket_' . $bucket->getSequence());
+            } catch (Throwable $th) {
+                call_user_func_array($this->logError, [$th, "StatsResources", "count_for_bucket_{$bucket->getSequence()}"]);
+                return;
+            }
 
             $metric = str_replace('{bucketInternalId}', $bucket->getSequence(), METRIC_BUCKET_ID_FILES);
             $this->createStatsDocuments($region, $metric, $files);
 
-            $storage = $dbForProject->sum('bucket_' . $bucket->getSequence(), 'sizeActual');
+            try {
+                $storage = $dbForProject->sum('bucket_' . $bucket->getSequence(), 'sizeActual');
+            } catch (Throwable $th) {
+                call_user_func_array($this->logError, [$th, "StatsResources", "sum_for_bucket_{$bucket->getSequence()}"]);
+                return;
+            }
+
             $metric = str_replace('{bucketInternalId}', $bucket->getSequence(), METRIC_BUCKET_ID_FILES_STORAGE);
             $this->createStatsDocuments($region, $metric, $storage);
 
@@ -242,9 +238,15 @@ class StatsResources extends Action
         $totalImageTransformations = 0;
         $last30Days = (new \DateTime())->sub(\DateInterval::createFromDateString('30 days'))->format('Y-m-d 00:00:00');
         $this->foreachDocument($dbForProject, 'buckets', [], function ($bucket) use ($dbForProject, $last30Days, $region, &$totalImageTransformations) {
-            $imageTransformations = $dbForProject->count('bucket_' . $bucket->getSequence(), [
-                Query::greaterThanEqual('transformedAt', $last30Days),
-            ]);
+            try {
+                $imageTransformations = $dbForProject->count('bucket_' . $bucket->getSequence(), [
+                    Query::greaterThanEqual('transformedAt', $last30Days),
+                ]);
+            } catch (Throwable $th) {
+                call_user_func_array($this->logError, [$th, "StatsResources", "count_for_image_transformations_bucket_{$bucket->getSequence()}"]);
+                return;
+            }
+
             $metric = str_replace('{bucketInternalId}', $bucket->getSequence(), METRIC_BUCKET_ID_FILES_IMAGES_TRANSFORMED);
             $this->createStatsDocuments($region, $metric, $imageTransformations);
             $totalImageTransformations += $imageTransformations;
@@ -463,7 +465,7 @@ class StatsResources extends Action
 
     protected function writeDocuments(Database $dbForLogs, Document $project): void
     {
-        $message = 'Stats writeDocuments project: ' . $project->getId() . '(' . $project->getSequence() . ')';
+        Span::add('documents.count', count($this->documents));
 
         /**
          * sort by unique index key reduce locks/deadlocks
@@ -492,16 +494,9 @@ class StatsResources extends Action
             return strcmp($a['time'], $b['time']);
         });
 
-        try {
-            $dbForLogs->upsertDocuments(
-                'stats',
-                $this->documents,
-            );
-
-            Console::success($message . ' | Documents: ' . count($this->documents));
-        } catch (\Throwable $e) {
-            Console::error('Error: ' . $message . ' | Exception: ' . $e->getMessage());
-            throw $e;
-        }
+        $dbForLogs->upsertDocuments(
+            'stats',
+            $this->documents,
+        );
     }
 }

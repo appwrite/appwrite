@@ -5,11 +5,11 @@ require_once __DIR__ . '/../init.php';
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Key;
+use Appwrite\Bus\Events\ExecutionCompleted;
+use Appwrite\Bus\Events\RequestCompleted;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete as DeleteEvent;
 use Appwrite\Event\Event;
-use Appwrite\Event\Execution;
-use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Locale\GeoRecord;
 use Appwrite\Network\Cors;
@@ -31,10 +31,13 @@ use Appwrite\Utopia\Response\Filters\V16 as ResponseV16;
 use Appwrite\Utopia\Response\Filters\V17 as ResponseV17;
 use Appwrite\Utopia\Response\Filters\V18 as ResponseV18;
 use Appwrite\Utopia\Response\Filters\V19 as ResponseV19;
+use Appwrite\Utopia\Response\Filters\V20 as ResponseV20;
+use Appwrite\Utopia\Response\Filters\V21 as ResponseV21;
 use Appwrite\Utopia\View;
 use Executor\Executor;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Table;
+use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -131,8 +134,9 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
     if (!$project->isEmpty() && $project->getId() !== 'console') {
         $accessedAt = $project->getAttribute('accessedAt', 0);
         if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
-            $project->setAttribute('accessedAt', DateTime::now());
-            $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $project));
+            $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                'accessedAt' => DateTime::now()
+            ])));
         }
 
         /**
@@ -320,7 +324,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         };
 
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
-        $spec = Config::getParam('specifications')[$resource->getAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
+        $spec = Config::getParam('specifications')[$resource->getAttribute('runtimeSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
 
         $runtime = match ($type) {
             'function' => $runtimes[$resource->getAttribute('runtime')] ?? null,
@@ -548,6 +552,10 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 }
             }
 
+            if (!empty($deployment->getAttribute('startCommand', ''))) {
+                $startCommand = 'cd /usr/local/server/src/function/ && ' . str_replace(['"', '`', '$'], ['\\"', '\\`', '\\$'], $deployment->getAttribute('startCommand', ''));
+            }
+
             $runtimeEntrypoint = match ($version) {
                 'v2' => '',
                 default => "cp /tmp/code.$extension /mnt/code/code.$extension && nohup helpers/start.sh \"$startCommand\"",
@@ -704,10 +712,12 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             }
         } finally {
             if ($type === 'function' || $type === 'site') {
-                $queueForExecutions
-                    ->setExecution($execution)
-                    ->setProject($project)
-                    ->trigger();
+                $bus->dispatch(new ExecutionCompleted(
+                    execution: $execution->getArrayCopy(),
+                    project: $project->getArrayCopy(),
+                    spec: $spec,
+                    resource: $resource->getArrayCopy(),
+                ));
             }
         }
 
@@ -752,70 +762,12 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             ->setStatusCode($execution['responseStatusCode'] ?? 200)
             ->send($body);
 
-        $fileSize = 0;
-        $file = $request->getFiles('file');
-        if (!empty($file)) {
-            $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
-        }
-
-        if (!empty($apiKey) && !empty($apiKey->getDisabledMetrics())) {
-            foreach ($apiKey->getDisabledMetrics() as $key) {
-                $queueForStatsUsage->disableMetric($key);
-            }
-        }
-
-        $metricTypeExecutions = str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_EXECUTIONS);
-        $metricTypeIdExecutions = str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS);
-        $metricTypeExecutionsCompute = str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_EXECUTIONS_COMPUTE);
-        $metricTypeIdExecutionsCompute = str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_COMPUTE);
-        $metricTypeExecutionsMbSeconds = str_replace(['{resourceType}'], [$deployment->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_EXECUTIONS_MB_SECONDS);
-        $metricTypeIdExecutionsMBSeconds = str_replace(['{resourceType}', '{resourceInternalId}'], [$deployment->getAttribute('resourceType'), $resource->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS);
-        if ($deployment->getAttribute('resourceType') === 'sites') {
-            $queueForStatsUsage
-                ->disableMetric(METRIC_NETWORK_REQUESTS)
-                ->disableMetric(METRIC_NETWORK_INBOUND)
-                ->disableMetric(METRIC_NETWORK_OUTBOUND);
-            if ($resource->getAttribute('adapter') !== 'ssr') {
-                $queueForStatsUsage
-                    ->disableMetric(METRIC_EXECUTIONS)
-                    ->disableMetric(METRIC_EXECUTIONS_COMPUTE)
-                    ->disableMetric(METRIC_EXECUTIONS_MB_SECONDS)
-                    ->disableMetric($metricTypeExecutions)
-                    ->disableMetric($metricTypeIdExecutions)
-                    ->disableMetric($metricTypeExecutionsCompute)
-                    ->disableMetric($metricTypeIdExecutionsCompute)
-                    ->disableMetric($metricTypeExecutionsMbSeconds)
-                    ->disableMetric($metricTypeIdExecutionsMBSeconds);
-            }
-
-            $queueForStatsUsage
-                ->addMetric(METRIC_SITES_REQUESTS, 1)
-                ->addMetric(METRIC_SITES_INBOUND, $request->getSize() + $fileSize)
-                ->addMetric(METRIC_SITES_OUTBOUND, $response->getSize())
-                ->addMetric(str_replace('{siteInternalId}', $resource->getSequence(), METRIC_SITES_ID_REQUESTS), 1)
-                ->addMetric(str_replace('{siteInternalId}', $resource->getSequence(), METRIC_SITES_ID_INBOUND), $request->getSize() + $fileSize)
-                ->addMetric(str_replace('{siteInternalId}', $resource->getSequence(), METRIC_SITES_ID_OUTBOUND), $response->getSize())
-            ;
-        }
-
-
-        $compute = (int)($execution->getAttribute('duration') * 1000);
-        $mbSeconds = (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT));
-        $queueForStatsUsage
-            ->addMetric(METRIC_NETWORK_REQUESTS, 1)
-            ->addMetric(METRIC_NETWORK_INBOUND, $request->getSize() + $fileSize)
-            ->addMetric(METRIC_NETWORK_OUTBOUND, $response->getSize())
-            ->addMetric(METRIC_EXECUTIONS, 1)
-            ->addMetric($metricTypeExecutions, 1)
-            ->addMetric($metricTypeIdExecutions, 1)
-            ->addMetric(METRIC_EXECUTIONS_COMPUTE, $compute) // per project
-            ->addMetric($metricTypeExecutionsCompute, $compute) // per function
-            ->addMetric($metricTypeIdExecutionsCompute, $compute) // per function
-            ->addMetric(METRIC_EXECUTIONS_MB_SECONDS, $mbSeconds)
-            ->addMetric($metricTypeExecutionsMbSeconds, $mbSeconds)
-            ->addMetric($metricTypeIdExecutionsMBSeconds, $mbSeconds)
-            ->setProject($project)
-            ->trigger();
+        $bus->dispatch(new RequestCompleted(
+            project: $project->getArrayCopy(),
+            request: $request,
+            response: $response,
+            deployment: $deployment->getArrayCopy(),
+        ));
 
         /* cleanup */
         if ($executionsRetentionCount > 0 && ENABLE_EXECUTIONS_LIMIT_ON_ROUTE) {
@@ -881,7 +833,7 @@ Http::init()
     ->inject('geoRecord')
     ->inject('queueForStatsUsage')
     ->inject('queueForEvents')
-    ->inject('queueForExecutions')
+    ->inject('bus')
     ->inject('executor')
     ->inject('platform')
     ->inject('isResourceBlocked')
@@ -986,17 +938,23 @@ Http::init()
          */
         $responseFormat = $request->getHeader('x-appwrite-response-format', System::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($responseFormat) {
-            if (version_compare($responseFormat, '1.4.0', '<')) {
-                $response->addFilter(new ResponseV16());
+            if (version_compare($responseFormat, '1.9.0', '<')) {
+                $response->addFilter(new ResponseV21());
             }
-            if (version_compare($responseFormat, '1.5.0', '<')) {
-                $response->addFilter(new ResponseV17());
+            if (version_compare($responseFormat, '1.8.0', '<')) {
+                $response->addFilter(new ResponseV20());
+            }
+            if (version_compare($responseFormat, '1.7.0', '<')) {
+                $response->addFilter(new ResponseV19());
             }
             if (version_compare($responseFormat, '1.6.0', '<')) {
                 $response->addFilter(new ResponseV18());
             }
-            if (version_compare($responseFormat, '1.7.0', '<')) {
-                $response->addFilter(new ResponseV19());
+            if (version_compare($responseFormat, '1.5.0', '<')) {
+                $response->addFilter(new ResponseV17());
+            }
+            if (version_compare($responseFormat, '1.4.0', '<')) {
+                $response->addFilter(new ResponseV16());
             }
             if (version_compare($responseFormat, APP_VERSION_STABLE, '>')) {
                 $warnings[] = "The current SDK is built for Appwrite " . $responseFormat . ". However, the current Appwrite server version is " . APP_VERSION_STABLE . ". Please downgrade your SDK to match the Appwrite version: https://appwrite.io/docs/sdks";
@@ -1176,8 +1134,7 @@ Http::options()
     ->inject('dbForPlatform')
     ->inject('getProjectDB')
     ->inject('queueForEvents')
-    ->inject('queueForStatsUsage')
-    ->inject('queueForExecutions')
+    ->inject('bus')
     ->inject('executor')
     ->inject('geoRecord')
     ->inject('isResourceBlocked')
@@ -1213,12 +1170,11 @@ Http::options()
         /** OPTIONS requests in utopia do not execute shutdown handlers, as a result we need to track the OPTIONS requests explicitly
          * @see https://github.com/utopia-php/http/blob/0.33.16/src/App.php#L825-L855
          */
-        $queueForStatsUsage
-            ->addMetric(METRIC_NETWORK_REQUESTS, 1)
-            ->addMetric(METRIC_NETWORK_INBOUND, $request->getSize())
-            ->addMetric(METRIC_NETWORK_OUTBOUND, $response->getSize())
-            ->setProject($project)
-            ->trigger();
+        $bus->dispatch(new RequestCompleted(
+            project: $project->getArrayCopy(),
+            request: $request,
+            response: $response,
+        ));
     });
 
 Http::error()
@@ -1229,10 +1185,10 @@ Http::error()
     ->inject('project')
     ->inject('logger')
     ->inject('log')
-    ->inject('queueForStatsUsage')
+    ->inject('bus')
     ->inject('devKey')
     ->inject('authorization')
-    ->action(function (Throwable $error, Http $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, StatsUsage $queueForStatsUsage, Document $devKey, Authorization $authorization) {
+    ->action(function (Throwable $error, Http $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, Bus $bus, Document $devKey, Authorization $authorization) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
         $class = \get_class($error);
@@ -1305,21 +1261,12 @@ Http::error()
          */
         if (!$publish && $project->getId() !== 'console') {
             if (!DBUser::isPrivileged($authorization->getRoles())) {
-                $fileSize = 0;
-                $file = $request->getFiles('file');
-                if (!empty($file)) {
-                    $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
-                }
-
-                $queueForStatsUsage
-                    ->addMetric(METRIC_NETWORK_REQUESTS, 1)
-                    ->addMetric(METRIC_NETWORK_INBOUND, $request->getSize() + $fileSize)
-                    ->addMetric(METRIC_NETWORK_OUTBOUND, $response->getSize());
+                $bus->dispatch(new RequestCompleted(
+                    project: $project->getArrayCopy(),
+                    request: $request,
+                    response: $response,
+                ));
             }
-
-            $queueForStatsUsage
-                ->setProject($project)
-                ->trigger();
         }
 
         if ($logger && $publish) {
@@ -1350,7 +1297,7 @@ Http::error()
             $log->setMessage($error->getMessage());
 
             $log->addTag('database', $dsn->getHost());
-            $log->addTag('method', $route->getMethod());
+            $log->addTag('method', $route?->getMethod() ?? $request->getMethod());
             $log->addTag('url', $request->getURI());
             $log->addTag('verboseType', get_class($error));
             $log->addTag('code', $error->getCode());
@@ -1448,10 +1395,17 @@ Http::error()
                 // don't fail the error handler
             }
 
+            $sdk = $route?->getLabel("sdk", false);
             $action = 'UNKNOWN_NAMESPACE.UNKNOWN.METHOD';
             if (!empty($sdk)) {
+                if (\is_array($sdk)) {
+                    $sdk = $sdk[0];
+                }
                 /** @var \Appwrite\SDK\Method $sdk */
                 $action = $sdk->getNamespace() . '.' . $sdk->getMethodName();
+            } elseif ($route === null) {
+                $path = ltrim(parse_url($request->getURI(), PHP_URL_PATH) ?? '/', '/') ?: 'root';
+                $action = 'http.' . $request->getMethod() . '.' . $path;
             }
 
             $log->setAction($action);
@@ -1562,8 +1516,7 @@ Http::get('/robots.txt')
     ->inject('dbForPlatform')
     ->inject('getProjectDB')
     ->inject('queueForEvents')
-    ->inject('queueForStatsUsage')
-    ->inject('queueForExecutions')
+    ->inject('bus')
     ->inject('executor')
     ->inject('geoRecord')
     ->inject('isResourceBlocked')
@@ -1597,8 +1550,7 @@ Http::get('/humans.txt')
     ->inject('dbForPlatform')
     ->inject('getProjectDB')
     ->inject('queueForEvents')
-    ->inject('queueForStatsUsage')
-    ->inject('queueForExecutions')
+    ->inject('bus')
     ->inject('executor')
     ->inject('geoRecord')
     ->inject('isResourceBlocked')
@@ -1712,7 +1664,10 @@ Http::get('/v1/ping')
             ->setAttribute('pingedAt', $pingedAt);
 
         $authorization->skip(function () use ($dbForPlatform, $project) {
-            $dbForPlatform->updateDocument('projects', $project->getId(), $project);
+            $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                'pingCount' => $project->getAttribute('pingCount'),
+                'pingedAt' => $project->getAttribute('pingedAt')
+            ]));
         });
 
         $queueForEvents

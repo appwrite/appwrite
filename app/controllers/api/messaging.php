@@ -9,7 +9,6 @@ use Appwrite\Event\Messaging;
 use Appwrite\Extend\Exception;
 use Appwrite\Locale\GeoRecord;
 use Appwrite\Messaging\Status as MessageStatus;
-use Appwrite\Network\Validator\Email;
 use Appwrite\Permission;
 use Appwrite\Role;
 use Appwrite\SDK\AuthType;
@@ -43,6 +42,7 @@ use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Roles;
 use Utopia\Database\Validator\UID;
+use Utopia\Emails\Validator\Email;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
@@ -78,7 +78,7 @@ Http::post('/v1/messaging/providers/mailgun')
             )
         ]
     ))
-    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('apiKey', '', new Text(0), 'Mailgun API Key.', true)
     ->param('domain', '', new Text(0), 'Mailgun Domain.', true)
@@ -172,7 +172,7 @@ Http::post('/v1/messaging/providers/sendgrid')
             )
         ]
     ))
-    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('apiKey', '', new Text(0), 'Sendgrid API key.', true)
     ->param('fromName', '', new Text(128, 0), 'Sender Name.', true)
@@ -254,7 +254,7 @@ Http::post('/v1/messaging/providers/resend')
             )
         ]
     ))
-    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('apiKey', '', new Text(0), 'Resend API key.', true)
     ->param('fromName', '', new Text(128, 0), 'Sender Name.', true)
@@ -356,7 +356,7 @@ Http::post('/v1/messaging/providers/smtp')
             ]
         )
     ])
-    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('host', '', new Text(0), 'SMTP hosts. Either a single hostname or multiple semicolon-delimited hostnames. You can also specify a different port for each host such as `smtp1.example.com:25;smtp2.example.com`. You can also specify encryption type, for example: `tls://smtp1.example.com:587;ssl://smtp2.example.com:465"`. Hosts will be tried in order.')
     ->param('port', 587, new Range(1, 65535), 'The default SMTP server port.', true)
@@ -451,7 +451,7 @@ Http::post('/v1/messaging/providers/msg91')
             )
         ]
     ))
-    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('templateId', '', new Text(0), 'Msg91 template ID', true)
     ->param('senderId', '', new Text(0), 'Msg91 sender ID.', true)
@@ -534,7 +534,7 @@ Http::post('/v1/messaging/providers/telesign')
             )
         ]
     ))
-    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('customerId', '', new Text(0), 'Telesign customer ID.', true)
@@ -618,7 +618,7 @@ Http::post('/v1/messaging/providers/textmagic')
             )
         ]
     ))
-    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('username', '', new Text(0), 'Textmagic username.', true)
@@ -702,7 +702,7 @@ Http::post('/v1/messaging/providers/twilio')
             )
         ]
     ))
-    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('accountSid', '', new Text(0), 'Twilio account secret ID.', true)
@@ -786,7 +786,7 @@ Http::post('/v1/messaging/providers/vonage')
             )
         ]
     ))
-    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('apiKey', '', new Text(0), 'Vonage API key.', true)
@@ -890,7 +890,7 @@ Http::post('/v1/messaging/providers/fcm')
             ]
         )
     ])
-    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('serviceAccountJSON', null, new Nullable(new JSON()), 'FCM service account JSON.', true)
     ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
@@ -980,7 +980,7 @@ Http::post('/v1/messaging/providers/apns')
             ]
         )
     ])
-    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('authKey', '', new Text(0), 'APNS authentication key.', true)
     ->param('authKeyId', '', new Text(0), 'APNS authentication key ID.', true)
@@ -1135,7 +1135,7 @@ Http::get('/v1/messaging/providers/:providerId/logs')
             )
         ]
     ))
-    ->param('providerId', '', new UID(), 'Provider ID.')
+    ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
@@ -1224,7 +1224,7 @@ Http::get('/v1/messaging/providers/:providerId')
             )
         ]
     ))
-    ->param('providerId', '', new UID(), 'Provider ID.')
+    ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $providerId, Database $dbForProject, Response $response) {
@@ -1258,7 +1258,7 @@ Http::patch('/v1/messaging/providers/mailgun/:providerId')
             )
         ]
     ))
-    ->param('providerId', '', new UID(), 'Provider ID.')
+    ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('apiKey', '', new Text(0), 'Mailgun API Key.', true)
     ->param('domain', '', new Text(0), 'Mailgun Domain.', true)
@@ -1371,7 +1371,7 @@ Http::patch('/v1/messaging/providers/sendgrid/:providerId')
             )
         ]
     ))
-    ->param('providerId', '', new UID(), 'Provider ID.')
+    ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->param('apiKey', '', new Text(0), 'Sendgrid API key.', true)
@@ -1469,7 +1469,7 @@ Http::patch('/v1/messaging/providers/resend/:providerId')
             )
         ]
     ))
-    ->param('providerId', '', new UID(), 'Provider ID.')
+    ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->param('apiKey', '', new Text(0), 'Resend API key.', true)
@@ -1587,7 +1587,7 @@ Http::patch('/v1/messaging/providers/smtp/:providerId')
             ]
         )
     ])
-    ->param('providerId', '', new UID(), 'Provider ID.')
+    ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('host', '', new Text(0), 'SMTP hosts. Either a single hostname or multiple semicolon-delimited hostnames. You can also specify a different port for each host such as `smtp1.example.com:25;smtp2.example.com`. You can also specify encryption type, for example: `tls://smtp1.example.com:587;ssl://smtp2.example.com:465"`. Hosts will be tried in order.', true)
     ->param('port', null, new Nullable(new Range(1, 65535)), 'SMTP port.', true)
@@ -1716,7 +1716,7 @@ Http::patch('/v1/messaging/providers/msg91/:providerId')
             )
         ]
     ))
-    ->param('providerId', '', new UID(), 'Provider ID.')
+    ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->param('templateId', '', new Text(0), 'Msg91 template ID.', true)
@@ -1803,7 +1803,7 @@ Http::patch('/v1/messaging/providers/telesign/:providerId')
             )
         ]
     ))
-    ->param('providerId', '', new UID(), 'Provider ID.')
+    ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->param('customerId', '', new Text(0), 'Telesign customer ID.', true)
@@ -1892,7 +1892,7 @@ Http::patch('/v1/messaging/providers/textmagic/:providerId')
             )
         ]
     ))
-    ->param('providerId', '', new UID(), 'Provider ID.')
+    ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->param('username', '', new Text(0), 'Textmagic username.', true)
@@ -1981,7 +1981,7 @@ Http::patch('/v1/messaging/providers/twilio/:providerId')
             )
         ]
     ))
-    ->param('providerId', '', new UID(), 'Provider ID.')
+    ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->param('accountSid', '', new Text(0), 'Twilio account secret ID.', true)
@@ -2070,7 +2070,7 @@ Http::patch('/v1/messaging/providers/vonage/:providerId')
             )
         ]
     ))
-    ->param('providerId', '', new UID(), 'Provider ID.')
+    ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->param('apiKey', '', new Text(0), 'Vonage API key.', true)
@@ -2179,7 +2179,7 @@ Http::patch('/v1/messaging/providers/fcm/:providerId')
             ]
         )
     ])
-    ->param('providerId', '', new UID(), 'Provider ID.')
+    ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->param('serviceAccountJSON', null, new Nullable(new JSON()), 'FCM service account JSON.', true)
@@ -2275,7 +2275,7 @@ Http::patch('/v1/messaging/providers/apns/:providerId')
             ]
         )
     ])
-    ->param('providerId', '', new UID(), 'Provider ID.')
+    ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
     ->param('authKey', '', new Text(0), 'APNS authentication key.', true)
@@ -2378,7 +2378,7 @@ Http::delete('/v1/messaging/providers/:providerId')
         ],
         contentType: ContentType::NONE
     ))
-    ->param('providerId', '', new UID(), 'Provider ID.')
+    ->param('providerId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID.', false, ['dbForProject'])
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -2420,7 +2420,7 @@ Http::post('/v1/messaging/topics')
             )
         ]
     ))
-    ->param('topicId', '', new CustomId(), 'Topic ID. Choose a custom Topic ID or a new Topic ID.')
+    ->param('topicId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Topic ID. Choose a custom Topic ID or a new Topic ID.', false, ['dbForProject'])
     ->param('name', '', new Text(128), 'Topic Name.')
     ->param('subscribe', [Role::users()], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with subscribe permission. By default all users are granted with any subscribe permission. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
     ->inject('queueForEvents')
@@ -2532,7 +2532,7 @@ Http::get('/v1/messaging/topics/:topicId/logs')
             )
         ]
     ))
-    ->param('topicId', '', new UID(), 'Topic ID.')
+    ->param('topicId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Topic ID.', false, ['dbForProject'])
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
@@ -2622,7 +2622,7 @@ Http::get('/v1/messaging/topics/:topicId')
             )
         ]
     ))
-    ->param('topicId', '', new UID(), 'Topic ID.')
+    ->param('topicId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Topic ID.', false, ['dbForProject'])
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $topicId, Database $dbForProject, Response $response) {
@@ -2657,7 +2657,7 @@ Http::patch('/v1/messaging/topics/:topicId')
             )
         ]
     ))
-    ->param('topicId', '', new UID(), 'Topic ID.')
+    ->param('topicId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Topic ID.', false, ['dbForProject'])
     ->param('name', null, new Nullable(new Text(128)), 'Topic Name.', true)
     ->param('subscribe', null, new Nullable(new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE)), 'An array of role strings with subscribe permission. By default all users are granted with any subscribe permission. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
     ->inject('queueForEvents')
@@ -2709,7 +2709,7 @@ Http::delete('/v1/messaging/topics/:topicId')
         ],
         contentType: ContentType::NONE
     ))
-    ->param('topicId', '', new UID(), 'Topic ID.')
+    ->param('topicId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Topic ID.', false, ['dbForProject'])
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('queueForDeletes')
@@ -2756,9 +2756,9 @@ Http::post('/v1/messaging/topics/:topicId/subscribers')
             )
         ]
     ))
-    ->param('subscriberId', '', new CustomId(), 'Subscriber ID. Choose a custom Subscriber ID or a new Subscriber ID.')
-    ->param('topicId', '', new UID(), 'Topic ID. The topic ID to subscribe to.')
-    ->param('targetId', '', new UID(), 'Target ID. The target ID to link to the specified Topic ID.')
+    ->param('subscriberId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Subscriber ID. Choose a custom Subscriber ID or a new Subscriber ID.', false, ['dbForProject'])
+    ->param('topicId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Topic ID. The topic ID to subscribe to.', false, ['dbForProject'])
+    ->param('targetId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Target ID. The target ID to link to the specified Topic ID.', false, ['dbForProject'])
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('authorization')
@@ -2854,8 +2854,8 @@ Http::get('/v1/messaging/topics/:topicId/subscribers')
             )
         ]
     ))
-    ->param('topicId', '', new UID(), 'Topic ID. The topic ID subscribed to.')
-    ->param('queries', [], new Subscribers(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Providers::ALLOWED_ATTRIBUTES), true)
+    ->param('topicId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Topic ID. The topic ID subscribed to.', false, ['dbForProject'])
+    ->param('queries', [], new Subscribers(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Subscribers::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('dbForProject')
@@ -2940,7 +2940,7 @@ Http::get('/v1/messaging/subscribers/:subscriberId/logs')
             )
         ]
     ))
-    ->param('subscriberId', '', new UID(), 'Subscriber ID.')
+    ->param('subscriberId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Subscriber ID.', false, ['dbForProject'])
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
@@ -3030,8 +3030,8 @@ Http::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
             )
         ]
     ))
-    ->param('topicId', '', new UID(), 'Topic ID. The topic ID subscribed to.')
-    ->param('subscriberId', '', new UID(), 'Subscriber ID.')
+    ->param('topicId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Topic ID. The topic ID subscribed to.', false, ['dbForProject'])
+    ->param('subscriberId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Subscriber ID.', false, ['dbForProject'])
     ->inject('dbForProject')
     ->inject('authorization')
     ->inject('response')
@@ -3081,8 +3081,8 @@ Http::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
         ],
         contentType: ContentType::NONE
     ))
-    ->param('topicId', '', new UID(), 'Topic ID. The topic ID subscribed to.')
-    ->param('subscriberId', '', new UID(), 'Subscriber ID.')
+    ->param('topicId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Topic ID. The topic ID subscribed to.', false, ['dbForProject'])
+    ->param('subscriberId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Subscriber ID.', false, ['dbForProject'])
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('authorization')
@@ -3148,14 +3148,14 @@ Http::post('/v1/messaging/messages/email')
             )
         ]
     ))
-    ->param('messageId', '', new CustomId(), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('messageId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('subject', '', new Text(998), 'Email Subject.')
     ->param('content', '', new Text(64230), 'Email Content.')
-    ->param('topics', [], new ArrayList(new UID()), 'List of Topic IDs.', true)
-    ->param('users', [], new ArrayList(new UID()), 'List of User IDs.', true)
-    ->param('targets', [], new ArrayList(new UID()), 'List of Targets IDs.', true)
-    ->param('cc', [], new ArrayList(new UID()), 'Array of target IDs to be added as CC.', true)
-    ->param('bcc', [], new ArrayList(new UID()), 'Array of target IDs to be added as BCC.', true)
+    ->param('topics', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of Topic IDs.', true, ['dbForProject'])
+    ->param('users', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of User IDs.', true, ['dbForProject'])
+    ->param('targets', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of Targets IDs.', true, ['dbForProject'])
+    ->param('cc', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Array of target IDs to be added as CC.', true, ['dbForProject'])
+    ->param('bcc', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Array of target IDs to be added as BCC.', true, ['dbForProject'])
     ->param('attachments', [], new ArrayList(new CompoundUID()), 'Array of compound ID strings of bucket IDs and file IDs to be attached to the email. They should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
     ->param('draft', false, new Boolean(), 'Is message a draft', true)
     ->param('html', false, new Boolean(), 'Is content of type HTML', true)
@@ -3230,7 +3230,7 @@ Http::post('/v1/messaging/messages/email')
             }
         }
 
-        $message = $dbForProject->createDocument('messages', new Document([
+        $message = new Document([
             '$id' => $messageId,
             'providerType' => MESSAGE_TYPE_EMAIL,
             'topics' => $topics,
@@ -3246,7 +3246,12 @@ Http::post('/v1/messaging/messages/email')
                 'attachments' => $attachments,
             ],
             'status' => $status,
-        ]));
+        ]);
+        try {
+            $message = $dbForProject->createDocument('messages', $message);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::MESSAGE_ALREADY_EXISTS);
+        }
 
         switch ($status) {
             case MessageStatus::PROCESSING:
@@ -3327,11 +3332,11 @@ Http::post('/v1/messaging/messages/sms')
             ]
         )
     ])
-    ->param('messageId', '', new CustomId(), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('messageId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('content', '', new Text(64230), 'SMS Content.')
-    ->param('topics', [], new ArrayList(new UID()), 'List of Topic IDs.', true)
-    ->param('users', [], new ArrayList(new UID()), 'List of User IDs.', true)
-    ->param('targets', [], new ArrayList(new UID()), 'List of Targets IDs.', true)
+    ->param('topics', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of Topic IDs.', true, ['dbForProject'])
+    ->param('users', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of User IDs.', true, ['dbForProject'])
+    ->param('targets', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of Targets IDs.', true, ['dbForProject'])
     ->param('draft', false, new Boolean(), 'Is message a draft', true)
     ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
@@ -3379,7 +3384,7 @@ Http::post('/v1/messaging/messages/sms')
             }
         }
 
-        $message = $dbForProject->createDocument('messages', new Document([
+        $message = new Document([
             '$id' => $messageId,
             'providerType' => MESSAGE_TYPE_SMS,
             'topics' => $topics,
@@ -3389,7 +3394,12 @@ Http::post('/v1/messaging/messages/sms')
                 'content' => $content,
             ],
             'status' => $status,
-        ]));
+        ]);
+        try {
+            $message = $dbForProject->createDocument('messages', $message);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::MESSAGE_ALREADY_EXISTS);
+        }
 
         switch ($status) {
             case MessageStatus::PROCESSING:
@@ -3450,12 +3460,12 @@ Http::post('/v1/messaging/messages/push')
             )
         ]
     ))
-    ->param('messageId', '', new CustomId(), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('messageId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
     ->param('title', '', new Text(256), 'Title for push notification.', true)
     ->param('body', '', new Text(64230), 'Body for push notification.', true)
-    ->param('topics', [], new ArrayList(new UID()), 'List of Topic IDs.', true)
-    ->param('users', [], new ArrayList(new UID()), 'List of User IDs.', true)
-    ->param('targets', [], new ArrayList(new UID()), 'List of Targets IDs.', true)
+    ->param('topics', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of Topic IDs.', true, ['dbForProject'])
+    ->param('users', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of User IDs.', true, ['dbForProject'])
+    ->param('targets', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of Targets IDs.', true, ['dbForProject'])
     ->param('data', null, new Nullable(new JSON()), 'Additional key-value pair data for push notification.', true)
     ->param('action', '', new Text(256), 'Action for push notification.', true)
     ->param('image', '', new CompoundUID(), 'Image for push notification. Must be a compound bucket ID to file ID of a jpeg, png, or bmp image in Appwrite Storage. It should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
@@ -3599,7 +3609,7 @@ Http::post('/v1/messaging/messages/push')
             $pushData['priority'] = $priority;
         }
 
-        $message = $dbForProject->createDocument('messages', new Document([
+        $message = new Document([
             '$id' => $messageId,
             'providerType' => MESSAGE_TYPE_PUSH,
             'topics' => $topics,
@@ -3608,7 +3618,12 @@ Http::post('/v1/messaging/messages/push')
             'scheduledAt' => $scheduledAt,
             'data' => $pushData,
             'status' => $status,
-        ]));
+        ]);
+        try {
+            $message = $dbForProject->createDocument('messages', $message);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::MESSAGE_ALREADY_EXISTS);
+        }
 
         switch ($status) {
             case MessageStatus::PROCESSING:
@@ -3731,7 +3746,7 @@ Http::get('/v1/messaging/messages/:messageId/logs')
             )
         ],
     ))
-    ->param('messageId', '', new UID(), 'Message ID.')
+    ->param('messageId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Message ID.', false, ['dbForProject'])
     ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
@@ -3821,7 +3836,7 @@ Http::get('/v1/messaging/messages/:messageId/targets')
             )
         ],
     ))
-    ->param('messageId', '', new UID(), 'Message ID.')
+    ->param('messageId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Message ID.', false, ['dbForProject'])
     ->param('queries', [], new Targets(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Targets::ALLOWED_ATTRIBUTES), true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
@@ -3899,7 +3914,7 @@ Http::get('/v1/messaging/messages/:messageId')
             )
         ]
     ))
-    ->param('messageId', '', new UID(), 'Message ID.')
+    ->param('messageId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Message ID.', false, ['dbForProject'])
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $messageId, Database $dbForProject, Response $response) {
@@ -3933,16 +3948,16 @@ Http::patch('/v1/messaging/messages/email/:messageId')
             )
         ]
     ))
-    ->param('messageId', '', new UID(), 'Message ID.')
-    ->param('topics', null, new Nullable(new ArrayList(new UID())), 'List of Topic IDs.', true)
-    ->param('users', null, new Nullable(new ArrayList(new UID())), 'List of User IDs.', true)
-    ->param('targets', null, new Nullable(new ArrayList(new UID())), 'List of Targets IDs.', true)
+    ->param('messageId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Message ID.', false, ['dbForProject'])
+    ->param('topics', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of Topic IDs.', true, ['dbForProject'])
+    ->param('users', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of User IDs.', true, ['dbForProject'])
+    ->param('targets', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of Targets IDs.', true, ['dbForProject'])
     ->param('subject', null, new Nullable(new Text(998)), 'Email Subject.', true)
     ->param('content', null, new Nullable(new Text(64230)), 'Email Content.', true)
     ->param('draft', null, new Nullable(new Boolean()), 'Is message a draft', true)
     ->param('html', null, new Nullable(new Boolean()), 'Is content of type HTML', true)
-    ->param('cc', null, new Nullable(new ArrayList(new UID())), 'Array of target IDs to be added as CC.', true)
-    ->param('bcc', null, new Nullable(new ArrayList(new UID())), 'Array of target IDs to be added as BCC.', true)
+    ->param('cc', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'Array of target IDs to be added as CC.', true, ['dbForProject'])
+    ->param('bcc', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'Array of target IDs to be added as BCC.', true, ['dbForProject'])
     ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->param('attachments', null, new Nullable(new ArrayList(new CompoundUID())), 'Array of compound ID strings of bucket IDs and file IDs to be attached to the email. They should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
     ->inject('queueForEvents')
@@ -4160,10 +4175,10 @@ Http::patch('/v1/messaging/messages/sms/:messageId')
             ]
         )
     ])
-    ->param('messageId', '', new UID(), 'Message ID.')
-    ->param('topics', null, new Nullable(new ArrayList(new UID())), 'List of Topic IDs.', true)
-    ->param('users', null, new Nullable(new ArrayList(new UID())), 'List of User IDs.', true)
-    ->param('targets', null, new Nullable(new ArrayList(new UID())), 'List of Targets IDs.', true)
+    ->param('messageId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Message ID.', false, ['dbForProject'])
+    ->param('topics', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of Topic IDs.', true, ['dbForProject'])
+    ->param('users', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of User IDs.', true, ['dbForProject'])
+    ->param('targets', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of Targets IDs.', true, ['dbForProject'])
     ->param('content', null, new Nullable(new Text(64230)), 'Email Content.', true)
     ->param('draft', null, new Nullable(new Boolean()), 'Is message a draft', true)
     ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
@@ -4322,10 +4337,10 @@ Http::patch('/v1/messaging/messages/push/:messageId')
             )
         ]
     ))
-    ->param('messageId', '', new UID(), 'Message ID.')
-    ->param('topics', null, new Nullable(new ArrayList(new UID())), 'List of Topic IDs.', true)
-    ->param('users', null, new Nullable(new ArrayList(new UID())), 'List of User IDs.', true)
-    ->param('targets', null, new Nullable(new ArrayList(new UID())), 'List of Targets IDs.', true)
+    ->param('messageId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Message ID.', false, ['dbForProject'])
+    ->param('topics', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of Topic IDs.', true, ['dbForProject'])
+    ->param('users', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of User IDs.', true, ['dbForProject'])
+    ->param('targets', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of Targets IDs.', true, ['dbForProject'])
     ->param('title', null, new Nullable(new Text(256)), 'Title for push notification.', true)
     ->param('body', null, new Nullable(new Text(64230)), 'Body for push notification.', true)
     ->param('data', null, new Nullable(new JSON()), 'Additional Data for push notification.', true)
@@ -4584,7 +4599,7 @@ Http::delete('/v1/messaging/messages/:messageId')
         ],
         contentType: ContentType::NONE
     ))
-    ->param('messageId', '', new UID(), 'Message ID.')
+    ->param('messageId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Message ID.', false, ['dbForProject'])
     ->inject('dbForProject')
     ->inject('dbForPlatform')
     ->inject('queueForEvents')

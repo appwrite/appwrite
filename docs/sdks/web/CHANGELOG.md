@@ -1,5 +1,11 @@
 # Change Log
 
+## 22.4.0
+
+* Added Query.containsAny(attribute, value[]) to filter resources where the attribute contains any of the given values.
+* Added Query.containsAll(attribute, value[]) to filter resources where the attribute contains all of the given values.
+* Updated Query.contains documentation to clarify behavior: string attributes are matched by substring, and for array attributes use containsAny/containsAll.
+
 ## 22.3.1
 
 * Add `upsert` method to Realtime `Channels` helper class

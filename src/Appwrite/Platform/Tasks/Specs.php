@@ -159,7 +159,25 @@ class Specs extends Action
                     'name' => 'X-Appwrite-Dev-Key',
                     'description' => 'Your secret dev API key',
                     'in' => 'header',
-                ]
+                ],
+                'ImpersonateUserId' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Impersonate-User-Id',
+                    'description' => 'Impersonate a user by ID on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
+                    'in' => 'header',
+                ],
+                'ImpersonateUserEmail' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Impersonate-User-Email',
+                    'description' => 'Impersonate a user by email on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
+                    'in' => 'header',
+                ],
+                'ImpersonateUserPhone' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Impersonate-User-Phone',
+                    'description' => 'Impersonate a user by phone on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
+                    'in' => 'header',
+                ],
             ],
             APP_SDK_PLATFORM_SERVER => [
                 'Project' => [
@@ -198,6 +216,24 @@ class Specs extends Action
                     'description' => 'The user agent string of the client that made the request',
                     'in' => 'header',
                 ],
+                'ImpersonateUserId' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Impersonate-User-Id',
+                    'description' => 'Impersonate a user by ID on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
+                    'in' => 'header',
+                ],
+                'ImpersonateUserEmail' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Impersonate-User-Email',
+                    'description' => 'Impersonate a user by email on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
+                    'in' => 'header',
+                ],
+                'ImpersonateUserPhone' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Impersonate-User-Phone',
+                    'description' => 'Impersonate a user by phone on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
+                    'in' => 'header',
+                ],
             ],
             APP_SDK_PLATFORM_CONSOLE => [
                 'Project' => [
@@ -234,6 +270,24 @@ class Specs extends Action
                     'type' => 'apiKey',
                     'name' => 'Cookie',
                     'description' => 'The user cookie to authenticate with',
+                    'in' => 'header',
+                ],
+                'ImpersonateUserId' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Impersonate-User-Id',
+                    'description' => 'Impersonate a user by ID on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
+                    'in' => 'header',
+                ],
+                'ImpersonateUserEmail' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Impersonate-User-Email',
+                    'description' => 'Impersonate a user by email on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
+                    'in' => 'header',
+                ],
+                'ImpersonateUserPhone' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Impersonate-User-Phone',
+                    'description' => 'Impersonate a user by phone on an already user-authenticated request. Requires the current request to be authenticated as a user with impersonator capability; X-Appwrite-Key alone is not sufficient. Impersonator users are intentionally granted users.read so they can discover a target before impersonation begins. Internal audit logs still attribute actions to the original impersonator and record the impersonated target only in internal audit payload data.',
                     'in' => 'header',
                 ],
             ],
@@ -409,8 +463,16 @@ class Specs extends Action
                     ->setParam('docs.description', 'Full API docs, specs and tutorials')
                     ->setParam('docs.url', $endpoint . '/docs');
 
+                $specsDir = __DIR__ . '/../../../../app/config/specs';
+
+                if (!is_dir($specsDir)) {
+                    if (!mkdir($specsDir, 0755, true)) {
+                        throw new Exception('Failed to create specs directory: ' . $specsDir);
+                    }
+                }
+
                 if ($mocks) {
-                    $path = __DIR__ . '/../../../../app/config/specs/' . $format . '-mocks-' . $platform . '.json';
+                    $path = $specsDir . '/' . $format . '-mocks-' . $platform . '.json';
 
                     if (!file_put_contents($path, json_encode($specs->parse(), JSON_PRETTY_PRINT))) {
                         throw new Exception('Failed to save mocks spec file: ' . $path);
@@ -422,7 +484,7 @@ class Specs extends Action
                     continue;
                 }
 
-                $path = __DIR__ . '/../../../../app/config/specs/' . $format . '-' . $version . '-' . $platform . '.json';
+                $path = $specsDir . '/' . $format . '-' . $version . '-' . $platform . '.json';
 
                 if (!file_put_contents($path, json_encode($specs->parse(), JSON_PRETTY_PRINT))) {
                     throw new Exception('Failed to save spec file: ' . $path);

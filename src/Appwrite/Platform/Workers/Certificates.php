@@ -423,7 +423,11 @@ class Certificates extends Action
         Func $queueForFunctions,
         Realtime $queueForRealtime
     ): void {
-        $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), $rule);
+        $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+            'status' => $rule->getAttribute('status'),
+            'certificateId' => $rule->getAttribute('certificateId'),
+            'logs' => $rule->getAttribute('logs'),
+        ]));
         $projectId = $rule->getAttribute('projectId');
 
         // Skip events for console project (triggered by auto-ssl generation for 1 click setups)

@@ -6,7 +6,6 @@ use Ahc\Jwt\JWT;
 use Appwrite\Event\Delete as DeleteEvent;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
-use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\Validator\Headers;
@@ -16,6 +15,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Executor\Executor;
@@ -79,7 +79,7 @@ class Create extends Base
                 ],
                 contentType: ContentType::MULTIPART,
             ))
-            ->param('functionId', '', new UID(), 'Function ID.')
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
             ->param('body', '', new Text(10485760, 0), 'HTTP body of execution. Default value is empty string.', true)
             ->param('async', false, new Boolean(true), 'Execute code in the background. Default value is false.', true)
             ->param('path', '/', new Text(2048), 'HTTP path of execution. Path can include query params. Default value is /', true)
@@ -93,7 +93,7 @@ class Create extends Base
             ->inject('dbForPlatform')
             ->inject('user')
             ->inject('queueForEvents')
-            ->inject('queueForStatsUsage')
+            ->inject('usage')
             ->inject('queueForFunctions')
             ->inject('geoRecord')
             ->inject('store')
@@ -121,7 +121,7 @@ class Create extends Base
         Database $dbForPlatform,
         Document $user,
         Event $queueForEvents,
-        StatsUsage $queueForStatsUsage,
+        Context $usage,
         Func $queueForFunctions,
         GeoRecord $geoRecord,
         Store $store,
@@ -180,7 +180,8 @@ class Create extends Base
 
         $version = $function->getAttribute('version', 'v2');
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
-        $spec = Config::getParam('specifications')[$function->getAttribute('specification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
+
+        $spec = Config::getParam('specifications')[$function->getAttribute('runtimeSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
 
         $runtime = (isset($runtimes[$function->getAttribute('runtime', '')])) ? $runtimes[$function->getAttribute('runtime', '')] : null;
 
@@ -416,6 +417,11 @@ class Create extends Base
         try {
             $version = $function->getAttribute('version', 'v2');
             $command = $runtime['startCommand'];
+
+            if (!empty($deployment->getAttribute('startCommand', ''))) {
+                $command = 'cd /usr/local/server/src/function/ && ' . $deployment->getAttribute('startCommand', '');
+            }
+
             $source = $deployment->getAttribute('buildPath', '');
             $extension = str_ends_with($source, '.tar') ? 'tar' : 'tar.gz';
             $command = $version === 'v2' ? '' : "cp /tmp/code.$extension /mnt/code/code.$extension && nohup helpers/start.sh \"$command\"";
@@ -489,7 +495,7 @@ class Create extends Base
                 throw $th;
             }
         } finally {
-            $queueForStatsUsage
+            $usage
                 ->addMetric(METRIC_EXECUTIONS, 1)
                 ->addMetric(str_replace(['{resourceType}'], [RESOURCE_TYPE_FUNCTIONS], METRIC_RESOURCE_TYPE_EXECUTIONS), 1)
                 ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS), 1)

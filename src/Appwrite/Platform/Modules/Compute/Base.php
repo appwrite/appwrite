@@ -4,8 +4,10 @@ namespace Appwrite\Platform\Modules\Compute;
 
 use Appwrite\Event\Build;
 use Appwrite\Extend\Exception;
+use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Compute\Validator\Specification as SpecificationValidator;
+use Appwrite\Platform\Permission as AppwritePermission;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -22,23 +24,7 @@ use Utopia\VCS\Exception\RepositoryNotFound;
 
 class Base extends Action
 {
-    /**
-     * Permissions for resources in this project.
-     *
-     * @param string $teamId
-     * @param string $projectId
-     * @return string[]
-     */
-    protected function getPermissions(string $teamId, string $projectId): array
-    {
-        return [
-            Permission::read(Role::team(ID::custom($teamId))),
-            Permission::update(Role::team(ID::custom($teamId), 'owner')),
-            Permission::update(Role::team(ID::custom($teamId), 'developer')),
-            Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-            Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-        ];
-    }
+    use AppwritePermission;
 
     /**
      * Get default specification based on plan and available specifications.
@@ -157,7 +143,12 @@ class Base extends Action
             ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
             ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
             ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-        $dbForProject->updateDocument('functions', $function->getId(), $function);
+        $dbForProject->updateDocument('functions', $function->getId(), new Document([
+            'latestDeploymentId' => $deployment->getId(),
+            'latestDeploymentInternalId' => $deployment->getSequence(),
+            'latestDeploymentCreatedAt' => $deployment->getCreatedAt(),
+            'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
+        ]));
 
         $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)
@@ -263,7 +254,12 @@ class Base extends Action
             ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
             ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
             ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-        $dbForProject->updateDocument('sites', $site->getId(), $site);
+        $dbForProject->updateDocument('sites', $site->getId(), new Document([
+            'latestDeploymentId' => $deployment->getId(),
+            'latestDeploymentInternalId' => $deployment->getSequence(),
+            'latestDeploymentCreatedAt' => $deployment->getCreatedAt(),
+            'latestDeploymentStatus' => $deployment->getAttribute('status', ''),
+        ]));
 
         $sitesDomain = $platform['sitesDomain'];
         $domain = ID::unique() . "." . $sitesDomain;
@@ -326,13 +322,12 @@ class Base extends Action
 
         // VCS branch preview
         if (!empty($providerBranch)) {
-            $branchPrefix = substr($providerBranch, 0, 16);
-            if (strlen($providerBranch) > 16) {
-                $remainingChars = substr($providerBranch, 16);
-                $branchPrefix .= '-' . substr(hash('sha256', $remainingChars), 0, 7);
-            }
-            $resourceProjectHash = substr(hash('sha256', $site->getId() . $project->getId()), 0, 7);
-            $domain = "branch-{$branchPrefix}-{$resourceProjectHash}.{$sitesDomain}";
+            $domain = (new BranchDomainFilter())->apply([
+                'branch' => $providerBranch,
+                'resourceId' => $site->getId(),
+                'projectId' => $project->getId(),
+                'sitesDomain' => $sitesDomain,
+            ]);
             $ruleId = md5($domain);
             try {
                 $authorization->skip(

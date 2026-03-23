@@ -2,10 +2,20 @@
 
 namespace Appwrite\Utopia\Database\Validator;
 
+use Utopia\Database\Database;
 use Utopia\Validator;
 
 class ProjectId extends Validator
 {
+    /**
+     * Constructor
+     *
+     * @param int $maxLength Maximum length for the project ID
+     */
+    public function __construct(protected readonly int $maxLength = Database::MAX_UID_DEFAULT_LENGTH)
+    {
+    }
+
     /**
      * Is valid.
      *
@@ -17,7 +27,21 @@ class ProjectId extends Validator
      */
     public function isValid($value): bool
     {
-        return $value == 'unique()' || preg_match('/^[a-z0-9][a-z0-9-]{1,35}$/', $value);
+        if ($value == 'unique()') {
+            return true;
+        }
+
+        // Must start with a-z or 0-9, followed by a-z, 0-9, or hyphen
+        if (!\preg_match('/^[a-z0-9][a-z0-9-]*$/', $value)) {
+            return false;
+        }
+
+        // Check length
+        if (\mb_strlen($value) > $this->maxLength) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -27,7 +51,7 @@ class ProjectId extends Validator
      */
     public function getDescription(): string
     {
-        return 'Project IDs must contain at most 36 chars. Valid chars are a-z, 0-9, and hyphen. Can\'t start with a special char.';
+        return 'Project IDs must contain at most ' . $this->maxLength . ' chars. Valid chars are a-z, 0-9, and hyphen. Can\'t start with a special char.';
     }
 
     /**

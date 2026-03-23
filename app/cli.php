@@ -4,11 +4,13 @@ require_once __DIR__ . '/init.php';
 
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
+use Appwrite\Event\Event;
 use Appwrite\Event\Func;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\StatsResources;
-use Appwrite\Event\StatsUsage;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Runtimes\Runtimes;
+use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
 use Executor\Executor;
 use Swoole\Runtime;
@@ -29,6 +31,7 @@ use Utopia\Platform\Service;
 use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Publisher;
+use Utopia\Queue\Queue;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
@@ -47,7 +50,7 @@ $platform = new Appwrite();
 $args = $platform->getEnv('argv');
 
 \array_shift($args);
-if (!isset($args[0])) {
+if (! isset($args[0])) {
     Console::error('Missing task name');
     Console::exit(1);
 }
@@ -85,6 +88,7 @@ $setResource('pools', function (Registry $register) {
 $setResource('authorization', function () {
     $authorization = new Authorization();
     $authorization->disable();
+
     return $authorization;
 }, []);
 
@@ -113,7 +117,7 @@ $setResource('dbForPlatform', function ($pools, $cache, $authorization) {
             $collections = Config::getParam('collections', [])['console'];
             $last = \array_key_last($collections);
 
-            if (!($dbForPlatform->exists($dbForPlatform->getDatabase(), $last))) { /** TODO cache ready variable using registry */
+            if (! ($dbForPlatform->exists($dbForPlatform->getDatabase(), $last))) { /** TODO cache ready variable using registry */
                 throw new Exception('Tables not ready yet.');
             }
 
@@ -122,10 +126,10 @@ $setResource('dbForPlatform', function ($pools, $cache, $authorization) {
             Console::warning($err->getMessage());
             sleep($sleep);
         }
-    } while ($attempts < $maxAttempts && !$ready);
+    } while ($attempts < $maxAttempts && ! $ready);
 
-    if (!$ready) {
-        throw new Exception("Console is not ready yet. Please try again later.");
+    if (! $ready) {
+        throw new Exception('Console is not ready yet. Please try again later.');
     }
 
     return $dbForPlatform;
@@ -163,7 +167,7 @@ $setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $c
             if (\in_array($dsn->getHost(), $sharedTables)) {
                 $database
                     ->setSharedTables(true)
-                    ->setTenant((int)$project->getSequence())
+                    ->setTenant($project->getSequence())
                     ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $database
@@ -184,7 +188,7 @@ $setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $c
         if (\in_array($dsn->getHost(), $sharedTables)) {
             $database
                 ->setSharedTables(true)
-                ->setTenant((int)$project->getSequence())
+                ->setTenant($project->getSequence())
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
             $database
@@ -208,7 +212,7 @@ $setResource('getLogsDB', function (Group $pools, Cache $cache, Authorization $a
 
     return function (?Document $project = null) use ($pools, $cache, $database, $authorization) {
         if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant((int)$project->getSequence());
+            $database->setTenant($project->getSequence());
             return $database;
         }
 
@@ -225,7 +229,7 @@ $setResource('getLogsDB', function (Group $pools, Cache $cache, Authorization $a
 
         // set tenant
         if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant((int)$project->getSequence());
+            $database->setTenant($project->getSequence());
         }
 
         return $database;
@@ -243,15 +247,16 @@ $setResource('publisherFunctions', function (BrokerPool $publisher) {
 $setResource('publisherMigrations', function (BrokerPool $publisher) {
     return $publisher;
 }, ['publisher']);
-$setResource('publisherStatsUsage', function (BrokerPool $publisher) {
-    return $publisher;
-}, ['publisher']);
 $setResource('publisherMessaging', function (BrokerPool $publisher) {
     return $publisher;
 }, ['publisher']);
-$setResource('queueForStatsUsage', function (Publisher $publisher) {
-    return new StatsUsage($publisher);
-}, ['publisher']);
+$setResource('usage', function () {
+    return new UsageContext();
+}, []);
+$setResource('publisherForUsage', fn (Publisher $publisher) => new UsagePublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME))
+), ['publisher']);
 $setResource('queueForStatsResources', function (Publisher $publisher) {
     return new StatsResources($publisher);
 }, ['publisher']);
@@ -317,6 +322,10 @@ $setResource('logError', function (Registry $register) {
 }, ['register']);
 
 $setResource('executor', fn () => new Executor(), []);
+
+$setResource('bus', function (Registry $register) use ($cli) {
+    return $register->get('bus')->setResolver(fn (string $name) => $cli->getResource($name));
+}, ['register']);
 
 $setResource('telemetry', fn () => new NoTelemetry(), []);
 
