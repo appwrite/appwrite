@@ -441,7 +441,7 @@ abstract class Scope extends TestCase
             return self::$root;
         }
 
-        $maxRetries = 1;
+        $maxRetries = 5;
 
         for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
             // Use more entropy to avoid collisions in parallel test execution
