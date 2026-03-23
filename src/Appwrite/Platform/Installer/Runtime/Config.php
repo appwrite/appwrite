@@ -14,6 +14,7 @@ final class Config
         'isLocal',
         'hostPath',
         'lockedDatabase',
+        'enabledDatabases',
         'vars',
     ];
 
@@ -26,6 +27,7 @@ final class Config
     private bool $isLocal = false;
     private ?string $hostPath = null;
     private ?string $lockedDatabase = null;
+    private array $enabledDatabases = ['mongodb', 'mariadb'];
     private array $vars = [];
 
     public function __construct(array $values = [])
@@ -67,6 +69,9 @@ final class Config
         if ($this->hasValidStringValue($values, 'lockedDatabase')) {
             $this->setLockedDatabase((string) $values['lockedDatabase']);
         }
+        if (array_key_exists('enabledDatabases', $values) && is_array($values['enabledDatabases'])) {
+            $this->setEnabledDatabases($values['enabledDatabases']);
+        }
         if (array_key_exists('vars', $values) && is_array($values['vars'])) {
             $this->setVars($values['vars']);
         }
@@ -100,6 +105,7 @@ final class Config
             'isLocal' => $this->isLocal,
             'hostPath' => $this->hostPath,
             'lockedDatabase' => $this->lockedDatabase,
+            'enabledDatabases' => $this->enabledDatabases,
         ];
     }
 
@@ -201,5 +207,29 @@ final class Config
     public function setLockedDatabase(?string $value): void
     {
         $this->lockedDatabase = $value;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getEnabledDatabases(): array
+    {
+        return $this->enabledDatabases;
+    }
+
+    /**
+     * @param string[] $value
+     */
+    public function setEnabledDatabases(array $value): void
+    {
+        $filtered = array_values(array_filter($value, fn ($v) => is_string($v) && $v !== ''));
+        if (!empty($filtered)) {
+            $this->enabledDatabases = $filtered;
+        }
+    }
+
+    public function isDatabaseEnabled(string $adapter): bool
+    {
+        return in_array($adapter, $this->enabledDatabases, true);
     }
 }

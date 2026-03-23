@@ -127,6 +127,10 @@ class Install extends Action
                 $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'Please select a supported database');
                 return;
             }
+            if (!$config->isDatabaseEnabled($database)) {
+                $this->sendBadRequest($response, $swooleResponse, $wantsStream, 'The selected database is not available');
+                return;
+            }
         }
 
         $installId = $state->sanitizeInstallId($installId);

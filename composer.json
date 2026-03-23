@@ -61,7 +61,7 @@
         "utopia-php/compression": "0.1.*",
         "utopia-php/config": "1.*",
         "utopia-php/console": "0.1.*",
-        "utopia-php/database": "dev-fix-collection-recreate as 5.3.15",
+        "utopia-php/database": "5.*",
         "utopia-php/detector": "0.2.*",
         "utopia-php/domains": "1.*",
         "utopia-php/emails": "0.6.*",
@@ -114,6 +114,12 @@
         "czproject/git-php": "4.*",
         "laravel/pint": "1.*"
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/database"
+        }
+    ],
     "provide": {
         "ext-phpiredis": "*"
     },

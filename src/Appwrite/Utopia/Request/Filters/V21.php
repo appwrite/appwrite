@@ -10,6 +10,9 @@ class V21 extends Filter
     public function parse(array $content, string $model): array
     {
         switch ($model) {
+            case 'webhooks.create':
+                $content = $this->fillWebhookid($content);
+                break;
             case 'functions.createTemplateDeployment':
             case 'sites.createTemplateDeployment':
                 $content = $this->convertVersionToTypeAndReference($content);
@@ -46,6 +49,12 @@ class V21 extends Filter
             unset($content['specification']);
         }
 
+        return $content;
+    }
+
+    protected function fillWebhookid(array $content): array
+    {
+        $content['webhookId'] = $content['webhookId'] ?? 'unique()';
         return $content;
     }
 }

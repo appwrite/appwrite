@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Env;
+use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server as InstallerServer;
 use Appwrite\Utopia\View;
 use Utopia\Auth\Proofs\Password;
@@ -23,7 +24,7 @@ class Install extends Action
     private const int WEB_SERVER_CHECK_DELAY_SECONDS = 1;
 
     private const int HEALTH_CHECK_ATTEMPTS = 30;
-    private const int HEALTH_CHECK_DELAY_SECONDS = 3;
+    private const int HEALTH_CHECK_DELAY_SECONDS = 1;
 
     private const string PATTERN_ENV_VAR_NAME = '/^[A-Z0-9_]+$/';
     private const string PATTERN_DB_PASSWORD_VAR = '/^_APP_DB_.*_PASS$/';
@@ -167,13 +168,39 @@ class Install extends Action
                 }
             }
 
-            // Block database type changes on existing installations
-            $existingDatabase = $vars['_APP_DB_ADAPTER']['default'] ?? null;
+            // Block database type changes on existing installations.
+            // Only enforce if the existing config explicitly set _APP_DB_ADAPTER
+            // (pre-1.9.0 installs never had this variable).
+            $existingDatabase = null;
+            foreach ($compose->getServices() as $service) {
+                if (!$service) {
+                    continue;
+                }
+                $svcEnv = $service->getEnvironment()->list();
+                if (isset($svcEnv['_APP_DB_ADAPTER'])) {
+                    $existingDatabase = $svcEnv['_APP_DB_ADAPTER'];
+                    break;
+                }
+            }
+            if ($existingDatabase === null) {
+                $envFilePath = $this->path . '/' . $this->getEnvFileName();
+                $rawEnv = @file_get_contents($envFilePath);
+                if ($rawEnv !== false) {
+                    $existingDatabase = (new Env($rawEnv))->list()['_APP_DB_ADAPTER'] ?? null;
+                }
+            }
             if ($existingDatabase !== null && $existingDatabase !== $database) {
                 Console::error("Cannot change database type from '{$existingDatabase}' to '{$database}'.");
                 Console::error('Changing database types on an existing installation is not supported.');
                 Console::exit(1);
             }
+        }
+
+        $installerConfig = $this->readInstallerConfig();
+        $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['mongodb', 'mariadb'];
+        if (!in_array($database, $enabledDatabases, true)) {
+            Console::error("Database '{$database}' is not available. Available options: " . implode(', ', $enabledDatabases));
+            Console::exit(1);
         }
 
         // If interactive and web mode enabled, start web server
@@ -271,7 +298,8 @@ class Install extends Action
                 Console::warning("\nUse 'AAAA' if you're using an IPv6 address and 'A' if you're using an IPv4 address.\n");
             }
         }
-        $database = $userInput['_APP_DB_ADAPTER'] ?? $database;
+        $userInput['_APP_DB_ADAPTER'] = $userInput['_APP_DB_ADAPTER'] ?? $database;
+        $database = $userInput['_APP_DB_ADAPTER'];
         if ($database === 'postgresql') {
             $userInput['_APP_DB_HOST'] = 'postgresql';
             $userInput['_APP_DB_PORT'] = 5432;
@@ -295,6 +323,12 @@ class Install extends Action
 
         @unlink(InstallerServer::INSTALLER_COMPLETE_FILE);
 
+        $state = new State([]);
+        $state->clearStaleLock();
+
+        $installerConfig = $this->readInstallerConfig();
+        $enabledDatabases = $installerConfig['enabledDatabases'] ?? ['mongodb', 'mariadb'];
+
         $this->setInstallerConfig([
             'defaultHttpPort' => $defaultHttpPort,
             'defaultHttpsPort' => $defaultHttpsPort,
@@ -304,6 +338,7 @@ class Install extends Action
             'vars' => $vars,
             'isUpgrade' => $isUpgrade,
             'lockedDatabase' => $lockedDatabase,
+            'enabledDatabases' => $enabledDatabases,
             'isLocal' => $this->isLocalInstall(),
             'hostPath' => $this->hostPath ?: null,
         ]);
@@ -734,8 +769,8 @@ class Install extends Action
     {
         $client = new Client();
         $client
-            ->setTimeout(5000)
-            ->setConnectTimeout(5000)
+            ->setTimeout(2000)
+            ->setConnectTimeout(2000)
             ->addHeader('Host', $domain);
 
         $healthPath = '/v1/health/version';

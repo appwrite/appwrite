@@ -69,6 +69,7 @@ class Origin extends Validator
             Platform::SCHEME_FIREFOX_EXTENSION,
             Platform::SCHEME_SAFARI_EXTENSION,
             Platform::SCHEME_EDGE_EXTENSION,
+            Platform::SCHEME_TAURI,
         ];
         if (in_array($this->scheme, $webPlatforms, true)) {
             $validator = new Hostname($this->allowedHostnames);
