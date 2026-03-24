@@ -728,7 +728,7 @@ return function (Container $container): void {
             $cacheKey = \sprintf(
                 '%s-cache-%s:%s:%s:project:%s:functions:events',
                 $dbForProject->getCacheName(),
-                $hostname ?? '',
+                $hostname,
                 $dbForProject->getNamespace(),
                 $dbForProject->getTenant(),
                 $project->getId()
