@@ -283,10 +283,10 @@
         return !isLocalHost?.(hostname) && !isIPAddress?.(hostname);
     };
 
-    const pollCertificate = async (domain, maxAttempts, intervalMs) => {
+    const pollCertificate = async (domain, port, maxAttempts, intervalMs) => {
         for (let i = 0; i < maxAttempts; i++) {
             try {
-                const response = await fetch(`/install/certificate?domain=${encodeURIComponent(domain)}`);
+                const response = await fetch(`/install/certificate?domain=${encodeURIComponent(domain)}&port=${encodeURIComponent(port)}`);
                 if (response.ok) {
                     const data = await response.json();
                     if (data.ready) return true;
@@ -428,6 +428,7 @@
 
     const initStep5 = (root) => {
         if (!root) return;
+        let resolvedProtocol = 'http';
 
         if (activeInstall?.controller) {
             activeInstall.controller.abort();
@@ -716,8 +717,9 @@
 
             const dataset = getBodyDataset?.() ?? {};
             const rawDomain = (formState?.appDomain || dataset.defaultAppDomain || '').trim();
+            const httpsPort = (formState?.httpsPort || dataset.defaultHttpsPort || '443').trim();
             const domain = extractHostname?.(rawDomain) || rawDomain;
-            pollCertificate(domain, 15, 2000).then((ready) => {
+            pollCertificate(domain, httpsPort, 15, 2000).then((ready) => {
                 stopSyncedSpinnerRotation();
                 const certMessage = ready ? SSL_STEP.done : 'Certificate pending';
                 animatePanelHeight(() => {
@@ -730,7 +732,8 @@
                         updateInstallRow(row, SSL_STEP, STATUS.COMPLETED, certMessage);
                     }
                 });
-                showRedirectStep(sessionDetails, ready ? 'https' : 'http');
+                resolvedProtocol = ready ? 'https' : 'http';
+                showRedirectStep(sessionDetails, resolvedProtocol);
             });
         };
 
@@ -943,7 +946,7 @@
             const retryButton = event.target.closest('[data-install-retry]');
 
             if (consoleButton) {
-                redirectToApp('http');
+                redirectToApp(resolvedProtocol);
                 return;
             }
 
