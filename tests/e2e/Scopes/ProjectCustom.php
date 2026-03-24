@@ -163,6 +163,8 @@ trait ProjectCustom
                     'tokens.write',
                     'webhooks.read',
                     'webhooks.write',
+                    'policies.read',
+                    'policies.write',
                     'project.read',
                     'project.write'
                 ],
