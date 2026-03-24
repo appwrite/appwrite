@@ -439,6 +439,8 @@ Http::setResource('user', function (string $mode, Document $project, Document $c
         if (! empty($jwtSessionId)) {
             if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
                 $user = new User([]);
+            } else {
+                $store->setProperty('sessionId', $jwtSessionId);
             }
         }
     }
@@ -540,7 +542,11 @@ Http::setResource('session', function (User $user, Store $store, Token $proofFor
     }
 
     $sessions = $user->getAttribute('sessions', []);
-    $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+    $sessionId = $store->getProperty('sessionId', '');
+
+    if (empty($sessionId)) {
+        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+    }
 
     if (! $sessionId) {
         return;

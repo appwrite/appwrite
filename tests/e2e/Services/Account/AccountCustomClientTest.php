@@ -2533,6 +2533,17 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/current', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-jwt' => $jwt,
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($sessionId, $response['body']['$id']);
+        $this->assertTrue($response['body']['current']);
+
         $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions/' . $sessionId, array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
