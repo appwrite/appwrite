@@ -194,7 +194,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: <?php echo $organization; ?>/console:7.8.25
+    image: <?php echo $organization; ?>/console:7.8.26
     restart: unless-stopped
     networks:
       - appwrite
