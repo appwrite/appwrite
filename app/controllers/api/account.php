@@ -2137,8 +2137,31 @@ Http::post('/v1/account/tokens/magic-url')
 
 
         $result = $dbForProject->findOne('users', [Query::equal('email', [$email])]);
+        $isAnonymousUser = !$user->isEmpty()
+            && \is_null($user->getAttribute('email'))
+            && \is_null($user->getAttribute('phone'));
+
         if (!$result->isEmpty()) {
             $user->setAttributes($result->getArrayCopy());
+        } elseif ($isAnonymousUser) {
+            try {
+                $emailCanonical = new Email($email);
+            } catch (Throwable) {
+                $emailCanonical = null;
+            }
+
+            $user = $authorization->skip(fn () => $dbForProject->updateDocument('users', $user->getId(), new Document([
+                'email' => $email,
+                'emailVerification' => false,
+                'search' => implode(' ', [$user->getId(), $email]),
+                'emailCanonical' => $emailCanonical?->getCanonical(),
+                'emailIsCanonical' => $emailCanonical?->isCanonicalSupported(),
+                'emailIsCorporate' => $emailCanonical?->isCorporate(),
+                'emailIsDisposable' => $emailCanonical?->isDisposable(),
+                'emailIsFree' => $emailCanonical?->isFree(),
+            ])));
+
+            $dbForProject->purgeCachedDocument('users', $user->getId());
         } else {
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
