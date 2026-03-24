@@ -31,6 +31,7 @@ class Get extends Base
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/project/platforms/:platformId')
+            ->httpAlias('/v1/projects/:projectId/platforms/:platformId')
             ->desc('Get project platform')
             ->groups(['api', 'project'])
             ->label('scope', 'project.read')

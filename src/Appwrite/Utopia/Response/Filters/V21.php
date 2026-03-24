@@ -54,11 +54,13 @@ class V21 extends Filter
 
     protected function parsePlatform(array $content): array
     {
-        // httpUser, httpPass, store removed
-
         // identifier -> key
-        $content['key'] = $content['identifier'] ?? $content['key'] ?? null;
+        $content['key'] = $content['identifier'] ?? $content['key'] ?? '';
         unset($content['identifier']);
+
+        // Restore fields removed in v1.9
+        $content['store'] = $content['store'] ?? '';
+        $content['hostname'] = $content['hostname'] ?? '';
 
         return $content;
     }
