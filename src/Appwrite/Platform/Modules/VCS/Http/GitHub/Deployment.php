@@ -40,6 +40,7 @@ trait Deployment
         string $providerCommitMessage,
         string $providerCommitUrl,
         string $providerPullRequestId,
+        array $providerAffectedFiles = [],
         bool $external,
         Database $dbForPlatform,
         Authorization $authorization,
@@ -89,6 +90,11 @@ trait Deployment
                 $resourceCollection = $resourceType === "function" ? 'functions' : 'sites';
                 $resource = $authorization->skip(fn () => $dbForProject->getDocument($resourceCollection, $resourceId));
                 $resourceInternalId = $resource->getSequence();
+
+                if (!$this->isResourceBuildable($resource, $providerBranch, $providerAffectedFiles, $logBase)) {
+                    Span::add("{$logBase}.build.skipped", 'true');
+                    continue;
+                }
 
                 $deploymentId = ID::unique();
                 $repositoryId = $repository->getId();
@@ -524,5 +530,73 @@ trait Deployment
     protected function getBuildQueueName(Document $project, Database $dbForPlatform, Authorization $authorization): string
     {
         return System::getEnv('_APP_BUILDS_QUEUE_NAME', Event::BUILDS_QUEUE_NAME);
+    }
+
+    private function isResourceBuildable(Document $resource, string $providerBranch, array $providerAffectedFiles, string $logBase): bool
+    {
+        $allowedBranches = $resource->getAttribute('providerBranches', []);
+        if (!$this->matchesPatterns($providerBranch, $allowedBranches)) {
+            Span::add("{$logBase}.build.skipped.reason", 'branch');
+            return false;
+        }
+
+        $allowedPaths = $resource->getAttribute('providerPaths', []);
+        if (!empty($allowedPaths) && !empty($providerAffectedFiles)) {
+            $pathMatched = false;
+            foreach ($providerAffectedFiles as $file) {
+                if ($this->matchesPatterns($file, $allowedPaths)) {
+                    $pathMatched = true;
+                    break;
+                }
+            }
+            if (!$pathMatched) {
+                Span::add("{$logBase}.build.skipped.reason", 'path');
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function matchesPatterns(string $subject, array $patterns): bool
+    {
+        if (empty($patterns)) {
+            return true;
+        }
+
+        $include = array_filter($patterns, fn ($p) => !str_starts_with($p, '!'));
+        $exclude = array_filter($patterns, fn ($p) => str_starts_with($p, '!'));
+
+        foreach ($include as $pattern) {
+            if ($this->matchGlob($subject, $pattern)) {
+                return true;
+            }
+        }
+
+        foreach ($exclude as $pattern) {
+            if ($this->matchGlob($subject, substr($pattern, 1))) {
+                return false;
+            }
+        }
+
+        return empty($include);
+    }
+
+    private function matchGlob(string $subject, string $pattern): bool
+    {
+        $regex = preg_replace_callback(
+            '/\*\*|\*|\?|[^*?]+/',
+            static function (array $m): string {
+                return match ($m[0]) {
+                    '**'    => '.*',
+                    '*'     => '[^/]*',
+                    '?'     => '[^/]',
+                    default => preg_quote($m[0], '/'),
+                };
+            },
+            $pattern
+        );
+
+        return (bool) preg_match('/^' . $regex . '$/', $subject);
     }
 }
