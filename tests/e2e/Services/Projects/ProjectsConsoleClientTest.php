@@ -60,6 +60,9 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertArrayHasKey('platforms', $response['body']);
         $this->assertArrayHasKey('webhooks', $response['body']);
         $this->assertArrayHasKey('keys', $response['body']);
+        $this->assertEquals(false, $response['body']['authDisposableEmails']);
+        $this->assertEquals(false, $response['body']['authCanonicalEmails']);
+        $this->assertEquals(false, $response['body']['authFreeEmails']);
 
         $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',

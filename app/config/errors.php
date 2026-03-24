@@ -226,6 +226,21 @@ return [
         'description' => 'A user with the same email already exists in the current project.',
         'code' => 409,
     ],
+    Exception::USER_EMAIL_DISPOSABLE => [
+        'name' => Exception::USER_EMAIL_DISPOSABLE,
+        'description' => 'Disposable email addresses are not allowed. Please use a permanent email address.',
+        'code' => 400,
+    ],
+    Exception::USER_EMAIL_FREE => [
+        'name' => Exception::USER_EMAIL_FREE,
+        'description' => 'Free email addresses are not allowed. Please use a business or custom-domain email address.',
+        'code' => 400,
+    ],
+    Exception::USER_EMAIL_NOT_CANONICAL => [
+        'name' => Exception::USER_EMAIL_NOT_CANONICAL,
+        'description' => 'This email address must already be in its canonical form. Please remove aliases, tags, or provider-specific variations and try again.',
+        'code' => 400,
+    ],
     Exception::USER_PASSWORD_MISMATCH => [
         'name' => Exception::USER_PASSWORD_MISMATCH,
         'description' => 'Passwords do not match. Please check the password and confirm password.',

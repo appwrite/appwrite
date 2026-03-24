@@ -403,7 +403,8 @@ Http::post('/v1/account')
     ->inject('dbForProject')
     ->inject('authorization')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Authorization $authorization, Hooks $hooks) {
+    ->inject('plan')
+    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Authorization $authorization, Hooks $hooks, array $plan) {
 
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
@@ -452,11 +453,38 @@ Http::post('/v1/account')
         $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
         $proof = new ProofsPassword();
         $hash = $proof->hash($password);
+        $emailMetadata = [
+            'emailCanonical' => null,
+            'emailIsCanonical' => null,
+            'emailIsCorporate' => null,
+            'emailIsDisposable' => null,
+            'emailIsFree' => null,
+        ];
 
         try {
-            $emailCanonical = new Email($email);
-        } catch (Throwable) {
-            $emailCanonical = null;
+            $parsedEmail = new Email($email);
+            $canonical = $parsedEmail->getCanonical();
+            $emailMetadata = [
+                'emailCanonical' => $canonical,
+                'emailIsCanonical' => $parsedEmail->get() === $canonical,
+                'emailIsCorporate' => $parsedEmail->isCorporate(),
+                'emailIsDisposable' => $parsedEmail->isDisposable(),
+                'emailIsFree' => $parsedEmail->isFree(),
+            ];
+        } catch (\Throwable) {
+            throw new Exception(Exception::GENERAL_INVALID_EMAIL);
+        }
+
+        if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
+            throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
+        }
+
+        if (($plan['supportsCanonicalEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
+            throw new Exception(Exception::USER_EMAIL_NOT_CANONICAL);
+        }
+
+        if (($plan['supportsFreeEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
+            throw new Exception(Exception::USER_EMAIL_FREE);
         }
 
         try {
@@ -487,11 +515,11 @@ Http::post('/v1/account')
                 'authenticators' => null,
                 'search' => implode(' ', [$userId, $email, $name]),
                 'accessedAt' => DateTime::now(),
-                'emailCanonical' => $emailCanonical?->getCanonical(),
-                'emailIsCanonical' => $emailCanonical?->isCanonicalSupported(),
-                'emailIsCorporate' => $emailCanonical?->isCorporate(),
-                'emailIsDisposable' => $emailCanonical?->isDisposable(),
-                'emailIsFree' => $emailCanonical?->isFree(),
+                'emailCanonical' => $emailMetadata['emailCanonical'],
+                'emailIsCanonical' => $emailMetadata['emailIsCanonical'],
+                'emailIsCorporate' => $emailMetadata['emailIsCorporate'],
+                'emailIsDisposable' => $emailMetadata['emailIsDisposable'],
+                'emailIsFree' => $emailMetadata['emailIsFree'],
             ]);
 
             $user->removeAttribute('$sequence');
@@ -1504,8 +1532,9 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('store')
     ->inject('proofForPassword')
     ->inject('proofForToken')
+    ->inject('plan')
     ->inject('authorization')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, Document $devKey, User $user, Database $dbForProject, Database $dbForPlatform, Reader $geodb, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, Authorization $authorization) use ($oauthDefaultSuccess) {
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, Document $devKey, User $user, Database $dbForProject, Database $dbForPlatform, Reader $geodb, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, array $plan, Authorization $authorization) use ($oauthDefaultSuccess) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
@@ -1747,10 +1776,38 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     }
                 }
 
+                $emailMetadata = [
+                    'emailCanonical' => null,
+                    'emailIsCanonical' => null,
+                    'emailIsCorporate' => null,
+                    'emailIsDisposable' => null,
+                    'emailIsFree' => null,
+                ];
+
                 try {
-                    $emailCanonical = new Email($email);
-                } catch (Throwable) {
-                    $emailCanonical = null;
+                    $parsedEmail = new Email($email);
+                    $canonical = $parsedEmail->getCanonical();
+                    $emailMetadata = [
+                        'emailCanonical' => $canonical,
+                        'emailIsCanonical' => $parsedEmail->get() === $canonical,
+                        'emailIsCorporate' => $parsedEmail->isCorporate(),
+                        'emailIsDisposable' => $parsedEmail->isDisposable(),
+                        'emailIsFree' => $parsedEmail->isFree(),
+                    ];
+                } catch (\Throwable) {
+                    $failureRedirect(Exception::GENERAL_INVALID_EMAIL);
+                }
+
+                if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
+                    $failureRedirect(Exception::USER_EMAIL_DISPOSABLE);
+                }
+
+                if (($plan['supportsCanonicalEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
+                    $failureRedirect(Exception::USER_EMAIL_NOT_CANONICAL);
+                }
+
+                if (($plan['supportsFreeEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
+                    $failureRedirect(Exception::USER_EMAIL_FREE);
                 }
 
                 try {
@@ -1780,11 +1837,11 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'authenticators' => null,
                         'search' => implode(' ', [$userId, $email, $name]),
                         'accessedAt' => DateTime::now(),
-                        'emailCanonical' => $emailCanonical?->getCanonical(),
-                        'emailIsCanonical' => $emailCanonical?->isCanonicalSupported(),
-                        'emailIsCorporate' => $emailCanonical?->isCorporate(),
-                        'emailIsDisposable' => $emailCanonical?->isDisposable(),
-                        'emailIsFree' => $emailCanonical?->isFree(),
+                        'emailCanonical' => $emailMetadata['emailCanonical'],
+                        'emailIsCanonical' => $emailMetadata['emailIsCanonical'],
+                        'emailIsCorporate' => $emailMetadata['emailIsCorporate'],
+                        'emailIsDisposable' => $emailMetadata['emailIsDisposable'],
+                        'emailIsFree' => $emailMetadata['emailIsFree'],
                     ]);
 
                     $user->removeAttribute('$sequence');
@@ -1859,19 +1916,47 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         if (empty($user->getAttribute('email'))) {
-            $user->setAttribute('email', $oauth2->getUserEmail($accessToken));
+            $email = $oauth2->getUserEmail($accessToken);
+            $emailMetadata = [
+                'emailCanonical' => null,
+                'emailIsCanonical' => null,
+                'emailIsCorporate' => null,
+                'emailIsDisposable' => null,
+                'emailIsFree' => null,
+            ];
 
             try {
-                $emailCanonical = new Email($user->getAttribute('email'));
-            } catch (Throwable) {
-                $emailCanonical = null;
+                $parsedEmail = new Email($email);
+                $canonical = $parsedEmail->getCanonical();
+                $emailMetadata = [
+                    'emailCanonical' => $canonical,
+                    'emailIsCanonical' => $parsedEmail->get() === $canonical,
+                    'emailIsCorporate' => $parsedEmail->isCorporate(),
+                    'emailIsDisposable' => $parsedEmail->isDisposable(),
+                    'emailIsFree' => $parsedEmail->isFree(),
+                ];
+            } catch (\Throwable) {
+                $failureRedirect(Exception::GENERAL_INVALID_EMAIL);
             }
 
-            $user->setAttribute('emailCanonical', $emailCanonical?->getCanonical());
-            $user->setAttribute('emailIsCanonical', $emailCanonical?->isCanonicalSupported());
-            $user->setAttribute('emailIsCorporate', $emailCanonical?->isCorporate());
-            $user->setAttribute('emailIsDisposable', $emailCanonical?->isDisposable());
-            $user->setAttribute('emailIsFree', $emailCanonical?->isFree());
+            if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
+                $failureRedirect(Exception::USER_EMAIL_DISPOSABLE);
+            }
+
+            if (($plan['supportsCanonicalEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
+                $failureRedirect(Exception::USER_EMAIL_NOT_CANONICAL);
+            }
+
+            if (($plan['supportsFreeEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
+                $failureRedirect(Exception::USER_EMAIL_FREE);
+            }
+
+            $user->setAttribute('email', $email);
+            $user->setAttribute('emailCanonical', $emailMetadata['emailCanonical']);
+            $user->setAttribute('emailIsCanonical', $emailMetadata['emailIsCanonical']);
+            $user->setAttribute('emailIsCorporate', $emailMetadata['emailIsCorporate']);
+            $user->setAttribute('emailIsDisposable', $emailMetadata['emailIsDisposable']);
+            $user->setAttribute('emailIsFree', $emailMetadata['emailIsFree']);
         }
 
         if (empty($user->getAttribute('name'))) {
@@ -2149,10 +2234,11 @@ Http::post('/v1/account/tokens/magic-url')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForMails')
+    ->inject('plan')
     ->inject('proofForPassword')
     ->inject('platform')
     ->inject('authorization')
-    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsPassword $proofForPassword, array $platform, Authorization $authorization) {
+    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, array $plan, ProofsPassword $proofForPassword, array $platform, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -2187,10 +2273,38 @@ Http::post('/v1/account/tokens/magic-url')
 
             $userId = $userId === 'unique()' ? ID::unique() : $userId;
 
+            $emailMetadata = [
+                'emailCanonical' => null,
+                'emailIsCanonical' => null,
+                'emailIsCorporate' => null,
+                'emailIsDisposable' => null,
+                'emailIsFree' => null,
+            ];
+
             try {
-                $emailCanonical = new Email($email);
-            } catch (Throwable) {
-                $emailCanonical = null;
+                $parsedEmail = new Email($email);
+                $canonical = $parsedEmail->getCanonical();
+                $emailMetadata = [
+                    'emailCanonical' => $canonical,
+                    'emailIsCanonical' => $parsedEmail->get() === $canonical,
+                    'emailIsCorporate' => $parsedEmail->isCorporate(),
+                    'emailIsDisposable' => $parsedEmail->isDisposable(),
+                    'emailIsFree' => $parsedEmail->isFree(),
+                ];
+            } catch (\Throwable) {
+                throw new Exception(Exception::GENERAL_INVALID_EMAIL);
+            }
+
+            if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
+                throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
+            }
+
+            if (($plan['supportsCanonicalEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
+                throw new Exception(Exception::USER_EMAIL_NOT_CANONICAL);
+            }
+
+            if (($plan['supportsFreeEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
+                throw new Exception(Exception::USER_EMAIL_FREE);
             }
 
             $user->setAttributes([
@@ -2217,11 +2331,11 @@ Http::post('/v1/account/tokens/magic-url')
                 'authenticators' => null,
                 'search' => implode(' ', [$userId, $email]),
                 'accessedAt' => DateTime::now(),
-                'emailCanonical' => $emailCanonical?->getCanonical(),
-                'emailIsCanonical' => $emailCanonical?->isCanonicalSupported(),
-                'emailIsCorporate' => $emailCanonical?->isCorporate(),
-                'emailIsDisposable' => $emailCanonical?->isDisposable(),
-                'emailIsFree' => $emailCanonical?->isFree(),
+                'emailCanonical' => $emailMetadata['emailCanonical'],
+                'emailIsCanonical' => $emailMetadata['emailIsCanonical'],
+                'emailIsCorporate' => $emailMetadata['emailIsCorporate'],
+                'emailIsDisposable' => $emailMetadata['emailIsDisposable'],
+                'emailIsFree' => $emailMetadata['emailIsFree'],
             ]);
 
             $user->removeAttribute('$sequence');
@@ -2429,10 +2543,11 @@ Http::post('/v1/account/tokens/email')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForMails')
+    ->inject('plan')
     ->inject('proofForPassword')
     ->inject('proofForCode')
     ->inject('authorization')
-    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization) {
+    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, array $plan, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -2465,10 +2580,38 @@ Http::post('/v1/account/tokens/email')
 
             $userId = $userId === 'unique()' ? ID::unique() : $userId;
 
+            $emailMetadata = [
+                'emailCanonical' => null,
+                'emailIsCanonical' => null,
+                'emailIsCorporate' => null,
+                'emailIsDisposable' => null,
+                'emailIsFree' => null,
+            ];
+
             try {
-                $emailCanonical = new Email($email);
-            } catch (Throwable) {
-                $emailCanonical = null;
+                $parsedEmail = new Email($email);
+                $canonical = $parsedEmail->getCanonical();
+                $emailMetadata = [
+                    'emailCanonical' => $canonical,
+                    'emailIsCanonical' => $parsedEmail->get() === $canonical,
+                    'emailIsCorporate' => $parsedEmail->isCorporate(),
+                    'emailIsDisposable' => $parsedEmail->isDisposable(),
+                    'emailIsFree' => $parsedEmail->isFree(),
+                ];
+            } catch (\Throwable) {
+                throw new Exception(Exception::GENERAL_INVALID_EMAIL);
+            }
+
+            if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
+                throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
+            }
+
+            if (($plan['supportsCanonicalEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
+                throw new Exception(Exception::USER_EMAIL_NOT_CANONICAL);
+            }
+
+            if (($plan['supportsFreeEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
+                throw new Exception(Exception::USER_EMAIL_FREE);
             }
 
             $user->setAttributes([
@@ -2493,11 +2636,11 @@ Http::post('/v1/account/tokens/email')
                 'memberships' => null,
                 'search' => implode(' ', [$userId, $email]),
                 'accessedAt' => DateTime::now(),
-                'emailCanonical' => $emailCanonical?->getCanonical(),
-                'emailIsCanonical' => $emailCanonical?->isCanonicalSupported(),
-                'emailIsCorporate' => $emailCanonical?->isCorporate(),
-                'emailIsDisposable' => $emailCanonical?->isDisposable(),
-                'emailIsFree' => $emailCanonical?->isFree(),
+                'emailCanonical' => $emailMetadata['emailCanonical'],
+                'emailIsCanonical' => $emailMetadata['emailIsCanonical'],
+                'emailIsCorporate' => $emailMetadata['emailIsCorporate'],
+                'emailIsDisposable' => $emailMetadata['emailIsDisposable'],
+                'emailIsFree' => $emailMetadata['emailIsFree'],
             ]);
 
             $user->removeAttribute('$sequence');
@@ -3314,9 +3457,10 @@ Http::patch('/v1/account/email')
     ->inject('queueForEvents')
     ->inject('project')
     ->inject('hooks')
+    ->inject('plan')
     ->inject('proofForPassword')
- ->inject('authorization')
-    ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, User $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, ProofsPassword $proofForPassword, Authorization $authorization) {
+    ->inject('authorization')
+    ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, User $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, array $plan, ProofsPassword $proofForPassword, Authorization $authorization) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
 
@@ -3344,20 +3488,48 @@ Http::patch('/v1/account/email')
             throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
         }
 
+        $emailMetadata = [
+            'emailCanonical' => null,
+            'emailIsCanonical' => null,
+            'emailIsCorporate' => null,
+            'emailIsDisposable' => null,
+            'emailIsFree' => null,
+        ];
+
         try {
-            $emailCanonical = new Email($email);
-        } catch (Throwable) {
-            $emailCanonical = null;
+            $parsedEmail = new Email($email);
+            $canonical = $parsedEmail->getCanonical();
+            $emailMetadata = [
+                'emailCanonical' => $canonical,
+                'emailIsCanonical' => $parsedEmail->get() === $canonical,
+                'emailIsCorporate' => $parsedEmail->isCorporate(),
+                'emailIsDisposable' => $parsedEmail->isDisposable(),
+                'emailIsFree' => $parsedEmail->isFree(),
+            ];
+        } catch (\Throwable) {
+            throw new Exception(Exception::GENERAL_INVALID_EMAIL);
+        }
+
+        if (($plan['supportsDisposableEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && ($emailMetadata['emailIsDisposable'] ?? false)) {
+            throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
+        }
+
+        if (($plan['supportsCanonicalEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
+            throw new Exception(Exception::USER_EMAIL_NOT_CANONICAL);
+        }
+
+        if (($plan['supportsFreeEmailValidation'] ?? false) && ($project->getAttribute('auths', [])['freeEmails'] ?? false) && ($emailMetadata['emailIsFree'] ?? false)) {
+            throw new Exception(Exception::USER_EMAIL_FREE);
         }
 
         $user
             ->setAttribute('email', $email)
             ->setAttribute('emailVerification', false) // After this user needs to confirm mail again
-            ->setAttribute('emailCanonical', $emailCanonical?->getCanonical())
-            ->setAttribute('emailIsCanonical', $emailCanonical?->isCanonicalSupported())
-            ->setAttribute('emailIsCorporate', $emailCanonical?->isCorporate())
-            ->setAttribute('emailIsDisposable', $emailCanonical?->isDisposable())
-            ->setAttribute('emailIsFree', $emailCanonical?->isFree())
+            ->setAttribute('emailCanonical', $emailMetadata['emailCanonical'])
+            ->setAttribute('emailIsCanonical', $emailMetadata['emailIsCanonical'])
+            ->setAttribute('emailIsCorporate', $emailMetadata['emailIsCorporate'])
+            ->setAttribute('emailIsDisposable', $emailMetadata['emailIsDisposable'])
+            ->setAttribute('emailIsFree', $emailMetadata['emailIsFree'])
         ;
 
         if (empty($passwordUpdate)) {
