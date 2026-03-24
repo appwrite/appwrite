@@ -107,7 +107,6 @@ class Create extends Base
             'type' => $type,
             'name' => $name,
             'key' => null, // App platform attribute
-            'store' => null, // Unused attribute
             'hostname' => $hostname
         ]);
 

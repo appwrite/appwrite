@@ -151,7 +151,6 @@ class Create extends Base
             'name' => $name,
             'key' => $identifier,
             'hostname' => $hostname, // Web platform attribute; We fill only during backwards compatibility, otherwise null
-            'store' => null, // Unused attribute
         ]);
 
         try {

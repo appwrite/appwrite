@@ -94,9 +94,6 @@ class PlatformApp extends PlatformBase
         $document->setAttribute('identifier', $document->getAttribute('key', null));
         $document->removeAttribute('key');
 
-        // DB level attribute unused on API level
-        $document->removeAttribute('store');
-
         return $document;
     }
 }
