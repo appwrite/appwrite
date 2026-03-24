@@ -6,7 +6,9 @@ use Utopia\Validator;
 
 class BuildTrigger extends Validator
 {
-    public function __construct(private readonly array $patterns) {}
+    public function __construct(private readonly array $patterns)
+    {
+    }
 
     public function isValid($value): bool
     {
@@ -32,7 +34,7 @@ class BuildTrigger extends Validator
         }
 
         // A pattern is "specific" when it contains no wildcard characters.
-        $isSpecific = fn($p) => !str_contains($p, '*') && !str_contains($p, '?');
+        $isSpecific = fn ($p) => !str_contains($p, '*') && !str_contains($p, '?');
 
         // 1. Specific inclusion always wins — an explicit exact match is never blocked.
         foreach ($include as $pattern) {

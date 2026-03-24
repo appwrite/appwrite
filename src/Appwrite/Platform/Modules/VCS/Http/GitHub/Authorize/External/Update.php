@@ -134,7 +134,10 @@ class Update extends Action
         $providerCommitAuthorUrl = $commitDetails["commitAuthorUrl"] ?? '';
 
         $prFiles = $github->getPullRequestFiles($owner, $providerRepositoryName, $providerPullRequestId);
-        $providerAffectedFiles = array_column($prFiles, 'filename');
+        $providerAffectedFiles = [
+            ...array_column($prFiles, 'filename'),
+            ...array_column($prFiles, 'previous_filename')
+        ];
 
         $this->createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, true, $dbForPlatform, $authorization, $queueForBuilds, $getProjectDB, $platform);
 
