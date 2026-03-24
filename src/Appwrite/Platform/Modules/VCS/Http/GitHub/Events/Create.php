@@ -213,7 +213,10 @@ class Create extends Action
             $providerCommitMessage = $commitDetails["commitMessage"] ?? '';
 
             $prFiles = $github->getPullRequestFiles($providerRepositoryOwner, $providerRepositoryName, $providerPullRequestId);
-            $providerAffectedFiles = array_column($prFiles, 'filename');
+            $providerAffectedFiles = [
+                ...array_column($prFiles, 'filename'),
+                ...array_column($prFiles, 'previous_filename')
+            ];
 
             $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', [
                 Query::equal('providerRepositoryId', [$providerRepositoryId]),
