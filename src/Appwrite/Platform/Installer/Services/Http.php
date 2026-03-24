@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Installer\Services;
 
+use Appwrite\Platform\Installer\Http\Installer\Certificate\Get as CertificateGet;
 use Appwrite\Platform\Installer\Http\Installer\Complete;
 use Appwrite\Platform\Installer\Http\Installer\Install;
 use Appwrite\Platform\Installer\Http\Installer\Shutdown;
@@ -22,5 +23,6 @@ class Http extends Service
         $this->addAction(Complete::getName(), new Complete());
         $this->addAction(Shutdown::getName(), new Shutdown());
         $this->addAction(Install::getName(), new Install());
+        $this->addAction(CertificateGet::getName(), new CertificateGet());
     }
 }
