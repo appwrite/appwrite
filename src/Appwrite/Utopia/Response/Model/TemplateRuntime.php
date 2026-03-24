@@ -20,7 +20,7 @@ class TemplateRuntime extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'The build command used to build the deployment.',
                 'default' => '',
-                'example' => 'npm install',
+                'example' => 'npm ci',
             ])
             ->addRule('entrypoint', [
                 'type' => self::TYPE_STRING,

@@ -62,7 +62,7 @@ return [
         'timeout' => 15,
         'useCases' => [FunctionUseCases::STARTER],
         'runtimes' => [
-            ...getRuntimes($templateRuntimes['NODE'], 'npm install', 'src/main.js', 'node/starter', $allowList),
+            ...getRuntimes($templateRuntimes['NODE'], 'npm ci', 'src/main.js', 'node/starter', $allowList),
             ...getRuntimes(
                 $templateRuntimes['PYTHON'],
                 'pip install -r requirements.txt',
@@ -105,7 +105,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install',
+                'npm ci',
                 'src/main.js',
                 'node/query-upstash-vector',
                 $allowList
@@ -151,7 +151,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install',
+                'npm ci',
                 'src/main.js',
                 'node/query-redis-labs',
                 $allowList
@@ -196,7 +196,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install',
+                'npm ci',
                 'src/main.js',
                 'node/query-neo4j-auradb',
                 $allowList
@@ -250,7 +250,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install',
+                'npm ci',
                 'src/main.js',
                 'node/query-mongo-atlas',
                 $allowList
@@ -289,7 +289,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install',
+                'npm ci',
                 'src/main.js',
                 'node/query-neon-postgres',
                 $allowList
@@ -358,7 +358,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install',
+                'npm ci',
                 'src/main.js',
                 'node/prompt-chatgpt',
                 $allowList
@@ -424,7 +424,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install && npm run setup',
+                'npm ci && npm run setup',
                 'src/main.js',
                 'node/discord-command-bot',
                 $allowList
@@ -491,7 +491,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install',
+                'npm ci',
                 'src/main.js',
                 'node/analyze-with-perspectiveapi',
                 $allowList
@@ -529,7 +529,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install',
+                'npm ci',
                 'src/main.js',
                 'node/censor-with-redact',
                 $allowList
@@ -578,7 +578,7 @@ return [
         'timeout' => 15,
         'useCases' => [FunctionUseCases::UTILITIES],
         'runtimes' => [
-            ...getRuntimes($templateRuntimes['NODE'], 'npm install', 'src/main.js', 'node/generate-pdf', $allowList)
+            ...getRuntimes($templateRuntimes['NODE'], 'npm ci', 'src/main.js', 'node/generate-pdf', $allowList)
         ],
         'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/generate-pdf">file</a>.',
         'vcsProvider' => 'github',
@@ -603,7 +603,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install',
+                'npm ci',
                 'src/main.js',
                 'node/github-issue-bot',
                 $allowList
@@ -648,7 +648,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install',
+                'npm ci',
                 'src/main.js',
                 'node/url-shortener',
                 $allowList
@@ -701,7 +701,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install',
+                'npm ci',
                 'src/main.js',
                 'node/sync-with-algolia',
                 $allowList
@@ -786,7 +786,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install',
+                'npm ci',
                 'src/main.js',
                 'node/sync-with-meilisearch',
                 $allowList
@@ -885,7 +885,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install',
+                'npm ci',
                 'src/main.js',
                 'node/whatsapp-with-vonage',
                 $allowList
@@ -978,7 +978,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install',
+                'npm ci',
                 'src/main.js',
                 'node/push-notification-with-fcm',
                 $allowList
@@ -1036,7 +1036,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install',
+                'npm ci',
                 'src/main.js',
                 'node/email-contact-form',
                 $allowList
@@ -1123,7 +1123,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install',
+                'npm ci',
                 'src/main.js',
                 'node/subscriptions-with-stripe',
                 $allowList
@@ -1166,7 +1166,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install',
+                'npm ci',
                 'src/main.js',
                 'node/payments-with-stripe',
                 $allowList
@@ -1225,7 +1225,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install',
+                'npm ci',
                 'src/main.js',
                 'node/text-generation-with-huggingface',
                 $allowList
@@ -1261,7 +1261,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install',
+                'npm ci',
                 'src/main.js',
                 'node/language-translation-with-huggingface',
                 $allowList
@@ -1297,7 +1297,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install && npm run setup',
+                'npm ci && npm run setup',
                 'src/main.js',
                 'node/image-classification-with-huggingface',
                 $allowList
@@ -1357,7 +1357,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install && npm run setup',
+                'npm ci && npm run setup',
                 'src/main.js',
                 'node/object-detection-with-huggingface',
                 $allowList
@@ -1417,7 +1417,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install && npm run setup',
+                'npm ci && npm run setup',
                 'src/main.js',
                 'node/speech-recognition-with-huggingface',
                 $allowList
@@ -1480,7 +1480,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install && npm run setup',
+                'npm ci && npm run setup',
                 'src/main.js',
                 'node/text-to-speech-with-huggingface',
                 $allowList
@@ -1540,7 +1540,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install',
+                'npm ci',
                 'src/main.js',
                 'node/generate-with-replicate',
                 $allowList
@@ -1577,7 +1577,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install',
+                'npm ci',
                 'src/main.js',
                 'node/generate-with-together-ai',
                 $allowList
@@ -1621,7 +1621,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install',
+                'npm ci',
                 'src/main.js',
                 'node/chat-with-perplexity-ai',
                 $allowList
@@ -1664,7 +1664,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install',
+                'npm ci',
                 'src/main.js',
                 'node/generate-with-replicate',
                 $allowList
@@ -1701,7 +1701,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install',
+                'npm ci',
                 'src/main.js',
                 'node/sync-with-pinecone',
                 $allowList
@@ -1766,7 +1766,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install',
+                'npm ci',
                 'src/main.js',
                 'node/rag-with-langchain',
                 $allowList
@@ -1831,7 +1831,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install',
+                'npm ci',
                 'src/main.js',
                 'node/speak-with-elevenlabs',
                 $allowList
@@ -1888,7 +1888,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install',
+                'npm ci',
                 'src/main.js',
                 'node/speak-with-lmnt',
                 $allowList
@@ -1931,7 +1931,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install',
+                'npm ci',
                 'src/main.js',
                 'node/chat-with-anyscale',
                 $allowList
@@ -1974,7 +1974,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install && npm run setup',
+                'npm ci && npm run setup',
                 'src/main.js',
                 'node/music-generation-with-huggingface',
                 $allowList
@@ -2018,7 +2018,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install',
+                'npm ci',
                 'src/main.js',
                 'node/generate-with-fal-ai',
                 $allowList
@@ -2055,7 +2055,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install',
+                'npm ci',
                 'src/main.js',
                 'node/subscriptions-with-lemon-squeezy',
                 $allowList
@@ -2112,7 +2112,7 @@ return [
         'runtimes' => [
             ...getRuntimes(
                 $templateRuntimes['NODE'],
-                'npm install',
+                'npm ci',
                 'src/main.js',
                 'node/payments-with-lemon-squeezy',
                 $allowList

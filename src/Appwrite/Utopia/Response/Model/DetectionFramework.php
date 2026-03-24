@@ -21,7 +21,7 @@ class DetectionFramework extends Detection
                 'type' => self::TYPE_STRING,
                 'description' => 'Site Install Command',
                 'default' => '',
-                'example' => 'npm install',
+                'example' => 'npm ci',
             ])
             ->addRule('buildCommand', [
                 'type' => self::TYPE_STRING,

@@ -20,7 +20,7 @@ class FrameworkAdapter extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Default command to download dependencies.',
                 'default' => '',
-                'example' => 'npm install',
+                'example' => 'npm ci',
             ])
             ->addRule('buildCommand', [
                 'type' => self::TYPE_STRING,
