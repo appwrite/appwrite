@@ -697,7 +697,7 @@ body {
     transition: opacity 0.2s ease;
     white-space: nowrap;
     user-select: none;
-    color: #6b7280;
+    color: var(--fgcolor-neutral-secondary);
 }
 
 .install-row[data-status='in-progress'] .install-counter:not(:empty) {

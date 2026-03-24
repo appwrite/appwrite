@@ -25,6 +25,7 @@ class Install extends Action
 
     private const int HEALTH_CHECK_ATTEMPTS = 30;
     private const int HEALTH_CHECK_DELAY_SECONDS = 1;
+    private const int PROC_CLOSE_TIMEOUT_SECONDS = 60;
 
     private const string PATTERN_ENV_VAR_NAME = '/^[A-Z0-9_]+$/';
     private const string PATTERN_DB_PASSWORD_VAR = '/^_APP_DB_.*_PASS$/';
@@ -601,18 +602,25 @@ class Install extends Action
                 $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_IN_PROGRESS, $messages);
                 $this->runDockerCompose($input, $isLocalInstall, $useExistingConfig, $isCLI, $progress, $isUpgrade);
 
+                if (!$isUpgrade) {
+                    $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_COMPLETED, $messages);
+                }
+
                 if (!$isLocalInstall) {
                     $this->connectInstallerToAppwriteNetwork();
                 }
 
                 $domain = $input['_APP_DOMAIN'] ?? 'localhost';
 
-                // Wait for Appwrite API to be healthy before marking containers as ready
-                $apiUrl = $this->waitForApiReady($domain, $httpPort, $isLocalInstall, $progress, InstallerServer::STEP_DOCKER_CONTAINERS);
+                $healthStep = $isUpgrade ? InstallerServer::STEP_DOCKER_CONTAINERS : InstallerServer::STEP_ACCOUNT_SETUP;
+                $apiUrl = $this->waitForApiReady($domain, $httpPort, $isLocalInstall, $progress, $healthStep);
 
-                $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_COMPLETED, $messages);
+                if ($isUpgrade) {
+                    $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_COMPLETED, $messages);
+                }
 
                 if (!$isUpgrade) {
+                    $currentStep = InstallerServer::STEP_ACCOUNT_SETUP;
                     $this->createInitialAdminAccount($account, $progress, $apiUrl, $domain);
                 }
 
@@ -777,7 +785,7 @@ class Install extends Action
      *  - host.docker.internal:{port} — reaches host-published ports from inside a container
      *  - localhost:{port} — works when running directly on the host (local dev)
      */
-    private function waitForApiReady(string $domain, string $httpPort, bool $isLocalInstall, ?callable $progress, string $step = InstallerServer::STEP_DOCKER_CONTAINERS): string
+    private function waitForApiReady(string $domain, string $httpPort, bool $isLocalInstall, ?callable $progress, string $step = InstallerServer::STEP_ACCOUNT_SETUP): string
     {
         $client = new Client();
         $client
@@ -818,7 +826,7 @@ class Install extends Action
                     $progress(
                         $step,
                         InstallerServer::STATUS_IN_PROGRESS,
-                        'Waiting for Appwrite to be ready (' . ($i + 1) . '/' . self::HEALTH_CHECK_ATTEMPTS . ')',
+                        'Waiting for Appwrite to be ready...',
                         []
                     );
                 } catch (\Throwable) {
@@ -1023,6 +1031,18 @@ class Install extends Action
 
         if ($progress) {
             $totalServices = $this->countComposeServices($composeFile);
+            if ($totalServices > 0) {
+                $verb = $isUpgrade ? 'Restarting' : 'Starting';
+                try {
+                    $progress(
+                        InstallerServer::STEP_DOCKER_CONTAINERS,
+                        InstallerServer::STATUS_IN_PROGRESS,
+                        "$verb Docker containers...",
+                        ['containerStarted' => 0, 'containerTotal' => $totalServices]
+                    );
+                } catch (\Throwable) {
+                }
+            }
             $result = $this->execWithContainerProgress($commandLine, $totalServices, $progress, $isUpgrade);
             $output = $result['output'];
             $exit = $result['exit'];
@@ -1072,7 +1092,7 @@ class Install extends Action
             $output[] = $trimmed;
 
             if (str_contains($trimmed, 'Container') && (str_contains($trimmed, 'Started') || str_contains($trimmed, 'Running'))) {
-                $started++;
+                $started = min($started + 1, $totalServices);
                 if ($totalServices > 0) {
                     try {
                         $progress(
@@ -1088,9 +1108,44 @@ class Install extends Action
         }
 
         fclose($pipes[1]);
-        $exit = proc_close($process);
+
+        $exit = $this->procCloseWithTimeout($process, self::PROC_CLOSE_TIMEOUT_SECONDS);
 
         return ['output' => $output, 'exit' => $exit];
+    }
+
+    /**
+     * Wait up to $timeoutSeconds for a process to exit, then kill it.
+     *
+     * proc_close() blocks indefinitely which can hang the installer if
+     * docker compose refuses to exit after all containers are running.
+     *
+     * @param resource $process A process resource from proc_open()
+     */
+    private function procCloseWithTimeout($process, int $timeoutSeconds): int
+    {
+        $deadline = time() + $timeoutSeconds;
+
+        while (time() < $deadline) {
+            $status = proc_get_status($process);
+            if (!$status['running']) {
+                $exitCode = $status['exitcode'];
+                $closeCode = proc_close($process);
+                return $exitCode !== -1 ? $exitCode : $closeCode;
+            }
+            usleep(250_000);
+        }
+
+        proc_terminate($process, SIGTERM);
+        usleep(500_000);
+
+        if (proc_get_status($process)['running']) {
+            proc_terminate($process, SIGKILL);
+        }
+
+        proc_close($process);
+
+        return 124;
     }
 
     protected function isLocalInstall(): bool
