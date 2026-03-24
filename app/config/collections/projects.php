@@ -2754,4 +2754,151 @@ return [
             ],
         ],
     ],
+    // to track connected users via realtime
+    // TODO: check we need expiry or not so that we ttl the user
+    'presence' => [
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('presence'),
+        'name' => 'Presence',
+        'attributes' => [
+            [
+                '$id' => ID::custom('userInternalId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('userId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ]
+        ],
+        'indexes' => [
+            [
+                '$id' => ID::custom('_unique_userId'),
+                'type' => Database::INDEX_UNIQUE,
+                'attributes' => ['userId'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC],
+            ]
+        ]
+    ],
+
+    // event logs
+    'presenceLogs' => [
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('presenceLogs'),
+        'name' => 'Presence Logs',
+        'attributes' => [
+            [
+                '$id' => ID::custom('userInternalId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('userId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            // permissions must be sorted before md5 conversion to have deterministic hashes
+            [
+                '$id' => ID::custom('perms_md5'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('expiry'),
+                'type' => Database::VAR_DATETIME,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => false,
+                'default' => null, // TODO: needed a default value
+                'array' => false,
+                'filters' => ['datetime'],
+            ],
+            [
+                '$id' => ID::custom('status'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('source'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => true,
+                'array' => false,
+                'filters' => [],
+            ],
+            // TODO: check the usecase and apply it
+            [
+                '$id' => ID::custom('hostname'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('metadata'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 65535,
+                'signed' => true,
+                'required' => false,
+                'default' => new \stdClass(),
+                'array' => false,
+                'filters' => ['json'],
+            ],
+        ],
+        'indexes' => [
+            [
+                '$id' => ID::custom('_unique_userId_perms'),
+                'type' => Database::INDEX_UNIQUE,
+                'attributes' => ['userId','perms_md5'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC],
+            ]
+        ]
+    ]
 ];
