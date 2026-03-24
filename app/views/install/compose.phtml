@@ -13,7 +13,7 @@ $organization = $this->getParam('organization', '');
 $image = $this->getParam('image', '');
 $enableAssistant = $this->getParam('enableAssistant', false);
 $dbService = $this->getParam('database', 'mongodb');
-$allowedDbServices = ['mariadb', 'mongodb', 'postgresql'];
+$allowedDbServices = ['mariadb', 'mongodb'];
 if (!\in_array($dbService, $allowedDbServices, true)) {
     $dbService = 'mongodb';
 }
@@ -194,7 +194,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: <?php echo $organization; ?>/console:7.6.4
+    image: <?php echo $organization; ?>/console:7.8.25
     restart: unless-stopped
     networks:
       - appwrite
