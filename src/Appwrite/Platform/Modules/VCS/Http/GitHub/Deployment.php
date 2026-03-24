@@ -541,9 +541,17 @@ trait Deployment
             return false;
         }
 
-        $pathTrigger = new BuildTrigger($resource->getAttribute('providerPaths', []));
-        foreach ($providerAffectedFiles as $file) {
-            if (!$pathTrigger->isValid($file)) {
+        $providerPaths = $resource->getAttribute('providerPaths', []);
+        if (!empty($providerPaths) && !empty($providerAffectedFiles)) {
+            $pathTrigger = new BuildTrigger($providerPaths);
+            $pathMatched = false;
+            foreach ($providerAffectedFiles as $file) {
+                if ($pathTrigger->isValid($file)) {
+                    $pathMatched = true;
+                    break;
+                }
+            }
+            if (!$pathMatched) {
                 Span::add("{$logBase}.build.skipped.reason", 'path');
                 return false;
             }
