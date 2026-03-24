@@ -9,7 +9,7 @@ class MockPublisher implements Publisher
 {
     private array $events = [];
 
-    public function enqueue(Queue $queue, array $payload): bool
+    public function enqueue(Queue $queue, array $payload, bool $priority = false): bool
     {
         if (!isset($this->events[$queue->name])) {
             $this->events[$queue->name] = [];
