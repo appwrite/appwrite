@@ -111,7 +111,7 @@
             return normalized.summary || 'Installation failed.';
         }
         if (status === STATUS.COMPLETED) return step.done;
-        return step.inProgress;
+        return message || step.inProgress;
     };
 
     const updateInstallRow = (row, step, status, message, details) => {
@@ -140,9 +140,9 @@
 
         const counter = row.querySelector('[data-install-counter]');
         if (counter) {
-            const started = details?.containerStarted;
+            const started = details?.containerStarted ?? 0;
             const total = details?.containerTotal;
-            counter.textContent = (status === STATUS.IN_PROGRESS && started > 0 && total > 0)
+            counter.textContent = (status === STATUS.IN_PROGRESS && total > 0 && started < total)
                 ? `${started}/${total}`
                 : '';
         }
