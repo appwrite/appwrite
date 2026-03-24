@@ -9,6 +9,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Databases;
 use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Database\Query;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
@@ -21,9 +22,14 @@ class XList extends DatabaseXList
     }
 
     protected function getDatabaseTypeQueryFilters(): array
-    {
-        return [DATABASE_TYPE_TABLESDB, DATABASE_TYPE_LEGACY];
-    }
+{
+    return [
+        Query::or([
+            Query::equal('type', [DATABASE_TYPE_TABLESDB, DATABASE_TYPE_LEGACY]),
+            Query::isNull('type'),
+        ]),
+    ];
+}
 
     public function __construct()
     {

@@ -29,7 +29,7 @@ class XList extends Action
 
     protected function getDatabaseTypeQueryFilters(): array
     {
-        return [$this->getDatabaseType()];
+        return [Query::equal('type', [$this->getDatabaseType()])];
     }
 
     public function __construct()
@@ -96,10 +96,8 @@ class XList extends Action
             $cursor->setValue($cursorDocument);
         }
 
-        $queries[] = Query::equal('type', $this->getDatabaseTypeQueryFilters());
-
         try {
-            $databases = $dbForProject->find('databases', $queries);
+            $databases = $dbForProject->find('databases', $this->getDatabaseTypeQueryFilters());
             $total = $includeTotal ? $dbForProject->count('databases', $queries, APP_LIMIT_COUNT) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order column '{$e->getAttribute()}' had a null value. Cursor pagination requires all rows order column values are non-null.");
