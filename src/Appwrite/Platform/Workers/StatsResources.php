@@ -340,7 +340,7 @@ class StatsResources extends Action
             $databaseIdStorageMetric = $databaseType . '.' . $databaseIdStorageMetric;
         }
 
-        $this->foreachDocument($dbForProject, 'database_' . $database->getSequence(), [], function ($collection) use ($dbForProject, $dbForDatabases, $database, $region, &$databaseStorage, &$databaseDocuments, $databaseIdCollectionIdDocumentsMetric, $databaseIdCollectionIdStorageMetric) {
+        $this->foreachDocument($dbForProject, 'database_' . $database->getSequence(), [], function ($collection) use ($dbForDatabases, $database, $region, &$databaseStorage, &$databaseDocuments, $databaseIdCollectionIdDocumentsMetric, $databaseIdCollectionIdStorageMetric) {
             $documents = $dbForDatabases->count('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
             $metric = str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getSequence(), $collection->getSequence()], $databaseIdCollectionIdDocumentsMetric);
             $this->createStatsDocuments($region, $metric, $documents);

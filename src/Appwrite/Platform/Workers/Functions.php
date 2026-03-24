@@ -513,7 +513,7 @@ class Functions extends Action
             $command = $runtime['startCommand'];
 
             if (!empty($deployment->getAttribute('startCommand', ''))) {
-                $command = 'cd /usr/local/server/src/function/ && ' . $deployment->getAttribute('startCommand', '');
+                $command = 'cd /usr/local/server/src/function/ && ' . str_replace(['"', '`', '$'], ['\\"', '\\`', '\\$'], $deployment->getAttribute('startCommand', ''));
             }
 
             $source = $deployment->getAttribute('buildPath', '');

@@ -81,10 +81,12 @@ trait ProjectsBase
         $projectData = $this->setupProjectData();
         $id = $projectData['projectId'];
 
-        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/webhooks', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/webhooks', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
+            'webhookId' => 'unique()',
             'name' => 'Webhook Test',
             'events' => ['users.*.create', 'users.*.update.email'],
             'url' => 'https://appwrite.io',
@@ -272,6 +274,7 @@ trait ProjectsBase
             'x-appwrite-project' => $projectData['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
+            'variableId' => 'unique()',
             'key' => 'APP_TEST',
             'value' => 'TESTINGVALUE',
             'secret' => false
@@ -286,6 +289,7 @@ trait ProjectsBase
             'x-appwrite-project' => $projectData['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
+            'variableId' => 'unique()',
             'key' => 'APP_TEST_1',
             'value' => 'TESTINGVALUE_1',
             'secret' => true

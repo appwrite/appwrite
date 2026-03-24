@@ -513,7 +513,8 @@ class StatsUsage extends Action
             }
         }
         $documentClone = clone $stat;
-        $documentClone->setAttribute('$tenant', (int) $project->getSequence());
+        $dbForLogs = ($this->getLogsDB)();
+        $documentClone->setAttribute('$tenant', $project->getSequence());
         $this->statDocuments[] = $documentClone;
     }
 

@@ -2850,10 +2850,12 @@ class ProjectsConsoleClientTest extends Scope
         $data = $this->setupProjectData();
         $id = $data['projectId'];
 
-        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/webhooks', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/webhooks', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), [
+            'webhookId' => 'unique()',
             'name' => 'Webhook Test',
             'events' => ['users.*.create', 'users.*.update.email'],
             'url' => 'https://appwrite.io',
@@ -2875,10 +2877,12 @@ class ProjectsConsoleClientTest extends Scope
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/webhooks', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/webhooks', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), [
+            'webhookId' => 'unique()',
             'name' => 'Webhook Test',
             'events' => ['account.unknown', 'users.*.update.email'],
             'url' => 'https://appwrite.io',
@@ -2889,10 +2893,12 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/webhooks', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/webhooks', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), [
+            'webhookId' => 'unique()',
             'name' => 'Webhook Test',
             'events' => ['users.*.create', 'users.*.update.email'],
             'url' => 'invalid://appwrite.io',
@@ -2906,9 +2912,10 @@ class ProjectsConsoleClientTest extends Scope
         $data = $this->setupProjectWithWebhook();
         $id = $data['projectId'];
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/webhooks', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/webhooks', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -2926,9 +2933,10 @@ class ProjectsConsoleClientTest extends Scope
         $id = $data['projectId'];
         $webhookId = $data['webhookId'];
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/webhooks/' . $webhookId, array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/webhooks/' . $webhookId, array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -2944,9 +2952,10 @@ class ProjectsConsoleClientTest extends Scope
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/webhooks/error', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/webhooks/error', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -2958,9 +2967,10 @@ class ProjectsConsoleClientTest extends Scope
         $id = $data['projectId'];
         $webhookId = $data['webhookId'];
 
-        $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/webhooks/' . $webhookId, array_merge([
+        $response = $this->client->call(Client::METHOD_PUT, '/webhooks/' . $webhookId, array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), [
             'name' => 'Webhook Test Update',
             'events' => ['users.*.delete', 'users.*.sessions.*.delete', 'buckets.*.files.*.create'],
@@ -2982,9 +2992,10 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('', $response['body']['httpUser']);
         $this->assertEquals('', $response['body']['httpPass']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/webhooks/' . $webhookId, array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/webhooks/' . $webhookId, array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -3004,9 +3015,10 @@ class ProjectsConsoleClientTest extends Scope
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/webhooks/' . $webhookId, array_merge([
+        $response = $this->client->call(Client::METHOD_PUT, '/webhooks/' . $webhookId, array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), [
             'name' => 'Webhook Test Update',
             'events' => ['users.*.delete', 'users.*.sessions.*.delete', 'buckets.*.files.*.unknown'],
@@ -3016,9 +3028,10 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/webhooks/' . $webhookId, array_merge([
+        $response = $this->client->call(Client::METHOD_PUT, '/webhooks/' . $webhookId, array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), [
             'name' => 'Webhook Test Update',
             'events' => ['users.*.delete', 'users.*.sessions.*.delete', 'buckets.*.files.*.create'],
@@ -3028,9 +3041,10 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/webhooks/' . $webhookId, array_merge([
+        $response = $this->client->call(Client::METHOD_PUT, '/webhooks/' . $webhookId, array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), [
             'name' => 'Webhook Test Update',
             'events' => ['users.*.delete', 'users.*.sessions.*.delete', 'buckets.*.files.*.create'],
@@ -3047,9 +3061,10 @@ class ProjectsConsoleClientTest extends Scope
         $webhookId = $data['webhookId'];
         $signatureKey = $data['signatureKey'];
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/webhooks/' . $webhookId . '/signature', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/webhooks/' . $webhookId . '/signature', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -3064,10 +3079,12 @@ class ProjectsConsoleClientTest extends Scope
         $id = $projectData['projectId'];
 
         // Create a webhook to delete
-        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/webhooks', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/webhooks', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), [
+            'webhookId' => 'unique()',
             'name' => 'Webhook To Delete',
             'events' => ['users.*.create'],
             'url' => 'https://appwrite.io',
@@ -3079,17 +3096,19 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
         $webhookId = $response['body']['$id'];
 
-        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/webhooks/' . $webhookId, array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/webhooks/' . $webhookId, array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), []);
 
         $this->assertEquals(204, $response['headers']['status-code']);
         $this->assertEmpty($response['body']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/webhooks/' . $webhookId, array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/webhooks/' . $webhookId, array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -3097,9 +3116,10 @@ class ProjectsConsoleClientTest extends Scope
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/webhooks/error', array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/webhooks/error', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -4457,9 +4477,10 @@ class ProjectsConsoleClientTest extends Scope
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/webhooks/error', array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/webhooks/error', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -4665,6 +4686,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $data['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
+            'variableId' => 'unique()',
             'key' => 'APP_TEST_CREATE',
             'value' => 'TESTINGVALUE',
             'secret' => false
@@ -4681,6 +4703,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $data['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
+            'variableId' => 'unique()',
             'key' => 'APP_TEST_CREATE_1',
             'value' => 'TESTINGVALUE_1',
             'secret' => true
@@ -4699,6 +4722,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $data['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
+            'variableId' => 'unique()',
             'key' => 'APP_TEST_CREATE',
             'value' => 'ANOTHERTESTINGVALUE'
         ]);
@@ -4711,6 +4735,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $data['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
+            'variableId' => 'unique()',
             'key' => str_repeat("A", 256),
             'value' => 'TESTINGVALUE'
         ]);
@@ -4723,6 +4748,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $data['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
+            'variableId' => 'unique()',
             'key' => 'LONGKEY',
             'value' => str_repeat("#", 8193),
         ]);
@@ -4868,18 +4894,6 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains("APP_TEST_UPDATE", $variableKeys);
         $this->assertContains("APP_TEST_UPDATE_1", $variableKeys);
 
-        /**
-         * Test for FAILURE
-         */
-
-        $response = $this->client->call(Client::METHOD_PUT, '/project/variables/' . $data['variableId'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $data['projectId'],
-            'x-appwrite-mode' => 'admin',
-        ], $this->getHeaders()));
-
-        $this->assertEquals(400, $response['headers']['status-code']);
-
         $response = $this->client->call(Client::METHOD_PUT, '/project/variables/' . $data['variableId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $data['projectId'],
@@ -4887,6 +4901,19 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'value' => 'TESTINGVALUEUPDATED_2'
         ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSame('TESTINGVALUEUPDATED_2', $response['body']['value']);
+        $this->assertSame('APP_TEST_UPDATE', $response['body']['key']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/project/variables/' . $data['variableId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectId'],
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()));
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
@@ -4937,6 +4964,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $projectData['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
+            'variableId' => 'unique()',
             'key' => 'APP_TEST_DELETE',
             'value' => 'TESTINGVALUE',
             'secret' => false
@@ -4951,6 +4979,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $projectData['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
+            'variableId' => 'unique()',
             'key' => 'APP_TEST_DELETE_1',
             'value' => 'TESTINGVALUE_1',
             'secret' => true

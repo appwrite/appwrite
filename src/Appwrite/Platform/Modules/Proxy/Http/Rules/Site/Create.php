@@ -75,7 +75,7 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $domain, string $siteId, string $branch, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform, Database $dbForProject, array $platform, Log $log)
+    public function action(string $domain, string $siteId, ?string $branch, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform, Database $dbForProject, array $platform, Log $log)
     {
         $this->validateDomainRestrictions($domain, $platform);
 

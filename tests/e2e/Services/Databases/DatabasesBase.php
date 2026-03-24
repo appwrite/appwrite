@@ -2612,9 +2612,7 @@ trait DatabasesBase
         }
         $this->assertTrue(array_key_exists('$sequence', $document1['body']));
 
-        $this->getSupportForIntegerIds()
-            ? $this->assertIsInt($document1['body']['$sequence'])
-            : $this->assertIsString($document1['body']['$sequence']);
+        $this->assertIsString($document1['body']['$sequence']);
 
         $this->assertEquals(201, $document2['headers']['status-code']);
         $this->assertEquals($data['moviesId'], $document2['body'][$this->getContainerIdResponseKey()]);
@@ -2694,9 +2692,7 @@ trait DatabasesBase
         /**
          * Resubmit same document, nothing to update
          */
-        $this->getSupportForIntegerIds()
-            ? $this->assertIsInt($document['body']['$sequence'])
-            : $this->assertIsString($document['body']['$sequence']);
+        $this->assertIsString($document['body']['$sequence']);
 
         $upsertData = [
             'title' => 'Thor: Ragnarok',
@@ -2810,6 +2806,10 @@ trait DatabasesBase
         $this->assertEquals(204, $document['headers']['status-code']);
 
         // relationship behaviour - only test on databases that support relationships
+        /** @var array<string, mixed>|null $person */
+        $person = null;
+        /** @var array<string, mixed>|null $library */
+        $library = null;
         if ($this->getSupportForRelationships()) {
             $person = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
                 'content-type' => 'application/json',
@@ -3131,7 +3131,7 @@ trait DatabasesBase
             $this->assertEquals(204, $deleteResponse['headers']['status-code']);
 
             // upsertion for the related document without passing permissions - only for databases that support relationships
-            if ($this->getSupportForRelationships()) {
+            if ($this->getSupportForRelationships() && $person !== null && $library !== null) {
                 // data should get added
                 $newPersonId = ID::unique();
                 $personNoPerm = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $person['body']['$id'], $newPersonId), array_merge([
@@ -3582,6 +3582,62 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
+    }
+
+    public function testQueryBySequenceType(): void
+    {
+        $data = $this->setupDocuments();
+        $databaseId = $data['databaseId'];
+
+        $documents = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('$id', $data['documentIds'])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $documents['headers']['status-code']);
+        $this->assertGreaterThan(0, count($documents['body'][$this->getRecordResource()]));
+
+        $sequence = $documents['body'][$this->getRecordResource()][0]['$sequence'];
+        $this->assertIsString($sequence);
+
+        // Query with string $sequence value (supported by all adapters)
+        $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('$sequence', [$sequence])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body'][$this->getRecordResource()]);
+        $this->assertIsString($response['body'][$this->getRecordResource()][0]['$sequence']);
+        $this->assertSame($sequence, $response['body'][$this->getRecordResource()][0]['$sequence']);
+
+        // Query with int $sequence value (supported by SQL adapters, rejected by MongoDB)
+        $intSequence = (int)$sequence;
+        $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('$sequence', [$intSequence])->toString(),
+            ],
+        ]);
+
+        $adapter = getenv('_APP_DB_ADAPTER');
+        if ($adapter === 'mongodb') {
+            $this->assertEquals(400, $response['headers']['status-code']);
+        } else {
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertCount(1, $response['body'][$this->getRecordResource()]);
+            $this->assertIsString($response['body'][$this->getRecordResource()][0]['$sequence']);
+        }
     }
 
     public function testListDocumentsAfterPagination(): void

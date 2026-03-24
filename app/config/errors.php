@@ -1144,6 +1144,11 @@ return [
         'description' => 'Webhook with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::WEBHOOK_ALREADY_EXISTS => [
+        'name' => Exception::WEBHOOK_ALREADY_EXISTS,
+        'description' => 'Webhook with the same ID already exists. Try again with a different ID.',
+        'code' => 409,
+    ],
     Exception::KEY_NOT_FOUND => [
         'name' => Exception::KEY_NOT_FOUND,
         'description' => 'Key with the requested ID could not be found.',

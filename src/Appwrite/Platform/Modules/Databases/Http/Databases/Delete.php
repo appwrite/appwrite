@@ -60,7 +60,6 @@ class Delete extends Action
             ->inject('dbForProject')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
-            ->inject('queueForStatsUsage')
             ->callback($this->action(...));
     }
 

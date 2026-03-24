@@ -342,7 +342,7 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
-            'installCommand' => 'npm install',
+            'installCommand' => 'npm ci',
             'fallbackFile' => '',
         ]);
 
@@ -404,7 +404,7 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
-            'installCommand' => 'npm install',
+            'installCommand' => 'npm ci',
         ]);
         $this->assertNotEmpty($siteId);
 
@@ -445,7 +445,7 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
-            'installCommand' => 'npm install',
+            'installCommand' => 'npm ci',
         ]);
         $this->assertNotEmpty($siteId);
 
@@ -569,7 +569,7 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
-            'installCommand' => 'npm install',
+            'installCommand' => 'npm ci',
         ]);
         $this->assertNotEmpty($siteId);
 
@@ -598,7 +598,7 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
-            'installCommand' => 'npm install',
+            'installCommand' => 'npm ci',
             'adapter' => 'ssr',
             'fallbackFile' => '',
             '$id' => $siteId,
@@ -849,7 +849,7 @@ class SitesCustomServerTest extends Scope
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
             '$id' => $siteId,
-            'installCommand' => 'npm install'
+            'installCommand' => 'npm ci'
         ]);
 
         $dateValidator = new DatetimeValidator();
@@ -859,7 +859,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals('Test Site Updated', $site['body']['name']);
         $this->assertEquals(true, $dateValidator->isValid($site['body']['$createdAt']));
         $this->assertEquals(true, $dateValidator->isValid($site['body']['$updatedAt']));
-        $this->assertEquals('npm install', $site['body']['installCommand']);
+        $this->assertEquals('npm ci', $site['body']['installCommand']);
 
         $this->cleanupSite($siteId);
     }
@@ -1437,6 +1437,71 @@ class SitesCustomServerTest extends Scope
         $function = $this->getSite($siteId);
 
         $this->assertEquals(404, $function['headers']['status-code']);
+    }
+
+    public function testDeleteSiteRulesCleanup(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => ID::unique(),
+            'name' => 'Test Rules Cleanup Site',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './',
+            'fallbackFile' => '',
+        ]);
+
+        $this->assertNotEmpty($siteId);
+
+        // Create a manual deployment rule (type = 'deployment')
+        $domain = $this->setupSiteDomain($siteId);
+        $this->assertNotEmpty($domain);
+
+        // Create a redirect rule (type = 'redirect')
+        $redirectDomain = \uniqid() . '-redirect-cleanup.custom.localhost';
+        $redirectRule = $this->client->call(Client::METHOD_POST, '/proxy/rules/redirect', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'domain' => $redirectDomain,
+            'url' => 'https://appwrite.io',
+            'statusCode' => 301,
+            'resourceType' => 'site',
+            'resourceId' => $siteId,
+        ]);
+
+        $this->assertEquals(201, $redirectRule['headers']['status-code']);
+        $this->assertNotEmpty($redirectRule['body']['$id']);
+
+        // Verify both rules exist (no type filter — catches all rule types)
+        $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('deploymentResourceId', [$siteId])->toString()
+            ]
+        ]);
+
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(2, $rules['body']['total']);
+
+        // Delete the site
+        $this->cleanupSite($siteId);
+
+        // Verify ALL rules (deployment + redirect) are cleaned up
+        $this->assertEventually(function () use ($siteId) {
+            $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => [
+                    Query::equal('deploymentResourceId', [$siteId])->toString()
+                ]
+            ]);
+
+            $this->assertEquals(200, $rules['headers']['status-code']);
+            $this->assertEquals(0, $rules['body']['total']);
+        }, 5000, 500);
     }
 
     public function testGetFrameworks(): void
@@ -2076,7 +2141,7 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
-            'installCommand' => 'npm install',
+            'installCommand' => 'npm ci',
             'fallbackFile' => '',
         ]);
 
@@ -2176,7 +2241,7 @@ class SitesCustomServerTest extends Scope
                 'buildRuntime' => 'node-22',
                 'outputDirectory' => './dist',
                 'buildCommand' => 'npm run build',
-                'installCommand' => 'npm install',
+                'installCommand' => 'npm ci',
                 'fallbackFile' => '',
                 'logging' => false // set logging to false
             ]
@@ -2605,7 +2670,7 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
-            'installCommand' => 'npm install',
+            'installCommand' => 'npm ci',
         ]);
 
         $this->assertNotEmpty($siteId);
@@ -2965,7 +3030,7 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
-            'installCommand' => 'echo "custom error" && npm install',
+            'installCommand' => 'echo "custom error" && npm ci',
             'adapter' => 'ssr',
         ]);
         $this->assertNotEmpty($siteId);
@@ -3008,7 +3073,7 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
-            'installCommand' => 'npm install',
+            'installCommand' => 'npm ci',
             'fallbackFile' => '',
         ]);
 
@@ -3050,7 +3115,7 @@ class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
-            'installCommand' => 'npm install',
+            'installCommand' => 'npm ci',
             'fallbackFile' => '',
         ]);
 
