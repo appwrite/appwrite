@@ -212,12 +212,14 @@ class Create extends Action
             $providerCommitAuthor = $commitDetails["commitAuthor"] ?? '';
             $providerCommitMessage = $commitDetails["commitMessage"] ?? '';
 
+            $prFiles = $github->getPullRequestFiles($providerRepositoryOwner, $providerRepositoryName, $providerPullRequestId);
+            $providerAffectedFiles = array_column($prFiles, 'filename');
+
             $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', [
                 Query::equal('providerRepositoryId', [$providerRepositoryId]),
                 Query::orderDesc('$createdAt')
             ]));
 
-            $providerAffectedFiles = $parsedPayload['affectedFiles'] ?? [];
             $this->createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $providerAffectedFiles, $external, $dbForPlatform, $authorization, $queueForBuilds, $getProjectDB, $platform);
         } elseif ($action == "closed") {
             // Allowed external contributions cleanup

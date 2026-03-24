@@ -5220,12 +5220,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "b37bf9c465db41b25bd741783ae36bf6b898fbdb"
+                "reference": "0d67c732ffd8e175446dd28ae77ee2137de89936"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/b37bf9c465db41b25bd741783ae36bf6b898fbdb",
-                "reference": "b37bf9c465db41b25bd741783ae36bf6b898fbdb",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/0d67c732ffd8e175446dd28ae77ee2137de89936",
+                "reference": "0d67c732ffd8e175446dd28ae77ee2137de89936",
                 "shasum": ""
             },
             "require": {
@@ -5261,7 +5261,7 @@
                 "issues": "https://github.com/utopia-php/vcs/issues",
                 "source": "https://github.com/utopia-php/vcs/tree/ser-401"
             },
-            "time": "2026-03-24T03:31:54+00:00"
+            "time": "2026-03-24T07:46:27+00:00"
         },
         {
             "name": "utopia-php/websocket",
