@@ -25,14 +25,6 @@ import { TransferDomainInSummary } from './TransferDomainInSummary'
 
 const PRICE_DEBOUNCE_MS = 500
 
-function buildTransferInReturnUrl(orgId: string, domainId: string) {
-  const base = window.location.origin
-  const q = new URLSearchParams()
-  q.set('payment', 'transfer_in')
-  q.set('domainId', domainId)
-  return `${base}/organizations/${orgId}/domains/transfer-in?${q.toString()}`
-}
-
 export function TransferDomainInWizard({
   search,
 }: {
@@ -154,13 +146,9 @@ export function TransferDomainInWizard({
       }
 
       if (purchase.clientSecret) {
-        const returnUrl = buildTransferInReturnUrl(orgId, purchase.domainId)
         await confirmPayment({
           clientSecret: purchase.clientSecret,
-          paymentMethodId,
-          returnUrl,
         })
-        return { kind: 'redirect' as const }
       }
 
       const finalized = await finalizeDomainTransferIn({
@@ -173,7 +161,6 @@ export function TransferDomainInWizard({
       return { kind: 'done' as const, domainId: finalized.domainId }
     },
     onSuccess: async (result) => {
-      if (result.kind === 'redirect') return
       await queryClient.refetchQueries({
         queryKey: ['domains', 'organization', orgId],
       })

@@ -65,14 +65,6 @@ function renewalPeriodSuffix(periodYears: number) {
   return `/${periodYears} yrs`
 }
 
-function buildPurchaseReturnUrl(orgId: string, domainId: string) {
-  const base = window.location.origin
-  const q = new URLSearchParams()
-  q.set('payment', 'purchase')
-  q.set('domainId', domainId)
-  return `${base}/organizations/${orgId}/domains/buy?${q.toString()}`
-}
-
 /** Right-column order summary for the buy-domain checkout wizard. */
 export function BuyDomainPurchaseSummary({
   selection,
@@ -285,13 +277,10 @@ export function BuyDomainCheckout({
       }
 
       if (purchase.clientSecret) {
-        const returnUrl = buildPurchaseReturnUrl(orgId, purchase.domainId)
+        // Backend already confirmed the PI; handle 3DS inline (no redirect)
         await confirmPayment({
           clientSecret: purchase.clientSecret,
-          paymentMethodId,
-          returnUrl,
         })
-        return { kind: 'redirect' as const }
       }
 
       const finalized = await finalizeDomainPurchase({
@@ -304,9 +293,6 @@ export function BuyDomainCheckout({
       return { kind: 'done' as const, domainId: finalized.domainId }
     },
     onSuccess: async (result) => {
-      if (result.kind === 'redirect') {
-        return
-      }
       await queryClient.refetchQueries({
         queryKey: ['domains', 'organization', orgId],
       })
