@@ -1165,7 +1165,7 @@ trait MigrationsBase
         $folderPath = realpath(__DIR__ . '/../../../resources/sites') . "/$site";
         $tarPath = "$folderPath/code.tar.gz";
 
-        Console::execute("cd $folderPath && tar --exclude code.tar.gz -czf code.tar.gz .", '', $stdout, $stderr);
+        Console::execute("cd $folderPath && tar --exclude code.tar.gz --exclude node_modules -czf code.tar.gz .", '', $stdout, $stderr);
 
         return new CURLFile($tarPath, 'application/x-gzip', \basename($tarPath));
     }
