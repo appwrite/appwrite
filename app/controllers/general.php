@@ -1216,6 +1216,15 @@ Http::error()
     ->inject('devKey')
     ->inject('authorization')
     ->action(function (Throwable $error, Http $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, Bus $bus, Document $devKey, Authorization $authorization) {
+        $trace = $error->getTrace();
+
+        foreach (array_slice($trace, 0, 100) as $index => $traceEntry) {
+            $file = isset($traceEntry['file']) ? $traceEntry['file'] : '[internal function]';
+            $line = isset($traceEntry['line']) ? $traceEntry['line'] : '';
+            $function = isset($traceEntry['function']) ? $traceEntry['function'] : '';
+            Console::error("[$index] $file : $line -> $function()");
+        }
+
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
         $class = \get_class($error);
