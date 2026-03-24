@@ -333,7 +333,9 @@ class Migrations extends Action
                 'targets.read',
                 'targets.write',
                 'webhooks.read',
-                'webhooks.write'
+                'webhooks.write',
+                'project.read',
+                'project.write'
             ]
         ]);
 
