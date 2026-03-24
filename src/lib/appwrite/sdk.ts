@@ -31,6 +31,7 @@ import {
   TablesDB,
   Domains,
   Organizations,
+  Webhooks,
 } from '@appwrite.io/console'
 import {
   getDebugEndpointBaseUrl,
@@ -167,6 +168,7 @@ function createConsoleSdkRaw(client: Client) {
     domains: new Domains(client),
     storage: new Storage(client),
     organizations: new Organizations(client),
+    webhooks: new Webhooks(client),
   }
 }
 
@@ -298,6 +300,7 @@ const sdkForProjectRaw = {
   sites: new Sites(clientProject),
   tablesDB: new TablesDB(clientProject),
   console: new Console(clientProject), // for suggestions API
+  webhooks: new Webhooks(clientProject),
 }
 
 const sdkForProject = wrapServiceObject(

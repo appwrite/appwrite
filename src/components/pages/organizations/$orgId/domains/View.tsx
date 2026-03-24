@@ -57,6 +57,7 @@ import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { CreateDomainDialog } from './CreateDomain'
 import { RetryVerification } from './RetryVerification'
+import { DomainContextMenu } from './_components/DomainContextMenu'
 import type { Models } from '@appwrite.io/console'
 import {
   useCreateOrganizationDomain,
@@ -664,43 +665,44 @@ export function View() {
               {paginatedDomains.map((domain) => {
                 const verification = getVerificationStatus(domain)
                 return (
-                  <Link
-                    key={domain.$id}
-                    to="/organizations/$orgId/domains/$domainId"
-                    params={{ orgId, domainId: domain.$id }}
-                  >
-                    <ResourceCard
-                      title={domain.domain}
-                      resourceId={domain.$id}
-                      icon={Globe}
-                      iconColor="bg-muted text-muted-foreground"
-                      status={
-                        verification.status === 'verified'
-                          ? 'success'
-                          : 'warning'
-                      }
-                      statusLabel={verification.label}
-                      metadata={[
-                        {
-                          label: 'Nameservers',
-                          value: (
-                            <span className="text-[11px] font-medium text-muted-foreground">
-                              {domain.nameservers || '—'}
-                            </span>
-                          ),
-                        },
-                        {
-                          label: 'Created',
-                          value: (
-                            <DateTooltip
-                              date={domain.$createdAt}
-                              className="text-[11px] font-medium text-muted-foreground"
-                            />
-                          ),
-                        },
-                      ]}
-                    />
-                  </Link>
+                  <DomainContextMenu key={domain.$id} orgId={orgId!} domain={domain}>
+                    <Link
+                      to="/organizations/$orgId/domains/$domainId"
+                      params={{ orgId, domainId: domain.$id }}
+                    >
+                      <ResourceCard
+                        title={domain.domain}
+                        resourceId={domain.$id}
+                        icon={Globe}
+                        iconColor="bg-muted text-muted-foreground"
+                        status={
+                          verification.status === 'verified'
+                            ? 'success'
+                            : 'warning'
+                        }
+                        statusLabel={verification.label}
+                        metadata={[
+                          {
+                            label: 'Nameservers',
+                            value: (
+                              <span className="text-[11px] font-medium text-muted-foreground">
+                                {domain.nameservers || '—'}
+                              </span>
+                            ),
+                          },
+                          {
+                            label: 'Created',
+                            value: (
+                              <DateTooltip
+                                date={domain.$createdAt}
+                                className="text-[11px] font-medium text-muted-foreground"
+                              />
+                            ),
+                          },
+                        ]}
+                      />
+                    </Link>
+                  </DomainContextMenu>
                 )
               })}
             </div>

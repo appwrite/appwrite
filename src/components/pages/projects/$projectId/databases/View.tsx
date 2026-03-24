@@ -103,6 +103,7 @@ import { TableContextMenu } from './_components/TableContextMenu'
 import { DatabaseSelector } from './_components/DatabaseSelector'
 import { TableSelector } from './_components/TableSelector'
 import { RowContextMenu } from './_components/RowContextMenu'
+import { DatabaseContextMenu } from './_components/DatabaseContextMenu'
 import { ImportCsv } from './_components/ImportCsv'
 import { ExportCsv } from './_components/ExportCsv'
 import { ComingSoonCurtain } from '@/components/ui/coming-soon-curtain'
@@ -565,6 +566,11 @@ export function View() {
 
   // Total count of all databases (without search) - for limit checking
   const totalDatabasesCount = totalDatabasesData?.total || 0
+
+  const showDbSecuritySettings = canShowDatabaseSecuritySettings(
+    access,
+    features,
+  )
 
   // Check if create button should be disabled (plan limit or missing write scope)
   const noCreateDbPermission = !canCreateDatabase(access, features)
@@ -1124,53 +1130,62 @@ export function View() {
                     backupPolicyCount?: number
                   },
                 ) => (
-                  <Link
+                  <DatabaseContextMenu
                     key={db.$id}
-                    to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
-                    params={{ projectId, databaseId: db.$id, tableId: '-' }}
+                    projectId={projectId}
+                    database={{ $id: db.$id, name: db.name }}
+                    showSecuritySettings={showDbSecuritySettings}
+                    showBackups={features.databaseBackups}
+                    showInsights={features.databaseInsights}
                   >
-                    <ResourceCard
-                      title={db.name}
-                      resourceId={db.$id}
-                      icon={Database}
-                      iconColor="bg-muted text-muted-foreground"
-                      status={db.enabled === false ? 'error' : undefined}
-                      statusLabel={
-                        db.enabled === false ? 'Disabled' : undefined
-                      }
-                      metadata={
-                        features.databaseBackups
-                          ? [
-                              {
-                                label: '',
-                                value: (db as DatabaseWithBackup)
-                                  .hasBackupPolicy ? (
-                                  <Badge
-                                    variant="success"
-                                    className="gap-1.5 text-[11px] font-medium"
-                                  >
-                                    <CheckCircle2 className="h-3 w-3" />
-                                    {(db as DatabaseWithBackup)
-                                      .backupPolicyCount > 0
-                                      ? `${(db as DatabaseWithBackup).backupPolicyCount} ${(db as DatabaseWithBackup).backupPolicyCount === 1 ? 'policy' : 'policies'}`
-                                      : (db as DatabaseWithBackup).backupPolicy
-                                          ?.name || 'Backup Enabled'}
-                                  </Badge>
-                                ) : (
-                                  <Badge
-                                    variant="warning"
-                                    className="gap-1.5 text-[11px] font-medium"
-                                  >
-                                    <AlertCircle className="h-3 w-3" />
-                                    No backup policies
-                                  </Badge>
-                                ),
-                              },
-                            ]
-                          : []
-                      }
-                    />
-                  </Link>
+                    <Link
+                      to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
+                      params={{ projectId, databaseId: db.$id, tableId: '-' }}
+                    >
+                      <ResourceCard
+                        title={db.name}
+                        resourceId={db.$id}
+                        icon={Database}
+                        iconColor="bg-muted text-muted-foreground"
+                        status={db.enabled === false ? 'error' : undefined}
+                        statusLabel={
+                          db.enabled === false ? 'Disabled' : undefined
+                        }
+                        metadata={
+                          features.databaseBackups
+                            ? [
+                                {
+                                  label: '',
+                                  value: (db as DatabaseWithBackup)
+                                    .hasBackupPolicy ? (
+                                    <Badge
+                                      variant="success"
+                                      className="gap-1.5 text-[11px] font-medium"
+                                    >
+                                      <CheckCircle2 className="h-3 w-3" />
+                                      {(db as DatabaseWithBackup)
+                                        .backupPolicyCount > 0
+                                        ? `${(db as DatabaseWithBackup).backupPolicyCount} ${(db as DatabaseWithBackup).backupPolicyCount === 1 ? 'policy' : 'policies'}`
+                                        : (db as DatabaseWithBackup)
+                                            .backupPolicy?.name ||
+                                          'Backup Enabled'}
+                                    </Badge>
+                                  ) : (
+                                    <Badge
+                                      variant="warning"
+                                      className="gap-1.5 text-[11px] font-medium"
+                                    >
+                                      <AlertCircle className="h-3 w-3" />
+                                      No backup policies
+                                    </Badge>
+                                  ),
+                                },
+                              ]
+                            : []
+                        }
+                      />
+                    </Link>
+                  </DatabaseContextMenu>
                 ),
               )}
 

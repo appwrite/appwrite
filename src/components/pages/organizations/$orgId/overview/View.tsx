@@ -68,6 +68,7 @@ import {
 import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import {
   canSeeProjects,
+  canShowProjectSettings,
   canShowOrgDomainsTab,
   canShowOrgSettingsTab,
   canAccessOrgSettingsOverview,
@@ -80,6 +81,7 @@ import {
   canCreateProject,
   canPinProjects,
 } from '@/lib/console-access-checks'
+import { ProjectContextMenu } from './_components/ProjectContextMenu'
 
 import {
   Popover,
@@ -267,6 +269,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const matches = useMatches()
   const [searchQuery, setSearchQuery] = useState('')
   const { features, isCloud } = useConsoleProfile()
+  const supportsMultiRegion = features.multiRegion
   const { access } = useOrganizationScopes(orgId)
   const { showSuccessTeamCard: debugShowSuccessTeamCard } = useDebugOverrides()
 
@@ -881,6 +884,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   }, [pinnedProjects, searchQuery])
 
   const canPinProjectsResult = canPinProjects(access, features)
+  const canManageProjects = canCreateProject(access, features)
+  const showProjectSettingsTab = canShowProjectSettings(access, features)
 
   const handlePinProject = (projectId: string) => {
     if (!canPinProjectsResult) return
@@ -907,6 +912,19 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       },
       onError: () => toast.error('Failed to update pinned projects'),
     })
+  }
+
+  const handleProjectDeleted = async (projectId: string) => {
+    if (!pinnedIds.includes(projectId)) return
+    const prefs = {
+      ...(teamPrefs || {}),
+      ...buildPinnedProjectIdsPrefs(pinnedIds.filter((id) => id !== projectId)),
+    }
+    try {
+      await updateTeamPrefsMutation.mutateAsync(prefs as Record<string, unknown>)
+    } catch {
+      // Keep project deletion successful even if pin cleanup fails.
+    }
   }
 
   // Get active projects from API (already filtered by team server-side, excludes pinned)
@@ -1763,65 +1781,73 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                 </h2>
                                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                                   {pinnedFiltered.map((project) => (
-                                    <div
+                                    <ProjectContextMenu
                                       key={project.$id}
-                                      className="group relative rounded-xl border border-border bg-card/50 p-4 transition-all hover:border-border hover:bg-card"
-                                      data-project-card
+                                      project={project}
+                                      showSettingsTab={showProjectSettingsTab}
+                                      canDeleteProject={canManageProjects}
+                                      onProjectDeleted={handleProjectDeleted}
                                     >
-                                      <Link
-                                        to="/projects/$projectId"
-                                        params={{ projectId: project.$id }}
-                                        className="block"
+                                      <div
+                                        className="group relative rounded-xl border border-border bg-card/50 p-4 transition-all hover:border-border hover:bg-card"
+                                        data-project-card
                                       >
-                                        <div>
-                                          <h3 className="text-[14px] font-medium text-foreground group-hover:text-foreground">
-                                            {project.name}
-                                          </h3>
-                                          {project.region && (
-                                            <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
-                                              <RegionFlag
-                                                region={project.region}
-                                              />
-                                              {project.region}
-                                            </div>
-                                          )}
-                                        </div>
-                                        <ProjectCardFooter
-                                          platformsCount={
-                                            project.platformsCount || 0
-                                          }
-                                          apiKeysCount={
-                                            project.apiKeysCount || 0
-                                          }
-                                          paused={project.paused}
-                                        />
-                                      </Link>
-                                      {canPinProjectsResult && (
-                                        <TooltipProvider delayDuration={0}>
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="absolute right-2 top-2 h-8 w-8 rounded-md opacity-0 transition-opacity group-hover:opacity-100"
-                                                onClick={(e) => {
-                                                  e.preventDefault()
-                                                  handlePinProject(project.$id)
-                                                }}
-                                                disabled={
-                                                  updateTeamPrefsMutation.isPending
-                                                }
-                                              >
-                                                <PinOff className="h-4 w-4" />
-                                              </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                              <p>Unpin project</p>
-                                            </TooltipContent>
-                                          </Tooltip>
-                                        </TooltipProvider>
-                                      )}
-                                    </div>
+                                        <Link
+                                          to="/projects/$projectId"
+                                          params={{ projectId: project.$id }}
+                                          className="block"
+                                        >
+                                          <div>
+                                            <h3 className="text-[14px] font-medium text-foreground group-hover:text-foreground">
+                                              {project.name}
+                                            </h3>
+                                            {supportsMultiRegion &&
+                                              project.region && (
+                                              <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                                                <RegionFlag
+                                                  region={project.region}
+                                                />
+                                                {project.region}
+                                              </div>
+                                            )}
+                                          </div>
+                                          <ProjectCardFooter
+                                            platformsCount={
+                                              project.platformsCount || 0
+                                            }
+                                            apiKeysCount={
+                                              project.apiKeysCount || 0
+                                            }
+                                            paused={project.paused}
+                                          />
+                                        </Link>
+                                        {canPinProjectsResult && (
+                                          <TooltipProvider delayDuration={0}>
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <Button
+                                                  variant="ghost"
+                                                  size="icon"
+                                                  className="absolute right-2 top-2 h-8 w-8 rounded-md opacity-0 transition-opacity group-hover:opacity-100"
+                                                  onClick={(e) => {
+                                                    e.preventDefault()
+                                                    handlePinProject(project.$id)
+                                                  }}
+                                                  disabled={
+                                                    updateTeamPrefsMutation.isPending
+                                                  }
+                                                >
+                                                  <PinOff className="h-4 w-4" />
+                                                </Button>
+                                              </TooltipTrigger>
+                                              <TooltipContent>
+                                                <p>Unpin project</p>
+                                              </TooltipContent>
+                                            </Tooltip>
+                                          </TooltipProvider>
+                                        )}
+                                      </div>
+                                    </ProjectContextMenu>
                                   ))}
                                 </div>
                               </div>
@@ -1845,71 +1871,80 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         const canPin =
                                           pinnedIds.length < MAX_PINNED_PROJECTS
                                         return (
-                                          <div
+                                          <ProjectContextMenu
                                             key={project.$id}
-                                            className="group relative rounded-xl border border-border bg-card/50 p-4 transition-all hover:border-border hover:bg-card"
-                                            data-project-card
+                                            project={project}
+                                            showSettingsTab={showProjectSettingsTab}
+                                            canDeleteProject={canManageProjects}
+                                            onProjectDeleted={handleProjectDeleted}
                                           >
-                                            <Link
-                                              to="/projects/$projectId"
-                                              params={{
-                                                projectId: project.$id,
-                                              }}
-                                              className="block"
+                                            <div
+                                              className="group relative rounded-xl border border-border bg-card/50 p-4 transition-all hover:border-border hover:bg-card"
+                                              data-project-card
                                             >
-                                              <div>
-                                                <h3 className="text-[14px] font-medium text-foreground group-hover:text-foreground">
-                                                  {project.name}
-                                                </h3>
-                                                {project.region && (
-                                                  <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
-                                                    <RegionFlag
-                                                      region={project.region}
-                                                    />
-                                                    {project.region}
-                                                  </div>
-                                                )}
-                                              </div>
-                                              <ProjectCardFooter
-                                                platformsCount={
-                                                  project.platformsCount || 0
-                                                }
-                                                apiKeysCount={
-                                                  project.apiKeysCount || 0
-                                                }
-                                                paused={project.paused}
-                                              />
-                                            </Link>
-                                            {canPin && canPinProjectsResult && (
-                                              <TooltipProvider
-                                                delayDuration={0}
+                                              <Link
+                                                to="/projects/$projectId"
+                                                params={{
+                                                  projectId: project.$id,
+                                                }}
+                                                className="block"
                                               >
-                                                <Tooltip>
-                                                  <TooltipTrigger asChild>
-                                                    <Button
-                                                      variant="ghost"
-                                                      size="icon"
-                                                      className="absolute right-2 top-2 h-8 w-8 rounded-md opacity-0 transition-opacity group-hover:opacity-100"
-                                                      onClick={(e) => {
-                                                        e.preventDefault()
-                                                        handlePinProject(
-                                                          project.$id,
-                                                        )
-                                                      }}
-                                                      disabled={
-                                                        updateTeamPrefsMutation.isPending
-                                                      }
-                                                    >
-                                                      <Pin className="h-4 w-4" />
-                                                    </Button>
-                                                  </TooltipTrigger>
-                                                  <TooltipContent>
-                                                    <p>Pin project</p>
-                                                  </TooltipContent>
-                                                </Tooltip>
-                                              </TooltipProvider>
-                                            )}
-                                          </div>
+                                                <div>
+                                                  <h3 className="text-[14px] font-medium text-foreground group-hover:text-foreground">
+                                                    {project.name}
+                                                  </h3>
+                                                  {supportsMultiRegion &&
+                                                    project.region && (
+                                                    <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                                                      <RegionFlag
+                                                        region={project.region}
+                                                      />
+                                                      {project.region}
+                                                    </div>
+                                                  )}
+                                                </div>
+                                                <ProjectCardFooter
+                                                  platformsCount={
+                                                    project.platformsCount || 0
+                                                  }
+                                                  apiKeysCount={
+                                                    project.apiKeysCount || 0
+                                                  }
+                                                  paused={project.paused}
+                                                />
+                                              </Link>
+                                              {canPin &&
+                                                canPinProjectsResult && (
+                                                  <TooltipProvider
+                                                    delayDuration={0}
+                                                  >
+                                                    <Tooltip>
+                                                      <TooltipTrigger asChild>
+                                                        <Button
+                                                          variant="ghost"
+                                                          size="icon"
+                                                          className="absolute right-2 top-2 h-8 w-8 rounded-md opacity-0 transition-opacity group-hover:opacity-100"
+                                                          onClick={(e) => {
+                                                            e.preventDefault()
+                                                            handlePinProject(
+                                                              project.$id,
+                                                            )
+                                                          }}
+                                                          disabled={
+                                                            updateTeamPrefsMutation.isPending
+                                                          }
+                                                        >
+                                                          <Pin className="h-4 w-4" />
+                                                        </Button>
+                                                      </TooltipTrigger>
+                                                      <TooltipContent>
+                                                        <p>Pin project</p>
+                                                      </TooltipContent>
+                                                    </Tooltip>
+                                                  </TooltipProvider>
+                                                )}
+                                            </div>
+                                          </ProjectContextMenu>
                                         )
                                       })}
                                     </div>

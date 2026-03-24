@@ -80,6 +80,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox'
 import { GitConfigurationCard } from './GitConfigurationCard'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 // Copyable Input Component
 interface CopyableInputProps {
@@ -137,6 +138,8 @@ interface ProjectSettingsOverviewProps {
 export function ProjectSettingsOverview({
   projectId,
 }: ProjectSettingsOverviewProps) {
+  const { features } = useConsoleProfile()
+  const supportsMultiRegion = features.multiRegion
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const search = useSearch({ from: '/_public/projects/$projectId/settings' })
@@ -883,6 +886,7 @@ export function ProjectSettingsOverview({
           {/* Delete Project Section */}
           <DeleteProjectSection
             project={project}
+            supportsMultiRegion={supportsMultiRegion}
             deleteConfirmation={deleteConfirmation}
             onDeleteConfirmationChange={setDeleteConfirmation}
             deleteDialogOpen={deleteDialogOpen}
@@ -1108,6 +1112,7 @@ function ChangeOrganizationSection({
 // Delete Project Section Component
 interface DeleteProjectSectionProps {
   project: Pick<Models.Project, 'name' | 'teamId' | '$id' | 'region'>
+  supportsMultiRegion: boolean
   deleteConfirmation: string
   onDeleteConfirmationChange: (value: string) => void
   deleteDialogOpen: boolean
@@ -1117,6 +1122,7 @@ interface DeleteProjectSectionProps {
 
 function DeleteProjectSection({
   project,
+  supportsMultiRegion,
   deleteConfirmation,
   onDeleteConfirmationChange,
   deleteDialogOpen,
@@ -1146,7 +1152,7 @@ function DeleteProjectSection({
                 <p className="text-[14px] font-medium text-foreground truncate">
                   {project.name}
                 </p>
-                {project.region && (
+                {supportsMultiRegion && project.region && (
                   <p className="text-[12px] text-muted-foreground">
                     Region: {project.region}
                   </p>
@@ -1193,7 +1199,7 @@ function DeleteProjectSection({
                         <p className="text-[13px] font-medium text-foreground">
                           {project.name}
                         </p>
-                        {project.region && (
+                        {supportsMultiRegion && project.region && (
                           <p className="text-[11px] text-muted-foreground">
                             Region: {project.region}
                           </p>

@@ -40,6 +40,7 @@ import { VerifyDomainDialog } from './domains/VerifyDomain'
 import { DeleteDomainDialog } from './domains/DeleteDomain'
 import { ViewLogsDialog } from './domains/ViewLogs'
 import { RetryDomainDialog } from './domains/RetryDomain'
+import { ProxyRuleContextMenu } from './domains/ProxyRuleContextMenu'
 
 interface DomainsProps {
   projectId: string
@@ -177,7 +178,16 @@ export function Domains({
               </TableHeader>
               <TableBody>
                 {paginatedRules.map((rule) => (
-                  <TableRow key={rule.$id}>
+                  <ProxyRuleContextMenu
+                    key={rule.$id}
+                    rule={rule}
+                    projectTeamId={project?.teamId}
+                    apexToOrgDomainId={apexToOrgDomainId}
+                    onViewLogs={handleViewLogs}
+                    onRetry={handleRetry}
+                    onDelete={handleDelete}
+                  >
+                    <TableRow>
                     <TableCell className="px-4 py-3">
                       <a
                         href={`https://${rule.domain}`}
@@ -287,7 +297,8 @@ export function Domains({
                         </DropdownMenu>
                       </div>
                     </TableCell>
-                  </TableRow>
+                    </TableRow>
+                  </ProxyRuleContextMenu>
                 ))}
               </TableBody>
             </Table>

@@ -41,6 +41,7 @@ import {
 import { VerifyDomain } from './_components/VerifyDomain'
 import { ViewLogsDialog } from '@/components/pages/projects/$projectId/settings/domains/ViewLogs'
 import { DeleteDomainDialog } from '@/components/pages/projects/$projectId/settings/domains/DeleteDomain'
+import { ProxyRuleContextMenu } from '@/components/pages/projects/$projectId/settings/domains/ProxyRuleContextMenu'
 import { getDomainStatusBadgeConfig } from '@/lib/utils/status-badge'
 import { getApexDomain } from '@/lib/utils/proxy-domains'
 import { toast } from 'sonner'
@@ -172,7 +173,16 @@ export function View() {
                     const ruleData = rule as Models.ProxyRule
 
                     return (
-                      <TableRow key={ruleData.$id}>
+                      <ProxyRuleContextMenu
+                        key={ruleData.$id}
+                        rule={ruleData}
+                        projectTeamId={project?.teamId}
+                        apexToOrgDomainId={apexToOrgDomainId}
+                        onViewLogs={handleViewLogs}
+                        onRetry={handleRetry}
+                        onDelete={handleDelete}
+                      >
+                        <TableRow>
                         <TableCell className="px-4 py-3">
                           <a
                             href={`https://${ruleData.domain}`}
@@ -296,7 +306,8 @@ export function View() {
                             </DropdownMenu>
                           </div>
                         </TableCell>
-                      </TableRow>
+                        </TableRow>
+                      </ProxyRuleContextMenu>
                     )
                   })}
                 </TableBody>

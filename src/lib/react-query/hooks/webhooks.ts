@@ -10,6 +10,7 @@ import {
   useQueryClient,
   queryOptions,
 } from '@tanstack/react-query'
+import { ID } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { Dependencies } from './dependencies'
 import { DEFAULT_STALE_TIME } from './constants'
@@ -31,7 +32,7 @@ export async function fetchProjectWebhooks(projectId: string) {
     return { webhooks: [], total: 0 }
   }
 
-  const response = await sdk.forConsole.projects.listWebhooks({ projectId })
+  const response = await sdk.forProject(projectId).webhooks.list()
   return {
     webhooks: response.webhooks || [],
     total: response.total || 0,
@@ -101,7 +102,7 @@ export function useProjectWebhook(
       if (!projectId || !webhookId) {
         throw new Error('Project ID and Webhook ID are required')
       }
-      return await sdk.forConsole.projects.getWebhook({ projectId, webhookId })
+      return await sdk.forProject(projectId).webhooks.get({ webhookId })
     },
     enabled: !!projectId && !!webhookId,
     staleTime: DEFAULT_STALE_TIME,
@@ -136,8 +137,8 @@ export function useCreateWebhook(projectId: string | null | undefined) {
       if (!projectId) {
         throw new Error('Project ID is required')
       }
-      return await sdk.forConsole.projects.createWebhook({
-        projectId,
+      return await sdk.forProject(projectId).webhooks.create({
+        webhookId: ID.unique(),
         name: data.name,
         events: data.events,
         url: data.url,
@@ -180,8 +181,7 @@ export function useUpdateWebhook(projectId: string | null | undefined) {
       if (!projectId) {
         throw new Error('Project ID is required')
       }
-      return await sdk.forConsole.projects.updateWebhook({
-        projectId,
+      return await sdk.forProject(projectId).webhooks.update({
         webhookId: data.webhookId,
         name: data.name,
         events: data.events,
@@ -224,8 +224,7 @@ export function useUpdateWebhookSignature(
       if (!projectId) {
         throw new Error('Project ID is required')
       }
-      return await sdk.forConsole.projects.updateWebhookSignature({
-        projectId,
+      return await sdk.forProject(projectId).webhooks.updateSignature({
         webhookId,
       })
     },
@@ -253,8 +252,7 @@ export function useDeleteWebhook(projectId: string | null | undefined) {
       if (!projectId) {
         throw new Error('Project ID is required')
       }
-      return await sdk.forConsole.projects.deleteWebhook({
-        projectId,
+      return await sdk.forProject(projectId).webhooks.delete({
         webhookId,
       })
     },
