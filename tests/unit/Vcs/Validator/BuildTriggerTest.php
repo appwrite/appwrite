@@ -59,6 +59,34 @@ class BuildTriggerTest extends TestCase
         $this->assertFalse($validator->isValid('feature/test'));
     }
 
+    public function testQuestionMarkWildcard(): void
+    {
+        $validator = new BuildTrigger(['v?.?']);
+        $this->assertTrue($validator->isValid('v1.0'));
+        $this->assertTrue($validator->isValid('v2.5'));
+        $this->assertFalse($validator->isValid('v10.0')); // ? matches exactly one char, not two
+        $this->assertFalse($validator->isValid('v1/0'));  // ? does not cross /
+    }
+
+    public function testQuestionMarkDoesNotCrossSlash(): void
+    {
+        $validator = new BuildTrigger(['feature/?']);
+        $this->assertTrue($validator->isValid('feature/a'));
+        $this->assertTrue($validator->isValid('feature/z'));
+        $this->assertFalse($validator->isValid('feature/ab'));   // ? matches only one char
+        $this->assertFalse($validator->isValid('feature/a/b')); // ? does not cross /
+        $this->assertFalse($validator->isValid('feature/'));
+    }
+
+    public function testQuestionMarkMixedWithStar(): void
+    {
+        $validator = new BuildTrigger(['fix-?.*']);
+        $this->assertTrue($validator->isValid('fix-1.php'));
+        $this->assertTrue($validator->isValid('fix-a.js'));
+        $this->assertFalse($validator->isValid('fix-12.php')); // ? matches only one char
+        $this->assertFalse($validator->isValid('fix-.php'));   // ? requires exactly one char
+    }
+
     public function testDoubleWildcardAtEnd(): void
     {
         $validator = new BuildTrigger(['src/**']);
@@ -169,36 +197,36 @@ class BuildTriggerTest extends TestCase
 
     public function testMultipleInclusionsWithSingleExclusion(): void
     {
-        // feature/wip matches the inclusion feature/* → true (exclusion !feature/wip is never reached)
+        // feature/wip matches wildcard inclusion feature/* but specific exclusion !feature/wip overrides it
         $validator = new BuildTrigger(['main', 'develop', 'feature/*', '!feature/wip']);
         $this->assertTrue($validator->isValid('main'));
         $this->assertTrue($validator->isValid('develop'));
         $this->assertTrue($validator->isValid('feature/foo'));
-        $this->assertTrue($validator->isValid('feature/wip'));    // inclusion wins
+        $this->assertFalse($validator->isValid('feature/wip'));   // specific exclusion overrides wildcard inclusion
         $this->assertFalse($validator->isValid('hotfix/urgent')); // no inclusion match
     }
 
     public function testSingleInclusionWithMultipleExclusions(): void
     {
-        // feature/wip and feature/experimental both match the inclusion feature/** → true
+        // specific exclusions !feature/wip and !feature/experimental override wildcard inclusion feature/**
         $validator = new BuildTrigger(['feature/**', '!feature/wip', '!feature/experimental']);
         $this->assertTrue($validator->isValid('feature/foo'));
         $this->assertTrue($validator->isValid('feature/a/b'));
-        $this->assertTrue($validator->isValid('feature/wip'));          // inclusion wins
-        $this->assertTrue($validator->isValid('feature/experimental')); // inclusion wins
-        $this->assertFalse($validator->isValid('main'));                 // no inclusion match
+        $this->assertFalse($validator->isValid('feature/wip'));          // specific exclusion wins
+        $this->assertFalse($validator->isValid('feature/experimental')); // specific exclusion wins
+        $this->assertFalse($validator->isValid('main'));                  // no inclusion match
     }
 
     public function testMultipleInclusionsWithMultipleExclusions(): void
     {
-        // feature/wip and feature/experimental both match the inclusion feature/** → true
+        // specific exclusions override the wildcard inclusion; specific inclusion 'main' is unaffected
         $validator = new BuildTrigger(['main', 'feature/**', '!feature/wip', '!feature/experimental']);
-        $this->assertTrue($validator->isValid('main'));
+        $this->assertTrue($validator->isValid('main'));          // specific inclusion wins regardless
         $this->assertTrue($validator->isValid('feature/foo'));
         $this->assertTrue($validator->isValid('feature/a/b'));
-        $this->assertTrue($validator->isValid('feature/wip'));          // inclusion wins
-        $this->assertTrue($validator->isValid('feature/experimental')); // inclusion wins
-        $this->assertFalse($validator->isValid('develop'));             // no inclusion match
+        $this->assertFalse($validator->isValid('feature/wip'));          // specific exclusion wins
+        $this->assertFalse($validator->isValid('feature/experimental')); // specific exclusion wins
+        $this->assertFalse($validator->isValid('develop'));              // no inclusion match
     }
 
     public function testSpecificInclusionOverridesWildcardExclusion(): void
