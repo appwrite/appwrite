@@ -253,7 +253,7 @@ return [
             getFramework('VITE', [
                 'providerRootDirectory' => './vite/vitepress',
                 'outputDirectory' => '404.html',
-                'installCommand' => 'npm i vitepress && npm install',
+                'installCommand' => 'npm i vitepress && npm ci',
                 'buildCommand' => 'npm run docs:build',
                 'outputDirectory' => './.vitepress/dist',
             ]),
