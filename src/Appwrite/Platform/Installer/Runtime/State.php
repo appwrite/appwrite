@@ -13,13 +13,15 @@ class State
     private const string PATTERN_IPV6_WITH_PORT = '/^\[(.+)](?::(\d+))?$/';
 
     private const int CONFIG_FILE_PERMISSION = 0600;
-    private const int GLOBAL_LOCK_TIMEOUT_SECONDS = 3600;
+    private const int GLOBAL_LOCK_TIMEOUT_SECONDS = 300;
+    private const int STALE_LOCK_CHECK_INTERVAL_SECONDS = 30;
 
     private const int PORT_MIN = 1;
     private const int PORT_MAX = 65535;
 
     private array $paths;
     private bool $bootstrapped = false;
+    private int $lastStaleLockClearAt = 0;
 
     public function __construct(array $paths)
     {
@@ -252,6 +254,16 @@ class State
                 @unlink($file);
             }
         }
+    }
+
+    public function clearStaleLockIfNeeded(): void
+    {
+        $now = time();
+        if ($now - $this->lastStaleLockClearAt < self::STALE_LOCK_CHECK_INTERVAL_SECONDS) {
+            return;
+        }
+        $this->lastStaleLockClearAt = $now;
+        $this->clearStaleLock();
     }
 
     public function reserveGlobalLock(string $installId): string
