@@ -124,10 +124,19 @@ export async function confirmPayment(config: {
   }
 
   if (paymentIntent?.status === 'requires_action') {
-    const { error } = await stripe.handleNextAction({
-      clientSecret: config.clientSecret,
-    })
+    const { error, paymentIntent: updatedIntent } =
+      await stripe.handleNextAction({
+        clientSecret: config.clientSecret,
+      })
     if (error) throw new Error(error.message ?? 'Payment confirmation failed')
+
+    // If the user dismissed the 3DS modal the PI reverts to requires_payment_method
+    // without surfacing an error — detect this and throw an actionable message.
+    if (updatedIntent?.status === 'requires_payment_method') {
+      throw new Error(
+        'Authentication was cancelled. Please try again or use a different payment method.',
+      )
+    }
   }
   // If already requires_capture or succeeded, nothing to do client-side
 }

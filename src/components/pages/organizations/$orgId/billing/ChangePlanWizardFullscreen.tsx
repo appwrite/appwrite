@@ -89,7 +89,9 @@ export function ChangePlanWizardFullscreen() {
     [memberships, membersTotal],
   )
 
-  // Check if user has a free organization
+  // Check if user has a free organization.
+  // org.plan is derived from billingPlan via getPlanNameFromTier() in useOrganizations(),
+  // so 'free' already covers tier-0 / Tier0 variants — no need for additional checks.
   const hasFreeOrgs = useMemo(() => {
     return organizations.some((org) => org.plan === 'free')
   }, [organizations])
@@ -384,12 +386,13 @@ export function ChangePlanWizardFullscreen() {
         await confirmPayment({
           clientSecret: resultObj.clientSecret,
         })
-        // 3DS succeeded — validate the organization
-        await validateOrganizationMutation.mutateAsync({
-          organizationId: orgId,
-          invites: [],
-        })
       }
+
+      // Validate the organization after payment (needed regardless of 3DS)
+      await validateOrganizationMutation.mutateAsync({
+        organizationId: orgId,
+        invites: [],
+      })
 
       toast.success('Plan updated successfully')
       navigate({
