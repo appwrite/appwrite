@@ -1216,6 +1216,11 @@ return [
         'description' => 'Migration is already in progress. You can check the status of the migration in your Appwrite Console\'s "Settings" > "Migrations".',
         'code' => 409,
     ],
+    Exception::MIGRATION_DATABASE_TYPE_UNSUPPORTED => [
+        'name' => Exception::MIGRATION_DATABASE_TYPE_UNSUPPORTED,
+        'description' => 'The specified database type is not supported for CSV import or export operations.',
+        'code' => 400,
+    ],
 
     /** Realtime */
     Exception::REALTIME_MESSAGE_FORMAT_INVALID => [
