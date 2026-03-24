@@ -8,7 +8,7 @@ class Platforms extends Base
         'type',
         'name',
         'hostname',
-        'key', // TODO: API should all it "identifier"
+        'identifier',
     ];
 
     /**
