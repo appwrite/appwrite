@@ -16,7 +16,7 @@ class MessagingChannelsTest extends TestCase
      */
     public $connectionsPerChannel = 10;
 
-    public Realtime $realtime;
+    public ?Realtime $realtime = null;
     public $connectionsCount = 0;
     public $connectionsAuthenticated = 0;
     public $connectionsGuest = 0;
@@ -125,7 +125,7 @@ class MessagingChannelsTest extends TestCase
 
     public function tearDown(): void
     {
-        unset($this->realtime);
+        $this->realtime = null;
         $this->connectionsCount = 0;
     }
 
