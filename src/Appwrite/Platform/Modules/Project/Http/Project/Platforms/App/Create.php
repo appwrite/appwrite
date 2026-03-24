@@ -123,7 +123,7 @@ class Create extends Base
         Database $dbForPlatform,
         Authorization $authorization,
     ) {
-        $hostname = null;
+        $hostname = '';
 
         // Backwards compatibility
         $isDeprecatedRequest = false;
