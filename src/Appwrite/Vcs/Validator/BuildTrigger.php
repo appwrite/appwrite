@@ -34,7 +34,7 @@ class BuildTrigger extends Validator
         }
 
         // A pattern is "specific" when it contains no wildcard characters.
-        $isSpecific = fn ($p) => !str_contains($p, '*') && !str_contains($p, '?');
+        $isSpecific = fn ($pattern) => !str_contains($pattern, '*') && !str_contains($pattern, '?');
 
         // 1. Specific inclusion always wins — an explicit exact match is never blocked.
         foreach ($include as $pattern) {
@@ -43,15 +43,14 @@ class BuildTrigger extends Validator
             }
         }
 
-        // 2. Specific exclusion overrides a wildcard inclusion — refines broad patterns.
+        // 2. Any exclusion (specific or wildcard) overrides a wildcard inclusion — refines broad patterns.
         foreach ($exclude as $pattern) {
-            $raw = substr($pattern, 1);
-            if ($isSpecific($raw) && $this->matchGlob($value, $raw)) {
+            if ($this->matchGlob($value, substr($pattern, 1))) {
                 return false;
             }
         }
 
-        // 3. Wildcard inclusion wins over any remaining wildcard exclusion.
+        // 3. Wildcard inclusion — no exclusion blocked it.
         foreach ($include as $pattern) {
             if (!$isSpecific($pattern) && $this->matchGlob($value, $pattern)) {
                 return true;
@@ -64,7 +63,7 @@ class BuildTrigger extends Validator
 
     public function getDescription(): string
     {
-        return 'Value must match a specific inclusion, or a wildcard inclusion not overridden by a specific exclusion.';
+        return 'Value must match a specific inclusion, or a wildcard inclusion not overridden by any exclusion.';
     }
 
     public function isArray(): bool

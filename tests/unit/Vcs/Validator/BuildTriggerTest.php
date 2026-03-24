@@ -229,6 +229,17 @@ class BuildTriggerTest extends TestCase
         $this->assertFalse($validator->isValid('develop'));              // no inclusion match
     }
 
+    public function testWildcardExclusionOverridesWildcardInclusion(): void
+    {
+        // src/** is a broad inclusion; !src/generated/** carves out the generated subtree
+        $validator = new BuildTrigger(['src/**', '!src/generated/**']);
+        $this->assertTrue($validator->isValid('src/components/Button.php'));
+        $this->assertTrue($validator->isValid('src/utils/helper.js'));
+        $this->assertFalse($validator->isValid('src/generated/Foo.php'));      // wildcard exclusion wins
+        $this->assertFalse($validator->isValid('src/generated/bar/Baz.php')); // wildcard exclusion wins
+        $this->assertFalse($validator->isValid('lib/other.php'));              // no inclusion match
+    }
+
     public function testSpecificInclusionOverridesWildcardExclusion(): void
     {
         // Narrow allowlist with a carve-out: exclude all of feature/* except feature/hotfix/critical
