@@ -6,10 +6,12 @@ use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Platform;
 use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Web\Create as CreateWebPlatform;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -18,6 +20,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Hostname;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -52,11 +55,23 @@ class Create extends Base
         ];
     }
 
+    /**
+     * @return array<string>
+     */
+    public static function getAllSupportedTypes(): array
+    {
+        return [
+            ...self::getSupportedTypes(),
+            ...CreateWebPlatform::getSupportedTypes(),
+        ];
+    }
+
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/project/platforms/app')
+            ->httpAlias('/v1/projects/:projectId/platforms')
             ->desc('Create project app platform')
             ->groups(['api', 'project'])
             ->label('scope', 'project.write')
@@ -83,10 +98,11 @@ class Create extends Base
             ->param(
                 'type',
                 null,
-                new WhiteList($this->getSupportedTypes(), true),
+                new WhiteList($this->getAllSupportedTypes(), true),  // We only support all here for backwards compatibility
                 'Platform type. Possible values are: ' . implode(', ', $this->getSupportedTypes())
             )
-            ->param('identifier', '', new Text(256), 'Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.')
+            ->param('identifier', '', new Text(256), 'Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.', true) // We only mark optional=true for backwards compatibility
+            ->inject('request')
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('project')
@@ -99,13 +115,31 @@ class Create extends Base
         string $platformId,
         string $name,
         string $type,
-        string $identifier,
+        ?string $identifier, // Only nullable for backwards compatibility
+        Request $request,
         Response $response,
         QueueEvent $queueForEvents,
         Document $project,
         Database $dbForPlatform,
         Authorization $authorization,
     ) {
+        $hostname = null;
+
+        // Backwards compatibility
+        $isDeprecatedRequest = false;
+        if (!\in_array($type, self::getSupportedTypes())) {
+            $isDeprecatedRequest = true;
+            $hostname = $request->getParam('hostname', '');
+            $hostnameValidator = new Hostname();
+            if (!$hostnameValidator->isValid($hostname)) {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Param "hostname" is invalid: ' . $hostnameValidator->getDescription());
+            }
+        } else {
+            if (empty($identifier)) {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Param "identifier" is not optional.');
+            }
+        }
+
         $platformId = ($platformId == 'unique()') ? ID::unique() : $platformId;
 
         $platform = new Document([
@@ -116,8 +150,8 @@ class Create extends Base
             'type' => $type,
             'name' => $name,
             'key' => $identifier,
-            'store' => null, // Unused at the moment
-            'hostname' => null // Web platform attribute
+            'hostname' => $hostname, // Web platform attribute; We fill only during backwards compatibility, otherwise null
+            'store' => null, // Unused attribute
         ]);
 
         try {
@@ -129,6 +163,10 @@ class Create extends Base
         $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
 
         $queueForEvents->setParam('platformId', $platform->getId());
+
+        if (!$isDeprecatedRequest) {
+            $platform->setAttribute('hostname', '');
+        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

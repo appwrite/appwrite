@@ -52,6 +52,13 @@ class PlatformApp extends PlatformBase
                 'default' => '',
                 'example' => 'com.company.appname',
             ])
+            ->addRule('hostname', [ // Backwards compatibility
+                'type' => self::TYPE_STRING,
+                'description' => 'Web app hostname. Empty string for other platforms.',
+                'default' => '',
+                'example' => 'app.example.com',
+                'hidden' => true,
+            ])
         ;
     }
 

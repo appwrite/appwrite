@@ -829,6 +829,10 @@ class OpenAPI3 extends Format
             }
 
             foreach ($model->getRules() as $name => $rule) {
+                if (($rule['hidden'] ?? false) === true) {
+                    continue;
+                }
+
                 $type = '';
                 $format = null;
                 $items = null;
