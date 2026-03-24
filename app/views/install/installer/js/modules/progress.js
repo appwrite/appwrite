@@ -1074,9 +1074,7 @@
         if (existingInstallId) {
             resumeInstall(existingInstallId).then((resumed) => {
                 if (!resumed) {
-                    clearInstallId?.();
-                    clearInstallLock?.();
-                    window.location.href = '/?step=1';
+                    startFreshInstall();
                 }
             });
         } else {
