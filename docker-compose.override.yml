@@ -19,7 +19,7 @@ services:
       - mongodb
 
   adminer:
-    image: adminer:4.8.1
+    image: adminer:4.17.1
     container_name: appwrite-adminer
     restart: always
     ports:
