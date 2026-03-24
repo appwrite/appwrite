@@ -13,7 +13,7 @@ $organization = $this->getParam('organization', '');
 $image = $this->getParam('image', '');
 $enableAssistant = $this->getParam('enableAssistant', false);
 $dbService = $this->getParam('database', 'mongodb');
-$allowedDbServices = ['mariadb', 'mongodb', 'postgresql'];
+$allowedDbServices = ['mariadb', 'mongodb'];
 if (!\in_array($dbService, $allowedDbServices, true)) {
     $dbService = 'mongodb';
 }
