@@ -29,6 +29,8 @@ use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Utopia\Agents\Adapters\Ollama;
+use Utopia\Agents\Agent;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit;
 use Utopia\Auth\Hashes\Argon2;
@@ -55,8 +57,6 @@ use Utopia\Queue\Publisher;
 use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
-use Utopia\Agents\Adapters\Ollama;
-use Utopia\Agents\Agent;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
