@@ -170,9 +170,9 @@ class Install extends Action
                 }
             }
 
-            // Block database type changes on existing installations.
-            // Only enforce if the existing config explicitly set _APP_DB_ADAPTER
-            // (pre-1.9.0 installs never had this variable).
+            // Detect database type from existing installation.
+            // 1.9.0+ installs have _APP_DB_ADAPTER; pre-1.9.0 installs
+            // can be detected by the DB service name or _APP_DB_HOST.
             $existingDatabase = null;
             foreach ($compose->getServices() as $service) {
                 if (!$service) {
@@ -191,10 +191,15 @@ class Install extends Action
                     $existingDatabase = (new Env($rawEnv))->list()['_APP_DB_ADAPTER'] ?? null;
                 }
             }
-            if ($existingDatabase !== null && $existingDatabase !== $database) {
-                Console::error("Cannot change database type from '{$existingDatabase}' to '{$database}'.");
-                Console::error('Changing database types on an existing installation is not supported.');
-                Console::exit(1);
+            if ($existingDatabase === null) {
+                $existingDatabase = $this->detectDatabaseFromCompose($compose);
+            }
+            if ($existingDatabase !== null) {
+                if ($existingDatabase !== $database) {
+                    $database = $existingDatabase;
+                    Console::info("Detected existing database: {$database}");
+                }
+                $vars['_APP_DB_ADAPTER']['default'] = $database;
             }
         }
 
@@ -211,7 +216,8 @@ class Install extends Action
             Console::info('Open your browser at: http://localhost:' . InstallerServer::INSTALLER_WEB_PORT);
             Console::info('Press Ctrl+C to cancel installation');
 
-            $this->startWebServer($defaultHttpPort, $defaultHttpsPort, $organization, $image, $noStart, $vars);
+            $detectedDb = ($existingInstallation && isset($existingDatabase)) ? $existingDatabase : null;
+            $this->startWebServer($defaultHttpPort, $defaultHttpsPort, $organization, $image, $noStart, $vars, $isUpgrade, $detectedDb);
             return;
         }
 
@@ -1218,6 +1224,34 @@ class Install extends Action
         }
         $this->path = '/usr/src/code';
         $this->hostPath = $this->getInstallerHostPath();
+    }
+
+    /**
+     * Detect the database adapter from a pre-1.9.0 compose file by
+     * checking which DB service exists or reading _APP_DB_HOST.
+     */
+    private function detectDatabaseFromCompose(Compose $compose): ?string
+    {
+        $serviceNames = array_keys($compose->getServices());
+        $dbServices = ['mariadb', 'mongodb', 'postgresql'];
+        foreach ($dbServices as $db) {
+            if (in_array($db, $serviceNames, true)) {
+                return $db;
+            }
+        }
+
+        foreach ($compose->getServices() as $service) {
+            if (!$service) {
+                continue;
+            }
+            $env = $service->getEnvironment()->list();
+            $host = $env['_APP_DB_HOST'] ?? null;
+            if ($host !== null && in_array($host, $dbServices, true)) {
+                return $host;
+            }
+        }
+
+        return null;
     }
 
     protected function readExistingCompose(): string
