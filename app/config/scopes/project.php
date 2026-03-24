@@ -180,4 +180,12 @@ return [ // List of publicly visible scopes
         "description" =>
             "Access to create, update, and delete project\'s webhooks",
     ],
+    "project.read" => [
+        "description" =>
+            "Access to read project\'s information",
+    ],
+    "project.write" => [
+        "description" =>
+            "Access to update project\'s information",
+    ],
 ];

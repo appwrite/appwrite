@@ -7,6 +7,8 @@
 
     const INSTALL_LOCK_KEY = 'appwrite-install-lock';
     const INSTALL_ID_KEY = 'appwrite-install-id';
+    const INSTALL_LOCK_LOCAL_KEY = 'appwrite-install-lock-backup';
+    const INSTALL_ID_LOCAL_KEY = 'appwrite-install-id-backup';
 
     const formState = {
         appDomain: null,
@@ -55,13 +57,24 @@
     const getInstallLock = () => {
         try {
             const raw = sessionStorage.getItem(INSTALL_LOCK_KEY);
-            if (!raw) return null;
-            const parsed = JSON.parse(raw);
-            if (!parsed || typeof parsed !== 'object') return null;
-            return parsed;
-        } catch (error) {
-            return null;
-        }
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === 'object') return parsed;
+            }
+        } catch (error) {}
+
+        try {
+            const raw = localStorage.getItem(INSTALL_LOCK_LOCAL_KEY);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === 'object') {
+                    sessionStorage.setItem(INSTALL_LOCK_KEY, raw);
+                    return parsed;
+                }
+            }
+        } catch (error) {}
+
+        return null;
     };
 
     const setInstallLock = (installId, payload) => {
@@ -79,6 +92,9 @@
         try {
             sessionStorage.setItem(INSTALL_LOCK_KEY, JSON.stringify(lock));
         } catch (error) {}
+        try {
+            localStorage.setItem(INSTALL_LOCK_LOCAL_KEY, JSON.stringify(lock));
+        } catch (error) {}
         if (document.body) {
             document.body.dataset.installLocked = 'true';
         }
@@ -88,6 +104,9 @@
     const clearInstallLock = () => {
         try {
             sessionStorage.removeItem(INSTALL_LOCK_KEY);
+        } catch (error) {}
+        try {
+            localStorage.removeItem(INSTALL_LOCK_LOCAL_KEY);
         } catch (error) {}
         if (document.body) {
             delete document.body.dataset.installLocked;
@@ -121,21 +140,30 @@
 
     const getStoredInstallId = () => {
         try {
-            return sessionStorage.getItem(INSTALL_ID_KEY);
-        } catch (error) {
-            return null;
-        }
+            const val = sessionStorage.getItem(INSTALL_ID_KEY);
+            if (val) return val;
+        } catch (error) {}
+        try {
+            return localStorage.getItem(INSTALL_ID_LOCAL_KEY);
+        } catch (error) {}
+        return null;
     };
 
     const storeInstallId = (installId) => {
         try {
             sessionStorage.setItem(INSTALL_ID_KEY, installId);
         } catch (error) {}
+        try {
+            localStorage.setItem(INSTALL_ID_LOCAL_KEY, installId);
+        } catch (error) {}
     };
 
     const clearInstallId = () => {
         try {
             sessionStorage.removeItem(INSTALL_ID_KEY);
+        } catch (error) {}
+        try {
+            localStorage.removeItem(INSTALL_ID_LOCAL_KEY);
         } catch (error) {}
     };
 
