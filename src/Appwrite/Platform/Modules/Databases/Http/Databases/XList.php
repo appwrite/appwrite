@@ -97,7 +97,8 @@ class XList extends Action
         }
 
         try {
-            $databases = $dbForProject->find('databases', $this->getDatabaseTypeQueryFilters());
+            $queries = array_merge($queries, $this->getDatabaseTypeQueryFilters());
+            $databases = $dbForProject->find('databases', $queries);
             $total = $includeTotal ? $dbForProject->count('databases', $queries, APP_LIMIT_COUNT) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order column '{$e->getAttribute()}' had a null value. Cursor pagination requires all rows order column values are non-null.");
