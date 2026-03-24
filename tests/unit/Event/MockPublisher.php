@@ -23,7 +23,7 @@ class MockPublisher implements Publisher
         return $this->events[$queue] ?? null;
     }
 
-    public function retry(Queue $queue, int $limit = null): void
+    public function retry(Queue $queue, ?int $limit = null): void
     {
         // TODO: Implement retry() method.
     }
