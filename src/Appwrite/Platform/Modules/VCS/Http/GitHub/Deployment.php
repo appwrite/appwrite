@@ -7,6 +7,7 @@ use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Vcs\Comment;
+use Appwrite\Vcs\Validator\BuildTrigger;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -534,69 +535,20 @@ trait Deployment
 
     private function isResourceBuildable(Document $resource, string $providerBranch, array $providerAffectedFiles, string $logBase): bool
     {
-        $allowedBranches = $resource->getAttribute('providerBranches', []);
-        if (!$this->matchesPatterns($providerBranch, $allowedBranches)) {
+        $branchTrigger = new BuildTrigger($resource->getAttribute('providerBranches', []));
+        if (!$branchTrigger->isValid($providerBranch)) {
             Span::add("{$logBase}.build.skipped.reason", 'branch');
             return false;
         }
 
-        $allowedPaths = $resource->getAttribute('providerPaths', []);
-        if (!empty($allowedPaths) && !empty($providerAffectedFiles)) {
-            $pathMatched = false;
-            foreach ($providerAffectedFiles as $file) {
-                if ($this->matchesPatterns($file, $allowedPaths)) {
-                    $pathMatched = true;
-                    break;
-                }
-            }
-            if (!$pathMatched) {
+        $pathTrigger = new BuildTrigger($resource->getAttribute('providerPaths', []));
+        foreach ($providerAffectedFiles as $file) {
+            if (!$pathTrigger->isValid($file)) {
                 Span::add("{$logBase}.build.skipped.reason", 'path');
                 return false;
             }
         }
 
         return true;
-    }
-
-    private function matchesPatterns(string $subject, array $patterns): bool
-    {
-        if (empty($patterns)) {
-            return true;
-        }
-
-        $include = array_filter($patterns, fn ($p) => !str_starts_with($p, '!'));
-        $exclude = array_filter($patterns, fn ($p) => str_starts_with($p, '!'));
-
-        foreach ($include as $pattern) {
-            if ($this->matchGlob($subject, $pattern)) {
-                return true;
-            }
-        }
-
-        foreach ($exclude as $pattern) {
-            if ($this->matchGlob($subject, substr($pattern, 1))) {
-                return false;
-            }
-        }
-
-        return empty($include);
-    }
-
-    private function matchGlob(string $subject, string $pattern): bool
-    {
-        $regex = preg_replace_callback(
-            '/\*\*|\*|\?|[^*?]+/',
-            static function (array $m): string {
-                return match ($m[0]) {
-                    '**'    => '.*',
-                    '*'     => '[^/]*',
-                    '?'     => '[^/]',
-                    default => preg_quote($m[0], '/'),
-                };
-            },
-            $pattern
-        );
-
-        return (bool) preg_match('/^' . $regex . '$/', $subject);
     }
 }
