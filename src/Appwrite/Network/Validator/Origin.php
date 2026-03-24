@@ -65,10 +65,6 @@ class Origin extends Validator
         $webPlatforms = [
             Platform::SCHEME_HTTP,
             Platform::SCHEME_HTTPS,
-            Platform::SCHEME_CHROME_EXTENSION,
-            Platform::SCHEME_FIREFOX_EXTENSION,
-            Platform::SCHEME_SAFARI_EXTENSION,
-            Platform::SCHEME_EDGE_EXTENSION,
             Platform::SCHEME_TAURI,
         ];
         if (in_array($this->scheme, $webPlatforms, true)) {

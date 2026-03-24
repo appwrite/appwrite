@@ -61,17 +61,22 @@ class OriginTest extends TestCase
         $this->assertEquals(false, $validator->isValid('appwrite-windows://com.company.appname'));
         $this->assertEquals('Invalid Origin. Register your new client (com.company.appname) as a new Windows platform on your project console dashboard', $validator->getDescription());
 
+        // Browser extensions are validated by scheme only, not hostname
         $this->assertEquals(false, $validator->isValid('chrome-extension://com.company.appname'));
-        $this->assertEquals('Invalid Origin. Register your new client (com.company.appname) as a new Web (Chrome Extension) platform on your project console dashboard', $validator->getDescription());
-
         $this->assertEquals(false, $validator->isValid('moz-extension://com.company.appname'));
-        $this->assertEquals('Invalid Origin. Register your new client (com.company.appname) as a new Web (Firefox Extension) platform on your project console dashboard', $validator->getDescription());
-
         $this->assertEquals(false, $validator->isValid('safari-web-extension://com.company.appname'));
-        $this->assertEquals('Invalid Origin. Register your new client (com.company.appname) as a new Web (Safari Extension) platform on your project console dashboard', $validator->getDescription());
-
         $this->assertEquals(false, $validator->isValid('ms-browser-extension://com.company.appname'));
-        $this->assertEquals('Invalid Origin. Register your new client (com.company.appname) as a new Web (Edge Extension) platform on your project console dashboard', $validator->getDescription());
+
+        // When extension schemes are in allowedSchemes, any extension ID is accepted
+        $validatorWithExtensions = new Origin(
+            allowedHostnames: ['appwrite.io'],
+            allowedSchemes: ['chrome-extension', 'moz-extension', 'safari-web-extension', 'ms-browser-extension']
+        );
+        $this->assertEquals(true, $validatorWithExtensions->isValid('chrome-extension://abcdefghijklmnop'));
+        $this->assertEquals(true, $validatorWithExtensions->isValid('chrome-extension://different-extension-id'));
+        $this->assertEquals(true, $validatorWithExtensions->isValid('moz-extension://some-uuid'));
+        $this->assertEquals(true, $validatorWithExtensions->isValid('safari-web-extension://some-id'));
+        $this->assertEquals(true, $validatorWithExtensions->isValid('ms-browser-extension://some-id'));
 
         $this->assertEquals(true, $validator->isValid('tauri://localhost'));
         $this->assertEquals(false, $validator->isValid('tauri://example.com'));

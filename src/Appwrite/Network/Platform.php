@@ -124,6 +124,10 @@ class Platform
                 case self::TYPE_FLUTTER_WEB:
                     $schemes[] = self::SCHEME_HTTP;
                     $schemes[] = self::SCHEME_HTTPS;
+                    $schemes[] = self::SCHEME_CHROME_EXTENSION;
+                    $schemes[] = self::SCHEME_FIREFOX_EXTENSION;
+                    $schemes[] = self::SCHEME_SAFARI_EXTENSION;
+                    $schemes[] = self::SCHEME_EDGE_EXTENSION;
                     break;
                 case self::TYPE_FLUTTER_IOS:
                 case self::TYPE_APPLE_IOS:
