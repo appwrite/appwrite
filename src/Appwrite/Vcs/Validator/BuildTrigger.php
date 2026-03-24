@@ -21,24 +21,48 @@ class BuildTrigger extends Validator
         $include = array_filter($this->patterns, fn ($p) => !str_starts_with($p, '!'));
         $exclude = array_filter($this->patterns, fn ($p) => str_starts_with($p, '!'));
 
+        if (empty($include)) {
+            // Only exclusions: pass everything unless excluded.
+            foreach ($exclude as $pattern) {
+                if ($this->matchGlob($value, substr($pattern, 1))) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // A pattern is "specific" when it contains no wildcard characters.
+        $isSpecific = fn($p) => !str_contains($p, '*') && !str_contains($p, '?');
+
+        // 1. Specific inclusion always wins — an explicit exact match is never blocked.
         foreach ($include as $pattern) {
-            if ($this->matchGlob($value, $pattern)) {
+            if ($isSpecific($pattern) && $this->matchGlob($value, $pattern)) {
                 return true;
             }
         }
 
+        // 2. Specific exclusion overrides a wildcard inclusion — refines broad patterns.
         foreach ($exclude as $pattern) {
-            if ($this->matchGlob($value, substr($pattern, 1))) {
+            $raw = substr($pattern, 1);
+            if ($isSpecific($raw) && $this->matchGlob($value, $raw)) {
                 return false;
             }
         }
 
-        return empty($include);
+        // 3. Wildcard inclusion wins over any remaining wildcard exclusion.
+        foreach ($include as $pattern) {
+            if (!$isSpecific($pattern) && $this->matchGlob($value, $pattern)) {
+                return true;
+            }
+        }
+
+        // No inclusion matched.
+        return false;
     }
 
     public function getDescription(): string
     {
-        return 'Value must match at least one inclusion pattern and must not match any exclusion pattern.';
+        return 'Value must match a specific inclusion, or a wildcard inclusion not overridden by a specific exclusion.';
     }
 
     public function isArray(): bool
