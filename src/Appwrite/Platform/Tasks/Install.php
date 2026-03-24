@@ -620,6 +620,9 @@ class Install extends Action
                 $domain = $input['_APP_DOMAIN'] ?? 'localhost';
 
                 $healthStep = $isUpgrade ? InstallerServer::STEP_DOCKER_CONTAINERS : InstallerServer::STEP_ACCOUNT_SETUP;
+                if (!$isUpgrade) {
+                    $currentStep = InstallerServer::STEP_ACCOUNT_SETUP;
+                }
                 $apiUrl = $this->waitForApiReady($domain, $httpPort, $isLocalInstall, $progress, $healthStep);
 
                 if ($isUpgrade) {
@@ -627,7 +630,6 @@ class Install extends Action
                 }
 
                 if (!$isUpgrade) {
-                    $currentStep = InstallerServer::STEP_ACCOUNT_SETUP;
                     $this->createInitialAdminAccount($account, $progress, $apiUrl, $domain);
                 }
 
@@ -1094,24 +1096,56 @@ class Install extends Action
             return ['output' => [], 'exit' => 1];
         }
 
-        while (($line = fgets($pipes[1])) !== false) {
-            $trimmed = rtrim($line, "\n\r");
-            $output[] = $trimmed;
+        stream_set_blocking($pipes[1], false);
+        $deadline = time() + self::PROC_CLOSE_TIMEOUT_SECONDS;
+        $buffer = '';
 
-            if (str_contains($trimmed, 'Container') && (str_contains($trimmed, 'Started') || str_contains($trimmed, 'Running'))) {
-                $started = min($started + 1, $totalServices);
-                if ($totalServices > 0) {
-                    try {
-                        $progress(
-                            InstallerServer::STEP_DOCKER_CONTAINERS,
-                            InstallerServer::STATUS_IN_PROGRESS,
-                            $message,
-                            ['containerStarted' => $started, 'containerTotal' => $totalServices]
-                        );
-                    } catch (\Throwable) {
+        while (time() < $deadline) {
+            $status = proc_get_status($process);
+
+            $read = [$pipes[1]];
+            $write = null;
+            $except = null;
+            $changed = @stream_select($read, $write, $except, 1);
+
+            if ($changed > 0) {
+                $chunk = fread($pipes[1], 8192);
+                if ($chunk === false || $chunk === '') {
+                    if (!$status['running']) {
+                        break;
+                    }
+                    continue;
+                }
+                $buffer .= $chunk;
+                while (($pos = strpos($buffer, "\n")) !== false) {
+                    $trimmed = rtrim(substr($buffer, 0, $pos), "\r");
+                    $buffer = substr($buffer, $pos + 1);
+                    $output[] = $trimmed;
+
+                    if (str_contains($trimmed, 'Container') && (str_contains($trimmed, 'Started') || str_contains($trimmed, 'Running'))) {
+                        $started = min($started + 1, $totalServices);
+                        if ($totalServices > 0) {
+                            try {
+                                $progress(
+                                    InstallerServer::STEP_DOCKER_CONTAINERS,
+                                    InstallerServer::STATUS_IN_PROGRESS,
+                                    $message,
+                                    ['containerStarted' => $started, 'containerTotal' => $totalServices]
+                                );
+                            } catch (\Throwable) {
+                            }
+                        }
                     }
                 }
             }
+
+            if (!$status['running'] && ($changed === 0 || feof($pipes[1]))) {
+                break;
+            }
+        }
+
+        if ($buffer !== '') {
+            $output[] = rtrim($buffer, "\r\n");
         }
 
         fclose($pipes[1]);

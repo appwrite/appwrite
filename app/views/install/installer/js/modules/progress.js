@@ -1026,7 +1026,9 @@
                     });
                     return;
                 }
-            } catch (e) {}
+            } catch (e) {
+                console.error('Reset request failed:', e);
+            }
 
             clearInstallLock?.();
             clearInstallId?.();
