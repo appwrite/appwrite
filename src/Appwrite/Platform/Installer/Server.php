@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Installer;
 
 use Appwrite\Platform\Installer\Http\Installer\Error;
+use Appwrite\Platform\Installer\Runtime\Config;
 use Appwrite\Platform\Installer\Runtime\State;
 use Swoole\Http\Server as SwooleServer;
 use Utopia\Http\Adapter\Swoole\Request;
@@ -136,6 +137,7 @@ class Server
 
         // Register resources for dependency injection into actions
         $config = $this->state->buildConfig();
+        $this->autoDetectUpgrade($config);
         $paths = $this->paths;
         $state = $this->state;
 
@@ -189,6 +191,77 @@ class Server
         });
 
         $adapter->start();
+    }
+
+    /**
+     * Auto-detect upgrade mode by checking for existing config files.
+     * Sets isUpgrade and lockedDatabase on the config when an existing
+     * installation is found and these values aren't already set.
+     */
+    private function autoDetectUpgrade(Config $config): void
+    {
+        if ($config->isUpgrade()) {
+            return;
+        }
+
+        $basePath = $config->isLocal() ? '/usr/src/code' : (getcwd() ?: '.');
+        $composePath = $basePath . '/docker-compose.yml';
+        $envPath = $basePath . '/.env';
+
+        if (!file_exists($composePath) && !file_exists($envPath)) {
+            return;
+        }
+
+        $config->setIsUpgrade(true);
+
+        if ($config->getLockedDatabase() !== null) {
+            return;
+        }
+
+        $database = $this->detectDatabaseFromFiles($composePath, $envPath);
+        if ($database !== null) {
+            $config->setLockedDatabase($database);
+        }
+    }
+
+    private function detectDatabaseFromFiles(string $composePath, string $envPath): ?string
+    {
+        $dbServices = ['mariadb', 'mongodb', 'postgresql'];
+
+        $composeData = @file_get_contents($composePath);
+        if ($composeData !== false) {
+            if (preg_match_all('/^\s*(?:container_name:\s*appwrite-(\w+)|(\w+):)\s*$/m', $composeData, $matches)) {
+                $serviceNames = array_filter(array_merge($matches[1], $matches[2]));
+                foreach ($dbServices as $db) {
+                    if (in_array($db, $serviceNames, true)) {
+                        return $db;
+                    }
+                }
+            }
+            foreach ($dbServices as $db) {
+                if (preg_match('/^\s*' . preg_quote($db, '/') . ':\s*$/m', $composeData)) {
+                    return $db;
+                }
+            }
+        }
+
+        $envData = @file_get_contents($envPath);
+        if ($envData !== false) {
+            if (preg_match('/^_APP_DB_ADAPTER=(.+)$/m', $envData, $m)) {
+                $adapter = trim($m[1], " \t\n\r\"'");
+                if (in_array($adapter, $dbServices, true)) {
+                    return $adapter;
+                }
+            }
+            if (preg_match('/^_APP_DB_HOST=(.+)$/m', $envData, $m)) {
+                $host = trim($m[1], " \t\n\r\"'");
+                if (in_array($host, $dbServices, true)) {
+                    return $host;
+                }
+            }
+        }
+
+        return null;
     }
 
     private function removeDockerInstallerContainer(string $container): void
