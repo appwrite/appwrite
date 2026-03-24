@@ -215,7 +215,7 @@ class Create extends Action
             $prFiles = $github->getPullRequestFiles($providerRepositoryOwner, $providerRepositoryName, $providerPullRequestId);
             $providerAffectedFiles = [
                 ...array_column($prFiles, 'filename'),
-                ...array_column($prFiles, 'previous_filename')
+                ...array_filter(array_column($prFiles, 'previous_filename')) // Filter out null values
             ];
 
             $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', [
