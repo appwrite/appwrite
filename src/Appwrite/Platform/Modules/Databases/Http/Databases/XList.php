@@ -29,7 +29,7 @@ class XList extends Action
 
     protected function getDatabaseTypeQueryFilters(): array
     {
-        return [$this->getDatabaseType()];
+        return [Query::equal('type', [$this->getDatabaseType()])];
     }
 
     public function __construct()
@@ -96,9 +96,8 @@ class XList extends Action
             $cursor->setValue($cursorDocument);
         }
 
-        $queries[] = Query::equal('type', $this->getDatabaseTypeQueryFilters());
-
         try {
+            $queries = array_merge($queries, $this->getDatabaseTypeQueryFilters());
             $databases = $dbForProject->find('databases', $queries);
             $total = $includeTotal ? $dbForProject->count('databases', $queries, APP_LIMIT_COUNT) : 0;
         } catch (OrderException $e) {
