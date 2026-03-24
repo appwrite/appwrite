@@ -368,6 +368,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             throw $exception;
         }
 
+        // Check execution permissions for functions.
         if ($type === 'function') {
             $userJwt = $request->getHeader('x-appwrite-user-jwt', '');
             $permissions = $resource->getAttribute('execute');
@@ -383,33 +384,26 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 }
 
                 /** @var \Appwrite\Utopia\Database\Documents\User | null */
-                $user = null;
+                $associatedUser = null;
 
                 $userExists = false;
                 $userId = $payload['userId'] ?? '';
                 if (!empty($userId)) {
-                    $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
-                    if (!$user->isEmpty() && $user->getAttribute('status', false)) {
+                    $associatedUser = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
+                    if (!$associatedUser->isEmpty() && $associatedUser->getAttribute('status', false)) {
                         $userExists = true;
                     }
                 }
 
                 $sessionExists = false;
                 $jwtSessionId = $payload['sessionId'] ?? '';
-                if (!empty($jwtSessionId) && isset($user)) {
-                    $sessionExists = !empty($user->find('$id', $jwtSessionId, 'sessions'));
+                if (!empty($jwtSessionId) && isset($associatedUser)) {
+                    $sessionExists = !empty($associatedUser->find('$id', $jwtSessionId, 'sessions'));
                 }
 
-                $membershipExists = false;
-                $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
-                if (!$project->isEmpty() && isset($user)) {
-                    $teamId = $project->getAttribute('teamId', '');
-                    $membershipExists = !empty($user->find('teamId', $teamId, 'memberships'));
-                }
-
-                if ($userExists && $sessionExists && $membershipExists) {
-                    foreach ($user->getRoles($authorization) as $role) {
-                        $authorization->addRole((string) $role);
+                if ($userExists && $sessionExists) {
+                    foreach ($associatedUser->getRoles($authorization) as $role) {
+                        $authorization->addRole($role);
                     }
                     $isExecutionAllowed = $authorization->isValid(new Input('execute', $permissions));
                 }
