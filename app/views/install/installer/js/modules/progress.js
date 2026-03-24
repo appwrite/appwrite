@@ -693,6 +693,7 @@
             }
             stopSyncedSpinnerRotation();
             setUnloadGuard(false);
+            clearInstallLock?.();
         };
 
         const SSL_STEP = {
@@ -909,9 +910,22 @@
             }
         };
 
+        const isSnapshotTerminal = (snapshot) => {
+            if (!snapshot?.steps) return true;
+            const stepEntries = Object.values(snapshot.steps);
+            if (stepEntries.length === 0) return true;
+            const hasError = stepEntries.some((s) => s.status === STATUS.ERROR);
+            if (hasError) return true;
+            const allCompleted = INSTALLATION_STEPS.every((step) => {
+                const detail = snapshot.steps[step.id];
+                return detail && detail.status === STATUS.COMPLETED;
+            });
+            return allCompleted;
+        };
+
         const resumeInstall = async (installId) => {
             const snapshot = await fetchInstallStatus(installId);
-            if (!snapshot) return false;
+            if (!snapshot || isSnapshotTerminal(snapshot)) return false;
             activeInstall = {
                 installId,
                 controller: new AbortController(),
@@ -1052,9 +1066,7 @@
                 if (!resumed) {
                     clearInstallId?.();
                     clearInstallLock?.();
-                    const newInstallId = generateInstallId();
-                    storeInstallId?.(newInstallId);
-                    startInstallStream(newInstallId);
+                    window.location.href = '/?step=1';
                 }
             });
         } else {
