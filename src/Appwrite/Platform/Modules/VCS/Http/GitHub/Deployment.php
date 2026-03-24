@@ -41,7 +41,7 @@ trait Deployment
         string $providerCommitMessage,
         string $providerCommitUrl,
         string $providerPullRequestId,
-        array $providerAffectedFiles = [],
+        array $providerAffectedFiles,
         bool $external,
         Database $dbForPlatform,
         Authorization $authorization,
