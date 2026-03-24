@@ -76,13 +76,14 @@ class XList extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
+            ->inject('getDatabasesDB')
             ->inject('usage')
             ->inject('transactionState')
             ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, bool $includeTotal, int $ttl, UtopiaResponse $response, Database $dbForProject, Document $user, Context $usage, TransactionState $transactionState, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, bool $includeTotal, int $ttl, UtopiaResponse $response, Database $dbForProject, Document $user, callable $getDatabasesDB, Context $usage, TransactionState $transactionState, Authorization $authorization): void
     {
         $isAPIKey = User::isApp($authorization->getRoles());
         $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
@@ -117,6 +118,7 @@ class XList extends Action
             $dbForProject->addJoinCollectionId($collectionTableId);
         }
 
+        $dbForDatabases = $getDatabasesDB($database);
         $cursor = Query::getCursorQueries($queries, false);
         $cursor = \reset($cursor);
 
@@ -128,7 +130,7 @@ class XList extends Action
 
             $documentId = $cursor->getValue();
 
-            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
+            $cursorDocument = $authorization->skip(fn () => $dbForDatabases->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
 
             if ($cursorDocument->isEmpty()) {
                 $type = ucfirst($this->getContext());
@@ -141,11 +143,10 @@ class XList extends Action
         try {
             $selectQueries = Query::groupByType($queries)['selections'] ?? [];
             $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
-
             // Use transaction-aware document retrieval if transactionId is provided
             if ($transactionId !== null) {
-                $documents = $transactionState->listDocuments($collectionTableId, $transactionId, $queries);
-                $total = $includeTotal ? $transactionState->countDocuments($collectionTableId, $transactionId, $queries) : 0;
+                $documents = $transactionState->listDocuments($database, $collectionTableId, $transactionId, $queries);
+                $total = $includeTotal ? $transactionState->countDocuments($database, $collectionTableId, $transactionId, $queries) : 0;
             } elseif (! empty($selectQueries)) {
 
                 if ((int)$ttl > 0) {
@@ -184,7 +185,7 @@ class XList extends Action
                         }, $cachedDocuments);
                         $documentsCacheHit = true;
                     } else {
-                        $documents = $dbForProject->find($collectionTableId, $queries);
+                        $documents = $dbForDatabases->find($collectionTableId, $queries);
 
                         // Convert Document objects to arrays for caching
                         $documentsArray = \array_map(function ($doc) {
@@ -210,15 +211,15 @@ class XList extends Action
 
                 } else {
                     // has selects, allow relationship on documents
-                    $documents = $dbForProject->find($collectionTableId, $queries);
-                    $total = $includeTotal ? $dbForProject->count($collectionTableId, $queries, APP_LIMIT_COUNT) : 0;
+                    $documents = $dbForDatabases->find($collectionTableId, $queries);
+                    $total = $includeTotal ? $dbForDatabases->count($collectionTableId, $queries, APP_LIMIT_COUNT) : 0;
                 }
 
             } else {
                 // has no selects, disable relationship loading on documents
                 /* @type Document[] $documents */
-                $documents = $dbForProject->skipRelationships(fn () => $dbForProject->find($collectionTableId, $queries));
-                $total = $includeTotal ? $dbForProject->count($collectionTableId, $queries, APP_LIMIT_COUNT) : 0;
+                $documents = $dbForDatabases->skipRelationships(fn () => $dbForDatabases->find($collectionTableId, $queries));
+                $total = $includeTotal ? $dbForDatabases->count($collectionTableId, $queries, APP_LIMIT_COUNT) : 0;
             }
         } catch (OrderException $e) {
             $documents = $this->isCollectionsAPI() ? 'documents' : 'rows';
@@ -246,8 +247,8 @@ class XList extends Action
         }
 
         $usage
-            ->addMetric(METRIC_DATABASES_OPERATIONS_READS, max($operations, 1))
-            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), METRIC_DATABASE_ID_OPERATIONS_READS), $operations);
+            ->addMetric($this->getDatabasesOperationReadMetric(), max($operations, 1))
+            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationReadMetric()), $operations);
 
         $response->dynamic(new Document([
             'total' => $total,

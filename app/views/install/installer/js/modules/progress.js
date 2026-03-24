@@ -21,7 +21,7 @@
         storeInstallId,
         clearInstallId
     } = window.InstallerStepsState || {};
-    const { extractHostname, isLocalHost } = window.InstallerStepsValidation || {};
+    const { extractHostname, isLocalHost, isIPAddress } = window.InstallerStepsValidation || {};
     const { generateSecretKey } = window.InstallerStepsUI || {};
     const { showToast } = window.InstallerToast || {};
 
@@ -251,7 +251,7 @@
         return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
     };
 
-    const buildRedirectUrl = () => {
+    const buildRedirectUrl = (protocol) => {
         const dataset = getBodyDataset?.() ?? {};
         const rawDomain = (formState?.appDomain || dataset.defaultAppDomain || '').trim();
         if (!rawDomain) return '';
@@ -266,22 +266,53 @@
         } else if (normalizedHost === 'traefik') {
             host = rawDomain.replace(hostForProtocol, 'localhost');
         }
-        let protocol = 'http';
-        let port = httpPort;
-        if (httpsPort && httpsPort !== '0' && !isLocalHost?.(normalizedHost)) {
-            protocol = 'https';
-            port = httpsPort;
-        }
-        if (!hasPort && port && ((protocol === 'http' && port !== '80') || (protocol === 'https' && port !== '443'))) {
+        const port = protocol === 'https' ? httpsPort : httpPort;
+        const defaultPort = protocol === 'https' ? '443' : '80';
+        if (!hasPort && port && port !== defaultPort) {
             host = `${host}:${port}`;
         }
         return `${protocol}://${host}`;
     };
 
-    const redirectToApp = () => {
-        const url = buildRedirectUrl();
+    const normalizeHostname = (rawDomain) => {
+        const hostname = extractHostname?.(rawDomain)?.toLowerCase?.() ?? '';
+        if (hostname === '0.0.0.0' || hostname === 'traefik') return 'localhost';
+        return hostname;
+    };
+
+    const canUseHttps = () => {
+        const dataset = getBodyDataset?.() ?? {};
+        const rawDomain = (formState?.appDomain || dataset.defaultAppDomain || '').trim();
+        const httpsPort = (formState?.httpsPort || dataset.defaultHttpsPort || '').trim();
+        if (!httpsPort || httpsPort === '0') return false;
+        const hostname = normalizeHostname(rawDomain);
+        return !isLocalHost?.(hostname) && !isIPAddress?.(hostname);
+    };
+
+    const pollCertificate = async (domain, port, maxAttempts, intervalMs) => {
+        for (let i = 0; i < maxAttempts; i++) {
+            try {
+                const response = await fetch(
+                    `/install/certificate?domain=${encodeURIComponent(domain)}&port=${encodeURIComponent(port)}`,
+                    { cache: 'no-store' }
+                );
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.ready) return true;
+                }
+            } catch {
+                // Installer server may have shut down
+            }
+            if (i < maxAttempts - 1) {
+                await new Promise((resolve) => setTimeout(resolve, intervalMs));
+            }
+        }
+        return false;
+    };
+
+    const redirectToApp = (protocol) => {
+        const url = buildRedirectUrl(protocol);
         if (!url) return;
-        // Fire-and-forget: tell the installer server it can shut down
         fetch('/install/shutdown', { method: 'POST', headers: withCsrfHeader() }).catch(() => {});
         window.location.href = url;
     };
@@ -406,6 +437,7 @@
 
     const initStep5 = (root) => {
         if (!root) return;
+        let resolvedProtocol = 'http';
 
         if (activeInstall?.controller) {
             activeInstall.controller.abort();
@@ -605,9 +637,7 @@
             const accountState = progressState.get(STEP_IDS.ACCOUNT_SETUP);
             const sessionDetails = sseSessionDetails || accountState?.details;
             finalizeInstall();
-            notifyInstallComplete(activeInstall?.installId, sessionDetails).finally(() => {
-                setTimeout(() => redirectToApp(), TIMINGS?.redirectDelay ?? 0);
-            });
+            startSslCheck(sessionDetails);
         };
 
         const startPolling = () => {
@@ -644,6 +674,76 @@
             }
             stopSyncedSpinnerRotation();
             setUnloadGuard(false);
+        };
+
+        const SSL_STEP = {
+            id: STEP_IDS.SSL_CERTIFICATE,
+            inProgress: 'Generating SSL certificate...',
+            done: 'SSL certificate verified'
+        };
+
+        const REDIRECT_STEP = {
+            id: STEP_IDS.REDIRECT,
+            inProgress: 'Redirecting to console...',
+            done: 'Redirecting to console...'
+        };
+
+        const showRedirectStep = (sessionDetails, protocol) => {
+            animatePanelHeight(() => {
+                progressState.set(REDIRECT_STEP.id, {
+                    status: STATUS.IN_PROGRESS,
+                    message: REDIRECT_STEP.inProgress
+                });
+                const row = ensureRow(REDIRECT_STEP);
+                if (row) {
+                    updateInstallRow(row, REDIRECT_STEP, STATUS.IN_PROGRESS, REDIRECT_STEP.inProgress);
+                }
+            });
+            startSyncedSpinnerRotation(list);
+
+            notifyInstallComplete(activeInstall?.installId, sessionDetails).finally(() => {
+                setTimeout(() => redirectToApp(protocol), TIMINGS?.redirectDelay ?? 0);
+            });
+        };
+
+        const startSslCheck = (sessionDetails) => {
+            if (!canUseHttps()) {
+                showRedirectStep(sessionDetails, 'http');
+                return;
+            }
+
+            animatePanelHeight(() => {
+                progressState.set(SSL_STEP.id, {
+                    status: STATUS.IN_PROGRESS,
+                    message: SSL_STEP.inProgress
+                });
+                const row = ensureRow(SSL_STEP);
+                if (row) {
+                    updateInstallRow(row, SSL_STEP, STATUS.IN_PROGRESS, SSL_STEP.inProgress);
+                }
+            });
+            startSyncedSpinnerRotation(list);
+
+            const dataset = getBodyDataset?.() ?? {};
+            const rawDomain = (formState?.appDomain || dataset.defaultAppDomain || '').trim();
+            const httpsPort = (formState?.httpsPort || dataset.defaultHttpsPort || '443').trim();
+            const domain = normalizeHostname(rawDomain);
+            pollCertificate(domain, httpsPort, 15, 2000).then((ready) => {
+                stopSyncedSpinnerRotation();
+                const certMessage = ready ? SSL_STEP.done : 'Certificate not ready, continuing over HTTP';
+                animatePanelHeight(() => {
+                    progressState.set(SSL_STEP.id, {
+                        status: STATUS.COMPLETED,
+                        message: certMessage
+                    });
+                    const row = ensureRow(SSL_STEP);
+                    if (row) {
+                        updateInstallRow(row, SSL_STEP, STATUS.COMPLETED, certMessage);
+                    }
+                });
+                resolvedProtocol = ready ? 'https' : 'http';
+                showRedirectStep(sessionDetails, resolvedProtocol);
+            });
         };
 
         const startInstallStream = async (installId, options = {}) => {
@@ -746,9 +846,7 @@
                         const accountState = progressState.get(STEP_IDS.ACCOUNT_SETUP);
                         const sessionDetails = sseSessionDetails || accountState?.details;
                         finalizeInstall();
-                        notifyInstallComplete(activeInstall?.installId, sessionDetails).finally(() => {
-                            setTimeout(() => redirectToApp(), TIMINGS?.redirectDelay ?? 0);
-                        });
+                        startSslCheck(sessionDetails);
                         return;
                     }
                     if (event === SSE_EVENTS.ERROR) {
@@ -857,7 +955,7 @@
             const retryButton = event.target.closest('[data-install-retry]');
 
             if (consoleButton) {
-                redirectToApp();
+                redirectToApp(resolvedProtocol);
                 return;
             }
 

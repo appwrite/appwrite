@@ -41,13 +41,14 @@ class ModuleTest extends TestCase
         $service = reset($services);
         $actions = $service->getActions();
 
-        $this->assertCount(6, $actions);
+        $this->assertCount(7, $actions);
         $this->assertArrayHasKey('installerView', $actions);
         $this->assertArrayHasKey('installerStatus', $actions);
         $this->assertArrayHasKey('installerValidate', $actions);
         $this->assertArrayHasKey('installerComplete', $actions);
         $this->assertArrayHasKey('installerShutdown', $actions);
         $this->assertArrayHasKey('installerInstall', $actions);
+        $this->assertArrayHasKey('installerCertificateGet', $actions);
     }
 
     public function testViewAction(): void

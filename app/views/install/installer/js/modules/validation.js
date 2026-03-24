@@ -106,12 +106,18 @@
         return LOCAL_HOSTS.has(normalized);
     };
 
+    const isIPAddress = (host) => {
+        if (!host) return false;
+        return isValidIPv4(host) || isValidIPv6(host);
+    };
+
     window.InstallerStepsValidation = {
         isValidEmail,
         isValidPort,
         isValidPassword,
         isValidHostnameInput,
         extractHostname,
-        isLocalHost
+        isLocalHost,
+        isIPAddress
     };
 })();
