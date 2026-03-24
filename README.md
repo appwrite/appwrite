@@ -77,6 +77,7 @@ docker run -it --rm \
     --entrypoint="install" \
     appwrite/appwrite:1.9.0
 ```
+> **Note:** You can replace `1.9.0` with the latest stable version if needed. Using a fixed version ensures reproducibility, while updating allows access to new features and fixes.
 
 ### Windows
 
