@@ -5216,22 +5216,23 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "2.0.2",
+            "version": "3.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "5769679308bad498f2777547d48ab332166c4c0b"
+                "reference": "0efe842d695acb4b184f5306a836169c771fbcea"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/5769679308bad498f2777547d48ab332166c4c0b",
-                "reference": "5769679308bad498f2777547d48ab332166c4c0b",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/0efe842d695acb4b184f5306a836169c771fbcea",
+                "reference": "0efe842d695acb4b184f5306a836169c771fbcea",
                 "shasum": ""
             },
             "require": {
                 "adhocore/jwt": "^1.1",
                 "php": ">=8.0",
-                "utopia-php/cache": "1.0.*"
+                "utopia-php/cache": "1.0.*",
+                "utopia-php/fetch": "0.5.*"
             },
             "require-dev": {
                 "laravel/pint": "1.*.*",
@@ -5258,9 +5259,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/vcs/issues",
-                "source": "https://github.com/utopia-php/vcs/tree/2.0.2"
+                "source": "https://github.com/utopia-php/vcs/tree/3.0.1"
             },
-            "time": "2026-03-13T15:25:16+00:00"
+            "time": "2026-03-23T15:58:31+00:00"
         },
         {
             "name": "utopia-php/websocket",

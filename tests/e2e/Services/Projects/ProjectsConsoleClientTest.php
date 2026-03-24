@@ -4686,6 +4686,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $data['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
+            'variableId' => 'unique()',
             'key' => 'APP_TEST_CREATE',
             'value' => 'TESTINGVALUE',
             'secret' => false
@@ -4702,6 +4703,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $data['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
+            'variableId' => 'unique()',
             'key' => 'APP_TEST_CREATE_1',
             'value' => 'TESTINGVALUE_1',
             'secret' => true
@@ -4720,6 +4722,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $data['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
+            'variableId' => 'unique()',
             'key' => 'APP_TEST_CREATE',
             'value' => 'ANOTHERTESTINGVALUE'
         ]);
@@ -4732,6 +4735,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $data['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
+            'variableId' => 'unique()',
             'key' => str_repeat("A", 256),
             'value' => 'TESTINGVALUE'
         ]);
@@ -4744,6 +4748,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $data['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
+            'variableId' => 'unique()',
             'key' => 'LONGKEY',
             'value' => str_repeat("#", 8193),
         ]);
@@ -4889,18 +4894,6 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains("APP_TEST_UPDATE", $variableKeys);
         $this->assertContains("APP_TEST_UPDATE_1", $variableKeys);
 
-        /**
-         * Test for FAILURE
-         */
-
-        $response = $this->client->call(Client::METHOD_PUT, '/project/variables/' . $data['variableId'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $data['projectId'],
-            'x-appwrite-mode' => 'admin',
-        ], $this->getHeaders()));
-
-        $this->assertEquals(400, $response['headers']['status-code']);
-
         $response = $this->client->call(Client::METHOD_PUT, '/project/variables/' . $data['variableId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $data['projectId'],
@@ -4908,6 +4901,19 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'value' => 'TESTINGVALUEUPDATED_2'
         ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSame('TESTINGVALUEUPDATED_2', $response['body']['value']);
+        $this->assertSame('APP_TEST_UPDATE', $response['body']['key']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/project/variables/' . $data['variableId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectId'],
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()));
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
@@ -4958,6 +4964,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $projectData['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
+            'variableId' => 'unique()',
             'key' => 'APP_TEST_DELETE',
             'value' => 'TESTINGVALUE',
             'secret' => false
@@ -4972,6 +4979,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $projectData['projectId'],
             'x-appwrite-mode' => 'admin',
         ], $this->getHeaders()), [
+            'variableId' => 'unique()',
             'key' => 'APP_TEST_DELETE_1',
             'value' => 'TESTINGVALUE_1',
             'secret' => true
