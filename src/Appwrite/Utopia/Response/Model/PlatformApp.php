@@ -30,12 +30,12 @@ class PlatformApp extends PlatformBase
         ];
     }
 
-    public array $conditions = [
-        'type' => self::getSupportedTypes(),
-    ];
-
     public function __construct()
     {
+        $this->conditions = [
+            'type' => self::getSupportedTypes(),
+        ];
+
         parent::__construct();
 
         $this
