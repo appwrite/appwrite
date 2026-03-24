@@ -1,0 +1,1 @@
+Get a list of all databases from the current Appwrite project. You can use the search parameter to filter your results.
