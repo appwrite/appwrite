@@ -79,6 +79,12 @@ class XList extends Base
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
+        foreach ($queries as $query) {
+            if ($query->getAttribute() === 'identifier') {
+                $query->setAttribute('key');
+            }
+        }
+
         $queries[] = Query::equal('projectInternalId', [$project->getSequence()]);
 
         $cursor = Query::getCursorQueries($queries, false);

@@ -594,10 +594,21 @@ $platformCollections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('identifier'),
+                '$id' => ID::custom('key'), // Identifier on API
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('store'), // Unused at the moment
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 256,
                 'signed' => true,
                 'required' => false,
                 'default' => null,
