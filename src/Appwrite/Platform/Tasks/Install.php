@@ -599,7 +599,7 @@ class Install extends Action
             if (!$noStart && $startIndex <= 2) {
                 $currentStep = InstallerServer::STEP_DOCKER_CONTAINERS;
                 $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_IN_PROGRESS, $messages);
-                $this->runDockerCompose($input, $isLocalInstall, $useExistingConfig, $isCLI);
+                $this->runDockerCompose($input, $isLocalInstall, $useExistingConfig, $isCLI, $progress, $isUpgrade);
 
                 if (!$isLocalInstall) {
                     $this->connectInstallerToAppwriteNetwork();
@@ -732,6 +732,8 @@ class Install extends Action
         $name = $account['name'] ?? 'Admin';
         $email = $account['email'] ?? 'admin@selfhosted.local';
 
+        $hostIp = gethostbyname($domain);
+
         $payload = [
             'action' => $type,
             'account' => 'self-hosted',
@@ -744,6 +746,11 @@ class Install extends Action
                 'email' => $email,
                 'domain' => $domain,
                 'database' => $database,
+                'hostIp' => $hostIp !== $domain ? $hostIp : null,
+                'os' => php_uname('s') . ' ' . php_uname('r'),
+                'arch' => php_uname('m'),
+                'cpus' => ((int) trim((string) \shell_exec('nproc'))) ?: null,
+                'ram' => (int) round(((float) trim((string) \shell_exec('grep MemTotal /proc/meminfo | awk \'{print $2}\''))) / 1024),
             ]),
         ];
 
@@ -776,12 +783,16 @@ class Install extends Action
 
         $healthPath = '/v1/health/version';
 
-        // Local dev: reach Traefik via localhost on the host.
-        // Docker: reach Appwrite directly via Docker internal DNS (network connect is guaranteed).
-        $candidate = $isLocalInstall
-            ? 'http://localhost:' . $httpPort . $healthPath
-            : self::APPWRITE_API_URL . $healthPath;
-        $candidates = [$candidate];
+        if ($isLocalInstall) {
+            $candidates = [
+                'http://localhost:' . $httpPort . $healthPath,
+            ];
+        } else {
+            $candidates = [
+                self::APPWRITE_API_URL . $healthPath,
+                'http://host.docker.internal:' . $httpPort . $healthPath,
+            ];
+        }
 
         $lastErrors = [];
 
@@ -964,7 +975,7 @@ class Install extends Action
         }
     }
 
-    protected function runDockerCompose(array $input, bool $isLocalInstall, bool $useExistingConfig, bool $isCLI): void
+    protected function runDockerCompose(array $input, bool $isLocalInstall, bool $useExistingConfig, bool $isCLI, ?callable $progress = null, bool $isUpgrade = false): void
     {
         $env = '';
         if (!$useExistingConfig) {
@@ -1004,8 +1015,16 @@ class Install extends Action
         $command[] = '-d';
         $command[] = '--remove-orphans';
         $command[] = '--renew-anon-volumes';
-        $commandLine = $env . implode(' ', array_map(escapeshellarg(...), $command)) . ' 2>&1';
-        \exec($commandLine, $output, $exit);
+        $commandLine = $env . implode(' ', array_map(escapeshellarg(...), $command));
+
+        if ($progress) {
+            $totalServices = $this->countComposeServices($composeFile);
+            $result = $this->execWithContainerProgress($commandLine, $totalServices, $progress, $isUpgrade);
+            $output = $result['output'];
+            $exit = $result['exit'];
+        } else {
+            \exec($commandLine . ' 2>&1', $output, $exit);
+        }
 
         if ($exit !== 0) {
             $message = trim(implode("\n", $output));
@@ -1015,6 +1034,59 @@ class Install extends Action
         if ($isLocalInstall && $isCLI && !empty($output)) {
             Console::log(implode("\n", $output));
         }
+    }
+
+    private function countComposeServices(string $composeFile): int
+    {
+        $content = @file_get_contents($composeFile);
+        if ($content === false) {
+            return 0;
+        }
+        $count = preg_match_all('/^\s*container_name:/m', $content);
+        return $count !== false ? $count : 0;
+    }
+
+    private function execWithContainerProgress(string $commandLine, int $totalServices, callable $progress, bool $isUpgrade): array
+    {
+        $verb = $isUpgrade ? 'Restarting' : 'Starting';
+        $message = "$verb Docker containers...";
+        $started = 0;
+        $output = [];
+
+        $process = proc_open(
+            $commandLine . ' 2>&1',
+            [1 => ['pipe', 'w']],
+            $pipes
+        );
+
+        if (!is_resource($process)) {
+            return ['output' => [], 'exit' => 1];
+        }
+
+        while (($line = fgets($pipes[1])) !== false) {
+            $trimmed = rtrim($line, "\n\r");
+            $output[] = $trimmed;
+
+            if (str_contains($trimmed, 'Container') && (str_contains($trimmed, 'Started') || str_contains($trimmed, 'Running'))) {
+                $started++;
+                if ($totalServices > 0) {
+                    try {
+                        $progress(
+                            InstallerServer::STEP_DOCKER_CONTAINERS,
+                            InstallerServer::STATUS_IN_PROGRESS,
+                            $message,
+                            ['containerStarted' => $started, 'containerTotal' => $totalServices]
+                        );
+                    } catch (\Throwable) {
+                    }
+                }
+            }
+        }
+
+        fclose($pipes[1]);
+        $exit = proc_close($process);
+
+        return ['output' => $output, 'exit' => $exit];
     }
 
     protected function isLocalInstall(): bool

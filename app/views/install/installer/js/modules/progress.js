@@ -114,7 +114,7 @@
         return step.inProgress;
     };
 
-    const updateInstallRow = (row, step, status, message) => {
+    const updateInstallRow = (row, step, status, message, details) => {
         if (!row || !step) return;
         row.dataset.status = status;
         row.dataset.step = step.id;
@@ -136,6 +136,15 @@
                     text.classList.remove('is-enter');
                 });
             }
+        }
+
+        const counter = row.querySelector('[data-install-counter]');
+        if (counter) {
+            const started = details?.containerStarted;
+            const total = details?.containerTotal;
+            counter.textContent = (status === STATUS.IN_PROGRESS && started > 0 && total > 0)
+                ? `${started}/${total}`
+                : '';
         }
 
         // Show/hide "Navigate to Console" button for account setup errors
@@ -349,7 +358,7 @@
         const normalizedDomain = (formState?.appDomain || '').trim() || 'localhost';
         const normalizedHttpPort = (formState?.httpPort || '').trim() || '80';
         const normalizedHttpsPort = (formState?.httpsPort || '').trim() || '443';
-        const normalizedEmail = (formState?.emailCertificates || '').trim();
+        const normalizedEmail = (formState?.emailCertificates || '').trim() || (formState?.accountEmail || '').trim();
         const normalizedAssistantKey = (formState?.assistantOpenAIKey || '').trim();
         const normalizedAccountEmail = (formState?.accountEmail || '').trim();
         const normalizedAccountPassword = (formState?.accountPassword || '').trim();
@@ -529,7 +538,7 @@
                     if (!state) return;
                     const row = ensureRow(step);
                     if (row) {
-                        updateInstallRow(row, step, state.status || STATUS.IN_PROGRESS, state.message);
+                        updateInstallRow(row, step, state.status || STATUS.IN_PROGRESS, state.message, state.details);
                         if (state.status === STATUS?.ERROR) {
                             updateInstallErrorDetails(row, {
                                 message: state.message,
@@ -579,6 +588,9 @@
                     }
                 }
             }
+            if (payload.status === STATUS.ERROR) {
+                showGlobalActions();
+            }
             scheduleFallback();
         };
 
@@ -616,6 +628,7 @@
 
         const applySnapshot = (snapshot) => {
             if (!snapshot || !snapshot.steps) return;
+            let hasErrors = false;
             INSTALLATION_STEPS.forEach((step) => {
                 const detail = snapshot.steps[step.id];
                 if (!detail) return;
@@ -624,8 +637,14 @@
                     message: detail.message,
                     details: snapshot.details?.[step.id]
                 });
+                if (detail.status === STATUS.ERROR) {
+                    hasErrors = true;
+                }
             });
             renderProgress();
+            if (hasErrors) {
+                showGlobalActions();
+            }
         };
 
         const checkAllCompleted = () => {
@@ -965,6 +984,58 @@
                 retryInstallStep(stepId);
             }
         });
+
+        const globalActions = root.querySelector('[data-install-global-actions]');
+
+        const showGlobalActions = () => {
+            if (globalActions) {
+                globalActions.classList.remove('is-hidden');
+            }
+        };
+
+        const performReset = async (hard) => {
+            const installId = activeInstall?.installId || getInstallLock?.()?.installId || getStoredInstallId?.();
+
+            try {
+                const res = await fetch('/install/reset', {
+                    method: 'POST',
+                    headers: withCsrfHeader({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({ installId: installId || '', hard })
+                });
+                if (hard && !res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    showToast?.({
+                        status: 'error',
+                        title: 'Reset failed',
+                        description: data?.message || 'Could not stop containers. Try running "docker compose down -v" manually.',
+                        dismissible: true
+                    });
+                    return;
+                }
+            } catch (e) {}
+
+            clearInstallLock?.();
+            clearInstallId?.();
+            cleanupInstallFlow();
+            window.location.href = '/?step=1';
+        };
+
+        const startOverButton = root.querySelector('[data-install-start-over]');
+        if (startOverButton) {
+            startOverButton.addEventListener('click', () => performReset(false));
+        }
+
+        const hardResetButton = root.querySelector('[data-install-hard-reset]');
+        if (hardResetButton) {
+            hardResetButton.addEventListener('click', () => {
+                const confirmed = window.confirm(
+                    'This will stop all containers, remove all volumes (including database data, uploads, and certificates), and delete configuration files.\n\nThis action cannot be undone. Continue?'
+                );
+                if (confirmed) {
+                    performReset(true);
+                }
+            });
+        }
 
         // When the user switches back to this tab, check if installation
         // finished while the tab was in the background.
