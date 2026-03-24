@@ -92,15 +92,15 @@ export function getStripeAppearanceFromTheme(theme: string | undefined) {
 }
 
 /**
- * Redirect to Stripe to confirm payment (e.g. 3DS). Call this when the API
- * returns clientSecret indicating payment authentication is required.
+ * Handle 3DS or other customer actions for a PaymentIntent that was already
+ * confirmed server-side (`confirm: true`).
  *
- * @param config - clientSecret, paymentMethodId, returnUrl
+ * The backend always returns a clientSecret, but the PI may or may not need
+ * customer action (3DS). We retrieve the PI status first and only call
+ * `handleNextAction` when the PI is actually in `requires_action`.
  */
 export async function confirmPayment(config: {
   clientSecret: string
-  paymentMethodId: string
-  returnUrl: string
   publishableKey?: string
 }): Promise<void> {
   const envKey =
@@ -115,12 +115,28 @@ export async function confirmPayment(config: {
         : envKey),
   )
   if (!stripe) throw new Error('Stripe not available')
-  const { error } = await stripe.confirmPayment({
-    clientSecret: config.clientSecret,
-    confirmParams: {
-      return_url: config.returnUrl,
-      payment_method: config.paymentMethodId,
-    },
-  })
-  if (error) throw new Error(error.message ?? 'Payment confirmation failed')
+
+  // Check if the PI actually needs a customer action (e.g. 3DS)
+  const { paymentIntent, error: retrieveError } =
+    await stripe.retrievePaymentIntent(config.clientSecret)
+  if (retrieveError) {
+    throw new Error(retrieveError.message ?? 'Failed to retrieve payment status')
+  }
+
+  if (paymentIntent?.status === 'requires_action') {
+    const { error, paymentIntent: updatedIntent } =
+      await stripe.handleNextAction({
+        clientSecret: config.clientSecret,
+      })
+    if (error) throw new Error(error.message ?? 'Payment confirmation failed')
+
+    // If the user dismissed the 3DS modal the PI reverts to requires_payment_method
+    // without surfacing an error — detect this and throw an actionable message.
+    if (updatedIntent?.status === 'requires_payment_method') {
+      throw new Error(
+        'Authentication was cancelled. Please try again or use a different payment method.',
+      )
+    }
+  }
+  // If already requires_capture or succeeded, nothing to do client-side
 }

@@ -89,14 +89,11 @@ export function ChangePlanWizardFullscreen() {
     [memberships, membersTotal],
   )
 
-  // Check if user has a free organization
+  // Check if user has a free organization.
+  // org.plan is derived from billingPlan via getPlanNameFromTier() in useOrganizations(),
+  // so 'free' already covers tier-0 / Tier0 variants — no need for additional checks.
   const hasFreeOrgs = useMemo(() => {
-    return organizations.some(
-      (org) =>
-        org.plan === 'free' ||
-        org.billingPlan === 'tier-0' ||
-        org.billingPlan === 'Tier0',
-    )
+    return organizations.some((org) => org.plan === 'free')
   }, [organizations])
 
   // Determine default plan (Pro or Scale based on current plan)
@@ -128,7 +125,11 @@ export function ChangePlanWizardFullscreen() {
   const [couponModalOpen, setCouponModalOpen] = useState(false)
   const [paymentModalOpen, setPaymentModalOpen] = useState(false)
   const [usageLimitsComponentRef, setUsageLimitsComponentRef] =
-    useState<unknown>(null)
+    useState<{ getSelectedProjects?: () => string[] } | null>(null)
+  const handleUsageLimitsRef = (ref: unknown) =>
+    setUsageLimitsComponentRef(
+      ref as { getSelectedProjects?: () => string[] } | null,
+    )
 
   // Fetch additional data
   const { paymentMethods } = usePaymentMethods()
@@ -379,24 +380,19 @@ export function ChangePlanWizardFullscreen() {
         taxId: taxId || null,
       })
 
-      // Payment authentication required (e.g. 3DS): redirect to Stripe, then user returns to change-plan?type=payment_confirmed
+      // Payment authentication required (e.g. 3DS): handle inline via handleNextAction
       const resultObj = result as { clientSecret?: string; status?: number }
       if (resultObj?.clientSecret) {
-        const base = `${window.location.origin}`
-        const returnPath = `/organizations/${orgId}/change-plan`
-        const params = new URLSearchParams()
-        params.set('type', 'payment_confirmed')
-        params.set('id', orgId)
-        params.set('invites', '')
-        if (selectedPlan) params.set('plan', selectedPlan)
-        const returnUrl = `${base}${returnPath}?${params.toString()}`
         await confirmPayment({
           clientSecret: resultObj.clientSecret,
-          paymentMethodId,
-          returnUrl,
         })
-        return
       }
+
+      // Validate the organization after payment (needed regardless of 3DS)
+      await validateOrganizationMutation.mutateAsync({
+        organizationId: orgId,
+        invites: [],
+      })
 
       toast.success('Plan updated successfully')
       navigate({
@@ -472,20 +468,23 @@ export function ChangePlanWizardFullscreen() {
   }
 
   // Show estimated total box conditions
+  // Cast to string for defensive checks — the API may return plan tiers outside the known enum
+  const currentTierStr = currentPlanEnum as string
+  const selectedTierStr = selectedPlan as string | null
   const showEstimatedTotal =
-    selectedPlan &&
-    selectedPlan !== currentPlanEnum &&
-    selectedPlan !== BillingPlanTier.Tier0 &&
-    currentPlanEnum !== 'custom' &&
-    currentPlanEnum !== 'Custom'
+    selectedTierStr &&
+    selectedTierStr !== currentTierStr &&
+    selectedTierStr !== BillingPlanTier.Tier0 &&
+    currentTierStr !== 'custom' &&
+    currentTierStr !== 'Custom'
 
   // Show plan comparison box conditions
   const showPlanComparison =
     !showEstimatedTotal ||
-    selectedPlan === BillingPlanTier.Tier0 ||
-    selectedPlan === currentPlanEnum ||
-    currentPlanEnum === 'custom' ||
-    currentPlanEnum === 'Custom'
+    selectedTierStr === BillingPlanTier.Tier0 ||
+    selectedTierStr === currentTierStr ||
+    currentTierStr === 'custom' ||
+    currentTierStr === 'Custom'
 
   // Early return if critical data is missing
   if (!orgId) {
@@ -669,7 +668,7 @@ export function ChangePlanWizardFullscreen() {
               members={members}
               organization={organization}
               targetLimit={targetProjectsLimit}
-              onRef={setUsageLimitsComponentRef}
+              onRef={handleUsageLimitsRef}
             />
           )}
 
@@ -694,7 +693,7 @@ export function ChangePlanWizardFullscreen() {
               <AlertTitle>Downgrading to Free Plan</AlertTitle>
               <AlertDescription className="mt-2">
                 Your plan will change on{' '}
-                {organization?.billingPlanDowngrade?.date ||
+                {organization?.billingPlanDowngrade ||
                   'the end of your billing period'}
                 . You will lose access to premium features and organization
                 members beyond the free limit will be removed.

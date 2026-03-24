@@ -11,7 +11,7 @@ import {
   queryOptions,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { Query, ID } from '@appwrite.io/console'
+import { Query, ID, type Models } from '@appwrite.io/console'
 import {
   BillingPlanTier,
   type BillingPlanTier as BillingPlanTierType,
@@ -347,12 +347,13 @@ export async function fetchBillingPlans() {
     // Transform array response to object format keyed by plan $id
     // Response format: { total: number, plans: BillingPlan[] }
     // We need: { plans: { [planId]: planData } }
-    const plansObject: Record<string, unknown> = {}
+    const plansObject: Record<string, Models.BillingPlan> = {}
 
     if (response.plans && Array.isArray(response.plans)) {
       response.plans.forEach((plan: unknown) => {
-        if (plan.$id) {
-          plansObject[plan.$id] = plan
+        const p = plan as Models.BillingPlan
+        if (p.$id) {
+          plansObject[p.$id] = p
         }
       })
     }
@@ -362,7 +363,7 @@ export async function fetchBillingPlans() {
       total: response.total || 0,
     }
   } catch {
-    return { plans: {}, total: 0 }
+    return { plans: {} as Record<string, Models.BillingPlan>, total: 0 }
   }
 }
 
@@ -2080,7 +2081,7 @@ export function useBillingPlans() {
   )
 
   return {
-    plans: data?.plans || {},
+    plans: data?.plans || ({} as Record<string, Models.BillingPlan>),
     isLoading,
     error,
     refetch,
