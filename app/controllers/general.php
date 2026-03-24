@@ -383,12 +383,12 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                     // isExecutionAllowed remains false
                 }
 
-                /** @var \Appwrite\Utopia\Database\Documents\User | null */
                 $associatedUser = null;
-
                 $userExists = false;
+
                 $userId = $payload['userId'] ?? '';
                 if (!empty($userId)) {
+                    /** @var \Appwrite\Utopia\Database\Documents\User $associatedUser */
                     $associatedUser = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
                     if (!$associatedUser->isEmpty() && $associatedUser->getAttribute('status', false)) {
                         $userExists = true;
