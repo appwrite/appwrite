@@ -274,19 +274,28 @@
         return `${protocol}://${host}`;
     };
 
+    const normalizeHostname = (rawDomain) => {
+        const hostname = extractHostname?.(rawDomain)?.toLowerCase?.() ?? '';
+        if (hostname === '0.0.0.0' || hostname === 'traefik') return 'localhost';
+        return hostname;
+    };
+
     const canUseHttps = () => {
         const dataset = getBodyDataset?.() ?? {};
         const rawDomain = (formState?.appDomain || dataset.defaultAppDomain || '').trim();
         const httpsPort = (formState?.httpsPort || dataset.defaultHttpsPort || '').trim();
         if (!httpsPort || httpsPort === '0') return false;
-        const hostname = extractHostname?.(rawDomain)?.toLowerCase?.() ?? '';
+        const hostname = normalizeHostname(rawDomain);
         return !isLocalHost?.(hostname) && !isIPAddress?.(hostname);
     };
 
     const pollCertificate = async (domain, port, maxAttempts, intervalMs) => {
         for (let i = 0; i < maxAttempts; i++) {
             try {
-                const response = await fetch(`/install/certificate?domain=${encodeURIComponent(domain)}&port=${encodeURIComponent(port)}`);
+                const response = await fetch(
+                    `/install/certificate?domain=${encodeURIComponent(domain)}&port=${encodeURIComponent(port)}`,
+                    { cache: 'no-store' }
+                );
                 if (response.ok) {
                     const data = await response.json();
                     if (data.ready) return true;
@@ -718,10 +727,10 @@
             const dataset = getBodyDataset?.() ?? {};
             const rawDomain = (formState?.appDomain || dataset.defaultAppDomain || '').trim();
             const httpsPort = (formState?.httpsPort || dataset.defaultHttpsPort || '443').trim();
-            const domain = extractHostname?.(rawDomain) || rawDomain;
+            const domain = normalizeHostname(rawDomain);
             pollCertificate(domain, httpsPort, 15, 2000).then((ready) => {
                 stopSyncedSpinnerRotation();
-                const certMessage = ready ? SSL_STEP.done : 'Certificate pending';
+                const certMessage = ready ? SSL_STEP.done : 'Certificate not ready, continuing over HTTP';
                 animatePanelHeight(() => {
                     progressState.set(SSL_STEP.id, {
                         status: STATUS.COMPLETED,
