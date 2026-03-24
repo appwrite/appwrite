@@ -22,14 +22,14 @@ class XList extends DatabaseXList
     }
 
     protected function getDatabaseTypeQueryFilters(): array
-{
-    return [
-        Query::or([
-            Query::equal('type', [DATABASE_TYPE_TABLESDB, DATABASE_TYPE_LEGACY]),
-            Query::isNull('type'),
-        ]),
-    ];
-}
+    {
+        return [
+            Query::or([
+                Query::equal('type', [DATABASE_TYPE_TABLESDB, DATABASE_TYPE_LEGACY]),
+                Query::isNull('type'),
+            ]),
+        ];
+    }
 
     public function __construct()
     {
