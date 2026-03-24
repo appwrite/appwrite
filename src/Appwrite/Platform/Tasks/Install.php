@@ -601,16 +601,16 @@ class Install extends Action
                 $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_IN_PROGRESS, $messages);
                 $this->runDockerCompose($input, $isLocalInstall, $useExistingConfig, $isCLI, $progress, $isUpgrade);
 
+                $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_COMPLETED, $messages);
+                $currentStep = $isUpgrade ? InstallerServer::STEP_DOCKER_CONTAINERS : InstallerServer::STEP_ACCOUNT_SETUP;
+
                 if (!$isLocalInstall) {
                     $this->connectInstallerToAppwriteNetwork();
                 }
 
                 $domain = $input['_APP_DOMAIN'] ?? 'localhost';
 
-                // Wait for Appwrite API to be healthy before marking containers as ready
-                $apiUrl = $this->waitForApiReady($domain, $httpPort, $isLocalInstall, $progress, InstallerServer::STEP_DOCKER_CONTAINERS);
-
-                $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_COMPLETED, $messages);
+                $apiUrl = $this->waitForApiReady($domain, $httpPort, $isLocalInstall, $progress, $currentStep);
 
                 if (!$isUpgrade) {
                     $this->createInitialAdminAccount($account, $progress, $apiUrl, $domain);
@@ -777,7 +777,7 @@ class Install extends Action
      *  - host.docker.internal:{port} — reaches host-published ports from inside a container
      *  - localhost:{port} — works when running directly on the host (local dev)
      */
-    private function waitForApiReady(string $domain, string $httpPort, bool $isLocalInstall, ?callable $progress, string $step = InstallerServer::STEP_DOCKER_CONTAINERS): string
+    private function waitForApiReady(string $domain, string $httpPort, bool $isLocalInstall, ?callable $progress, string $step = InstallerServer::STEP_ACCOUNT_SETUP): string
     {
         $client = new Client();
         $client
@@ -818,7 +818,7 @@ class Install extends Action
                     $progress(
                         $step,
                         InstallerServer::STATUS_IN_PROGRESS,
-                        'Waiting for Appwrite to be ready (' . ($i + 1) . '/' . self::HEALTH_CHECK_ATTEMPTS . ')',
+                        'Waiting for Appwrite to be ready...',
                         []
                     );
                 } catch (\Throwable) {
@@ -1023,6 +1023,18 @@ class Install extends Action
 
         if ($progress) {
             $totalServices = $this->countComposeServices($composeFile);
+            if ($totalServices > 0) {
+                $verb = $isUpgrade ? 'Restarting' : 'Starting';
+                try {
+                    $progress(
+                        InstallerServer::STEP_DOCKER_CONTAINERS,
+                        InstallerServer::STATUS_IN_PROGRESS,
+                        "$verb Docker containers...",
+                        ['containerStarted' => 0, 'containerTotal' => $totalServices]
+                    );
+                } catch (\Throwable) {
+                }
+            }
             $result = $this->execWithContainerProgress($commandLine, $totalServices, $progress, $isUpgrade);
             $output = $result['output'];
             $exit = $result['exit'];
@@ -1088,9 +1100,46 @@ class Install extends Action
         }
 
         fclose($pipes[1]);
-        $exit = proc_close($process);
+
+        $exit = $this->procCloseWithTimeout($process, 60);
 
         return ['output' => $output, 'exit' => $exit];
+    }
+
+    /**
+     * Wait up to $timeoutSeconds for a process to exit, then kill it.
+     *
+     * proc_close() blocks indefinitely which can hang the installer if
+     * docker compose refuses to exit after all containers are running.
+     *
+     * @param resource $process
+     */
+    private function procCloseWithTimeout($process, int $timeoutSeconds): int
+    {
+        $deadline = time() + $timeoutSeconds;
+
+        while (time() < $deadline) {
+            $status = proc_get_status($process);
+            if (!$status['running']) {
+                proc_close($process);
+                return $status['exitcode'];
+            }
+            usleep(250_000);
+        }
+
+        // Process still running after timeout — kill it and move on.
+        // The containers are already up; the compose process is just lingering.
+        $pid = proc_get_status($process)['pid'] ?? 0;
+        if ($pid > 0) {
+            @posix_kill($pid, SIGTERM);
+            usleep(500_000);
+            if (proc_get_status($process)['running']) {
+                @posix_kill($pid, SIGKILL);
+            }
+        }
+        proc_close($process);
+
+        return 0;
     }
 
     protected function isLocalInstall(): bool
