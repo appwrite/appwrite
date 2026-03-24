@@ -1059,20 +1059,24 @@
             }
         });
 
+        const startFreshInstall = () => {
+            clearInstallId?.();
+            clearInstallLock?.();
+            const newInstallId = generateInstallId();
+            storeInstallId?.(newInstallId);
+            startInstallStream(newInstallId);
+        };
+
         const lock = getInstallLock?.();
         const existingInstallId = lock?.installId || getStoredInstallId?.();
         if (existingInstallId) {
             resumeInstall(existingInstallId).then((resumed) => {
                 if (!resumed) {
-                    clearInstallId?.();
-                    clearInstallLock?.();
-                    window.location.href = '/?step=1';
+                    startFreshInstall();
                 }
             });
         } else {
-            const newInstallId = generateInstallId();
-            storeInstallId?.(newInstallId);
-            startInstallStream(newInstallId);
+            startFreshInstall();
         }
     };
 

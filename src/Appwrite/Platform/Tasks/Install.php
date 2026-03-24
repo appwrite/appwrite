@@ -610,6 +610,7 @@ class Install extends Action
 
                 if (!$isUpgrade) {
                     $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_COMPLETED, $messages);
+                    $this->updateProgress($progress, InstallerServer::STEP_ACCOUNT_SETUP, InstallerServer::STATUS_IN_PROGRESS, messageOverride: 'Creating Appwrite account...');
                 }
 
                 if (!$isLocalInstall) {
