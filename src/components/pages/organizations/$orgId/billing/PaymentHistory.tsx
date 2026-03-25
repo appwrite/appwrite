@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Download, Eye, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { type Invoice } from '@/lib/utils/mock-data'
@@ -21,7 +21,8 @@ import { toast } from 'sonner'
  * Props: None
  *
  * State:
- * - currentPage: number - Current page index
+ * - requestedPage: number - Page user requested (fetch target)
+ * - displayedPage: number - Page currently rendered
  *
  * Edge cases:
  * - Empty invoices: Shows empty state message
@@ -88,40 +89,76 @@ function mapApiInvoiceToComponent(apiInvoice: Models.Invoice): Invoice {
   }
 }
 
+function extractUrlFromResponse(response: unknown): string | undefined {
+  if (!response || typeof response !== 'object') {
+    return undefined
+  }
+
+  const responseObject = response as Record<string, unknown>
+  const candidate =
+    responseObject.url || responseObject.href || responseObject.link
+
+  return typeof candidate === 'string' ? candidate : undefined
+}
+
 export function PaymentHistory() {
   // Get orgId from route params - works for any route that has orgId
   const params = useParams({ strict: false })
   const orgId = params.orgId as string | undefined
-  const [currentPage, setCurrentPage] = useState(0)
+  const [requestedPage, setRequestedPage] = useState(0)
+  const [displayedPage, setDisplayedPage] = useState(0)
 
-  // Fetch invoices from API with pagination
+  // Fetch invoices for requested page (user intent)
   const {
-    invoices: apiInvoices,
-    total: totalInvoices,
-    data,
-    isPending,
-    error,
-  } = useOrganizationInvoices(orgId, currentPage, ITEMS_PER_PAGE)
+    isFetching: requestedPageIsFetching,
+    error: requestedPageError,
+    data: requestedPageData,
+  } = useOrganizationInvoices(orgId, requestedPage, ITEMS_PER_PAGE)
+
+  // Fetch invoices for displayed page (what the user currently sees)
+  const {
+    invoices: displayedApiInvoices,
+    total: displayedTotalInvoices,
+    data: displayedData,
+    isPending: displayedIsPending,
+    error: displayedError,
+  } = useOrganizationInvoices(orgId, displayedPage, ITEMS_PER_PAGE)
+
+  // Keep showing current page until next page data is fully loaded
+  useEffect(() => {
+    if (
+      requestedPage !== displayedPage &&
+      !requestedPageIsFetching &&
+      requestedPageData
+    ) {
+      setDisplayedPage(requestedPage)
+    }
+  }, [requestedPage, displayedPage, requestedPageIsFetching, requestedPageData])
 
   // Map API invoices to component format
   const invoices = useMemo(() => {
-    return apiInvoices.map(mapApiInvoiceToComponent)
-  }, [apiInvoices])
+    return displayedApiInvoices.map(mapApiInvoiceToComponent)
+  }, [displayedApiInvoices])
 
-  const totalPages = Math.ceil(totalInvoices / ITEMS_PER_PAGE)
+  const totalInvoices = displayedTotalInvoices
+  const totalPages = Math.max(1, Math.ceil(totalInvoices / ITEMS_PER_PAGE))
+  const isPageTransitioning =
+    requestedPage !== displayedPage && requestedPageIsFetching
 
   const handlePrevPage = () => {
-    setCurrentPage((prev) => Math.max(0, prev - 1))
+    if (isPageTransitioning) return
+    setRequestedPage((prev) => Math.max(0, prev - 1))
   }
 
   const handleNextPage = () => {
-    setCurrentPage((prev) => Math.min(totalPages - 1, prev + 1))
+    if (isPageTransitioning) return
+    setRequestedPage((prev) => Math.min(totalPages - 1, prev + 1))
   }
 
   // Loading state - only show if we don't have any data yet
   // This prevents showing loading when we have cached data from route loader
   // Check if data exists (from cache or fresh) - if it does, we should render it even if isPending is briefly true
-  if (isPending && !data) {
+  if (displayedIsPending && !displayedData) {
     return (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
@@ -139,7 +176,8 @@ export function PaymentHistory() {
   }
 
   // Error state
-  if (error) {
+  if (displayedError || requestedPageError) {
+    const error = displayedError || requestedPageError
     return (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
@@ -226,10 +264,7 @@ export function PaymentHistory() {
                       url = response
                     } else if (response && typeof response === 'object') {
                       // Check for common URL properties
-                      url =
-                        (response as unknown).url ||
-                        (response as unknown).href ||
-                        (response as unknown).link
+                      url = extractUrlFromResponse(response) || ''
                       if (!url) {
                         // If no URL in response, construct it from endpoint
                         const endpoint = sdk.forConsole.client.config.endpoint
@@ -267,10 +302,7 @@ export function PaymentHistory() {
                       url = response
                     } else if (response && typeof response === 'object') {
                       // Check for common URL properties
-                      url =
-                        (response as unknown).url ||
-                        (response as unknown).href ||
-                        (response as unknown).link
+                      url = extractUrlFromResponse(response) || ''
                       if (!url) {
                         // If no URL in response, construct it from endpoint
                         const endpoint = sdk.forConsole.client.config.endpoint
@@ -322,9 +354,15 @@ export function PaymentHistory() {
       <div className="border-t border-border px-6 py-3 bg-muted/30">
         <div className="flex items-center justify-between">
           <p className="text-[12px] text-muted-foreground">
-            Showing {currentPage * ITEMS_PER_PAGE + 1}–
-            {Math.min((currentPage + 1) * ITEMS_PER_PAGE, totalInvoices)} of{' '}
-            {totalInvoices} invoices
+            {totalInvoices > 0 ? (
+              <>
+                Showing {displayedPage * ITEMS_PER_PAGE + 1}–
+                {Math.min((displayedPage + 1) * ITEMS_PER_PAGE, totalInvoices)}{' '}
+                of {totalInvoices} invoices
+              </>
+            ) : (
+              'No invoices'
+            )}
           </p>
           <div className="flex items-center gap-2">
             <Button
@@ -332,19 +370,19 @@ export function PaymentHistory() {
               size="sm"
               className="h-8 w-8 p-0"
               onClick={handlePrevPage}
-              disabled={currentPage === 0}
+              disabled={displayedPage === 0 || isPageTransitioning}
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <span className="text-[12px] text-muted-foreground">
-              Page {currentPage + 1} of {totalPages}
+              Page {displayedPage + 1} of {totalPages}
             </span>
             <Button
               variant="outline"
               size="sm"
               className="h-8 w-8 p-0"
               onClick={handleNextPage}
-              disabled={currentPage === totalPages - 1}
+              disabled={displayedPage === totalPages - 1 || isPageTransitioning}
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
