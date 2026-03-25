@@ -127,13 +127,40 @@ trait Deployment
 
                 Span::add("{$logBase}.authorized", $isAuthorized);
 
-                $commentStatus = 'waiting';
                 $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
                 $hostname = $platform['consoleHostname'] ?? '';
 
                 $authorizeUrl = $protocol . '://' . $hostname . "/console/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}";
 
                 $action = $isAuthorized ? ['type' => 'logs'] : ['type' => 'authorize', 'url' => $authorizeUrl];
+
+                $commentStatus = 'waiting';
+                $commentPreviewUrl = '';
+
+                // If this action was triggered by pull request, use most up to date details in comment
+                if (!empty($providerPullRequestId)) {
+                    $existingDeployment = $authorization->skip(fn () => $dbForProject->findOne('deployments', [
+                        Query::equal('resourceInternalId', [$resource->getSequence()]),
+                        Query::equal('resourceType', [$resourceCollection]),
+                        Query::equal('providerCommitHash', [$providerCommitHash]),
+                        Query::equal('providerBranch', [$providerBranch]),
+                        Query::orderDesc('$createdAt')
+                    ]));
+
+                    $commentStatus = $existingDeployment->getAttribute('status', 'waiting');
+
+                    if ($resource->getCollection() === 'sites') {
+                        $previewRule = $authorization->skip(fn () => $dbForPlatform->findOne('rules', [
+                            Query::equal('projectInternalId', [$project->getSequence()]),
+                            Query::equal('type', ['deployment']), // Not redirect
+                            Query::equal('trigger', ['deployment']), // Preview - Not manual
+                            Query::equal('deploymentResourceType', ['site']), // Not function
+                            Query::equal('deploymentInternalId', [$existingDeployment->getSequence()]),
+                        ]));
+
+                        $commentPreviewUrl = !$previewRule->isEmpty() ? ("{$protocol}://" . $previewRule->getAttribute('domain', '')) : '';
+                    }
+                }
 
                 $latestCommentId = '';
 
@@ -173,7 +200,7 @@ trait Deployment
                             try {
                                 $comment = new Comment($platform);
                                 $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
-                                $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
+                                $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $commentPreviewUrl);
 
                                 $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
                             } finally {
@@ -182,7 +209,7 @@ trait Deployment
                         }
                     } else {
                         $comment = new Comment($platform);
-                        $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
+                        $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $commentPreviewUrl);
                         $latestCommentId = \strval($github->createComment($owner, $repositoryName, $providerPullRequestId, $comment->generateComment()));
 
                         if (!empty($latestCommentId)) {
@@ -271,6 +298,19 @@ trait Deployment
                     }
                     $owner = $github->getOwnerName($providerInstallationId);
                     $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $authorizeUrl, $name);
+                    continue;
+                }
+
+                if (!empty($providerPullRequestId)) {
+                    // Update comment ID so running build can update comment
+                    $authorization->skip(fn () => $dbForProject->updateDocuments('deployments', new Document([
+                        'providerCommentId' => \strval($latestCommentId)
+                    ]), [
+                        Query::equal('providerCommitHash', [$providerCommitHash]),
+                        Query::equal('providerBranch', [$providerBranch]),
+                    ]));
+
+                    // Skip rest - prevent double deployments (previous one was made by push)
                     continue;
                 }
 
