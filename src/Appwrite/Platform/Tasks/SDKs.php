@@ -745,7 +745,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 'mkdir -p ' . $resultExamples . $languagePath . ' && \
                 cp -r ' . $examplesSource . ' ' . $resultExamples
             );
-            Console::success("  Examples copied to {$resultExamples}");
+            $label = \is_string($languageTitle) ? " ({$languageTitle})" : '';
+            Console::success("  Examples{$label} copied to {$resultExamples}{$languagePath}");
         }
     }
 
