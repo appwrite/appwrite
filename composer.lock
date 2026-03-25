@@ -3854,12 +3854,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "d77451fe435f0cfeda96a4fa185b95f08c038ee3"
+                "reference": "a97aae043ec70d0cc3df5f511e7f13ca4db4c2fc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/d77451fe435f0cfeda96a4fa185b95f08c038ee3",
-                "reference": "d77451fe435f0cfeda96a4fa185b95f08c038ee3",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/a97aae043ec70d0cc3df5f511e7f13ca4db4c2fc",
+                "reference": "a97aae043ec70d0cc3df5f511e7f13ca4db4c2fc",
                 "shasum": ""
             },
             "require": {
@@ -3905,7 +3905,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/joins8"
             },
-            "time": "2026-03-23T15:34:13+00:00"
+            "time": "2026-03-25T10:51:22+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -6195,11 +6195,11 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "2.1.42",
+            "version": "2.1.43",
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/1279e1ce86ba768f0780c9d889852b4e02ff40d0",
-                "reference": "1279e1ce86ba768f0780c9d889852b4e02ff40d0",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/d01bebe3edfd4d49b9666ee5b8271ddca561042f",
+                "reference": "d01bebe3edfd4d49b9666ee5b8271ddca561042f",
                 "shasum": ""
             },
             "require": {
@@ -6244,7 +6244,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-03-17T14:58:32+00:00"
+            "time": "2026-03-24T20:40:50+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
