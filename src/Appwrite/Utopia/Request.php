@@ -7,8 +7,8 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request\Filter;
 use Swoole\Http\Request as SwooleRequest;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Route;
-use Utopia\Swoole\Request as UtopiaRequest;
+use Utopia\Http\Adapter\Swoole\Request as UtopiaRequest;
+use Utopia\Http\Route;
 use Utopia\System\System;
 
 class Request extends UtopiaRequest

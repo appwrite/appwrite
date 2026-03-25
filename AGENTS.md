@@ -1,0 +1,107 @@
+# AGENTS.md
+
+Appwrite is an end-to-end backend server for web, mobile, native, and backend apps. This guide provides context and instructions for AI coding agents working on the Appwrite codebase.
+
+## Project Overview
+
+Appwrite is a self-hosted Backend-as-a-Service (BaaS) platform that provides developers with a set of APIs and tools to build secure, scalable applications. The project uses a hybrid monolithic-microservice architecture built with PHP, running on Swoole for high performance.
+
+**Key Technologies:**
+- **Backend:** PHP 8.3+, Swoole
+- **Libraries:** Utopia PHP
+- **Database:** MariaDB, Redis
+- **Cache:** Redis
+- **Queue:** Redis
+- **Containers:** Docker
+
+## Development Commands
+
+```bash
+# Run Appwrite
+docker compose up -d --force-recreate --build
+
+# Run specific test
+docker compose exec appwrite test /usr/src/code/tests/e2e/Services/[ServiceName] --filter=[FunctionName]
+
+# Format code
+composer format
+```
+
+## Code Style Guidelines
+
+- Follow [PSR-12](https://www.php-fig.org/psr/psr-12/) coding standard
+- Use PSR-4 autoloading
+- Strict type declarations where applicable
+- Comprehensive PHPDoc comments
+
+### Naming Conventions
+
+#### `resourceType` Naming Rule
+
+When a collection has a combination of `resourceType`, `resourceId`, and/or `resourceInternalId`, the value of `resourceType` MUST always be **plural** - for example: `functions`, `sites`, `deployments`.
+
+Examples:
+```php
+'resourceType' => 'functions'
+'resourceType' => 'sites'
+'resourceType' => 'deployments'
+```
+
+## Performance Patterns
+
+### Document Update Optimization
+
+When updating documents, always pass only the changed attributes as a sparse `Document` rather than the full document. This is more efficient because `updateDocument()` internally performs `array_merge($old, $new)`.
+
+**Correct Pattern:**
+```php
+// Good: Pass only changed attributes directly
+$user = $dbForProject->updateDocument('users', $user->getId(), new Document([
+    'name' => $name,
+    'email' => $email,
+]));
+```
+
+**Incorrect Pattern:**
+```php
+$user->setAttribute('name', $name);
+$user->setAttribute('email', $email);
+
+// Bad: Passing full document is inefficient
+$user = $dbForProject->updateDocument('users', $user->getId(), $user);
+```
+
+**Exceptions:**
+- Migration files (need full document updates by design)
+- Cases already using `array_merge()` with `getArrayCopy()`
+- Updates where almost all attributes of the document change at once (sparse update provides little benefit compared to passing the full document)
+- Complex nested relationship logic where full document state is required
+
+## Security Considerations
+
+### Critical Security Practices
+
+- **Never hardcode credentials** - Use environment variables
+- **Rate limiting** - Respect abuse prevention mechanisms
+
+## Dependencies
+
+Avoid introducing new dependencies other than utopia-php.
+
+## Adding new endpoints
+
+When adding new endpoints, make sure to use modules and follow its patterns. Find instruction in [Modules AGENTS.md](src/Appwrite/Platform/AGENTS.md) file.
+
+## Pull Request Guidelines
+### Before Submitting
+
+-  Run `composer format`
+- Update documentation if adding features
+- Add/update tests for your changes
+- Check that Docker build succeeds
+`docs/specs/authentication.drawio.svg`
+
+## Known Issues and Gotchas
+
+- **Hot Reload:** Code changes require container restart in some cases
+- **Logging:** There is no central place for logs, so when debugging, ensure to check all possibly relevant containers

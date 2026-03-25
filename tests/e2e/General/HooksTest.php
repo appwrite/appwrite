@@ -128,7 +128,7 @@ class HooksTest extends Scope
             'cookie' => $cookie,
         ]);
 
-        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals(403, $response['headers']['status-code']);
 
         /**
         * Test for api controllers
@@ -140,7 +140,7 @@ class HooksTest extends Scope
             'cookie' => $cookie,
         ]);
 
-        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals(403, $response['headers']['status-code']);
         $this->assertEquals(Exception::USER_BLOCKED, $response['body']['type']);
 
         /**

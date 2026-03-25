@@ -356,7 +356,19 @@ class AbuseTest extends Scope
             'required' => true,
         ]);
 
-        sleep(1);
+        $attrEndpoint = $isCollection
+            ? '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/title'
+            : '/tablesdb/' . $databaseId . '/tables/' . $collectionId . '/columns/title';
+
+        $this->assertEventually(function () use ($attrEndpoint) {
+            $attr = $this->client->call(Client::METHOD_GET, $attrEndpoint, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertEquals(200, $attr['headers']['status-code']);
+            $this->assertEquals('available', $attr['body']['status']);
+        }, 30_000, 500);
 
         return [
             'databaseId' => $databaseId,

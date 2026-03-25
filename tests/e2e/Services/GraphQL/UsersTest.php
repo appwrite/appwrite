@@ -15,8 +15,16 @@ class UsersTest extends Scope
     use SideServer;
     use Base;
 
-    public function testCreateUser(): array
+    private static array $cachedUser = [];
+    private static array $cachedUserTarget = [];
+
+    protected function setupUser(): array
     {
+        $key = $this->getProject()['$id'];
+        if (!empty(static::$cachedUser[$key])) {
+            return static::$cachedUser[$key];
+        }
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_USER);
         $email = 'users.service@example.com';
@@ -42,14 +50,19 @@ class UsersTest extends Scope
         $this->assertEquals('Project User', $user['name']);
         $this->assertEquals($email, $user['email']);
 
+        static::$cachedUser[$key] = $user;
         return $user;
     }
 
-    /**
-     * @depends testCreateUser
-     */
-    public function testCreateUserTarget(array $user)
+    protected function setupUserTarget(): array
     {
+        $key = $this->getProject()['$id'];
+        if (!empty(static::$cachedUserTarget[$key])) {
+            return static::$cachedUserTarget[$key];
+        }
+
+        $user = $this->setupUser();
+
         $projectId = $this->getProject()['$id'];
 
         $query = $this->getQuery(self::CREATE_MAILGUN_PROVIDER);
@@ -93,7 +106,20 @@ class UsersTest extends Scope
         $this->assertEquals(200, $target['headers']['status-code']);
         $this->assertEquals('random-email@mail.org', $target['body']['data']['usersCreateTarget']['identifier']);
 
-        return $target['body']['data']['usersCreateTarget'];
+        static::$cachedUserTarget[$key] = $target['body']['data']['usersCreateTarget'];
+        return static::$cachedUserTarget[$key];
+    }
+
+    public function testCreateUser(): void
+    {
+        $user = $this->setupUser();
+        $this->assertEquals('Project User', $user['name']);
+    }
+
+    public function testCreateUserTarget(): void
+    {
+        $target = $this->setupUserTarget();
+        $this->assertEquals('random-email@mail.org', $target['identifier']);
     }
 
     public function testGetUsers()
@@ -227,11 +253,10 @@ class UsersTest extends Scope
         $this->assertIsArray($user['body']['data']['usersListLogs']);
     }
 
-    /**
-     * @depends testCreateUserTarget
-     */
-    public function testListUserTargets(array $target)
+    public function testListUserTargets()
     {
+        $target = $this->setupUserTarget();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::LIST_USER_TARGETS);
         $graphQLPayload = [
@@ -251,11 +276,10 @@ class UsersTest extends Scope
         $this->assertCount(2, $targets['body']['data']['usersListTargets']['targets']);
     }
 
-    /**
-     * @depends testCreateUserTarget
-     */
-    public function testGetUserTarget(array $target)
+    public function testGetUserTarget()
     {
+        $target = $this->setupUserTarget();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_USER_TARGET);
         $graphQLPayload = [
@@ -459,11 +483,10 @@ class UsersTest extends Scope
         $this->assertEquals('{"key":"value"}', $user['body']['data']['usersUpdatePrefs']['data']);
     }
 
-    /**
-     * @depends testCreateUserTarget
-     */
-    public function testUpdateUserTarget(array $target)
+    public function testUpdateUserTarget()
     {
+        $target = $this->setupUserTarget();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::UPDATE_USER_TARGET);
         $graphQLPayload = [
@@ -510,32 +533,35 @@ class UsersTest extends Scope
     public function testDeleteUserSession()
     {
         $projectId = $this->getProject()['$id'];
+
+        // Create a fresh user with a session specifically for this test
+        $user = $this->getUser(true);
+
         $query = $this->getQuery(self::DELETE_USER_SESSION);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'userId' => $this->getUser()['$id'],
-                'sessionId' => $this->getUser()['sessionId'],
+                'userId' => $user['$id'],
+                'sessionId' => $user['sessionId'],
             ]
         ];
 
-        $user = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+        $result = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertIsNotArray($user['body']);
-        $this->assertEquals(204, $user['headers']['status-code']);
+        $this->assertIsNotArray($result['body']);
+        $this->assertEquals(204, $result['headers']['status-code']);
 
         unset(self::$user[$this->getProject()['$id']]);
         $this->getUser();
     }
 
-    /**
-     * @depends testCreateUserTarget
-     */
-    public function testDeleteUserTarget(array $target)
+    public function testDeleteUserTarget()
     {
+        $target = $this->setupUserTarget();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::DELETE_USER_TARGET);
         $graphQLPayload = [
@@ -552,6 +578,10 @@ class UsersTest extends Scope
         ], $this->getHeaders()), $graphQLPayload);
 
         $this->assertEquals(204, $target['headers']['status-code']);
+
+        // Clear cache after deletion
+        $key = $this->getProject()['$id'];
+        static::$cachedUserTarget[$key] = [];
     }
 
     public function testDeleteUser()

@@ -3,8 +3,8 @@
 namespace Appwrite\Migration;
 
 use Exception;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict;
@@ -90,6 +90,8 @@ abstract class Migration
         '1.7.3' => 'V22',
         '1.7.4' => 'V22',
         '1.8.0' => 'V23',
+        '1.8.1' => 'V23',
+        '1.9.0' => 'V24',
     ];
 
     /**
@@ -210,7 +212,7 @@ abstract class Migration
      * @return void
      * @throws \Throwable
      */
-    protected function createCollection(string $id, string $name = null): void
+    protected function createCollection(string $id, ?string $name = null): void
     {
         $name ??= $id;
 
@@ -261,7 +263,7 @@ abstract class Migration
         Database $database,
         string $collectionId,
         array $attributeIds,
-        string $from = null
+        ?string $from = null
     ): void {
         $from ??= $collectionId;
 
@@ -326,7 +328,7 @@ abstract class Migration
         Database $database,
         string $collectionId,
         string $attributeId,
-        string $from = null
+        ?string $from = null
     ): void {
         $from ??= $collectionId;
 
@@ -384,7 +386,7 @@ abstract class Migration
      * @throws Duplicate
      * @throws Limit
      */
-    public function createIndexFromCollection(Database $database, string $collectionId, string $indexId, string $from = null): void
+    public function createIndexFromCollection(Database $database, string $collectionId, string $indexId, ?string $from = null): void
     {
         $from ??= $collectionId;
 

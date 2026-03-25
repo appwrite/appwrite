@@ -3,6 +3,8 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections;
 
 use Appwrite\Extend\Exception;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
 
@@ -13,6 +15,8 @@ abstract class Action extends UtopiaAction
      */
     private ?string $context = COLLECTIONS;
 
+    private ?string $databaseType = LEGACY;
+
     /**
      * Get the response model used in the SDK and HTTP responses.
      */
@@ -22,6 +26,9 @@ abstract class Action extends UtopiaAction
     {
         if (\str_contains($path, '/tablesdb')) {
             $this->context = TABLES;
+            $this->databaseType = TABLESDB;
+        } elseif (\str_contains($path, '/vectorsdb')) {
+            $this->databaseType = VECTORSDB;
         }
         return parent::setHttpPath($path);
     }
@@ -32,6 +39,14 @@ abstract class Action extends UtopiaAction
     protected function getContext(): string
     {
         return $this->context;
+    }
+
+    /**
+     * Get the current API database type.
+     */
+    protected function getDatabaseType(): string
+    {
+        return $this->databaseType;
     }
 
     /**
@@ -164,5 +179,16 @@ abstract class Action extends UtopiaAction
         return $this->isCollectionsAPI()
             ? Exception::ATTRIBUTE_TYPE_INVALID
             : Exception::COLUMN_TYPE_INVALID;
+    }
+
+    /**
+     * Add row bytes information to a collection/table document.
+     */
+    protected function addRowBytesInfo(Document $document, Database $dbForProject): Document
+    {
+        $adapter = $dbForProject->getAdapter();
+        $document->setAttribute('bytesMax', $adapter->getDocumentSizeLimit());
+        $document->setAttribute('bytesUsed', $adapter->getAttributeWidth($document));
+        return $document;
     }
 }

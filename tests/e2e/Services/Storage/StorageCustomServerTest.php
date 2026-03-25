@@ -17,7 +17,38 @@ class StorageCustomServerTest extends Scope
     use ProjectCustom;
     use SideServer;
 
-    public function testCreateBucket(): array
+    /**
+     * @var array Cached bucket data for tests
+     */
+    private static array $cachedBucket = [];
+
+    /**
+     * Helper method to set up a bucket for tests.
+     * Uses static caching to avoid recreating resources.
+     */
+    protected function setupBucket(): array
+    {
+        $cacheKey = $this->getProject()['$id'];
+
+        if (!empty(self::$cachedBucket[$cacheKey])) {
+            return self::$cachedBucket[$cacheKey];
+        }
+
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket',
+            'fileSecurity' => true,
+        ]);
+
+        self::$cachedBucket[$cacheKey] = ['bucketId' => $bucket['body']['$id']];
+
+        return self::$cachedBucket[$cacheKey];
+    }
+
+    public function testCreateBucket(): void
     {
         /**
          * Test for SUCCESS
@@ -67,16 +98,25 @@ class StorageCustomServerTest extends Scope
             'fileSecurity' => true,
         ]);
         $this->assertEquals(400, $bucket['headers']['status-code']);
-
-        return ['bucketId' => $bucketId];
     }
 
-    /**
-     * @depends testCreateBucket
-     */
-    public function testListBucket($data): array
+    public function testListBucket(): void
     {
+        $data = $this->setupBucket();
         $id = $data['bucketId'] ?? '';
+
+        // Create bucket1 for this test (may already exist from testCreateBucket in parallel runs)
+        $bucket1Response = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'bucketId' => ID::custom('bucket1'),
+            'name' => 'Test Bucket 1',
+            'fileSecurity' => true,
+        ]);
+        // Accept both 201 (created) and 409 (already exists from parallel test)
+        $this->assertContains($bucket1Response['headers']['status-code'], [201, 409]);
+
         /**
          * Test for SUCCESS
          */
@@ -93,8 +133,27 @@ class StorageCustomServerTest extends Scope
         );
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
-        $this->assertEquals($id, $response['body']['buckets'][0]['$id']);
-        $this->assertEquals('Test Bucket', $response['body']['buckets'][0]['name']);
+        // Find our bucket in the list (may not be first in parallel execution)
+        $bucketIds = array_column($response['body']['buckets'], '$id');
+        $this->assertContains($id, $bucketIds, 'Created bucket should exist in bucket list');
+        // Find our bucket for name assertion
+        $ourBucket = null;
+        foreach ($response['body']['buckets'] as $bucket) {
+            if ($bucket['$id'] === $id) {
+                $ourBucket = $bucket;
+                break;
+            }
+        }
+        $this->assertNotNull($ourBucket);
+        $this->assertEquals('Test Bucket', $ourBucket['name']);
+
+        foreach ($response['body']['buckets'] as $bucket) {
+            $this->assertArrayHasKey('totalSize', $bucket);
+            $this->assertIsInt($bucket['totalSize']);
+
+            /* always 0 because the stats worker runs hourly! */
+            $this->assertGreaterThanOrEqual(0, $bucket['totalSize']);
+        }
 
         $response = $this->client->call(Client::METHOD_GET, '/storage/buckets', array_merge([
             'content-type' => 'application/json',
@@ -118,7 +177,8 @@ class StorageCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(1, $response['body']['buckets']);
+        // With offset(1) and at least 2 buckets created, expect at least 1 result
+        $this->assertGreaterThanOrEqual(1, count($response['body']['buckets']));
 
         $response = $this->client->call(Client::METHOD_GET, '/storage/buckets', array_merge([
             'content-type' => 'application/json',
@@ -142,7 +202,8 @@ class StorageCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(2, $response['body']['buckets']);
+        // We created 2 buckets with fileSecurity=true (setupBucket + bucket1)
+        $this->assertGreaterThanOrEqual(2, count($response['body']['buckets']));
 
         $response = $this->client->call(Client::METHOD_GET, '/storage/buckets', array_merge([
             'content-type' => 'application/json',
@@ -156,17 +217,16 @@ class StorageCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['buckets']);
-        $this->assertCount(1, $response['body']['buckets']);
-
-        $this->assertEquals('bucket1', $response['body']['buckets'][0]['$id']);
-        return $data;
+        // In parallel execution, there may be more buckets after the cursor
+        $this->assertGreaterThanOrEqual(1, count($response['body']['buckets']));
+        // Find bucket1 by ID (may not be first in parallel execution)
+        $bucketIds = array_column($response['body']['buckets'], '$id');
+        $this->assertContains('bucket1', $bucketIds, 'bucket1 should exist in bucket list after cursor');
     }
 
-    /**
-     * @depends testCreateBucket
-     */
-    public function testGetBucket(array $data): array
+    public function testGetBucket(): void
     {
+        $data = $this->setupBucket();
         $id = $data['bucketId'] ?? '';
         /**
          * Test for SUCCESS
@@ -186,6 +246,7 @@ class StorageCustomServerTest extends Scope
         $this->assertNotEmpty($response['body']);
         $this->assertEquals($id, $response['body']['$id']);
         $this->assertEquals('Test Bucket', $response['body']['name']);
+        $this->assertArrayHasKey('totalSize', $response['body']);
 
         /**
          * Test for FAILURE
@@ -215,16 +276,13 @@ class StorageCustomServerTest extends Scope
                 $this->getHeaders()
             )
         );
+        // UID validator always limits to 36 chars regardless of adapter, so validation catches this and returns 400
         $this->assertEquals(400, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    /**
-     * @depends testCreateBucket
-     */
-    public function testUpdateBucket(array $data): array
+    public function testUpdateBucket(): void
     {
+        $data = $this->setupBucket();
         $id = $data['bucketId'] ?? '';
         /**
          * Test for SUCCESS
@@ -259,16 +317,22 @@ class StorageCustomServerTest extends Scope
             'enabled' => 'false',
         ]);
         $this->assertEquals(400, $bucket['headers']['status-code']);
-
-        return ['bucketId' => $bucketId];
     }
 
-    /**
-     * @depends testCreateBucket
-     */
-    public function testDeleteBucket(array $data): array
+    public function testDeleteBucket(): void
     {
-        $id = $data['bucketId'] ?? '';
+        // Create a fresh bucket for deletion testing (not using cache since we delete it)
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket Delete',
+            'fileSecurity' => true,
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+
+        $id = $bucket['body']['$id'];
         /**
          * Test for SUCCESS
          */
@@ -298,7 +362,5 @@ class StorageCustomServerTest extends Scope
             )
         );
         $this->assertEquals(404, $response['headers']['status-code']);
-
-        return $data;
     }
 }

@@ -1,5 +1,23 @@
 # Change Log
 
+## 14.3.0
+
+* Added upsert() support for RealtimeChannel on both Document and Row variants to perform upsert operations over real-time channels.
+* Introduced new Query filter methods: contains(_:, value:), containsAny(_:, value: [Any]), containsAll(_:, value: [Any]) for enhanced querying capabilities (substring and multi-value containment).
+* Documentation and packaging updates to align with the new release: README dependency example updated from 14.2.0 to 14.1.0, and server compatibility note updated to indicate Appwrite server version 1.8.x compatibility.
+
+## 14.1.0
+
+* Add `queries` parameter to Realtime subscriptions for filtering events
+* Fix `Roles` enum removed from Teams service; `roles` parameter now accepts `[String]`
+* Fix doc examples with proper formatting and complete client configuration
+
+## 14.0.0
+
+* Add array-based enum parameters (e.g., `permissions: [BrowserPermission]`).
+* Breaking change: `Output` enum has been removed; use `ImageFormat` instead.
+* Add `Channel` helpers for Realtime.
+
 ## 13.5.0
 
 * Add `getScreenshot` method to `Avatars` service

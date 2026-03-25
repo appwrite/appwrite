@@ -18,3 +18,12 @@ dev/yasd_init.php
 Makefile
 appwrite.config.json
 /.zed/
+/app/config/specs/
+/docs/examples/
+.phpunit.cache
+playwright-report
+test-results
+docker-compose.web-installer.yml
+.env.web-installer
+docker-compose.web-installer.yml.**.backup
+tests/playwright/screenshots

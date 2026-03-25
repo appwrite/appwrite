@@ -39,7 +39,7 @@ class User extends Document
     {
         $roles = [];
 
-        if (!$this->isPrivileged($authorization->getRoles()) && !$this->isApp($authorization->getRoles())) {
+        if (!$this->isApp($authorization->getRoles())) {
             if ($this->getId()) {
                 $roles[] = Role::user($this->getId())->toString();
                 $roles[] = Role::users()->toString();
@@ -131,7 +131,7 @@ class User extends Document
         return false;
     }
 
-    public function tokenVerify(int $type = null, string $secret, Proof $proofForToken): false|Document
+    public function tokenVerify(?int $type, string $secret, Proof $proofForToken): false|Document
     {
         $tokens = $this->getAttribute('tokens', []);
         foreach ($tokens as $token) {

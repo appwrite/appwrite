@@ -5,12 +5,13 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
+use Appwrite\Functions\EventProcessor;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
@@ -25,7 +26,7 @@ use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 
 class Update extends Action
@@ -63,20 +64,23 @@ class Update extends Action
                 ],
                 contentType: ContentType::JSON
             ))
-            ->param('transactionId', '', new UID(), 'Transaction ID.')
+            ->param('transactionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Transaction ID.', false, ['dbForProject'])
             ->param('commit', false, new Boolean(), 'Commit transaction?', true)
             ->param('rollback', false, new Boolean(), 'Rollback transaction?', true)
+            ->inject('project')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('user')
             ->inject('transactionState')
             ->inject('queueForDeletes')
             ->inject('queueForEvents')
-            ->inject('queueForStatsUsage')
+            ->inject('usage')
             ->inject('queueForRealtime')
             ->inject('queueForFunctions')
             ->inject('queueForWebhooks')
             ->inject('authorization')
+            ->inject('eventProcessor')
             ->callback($this->action(...));
     }
 
@@ -86,14 +90,16 @@ class Update extends Action
      * @param bool $rollback
      * @param UtopiaResponse $response
      * @param Database $dbForProject
+     * @param callable $getDatabasesDB
      * @param Document $user
      * @param TransactionState $transactionState
      * @param Delete $queueForDeletes
      * @param Event $queueForEvents
-     * @param StatsUsage $queueForStatsUsage
+     * @param Context $usage
      * @param Event $queueForRealtime
      * @param Event $queueForFunctions
      * @param Event $queueForWebhooks
+     * @param EventProcessor $eventProcessor
      * @return void
      * @throws ConflictException
      * @throws Exception
@@ -101,9 +107,9 @@ class Update extends Action
      * @throws \Utopia\Database\Exception
      * @throws Authorization
      * @throws Structure
-     * @throws \Utopia\Exception
+     * @throws \Utopia\Http\Exception
      */
-    public function action(string $transactionId, bool $commit, bool $rollback, UtopiaResponse $response, Database $dbForProject, Document $user, TransactionState $transactionState, Delete $queueForDeletes, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, Authorization $authorization): void
+    public function action(string $transactionId, bool $commit, bool $rollback, Document $project, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Document $user, TransactionState $transactionState, Delete $queueForDeletes, Event $queueForEvents, Context $usage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, Authorization $authorization, EventProcessor $eventProcessor): void
     {
         if (!$commit && !$rollback) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Either commit or rollback must be true');
@@ -132,14 +138,52 @@ class Update extends Action
         }
 
         if ($commit) {
-
             $operations = [];
             $totalOperations = 0;
             $databaseOperations = [];
             $currentDocumentId = null;
 
+            $firstOperation = $authorization->skip(fn () => $dbForProject->findOne('transactionLogs', [
+                Query::equal('transactionInternalId', [$transaction->getSequence()]),
+                Query::orderAsc(),
+            ]));
+
+            if ($firstOperation->isEmpty()) {
+                $transaction = $authorization->skip(fn () => $dbForProject->updateDocument(
+                    'transactions',
+                    $transactionId,
+                    new Document(['status' => 'committed'])
+                ));
+
+                $queueForDeletes
+                    ->setType(DELETE_TYPE_DOCUMENT)
+                    ->setDocument($transaction);
+
+                $response
+                    ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
+                    ->dynamic($transaction, $this->getResponseModel());
+
+                return;
+            }
+
+            $databaseDoc = null;
+            switch ($this->getDatabaseType()) {
+                case DATABASE_TYPE_DOCUMENTSDB:
+                case DATABASE_TYPE_VECTORSDB:
+                    $databaseDoc = $authorization->skip(fn () => $dbForProject->findOne('databases', [
+                        Query::equal('$sequence', [$firstOperation['databaseInternalId']])
+                    ]));
+                    break;
+                default:
+                    // Legacy/tablesdb: use project-level database
+                    $databaseDoc = new Document(['database' => $project->getAttribute('database')]);
+                    break;
+            }
+
+            $dbForDatabases = $getDatabasesDB($databaseDoc);
+
             try {
-                $dbForProject->withTransaction(function () use ($dbForProject, $transactionState, $queueForDeletes, $transactionId, &$transaction, &$operations, &$totalOperations, &$databaseOperations, &$currentDocumentId, $queueForEvents, $queueForStatsUsage, $queueForRealtime, $queueForFunctions, $queueForWebhooks, $authorization) {
+                $dbForDatabases->withTransaction(function () use ($dbForDatabases, $dbForProject, $transactionState, $queueForDeletes, $transactionId, &$transaction, &$operations, &$totalOperations, &$databaseOperations, &$currentDocumentId, $queueForEvents, $usage, $queueForRealtime, $queueForFunctions, $queueForWebhooks, $authorization) {
                     $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                         'status' => 'committing',
                     ])));
@@ -179,7 +223,7 @@ class Update extends Action
                         }
 
                         if ($action === 'delete' && $documentId && empty($data)) {
-                            $doc = $dbForProject->getDocument($collectionId, $documentId);
+                            $doc = $dbForDatabases->getDocument($collectionId, $documentId);
                             if (!$doc->isEmpty()) {
                                 $operation['data'] = $doc->getArrayCopy();
                                 $data = $operation['data'];
@@ -193,40 +237,40 @@ class Update extends Action
 
                         switch ($action) {
                             case 'create':
-                                $this->handleCreateOperation($dbForProject, $collectionId, $documentId, $data, $createdAt, $state);
+                                $this->handleCreateOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
                                 break;
                             case 'update':
-                                $this->handleUpdateOperation($dbForProject, $collectionId, $documentId, $data, $createdAt, $state);
+                                $this->handleUpdateOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
                                 break;
                             case 'upsert':
-                                $this->handleUpsertOperation($dbForProject, $collectionId, $documentId, $data, $createdAt, $state);
+                                $this->handleUpsertOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
                                 break;
                             case 'delete':
-                                $this->handleDeleteOperation($dbForProject, $collectionId, $documentId, $createdAt, $state);
+                                $this->handleDeleteOperation($dbForDatabases, $collectionId, $documentId, $createdAt, $state);
                                 break;
                             case 'increment':
-                                $this->handleIncrementOperation($dbForProject, $collectionId, $documentId, $data, $createdAt, $state);
+                                $this->handleIncrementOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
                                 break;
                             case 'decrement':
-                                $this->handleDecrementOperation($dbForProject, $collectionId, $documentId, $data, $createdAt, $state);
+                                $this->handleDecrementOperation($dbForDatabases, $collectionId, $documentId, $data, $createdAt, $state);
                                 break;
                             case 'bulkCreate':
-                                $count = $this->handleBulkCreateOperation($dbForProject, $collectionId, $data, $createdAt, $state);
+                                $count = $this->handleBulkCreateOperation($dbForDatabases, $collectionId, $data, $createdAt, $state);
                                 $totalOperations += $count;
                                 $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + $count;
                                 break;
                             case 'bulkUpdate':
-                                $count = $this->handleBulkUpdateOperation($dbForProject, $transactionState, $collectionId, $data, $createdAt, $state);
+                                $count = $this->handleBulkUpdateOperation($dbForDatabases, $transactionState, $collectionId, $data, $createdAt, $state);
                                 $totalOperations += $count;
                                 $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + $count;
                                 break;
                             case 'bulkUpsert':
-                                $count = $this->handleBulkUpsertOperation($dbForProject, $transactionState, $collectionId, $data, $createdAt, $state);
+                                $count = $this->handleBulkUpsertOperation($dbForDatabases, $transactionState, $collectionId, $data, $createdAt, $state);
                                 $totalOperations += $count;
                                 $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + $count;
                                 break;
                             case 'bulkDelete':
-                                $count = $this->handleBulkDeleteOperation($dbForProject, $transactionState, $collectionId, $data, $createdAt, $state);
+                                $count = $this->handleBulkDeleteOperation($dbForDatabases, $transactionState, $collectionId, $data, $createdAt, $state);
                                 $totalOperations += $count;
                                 $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + $count;
                                 break;
@@ -276,16 +320,16 @@ class Update extends Action
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
             }
 
-            $queueForStatsUsage
-                ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, $totalOperations);
+            $usage->addMetric($this->getDatabasesOperationWriteMetric(), $totalOperations);
 
             foreach ($databaseOperations as $sequence => $count) {
-                $queueForStatsUsage->addMetric(
-                    str_replace('{databaseInternalId}', $sequence, METRIC_DATABASE_ID_OPERATIONS_WRITES),
+                $usage->addMetric(
+                    str_replace('{databaseInternalId}', $sequence, $this->getDatabasesIdOperationWriteMetric()),
                     $count
                 );
             }
 
+            $dbCache = [];
             foreach ($operations as $operation) {
                 $databaseInternalId = $operation['databaseInternalId'];
                 $collectionInternalId = $operation['collectionInternalId'];
@@ -297,6 +341,16 @@ class Update extends Action
                 if ($data instanceof Document) {
                     $data = $data->getArrayCopy();
                 }
+
+                // using a dbCache so only one time database is set with databaseInternalId
+                if (!isset($dbCache[$databaseInternalId])) {
+                    $databaseDoc = $authorization->skip(fn () => $dbForProject->findOne('databases', [
+                        Query::equal('$sequence', [$databaseInternalId])
+                    ]));
+                    $dbCache[$databaseInternalId] = $getDatabasesDB($databaseDoc);
+                }
+
+                $dbForDatabases = $dbCache[$databaseInternalId];
 
                 $database = $authorization->skip(fn () => $dbForProject->findOne('databases', [
                     Query::equal('$sequence', [$databaseInternalId])
@@ -327,7 +381,7 @@ class Update extends Action
                         $eventAction = 'create';
                         $docId = $documentId ?? $data['$id'] ?? null;
                         if ($docId) {
-                            $doc = $dbForProject->getDocument($collectionId, $docId);
+                            $doc = $dbForDatabases->getDocument($collectionId, $docId);
                             if (!$doc->isEmpty()) {
                                 $documentsToTrigger[] = $doc;
                             }
@@ -338,7 +392,7 @@ class Update extends Action
                     case 'decrement':
                         $eventAction = 'update';
                         if ($documentId) {
-                            $doc = $dbForProject->getDocument($collectionId, $documentId);
+                            $doc = $dbForDatabases->getDocument($collectionId, $documentId);
                             if (!$doc->isEmpty()) {
                                 $documentsToTrigger[] = $doc;
                             }
@@ -354,7 +408,7 @@ class Update extends Action
                         $eventAction = 'update';
                         $docId = $documentId ?? $data['$id'] ?? null;
                         if ($docId) {
-                            $doc = $dbForProject->getDocument($collectionId, $docId);
+                            $doc = $dbForDatabases->getDocument($collectionId, $docId);
                             if (!$doc->isEmpty()) {
                                 $documentsToTrigger[] = $doc;
                             }
@@ -371,6 +425,11 @@ class Update extends Action
 
                 $queueForEvents->setEvent($eventString);
 
+                // Get project and function/webhook events (cached)
+                $project = $queueForEvents->getProject();
+                $functionsEvents = $eventProcessor->getFunctionsEvents($project, $dbForProject);
+                $webhooksEvents = $eventProcessor->getWebhooksEvents($project);
+
                 foreach ($documentsToTrigger as $doc) {
                     $payload = $doc->getArrayCopy();
                     $payload['$tableId'] = $collection->getId();
@@ -381,9 +440,33 @@ class Update extends Action
                         ->setParam('rowId', $doc->getId())
                         ->setPayload($payload);
 
+                    // Generate events for this document operation
+                    $generatedEvents = Event::generateEvents(
+                        $queueForEvents->getEvent(),
+                        $queueForEvents->getParams()
+                    );
+
                     $queueForRealtime->from($queueForEvents)->trigger();
-                    $queueForFunctions->from($queueForEvents)->trigger();
-                    $queueForWebhooks->from($queueForEvents)->trigger();
+
+                    // Only trigger functions if there are matching function events
+                    if (!empty($functionsEvents)) {
+                        foreach ($generatedEvents as $event) {
+                            if (isset($functionsEvents[$event])) {
+                                $queueForFunctions->from($queueForEvents)->trigger();
+                                break;
+                            }
+                        }
+                    }
+
+                    // Only trigger webhooks if there are matching webhook events
+                    if (!empty($webhooksEvents)) {
+                        foreach ($generatedEvents as $event) {
+                            if (isset($webhooksEvents[$event])) {
+                                $queueForWebhooks->from($queueForEvents)->trigger();
+                                break;
+                            }
+                        }
+                    }
                 }
 
                 $queueForEvents->reset();

@@ -1,0 +1,113 @@
+name: "Generate Specs"
+
+env:
+  COMPOSE_FILE: docker-compose.yml
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        type: choice
+        description: "Appwrite version to generate specs for"
+        required: true
+        options:
+          - "1.8.x"
+          - "1.7.x"
+          - "1.6.x"
+          - "1.5.x"
+          - "latest"
+      push:
+        type: boolean
+        description: "Push specs to appwrite/specs repo and create PR"
+        default: true
+      message:
+        type: string
+        description: "Commit message for the specs PR"
+        default: "chore: update API specs and SDK examples"
+
+jobs:
+  generate:
+    name: Generate Specs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Build and start Appwrite
+        run: |
+          docker compose build
+          docker compose up -d
+
+      - name: Generate specs
+        run: |
+          docker compose exec appwrite specs --version=${{ inputs.version }} --mode=normal --git=no
+
+      - name: Generate SDK examples
+        if: inputs.push
+        run: |
+          docker compose exec appwrite sdks --platform=* --sdk=* --version=${{ inputs.version }} --git=no --mode=examples
+          sudo chown -R $USER:$USER ./docs/examples/
+
+      - name: Push to appwrite/specs and create PR
+        if: inputs.push
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ inputs.version }}"
+          MESSAGE="${{ inputs.message }}"
+          GIT_BRANCH="feat-${VERSION}-specs"
+          SPECS_DIR="./app/config/specs"
+          EXAMPLES_DIR="./docs/examples/${VERSION}"
+          TARGET="/tmp/specs-repo"
+
+          sudo chown -R $USER:$USER "${SPECS_DIR}"
+
+          # Clone the specs repo
+          git clone "https://x-access-token:${GH_TOKEN}@github.com/appwrite/specs.git" "${TARGET}"
+          cd "${TARGET}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Create or checkout the feature branch
+          git checkout -b "${GIT_BRANCH}" || git checkout "${GIT_BRANCH}"
+
+          # Copy spec files
+          mkdir -p "specs/${VERSION}"
+          cp ${GITHUB_WORKSPACE}/${SPECS_DIR}/*${VERSION}*.json "specs/${VERSION}/" 2>/dev/null || true
+
+          # Copy latest specs if version is latest
+          if [ "${VERSION}" = "latest" ]; then
+            cp ${GITHUB_WORKSPACE}/${SPECS_DIR}/*latest*.json "specs/latest/" 2>/dev/null || true
+          fi
+
+          # Copy SDK examples
+          if [ -d "${GITHUB_WORKSPACE}/docs/examples/${VERSION}" ]; then
+            mkdir -p "examples/${VERSION}"
+            cp -r "${GITHUB_WORKSPACE}/docs/examples/${VERSION}/." "examples/${VERSION}/"
+          fi
+
+          # Commit and push
+          git add -A
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          git commit -m "${MESSAGE}"
+          git push -u origin "${GIT_BRANCH}" --force
+
+          # Create or update PR
+          EXISTING_PR=$(gh pr list --repo appwrite/specs --head "${GIT_BRANCH}" --json number --jq '.[0].number' 2>/dev/null || true)
+          if [ -n "${EXISTING_PR}" ]; then
+            echo "PR #${EXISTING_PR} already exists, updated branch"
+            echo "https://github.com/appwrite/specs/pull/${EXISTING_PR}"
+          else
+            gh pr create \
+              --repo "appwrite/specs" \
+              --title "feat: API specs update for version ${VERSION}" \
+              --body "This PR contains API specification updates and SDK examples for version ${VERSION}." \
+              --base "main" \
+              --head "${GIT_BRANCH}"
+          fi
+
+      - name: Stop containers
+        if: always()
+        run: docker compose down

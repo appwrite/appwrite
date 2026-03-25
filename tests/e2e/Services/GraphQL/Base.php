@@ -3,7 +3,7 @@
 namespace Tests\E2E\Services\GraphQL;
 
 use CURLFile;
-use Utopia\CLI\Console;
+use Utopia\Console;
 
 trait Base
 {
@@ -2334,7 +2334,8 @@ trait Base
                         buckets {
                             _id
                             name
-                            enabled
+                            enabled,
+                            totalSize
                         }
                     }
                 }';
@@ -2344,6 +2345,7 @@ trait Base
                         _id
                         name
                         enabled
+                        totalSize
                     }
                 }';
             case self::UPDATE_BUCKET:
@@ -2426,15 +2428,21 @@ trait Base
             case self::GET_DB_HEALTH:
                 return 'query getDbHealth {
                     healthGetDB {
-                        ping
-                        status
+                        statuses {
+                            ping
+                            status
+                        }
+                        total
                     }
                 }';
             case self::GET_CACHE_HEALTH:
                 return 'query getCacheHealth {
                     healthGetCache {
-                        ping
-                        status
+                        statuses {
+                            ping
+                            status
+                        }
+                        total
                     }
                 }';
             case self::GET_TIME_HEALTH:
@@ -3456,7 +3464,7 @@ trait Base
         $folderPath = realpath(__DIR__ . '/../../../resources/functions') . "/$function";
         $tarPath = "$folderPath/code.tar.gz";
 
-        Console::execute("cd $folderPath && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
+        Console::execute("cd $folderPath && tar --exclude code.tar.gz --exclude node_modules -czf code.tar.gz .", '', $this->stdout, $this->stderr);
 
         if (filesize($tarPath) > 1024 * 1024 * 5) {
             throw new \Exception('Code package is too large. Use the chunked upload method instead.');

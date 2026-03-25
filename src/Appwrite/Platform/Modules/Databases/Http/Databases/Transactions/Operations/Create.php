@@ -20,7 +20,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\UID;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
 
 class Create extends Action
@@ -58,7 +58,7 @@ class Create extends Action
                 ],
                 contentType: ContentType::JSON
             ))
-            ->param('transactionId', '', new UID(), 'Transaction ID.')
+            ->param('transactionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Transaction ID.', false, ['dbForProject'])
             ->param('operations', [], new ArrayList(new Operation(type: 'legacy')), 'Array of staged operations.', true)
             ->inject('response')
             ->inject('dbForProject')
@@ -148,7 +148,7 @@ class Create extends Action
                 $collectionKey = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
                 $isDependant = isset($dependants[$collectionKey][$documentId]);
 
-                $document = $transactionState->getDocument($collectionKey, $documentId, $transactionId);
+                $document = $transactionState->getDocument($database, $collectionKey, $documentId, $transactionId);
                 if ($document->isEmpty() && !$isDependant && $operation['action'] !== 'upsert') {
                     throw new Exception(Exception::DOCUMENT_NOT_FOUND, params: [$documentId]);
                 }

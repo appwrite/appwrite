@@ -13,19 +13,23 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
-use Appwrite\Event\StatsUsage;
+use Appwrite\Event\Screenshot;
 use Appwrite\Event\Webhook;
 use Appwrite\Platform\Appwrite;
+use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Executor\Executor;
 use Swoole\Runtime;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
+use Utopia\Audit\Adapter\Database as AdapterDatabase;
+use Utopia\Audit\Audit as UtopiaAudit;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -39,6 +43,7 @@ use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Message;
 use Utopia\Queue\Publisher;
+use Utopia\Queue\Queue;
 use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device\Telemetry as TelemetryDevice;
@@ -47,13 +52,16 @@ use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
 Runtime::enableCoroutine();
+require_once __DIR__ . '/init/span.php';
 
+global $register;
 Server::setResource('register', fn () => $register);
 
 Server::setResource('authorization', function () {
     $authorization = new Authorization();
     $authorization->disable();
-    return  $authorization;
+
+    return $authorization;
 }, []);
 
 Server::setResource('dbForPlatform', function (Cache $cache, Registry $register, Authorization $authorization) {
@@ -62,11 +70,10 @@ Server::setResource('dbForPlatform', function (Cache $cache, Registry $register,
     $dbForPlatform = new Database($adapter, $cache);
 
     $dbForPlatform
+        ->setDatabase(APP_DATABASE)
         ->setAuthorization($authorization)
         ->setNamespace('_console')
-        ->setDocumentType('users', User::class)
-    ;
-
+        ->setDocumentType('users', User::class);
 
     return $dbForPlatform;
 }, ['cache', 'register', 'authorization']);
@@ -105,7 +112,7 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
     if (\in_array($dsn->getHost(), $sharedTables)) {
         $database
             ->setSharedTables(true)
-            ->setTenant((int)$project->getSequence())
+            ->setTenant($project->getSequence())
             ->setNamespace($dsn->getParam('namespace'));
     } else {
         $database
@@ -115,6 +122,7 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
     }
 
     $database
+        ->setDatabase(APP_DATABASE)
         ->setAuthorization($authorization)
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
 
@@ -144,7 +152,7 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
             if (\in_array($dsn->getHost(), $sharedTables)) {
                 $database
                     ->setSharedTables(true)
-                    ->setTenant((int)$project->getSequence())
+                    ->setTenant($project->getSequence())
                     ->setNamespace($dsn->getParam('namespace'));
             } else {
                 $database
@@ -166,7 +174,7 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
         if (\in_array($dsn->getHost(), $sharedTables)) {
             $database
                 ->setSharedTables(true)
-                ->setTenant((int)$project->getSequence())
+                ->setTenant($project->getSequence())
                 ->setNamespace($dsn->getParam('namespace'));
         } else {
             $database
@@ -176,6 +184,7 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
         }
 
         $database
+            ->setDatabase(APP_DATABASE)
             ->setAuthorization($authorization)
             ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
 
@@ -185,9 +194,10 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
 
 Server::setResource('getLogsDB', function (Group $pools, Cache $cache, Authorization $authorization) {
     $database = null;
+
     return function (?Document $project = null) use ($pools, $cache, $database, $authorization) {
         if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant((int)$project->getSequence());
+            $database->setTenant($project->getSequence());
             return $database;
         }
 
@@ -195,20 +205,74 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache, Authoriza
         $database = new Database($adapter, $cache);
 
         $database
+            ->setDatabase(APP_DATABASE)
             ->setAuthorization($authorization)
             ->setSharedTables(true)
             ->setNamespace('logsV1')
             ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER)
             ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES_WORKER);
 
-        // set tenant
         if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant((int)$project->getSequence());
+            $database->setTenant($project->getSequence());
         }
 
         return $database;
     };
 }, ['pools', 'cache', 'authorization']);
+
+Server::setResource('getDatabasesDB', function (Cache $cache, Registry $register, Document $project, Authorization $authorization) {
+    return function (Document $database, ?Document $projectDocument = null) use ($cache, $register, $project, $authorization): Database {
+        $projectDocument ??= $project;
+        $databaseDSN = $database->getAttribute('database', $project->getAttribute('database', ''));
+        $databaseType = $database->getAttribute('type', '');
+
+        // Backwards‑compatibility: older or seeded legacy databases may not have a DSN stored
+        // in the "database" attribute. In that case, fall back to the project's database DSN.
+        if ($databaseDSN === '') {
+            $databaseDSN = $projectDocument->getAttribute('database', '');
+        }
+
+        try {
+            $databaseDSN = new DSN($databaseDSN);
+        } catch (\InvalidArgumentException) {
+            $databaseDSN = new DSN('mysql://'.$databaseDSN);
+        }
+
+        try {
+            $dsn = new DSN($projectDocument->getAttribute('database'));
+        } catch (\InvalidArgumentException) {
+            // Temporary fallback until all projects use shared tables
+            $dsn = new DSN('mysql://' . $projectDocument->getAttribute('database'));
+        }
+
+        $pools = $register->get('pools');
+        $pool = $pools->get($databaseDSN->getHost());
+
+        $adapter = new DatabasePool($pool);
+        $database = new Database($adapter, $cache);
+        $database
+            ->setDatabase(APP_DATABASE)
+            ->setAuthorization($authorization);
+        $database->getAdapter()->setSupportForAttributes($databaseType !== DOCUMENTSDB);
+
+        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+
+        if (\in_array($dsn->getHost(), $sharedTables, true)) {
+            $database
+                ->setSharedTables(true)
+                ->setTenant((int) $projectDocument->getSequence())
+                ->setNamespace($dsn->getParam('namespace'));
+        } else {
+            $database
+                ->setSharedTables(false)
+                ->setTenant(null)
+                ->setNamespace('_' . $projectDocument->getSequence());
+        }
+
+        $database->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
+        return $database;
+    };
+}, ['cache', 'register', 'project', 'authorization']);
 
 Server::setResource('abuseRetention', function () {
     return time() - (int) System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400); // 1 day
@@ -218,6 +282,7 @@ Server::setResource('auditRetention', function (Document $project) {
     if ($project->getId() === 'console') {
         return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE', 15778800)); // 6 months
     }
+
     return DateTime::addSeconds(new \DateTime(), -1 * System::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 1209600)); // 14 days
 }, ['project']);
 
@@ -243,7 +308,7 @@ Server::setResource('redis', function () {
     $pass = System::getEnv('_APP_REDIS_PASS', '');
 
     $redis = new \Redis();
-    @$redis->pconnect($host, (int)$port);
+    @$redis->pconnect($host, (int) $port);
     if ($pass) {
         $redis->auth($pass);
     }
@@ -260,7 +325,6 @@ Server::setResource('timelimit', function (\Redis $redis) {
 
 Server::setResource('log', fn () => new Log());
 
-
 Server::setResource('publisher', function (Group $pools) {
     return new BrokerPool(publisher: $pools->get('publisher'));
 }, ['pools']);
@@ -274,10 +338,6 @@ Server::setResource('publisherFunctions', function (BrokerPool $publisher) {
 }, ['publisher']);
 
 Server::setResource('publisherMigrations', function (BrokerPool $publisher) {
-    return $publisher;
-}, ['publisher']);
-
-Server::setResource('publisherStatsUsage', function (BrokerPool $publisher) {
     return $publisher;
 }, ['publisher']);
 
@@ -301,9 +361,13 @@ Server::setResource('consumerStatsUsage', function (BrokerPool $consumer) {
     return $consumer;
 }, ['consumer']);
 
-Server::setResource('queueForStatsUsage', function (Publisher $publisher) {
-    return new StatsUsage($publisher);
-}, ['publisher']);
+Server::setResource('usage', function () {
+    return new Context();
+}, []);
+Server::setResource('publisherForUsage', fn (Publisher $publisher) => new UsagePublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', Event::STATS_USAGE_QUEUE_NAME))
+), ['publisher']);
 
 Server::setResource('queueForDatabase', function (Publisher $publisher) {
     return new EventDatabase($publisher);
@@ -319,6 +383,10 @@ Server::setResource('queueForMails', function (Publisher $publisher) {
 
 Server::setResource('queueForBuilds', function (Publisher $publisher) {
     return new Build($publisher);
+}, ['publisher']);
+
+Server::setResource('queueForScreenshots', function (Publisher $publisher) {
+    return new Screenshot($publisher);
 }, ['publisher']);
 
 Server::setResource('queueForDeletes', function (Publisher $publisher) {
@@ -466,11 +534,34 @@ Server::setResource('logError', function (Registry $register, Document $project)
 
 Server::setResource('executor', fn () => new Executor());
 
+Server::setResource('getAudit', function (Database $dbForPlatform, callable $getProjectDB) {
+    return function (Document $project) use ($dbForPlatform, $getProjectDB) {
+        if ($project->isEmpty() || $project->getId() === 'console') {
+            $adapter = new AdapterDatabase($dbForPlatform);
+
+            return new UtopiaAudit($adapter);
+        }
+
+        $dbForProject = $getProjectDB($project);
+        $adapter = new AdapterDatabase($dbForProject);
+
+        return new UtopiaAudit($adapter);
+    };
+}, ['dbForPlatform', 'getProjectDB']);
+
+Server::setResource('executionsRetentionCount', function (Document $project, array $plan) {
+    if ($project->getId() === 'console' || empty($plan)) {
+        return 0;
+    }
+
+    return (int) ($plan['executionsRetentionCount'] ?? 100);
+}, ['project', 'plan']);
+
 $pools = $register->get('pools');
 $platform = new Appwrite();
 $args = $platform->getEnv('argv');
 
-if (!isset($args[1])) {
+if (! isset($args[1])) {
     Console::error('Missing worker name');
     Console::exit(1);
 }
@@ -495,13 +586,17 @@ try {
         'workersNum' => System::getEnv('_APP_WORKERS_NUM', 1),
         'connection' => $pools->get('consumer')->pop()->getResource(),
         'workerName' => strtolower($workerName) ?? null,
-        'queueName' => $queueName
+        'queueName' => $queueName,
     ]);
 } catch (\Throwable $e) {
-    Console::error($e->getMessage() . ', File: ' . $e->getFile() .  ', Line: ' . $e->getLine());
+    Console::error($e->getMessage() . ', File: ' . $e->getFile() . ', Line: ' . $e->getLine());
 }
 
 $worker = $platform->getWorker();
+
+Server::setResource('bus', function ($register) use ($worker) {
+    return $register->get('bus')->setResolver(fn (string $name) => $worker->getResource($name));
+}, ['register']);
 
 $worker
     ->error()
@@ -511,11 +606,11 @@ $worker
     ->inject('pools')
     ->inject('project')
     ->inject('authorization')
-    ->action(function (Throwable $error, ?Logger $logger, Log $log, Group $pools, Document $project, Authorization $authorization) use ($worker, $queueName) {
+    ->action(function (Throwable $error, ?Logger $logger, Log $log, Group $pools, Document $project, Authorization $authorization) use ($queueName) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
         if ($logger) {
-            $log->setNamespace("appwrite-worker");
+            $log->setNamespace('appwrite-worker');
             $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
             $log->setVersion($version);
             $log->setType(Log::TYPE_ERROR);
@@ -544,11 +639,6 @@ $worker
         Console::error('[Error] Message: ' . $error->getMessage());
         Console::error('[Error] File: ' . $error->getFile());
         Console::error('[Error] Line: ' . $error->getLine());
-    });
-
-$worker->workerStart()
-    ->action(function () use ($workerName) {
-        Console::info("Worker $workerName  started");
     });
 
 $worker->start();

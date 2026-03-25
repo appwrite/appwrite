@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Tasks;
 
 use Swoole\Timer;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -59,8 +59,11 @@ abstract class ScheduleBase extends Action
         if (!$project->isEmpty() && $project->getId() !== 'console') {
             $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
-                $project->setAttribute('accessedAt', DateTime::now());
-                $dbForPlatform->updateDocument('projects', $project->getId(), $project);
+                $now = DateTime::now();
+                $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                    'accessedAt' => $now
+                ]));
+                $project->setAttribute('accessedAt', $now);
             }
         }
     }
