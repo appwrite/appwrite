@@ -565,36 +565,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 }
             }
             Console::log('');
-
-            if (\function_exists('posix_isatty') && \posix_isatty(STDIN)) {
-                Console::confirm('Press Enter to copy PR summary to clipboard');
-
-                $markdown = "## Pull Request Summary\n\n";
-                foreach ($prUrls as $platformName => $sdks) {
-                    $markdown .= "### {$platformName}\n";
-                    foreach ($sdks as $sdkName => $url) {
-                        $markdown .= "- {$sdkName}: {$url}\n";
-                    }
-                    $markdown .= "\n";
-                }
-
-                if (PHP_OS_FAMILY === 'Darwin') {
-                    $copyCommand = 'pbcopy';
-                } elseif (! empty(\getenv('WAYLAND_DISPLAY'))) {
-                    $copyCommand = 'wl-copy';
-                } else {
-                    $copyCommand = 'xclip -selection clipboard';
-                }
-
-                $process = \popen($copyCommand, 'w');
-                if ($process) {
-                    \fwrite($process, $markdown);
-                    \pclose($process);
-                    Console::success('PR summary copied to clipboard!');
-                } else {
-                    Console::error('Failed to copy to clipboard. Install pbcopy (macOS), wl-clipboard (Wayland), or xclip (X11).');
-                }
-            }
         }
     }
 
