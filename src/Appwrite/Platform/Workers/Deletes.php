@@ -691,7 +691,7 @@ class Deletes extends Action
                 $callback($dbForDatabases);
             };
 
-            batch(array_map(
+            Promise::map(array_map(
                 fn ($databaseDoc) => fn () => $this->cleanDatabase(
                     $databaseDoc,
                     $executionActionPerDatabase,
@@ -699,7 +699,7 @@ class Deletes extends Action
                     $projectCollectionIds
                 ),
                 $databasesToClean
-            ));
+            ))->await();
 
             // Delete platform-level resources concurrently
             Promise::map([
@@ -750,7 +750,7 @@ class Deletes extends Action
 
             // Delete metadata table
             if ($projectTables) {
-                batch(array_map(
+                Promise::map(array_map(
                     fn ($databaseDoc) => fn () =>
                         $executionActionPerDatabase(
                             $databaseDoc,
@@ -758,7 +758,7 @@ class Deletes extends Action
                                 $dbForDatabases->deleteCollection(Database::METADATA)
                         ),
                     $databasesToClean
-                ));
+                ))->await();
             } elseif ($sharedTablesV1) {
                 $this->deleteByGroup(
                     Database::METADATA,
