@@ -89,7 +89,7 @@ class SDKs extends Action
         $selectedSDK = $sdk;
 
         if (! $sdks) {
-            $selectedPlatform ??= Console::confirm('Choose Platform ("' . implode('", "', static::getPlatforms()) . '" or "*" for all):');
+            $selectedPlatform ??= Console::confirm('Choose Platform ("' . implode('", "', static::getPlatforms()) . '", comma-separated, or "*" for all):');
             $selectedSDK ??= \strtolower(Console::confirm('Choose SDK ("*" for all):'));
             $supportedSDKs = $this->getSupportedSDKs();
             if ($selectedSDK !== '*' && ! \in_array($selectedSDK, $supportedSDKs)) {
@@ -140,9 +140,11 @@ class SDKs extends Action
             throw new \Exception('Unknown version given');
         }
 
+        $selectedPlatforms = ($selectedPlatform === '*' || $selectedPlatform === null) ? null : \array_map('trim', \explode(',', $selectedPlatform));
+
         $platforms = Config::getParam('sdks');
         foreach ($platforms as $key => $platform) {
-            if ($selectedPlatform !== $key && $selectedPlatform !== '*' && ($sdks === null)) {
+            if ($selectedPlatforms !== null && ! \in_array($key, $selectedPlatforms) && ($sdks === null)) {
                 continue;
             }
 
@@ -532,7 +534,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     $pushSuccess = $this->pushToGit($language, $target, $result, $gitUrl, $gitBranch, $repoBranch, $commitMessage);
 
                     if ($pushSuccess) {
-                        $this->createPullRequest($language, $target, $gitBranch, $repoBranch, $aiChangelog, $prUrls);
+                        $this->createPullRequest($language, $platform['name'], $target, $gitBranch, $repoBranch, $aiChangelog, $prUrls);
                     }
 
                     \exec('chmod -R u+w ' . $target . ' && rm -rf ' . $target);
@@ -546,10 +548,35 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
         if (! empty($prUrls)) {
             Console::log('');
             Console::info('━━━ Pull Request Summary ━━━');
-            foreach ($prUrls as $sdkName => $url) {
-                Console::log("  {$sdkName}: {$url}");
+            foreach ($prUrls as $platformName => $sdks) {
+                Console::log('');
+                Console::info("  {$platformName}:");
+                foreach ($sdks as $sdkName => $url) {
+                    Console::log("    {$sdkName}: {$url}");
+                }
             }
             Console::log('');
+
+            Console::confirm('Press Enter to copy PR summary to clipboard');
+
+            $markdown = "## Pull Request Summary\n\n";
+            foreach ($prUrls as $platformName => $sdks) {
+                $markdown .= "### {$platformName}\n";
+                foreach ($sdks as $sdkName => $url) {
+                    $markdown .= "- {$sdkName}: {$url}\n";
+                }
+                $markdown .= "\n";
+            }
+
+            $copyCommand = PHP_OS_FAMILY === 'Darwin' ? 'pbcopy' : 'xclip -selection clipboard';
+            $process = \popen($copyCommand, 'w');
+            if ($process) {
+                \fwrite($process, $markdown);
+                \pclose($process);
+                Console::success('PR summary copied to clipboard!');
+            } else {
+                Console::error('Failed to copy to clipboard');
+            }
         }
     }
 
@@ -657,7 +684,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
         return true;
     }
 
-    private function createPullRequest(array $language, string $target, string $gitBranch, string $repoBranch, string $aiChangelog, array &$prUrls): void
+    private function createPullRequest(array $language, string $platformName, string $target, string $gitBranch, string $repoBranch, string $aiChangelog, array &$prUrls): void
     {
         $prTitle = "feat: {$language['name']} SDK update for version {$language['version']}";
         $prBody = "This PR contains updates to the {$language['name']} SDK for version {$language['version']}.";
@@ -685,7 +712,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
             Console::success("  Pull request created");
             foreach ($prOutput as $line) {
                 if (\str_starts_with(trim($line), 'https://')) {
-                    $prUrls[$language['name']] = trim($line);
+                    $prUrls[$platformName][$language['name']] = trim($line);
                     break;
                 }
             }
@@ -703,7 +730,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     }
                 }
 
-                $this->updateExistingPr($repoName, $gitBranch, $prTitle, $prBody, $language['name'], $prUrls, $existingPrUrl);
+                $this->updateExistingPr($repoName, $gitBranch, $prTitle, $prBody, $platformName, $language['name'], $prUrls, $existingPrUrl);
             }
         }
     }
@@ -1081,7 +1108,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
         }
     }
 
-    private function updateExistingPr(string $repoName, string $gitBranch, string $prTitle, string $prBody, string $sdkName, array &$prUrls, string $existingPrUrl = ''): void
+    private function updateExistingPr(string $repoName, string $gitBranch, string $prTitle, string $prBody, string $platformName, string $sdkName, array &$prUrls, string $existingPrUrl = ''): void
     {
         Console::log('  Pull request already exists, updating...');
 
@@ -1140,7 +1167,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
         Console::success("  Pull request updated");
 
         if (! empty($prUrl)) {
-            $prUrls[$sdkName] = $prUrl;
+            $prUrls[$platformName][$sdkName] = $prUrl;
         }
     }
 }
