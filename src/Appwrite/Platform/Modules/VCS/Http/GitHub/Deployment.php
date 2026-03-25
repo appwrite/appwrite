@@ -7,6 +7,7 @@ use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Vcs\Comment;
+use Appwrite\Vcs\Validator\BuildTrigger;
 use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
@@ -40,6 +41,7 @@ trait Deployment
         string $providerCommitMessage,
         string $providerCommitUrl,
         string $providerPullRequestId,
+        array $providerAffectedFiles,
         bool $external,
         Database $dbForPlatform,
         Authorization $authorization,
@@ -89,6 +91,11 @@ trait Deployment
                 $resourceCollection = $resourceType === "function" ? 'functions' : 'sites';
                 $resource = $authorization->skip(fn () => $dbForProject->getDocument($resourceCollection, $resourceId));
                 $resourceInternalId = $resource->getSequence();
+
+                if (!$this->isResourceBuildable($resource, $providerBranch, $providerAffectedFiles, $logBase)) {
+                    Span::add("{$logBase}.build.skipped", 'true');
+                    continue;
+                }
 
                 $deploymentId = ID::unique();
                 $repositoryId = $repository->getId();
@@ -524,5 +531,32 @@ trait Deployment
     protected function getBuildQueueName(Document $project, Database $dbForPlatform, Authorization $authorization): string
     {
         return System::getEnv('_APP_BUILDS_QUEUE_NAME', Event::BUILDS_QUEUE_NAME);
+    }
+
+    private function isResourceBuildable(Document $resource, string $providerBranch, array $providerAffectedFiles, string $logBase): bool
+    {
+        $branchTrigger = new BuildTrigger($resource->getAttribute('providerBranches', []));
+        if (!$branchTrigger->isValid($providerBranch)) {
+            Span::add("{$logBase}.build.skipped.reason", 'branch');
+            return false;
+        }
+
+        $providerPaths = $resource->getAttribute('providerPaths', []);
+        if (!empty($providerPaths) && !empty($providerAffectedFiles)) {
+            $pathTrigger = new BuildTrigger($providerPaths);
+            $pathMatched = false;
+            foreach ($providerAffectedFiles as $file) {
+                if ($pathTrigger->isValid($file)) {
+                    $pathMatched = true;
+                    break;
+                }
+            }
+            if (!$pathMatched) {
+                Span::add("{$logBase}.build.skipped.reason", 'path');
+                return false;
+            }
+        }
+
+        return true;
     }
 }
