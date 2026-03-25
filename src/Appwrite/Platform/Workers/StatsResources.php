@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Platform\Action;
 use Exception;
 use Throwable;
+use Utopia\Async\Promise;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -90,76 +91,74 @@ class StatsResources extends Action
 
             $region = $project->getAttribute('region');
 
-            $platforms = $dbForPlatform->count('platforms', [
-                Query::equal('projectInternalId', [$project->getSequence()])
-            ]);
-            $webhooks = $dbForPlatform->count('webhooks', [
-                Query::equal('projectInternalId', [$project->getSequence()])
-            ]);
-            $keys = $dbForPlatform->count('keys', [
-                Query::equal('resourceType', ['projects']),
-                Query::equal('resourceInternalId', [$project->getSequence()]),
-            ]);
-
-            $domains = $dbForPlatform->count('rules', [
-                Query::equal('projectInternalId', [$project->getSequence()]),
-                Query::equal('owner', ['']),
-            ]);
-
-
-            $databases = $dbForProject->count('databases');
-            $buckets = $dbForProject->count('buckets');
-            $users = $dbForProject->count('users');
-
             $last30Days = (new \DateTime())->sub(\DateInterval::createFromDateString('30 days'))->format('Y-m-d 00:00:00');
-            $usersMAU = $dbForProject->count('users', [
-                Query::greaterThanEqual('accessedAt', $last30Days)
-            ]);
             $last24Hours = (new \DateTime())->sub(\DateInterval::createFromDateString('24 hours'))->format('Y-m-d h:m:00');
-            $usersDAU = $dbForProject->count('users', [
-                Query::greaterThanEqual('accessedAt', $last24Hours)
-            ]);
             $last7Days = (new \DateTime())->sub(\DateInterval::createFromDateString('7 days'))->format('Y-m-d 00:00:00');
-            $usersWAU = $dbForProject->count('users', [
-                Query::greaterThanEqual('accessedAt', $last7Days)
-            ]);
-            $teams = $dbForProject->count('teams');
-            $functions = $dbForProject->count('functions');
 
-            $messages = $dbForProject->count('messages');
-            $providers = $dbForProject->count('providers');
-            $topics = $dbForProject->count('topics');
-            $targets = $dbForProject->count('targets');
-            $emailTargets = $dbForProject->count('targets', [
-                Query::equal('providerType', [MESSAGE_TYPE_EMAIL])
-            ]);
-            $pushTargets = $dbForProject->count('targets', [
-                Query::equal('providerType', [MESSAGE_TYPE_PUSH])
-            ]);
-            $smsTargets = $dbForProject->count('targets', [
-                Query::equal('providerType', [MESSAGE_TYPE_SMS])
-            ]);
+            $results = Promise::map([
+                'platforms' => fn () => $dbForPlatform->count('platforms', [
+                    Query::equal('projectInternalId', [$project->getSequence()])
+                ]),
+                'webhooks' => fn () => $dbForPlatform->count('webhooks', [
+                    Query::equal('projectInternalId', [$project->getSequence()])
+                ]),
+                'keys' => fn () => $dbForPlatform->count('keys', [
+                    Query::equal('resourceType', ['projects']),
+                    Query::equal('resourceInternalId', [$project->getSequence()]),
+                ]),
+                'domains' => fn () => $dbForPlatform->count('rules', [
+                    Query::equal('projectInternalId', [$project->getSequence()]),
+                    Query::equal('owner', ['']),
+                ]),
+                'databases' => fn () => $dbForProject->count('databases'),
+                'buckets' => fn () => $dbForProject->count('buckets'),
+                'users' => fn () => $dbForProject->count('users'),
+                'usersMAU' => fn () => $dbForProject->count('users', [
+                    Query::greaterThanEqual('accessedAt', $last30Days)
+                ]),
+                'usersDAU' => fn () => $dbForProject->count('users', [
+                    Query::greaterThanEqual('accessedAt', $last24Hours)
+                ]),
+                'usersWAU' => fn () => $dbForProject->count('users', [
+                    Query::greaterThanEqual('accessedAt', $last7Days)
+                ]),
+                'teams' => fn () => $dbForProject->count('teams'),
+                'functions' => fn () => $dbForProject->count('functions'),
+                'messages' => fn () => $dbForProject->count('messages'),
+                'providers' => fn () => $dbForProject->count('providers'),
+                'topics' => fn () => $dbForProject->count('topics'),
+                'targets' => fn () => $dbForProject->count('targets'),
+                'emailTargets' => fn () => $dbForProject->count('targets', [
+                    Query::equal('providerType', [MESSAGE_TYPE_EMAIL])
+                ]),
+                'pushTargets' => fn () => $dbForProject->count('targets', [
+                    Query::equal('providerType', [MESSAGE_TYPE_PUSH])
+                ]),
+                'smsTargets' => fn () => $dbForProject->count('targets', [
+                    Query::equal('providerType', [MESSAGE_TYPE_SMS])
+                ]),
+            ])->await();
 
             $metrics = [
-                METRIC_DATABASES => $databases,
-                METRIC_BUCKETS => $buckets,
-                METRIC_USERS => $users,
-                METRIC_FUNCTIONS => $functions,
-                METRIC_TEAMS => $teams,
-                METRIC_MESSAGES => $messages,
-                METRIC_MAU => $usersMAU,
-                METRIC_DAU => $usersDAU,
-                METRIC_WAU => $usersWAU,
-                METRIC_WEBHOOKS => $webhooks,
-                METRIC_PLATFORMS => $platforms,
-                METRIC_PROVIDERS => $providers,
-                METRIC_TOPICS => $topics,
-                METRIC_KEYS => $keys,
-                METRIC_DOMAINS => $domains,
-                METRIC_TARGETS => $targets,
-                str_replace('{providerType}', MESSAGE_TYPE_EMAIL, METRIC_PROVIDER_TYPE_TARGETS) => $emailTargets,
-                str_replace('{providerType}', MESSAGE_TYPE_PUSH, METRIC_PROVIDER_TYPE_TARGETS) => $pushTargets,
-                str_replace('{providerType}', MESSAGE_TYPE_SMS, METRIC_PROVIDER_TYPE_TARGETS) => $smsTargets,
+                METRIC_DATABASES => $results['databases'],
+                METRIC_BUCKETS => $results['buckets'],
+                METRIC_USERS => $results['users'],
+                METRIC_FUNCTIONS => $results['functions'],
+                METRIC_TEAMS => $results['teams'],
+                METRIC_MESSAGES => $results['messages'],
+                METRIC_MAU => $results['usersMAU'],
+                METRIC_DAU => $results['usersDAU'],
+                METRIC_WAU => $results['usersWAU'],
+                METRIC_WEBHOOKS => $results['webhooks'],
+                METRIC_PLATFORMS => $results['platforms'],
+                METRIC_PROVIDERS => $results['providers'],
+                METRIC_TOPICS => $results['topics'],
+                METRIC_KEYS => $results['keys'],
+                METRIC_DOMAINS => $results['domains'],
+                METRIC_TARGETS => $results['targets'],
+                str_replace('{providerType}', MESSAGE_TYPE_EMAIL, METRIC_PROVIDER_TYPE_TARGETS) => $results['emailTargets'],
+                str_replace('{providerType}', MESSAGE_TYPE_PUSH, METRIC_PROVIDER_TYPE_TARGETS) => $results['pushTargets'],
+                str_replace('{providerType}', MESSAGE_TYPE_SMS, METRIC_PROVIDER_TYPE_TARGETS) => $results['smsTargets'],
             ];
 
             foreach ($metrics as $metric => $value) {
@@ -203,21 +202,20 @@ class StatsResources extends Action
         $totalStorage = 0;
         $this->foreachDocument($dbForProject, 'buckets', [], function ($bucket) use ($dbForProject, $dbForLogs, $region, &$totalFiles, &$totalStorage) {
             try {
-                $files = $dbForProject->count('bucket_' . $bucket->getSequence());
+                $bucketResults = Promise::map([
+                    'files' => fn () => $dbForProject->count('bucket_' . $bucket->getSequence()),
+                    'storage' => fn () => $dbForProject->sum('bucket_' . $bucket->getSequence(), 'sizeActual'),
+                ])->await();
             } catch (Throwable $th) {
                 call_user_func_array($this->logError, [$th, "StatsResources", "count_for_bucket_{$bucket->getSequence()}"]);
                 return;
             }
 
+            $files = $bucketResults['files'];
+            $storage = $bucketResults['storage'];
+
             $metric = str_replace('{bucketInternalId}', $bucket->getSequence(), METRIC_BUCKET_ID_FILES);
             $this->createStatsDocuments($region, $metric, $files);
-
-            try {
-                $storage = $dbForProject->sum('bucket_' . $bucket->getSequence(), 'sizeActual');
-            } catch (Throwable $th) {
-                call_user_func_array($this->logError, [$th, "StatsResources", "sum_for_bucket_{$bucket->getSequence()}"]);
-                return;
-            }
 
             $metric = str_replace('{bucketInternalId}', $bucket->getSequence(), METRIC_BUCKET_ID_FILES_STORAGE);
             $this->createStatsDocuments($region, $metric, $storage);
@@ -284,16 +282,20 @@ class StatsResources extends Action
         $databaseDocuments = 0;
         $databaseStorage = 0;
         $this->foreachDocument($dbForProject, 'database_' . $database->getSequence(), [], function ($collection) use ($dbForProject, $database, $region, &$databaseStorage, &$databaseDocuments) {
-            $documents = $dbForProject->count('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+            $collectionName = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+
+            $collectionResults = Promise::map([
+                'documents' => fn () => $dbForProject->count($collectionName),
+                'storage' => fn () => $dbForProject->getSizeOfCollection($collectionName),
+            ])->await();
+
             $metric = str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getSequence(), $collection->getSequence()], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS);
-            $this->createStatsDocuments($region, $metric, $documents);
-            $databaseDocuments += $documents;
+            $this->createStatsDocuments($region, $metric, $collectionResults['documents']);
+            $databaseDocuments += $collectionResults['documents'];
 
-            $collectionStorage = $dbForProject->getSizeOfCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
             $metric = str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getSequence(), $collection->getSequence()], METRIC_DATABASE_ID_COLLECTION_ID_STORAGE);
-            $this->createStatsDocuments($region, $metric, $collectionStorage);
-            $databaseStorage += $collectionStorage;
-
+            $this->createStatsDocuments($region, $metric, $collectionResults['storage']);
+            $databaseStorage += $collectionResults['storage'];
         });
 
         $metric = str_replace(['{databaseInternalId}'], [$database->getSequence()], METRIC_DATABASE_ID_DOCUMENTS);
@@ -307,14 +309,16 @@ class StatsResources extends Action
 
     protected function countForSitesAndFunctions(Database $dbForProject, string $region): void
     {
-        $deploymentsStorage = $dbForProject->sum('deployments', 'sourceSize');
-        $buildsStorage = $dbForProject->sum('deployments', 'buildSize');
-        $this->createStatsDocuments($region, METRIC_DEPLOYMENTS_STORAGE, $deploymentsStorage);
-        $this->createStatsDocuments($region, METRIC_BUILDS_STORAGE, $buildsStorage);
+        $results = Promise::map([
+            'deploymentsStorage' => fn () => $dbForProject->sum('deployments', 'sourceSize'),
+            'buildsStorage' => fn () => $dbForProject->sum('deployments', 'buildSize'),
+            'deployments' => fn () => $dbForProject->count('deployments'),
+        ])->await();
 
-        $deployments = $dbForProject->count('deployments');
-        $this->createStatsDocuments($region, METRIC_DEPLOYMENTS, $deployments);
-        $this->createStatsDocuments($region, METRIC_BUILDS, $deployments);
+        $this->createStatsDocuments($region, METRIC_DEPLOYMENTS_STORAGE, $results['deploymentsStorage']);
+        $this->createStatsDocuments($region, METRIC_BUILDS_STORAGE, $results['buildsStorage']);
+        $this->createStatsDocuments($region, METRIC_DEPLOYMENTS, $results['deployments']);
+        $this->createStatsDocuments($region, METRIC_BUILDS, $results['deployments']);
 
         $this->countForFunctions($dbForProject, $region);
         $this->countForSites($dbForProject, $region);
@@ -322,127 +326,113 @@ class StatsResources extends Action
 
     protected function countForFunctions(Database $dbForProject, string $region)
     {
+        $results = Promise::map([
+            'deploymentsStorage' => fn () => $dbForProject->sum('deployments', 'sourceSize', [
+                Query::equal('resourceType', [RESOURCE_TYPE_FUNCTIONS])
+            ]),
+            'buildsStorage' => fn () => $dbForProject->sum('deployments', 'buildSize', [
+                Query::equal('resourceType', [RESOURCE_TYPE_FUNCTIONS])
+            ]),
+            'deployments' => fn () => $dbForProject->count('deployments', [
+                Query::equal('resourceType', [RESOURCE_TYPE_FUNCTIONS])
+            ]),
+        ])->await();
 
-        $deploymentsStorage = $dbForProject->sum('deployments', 'sourceSize', [
-            Query::equal('resourceType', [RESOURCE_TYPE_FUNCTIONS])
+        $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_FUNCTIONS, METRIC_RESOURCE_TYPE_DEPLOYMENTS_STORAGE), $results['deploymentsStorage']);
+        $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_FUNCTIONS, METRIC_RESOURCE_TYPE_BUILDS_STORAGE), $results['buildsStorage']);
+        $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_FUNCTIONS, METRIC_RESOURCE_TYPE_DEPLOYMENTS), $results['deployments']);
+        $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_FUNCTIONS, METRIC_RESOURCE_TYPE_BUILDS), $results['deployments']);
+
+        // Per-function deployment stats via groupBy (replaces N+1 loop)
+        $groupedDeployments = $dbForProject->find('deployments', [
+            Query::equal('resourceType', [RESOURCE_TYPE_FUNCTIONS]),
+            Query::groupBy(['resourceInternalId']),
+            Query::count('*', 'deploymentsCount'),
+            Query::sum('sourceSize', 'deploymentsStorage'),
+            Query::sum('buildSize', 'buildsStorage'),
         ]);
-        $buildsStorage = $dbForProject->sum('deployments', 'buildSize', [
-            Query::equal('resourceType', [RESOURCE_TYPE_FUNCTIONS])
-        ]);
-        $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_FUNCTIONS, METRIC_RESOURCE_TYPE_DEPLOYMENTS_STORAGE), $deploymentsStorage);
-        $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_FUNCTIONS, METRIC_RESOURCE_TYPE_BUILDS_STORAGE), $buildsStorage);
 
-        $deployments = $dbForProject->count('deployments', [
-            Query::equal('resourceType', [RESOURCE_TYPE_FUNCTIONS])
-        ]);
-        $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_FUNCTIONS, METRIC_RESOURCE_TYPE_DEPLOYMENTS), $deployments);
-        $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_FUNCTIONS, METRIC_RESOURCE_TYPE_BUILDS), $deployments);
+        foreach ($groupedDeployments as $row) {
+            $resourceInternalId = $row->getAttribute('resourceInternalId');
+            $deploymentsCount = $row->getAttribute('deploymentsCount', 0);
+            $deploymentsStorage = $row->getAttribute('deploymentsStorage', 0);
+            $buildsStorage = $row->getAttribute('buildsStorage', 0);
 
-
-        // Count runtimes
-        $runtimes = [];
-
-        $this->foreachDocument($dbForProject, 'functions', [], function (Document $function) use ($dbForProject, $region, &$runtimes) {
-            $functionDeploymentsStorage = $dbForProject->sum('deployments', 'sourceSize', [
-                Query::equal('resourceInternalId', [$function->getSequence()]),
-                Query::equal('resourceType', [RESOURCE_TYPE_FUNCTIONS]),
-            ]);
-            $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS,$function->getSequence()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE), $functionDeploymentsStorage);
-
-            $functionDeployments = $dbForProject->count('deployments', [
-                Query::equal('resourceInternalId', [$function->getSequence()]),
-                Query::equal('resourceType', [RESOURCE_TYPE_FUNCTIONS]),
-            ]);
-            $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS,$function->getSequence()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS), $functionDeployments);
-
-            /**
-             * As deployments and builds have 1-1 relationship,
-             * the count for one should match the other
-             */
-            $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS,$function->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS), $functionDeployments);
-
-            $functionBuildsStorage = 0;
-
-            $this->foreachDocument($dbForProject, 'deployments', [
-                Query::equal('resourceInternalId', [$function->getSequence()]),
-                Query::equal('resourceType', [RESOURCE_TYPE_FUNCTIONS]),
-            ], function (Document $deployment) use (&$functionBuildsStorage): void {
-                $functionBuildsStorage += $deployment->getAttribute('buildSize', 0);
-            });
-
-            $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS,$function->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE), $functionBuildsStorage);
-
-            // Runtimes count
-            $runtime = $function->getAttribute('runtime');
-            if (!empty($runtime)) {
-                $runtimes[$runtime] = ($runtimes[$runtime] ?? 0) + 1;
-            }
-        });
-
-        // Write runtimes counts
-        foreach ($runtimes as $runtime => $count) {
-            $this->createStatsDocuments($region, str_replace('{runtime}', $runtime, METRIC_FUNCTIONS_RUNTIME), $count);
+            $this->createStatsDocuments($region, str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $resourceInternalId], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE), $deploymentsStorage);
+            $this->createStatsDocuments($region, str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $resourceInternalId], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS), $deploymentsCount);
+            $this->createStatsDocuments($region, str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $resourceInternalId], METRIC_RESOURCE_TYPE_ID_BUILDS), $deploymentsCount);
+            $this->createStatsDocuments($region, str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $resourceInternalId], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE), $buildsStorage);
         }
 
+        // Count runtimes via groupBy (replaces N+1 loop)
+        $runtimeGroups = $dbForProject->find('functions', [
+            Query::select(['runtime']),
+            Query::groupBy(['runtime']),
+            Query::count('*', 'count'),
+            Query::isNotNull('runtime'),
+        ]);
+
+        foreach ($runtimeGroups as $row) {
+            $runtime = $row->getAttribute('runtime');
+            if (!empty($runtime)) {
+                $this->createStatsDocuments($region, str_replace('{runtime}', $runtime, METRIC_FUNCTIONS_RUNTIME), $row->getAttribute('count', 0));
+            }
+        }
     }
 
     protected function countForSites(Database $dbForProject, string $region)
     {
+        $results = Promise::map([
+            'deploymentsStorage' => fn () => $dbForProject->sum('deployments', 'sourceSize', [
+                Query::equal('resourceType', [RESOURCE_TYPE_SITES])
+            ]),
+            'buildsStorage' => fn () => $dbForProject->sum('deployments', 'buildSize', [
+                Query::equal('resourceType', [RESOURCE_TYPE_SITES])
+            ]),
+            'deployments' => fn () => $dbForProject->count('deployments', [
+                Query::equal('resourceType', [RESOURCE_TYPE_SITES])
+            ]),
+        ])->await();
 
-        $deploymentsStorage = $dbForProject->sum('deployments', 'sourceSize', [
-            Query::equal('resourceType', [RESOURCE_TYPE_SITES])
+        $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_SITES, METRIC_RESOURCE_TYPE_DEPLOYMENTS_STORAGE), $results['deploymentsStorage']);
+        $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_SITES, METRIC_RESOURCE_TYPE_BUILDS_STORAGE), $results['buildsStorage']);
+        $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_SITES, METRIC_RESOURCE_TYPE_DEPLOYMENTS), $results['deployments']);
+        $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_SITES, METRIC_RESOURCE_TYPE_BUILDS), $results['deployments']);
+
+        // Per-site deployment stats via groupBy (replaces N+1 loop)
+        $groupedDeployments = $dbForProject->find('deployments', [
+            Query::equal('resourceType', [RESOURCE_TYPE_SITES]),
+            Query::groupBy(['resourceInternalId']),
+            Query::count('*', 'deploymentsCount'),
+            Query::sum('sourceSize', 'deploymentsStorage'),
+            Query::sum('buildSize', 'buildsStorage'),
         ]);
-        $buildsStorage = $dbForProject->sum('deployments', 'buildSize', [
-            Query::equal('resourceType', [RESOURCE_TYPE_SITES])
+
+        foreach ($groupedDeployments as $row) {
+            $resourceInternalId = $row->getAttribute('resourceInternalId');
+            $deploymentsCount = $row->getAttribute('deploymentsCount', 0);
+            $deploymentsStorage = $row->getAttribute('deploymentsStorage', 0);
+            $buildsStorage = $row->getAttribute('buildsStorage', 0);
+
+            $this->createStatsDocuments($region, str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $resourceInternalId], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE), $deploymentsStorage);
+            $this->createStatsDocuments($region, str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $resourceInternalId], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS), $deploymentsCount);
+            $this->createStatsDocuments($region, str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $resourceInternalId], METRIC_RESOURCE_TYPE_ID_BUILDS), $deploymentsCount);
+            $this->createStatsDocuments($region, str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_SITES, $resourceInternalId], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE), $buildsStorage);
+        }
+
+        // Count frameworks via groupBy (replaces N+1 loop)
+        $frameworkGroups = $dbForProject->find('sites', [
+            Query::select(['framework']),
+            Query::groupBy(['framework']),
+            Query::count('*', 'count'),
+            Query::isNotNull('framework'),
         ]);
-        $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_SITES, METRIC_RESOURCE_TYPE_DEPLOYMENTS_STORAGE), $deploymentsStorage);
-        $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_SITES, METRIC_RESOURCE_TYPE_BUILDS_STORAGE), $buildsStorage);
 
-        $deployments = $dbForProject->count('deployments', [
-            Query::equal('resourceType', [RESOURCE_TYPE_SITES])
-        ]);
-        $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_SITES, METRIC_RESOURCE_TYPE_DEPLOYMENTS), $deployments);
-        $this->createStatsDocuments($region, str_replace("{resourceType}", RESOURCE_TYPE_SITES, METRIC_RESOURCE_TYPE_BUILDS), $deployments);
-
-        // Count frameworks
-        $frameworks = [];
-
-        $this->foreachDocument($dbForProject, 'sites', [], function (Document $site) use ($dbForProject, $region, &$frameworks) {
-            $siteDeploymentsStorage = $dbForProject->sum('deployments', 'sourceSize', [
-                Query::equal('resourceInternalId', [$site->getSequence()]),
-                Query::equal('resourceType', [RESOURCE_TYPE_SITES]),
-            ]);
-            $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_SITES,$site->getSequence()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE), $siteDeploymentsStorage);
-
-            $siteDeployments = $dbForProject->count('deployments', [
-                Query::equal('resourceInternalId', [$site->getSequence()]),
-                Query::equal('resourceType', [RESOURCE_TYPE_SITES]),
-            ]);
-            $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_SITES,$site->getSequence()], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS), $siteDeployments);
-
-            /**
-             * As deployments and builds have 1-1 relationship,
-             * the count for one should match the other
-             */
-            $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_SITES,$site->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS), $siteDeployments);
-
-            $siteBuildsStorage = $dbForProject->sum('deployments', 'buildSize', [
-                Query::equal('resourceInternalId', [$site->getSequence()]),
-                Query::equal('resourceType', [RESOURCE_TYPE_SITES]),
-            ]);
-
-            $this->createStatsDocuments($region, str_replace(['{resourceType}','{resourceInternalId}'], [RESOURCE_TYPE_SITES,$site->getSequence()], METRIC_RESOURCE_TYPE_ID_BUILDS_STORAGE), $siteBuildsStorage);
-
-            // Frameworks count
-            $framework = $site->getAttribute('framework');
+        foreach ($frameworkGroups as $row) {
+            $framework = $row->getAttribute('framework');
             if (!empty($framework)) {
-                $frameworks[$framework] = ($frameworks[$framework] ?? 0) + 1;
+                $this->createStatsDocuments($region, str_replace('{framework}', $framework, METRIC_SITES_FRAMEWORK), $row->getAttribute('count', 0));
             }
-        });
-
-        // Write frameworks counts
-        foreach ($frameworks as $framework => $count) {
-            $this->createStatsDocuments($region, str_replace('{framework}', $framework, METRIC_SITES_FRAMEWORK), $count);
         }
     }
 
