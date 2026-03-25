@@ -7,6 +7,7 @@ use Appwrite\Event\Realtime;
 use Appwrite\Permission;
 use Appwrite\Role;
 use Exception;
+use Utopia\Async\Promise;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
 use Utopia\Console;
@@ -19,8 +20,6 @@ use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device;
 use Utopia\System\System;
-
-use function Swoole\Coroutine\batch;
 
 class Screenshots extends Action
 {
@@ -154,7 +153,7 @@ class Screenshots extends Action
             ]);
 
             $screenshotError = null;
-            $screenshots = batch(\array_map(function ($key) use ($configs, $apiKey, $site, $client, &$screenshotError) {
+            $screenshots = Promise::map(\array_map(function ($key) use ($configs, $apiKey, $site, $client, &$screenshotError) {
                 return function () use ($key, $configs, $apiKey, $site, $client, &$screenshotError) {
                     try {
                         $config = $configs[$key];
@@ -189,7 +188,7 @@ class Screenshots extends Action
                         return;
                     }
                 };
-            }, \array_keys($configs)));
+            }, \array_keys($configs)))->await();
 
             if (!\is_null($screenshotError)) {
                 throw new \Exception($screenshotError);

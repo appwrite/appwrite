@@ -25,6 +25,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Targets;
 use Appwrite\Utopia\Database\Validator\Queries\Topics;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
+use Utopia\Async\Promise;
 use Utopia\Audit\Audit;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -54,8 +55,6 @@ use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-
-use function Swoole\Coroutine\batch;
 
 Http::post('/v1/messaging/providers/mailgun')
     ->desc('Create Mailgun provider')
@@ -2918,7 +2917,7 @@ Http::get('/v1/messaging/topics/:topicId/subscribers')
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
 
-        $subscribers = batch(\array_map(function (Document $subscriber) use ($dbForProject, $authorization) {
+        $subscribers = Promise::map(\array_map(function (Document $subscriber) use ($dbForProject, $authorization) {
             return function () use ($subscriber, $dbForProject, $authorization) {
                 $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
                 $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
@@ -2927,7 +2926,7 @@ Http::get('/v1/messaging/topics/:topicId/subscribers')
                     ->setAttribute('target', $target)
                     ->setAttribute('userName', $user->getAttribute('name'));
             };
-        }, $subscribers));
+        }, $subscribers))->await();
 
         $response
             ->dynamic(new Document([
