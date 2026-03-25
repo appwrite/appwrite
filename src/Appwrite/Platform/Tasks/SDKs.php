@@ -134,6 +134,7 @@ class SDKs extends Action
             '1.6.x',
             '1.7.x',
             '1.8.x',
+            '1.9.x',
             'latest',
         ])) {
             throw new \Exception('Unknown version given');
@@ -971,24 +972,37 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
         // Second, try to find version in array format (pattern 2)
         // Pattern matches: 'nodejs' => '22.1.2', or "nodejs" => "22.1.2",
         // Also handles extra whitespace: 'nodejs'  =>  '22.1.2',
-        $arrayPattern = '/([\'"]' . preg_quote($sdkKey, '/') . '[\'"]\s*=>\s*[\'"])([^\'"]+)([\'"],)/m';
+        // Scoped to the correct $<platform>Versions array block to avoid
+        // updating duplicate keys that appear under a different platform.
+        $blockPattern = '/(\$' . preg_quote($platform, '/') . 'Versions\s*=\s*\[)([\s\S]*?)(\];)/m';
+        $entryPattern = '/([\'"]' . preg_quote($sdkKey, '/') . '[\'"]\s*=>\s*[\'"])([^\'"]+)([\'"],)/m';
 
-        if (preg_match($arrayPattern, $content, $matches)) {
-            $oldVersion = $matches[2];
-            $newContent = preg_replace($arrayPattern, '${1}' . $newVersion . '${3}', $content);
-
-            if (file_put_contents($configPath, $newContent) !== false) {
-                Console::success("Updated {$sdkKey} version from {$oldVersion} to {$newVersion} in config");
-                return true;
-            } else {
-                Console::error('Failed to write config file');
-                return false;
-            }
+        if (! preg_match($blockPattern, $content)) {
+            throw new \RuntimeException("Could not find \${$platform}Versions block in config file");
         }
 
-        Console::warning("Could not find version entry for {$sdkKey} in config");
+        $updated = false;
+        $newContent = preg_replace_callback($blockPattern, function ($blockMatch) use ($entryPattern, $newVersion, $sdkKey, &$updated) {
+            $blockContent = $blockMatch[2];
+            if (preg_match($entryPattern, $blockContent, $entryMatch)) {
+                $oldVersion = $entryMatch[2];
+                Console::success("Updated {$sdkKey} version from {$oldVersion} to {$newVersion} in config");
+                $blockContent = preg_replace($entryPattern, '${1}' . $newVersion . '${3}', $blockContent);
+                $updated = true;
+            }
+            return $blockMatch[1] . $blockContent . $blockMatch[3];
+        }, $content);
 
-        return false;
+        if (! $updated) {
+            throw new \RuntimeException("Could not find version entry for {$sdkKey} in \${$platform}Versions block");
+        }
+
+        if (file_put_contents($configPath, $newContent) === false) {
+            Console::error('Failed to write config file');
+            return false;
+        }
+
+        return true;
     }
 
     /**
