@@ -142,6 +142,15 @@ class SDKs extends Action
 
         $selectedPlatforms = ($selectedPlatform === '*' || $selectedPlatform === null) ? null : \array_map('trim', \explode(',', $selectedPlatform));
 
+        if ($selectedPlatforms !== null) {
+            $validPlatforms = static::getPlatforms();
+            foreach ($selectedPlatforms as $p) {
+                if (! \in_array($p, $validPlatforms)) {
+                    throw new \Exception('Unknown platform "' . $p . '". Options are: ' . implode(', ', $validPlatforms));
+                }
+            }
+        }
+
         $platforms = Config::getParam('sdks');
         foreach ($platforms as $key => $platform) {
             if ($selectedPlatforms !== null && ! \in_array($key, $selectedPlatforms) && ($sdks === null)) {
@@ -557,25 +566,34 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
             }
             Console::log('');
 
-            Console::confirm('Press Enter to copy PR summary to clipboard');
+            if (\function_exists('posix_isatty') && \posix_isatty(STDIN)) {
+                Console::confirm('Press Enter to copy PR summary to clipboard');
 
-            $markdown = "## Pull Request Summary\n\n";
-            foreach ($prUrls as $platformName => $sdks) {
-                $markdown .= "### {$platformName}\n";
-                foreach ($sdks as $sdkName => $url) {
-                    $markdown .= "- {$sdkName}: {$url}\n";
+                $markdown = "## Pull Request Summary\n\n";
+                foreach ($prUrls as $platformName => $sdks) {
+                    $markdown .= "### {$platformName}\n";
+                    foreach ($sdks as $sdkName => $url) {
+                        $markdown .= "- {$sdkName}: {$url}\n";
+                    }
+                    $markdown .= "\n";
                 }
-                $markdown .= "\n";
-            }
 
-            $copyCommand = PHP_OS_FAMILY === 'Darwin' ? 'pbcopy' : 'xclip -selection clipboard';
-            $process = \popen($copyCommand, 'w');
-            if ($process) {
-                \fwrite($process, $markdown);
-                \pclose($process);
-                Console::success('PR summary copied to clipboard!');
-            } else {
-                Console::error('Failed to copy to clipboard');
+                if (PHP_OS_FAMILY === 'Darwin') {
+                    $copyCommand = 'pbcopy';
+                } elseif (! empty(\getenv('WAYLAND_DISPLAY'))) {
+                    $copyCommand = 'wl-copy';
+                } else {
+                    $copyCommand = 'xclip -selection clipboard';
+                }
+
+                $process = \popen($copyCommand, 'w');
+                if ($process) {
+                    \fwrite($process, $markdown);
+                    \pclose($process);
+                    Console::success('PR summary copied to clipboard!');
+                } else {
+                    Console::error('Failed to copy to clipboard. Install pbcopy (macOS), wl-clipboard (Wayland), or xclip (X11).');
+                }
             }
         }
     }
