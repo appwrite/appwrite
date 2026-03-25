@@ -6,6 +6,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Async\Promise;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -104,20 +105,19 @@ Http::get('/v1/project/usage')
         };
 
         $authorization->skip(function () use ($dbForProject, $dbForLogs, $firstDay, $lastDay, $period, $metrics, $limit, &$total, &$stats) {
+            $tasks = [];
+
             foreach ($metrics['total'] as $metric) {
                 $db = ($metric === METRIC_FILES_IMAGES_TRANSFORMED) ? $dbForLogs : $dbForProject;
-
-                $result = $db->findOne('stats', [
+                $tasks['total_' . $metric] = fn () => $db->findOne('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', ['inf'])
                 ]);
-                $total[$metric] = $result['value'] ?? 0;
             }
 
             foreach ($metrics['period'] as $metric) {
                 $db = ($metric === METRIC_FILES_IMAGES_TRANSFORMED) ? $dbForLogs : $dbForProject;
-
-                $results = $db->find('stats', [
+                $tasks['period_' . $metric] = fn () => $db->find('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', [$period]),
                     Query::greaterThanEqual('time', $firstDay),
@@ -125,9 +125,17 @@ Http::get('/v1/project/usage')
                     Query::limit($limit),
                     Query::orderDesc('time'),
                 ]);
+            }
 
+            $results = Promise::map($tasks)->await();
+
+            foreach ($metrics['total'] as $metric) {
+                $total[$metric] = $results['total_' . $metric]['value'] ?? 0;
+            }
+
+            foreach ($metrics['period'] as $metric) {
                 $stats[$metric] = [];
-                foreach ($results as $result) {
+                foreach ($results['period_' . $metric] as $result) {
                     $stats[$metric][$result->getAttribute('time')] = [
                         'value' => $result->getAttribute('value'),
                     ];
