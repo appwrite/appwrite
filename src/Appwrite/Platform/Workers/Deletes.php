@@ -1141,8 +1141,11 @@ class Deletes extends Action
         $functionId = $document->getId();
         $functionInternalId = $document->getSequence();
 
-        // Delete function resources concurrently
+        // Request executor to delete all deployment containers before deleting deployments
         Console::info("Deleting resources for function " . $functionId);
+        $this->deleteRuntimes($getProjectDB, $document, $project, $executor);
+
+        // Delete function resources concurrently
         $deploymentInternalIds = [];
         Promise::map([
             // Delete rules
@@ -1193,8 +1196,6 @@ class Deletes extends Action
                     Query::orderAsc()
                 ], $dbForPlatform);
             }),
-            // Request executor to delete all deployment containers
-            fn () => $this->deleteRuntimes($getProjectDB, $document, $project, $executor),
         ])->await();
     }
 
