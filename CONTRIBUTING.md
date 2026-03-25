@@ -89,7 +89,7 @@ Now, go a step further by running the linter using the following command to manu
 composer lint <your file path>
 ```
 
-This will give you a list of errors to rectify. If you need more information on the errors, you can pass in additional command line arguments to get more verbose information. More lists of available arguments can be found [on PHP_Codesniffer usage Wiki](https://github.com/squizlabs/PHP_CodeSniffer/wiki/Usage). A very useful command line argument is `--report=diff`. This will give you the expected changes by the linter for easy fixing of formatting issues.
+This will give you a list of errors to rectify. If you need more information on the errors, you can pass in additional command line arguments to get more verbose information. More lists of available arguments can be found [on PHP_Codesniffer usage Wiki](https://github.com/PHPCSStandards/PHP_CodeSniffer/wiki/Usage). A very useful command line argument is `--report=diff`. This will give you the expected changes by the linter for easy fixing of formatting issues.
 
 ```bash
 composer lint --report=diff <your file path>
