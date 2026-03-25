@@ -9,6 +9,7 @@ use Appwrite\Usage\Context as UsageContext;
 use libphonenumber\NumberParseException;
 use libphonenumber\PhoneNumberUtil;
 use Swoole\Runtime;
+use Utopia\Async\Promise;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -47,8 +48,6 @@ use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Utopia\System\System;
-
-use function Swoole\Coroutine\batch;
 
 class Messaging extends Action
 {
@@ -147,43 +146,40 @@ class Messaging extends Action
          */
         $allTargets = [];
 
-        if (\count($topicIds) > 0) {
-            $topics = $dbForProject->find('topics', [
+        // Fetch topics, users, and targets concurrently
+        $results = Promise::map([
+            'topics' => fn () => \count($topicIds) > 0 ? $dbForProject->find('topics', [
                 Query::equal('$id', $topicIds),
                 Query::limit(\count($topicIds)),
-            ]);
-            foreach ($topics as $topic) {
-                $targets = \array_filter($topic->getAttribute('targets'), function (Document $target) use ($providerType) {
-                    return $target->getAttribute('providerType') === $providerType;
-                });
-
-                \array_push($allTargets, ...$targets);
-            }
-        }
-
-        if (\count($userIds) > 0) {
-            $users = $dbForProject->find('users', [
+            ]) : [],
+            'users' => fn () => \count($userIds) > 0 ? $dbForProject->find('users', [
                 Query::equal('$id', $userIds),
                 Query::limit(\count($userIds)),
-            ]);
-            foreach ($users as $user) {
-                $targets = \array_filter($user->getAttribute('targets'), function (Document $target) use ($providerType) {
-                    return $target->getAttribute('providerType') === $providerType;
-                });
-
-                \array_push($allTargets, ...$targets);
-            }
-        }
-
-        if (\count($targetIds) > 0) {
-            $targets = $dbForProject->find('targets', [
+            ]) : [],
+            'targets' => fn () => \count($targetIds) > 0 ? $dbForProject->find('targets', [
                 Query::equal('$id', $targetIds),
                 Query::equal('providerType', [$providerType]),
                 Query::limit(\count($targetIds)),
-            ]);
+            ]) : [],
+        ])->await();
+
+        foreach ($results['topics'] as $topic) {
+            $targets = \array_filter($topic->getAttribute('targets'), function (Document $target) use ($providerType) {
+                return $target->getAttribute('providerType') === $providerType;
+            });
 
             \array_push($allTargets, ...$targets);
         }
+
+        foreach ($results['users'] as $user) {
+            $targets = \array_filter($user->getAttribute('targets'), function (Document $target) use ($providerType) {
+                return $target->getAttribute('providerType') === $providerType;
+            });
+
+            \array_push($allTargets, ...$targets);
+        }
+
+        \array_push($allTargets, ...$results['targets']);
 
         if (empty($allTargets)) {
             $dbForProject->updateDocument('messages', $message->getId(), $message->setAttributes([
@@ -241,7 +237,7 @@ class Messaging extends Action
         /**
          * @var array<array> $results
          */
-        $results = batch(\array_map(function ($providerId) use ($identifiers, &$providers, $default, $message, $dbForProject, $deviceForFiles, $project, $publisherForUsage) {
+        $results = Promise::map(\array_map(function ($providerId) use ($identifiers, &$providers, $default, $message, $dbForProject, $deviceForFiles, $project, $publisherForUsage) {
             return function () use ($providerId, $identifiers, &$providers, $default, $message, $dbForProject, $deviceForFiles, $project, $publisherForUsage) {
                 if (\array_key_exists($providerId, $providers)) {
                     $provider = $providers[$providerId];
@@ -269,7 +265,7 @@ class Messaging extends Action
                     $adapter->getMaxMessagesPerRequest()
                 );
 
-                return batch(\array_map(function ($batch) use ($message, $provider, $adapter, $dbForProject, $deviceForFiles, $project, $publisherForUsage) {
+                return Promise::map(\array_map(function ($batch) use ($message, $provider, $adapter, $dbForProject, $deviceForFiles, $project, $publisherForUsage) {
                     return function () use ($batch, $message, $provider, $adapter, $dbForProject, $deviceForFiles, $project, $publisherForUsage) {
                         $deliveredTotal = 0;
                         $deliveryErrors = [];
@@ -333,9 +329,9 @@ class Messaging extends Action
                             ];
                         }
                     };
-                }, $batches));
+                }, $batches))->await();
             };
-        }, \array_keys($identifiers)));
+        }, \array_keys($identifiers)))->await();
 
         $results = \array_merge(...$results);
 
