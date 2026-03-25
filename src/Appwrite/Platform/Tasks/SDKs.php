@@ -987,26 +987,33 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
         // Scoped to the correct $<platform>Versions array block to avoid
         // updating duplicate keys that appear under a different platform.
         $blockPattern = '/(\$' . preg_quote($platform, '/') . 'Versions\s*=\s*\[)([\s\S]*?)(\];)/m';
-        $entryPattern = '/([\'"]' . preg_quote($sdkKey, '/') . '[\'"]\s*=>\s*[\'"])([^\'"]+)([\'"],)/m';
+        $entryPattern = '/([\'"]' . preg_quote($sdkKey, '/') . '[\'"]\s*=>\s*[\'"])([^\'"]+)([\'"],?)/m';
 
         if (! preg_match($blockPattern, $content)) {
-            throw new \RuntimeException("Could not find \${$platform}Versions block in config file");
+            Console::warning("  Could not find \${$platform}Versions block in config file");
+            return false;
         }
 
         $updated = false;
-        $newContent = preg_replace_callback($blockPattern, function ($blockMatch) use ($entryPattern, $newVersion, $sdkKey, &$updated) {
+        $oldVersion = '';
+        $newContent = preg_replace_callback($blockPattern, function ($blockMatch) use ($entryPattern, $newVersion, &$updated, &$oldVersion) {
             $blockContent = $blockMatch[2];
             if (preg_match($entryPattern, $blockContent, $entryMatch)) {
                 $oldVersion = $entryMatch[2];
-                Console::success("  Config updated: {$sdkKey} {$oldVersion} → {$newVersion}");
                 $blockContent = preg_replace($entryPattern, '${1}' . $newVersion . '${3}', $blockContent);
                 $updated = true;
             }
             return $blockMatch[1] . $blockContent . $blockMatch[3];
         }, $content);
 
+        if ($newContent === null) {
+            Console::error('  preg_replace_callback failed while updating config');
+            return false;
+        }
+
         if (! $updated) {
-            throw new \RuntimeException("Could not find version entry for {$sdkKey} in \${$platform}Versions block");
+            Console::warning("  Could not find version entry for {$sdkKey} in \${$platform}Versions block");
+            return false;
         }
 
         if (file_put_contents($configPath, $newContent) === false) {
@@ -1014,6 +1021,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
             return false;
         }
 
+        Console::success("  Config updated: {$sdkKey} {$oldVersion} → {$newVersion}");
         return true;
     }
 
