@@ -15,7 +15,6 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
-use Appwrite\Network\Validator\Email as EmailValidator;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
@@ -61,6 +60,7 @@ use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
 use Utopia\Emails\Email;
+use Utopia\Emails\Validator\Email as EmailValidator;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
@@ -1206,6 +1206,47 @@ Http::put('/v1/users/:userId/labels')
         $user->setAttribute('labels', (array) \array_values(\array_unique($labels)));
 
         $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['labels' => $user->getAttribute('labels')]));
+
+        $queueForEvents
+            ->setParam('userId', $user->getId());
+
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
+Http::patch('/v1/users/:userId/impersonator')
+    ->desc('Update user impersonator capability')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].update.impersonator')
+    ->label('scope', 'users.write')
+    ->label('audits.event', 'user.update')
+    ->label('audits.resource', 'user/{response.$id}')
+    ->label('sdk', new Method(
+        namespace: 'users',
+        group: 'users',
+        name: 'updateImpersonator',
+        description: '/docs/references/users/update-user-impersonator.md',
+        auth: [AuthType::ADMIN, AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_USER,
+            )
+        ]
+    ))
+    ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
+    ->param('impersonator', false, new Boolean(true), 'Whether the user can impersonate other users. When true, the user can browse project users to choose a target and can pass impersonation headers to act as that user. Internal audit logs still attribute impersonated actions to the original impersonator and store the target user details only in internal audit payload data.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('queueForEvents')
+    ->action(function (string $userId, bool $impersonator, Response $response, Database $dbForProject, Event $queueForEvents) {
+
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $user = $dbForProject->updateDocument('users', $user->getId(), new Document(['impersonator' => $impersonator]));
 
         $queueForEvents
             ->setParam('userId', $user->getId());

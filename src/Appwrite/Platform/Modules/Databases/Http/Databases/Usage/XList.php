@@ -25,6 +25,43 @@ class XList extends Action
         return 'listDatabaseUsage';
     }
 
+    protected $databaseType = DATABASE_TYPE_LEGACY;
+
+    public function setHttpPath(string $path): Action
+    {
+        $this->databaseType = match (true) {
+            str_contains($path, '/documentsdb') => DATABASE_TYPE_DOCUMENTSDB,
+            str_contains($path, '/vectorsdb') => DATABASE_TYPE_VECTORSDB,
+            default => DATABASE_TYPE_LEGACY,
+        };
+
+        return parent::setHttpPath($path);
+    }
+
+    protected function getMetrics(): array
+    {
+        $metrics = [
+            METRIC_DATABASES,
+            METRIC_COLLECTIONS,
+            METRIC_DOCUMENTS,
+            METRIC_DATABASES_STORAGE,
+            METRIC_DATABASES_OPERATIONS_READS,
+            METRIC_DATABASES_OPERATIONS_WRITES,
+        ];
+        if ($this->databaseType === DATABASE_TYPE_LEGACY || $this->databaseType === DATABASE_TYPE_TABLESDB) {
+            return $metrics;
+        }
+        return array_map(
+            fn ($metric) => "{$this->databaseType}.{$metric}",
+            $metrics
+        );
+    }
+
+    protected function getResponseModel(): string
+    {
+        return UtopiaResponse::MODEL_USAGE_DATABASES;
+    }
+
     public function __construct()
     {
         $this
@@ -67,14 +104,7 @@ class XList extends Action
         $periods = Config::getParam('usage', []);
         $stats = $usage = [];
         $days = $periods[$range];
-        $metrics = [
-            METRIC_DATABASES,
-            METRIC_COLLECTIONS,
-            METRIC_DOCUMENTS,
-            METRIC_DATABASES_STORAGE,
-            METRIC_DATABASES_OPERATIONS_READS,
-            METRIC_DATABASES_OPERATIONS_WRITES,
-        ];
+        $metrics = $this->getMetrics();
 
         $authorization->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             $limit = $days['limit'];
@@ -143,6 +173,6 @@ class XList extends Action
             'storage' => $usage[$metrics[3]]['data'],
             'databasesReads' => $usage[$metrics[4]]['data'],
             'databasesWrites' => $usage[$metrics[5]]['data'],
-        ]), UtopiaResponse::MODEL_USAGE_DATABASES);
+        ]), $this->getResponseModel());
     }
 }

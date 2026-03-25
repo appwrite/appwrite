@@ -172,4 +172,20 @@ return [ // List of publicly visible scopes
     'tokens.write' => [
         'description' => 'Access to create, update, and delete your project\'s tokens',
     ],
+    "webhooks.read" => [
+        "description" =>
+            "Access to read project\'s webhooks",
+    ],
+    "webhooks.write" => [
+        "description" =>
+            "Access to create, update, and delete project\'s webhooks",
+    ],
+    "project.read" => [
+        "description" =>
+            "Access to read project\'s information",
+    ],
+    "project.write" => [
+        "description" =>
+            "Access to update project\'s information",
+    ],
 ];

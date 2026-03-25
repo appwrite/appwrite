@@ -34,8 +34,10 @@
             <directory>./tests/e2e/Services/Storage</directory>
             <directory>./tests/e2e/Services/Tokens</directory>
             <directory>./tests/e2e/Services/Webhooks</directory>
+            <directory>./tests/e2e/Services/ProjectWebhooks</directory>
             <directory>./tests/e2e/Services/Messaging</directory>
             <directory>./tests/e2e/Services/Migrations</directory>
+            <directory>./tests/e2e/Services/Project</directory>
             <file>./tests/e2e/Services/Functions/FunctionsBase.php</file>
             <file>./tests/e2e/Services/Functions/FunctionsCustomServerTest.php</file>
             <file>./tests/e2e/Services/Functions/FunctionsCustomClientTest.php</file>

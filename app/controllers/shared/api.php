@@ -215,7 +215,7 @@ Http::init()
                     );
                 }
 
-                if (! $dbKey) {
+                if (!$dbKey) {
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
 
@@ -338,6 +338,19 @@ Http::init()
 
         $scopes = \array_unique($scopes);
 
+        // Intentional: impersonators get users.read so they can discover a target user
+        // before impersonation starts, and keep that access while impersonating.
+        if (
+            !$user->isEmpty()
+            && (
+                $user->getAttribute('impersonator', false)
+                || $user->getAttribute('impersonatorUserId')
+            )
+        ) {
+            $scopes[] = 'users.read';
+            $scopes = \array_unique($scopes);
+        }
+
         $authorization->addRole($role);
         foreach ($user->getRoles($authorization) as $authRole) {
             $authorization->addRole($authRole);
@@ -369,8 +382,11 @@ Http::init()
         }
 
         if (! empty($user->getId())) {
+            $impersonatorUserId = $user->getAttribute('impersonatorUserId');
             $accessedAt = $user->getAttribute('accessedAt', 0);
-            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
+
+            // Skip updating accessedAt for impersonated requests so we don't attribute activity to the target user.
+            if (! $impersonatorUserId && DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
                 $user->setAttribute('accessedAt', DateTime::now());
 
                 if ($project->getId() !== 'console' && $mode !== APP_MODE_ADMIN) {
@@ -470,6 +486,12 @@ Http::init()
     ->action(function (Http $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Context $usage, Func $queueForFunctions, Mail $queueForMails, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform, Authorization $authorization) {
 
         $route = $utopia->getRoute();
+        $path = $route->getMatchedPath();
+        $databaseType = match (true) {
+            str_contains($path, '/documentsdb') => DATABASE_TYPE_DOCUMENTSDB,
+            str_contains($path, '/vectorsdb') => DATABASE_TYPE_VECTORSDB,
+            default => '',
+        };
 
         if (
             array_key_exists('rest', $project->getAttribute('apis', []))

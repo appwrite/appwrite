@@ -307,6 +307,7 @@ class Exception extends \Exception
 
     /** Webhooks */
     public const string WEBHOOK_NOT_FOUND = 'webhook_not_found';
+    public const string WEBHOOK_ALREADY_EXISTS = 'webhook_already_exists';
 
     /** Router */
     public const string ROUTER_HOST_NOT_FOUND = 'router_host_not_found';
@@ -339,6 +340,7 @@ class Exception extends \Exception
     public const string MIGRATION_ALREADY_EXISTS = 'migration_already_exists';
     public const string MIGRATION_IN_PROGRESS = 'migration_in_progress';
     public const string MIGRATION_PROVIDER_ERROR = 'migration_provider_error';
+    public const string MIGRATION_DATABASE_TYPE_UNSUPPORTED = 'migration_database_type_unsupported';
 
     /** Realtime */
     public const string REALTIME_MESSAGE_FORMAT_INVALID = 'realtime_message_format_invalid';

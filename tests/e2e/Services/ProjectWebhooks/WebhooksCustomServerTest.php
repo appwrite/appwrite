@@ -1,0 +1,951 @@
+<?php
+
+namespace Tests\E2E\Services\ProjectWebhooks;
+
+use Appwrite\Tests\Async;
+use CURLFile;
+use Tests\E2E\Client;
+use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\Scope;
+use Tests\E2E\Scopes\SideServer;
+use Utopia\Console;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
+
+class WebhooksCustomServerTest extends Scope
+{
+    use Async;
+    use WebhooksBase;
+    use ProjectCustom;
+    use SideServer;
+
+    /**
+     * Creates a user and returns user details.
+     *
+     * @return array Array containing 'userId', 'name', 'email'
+     */
+    protected function setupUser(): array
+    {
+        $email = uniqid() . 'user@localhost.test';
+        $password = 'password';
+        $name = 'User Name';
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+
+        return [
+            'userId' => $user['body']['$id'],
+            'name' => $user['body']['name'],
+            'email' => $user['body']['email'],
+        ];
+    }
+
+    /**
+     * Creates a function and returns function details.
+     *
+     * @return array Array containing 'functionId'
+     */
+    protected function setupFunction(): array
+    {
+        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'functionId' => ID::unique(),
+            'name' => 'Test',
+            'execute' => [Role::any()->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 10,
+        ]);
+
+        return ['functionId' => $function['body']['$id']];
+    }
+
+    /**
+     * Creates a function deployment and waits for it to be built.
+     *
+     * @param string $functionId Function ID
+     * @return array Array containing 'functionId', 'deploymentId'
+     */
+    protected function setupDeployment(string $functionId): array
+    {
+        $stderr = '';
+        $stdout = '';
+        $folder = 'timeout';
+        $code = realpath(__DIR__ . '/../../../resources/functions') . "/{$folder}/code.tar.gz";
+        Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/{$folder}  && tar --exclude code.tar.gz --exclude node_modules -czf code.tar.gz .", '', $stdout, $stderr);
+
+        // Create variable first
+        $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'key' => 'key1',
+            'value' => 'value1',
+        ]);
+
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'entrypoint' => 'index.js',
+            'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
+            'activate' => true
+        ]);
+
+        $deploymentId = $deployment['body']['$id'];
+
+        // Wait for deployment to be built
+        $this->awaitDeploymentIsBuilt($functionId, $deploymentId);
+
+        return [
+            'functionId' => $functionId,
+            'deploymentId' => $deploymentId,
+        ];
+    }
+
+    // Collection APIs
+    public function testUpdateCollection(): void
+    {
+        // Set up collection with attributes
+        $data = $this->setupCollectionWithAttributes();
+        $id = $data['actorsId'];
+        $databaseId = $data['databaseId'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $actors = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $id, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'name' => 'Actors1',
+            'documentSecurity' => true,
+        ]);
+
+        $this->assertEquals(200, $actors['headers']['status-code']);
+        $this->assertNotEmpty($actors['body']['$id']);
+
+        $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.collections.{$id}.update"));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
+
+        $this->assertEquals('POST', $webhook['method']);
+        $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+        $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
+        $this->assertStringContainsString('databases.' . $databaseId . '.collections.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString('databases.' . $databaseId . '.collections.*.update', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString("databases.{$databaseId}.collections.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString("databases.{$databaseId}.collections.{$id}.update", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
+        $this->assertTrue(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''));
+        $this->assertNotEmpty($webhook['data']['$id']);
+        $this->assertEquals('Actors1', $webhook['data']['name']);
+        $this->assertIsArray($webhook['data']['$permissions']);
+        $this->assertCount(4, $webhook['data']['$permissions']);
+    }
+
+    public function testCreateDeleteIndexes(): void
+    {
+        // Set up collection with attributes
+        $data = $this->setupCollectionWithAttributes();
+        $actorsId = $data['actorsId'];
+        $databaseId = $data['databaseId'];
+
+        $index = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actorsId . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'fullname',
+            'type' => 'key',
+            'attributes' => ['lastName', 'firstName'],
+            'orders' => ['ASC', 'ASC'],
+        ]);
+
+        $this->assertEquals(202, $index['headers']['status-code']);
+        $this->assertEquals('fullname', $index['body']['key']);
+
+        // wait for database worker to create index
+        $this->assertEventually(function () use ($databaseId, $actorsId) {
+            $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.collections.{$actorsId}.indexes.*.create"));
+            $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
+
+            $this->assertEquals('POST', $webhook['method']);
+            $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+            $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
+            $this->assertStringContainsString('databases.' . $databaseId . '.collections.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+            $this->assertStringContainsString('databases.' . $databaseId . '.collections.*.indexes.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+            $this->assertStringContainsString('databases.' . $databaseId . '.collections.*.indexes.*.create', $webhook['headers']['X-Appwrite-Webhook-Events']);
+            $this->assertStringContainsString("databases.{$databaseId}.collections.{$actorsId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
+            $this->assertStringContainsString("databases.{$databaseId}.collections.{$actorsId}.indexes.*", $webhook['headers']['X-Appwrite-Webhook-Events']);
+            $this->assertStringContainsString("databases.{$databaseId}.collections.{$actorsId}.indexes.*.create", $webhook['headers']['X-Appwrite-Webhook-Events']);
+            $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
+            $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
+            $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
+            $this->assertTrue(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''));
+        }, 10000, 500);
+
+        // Remove index
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $actorsId . '/indexes/' . $index['body']['key'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        // // wait for database worker to remove index
+        $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.collections.{$actorsId}.indexes.*.update"));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
+
+        // $this->assertEquals($webhook['method'], 'DELETE');
+        $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+        $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
+        $this->assertStringContainsString('databases.' . $databaseId . '.collections.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString('databases.' . $databaseId . '.collections.*.indexes.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString('databases.' . $databaseId . '.collections.*.indexes.*.update', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString("databases.{$databaseId}.collections.{$actorsId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString("databases.{$databaseId}.collections.{$actorsId}.indexes.*", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString("databases.{$databaseId}.collections.{$actorsId}.indexes.*.update", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
+        $this->assertTrue(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''));
+    }
+
+    public function testDeleteCollection(): void
+    {
+        /**
+         * Create database
+         */
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], $this->getHeaders()), [
+            'databaseId' => ID::unique(),
+            'name' => 'Actors DB',
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $actors = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Demo',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'documentSecurity' => true,
+        ]);
+
+        $id = $actors['body']['$id'];
+
+        $this->assertEquals(201, $actors['headers']['status-code']);
+        $this->assertNotEmpty($actors['body']['$id']);
+
+        $actors = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $actors['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), []);
+
+        $this->assertEquals(204, $actors['headers']['status-code']);
+
+        $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.collections.{$id}.delete"));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
+
+        $this->assertEquals('POST', $webhook['method']);
+        $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+        $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
+        $this->assertStringContainsString('databases.' . $databaseId . '.collections.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString('databases.' . $databaseId . '.collections.*.delete', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString("databases.{$databaseId}.collections.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString("databases.{$databaseId}.collections.{$id}.delete", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
+        $this->assertTrue(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''));
+        $this->assertNotEmpty($webhook['data']['$id']);
+        $this->assertEquals('Demo', $webhook['data']['name']);
+        $this->assertIsArray($webhook['data']['$permissions']);
+        $this->assertCount(4, $webhook['data']['$permissions']);
+    }
+
+    // Table APIs
+    public function testUpdateTable(): void
+    {
+        // Set up table with columns
+        $data = $this->setupTableWithColumns();
+        $id = $data['actorsId'];
+        $databaseId = $data['databaseId'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $actors = $this->client->call(Client::METHOD_PUT, '/tablesdb/' . $databaseId . '/tables/' . $id, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'name' => 'Actors1',
+            'rowSecurity' => true,
+        ]);
+
+        $this->assertEquals(200, $actors['headers']['status-code']);
+        $this->assertNotEmpty($actors['body']['$id']);
+
+        $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.tables.{$id}.update"));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
+
+        $this->assertEquals('POST', $webhook['method']);
+        $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+        $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
+        $this->assertStringContainsString('databases.' . $databaseId . '.tables.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString('databases.' . $databaseId . '.tables.*.update', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString("databases.{$databaseId}.tables.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString("databases.{$databaseId}.tables.{$id}.update", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
+        $this->assertEmpty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? '');
+        $this->assertNotEmpty($webhook['data']['$id']);
+        $this->assertEquals('Actors1', $webhook['data']['name']);
+        $this->assertIsArray($webhook['data']['$permissions']);
+        $this->assertCount(4, $webhook['data']['$permissions']);
+    }
+
+    public function testCreateDeleteColumnIndexes(): void
+    {
+        // Set up table with columns
+        $data = $this->setupTableWithColumns();
+        $actorsId = $data['actorsId'];
+        $databaseId = $data['databaseId'];
+
+        $index = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $actorsId . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'fullname',
+            'type' => 'key',
+            'columns' => ['lastName', 'firstName'],
+            'orders' => ['ASC', 'ASC'],
+        ]);
+
+        $this->assertEquals(202, $index['headers']['status-code']);
+        $this->assertEquals('fullname', $index['body']['key']);
+
+        // wait for database worker to create index
+        $this->assertEventually(function () use ($databaseId, $actorsId) {
+            $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.tables.{$actorsId}.indexes.*.create"));
+            $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
+
+            $this->assertEquals('POST', $webhook['method']);
+            $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+            $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
+            $this->assertStringContainsString('databases.' . $databaseId . '.tables.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+            $this->assertStringContainsString('databases.' . $databaseId . '.tables.*.indexes.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+            $this->assertStringContainsString('databases.' . $databaseId . '.tables.*.indexes.*.create', $webhook['headers']['X-Appwrite-Webhook-Events']);
+            $this->assertStringContainsString("databases.{$databaseId}.tables.{$actorsId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
+            $this->assertStringContainsString("databases.{$databaseId}.tables.{$actorsId}.indexes.*", $webhook['headers']['X-Appwrite-Webhook-Events']);
+            $this->assertStringContainsString("databases.{$databaseId}.tables.{$actorsId}.indexes.*.create", $webhook['headers']['X-Appwrite-Webhook-Events']);
+            $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
+            $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
+            $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
+            $this->assertTrue(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''));
+        }, 10000, 500);
+
+        // Remove index
+        $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId . '/tables/' . $actorsId . '/indexes/' . $index['body']['key'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        // // wait for database worker to remove index
+        $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.tables.{$actorsId}.indexes.*.update"));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
+
+        // $this->assertEquals($webhook['method'], 'DELETE');
+        $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+        $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
+        $this->assertStringContainsString('databases.' . $databaseId . '.tables.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString('databases.' . $databaseId . '.tables.*.indexes.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString('databases.' . $databaseId . '.tables.*.indexes.*.update', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString("databases.{$databaseId}.tables.{$actorsId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString("databases.{$databaseId}.tables.{$actorsId}.indexes.*", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString("databases.{$databaseId}.tables.{$actorsId}.indexes.*.update", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
+        $this->assertTrue(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''));
+    }
+
+    public function testDeleteTable(): void
+    {
+        /**
+         * Create database
+         */
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], $this->getHeaders()), [
+            'databaseId' => ID::unique(),
+            'name' => 'Actors DB',
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $actors = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'Demo',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'rowSecurity' => true,
+        ]);
+
+        $id = $actors['body']['$id'];
+
+        $this->assertEquals(201, $actors['headers']['status-code']);
+        $this->assertNotEmpty($actors['body']['$id']);
+
+        $actors = $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId . '/tables/' . $actors['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals(204, $actors['headers']['status-code']);
+
+        $webhook = $this->getLastRequest($this->webhookEventProbe("databases.{$databaseId}.tables.{$id}.delete"));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
+
+        $this->assertEquals('POST', $webhook['method']);
+        $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+        $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
+        $this->assertStringContainsString('databases.' . $databaseId . '.tables.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString('databases.' . $databaseId . '.tables.*.delete', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString("databases.{$databaseId}.tables.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString("databases.{$databaseId}.tables.{$id}.delete", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
+        $this->assertEmpty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? '');
+        $this->assertNotEmpty($webhook['data']['$id']);
+        $this->assertEquals('Demo', $webhook['data']['name']);
+        $this->assertIsArray($webhook['data']['$permissions']);
+        $this->assertCount(4, $webhook['data']['$permissions']);
+    }
+
+    public function testCreateUser(): void
+    {
+        $email = uniqid() . 'user@localhost.test';
+        $password = 'password';
+        $name = 'User Name';
+
+        /**
+         * Test for SUCCESS
+         */
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+
+        $this->assertEquals(201, $user['headers']['status-code']);
+        $this->assertNotEmpty($user['body']['$id']);
+
+        $id = $user['body']['$id'];
+
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.create"));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
+
+        $this->assertEquals('POST', $webhook['method']);
+        $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+        $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
+        $this->assertStringContainsString('users.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString('users.*.create', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString("users.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString("users.{$id}.create", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
+        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
+        $this->assertNotEmpty($webhook['data']['$id']);
+        $this->assertEquals($webhook['data']['name'], $name);
+        $this->assertTrue((new DatetimeValidator())->isValid($webhook['data']['registration']));
+        $this->assertTrue($webhook['data']['status']);
+        $this->assertEquals($webhook['data']['email'], $email);
+        $this->assertFalse($webhook['data']['emailVerification']);
+        $this->assertEquals([], $webhook['data']['prefs']);
+    }
+
+    public function testUpdateUserPrefs(): void
+    {
+        // Set up a user
+        $data = $this->setupUser();
+        $id = $data['userId'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $id . '/prefs', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'prefs' => ['a' => 'b']
+        ]);
+
+        $this->assertEquals(200, $user['headers']['status-code']);
+        $this->assertEquals('b', $user['body']['a']);
+
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.update.prefs"));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
+
+        $this->assertEquals('POST', $webhook['method']);
+        $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+        $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
+        $this->assertStringContainsString('users.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString('users.*.update', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString('users.*.update.prefs', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString("users.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString("users.{$id}.update", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString("users.{$id}.update.prefs", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
+        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
+        $this->assertEquals('b', $webhook['data']['a']);
+    }
+
+    public function testUpdateUserStatus(): void
+    {
+        // Set up a user
+        $data = $this->setupUser();
+        $id = $data['userId'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/status', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'status' => false,
+        ]);
+
+        $this->assertEquals(200, $user['headers']['status-code']);
+        $this->assertNotEmpty($user['body']['$id']);
+
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.update.status"));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
+
+        $this->assertEquals('POST', $webhook['method']);
+        $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+        $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
+        $this->assertStringContainsString('users.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString('users.*.update', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString('users.*.update.status', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString("users.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString("users.{$id}.update", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString("users.{$id}.update.status", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
+        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
+        $this->assertNotEmpty($webhook['data']['$id']);
+        $this->assertEquals($webhook['data']['name'], $data['name']);
+        $this->assertTrue((new DatetimeValidator())->isValid($webhook['data']['registration']));
+        $this->assertFalse($webhook['data']['status']);
+        $this->assertEquals($webhook['data']['email'], $data['email']);
+        $this->assertFalse($webhook['data']['emailVerification']);
+    }
+
+    public function testDeleteUser(): void
+    {
+        // Set up a user
+        $data = $this->setupUser();
+        $id = $data['userId'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $user = $this->client->call(Client::METHOD_DELETE, '/users/' . $data['userId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $user['headers']['status-code']);
+
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.delete"));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
+
+        $this->assertEquals('POST', $webhook['method']);
+        $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+        $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
+        $this->assertStringContainsString('users.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString('users.*.delete', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString("users.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString("users.{$id}.delete", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
+        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
+        $this->assertNotEmpty($webhook['data']['$id']);
+        $this->assertEquals($webhook['data']['name'], $data['name']);
+        $this->assertTrue((new DatetimeValidator())->isValid($webhook['data']['registration']));
+        // User is created with status=true by default, so webhook shows that status at deletion
+        $this->assertTrue($webhook['data']['status']);
+        $this->assertEquals($webhook['data']['email'], $data['email']);
+        $this->assertFalse($webhook['data']['emailVerification']);
+    }
+
+    public function testCreateFunction(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'functionId' => ID::unique(),
+            'name' => 'Test',
+            'execute' => [Role::any()->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 10,
+        ]);
+
+        $id = $function['body']['$id'] ?? '';
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+        $this->assertNotEmpty($function['body']['$id']);
+
+        $webhook = $this->getLastRequest($this->webhookEventProbe("functions.{$id}.create"));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
+
+        $this->assertEquals('POST', $webhook['method']);
+        $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+        $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
+    }
+
+    public function testUpdateFunction(): void
+    {
+        // Set up a function
+        $data = $this->setupFunction();
+        $id = $data['functionId'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $function = $this->client->call(Client::METHOD_PUT, '/functions/' . $id, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Test',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'execute' => [Role::any()->toString()],
+            'vars' => [
+                'key1' => 'value1',
+            ]
+        ]);
+
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertEquals($function['body']['$id'], $id);
+
+        // Create variable
+        $variable = $this->client->call(Client::METHOD_POST, '/functions/' . $id . '/variables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'key' => 'key1',
+            'value' => 'value1',
+        ]);
+
+        $this->assertEquals(201, $variable['headers']['status-code']);
+
+        $webhook = $this->getLastRequest($this->webhookEventProbe("functions.{$id}.update"));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
+
+        $this->assertEquals('POST', $webhook['method']);
+        $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+        $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
+        // $this->assertStringContainsString('functions.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        // $this->assertStringContainsString('functions.*.update', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        // $this->assertStringContainsString("functions.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        // $this->assertStringContainsString("functions.{$id}.update", $webhook['headers']['X-Appwrite-Webhook-Events']); TODO @christyjacob4 : enable test once we allow functions.* events
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
+    }
+
+    public function testCreateDeployment(): void
+    {
+        // Set up a function
+        $data = $this->setupFunction();
+        $functionId = $data['functionId'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $stderr = '';
+        $stdout = '';
+        $folder = 'timeout';
+        $code = realpath(__DIR__ . '/../../../resources/functions') . "/{$folder}/code.tar.gz";
+        Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/{$folder}  && tar --exclude code.tar.gz --exclude node_modules -czf code.tar.gz .", '', $stdout, $stderr);
+
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'entrypoint' => 'index.js',
+            'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
+            'activate' => true
+        ]);
+
+        $deploymentId = $deployment['body']['$id'] ?? '';
+
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+        $this->assertNotEmpty($deployment['body']['$id']);
+
+        $webhook = $this->getLastRequest($this->webhookEventProbe("functions.{$functionId}.deployments.{$deploymentId}.create"));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
+
+        $this->assertEquals('POST', $webhook['method']);
+        $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+        $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
+        // $this->assertStringContainsString('functions.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        // $this->assertStringContainsString('functions.*.deployments.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        // $this->assertStringContainsString("functions.*.deployments.{$deploymentId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        // $this->assertStringContainsString("functions.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        // $this->assertStringContainsString("functions.{$id}.deployments.*", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        // $this->assertStringContainsString("functions.{$id}.deployments.{$deploymentId}", $webhook['headers']['X-Appwrite-Webhook-Events']); TODO @christyjacob4 : enable test once we allow functions.* events
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
+
+        $this->awaitDeploymentIsBuilt($functionId, $deploymentId);
+    }
+
+    public function testUpdateDeployment(): void
+    {
+        // Set up a function with deployment
+        $data = $this->setupFunction();
+        $deploymentData = $this->setupDeployment($data['functionId']);
+        $id = $deploymentData['functionId'];
+        $deploymentId = $deploymentData['deploymentId'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/functions/' . $id . '/deployments/' . $deploymentId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        // Wait for deployment to be built.
+        $this->assertEventually(function () use ($deploymentId, $id) {
+            $webhook = $this->getLastRequest($this->webhookEventProbe("functions.{$id}.deployments.{$deploymentId}.update"));
+            $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
+
+            $this->assertEquals('POST', $webhook['method']);
+            $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+            $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
+            // $this->assertStringContainsString('functions.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+            // $this->assertStringContainsString('functions.*.deployments.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+            // $this->assertStringContainsString('functions.*.deployments.*.update', $webhook['headers']['X-Appwrite-Webhook-Events']);
+            // $this->assertStringContainsString("functions.*.deployments.{$deploymentId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
+            // $this->assertStringContainsString("functions.*.deployments.{$deploymentId}.update", $webhook['headers']['X-Appwrite-Webhook-Events']);
+            // $this->assertStringContainsString("functions.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
+            // $this->assertStringContainsString("functions.{$id}.deployments.*", $webhook['headers']['X-Appwrite-Webhook-Events']);
+            // $this->assertStringContainsString("functions.{$id}.deployments.*.update", $webhook['headers']['X-Appwrite-Webhook-Events']);
+            // $this->assertStringContainsString("functions.{$id}.deployments.{$deploymentId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
+            // $this->assertStringContainsString("functions.{$id}.deployments.{$deploymentId}.update", $webhook['headers']['X-Appwrite-Webhook-Events']); TODO @christyjacob4 : enable test once we allow functions.* events
+            $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
+            $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
+            $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
+        }, 10000, 500);
+
+    }
+
+    public function testExecutions(): void
+    {
+        // Set up a function with deployment
+        $data = $this->setupFunction();
+        $deploymentData = $this->setupDeployment($data['functionId']);
+        $id = $deploymentData['functionId'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $id . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'async' => true
+        ]);
+
+        $executionId = $execution['body']['$id'] ?? '';
+
+        $this->assertEquals(202, $execution['headers']['status-code']);
+        $this->assertNotEmpty($execution['body']['$id']);
+
+        $webhook = $this->getLastRequest($this->webhookEventProbe("functions.{$id}.executions.{$executionId}.create"));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
+        $this->assertEquals('POST', $webhook['method']);
+        $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+        $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
+        // $this->assertStringContainsString('functions.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        // $this->assertStringContainsString('functions.*.executions.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        // $this->assertStringContainsString('functions.*.executions.*.create', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        // $this->assertStringContainsString("functions.*.executions.{$executionId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        // $this->assertStringContainsString("functions.*.executions.{$executionId}.create", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        // $this->assertStringContainsString("functions.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        // $this->assertStringContainsString("functions.{$id}.executions.*", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        // $this->assertStringContainsString("functions.{$id}.executions.*.create", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        // $this->assertStringContainsString("functions.{$id}.executions.{$executionId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        // $this->assertStringContainsString("functions.{$id}.executions.{$executionId}.create", $webhook['headers']['X-Appwrite-Webhook-Events']); TODO @christyjacob4 : enable test once we allow functions.* events
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
+
+        // wait for timeout function to complete
+        $this->assertEventually(function () use ($executionId, $id) {
+            $webhook = $this->getLastRequest($this->webhookEventProbe("functions.{$id}.executions.{$executionId}.update"));
+            $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
+
+            $this->assertEquals('POST', $webhook['method']);
+            $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+            $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
+            // $this->assertStringContainsString('functions.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+            // $this->assertStringContainsString('functions.*.executions.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+            // $this->assertStringContainsString('functions.*.executions.*.update', $webhook['headers']['X-Appwrite-Webhook-Events']);
+            // $this->assertStringContainsString("functions.*.executions.{$executionId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
+            // $this->assertStringContainsString("functions.*.executions.{$executionId}.update", $webhook['headers']['X-Appwrite-Webhook-Events']);
+            // $this->assertStringContainsString("functions.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
+            // $this->assertStringContainsString("functions.{$id}.executions.*", $webhook['headers']['X-Appwrite-Webhook-Events']);
+            // $this->assertStringContainsString("functions.{$id}.executions.*.update", $webhook['headers']['X-Appwrite-Webhook-Events']);
+            // $this->assertStringContainsString("functions.{$id}.executions.{$executionId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
+            // $this->assertStringContainsString("functions.{$id}.executions.{$executionId}.update", $webhook['headers']['X-Appwrite-Webhook-Events']); TODO @christyjacob4 : enable test once we allow functions.* events
+            $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
+            $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
+            $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
+        }, 30000, 500);
+    }
+
+    public function testDeleteDeployment(): void
+    {
+        // Set up a function with deployment
+        $data = $this->setupFunction();
+        $deploymentData = $this->setupDeployment($data['functionId']);
+        $id = $deploymentData['functionId'];
+        $deploymentId = $deploymentData['deploymentId'];
+        /**
+         * Test for SUCCESS
+         */
+        $deployment = $this->client->call(Client::METHOD_DELETE, '/functions/' . $id . '/deployments/' . $deploymentId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $deployment['headers']['status-code']);
+        $this->assertEmpty($deployment['body']);
+
+        $webhook = $this->getLastRequest($this->webhookEventProbe("functions.{$id}.deployments.{$deploymentId}.delete"));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
+
+        $this->assertEquals('POST', $webhook['method']);
+        $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+        $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
+        // $this->assertStringContainsString('functions.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        // $this->assertStringContainsString('functions.*.deployments.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        // $this->assertStringContainsString('functions.*.deployments.*.delete', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        // $this->assertStringContainsString("functions.*.deployments.{$deploymentId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        // $this->assertStringContainsString("functions.*.deployments.{$deploymentId}.delete", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        // $this->assertStringContainsString("functions.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        // $this->assertStringContainsString("functions.{$id}.deployments.*", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        // $this->assertStringContainsString("functions.{$id}.deployments.*.delete", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        // $this->assertStringContainsString("functions.{$id}.deployments.{$deploymentId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        // $this->assertStringContainsString("functions.{$id}.deployments.{$deploymentId}.delete", $webhook['headers']['X-Appwrite-Webhook-Events']); TODO @christyjacob4 : enable test once we allow functions.* events
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
+    }
+
+    public function testDeleteFunction(): void
+    {
+        // Set up a function
+        $data = $this->setupFunction();
+        $id = $data['functionId'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $function = $this->client->call(Client::METHOD_DELETE, '/functions/' . $id, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $function['headers']['status-code']);
+        $this->assertEmpty($function['body']);
+
+        $webhook = $this->getLastRequest($this->webhookEventProbe("functions.{$id}.delete"));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
+
+        $this->assertEquals('POST', $webhook['method']);
+        $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+        $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
+        // $this->assertStringContainsString('functions.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        // $this->assertStringContainsString('functions.*.delete', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        // $this->assertStringContainsString("functions.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        // $this->assertStringContainsString("functions.{$id}.delete", $webhook['headers']['X-Appwrite-Webhook-Events']); TODO @christyjacob4 : enable test once we allow functions.* events
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
+    }
+}
