@@ -535,7 +535,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $this->createPullRequest($language, $target, $gitBranch, $repoBranch, $aiChangelog, $prUrls);
                     }
 
-                    $this->cleanupTarget($target, $language['name']);
+                    \exec('chmod -R u+w ' . $target . ' && rm -rf ' . $target);
+                    Console::log('  Cleaned up temp directory');
                 }
 
                 $this->copyExamples($language, $version, $result, $resultExamples);
@@ -637,7 +638,15 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
             // Stage, commit, push
             $repo->addAllChanges();
-            $repo->commit($commitMessage);
+
+            try {
+                $repo->commit($commitMessage);
+            } catch (\Throwable $e) {
+                // Exit code 1 (256 in PHP) = nothing to commit
+                Console::log('  No changes to commit, SDK is up to date');
+                return true;
+            }
+
             $repo->execute('push', '-u', 'origin', $gitBranch, '--quiet');
         } catch (\Throwable $e) {
             Console::warning("  Git push failed: " . $e->getMessage());
@@ -697,12 +706,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 $this->updateExistingPr($repoName, $gitBranch, $prTitle, $prBody, $language['name'], $prUrls, $existingPrUrl);
             }
         }
-    }
-
-    private function cleanupTarget(string $target, string $languageName): void
-    {
-        \exec('chmod -R u+w ' . $target . ' && rm -rf ' . $target);
-        Console::log('  Cleaned up temp directory');
     }
 
     private function copyExamples(array $language, string $version, string $result, string $resultExamples): void
