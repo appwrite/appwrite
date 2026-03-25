@@ -1,0 +1,375 @@
+diff --git a/src/Appwrite/Platform/Appwrite.php b/src/Appwrite/Platform/Appwrite.php
+index 06312d9cb2..ec23a9a112 100644
+--- a/src/Appwrite/Platform/Appwrite.php
++++ b/src/Appwrite/Platform/Appwrite.php
+@@ -9,6 +9,7 @@ use Appwrite\Platform\Modules\Core;
+ use Appwrite\Platform\Modules\Databases;
+ use Appwrite\Platform\Modules\Functions;
+ use Appwrite\Platform\Modules\Health;
++use Appwrite\Platform\Modules\Presence;
+ use Appwrite\Platform\Modules\Project;
+ use Appwrite\Platform\Modules\Projects;
+ use Appwrite\Platform\Modules\Proxy;
+@@ -31,6 +32,7 @@ class Appwrite extends Platform
+         $this->addModule(new Projects\Module());
+         $this->addModule(new Functions\Module());
+         $this->addModule(new Health\Module());
++        $this->addModule(new Presence\Module());
+         $this->addModule(new Sites\Module());
+         $this->addModule(new Console\Module());
+         $this->addModule(new Proxy\Module());
+diff --git a/src/Appwrite/Platform/Modules/Presence/HTTP/Iterative/XList.php b/src/Appwrite/Platform/Modules/Presence/HTTP/Iterative/XList.php
+index 165c4b8f88..f86b9feda5 100644
+--- a/src/Appwrite/Platform/Modules/Presence/HTTP/Iterative/XList.php
++++ b/src/Appwrite/Platform/Modules/Presence/HTTP/Iterative/XList.php
+@@ -1,6 +1,6 @@
+ <?php
+ 
+-namespace Appwrite\Platform\Modules\Presence\Http\Iterative;
++namespace Appwrite\Platform\Modules\Presence\HTTP\Iterative;
+ 
+ use Appwrite\Extend\Exception;
+ use Appwrite\Utopia\Response as UtopiaResponse;
+@@ -9,6 +9,7 @@ use Utopia\Database\Document;
+ use Utopia\Database\Exception\Order as OrderException;
+ use Utopia\Database\Exception\Query as QueryException;
+ use Utopia\Database\Query;
++use Utopia\Database\Validator\Authorization;
+ use Utopia\Platform\Action;
+ 
+ class XList extends Action
+@@ -22,21 +23,24 @@ class XList extends Action
+     {
+         $this
+             ->setHttpMethod(self::HTTP_REQUEST_METHOD_GET)
++            // TODO: create a separate scope
++            ->label('scope', 'documents.read')
+             ->setHttpPath('/v1/iterative/presence')
+             ->inject('response')
+             ->inject('dbForProject')
++            ->inject('authorization')
+             ->callback($this->action(...));
+     }
+     // Since POC so not adding queries or advanced filtering now
+     // just for getting group based presence list based on permissions
+-    public function action(UtopiaResponse $response, Database $dbForProject): void
++    public function action(UtopiaResponse $response, Database $dbForProject, Authorization $authorization): void
+     {
+         try {
+             $presenceLogs = [];
+-            $users = $dbForProject->find('presence',[]);
++            $users = $authorization->skip(fn () => $dbForProject->find('presence', []));
+             foreach ($users as $user) {
+-                $presenceLogs[] = $dbForProject->findOne('presenceLogs',[
+-                    Query::equal('userId', $user['userId']),
++                $presenceLogs[] = $dbForProject->findOne('presenceLogs', [
++                    Query::equal('userId', [$user['userId']]),
+                     Query::orderDesc('$updatedAt'),
+                     Query::limit(1),
+                 ]);
+diff --git a/src/Appwrite/Platform/Modules/Presence/Services/Http.php b/src/Appwrite/Platform/Modules/Presence/Services/Http.php
+index 1afeed6164..fa3dc42197 100644
+--- a/src/Appwrite/Platform/Modules/Presence/Services/Http.php
++++ b/src/Appwrite/Platform/Modules/Presence/Services/Http.php
+@@ -2,7 +2,9 @@
+ 
+ namespace Appwrite\Platform\Modules\Presence\Services;
+ 
+-use Appwrite\Platform\Modules\Presence\Http\Iterative\XList as ListPresence;
++use Appwrite\Platform\Modules\Presence\HTTP\Create as CreatePresence;
++use Appwrite\Platform\Modules\Presence\HTTP\Iterative\XList as ListPresence;
++use Appwrite\Platform\Modules\Presence\HTTP\Iterative\XListUnique as ListPresenceUnique;
+ use Utopia\Platform\Service;
+ 
+ class Http extends Service
+@@ -10,6 +12,8 @@ class Http extends Service
+     public function __construct()
+     {
+         $this->type = Service::TYPE_HTTP;
++        $this->addAction(CreatePresence::getName(), new CreatePresence());
+         $this->addAction(ListPresence::getName(), new ListPresence());
++        $this->addAction(ListPresenceUnique::getName(), new ListPresenceUnique());
+     }
+ }
+diff --git a/tests/e2e/Services/Realtime/PresenceBase.php b/tests/e2e/Services/Realtime/PresenceBase.php
+index e69de29bb2..5124708aa2 100644
+--- a/tests/e2e/Services/Realtime/PresenceBase.php
++++ b/tests/e2e/Services/Realtime/PresenceBase.php
+@@ -0,0 +1,251 @@
++<?php
++
++namespace Tests\E2E\Services\Realtime;
++
++use Tests\E2E\Client;
++use Tests\E2E\Scopes\ProjectCustom;
++use Tests\E2E\Scopes\Scope;
++use Tests\E2E\Scopes\SideClient;
++use Utopia\Database\Helpers\Permission;
++use Utopia\Database\Helpers\Role;
++
++abstract class PresenceBase extends Scope
++{
++    use RealtimeBase;
++    use ProjectCustom;
++    use SideClient;
++
++    /**
++     * @var array<string, array<float>>
++     */
++    private array $timings = [
++        'createPresenceApi' => [],
++        'createPresenceRealtime' => [],
++        'listPresence' => [],
++    ];
++
++    abstract protected function getNumberOfUsersToCreate(): int;
++
++    abstract protected function getListPresenceURL(): string;
++
++    protected function getSeedPresenceDocumentsCount(): int
++    {
++        return 0;
++    }
++
++    public function testListPresenceBenchmarkWithPermissionGroups(): void
++    {
++        $this->seedPresenceLoad();
++
++        $usersToCreate = \max(2, $this->getNumberOfUsersToCreate());
++        $users = [];
++        for ($i = 0; $i < $usersToCreate; $i++) {
++            $users[] = $this->getUser(true);
++        }
++
++        $expectedByViewer = [];
++        foreach ($users as $viewer) {
++            $expectedByViewer[$viewer['$id']] = [];
++        }
++
++        // Uniform visibility: each user's presence is readable by a rotating half-set of users.
++        $window = \max(1, (int) \floor($usersToCreate / 2));
++        foreach ($users as $ownerIndex => $owner) {
++            $status = 'uniform-presence-' . $ownerIndex;
++            $permissions = [];
++
++            for ($offset = 0; $offset < $window; $offset++) {
++                $viewerIndex = ($ownerIndex + $offset) % $usersToCreate;
++                $viewer = $users[$viewerIndex];
++                $permissions[] = Permission::read(Role::user($viewer['$id']));
++                $expectedByViewer[$viewer['$id']][$owner['$id']] = $status;
++            }
++
++            $this->reportPresence($owner, $status, $permissions);
++            \usleep(50000);
++        }
++
++        foreach ($users as $viewer) {
++            $benchmark = $this->fetchPresenceListAs($viewer);
++            $this->assertEquals(200, $benchmark['response']['headers']['status-code']);
++            $this->assertGreaterThan(0.0, $benchmark['elapsedMs']);
++
++            $rows = $this->extractPresenceRows($benchmark['response']['body']);
++            $visibleMap = $this->indexPresenceRowsByUserId($rows);
++            $expectedVisible = $expectedByViewer[$viewer['$id']];
++
++            foreach ($expectedVisible as $ownerUserId => $status) {
++                $this->assertArrayHasKey($ownerUserId, $visibleMap, 'Viewer cannot see expected user: ' . $ownerUserId);
++                $this->assertEquals($status, $visibleMap[$ownerUserId]['status'] ?? null);
++            }
++
++            foreach ($users as $owner) {
++                $ownerUserId = $owner['$id'];
++                if (!isset($expectedVisible[$ownerUserId])) {
++                    $this->assertArrayNotHasKey($ownerUserId, $visibleMap, 'Viewer should not see unauthorized user: ' . $ownerUserId);
++                }
++            }
++        }
++
++        $this->printTimingSummary();
++    }
++
++    private function seedPresenceLoad(): void
++    {
++        $seedCount = \max(0, $this->getSeedPresenceDocumentsCount());
++
++        if ($seedCount === 0) {
++            return;
++        }
++
++        for ($i = 0; $i < $seedCount; $i++) {
++            $seedUser = $this->getUser(true);
++
++            $this->createPresenceViaApi(
++                $seedUser,
++                'seed-load-' . $i,
++                [Permission::read(Role::user($seedUser['$id']))]
++            );
++        }
++    }
++
++    private function reportPresence(array $user, string $status, array $permissions): void
++    {
++        $start = \microtime(true);
++        $projectId = $this->getProject()['$id'];
++        $client = $this->getWebsocket(['account'], [
++            'origin' => 'http://localhost',
++            'cookie' => 'a_session_' . $projectId . '=' . $user['session'],
++        ]);
++
++        // connected payload
++        $client->receive();
++
++        $expiry = \gmdate('Y-m-d\TH:i:s\Z', \time() + 120);
++
++        $client->send(\json_encode([
++            'type' => 'presence',
++            'data' => [
++                'session' => $user['session'],
++                'status' => $status,
++                'permissions' => $permissions,
++                'expiry' => $expiry,
++            ],
++        ]));
++
++        \usleep(50000);
++        $client->close();
++
++        $elapsedMs = (\microtime(true) - $start) * 1000;
++        $this->recordTiming('createPresenceRealtime', $elapsedMs);
++    }
++
++    private function createPresenceViaApi(array $user, string $status, array $permissions): void
++    {
++        $projectId = $this->getProject()['$id'];
++        $headers = [
++            'content-type' => 'application/json',
++            'origin' => 'http://localhost',
++            'x-appwrite-project' => $projectId,
++            'cookie' => 'a_session_' . $projectId . '=' . $user['session'],
++        ];
++
++        $payload = [
++            'status' => $status,
++            'permissions' => $permissions,
++        ];
++
++        $start = \microtime(true);
++
++        $response = $this->client->call(Client::METHOD_POST, '/iterative/presence', $headers, $payload);
++
++        $elapsedMs = (\microtime(true) - $start) * 1000;
++        $this->recordTiming('createPresenceApi', $elapsedMs);
++        $this->assertEquals(
++            201,
++            $response['headers']['status-code'],
++            'Create presence failed: ' . json_encode($response['body'] ?? [])
++        );
++    }
++
++    private function fetchPresenceListAs(array $user): array
++    {
++        $projectId = $this->getProject()['$id'];
++
++        $start = \microtime(true);
++        $response = $this->client->call(Client::METHOD_GET, $this->getListPresenceURL(), [
++            'content-type' => 'application/json',
++            'origin' => 'http://localhost',
++            'x-appwrite-project' => $projectId,
++            'cookie' => 'a_session_' . $projectId . '=' . $user['session'],
++        ]);
++        $elapsedMs = (\microtime(true) - $start) * 1000;
++        $this->recordTiming('listPresence', $elapsedMs);
++
++        return [
++            'elapsedMs' => $elapsedMs,
++            'response' => $response,
++        ];
++    }
++
++    private function extractPresenceRows(array $body): array
++    {
++        foreach (['presences', 'presence', 'documents', 'rows'] as $key) {
++            $value = $body[$key] ?? null;
++            if (\is_array($value)) {
++                return $value;
++            }
++        }
++
++        return [];
++    }
++
++    private function indexPresenceRowsByUserId(array $rows): array
++    {
++        $indexed = [];
++        foreach ($rows as $row) {
++            if (!\is_array($row)) {
++                continue;
++            }
++
++            $userId = $row['userId'] ?? null;
++            if (!\is_string($userId) || $userId === '') {
++                continue;
++            }
++
++            $indexed[$userId] = $row;
++        }
++
++        return $indexed;
++    }
++
++    private function recordTiming(string $operation, float $elapsedMs): void
++    {
++        $this->timings[$operation][] = $elapsedMs;
++    }
++
++    private function printTimingSummary(): void
++    {
++        foreach ($this->timings as $operation => $values) {
++            if (empty($values)) {
++                continue;
++            }
++
++            $avg = \array_sum($values) / \count($values);
++            $min = \min($values);
++            $max = \max($values);
++
++            \fwrite(
++                \STDOUT,
++                \sprintf(
++                    "\n[Presence Benchmark] %s count=%d avg=%.2fms min=%.2fms max=%.2fms\n",
++                    $operation,
++                    \count($values),
++                    $avg,
++                    $min,
++                    $max
++                )
++            );
++        }
++    }
++}
+diff --git a/tests/e2e/Services/Realtime/PresenceIterativeTest.php b/tests/e2e/Services/Realtime/PresenceIterativeTest.php
+index e69de29bb2..cb0ec8baa2 100644
+--- a/tests/e2e/Services/Realtime/PresenceIterativeTest.php
++++ b/tests/e2e/Services/Realtime/PresenceIterativeTest.php
+@@ -0,0 +1,21 @@
++<?php
++
++namespace Tests\E2E\Services\Realtime;
++
++class PresenceIterativeTest extends PresenceBase
++{
++    protected function getNumberOfUsersToCreate(): int
++    {
++        return 8;
++    }
++
++    protected function getListPresenceURL(): string
++    {
++        return '/iterative/presence/unique';
++    }
++
++    protected function getSeedPresenceDocumentsCount(): int
++    {
++        return 100;
++    }
++}

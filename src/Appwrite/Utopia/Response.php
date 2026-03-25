@@ -127,6 +127,10 @@ class Response extends SwooleResponse
     public const MODEL_JWT = 'jwt';
     public const MODEL_PREFERENCES = 'preferences';
 
+    // Presence
+    public const MODEL_PRESENCE = 'presence';
+    public const MODEL_PRESENCE_LIST = 'presenceList';
+
     // MFA
     public const MODEL_MFA_TYPE = 'mfaType';
     public const MODEL_MFA_FACTORS = 'mfaFactors';

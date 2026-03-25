@@ -241,6 +241,32 @@ if (!function_exists('triggerStats')) {
     }
 }
 
+if (!function_exists('createPresence')) {
+    function createPresence(Document $project, User $user, string $status, array $permissions, ?DateTime $expiry = null): Document
+    {
+        $dbForProject = getProjectDB($project);
+        sort($permissions);
+        return $dbForProject->withTransaction(function () use ($dbForProject, $user, $status, $permissions, $expiry) {
+            $document = $dbForProject->upsertDocument('presenceLogs', new Document([
+                'userInternalId' => $user->getSequence(),
+                'userId' => $user->getId(),
+                '$permissions' => $permissions,
+                'perms_md5' => md5(json_encode($permissions)),
+                'expiry' => $expiry,
+                'status' => $status,
+                'source' => 'realtime'
+            ]));
+            $dbForProject->upsertDocument('presence', new Document([
+                '$id' => $user->getId(),
+                'userInternalId' => $user->getSequence(),
+                'userId' => $user->getId(),
+            ]));
+
+            return $document;
+        });
+    }
+}
+
 $realtime = getRealtime();
 
 /**
@@ -960,7 +986,70 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 }
 
                 break;
+            case 'presence':
+                if (!array_key_exists('session', $message['data'])) {
+                    throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Payload is not valid.');
+                }
 
+                if ($project === null || $project->isEmpty()) {
+                    throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Missing project context. Reconnect to the project first.');
+                }
+
+                $store = new Store();
+                $store->decode($message['data']['session']);
+
+                /** @var User $user */
+                $user = $database->getDocument('users', $store->getProperty('id', ''));
+
+                $proofForToken = new Token();
+                $proofForToken->setHash(new Sha());
+
+                if (
+                    empty($user->getId())
+                    || !$user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
+                ) {
+                    throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Session is not valid.');
+                }
+
+                if (
+                    !array_key_exists('status', $message['data'])
+                    || !array_key_exists('permissions', $message['data'])
+                ) {
+                    throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Status and permissions are required.');
+                }
+
+                $status = $message['data']['status'];
+                if (!is_string($status) || $status === '') {
+                    throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Status must be a non-empty string.');
+                }
+
+                $permissions = $message['data']['permissions'];
+                if (!is_array($permissions)) {
+                    throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Permissions must be an array.');
+                }
+
+                $expiry = null;
+                // $expiryValue = $message['data']['expiry'] ?? null;
+                // if (is_string($expiryValue) && $expiryValue !== '') {
+                //     try {
+                //         $expiry = new DateTime($expiryValue);
+                //     } catch (Throwable) {
+                //         throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Payload is not valid.');
+                //     }
+                // }
+
+                $document = createPresence($project, $user, $status, $permissions, $expiry);
+
+                $server->send([$connection], json_encode([
+                    'type' => 'presence',
+                    'data' => [
+                        '$id' => $document->getId(),
+                        'status' => $status,
+                        'userId' => $user->getId(),
+                    ]
+                ]));
+
+                break;
             default:
                 throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Message type is not valid.');
         }

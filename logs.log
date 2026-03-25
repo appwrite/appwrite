@@ -1,0 +1,279 @@
+[34m  └── Creating database: logs...[0m
+[1m[32mdatabase.setup[0m[2m · [0m[32m3ms[0m[2m · [0m[2m0315c704[0m
+
+  [36mdatabase.name               [0m [37mlogs[0m
+  [36mdatabase.collections_created[0m [37m0[0m
+  [36mlevel                       [0m [37minfo[0m
+
+[2m────────────────────────────────────────────────────────────[0m
+[34m  └── Creating database: appwrite...[0m
+[1m[32mdatabase.setup[0m[2m · [0m[32m5.1ms[0m[2m · [0m[2me2f2aedf[0m
+
+  [36mdatabase.name               [0m [37mappwrite[0m
+  [36mdatabase.collections_created[0m [37m0[0m
+  [36mlevel                       [0m [37minfo[0m
+
+[2m────────────────────────────────────────────────────────────[0m
+[1m[32mhttp.server.start[0m[2m · [0m[32m0ms[0m[2m · [0m[2m59b604f0[0m
+
+  [36mserver.workers     [0m [37m60[0m
+  [36mserver.payload_size[0m [37m12582912[0m
+  [36mserver.master_pid  [0m [37m1[0m
+  [36mserver.manager_pid [0m [37m7[0m
+  [36mlevel              [0m [37minfo[0m
+
+[2m────────────────────────────────────────────────────────────[0m
+[1m[32mhttp.request[0m[2m · [0m[32m85ms[0m[2m · [0m[2m691453e9[0m
+
+  [36mhttp.method       [0m [37mPOST[0m
+  [36mhttp.path         [0m [37m/v1/account[0m
+  [36mhttp.response.code[0m [37m201[0m
+  [36mlevel             [0m [37minfo[0m
+
+[2m────────────────────────────────────────────────────────────[0m
+[1m[32mhttp.request[0m[2m · [0m[32m82.4ms[0m[2m · [0m[2mc84b3c1b[0m
+
+  [36mhttp.method       [0m [37mPOST[0m
+  [36mhttp.path         [0m [37m/v1/account/sessions/email[0m
+  [36mhttp.response.code[0m [37m201[0m
+  [36mlevel             [0m [37minfo[0m
+
+[2m────────────────────────────────────────────────────────────[0m
+[1m[32mhttp.request[0m[2m · [0m[32m3.4ms[0m[2m · [0m[2m7bfbeb70[0m
+
+  [36mhttp.method       [0m [37mGET[0m
+  [36mhttp.path         [0m [37m/v1/account[0m
+  [36mhttp.response.code[0m [37m200[0m
+  [36mlevel             [0m [37minfo[0m
+
+[2m────────────────────────────────────────────────────────────[0m
+[1m[32mhttp.request[0m[2m · [0m[32m8ms[0m[2m · [0m[2mb2fc006d[0m
+
+  [36mhttp.method       [0m [37mPOST[0m
+  [36mhttp.path         [0m [37m/v1/teams[0m
+  [36mhttp.response.code[0m [37m201[0m
+  [36mlevel             [0m [37minfo[0m
+
+[2m────────────────────────────────────────────────────────────[0m
+[1m[32mhttp.request[0m[2m · [0m[33m658.5ms[0m[2m · [0m[2m9085360f[0m
+
+  [36mhttp.method       [0m [37mPOST[0m
+  [36mhttp.path         [0m [37m/v1/projects[0m
+  [36mhttp.response.code[0m [37m201[0m
+  [36mlevel             [0m [37minfo[0m
+
+[2m────────────────────────────────────────────────────────────[0m
+[1m[32mhttp.request[0m[2m · [0m[32m4.3ms[0m[2m · [0m[2m38681d3b[0m
+
+  [36mhttp.method       [0m [37mPOST[0m
+  [36mhttp.path         [0m [37m/v1/projects/:projectId/keys[0m
+  [36mhttp.response.code[0m [37m201[0m
+  [36mlevel             [0m [37minfo[0m
+
+[2m────────────────────────────────────────────────────────────[0m
+[1m[32mhttp.request[0m[2m · [0m[32m3.9ms[0m[2m · [0m[2m15566177[0m
+
+  [36mhttp.method       [0m [37mPOST[0m
+  [36mhttp.path         [0m [37m/v1/projects/:projectId/dev-keys[0m
+  [36mhttp.response.code[0m [37m201[0m
+  [36mlevel             [0m [37minfo[0m
+
+[2m────────────────────────────────────────────────────────────[0m
+[1m[32mhttp.request[0m[2m · [0m[32m4.8ms[0m[2m · [0m[2ma8ecb3f4[0m
+
+  [36mhttp.method       [0m [37mPOST[0m
+  [36mhttp.path         [0m [37m/v1/webhooks[0m
+  [36mhttp.response.code[0m [37m201[0m
+  [36mlevel             [0m [37minfo[0m
+
+[2m────────────────────────────────────────────────────────────[0m
+[1m[32mhttp.request[0m[2m · [0m[33m123.9ms[0m[2m · [0m[2mab97717c[0m
+
+  [36mhttp.method       [0m [37mPATCH[0m
+  [36mhttp.path         [0m [37m/v1/projects/:projectId/smtp[0m
+  [36mhttp.response.code[0m [37m200[0m
+  [36mlevel             [0m [37minfo[0m
+
+[2m────────────────────────────────────────────────────────────[0m
+[34m[Presence][Create] presenceId=69c3c4c56ace451371a1 creatorUserId=69c3c4c54841d17f980b creatorUserInternalId=1 status=seed-load-0 permissions=["read(\"user:69c3c4c54841d17f980b\")"] allowedReadRoles=["user:69c3c4c54841d17f980b"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c588d8b30491a4 creatorUserId=69c3c4c56bb8f17caf7a creatorUserInternalId=2 status=seed-load-1 permissions=["read(\"user:69c3c4c56bb8f17caf7a\")"] allowedReadRoles=["user:69c3c4c56bb8f17caf7a"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c59eb137bbfafb creatorUserId=69c3c4c589c2990fa68b creatorUserInternalId=3 status=seed-load-2 permissions=["read(\"user:69c3c4c589c2990fa68b\")"] allowedReadRoles=["user:69c3c4c589c2990fa68b"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c5b57384645c88 creatorUserId=69c3c4c59f9c34c4d5f7 creatorUserInternalId=4 status=seed-load-3 permissions=["read(\"user:69c3c4c59f9c34c4d5f7\")"] allowedReadRoles=["user:69c3c4c59f9c34c4d5f7"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c5cab9908e0156 creatorUserId=69c3c4c5b61873b720cb creatorUserInternalId=5 status=seed-load-4 permissions=["read(\"user:69c3c4c5b61873b720cb\")"] allowedReadRoles=["user:69c3c4c5b61873b720cb"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c5e1192f7986fd creatorUserId=69c3c4c5cb7be0a29bcd creatorUserInternalId=6 status=seed-load-5 permissions=["read(\"user:69c3c4c5cb7be0a29bcd\")"] allowedReadRoles=["user:69c3c4c5cb7be0a29bcd"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c60334c89b7103 creatorUserId=69c3c4c5e2057801da30 creatorUserInternalId=7 status=seed-load-6 permissions=["read(\"user:69c3c4c5e2057801da30\")"] allowedReadRoles=["user:69c3c4c5e2057801da30"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c6195a3a1d88e8 creatorUserId=69c3c4c6044b3ee83478 creatorUserInternalId=8 status=seed-load-7 permissions=["read(\"user:69c3c4c6044b3ee83478\")"] allowedReadRoles=["user:69c3c4c6044b3ee83478"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c62f7ae5c297e6 creatorUserId=69c3c4c61a3bc31f5004 creatorUserInternalId=9 status=seed-load-8 permissions=["read(\"user:69c3c4c61a3bc31f5004\")"] allowedReadRoles=["user:69c3c4c61a3bc31f5004"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c645a5783d2247 creatorUserId=69c3c4c63095cd7eb79b creatorUserInternalId=10 status=seed-load-9 permissions=["read(\"user:69c3c4c63095cd7eb79b\")"] allowedReadRoles=["user:69c3c4c63095cd7eb79b"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c65c9eb21b4da4 creatorUserId=69c3c4c646d615986db9 creatorUserInternalId=11 status=seed-load-10 permissions=["read(\"user:69c3c4c646d615986db9\")"] allowedReadRoles=["user:69c3c4c646d615986db9"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c672ad6e939983 creatorUserId=69c3c4c65da521f6ded7 creatorUserInternalId=12 status=seed-load-11 permissions=["read(\"user:69c3c4c65da521f6ded7\")"] allowedReadRoles=["user:69c3c4c65da521f6ded7"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c6885529a9ee0c creatorUserId=69c3c4c673867d685ef5 creatorUserInternalId=13 status=seed-load-12 permissions=["read(\"user:69c3c4c673867d685ef5\")"] allowedReadRoles=["user:69c3c4c673867d685ef5"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c6a475ce934b73 creatorUserId=69c3c4c6894169cd73d6 creatorUserInternalId=14 status=seed-load-13 permissions=["read(\"user:69c3c4c6894169cd73d6\")"] allowedReadRoles=["user:69c3c4c6894169cd73d6"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c6be613d23f503 creatorUserId=69c3c4c6a63983e2609d creatorUserInternalId=15 status=seed-load-14 permissions=["read(\"user:69c3c4c6a63983e2609d\")"] allowedReadRoles=["user:69c3c4c6a63983e2609d"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c6d6c7e4efff52 creatorUserId=69c3c4c6bf2ba633e9b0 creatorUserInternalId=16 status=seed-load-15 permissions=["read(\"user:69c3c4c6bf2ba633e9b0\")"] allowedReadRoles=["user:69c3c4c6bf2ba633e9b0"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c6eef7edd3454a creatorUserId=69c3c4c6d7f8bb919b94 creatorUserInternalId=17 status=seed-load-16 permissions=["read(\"user:69c3c4c6d7f8bb919b94\")"] allowedReadRoles=["user:69c3c4c6d7f8bb919b94"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c712aa150e02ff creatorUserId=69c3c4c6efce3ea5c64f creatorUserInternalId=18 status=seed-load-17 permissions=["read(\"user:69c3c4c6efce3ea5c64f\")"] allowedReadRoles=["user:69c3c4c6efce3ea5c64f"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c72947176267d4 creatorUserId=69c3c4c713b02d43af5d creatorUserInternalId=19 status=seed-load-18 permissions=["read(\"user:69c3c4c713b02d43af5d\")"] allowedReadRoles=["user:69c3c4c713b02d43af5d"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c745ee2bc05dd7 creatorUserId=69c3c4c72a2f5a455615 creatorUserInternalId=20 status=seed-load-19 permissions=["read(\"user:69c3c4c72a2f5a455615\")"] allowedReadRoles=["user:69c3c4c72a2f5a455615"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c76cc5619d7952 creatorUserId=69c3c4c746ef8ccf63d2 creatorUserInternalId=21 status=seed-load-20 permissions=["read(\"user:69c3c4c746ef8ccf63d2\")"] allowedReadRoles=["user:69c3c4c746ef8ccf63d2"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c78b0f72e6f308 creatorUserId=69c3c4c76e4696874cd2 creatorUserInternalId=22 status=seed-load-21 permissions=["read(\"user:69c3c4c76e4696874cd2\")"] allowedReadRoles=["user:69c3c4c76e4696874cd2"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c7a5861027bbb2 creatorUserId=69c3c4c78c95a0ad7f3b creatorUserInternalId=23 status=seed-load-22 permissions=["read(\"user:69c3c4c78c95a0ad7f3b\")"] allowedReadRoles=["user:69c3c4c78c95a0ad7f3b"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c7bdcc9346f6cb creatorUserId=69c3c4c7a6525f92b5ea creatorUserInternalId=24 status=seed-load-23 permissions=["read(\"user:69c3c4c7a6525f92b5ea\")"] allowedReadRoles=["user:69c3c4c7a6525f92b5ea"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c7d4748916ca1b creatorUserId=69c3c4c7be86cb172ba1 creatorUserInternalId=25 status=seed-load-24 permissions=["read(\"user:69c3c4c7be86cb172ba1\")"] allowedReadRoles=["user:69c3c4c7be86cb172ba1"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c7eb109ba5aab3 creatorUserId=69c3c4c7d53b8709c3f6 creatorUserInternalId=26 status=seed-load-25 permissions=["read(\"user:69c3c4c7d53b8709c3f6\")"] allowedReadRoles=["user:69c3c4c7d53b8709c3f6"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c80d3eee93bec5 creatorUserId=69c3c4c7ebc6cd745fba creatorUserInternalId=27 status=seed-load-26 permissions=["read(\"user:69c3c4c7ebc6cd745fba\")"] allowedReadRoles=["user:69c3c4c7ebc6cd745fba"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c826222fc63b29 creatorUserId=69c3c4c80dd361298b2d creatorUserInternalId=28 status=seed-load-27 permissions=["read(\"user:69c3c4c80dd361298b2d\")"] allowedReadRoles=["user:69c3c4c80dd361298b2d"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c83ff385f56e03 creatorUserId=69c3c4c82702aaef7601 creatorUserInternalId=29 status=seed-load-28 permissions=["read(\"user:69c3c4c82702aaef7601\")"] allowedReadRoles=["user:69c3c4c82702aaef7601"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c8588d838b15c4 creatorUserId=69c3c4c840c38a2cb2a1 creatorUserInternalId=30 status=seed-load-29 permissions=["read(\"user:69c3c4c840c38a2cb2a1\")"] allowedReadRoles=["user:69c3c4c840c38a2cb2a1"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c872553a3bd691 creatorUserId=69c3c4c8593f7a759d90 creatorUserInternalId=31 status=seed-load-30 permissions=["read(\"user:69c3c4c8593f7a759d90\")"] allowedReadRoles=["user:69c3c4c8593f7a759d90"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c88a3ed8171be7 creatorUserId=69c3c4c87364129b8b10 creatorUserInternalId=32 status=seed-load-31 permissions=["read(\"user:69c3c4c87364129b8b10\")"] allowedReadRoles=["user:69c3c4c87364129b8b10"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c8a166e5f6918f creatorUserId=69c3c4c88b50b7da379c creatorUserInternalId=33 status=seed-load-32 permissions=["read(\"user:69c3c4c88b50b7da379c\")"] allowedReadRoles=["user:69c3c4c88b50b7da379c"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c8b833b4c4c039 creatorUserId=69c3c4c8a29626880e8a creatorUserInternalId=34 status=seed-load-33 permissions=["read(\"user:69c3c4c8a29626880e8a\")"] allowedReadRoles=["user:69c3c4c8a29626880e8a"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c8cdce4601b40e creatorUserId=69c3c4c8b8d555460ce4 creatorUserInternalId=35 status=seed-load-34 permissions=["read(\"user:69c3c4c8b8d555460ce4\")"] allowedReadRoles=["user:69c3c4c8b8d555460ce4"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c8e354c645edbd creatorUserId=69c3c4c8ce681f6b14b5 creatorUserInternalId=36 status=seed-load-35 permissions=["read(\"user:69c3c4c8ce681f6b14b5\")"] allowedReadRoles=["user:69c3c4c8ce681f6b14b5"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c91855e8fa04bc creatorUserId=69c3c4c8e42809a8447f creatorUserInternalId=37 status=seed-load-36 permissions=["read(\"user:69c3c4c8e42809a8447f\")"] allowedReadRoles=["user:69c3c4c8e42809a8447f"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c9314ab1324ec3 creatorUserId=69c3c4c919560c20b571 creatorUserInternalId=38 status=seed-load-37 permissions=["read(\"user:69c3c4c919560c20b571\")"] allowedReadRoles=["user:69c3c4c919560c20b571"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c9484eef2ff740 creatorUserId=69c3c4c932129f7ca7e4 creatorUserInternalId=39 status=seed-load-38 permissions=["read(\"user:69c3c4c932129f7ca7e4\")"] allowedReadRoles=["user:69c3c4c932129f7ca7e4"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c95e8ec4aca79a creatorUserId=69c3c4c94910abcc8aec creatorUserInternalId=40 status=seed-load-39 permissions=["read(\"user:69c3c4c94910abcc8aec\")"] allowedReadRoles=["user:69c3c4c94910abcc8aec"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c975518c7aa1bd creatorUserId=69c3c4c95f24f9af0831 creatorUserInternalId=41 status=seed-load-40 permissions=["read(\"user:69c3c4c95f24f9af0831\")"] allowedReadRoles=["user:69c3c4c95f24f9af0831"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c98c02f23b36f3 creatorUserId=69c3c4c9760f86b1abbb creatorUserInternalId=42 status=seed-load-41 permissions=["read(\"user:69c3c4c9760f86b1abbb\")"] allowedReadRoles=["user:69c3c4c9760f86b1abbb"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c9a5806bf0e1ae creatorUserId=69c3c4c98c98e5d1af05 creatorUserInternalId=43 status=seed-load-42 permissions=["read(\"user:69c3c4c98c98e5d1af05\")"] allowedReadRoles=["user:69c3c4c98c98e5d1af05"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c9bf94a1fadde5 creatorUserId=69c3c4c9a62794290964 creatorUserInternalId=44 status=seed-load-43 permissions=["read(\"user:69c3c4c9a62794290964\")"] allowedReadRoles=["user:69c3c4c9a62794290964"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4c9d8ec34edf8dd creatorUserId=69c3c4c9c096487b20d6 creatorUserInternalId=45 status=seed-load-44 permissions=["read(\"user:69c3c4c9c096487b20d6\")"] allowedReadRoles=["user:69c3c4c9c096487b20d6"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4ca0125bc4b8a1f creatorUserId=69c3c4c9d9b2f95e2274 creatorUserInternalId=46 status=seed-load-45 permissions=["read(\"user:69c3c4c9d9b2f95e2274\")"] allowedReadRoles=["user:69c3c4c9d9b2f95e2274"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4ca1b3d271733bf creatorUserId=69c3c4ca020b86e230fa creatorUserInternalId=47 status=seed-load-46 permissions=["read(\"user:69c3c4ca020b86e230fa\")"] allowedReadRoles=["user:69c3c4ca020b86e230fa"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4ca35506c30928c creatorUserId=69c3c4ca1c19fdab77fe creatorUserInternalId=48 status=seed-load-47 permissions=["read(\"user:69c3c4ca1c19fdab77fe\")"] allowedReadRoles=["user:69c3c4ca1c19fdab77fe"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4ca4e2e607ea1b4 creatorUserId=69c3c4ca368b01d28694 creatorUserInternalId=49 status=seed-load-48 permissions=["read(\"user:69c3c4ca368b01d28694\")"] allowedReadRoles=["user:69c3c4ca368b01d28694"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4ca6bc2cda50bf7 creatorUserId=69c3c4ca4f12d1833b1b creatorUserInternalId=50 status=seed-load-49 permissions=["read(\"user:69c3c4ca4f12d1833b1b\")"] allowedReadRoles=["user:69c3c4ca4f12d1833b1b"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4ca82e2a56f06be creatorUserId=69c3c4ca6c88186bfb08 creatorUserInternalId=51 status=seed-load-50 permissions=["read(\"user:69c3c4ca6c88186bfb08\")"] allowedReadRoles=["user:69c3c4ca6c88186bfb08"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4ca993f6ee33f80 creatorUserId=69c3c4ca83803d70d020 creatorUserInternalId=52 status=seed-load-51 permissions=["read(\"user:69c3c4ca83803d70d020\")"] allowedReadRoles=["user:69c3c4ca83803d70d020"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4caafaa4b1ab97d creatorUserId=69c3c4ca9a41e097a1f4 creatorUserInternalId=53 status=seed-load-52 permissions=["read(\"user:69c3c4ca9a41e097a1f4\")"] allowedReadRoles=["user:69c3c4ca9a41e097a1f4"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cac5afd9a17d7a creatorUserId=69c3c4cab04b5d8d847b creatorUserInternalId=54 status=seed-load-53 permissions=["read(\"user:69c3c4cab04b5d8d847b\")"] allowedReadRoles=["user:69c3c4cab04b5d8d847b"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cadcceb3ef2f18 creatorUserId=69c3c4cac6da2c7334bc creatorUserInternalId=55 status=seed-load-54 permissions=["read(\"user:69c3c4cac6da2c7334bc\")"] allowedReadRoles=["user:69c3c4cac6da2c7334bc"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cb012d0ac72269 creatorUserId=69c3c4cadd9b588677f6 creatorUserInternalId=56 status=seed-load-55 permissions=["read(\"user:69c3c4cadd9b588677f6\")"] allowedReadRoles=["user:69c3c4cadd9b588677f6"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cb171b6055fb23 creatorUserId=69c3c4cb01dba80b770f creatorUserInternalId=57 status=seed-load-56 permissions=["read(\"user:69c3c4cb01dba80b770f\")"] allowedReadRoles=["user:69c3c4cb01dba80b770f"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cb2d4888836fc7 creatorUserId=69c3c4cb17ff0602b51f creatorUserInternalId=58 status=seed-load-57 permissions=["read(\"user:69c3c4cb17ff0602b51f\")"] allowedReadRoles=["user:69c3c4cb17ff0602b51f"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cb434f9b80288f creatorUserId=69c3c4cb2df430669fc9 creatorUserInternalId=59 status=seed-load-58 permissions=["read(\"user:69c3c4cb2df430669fc9\")"] allowedReadRoles=["user:69c3c4cb2df430669fc9"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cb593ab1108adb creatorUserId=69c3c4cb4429dacfa37b creatorUserInternalId=60 status=seed-load-59 permissions=["read(\"user:69c3c4cb4429dacfa37b\")"] allowedReadRoles=["user:69c3c4cb4429dacfa37b"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cb705ac2108e84 creatorUserId=69c3c4cb59fc972454ca creatorUserInternalId=61 status=seed-load-60 permissions=["read(\"user:69c3c4cb59fc972454ca\")"] allowedReadRoles=["user:69c3c4cb59fc972454ca"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cb86f28aa29eb6 creatorUserId=69c3c4cb7117244e97a9 creatorUserInternalId=62 status=seed-load-61 permissions=["read(\"user:69c3c4cb7117244e97a9\")"] allowedReadRoles=["user:69c3c4cb7117244e97a9"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cb9de034bffd1b creatorUserId=69c3c4cb87dcaffd33af creatorUserInternalId=63 status=seed-load-62 permissions=["read(\"user:69c3c4cb87dcaffd33af\")"] allowedReadRoles=["user:69c3c4cb87dcaffd33af"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cbb4f00f24c7a4 creatorUserId=69c3c4cb9f026ad79750 creatorUserInternalId=64 status=seed-load-63 permissions=["read(\"user:69c3c4cb9f026ad79750\")"] allowedReadRoles=["user:69c3c4cb9f026ad79750"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cbcab6da5b5ab0 creatorUserId=69c3c4cbb59aa1049c7d creatorUserInternalId=65 status=seed-load-64 permissions=["read(\"user:69c3c4cbb59aa1049c7d\")"] allowedReadRoles=["user:69c3c4cbb59aa1049c7d"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cbe369257073e6 creatorUserId=69c3c4cbcbafae64b2d5 creatorUserInternalId=66 status=seed-load-65 permissions=["read(\"user:69c3c4cbcbafae64b2d5\")"] allowedReadRoles=["user:69c3c4cbcbafae64b2d5"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cc0528e1889ffa creatorUserId=69c3c4cbe4234c8a7436 creatorUserInternalId=67 status=seed-load-66 permissions=["read(\"user:69c3c4cbe4234c8a7436\")"] allowedReadRoles=["user:69c3c4cbe4234c8a7436"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cc1be86868f379 creatorUserId=69c3c4cc05da299e391c creatorUserInternalId=68 status=seed-load-67 permissions=["read(\"user:69c3c4cc05da299e391c\")"] allowedReadRoles=["user:69c3c4cc05da299e391c"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cc32ab71359be8 creatorUserId=69c3c4cc1d34921f5d3d creatorUserInternalId=69 status=seed-load-68 permissions=["read(\"user:69c3c4cc1d34921f5d3d\")"] allowedReadRoles=["user:69c3c4cc1d34921f5d3d"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cc48ec1ee35390 creatorUserId=69c3c4cc3395c6dbf6b4 creatorUserInternalId=70 status=seed-load-69 permissions=["read(\"user:69c3c4cc3395c6dbf6b4\")"] allowedReadRoles=["user:69c3c4cc3395c6dbf6b4"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cc5f200fbd5f4c creatorUserId=69c3c4cc49bba8351229 creatorUserInternalId=71 status=seed-load-70 permissions=["read(\"user:69c3c4cc49bba8351229\")"] allowedReadRoles=["user:69c3c4cc49bba8351229"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cc770048b9c583 creatorUserId=69c3c4cc600e94c356fb creatorUserInternalId=72 status=seed-load-71 permissions=["read(\"user:69c3c4cc600e94c356fb\")"] allowedReadRoles=["user:69c3c4cc600e94c356fb"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cc8e1b4aacfe66 creatorUserId=69c3c4cc77c94de533a9 creatorUserInternalId=73 status=seed-load-72 permissions=["read(\"user:69c3c4cc77c94de533a9\")"] allowedReadRoles=["user:69c3c4cc77c94de533a9"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cca54115b2073a creatorUserId=69c3c4cc8ec226e16aa5 creatorUserInternalId=74 status=seed-load-73 permissions=["read(\"user:69c3c4cc8ec226e16aa5\")"] allowedReadRoles=["user:69c3c4cc8ec226e16aa5"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4ccbc03600bda1c creatorUserId=69c3c4cca657ec7b7eae creatorUserInternalId=75 status=seed-load-74 permissions=["read(\"user:69c3c4cca657ec7b7eae\")"] allowedReadRoles=["user:69c3c4cca657ec7b7eae"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4ccd24f44be3a9b creatorUserId=69c3c4ccbcb98856f5f1 creatorUserInternalId=76 status=seed-load-75 permissions=["read(\"user:69c3c4ccbcb98856f5f1\")"] allowedReadRoles=["user:69c3c4ccbcb98856f5f1"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cce9253a1cc7ef creatorUserId=69c3c4ccd2fdda2721b3 creatorUserInternalId=77 status=seed-load-76 permissions=["read(\"user:69c3c4ccd2fdda2721b3\")"] allowedReadRoles=["user:69c3c4ccd2fdda2721b3"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cd0c5b8c4f36da creatorUserId=69c3c4cce9fe57f1aa39 creatorUserInternalId=78 status=seed-load-77 permissions=["read(\"user:69c3c4cce9fe57f1aa39\")"] allowedReadRoles=["user:69c3c4cce9fe57f1aa39"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cd22d2340473bf creatorUserId=69c3c4cd0d72b78e9721 creatorUserInternalId=79 status=seed-load-78 permissions=["read(\"user:69c3c4cd0d72b78e9721\")"] allowedReadRoles=["user:69c3c4cd0d72b78e9721"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cd390bf0aa2f24 creatorUserId=69c3c4cd23c36931906d creatorUserInternalId=80 status=seed-load-79 permissions=["read(\"user:69c3c4cd23c36931906d\")"] allowedReadRoles=["user:69c3c4cd23c36931906d"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cd4f3fa151fece creatorUserId=69c3c4cd39faa29575ad creatorUserInternalId=81 status=seed-load-80 permissions=["read(\"user:69c3c4cd39faa29575ad\")"] allowedReadRoles=["user:69c3c4cd39faa29575ad"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cd66700b2ebeb1 creatorUserId=69c3c4cd504c8d82de8c creatorUserInternalId=82 status=seed-load-81 permissions=["read(\"user:69c3c4cd504c8d82de8c\")"] allowedReadRoles=["user:69c3c4cd504c8d82de8c"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cd7d7e4c3e39b7 creatorUserId=69c3c4cd6722c11f5d3c creatorUserInternalId=83 status=seed-load-82 permissions=["read(\"user:69c3c4cd6722c11f5d3c\")"] allowedReadRoles=["user:69c3c4cd6722c11f5d3c"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cd9500ad23f2d1 creatorUserId=69c3c4cd7f5b5d824f19 creatorUserInternalId=84 status=seed-load-83 permissions=["read(\"user:69c3c4cd7f5b5d824f19\")"] allowedReadRoles=["user:69c3c4cd7f5b5d824f19"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cdab6430527db1 creatorUserId=69c3c4cd95ed047abaf8 creatorUserInternalId=85 status=seed-load-84 permissions=["read(\"user:69c3c4cd95ed047abaf8\")"] allowedReadRoles=["user:69c3c4cd95ed047abaf8"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cdce5d90e08839 creatorUserId=69c3c4cdaeea5ad72cee creatorUserInternalId=86 status=seed-load-85 permissions=["read(\"user:69c3c4cdaeea5ad72cee\")"] allowedReadRoles=["user:69c3c4cdaeea5ad72cee"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cdec1a72eb157f creatorUserId=69c3c4cdcf21d0f4fa0f creatorUserInternalId=87 status=seed-load-86 permissions=["read(\"user:69c3c4cdcf21d0f4fa0f\")"] allowedReadRoles=["user:69c3c4cdcf21d0f4fa0f"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4ce0f34c32e62f1 creatorUserId=69c3c4cded1340d16f05 creatorUserInternalId=88 status=seed-load-87 permissions=["read(\"user:69c3c4cded1340d16f05\")"] allowedReadRoles=["user:69c3c4cded1340d16f05"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4ce2805daf2a243 creatorUserId=69c3c4ce0fe17c4125c5 creatorUserInternalId=89 status=seed-load-88 permissions=["read(\"user:69c3c4ce0fe17c4125c5\")"] allowedReadRoles=["user:69c3c4ce0fe17c4125c5"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4ce3fbeb7fa150d creatorUserId=69c3c4ce28b4931bca5a creatorUserInternalId=90 status=seed-load-89 permissions=["read(\"user:69c3c4ce28b4931bca5a\")"] allowedReadRoles=["user:69c3c4ce28b4931bca5a"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4ce57ab854ca9db creatorUserId=69c3c4ce409823582a3a creatorUserInternalId=91 status=seed-load-90 permissions=["read(\"user:69c3c4ce409823582a3a\")"] allowedReadRoles=["user:69c3c4ce409823582a3a"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4ce6e1975b7549f creatorUserId=69c3c4ce5888c8058712 creatorUserInternalId=92 status=seed-load-91 permissions=["read(\"user:69c3c4ce5888c8058712\")"] allowedReadRoles=["user:69c3c4ce5888c8058712"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4ce858176eef53e creatorUserId=69c3c4ce6ef972bf230f creatorUserInternalId=93 status=seed-load-92 permissions=["read(\"user:69c3c4ce6ef972bf230f\")"] allowedReadRoles=["user:69c3c4ce6ef972bf230f"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4ce9b542d1a21cd creatorUserId=69c3c4ce865fbfd4d52c creatorUserInternalId=94 status=seed-load-93 permissions=["read(\"user:69c3c4ce865fbfd4d52c\")"] allowedReadRoles=["user:69c3c4ce865fbfd4d52c"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4ceb1255ea5eb53 creatorUserId=69c3c4ce9befaa675543 creatorUserInternalId=95 status=seed-load-94 permissions=["read(\"user:69c3c4ce9befaa675543\")"] allowedReadRoles=["user:69c3c4ce9befaa675543"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cec7e3c02d8c69 creatorUserId=69c3c4ceb1fed3ad5846 creatorUserInternalId=96 status=seed-load-95 permissions=["read(\"user:69c3c4ceb1fed3ad5846\")"] allowedReadRoles=["user:69c3c4ceb1fed3ad5846"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cedde388757f65 creatorUserId=69c3c4cec8d5f2a62f19 creatorUserInternalId=97 status=seed-load-96 permissions=["read(\"user:69c3c4cec8d5f2a62f19\")"] allowedReadRoles=["user:69c3c4cec8d5f2a62f19"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cf0301ecb8f64d creatorUserId=69c3c4cedeb597b92294 creatorUserInternalId=98 status=seed-load-97 permissions=["read(\"user:69c3c4cedeb597b92294\")"] allowedReadRoles=["user:69c3c4cedeb597b92294"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cf18ec2a87aab1 creatorUserId=69c3c4cf03c05c68c5ff creatorUserInternalId=99 status=seed-load-98 permissions=["read(\"user:69c3c4cf03c05c68c5ff\")"] allowedReadRoles=["user:69c3c4cf03c05c68c5ff"] expiry=null[0m
+[34m[Presence][Create] presenceId=69c3c4cf2fd9eb2fd41e creatorUserId=69c3c4cf19b8e319f413 creatorUserInternalId=100 status=seed-load-99 permissions=["read(\"user:69c3c4cf19b8e319f413\")"] allowedReadRoles=["user:69c3c4cf19b8e319f413"] expiry=null[0m
+[34m[Presence][XList] requesterUserId=69c3c4cf30b59e4a5549 requesterUserInternalId=101 requesterRoles=["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549/unverified","users/unverified"][0m
+[34m[Presence][XList][DENY] requesterUserId=69c3c4cf30b59e4a5549 presenceOwnerUserId=69c3c4c54841d17f980b presenceId=69c3c4c56ace451371a1 allowedReadRoles=["user:69c3c4c54841d17f980b"] requesterRoles=["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549/unverified","users/unverified"] validatorDescription=Missing "read" permission for role "user:69c3c4c54841d17f980b". Only "["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549\/unverified","users\/unverified"]" scopes are allowed and "["user:69c3c4c54841d17f980b"]" was given. status=seed-load-0[0m
+[34m[Presence][XList][DENY] requesterUserId=69c3c4cf30b59e4a5549 presenceOwnerUserId=69c3c4c56bb8f17caf7a presenceId=69c3c4c588d8b30491a4 allowedReadRoles=["user:69c3c4c56bb8f17caf7a"] requesterRoles=["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549/unverified","users/unverified"] validatorDescription=Missing "read" permission for role "user:69c3c4c56bb8f17caf7a". Only "["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549\/unverified","users\/unverified"]" scopes are allowed and "["user:69c3c4c56bb8f17caf7a"]" was given. status=seed-load-1[0m
+[34m[Presence][XList][DENY] requesterUserId=69c3c4cf30b59e4a5549 presenceOwnerUserId=69c3c4c589c2990fa68b presenceId=69c3c4c59eb137bbfafb allowedReadRoles=["user:69c3c4c589c2990fa68b"] requesterRoles=["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549/unverified","users/unverified"] validatorDescription=Missing "read" permission for role "user:69c3c4c589c2990fa68b". Only "["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549\/unverified","users\/unverified"]" scopes are allowed and "["user:69c3c4c589c2990fa68b"]" was given. status=seed-load-2[0m
+[34m[Presence][XList][DENY] requesterUserId=69c3c4cf30b59e4a5549 presenceOwnerUserId=69c3c4c59f9c34c4d5f7 presenceId=69c3c4c5b57384645c88 allowedReadRoles=["user:69c3c4c59f9c34c4d5f7"] requesterRoles=["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549/unverified","users/unverified"] validatorDescription=Missing "read" permission for role "user:69c3c4c59f9c34c4d5f7". Only "["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549\/unverified","users\/unverified"]" scopes are allowed and "["user:69c3c4c59f9c34c4d5f7"]" was given. status=seed-load-3[0m
+[34m[Presence][XList][DENY] requesterUserId=69c3c4cf30b59e4a5549 presenceOwnerUserId=69c3c4c5b61873b720cb presenceId=69c3c4c5cab9908e0156 allowedReadRoles=["user:69c3c4c5b61873b720cb"] requesterRoles=["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549/unverified","users/unverified"] validatorDescription=Missing "read" permission for role "user:69c3c4c5b61873b720cb". Only "["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549\/unverified","users\/unverified"]" scopes are allowed and "["user:69c3c4c5b61873b720cb"]" was given. status=seed-load-4[0m
+[34m[Presence][XList][DENY] requesterUserId=69c3c4cf30b59e4a5549 presenceOwnerUserId=69c3c4c5cb7be0a29bcd presenceId=69c3c4c5e1192f7986fd allowedReadRoles=["user:69c3c4c5cb7be0a29bcd"] requesterRoles=["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549/unverified","users/unverified"] validatorDescription=Missing "read" permission for role "user:69c3c4c5cb7be0a29bcd". Only "["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549\/unverified","users\/unverified"]" scopes are allowed and "["user:69c3c4c5cb7be0a29bcd"]" was given. status=seed-load-5[0m
+[34m[Presence][XList][DENY] requesterUserId=69c3c4cf30b59e4a5549 presenceOwnerUserId=69c3c4c5e2057801da30 presenceId=69c3c4c60334c89b7103 allowedReadRoles=["user:69c3c4c5e2057801da30"] requesterRoles=["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549/unverified","users/unverified"] validatorDescription=Missing "read" permission for role "user:69c3c4c5e2057801da30". Only "["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549\/unverified","users\/unverified"]" scopes are allowed and "["user:69c3c4c5e2057801da30"]" was given. status=seed-load-6[0m
+[34m[Presence][XList][DENY] requesterUserId=69c3c4cf30b59e4a5549 presenceOwnerUserId=69c3c4c6044b3ee83478 presenceId=69c3c4c6195a3a1d88e8 allowedReadRoles=["user:69c3c4c6044b3ee83478"] requesterRoles=["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549/unverified","users/unverified"] validatorDescription=Missing "read" permission for role "user:69c3c4c6044b3ee83478". Only "["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549\/unverified","users\/unverified"]" scopes are allowed and "["user:69c3c4c6044b3ee83478"]" was given. status=seed-load-7[0m
+[34m[Presence][XList][DENY] requesterUserId=69c3c4cf30b59e4a5549 presenceOwnerUserId=69c3c4c61a3bc31f5004 presenceId=69c3c4c62f7ae5c297e6 allowedReadRoles=["user:69c3c4c61a3bc31f5004"] requesterRoles=["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549/unverified","users/unverified"] validatorDescription=Missing "read" permission for role "user:69c3c4c61a3bc31f5004". Only "["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549\/unverified","users\/unverified"]" scopes are allowed and "["user:69c3c4c61a3bc31f5004"]" was given. status=seed-load-8[0m
+[34m[Presence][XList][DENY] requesterUserId=69c3c4cf30b59e4a5549 presenceOwnerUserId=69c3c4c63095cd7eb79b presenceId=69c3c4c645a5783d2247 allowedReadRoles=["user:69c3c4c63095cd7eb79b"] requesterRoles=["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549/unverified","users/unverified"] validatorDescription=Missing "read" permission for role "user:69c3c4c63095cd7eb79b". Only "["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549\/unverified","users\/unverified"]" scopes are allowed and "["user:69c3c4c63095cd7eb79b"]" was given. status=seed-load-9[0m
+[34m[Presence][XList][DENY] requesterUserId=69c3c4cf30b59e4a5549 presenceOwnerUserId=69c3c4c646d615986db9 presenceId=69c3c4c65c9eb21b4da4 allowedReadRoles=["user:69c3c4c646d615986db9"] requesterRoles=["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549/unverified","users/unverified"] validatorDescription=Missing "read" permission for role "user:69c3c4c646d615986db9". Only "["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549\/unverified","users\/unverified"]" scopes are allowed and "["user:69c3c4c646d615986db9"]" was given. status=seed-load-10[0m
+[34m[Presence][XList][DENY] requesterUserId=69c3c4cf30b59e4a5549 presenceOwnerUserId=69c3c4c65da521f6ded7 presenceId=69c3c4c672ad6e939983 allowedReadRoles=["user:69c3c4c65da521f6ded7"] requesterRoles=["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549/unverified","users/unverified"] validatorDescription=Missing "read" permission for role "user:69c3c4c65da521f6ded7". Only "["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549\/unverified","users\/unverified"]" scopes are allowed and "["user:69c3c4c65da521f6ded7"]" was given. status=seed-load-11[0m
+[34m[Presence][XList][DENY] requesterUserId=69c3c4cf30b59e4a5549 presenceOwnerUserId=69c3c4c673867d685ef5 presenceId=69c3c4c6885529a9ee0c allowedReadRoles=["user:69c3c4c673867d685ef5"] requesterRoles=["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549/unverified","users/unverified"] validatorDescription=Missing "read" permission for role "user:69c3c4c673867d685ef5". Only "["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549\/unverified","users\/unverified"]" scopes are allowed and "["user:69c3c4c673867d685ef5"]" was given. status=seed-load-12[0m
+[34m[Presence][XList][DENY] requesterUserId=69c3c4cf30b59e4a5549 presenceOwnerUserId=69c3c4c6894169cd73d6 presenceId=69c3c4c6a475ce934b73 allowedReadRoles=["user:69c3c4c6894169cd73d6"] requesterRoles=["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549/unverified","users/unverified"] validatorDescription=Missing "read" permission for role "user:69c3c4c6894169cd73d6". Only "["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549\/unverified","users\/unverified"]" scopes are allowed and "["user:69c3c4c6894169cd73d6"]" was given. status=seed-load-13[0m
+[34m[Presence][XList][DENY] requesterUserId=69c3c4cf30b59e4a5549 presenceOwnerUserId=69c3c4c6a63983e2609d presenceId=69c3c4c6be613d23f503 allowedReadRoles=["user:69c3c4c6a63983e2609d"] requesterRoles=["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549/unverified","users/unverified"] validatorDescription=Missing "read" permission for role "user:69c3c4c6a63983e2609d". Only "["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549\/unverified","users\/unverified"]" scopes are allowed and "["user:69c3c4c6a63983e2609d"]" was given. status=seed-load-14[0m
+[34m[Presence][XList][DENY] requesterUserId=69c3c4cf30b59e4a5549 presenceOwnerUserId=69c3c4c6bf2ba633e9b0 presenceId=69c3c4c6d6c7e4efff52 allowedReadRoles=["user:69c3c4c6bf2ba633e9b0"] requesterRoles=["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549/unverified","users/unverified"] validatorDescription=Missing "read" permission for role "user:69c3c4c6bf2ba633e9b0". Only "["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549\/unverified","users\/unverified"]" scopes are allowed and "["user:69c3c4c6bf2ba633e9b0"]" was given. status=seed-load-15[0m
+[34m[Presence][XList][DENY] requesterUserId=69c3c4cf30b59e4a5549 presenceOwnerUserId=69c3c4c6d7f8bb919b94 presenceId=69c3c4c6eef7edd3454a allowedReadRoles=["user:69c3c4c6d7f8bb919b94"] requesterRoles=["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549/unverified","users/unverified"] validatorDescription=Missing "read" permission for role "user:69c3c4c6d7f8bb919b94". Only "["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549\/unverified","users\/unverified"]" scopes are allowed and "["user:69c3c4c6d7f8bb919b94"]" was given. status=seed-load-16[0m
+[34m[Presence][XList][DENY] requesterUserId=69c3c4cf30b59e4a5549 presenceOwnerUserId=69c3c4c6efce3ea5c64f presenceId=69c3c4c712aa150e02ff allowedReadRoles=["user:69c3c4c6efce3ea5c64f"] requesterRoles=["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549/unverified","users/unverified"] validatorDescription=Missing "read" permission for role "user:69c3c4c6efce3ea5c64f". Only "["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549\/unverified","users\/unverified"]" scopes are allowed and "["user:69c3c4c6efce3ea5c64f"]" was given. status=seed-load-17[0m
+[34m[Presence][XList][DENY] requesterUserId=69c3c4cf30b59e4a5549 presenceOwnerUserId=69c3c4c713b02d43af5d presenceId=69c3c4c72947176267d4 allowedReadRoles=["user:69c3c4c713b02d43af5d"] requesterRoles=["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549/unverified","users/unverified"] validatorDescription=Missing "read" permission for role "user:69c3c4c713b02d43af5d". Only "["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549\/unverified","users\/unverified"]" scopes are allowed and "["user:69c3c4c713b02d43af5d"]" was given. status=seed-load-18[0m
+[34m[Presence][XList][DENY] requesterUserId=69c3c4cf30b59e4a5549 presenceOwnerUserId=69c3c4c72a2f5a455615 presenceId=69c3c4c745ee2bc05dd7 allowedReadRoles=["user:69c3c4c72a2f5a455615"] requesterRoles=["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549/unverified","users/unverified"] validatorDescription=Missing "read" permission for role "user:69c3c4c72a2f5a455615". Only "["any","users","user:69c3c4cf30b59e4a5549","user:69c3c4cf30b59e4a5549\/unverified","users\/unverified"]" scopes are allowed and "["user:69c3c4c72a2f5a455615"]" was given. status=seed-load-19[0m
+[32mWorker 1 stopped successfully[0m
+[32mWorker 2 stopped successfully[0m
+[32mWorker 3 stopped successfully[0m
+[32mWorker 4 stopped successfully[0m
+[32mWorker 8 stopped successfully[0m
+[32mWorker 6 stopped successfully[0m
+[32mWorker 5 stopped successfully[0m
+[32mWorker 36 stopped successfully[0m
+[32mWorker 7 stopped successfully[0m
+[32mWorker 23 stopped successfully[0m
+[32mWorker 9 stopped successfully[0m
+[32mWorker 49 stopped successfully[0m
+[32mWorker 24 stopped successfully[0m
+[32mWorker 50 stopped successfully[0m
+[32mWorker 31 stopped successfully[0m
+[32mWorker 22 stopped successfully[0m
+[32mWorker 11 stopped successfully[0m
+[32mWorker 21 stopped successfully[0m
+[32mWorker 25 stopped successfully[0m
+[32mWorker 52 stopped successfully[0m
+[32mWorker 12 stopped successfully[0m
+[32mWorker 32 stopped successfully[0m
+[32mWorker 20 stopped successfully[0m
+[32mWorker 19 stopped successfully[0m
+[32mWorker 53 stopped successfully[0m
+[32mWorker 39 stopped successfully[0m
+[32mWorker 26 stopped successfully[0m
+[32mWorker 54 stopped successfully[0m
+[32mWorker 13 stopped successfully[0m
+[32mWorker 10 stopped successfully[0m
+[32mWorker 55 stopped successfully[0m
+[32mWorker 28 stopped successfully[0m
+[32mWorker 34 stopped successfully[0m
+[32mWorker 40 stopped successfully[0m
+[32mWorker 27 stopped successfully[0m
+[32mWorker 29 stopped successfully[0m
+[32mWorker 18 stopped successfully[0m
+[32mWorker 35 stopped successfully[0m
+[32mWorker 14 stopped successfully[0m
+[32mWorker 30 stopped successfully[0m
+[32mWorker 37 stopped successfully[0m
+[32mWorker 33 stopped successfully[0m
+[32mWorker 56 stopped successfully[0m
+[32mWorker 15 stopped successfully[0m
+[32mWorker 41 stopped successfully[0m
+[32mWorker 57 stopped successfully[0m
+[32mWorker 58 stopped successfully[0m
+[32mWorker 51 stopped successfully[0m
+[32mWorker 42 stopped successfully[0m
+[32mWorker 16 stopped successfully[0m
+[32mWorker 59 stopped successfully[0m
+[32mWorker 60 stopped successfully[0m
+[32mWorker 17 stopped successfully[0m
+[32mWorker 48 stopped successfully[0m
+[32mWorker 47 stopped successfully[0m
+[32mWorker 46 stopped successfully[0m
+[32mWorker 45 stopped successfully[0m
+[32mWorker 44 stopped successfully[0m
+[32mWorker 38 stopped successfully[0m
+[32mWorker 43 stopped successfully[0m
+[32mWorker 61 stopped successfully[0m
