@@ -9,7 +9,6 @@ class SessionCreated implements Event
     /**
      * @param array<string, mixed> $user
      * @param array<string, mixed> $project
-     * @param array<string, mixed> $platform
      * @param array<string, mixed> $session
      */
     public function __construct(
