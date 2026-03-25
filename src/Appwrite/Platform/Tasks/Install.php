@@ -211,7 +211,8 @@ class Install extends Action
         }
 
         // If interactive and web mode enabled, start web server
-        if ($interactive === 'Y' && Console::isInteractive()) {
+        // Skip the web installer when explicit CLI params are provided
+        if ($interactive === 'Y' && Console::isInteractive() && !$this->hasExplicitCliParams()) {
             Console::success('Starting web installer...');
             Console::info('Open your browser at: http://localhost:' . InstallerServer::INSTALLER_WEB_PORT);
             Console::info('Press Ctrl+C to cancel installation');
@@ -767,7 +768,7 @@ class Install extends Action
                 'email' => $email,
                 'domain' => $domain,
                 'database' => $database,
-                'hostIp' => $hostIp !== $domain ? $hostIp : null,
+                'ip' => $hostIp !== $domain ? $hostIp : null,
                 'os' => php_uname('s') . ' ' . php_uname('r'),
                 'arch' => php_uname('m'),
                 'cpus' => ((int) trim((string) \shell_exec('nproc'))) ?: null,
@@ -1259,6 +1260,22 @@ class Install extends Action
         }
         $this->path = '/usr/src/code';
         $this->hostPath = $this->getInstallerHostPath();
+    }
+
+    /**
+     * Check if any installer-specific CLI params were explicitly passed.
+     * When params like --database or --http-port are provided, the user
+     * intends to run in CLI mode rather than launching the web installer.
+     */
+    private function hasExplicitCliParams(): bool
+    {
+        $argv = $_SERVER['argv'] ?? [];
+        foreach ($argv as $arg) {
+            if (\str_starts_with($arg, '--') && !\str_starts_with($arg, '--interactive')) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
