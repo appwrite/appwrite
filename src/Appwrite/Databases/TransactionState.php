@@ -172,7 +172,7 @@ class TransactionState
             return $baseCount;
         }
 
-        $committedDocs = $this->dbForProject->find($collectionId, $queries);
+        $committedDocs = $this->dbForProject->find($collectionId, \array_merge($queries, [Query::select(['$id'])]));
         $committedDocIds = [];
         foreach ($committedDocs as $doc) {
             $committedDocIds[$doc->getId()] = true;
