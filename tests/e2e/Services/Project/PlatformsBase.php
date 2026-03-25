@@ -147,13 +147,25 @@ trait PlatformsBase
         $this->assertSame(400, $response['headers']['status-code']);
     }
 
+    public function testCreateWebPlatformEmptyHostname(): void
+    {
+        $response = $this->createWebPlatform(
+            ID::unique(),
+            'Empty Hostname',
+            'web',
+            '',
+        );
+
+        $this->assertSame(400, $response['headers']['status-code']);
+    }
+    
     public function testCreateWebPlatformInvalidHostname(): void
     {
         $response = $this->createWebPlatform(
             ID::unique(),
-            'Invalid Hostname',
+            'Empty Hostname',
             'web',
-            'not a valid hostname!!!',
+            'notavalid!hostname',
         );
 
         $this->assertSame(400, $response['headers']['status-code']);
