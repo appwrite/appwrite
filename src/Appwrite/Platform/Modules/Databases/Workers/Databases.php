@@ -571,7 +571,7 @@ class Databases extends Action
                 Query::equal('databaseInternalId', [$databaseInternalId]),
                 Query::equal('type', [Database::VAR_RELATIONSHIP]),
                 Query::notEqual('collectionInternalId', $collectionInternalId),
-                Query::contains('options', ['"relatedCollection":"'. $collectionId .'"']),
+                Query::containsAny('options', ['"relatedCollection":"'. $collectionId .'"']),
             ],
             $dbForProject,
             function ($attribute) use ($dbForProject, $databaseInternalId) {

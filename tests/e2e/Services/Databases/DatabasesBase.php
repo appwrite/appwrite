@@ -3939,7 +3939,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::greaterThan('$createdAt', '1976-06-12')->toString(),
+                Query::createdAfter('1976-06-12')->toString(),
             ],
         ]);
 
@@ -3950,7 +3950,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::lessThan('$createdAt', '1976-06-12')->toString(),
+                Query::createdBefore('1976-06-12')->toString(),
             ],
         ]);
 
