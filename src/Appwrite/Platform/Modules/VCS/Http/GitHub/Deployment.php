@@ -144,6 +144,7 @@ trait Deployment
                         Query::equal('resourceType', [$resourceCollection]),
                         Query::equal('providerCommitHash', [$providerCommitHash]),
                         Query::equal('providerBranch', [$providerBranch]),
+                        Query::orderDesc('$createdAt')
                     ]));
 
                     $commentStatus = $existingDeployment->getAttribute('status', 'waiting');
@@ -310,7 +311,7 @@ trait Deployment
                     ]));
 
                     // Skip rest - prevent double deployments (previous one was made by push)
-                    return;
+                    continue;
                 }
 
                 $commands = [];
