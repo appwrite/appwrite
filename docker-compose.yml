@@ -254,7 +254,7 @@ services:
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: appwrite/console:7.5.7
+    image: appwrite/console:7.8.26
     restart: unless-stopped
     networks:
       - appwrite
@@ -1319,20 +1319,6 @@ services:
       timeout: 10s
       retries: 10
       start_period: 30s
-
-  appwrite-mongo-express:
-    image: mongo-express
-    container_name: appwrite-mongo-express
-    networks:
-      - appwrite
-    ports:
-      - "8082:8081"
-    environment:
-      ME_CONFIG_MONGODB_URL: "mongodb://root:${_APP_DB_ROOT_PASS}@appwrite-mongodb:27017/?replicaSet=rs0&directConnection=true"
-      ME_CONFIG_BASICAUTH_USERNAME: ${_APP_DB_USER}
-      ME_CONFIG_BASICAUTH_PASSWORD: ${_APP_DB_PASS}
-    depends_on:
-      - mongodb
 
   postgresql:
     image: appwrite/postgres:0.1.0
