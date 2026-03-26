@@ -216,17 +216,44 @@ class Builds extends Action
         }
 
         if ($resource->getCollection() === 'functions' && empty($deployment->getAttribute('entrypoint', ''))) {
-            throw new \Exception('Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".');
+            $this->markDeploymentFailed(
+                $dbForProject,
+                $dbForPlatform,
+                $deployment,
+                $resource,
+                $project,
+                $queueForRealtime,
+                $queueForStatsUsage,
+                $github,
+                $platform,
+                $durationStart,
+                'Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".'
+            );
+            return;
         }
 
         $version = $this->getVersion($resource);
         $runtime = $this->getRuntime($resource, $version);
 
-        $spec = Config::getParam('specifications')[$resource->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
-
-        if ($resource->getCollection() === 'functions' && \is_null($runtime)) {
-            throw new \Exception('Runtime "' . $resource->getAttribute('runtime', '') . '" is not supported');
+        if (\is_null($runtime)) {
+            $runtimeLabel = $resource->getAttribute('runtime', '') ?: $resource->getAttribute('buildRuntime', '');
+            $this->markDeploymentFailed(
+                $dbForProject,
+                $dbForPlatform,
+                $deployment,
+                $resource,
+                $project,
+                $queueForRealtime,
+                $queueForStatsUsage,
+                $github,
+                $platform,
+                $durationStart,
+                'Runtime "' . $runtimeLabel . '" is not supported'
+            );
+            return;
         }
+
+        $spec = Config::getParam('specifications')[$resource->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
 
         // Realtime preparation
         $event = "{$resource->getCollection()}.[{$resourceKey}].deployments.[deploymentId].update";
@@ -1291,18 +1318,19 @@ class Builds extends Action
         }
     }
 
-    protected function getRuntime(Document $resource, string $version): array
+    /**
+     * @return array|null Runtime config array, or null if the runtime is not supported (caller should fail deployment for functions).
+     */
+    protected function getRuntime(Document $resource, string $version): ?array
     {
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
         $key = $resource->getAttribute('runtime');
+
         $runtime = match ($resource->getCollection()) {
             'functions' => $runtimes[$resource->getAttribute('runtime')] ?? null,
             'sites' => $runtimes[$resource->getAttribute('buildRuntime')] ?? null,
             default => null
         };
-        if (\is_null($runtime)) {
-            throw new \Exception('Runtime "' . $resource->getAttribute('runtime', '') . '" is not supported');
-        }
 
         return $runtime;
     }
@@ -1313,6 +1341,62 @@ class Builds extends Action
             'functions' => $resource->getAttribute('version', 'v2'),
             'sites' => 'v5',
         };
+    }
+
+    /**
+     * Mark a deployment as failed with a user-facing message (e.g. validation / bad config).
+     * Updates the deployment, resource, realtime, optional VCS status, and usage — then returns.
+     * Use this instead of throwing for failures caused by bad user input so the error is shown
+     * in build logs and not reported as an unhandled exception (e.g. to Sentry).
+     */
+    protected function markDeploymentFailed(
+        Database $dbForProject,
+        Database $dbForPlatform,
+        Document $deployment,
+        Document $resource,
+        Document $project,
+        Realtime $queueForRealtime,
+        StatsUsage $queueForStatsUsage,
+        GitHub $github,
+        array $platform,
+        float $durationStart,
+        string $message
+    ): void {
+        $deploymentId = $deployment->getId();
+        $endTime = DateTime::now();
+        $durationEnd = \microtime(true);
+        $buildDuration = (int) \ceil($durationEnd - $durationStart);
+
+        $existingLogs = $deployment->getAttribute('buildLogs', '');
+        $buildLogs = empty($existingLogs) ? $message : $existingLogs . "\n" . $message;
+
+        $deployment = $dbForProject->updateDocument('deployments', $deploymentId, new Document([
+            'buildEndedAt' => $endTime,
+            'buildDuration' => $buildDuration,
+            'status' => 'failed',
+            'buildLogs' => $buildLogs,
+        ]));
+
+        if ($deployment->getSequence() === $resource->getAttribute('latestDeploymentInternalId', '')) {
+            $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), new Document(['latestDeploymentStatus' => 'failed']));
+        }
+
+        $queueForRealtime
+            ->setPayload($deployment->getArrayCopy())
+            ->trigger();
+
+        $providerRepositoryId = $deployment->getAttribute('providerRepositoryId', '');
+        if (!empty($providerRepositoryId)) {
+            $installationId = $deployment->getAttribute('installationId', '');
+            $installation = $dbForPlatform->getDocument('installations', $installationId);
+            $providerInstallationId = $installation->getAttribute('providerInstallationId');
+            $github->initializeVariables($providerInstallationId, System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY'), System::getEnv('_APP_VCS_GITHUB_APP_ID'));
+            $owner = $deployment->getAttribute('providerRepositoryOwner', $github->getOwnerName($providerInstallationId));
+            $repositoryName = $deployment->getAttribute('providerRepositoryName', $github->getRepositoryName($providerRepositoryId));
+            $this->runGitAction('failed', $github, $deployment->getAttribute('providerCommitHash', ''), $owner, $repositoryName, $project, $resource, $deploymentId, $dbForProject, $dbForPlatform, $queueForRealtime, $platform);
+        }
+
+        $this->sendUsage($resource, $deployment, $project, $queueForStatsUsage);
     }
 
     protected function getCommand(Document $resource, Document $deployment): string
