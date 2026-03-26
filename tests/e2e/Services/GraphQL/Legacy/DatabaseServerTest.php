@@ -12,6 +12,8 @@ use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\RelationType;
+use Utopia\Query\Schema\ForeignKeyAction;
 
 class DatabaseServerTest extends Scope
 {
@@ -665,7 +667,7 @@ class DatabaseServerTest extends Scope
                 'databaseId' => $data['database']['_id'],
                 'collectionId' => $data['collection2']['_id'],          // Movies
                 'relatedCollectionId' => $data['collection']['_id'],    // Actors
-                'type' => Database::RELATION_ONE_TO_MANY,
+                'type' => RelationType::OneToMany->value,
                 'twoWay' => true,
                 'key' => 'actors',
                 'twoWayKey' => 'movie'
@@ -1449,7 +1451,7 @@ class DatabaseServerTest extends Scope
                 'databaseId' => $data['database']['_id'],
                 'collectionId' => $data['collection2']['_id'],          // Movies
                 'relatedCollectionId' => $data['collection']['_id'],    // Actors
-                'type' => Database::RELATION_ONE_TO_MANY,
+                'type' => RelationType::OneToMany->value,
                 'twoWay' => true,
                 'key' => 'actors',
                 'twoWayKey' => 'movie'
@@ -1491,7 +1493,7 @@ class DatabaseServerTest extends Scope
                 'databaseId' => $data['database']['_id'],
                 'collectionId' => $data['collection2']['_id'],
                 'key' => 'actors',
-                'onDelete' => Database::RELATION_MUTATE_CASCADE,
+                'onDelete' => ForeignKeyAction::Cascade->value,
             ]
         ];
 
