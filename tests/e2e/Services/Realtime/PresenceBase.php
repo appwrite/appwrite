@@ -763,16 +763,19 @@ abstract class PresenceBase extends Scope
 
         // Pick 2 viewers from each group: first two indices within group.
         $viewerIndices = [];
-        for ($g = 0; $g < $numGroups; $g++) {
+        for ($g = 0; $g < $numGroups && \count($viewerIndices) < $viewerCount; $g++) {
             $base = $g * $groupSize;
+
             $viewerIndices[] = $base;
-            if ($viewerCount >= 10) {
-                // keep exactly 10; should trigger only if group math changes
+            if (\count($viewerIndices) >= $viewerCount) {
                 break;
             }
-            $viewerIndices[] = $base + 1;
+
+            // Add the next index within the group if it exists.
+            if ($base + 1 < $totalUsers) {
+                $viewerIndices[] = $base + 1;
+            }
         }
-        $viewerIndices = \array_slice($viewerIndices, 0, $viewerCount);
 
         $statusSampleOwnerOffsets = [0, 50, 99];
 
@@ -828,11 +831,12 @@ abstract class PresenceBase extends Scope
             // Allow realtime write to settle.
             \usleep(100000);
 
-            for ($occurrence = 0; $occurrence < $occurrences; $occurrence++) {
-                foreach ($viewerIndices as $viewerSampleIndex) {
-                    $viewer = $users[$viewerSampleIndex];
-                    $group = (int) \floor($viewerSampleIndex / $groupSize);
+            // Fetch listPresence `occurrences` times per viewer, in-order.
+            foreach ($viewerIndices as $viewerSampleIndex) {
+                $viewer = $users[$viewerSampleIndex];
+                $group = (int) \floor($viewerSampleIndex / $groupSize);
 
+                for ($occurrence = 0; $occurrence < $occurrences; $occurrence++) {
                     $benchmark = $this->fetchPresenceListAs($viewer);
                     $this->assertEquals(200, $benchmark['response']['headers']['status-code']);
                     $this->assertGreaterThan(0.0, $benchmark['elapsedMs']);
@@ -861,10 +865,11 @@ abstract class PresenceBase extends Scope
                 }
 
                 Console::info(\sprintf(
-                    '[Presence Benchmark F] cycle=%d occurrence=%d listCallsThisOcc=%d',
+                    '[Presence Benchmark F] cycle=%d viewerIndex=%d viewerGroup=%d occurrences=%d',
                     $cycle,
-                    $occurrence + 1,
-                    $viewerCount
+                    $viewerSampleIndex,
+                    $group,
+                    $occurrences
                 ));
             }
         }
