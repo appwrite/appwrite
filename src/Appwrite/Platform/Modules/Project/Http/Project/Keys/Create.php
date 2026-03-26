@@ -75,12 +75,12 @@ class Create extends Base
     }
 
     /**
-     * @param array<string> $scopes
+     * @param array<string>|null $scopes
      */
     public function action(
         string $keyId,
         string $name,
-        array $scopes,
+        ?array $scopes,
         ?string $expire,
         Response $response,
         QueueEvent $queueForEvents,
