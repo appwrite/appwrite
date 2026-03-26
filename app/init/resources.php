@@ -703,9 +703,9 @@ Http::setResource('dbForPlatform', function (Group $pools, Cache $cache, Authori
     return $database;
 }, ['pools', 'cache', 'authorization']);
 
-Http::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Document $project, Request $request, UsageContext $usage, Authorization $authorization, Database $dbForProject) {
+Http::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Document $project, Request $request, UsageContext $usage, Authorization $authorization) {
 
-    return function (Document $database) use ($pools, $cache, $project, $request, $usage, $authorization, $dbForProject): Database {
+    return function (Document $database) use ($pools, $cache, $project, $request, $usage, $authorization): Database {
         $originalDatabase = $database;
         $context = str_contains($request->getURI(), '/tablesdb/') ? 'table' : 'collection';
         $databaseDSN = $database->getAttribute('database', $project->getAttribute('database', ''));
@@ -777,7 +777,6 @@ Http::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Docume
             ->addHook(new Metadata(
                 database: $originalDatabase,
                 context: $context,
-                dbForProject: $dbForProject,
                 authorization: $authorization,
             ));
 
@@ -788,7 +787,7 @@ Http::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Docume
         return $database;
     };
 
-}, ['pools','cache','project','request','usage','authorization', 'dbForProject']);
+}, ['pools','cache','project','request','usage','authorization']);
 
 Http::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache, Authorization $authorization) {
     $databases = [];
