@@ -1097,9 +1097,10 @@ trait StorageBase
         $chunkSize = 5 * 1024 * 1024; // 5MB chunks
         $mimeType = mime_content_type($source);
 
-        $handle = @fopen($source, "rb");
-        $chunkData = @fread($handle, $chunkSize);
-        @fclose($handle);
+        $handle = fopen($source, "rb");
+        $this->assertNotFalse($handle, "Could not open test resource: $source");
+        $chunkData = fread($handle, $chunkSize);
+        fclose($handle);
 
         $curlFile = new \CURLFile(
             'data://' . $mimeType . ';base64,' . base64_encode($chunkData),
@@ -1148,6 +1149,15 @@ trait StorageBase
         ], $this->getHeaders()));
 
         $this->assertEquals(404, $getResponse['headers']['status-code']);
+
+        // Clean up the test bucket
+        $deleteBucketResponse = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(204, $deleteBucketResponse['headers']['status-code']);
     }
 
     public function testDeleteBucketFile(): void

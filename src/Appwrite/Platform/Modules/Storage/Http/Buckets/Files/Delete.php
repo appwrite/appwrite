@@ -16,6 +16,7 @@ use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\UID;
+use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
@@ -66,6 +67,7 @@ class Delete extends Action
             ->inject('deviceForFiles')
             ->inject('queueForDeletes')
             ->inject('authorization')
+            ->inject('log')
             ->callback($this->action(...));
     }
 
@@ -77,7 +79,8 @@ class Delete extends Action
         Event $queueForEvents,
         Device $deviceForFiles,
         DeleteEvent $queueForDeletes,
-        Authorization $authorization
+        Authorization $authorization,
+        Log $log
     ) {
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -113,10 +116,11 @@ class Delete extends Action
                     $file->getAttribute('path'),
                     ($file->getAttribute('metadata', [])['uploadId'] ?? '')
                 );
-            } catch (\Exception) {
+            } catch (\Exception $e) {
                 // If the partial upload chunks are already gone from the device
                 // (e.g. the upload never wrote anything to disk), treat it as deleted
                 // so the pending file document can still be removed from the database.
+                $log->addTag('abortException', $e->getMessage());
                 $deviceDeleted = true;
             }
         } else {
