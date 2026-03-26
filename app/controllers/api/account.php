@@ -189,16 +189,11 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed saving user to DB');
     }
 
-    $isFirstSession = $dbForProject->count('sessions', [
-        Query::equal('userId', [$user->getId()]),
-    ]) === 1;
-
     $bus->dispatch(new SessionCreated(
         user: $user->getArrayCopy(),
         project: $project->getArrayCopy(),
         session: $session->getArrayCopy(),
         locale: $locale->default,
-        isFirstSession: $isFirstSession,
     ));
 
     $queueForEvents
@@ -967,16 +962,11 @@ Http::post('/v1/account/sessions/email')
             ->setParam('sessionId', $session->getId())
         ;
 
-        $isFirstSession = $dbForProject->count('sessions', [
-            Query::equal('userId', [$user->getId()]),
-        ]) === 1;
-
         $bus->dispatch(new SessionCreated(
             user: $user->getArrayCopy(),
             project: $project->getArrayCopy(),
             session: $session->getArrayCopy(),
             locale: $locale->default,
-            isFirstSession: $isFirstSession,
         ));
 
         $response->dynamic($session, Response::MODEL_SESSION);

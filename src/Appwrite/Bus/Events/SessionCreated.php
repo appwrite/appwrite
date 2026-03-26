@@ -16,7 +16,6 @@ class SessionCreated implements Event
         public readonly array $project,
         public readonly array $session,
         public readonly string $locale,
-        public readonly bool $isFirstSession,
     ) {
     }
 }
