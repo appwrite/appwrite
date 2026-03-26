@@ -656,6 +656,7 @@ class Migrations extends Action
                     options: $options,
                     queueForMails: $queueForMails,
                     platform: $platform,
+                    exportType: $migration->getAttribute('destination') === DestinationJSON::getName() ? 'JSON' : 'CSV',
                     sizeMB: $sizeMB
                 );
 
@@ -718,6 +719,7 @@ class Migrations extends Action
             options: $options,
             queueForMails: $queueForMails,
             platform: $platform,
+            exportType: $migration->getAttribute('destination') === DestinationJSON::getName() ? 'JSON' : 'CSV',
             downloadUrl: $downloadUrl
         );
     }
@@ -743,6 +745,7 @@ class Migrations extends Action
         array $options,
         Mail $queueForMails,
         array $platform,
+        string $exportType = 'CSV',
         string $downloadUrl = '',
         float $sizeMB = 0.0,
     ): void {
@@ -762,15 +765,15 @@ class Migrations extends Action
             ? 'success'
             : 'failure';
 
-        // Get localized email content
-        $subject = $locale->getText("emails.csvExport.{$emailType}.subject");
-        $preview = $locale->getText("emails.csvExport.{$emailType}.preview");
-        $hello = $locale->getText("emails.csvExport.{$emailType}.hello");
-        $body = $locale->getText("emails.csvExport.{$emailType}.body");
-        $footer = $locale->getText("emails.csvExport.{$emailType}.footer");
-        $thanks = $locale->getText("emails.csvExport.{$emailType}.thanks");
-        $signature = $locale->getText("emails.csvExport.{$emailType}.signature");
-        $buttonText = $success ? $locale->getText("emails.csvExport.{$emailType}.buttonText") : '';
+        // Get localized email content — replace {{type}} with export format (CSV/JSON)
+        $subject = \str_replace('{{type}}', $exportType, $locale->getText("emails.dataExport.{$emailType}.subject"));
+        $preview = \str_replace('{{type}}', $exportType, $locale->getText("emails.dataExport.{$emailType}.preview"));
+        $hello = $locale->getText("emails.dataExport.{$emailType}.hello");
+        $body = $locale->getText("emails.dataExport.{$emailType}.body");
+        $footer = $locale->getText("emails.dataExport.{$emailType}.footer");
+        $thanks = $locale->getText("emails.dataExport.{$emailType}.thanks");
+        $signature = $locale->getText("emails.dataExport.{$emailType}.signature");
+        $buttonText = $success ? $locale->getText("emails.dataExport.{$emailType}.buttonText") : '';
 
         // Build email body using appropriate template
         $templatePath = $success
@@ -786,6 +789,7 @@ class Migrations extends Action
             ->setParam('{{direction}}', $locale->getText('settings.direction'))
             ->setParam('{{project}}', $project->getAttribute('name'))
             ->setParam('{{user}}', $user->getAttribute('name', $user->getAttribute('email')))
+            ->setParam('{{type}}', $exportType)
             ->setParam('{{size}}', $success ? '' : (string)$sizeMB);
 
         if ($success) {
@@ -806,7 +810,7 @@ class Migrations extends Action
             'terms' => $platform['termsUrl'],
             'privacy' => $platform['privacyUrl'],
             'platform' => $platform['platformName'],
-            'type' => $migration->getAttribute('destination', 'CSV'),
+            'type' => $exportType,
         ];
 
         $queueForMails
