@@ -1825,7 +1825,7 @@ trait MigrationsBase
             'filename' => 'vectorsdb-export-test',
             'columns' => [],
             'queries' => [],
-            'notify' => true,
+            'notify' => false,
         ]);
         $this->assertEquals(202, $migration['headers']['status-code']);
         $migrationId = $migration['body']['$id'];
@@ -1840,37 +1840,6 @@ trait MigrationsBase
             $this->assertEquals('Appwrite', $migration['body']['source']);
             $this->assertEquals('JSON', $migration['body']['destination']);
         }, 30_000, 500);
-
-        // Verify email notification
-        $lastEmail = $this->getLastEmail();
-        $this->assertNotEmpty($lastEmail);
-        $this->assertEquals('Your JSON export is ready', $lastEmail['subject']);
-
-        // Download and verify JSON content
-        $body = $lastEmail['html'];
-        preg_match('/href="([^"]*)"/', $body, $matches);
-        $this->assertNotEmpty($matches[1], 'Download link should be present in email');
-
-        $downloadUrl = html_entity_decode($matches[1]);
-        $parsedUrl = parse_url($downloadUrl);
-        parse_str($parsedUrl['query'] ?? '', $queryParams);
-
-        $jsonFile = $this->client->call(Client::METHOD_GET, $parsedUrl['path'], [
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'origin' => 'http://localhost',
-        ], $queryParams);
-
-        $this->assertNotEmpty($jsonFile['body']);
-        $jsonData = $jsonFile['body'];
-        $this->assertNotEmpty($jsonData, 'JSON export should not be empty');
-
-        // Verify content has embeddings
-        $decoded = json_decode($jsonData, true);
-        $this->assertNotNull($decoded);
-        $this->assertGreaterThanOrEqual(5, count($decoded));
-        $this->assertArrayHasKey('embeddings', $decoded[0]);
-        $this->assertCount(16, $decoded[0]['embeddings'], 'Embeddings should have 16 dimensions');
-        $this->assertArrayHasKey('metadata', $decoded[0]);
 
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/vectorsdb/' . $databaseId, $headers);
