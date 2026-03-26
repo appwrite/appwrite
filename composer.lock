@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f9225f2b580de0ccb796b2fb8c881384",
+    "content-hash": "ed42344c47c7bfe9bf74897e7bb91cc3",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1226,16 +1226,16 @@
         },
         {
             "name": "open-telemetry/api",
-            "version": "1.8.0",
+            "version": "1.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/api.git",
-                "reference": "df5197c6fd0ddd8e9883b87de042d9341300e2ad"
+                "reference": "6f8d237ce2c304ca85f31970f788e7f074d147be"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/api/zipball/df5197c6fd0ddd8e9883b87de042d9341300e2ad",
-                "reference": "df5197c6fd0ddd8e9883b87de042d9341300e2ad",
+                "url": "https://api.github.com/repos/opentelemetry-php/api/zipball/6f8d237ce2c304ca85f31970f788e7f074d147be",
+                "reference": "6f8d237ce2c304ca85f31970f788e7f074d147be",
                 "shasum": ""
             },
             "require": {
@@ -1292,20 +1292,20 @@
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2026-01-21T04:14:03+00:00"
+            "time": "2026-02-25T13:24:05+00:00"
         },
         {
             "name": "open-telemetry/context",
-            "version": "1.4.0",
+            "version": "1.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/context.git",
-                "reference": "d4c4470b541ce72000d18c339cfee633e4c8e0cf"
+                "reference": "3c414b246e0dabb7d6145404e6a5e4536ca18d07"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/context/zipball/d4c4470b541ce72000d18c339cfee633e4c8e0cf",
-                "reference": "d4c4470b541ce72000d18c339cfee633e4c8e0cf",
+                "url": "https://api.github.com/repos/opentelemetry-php/context/zipball/3c414b246e0dabb7d6145404e6a5e4536ca18d07",
+                "reference": "3c414b246e0dabb7d6145404e6a5e4536ca18d07",
                 "shasum": ""
             },
             "require": {
@@ -1347,11 +1347,11 @@
             ],
             "support": {
                 "chat": "https://app.slack.com/client/T08PSQ7BQ/C01NFPCV44V",
-                "docs": "https://opentelemetry.io/docs/php",
+                "docs": "https://opentelemetry.io/docs/languages/php",
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2025-09-19T00:05:49+00:00"
+            "time": "2025-10-19T06:44:33+00:00"
         },
         {
             "name": "open-telemetry/exporter-otlp",
@@ -1419,16 +1419,16 @@
         },
         {
             "name": "open-telemetry/gen-otlp-protobuf",
-            "version": "1.8.0",
+            "version": "1.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/gen-otlp-protobuf.git",
-                "reference": "673af5b06545b513466081884b47ef15a536edde"
+                "reference": "a229cf161d42001d64c8f21e8f678581fe1c66b9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/gen-otlp-protobuf/zipball/673af5b06545b513466081884b47ef15a536edde",
-                "reference": "673af5b06545b513466081884b47ef15a536edde",
+                "url": "https://api.github.com/repos/opentelemetry-php/gen-otlp-protobuf/zipball/a229cf161d42001d64c8f21e8f678581fe1c66b9",
+                "reference": "a229cf161d42001d64c8f21e8f678581fe1c66b9",
                 "shasum": ""
             },
             "require": {
@@ -1474,30 +1474,30 @@
             ],
             "support": {
                 "chat": "https://app.slack.com/client/T08PSQ7BQ/C01NFPCV44V",
-                "docs": "https://opentelemetry.io/docs/php",
+                "docs": "https://opentelemetry.io/docs/languages/php",
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2025-09-17T23:10:12+00:00"
+            "time": "2025-10-19T06:44:33+00:00"
         },
         {
             "name": "open-telemetry/sdk",
-            "version": "1.13.0",
+            "version": "1.14.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/sdk.git",
-                "reference": "c76f91203bf7ef98ab3f4e0a82ca21699af185e1"
+                "reference": "6e3d0ce93e76555dd5e2f1d19443ff45b990e410"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/sdk/zipball/c76f91203bf7ef98ab3f4e0a82ca21699af185e1",
-                "reference": "c76f91203bf7ef98ab3f4e0a82ca21699af185e1",
+                "url": "https://api.github.com/repos/opentelemetry-php/sdk/zipball/6e3d0ce93e76555dd5e2f1d19443ff45b990e410",
+                "reference": "6e3d0ce93e76555dd5e2f1d19443ff45b990e410",
                 "shasum": ""
             },
             "require": {
                 "ext-json": "*",
                 "nyholm/psr7-server": "^1.1",
-                "open-telemetry/api": "^1.7",
+                "open-telemetry/api": "^1.8",
                 "open-telemetry/context": "^1.4",
                 "open-telemetry/sem-conv": "^1.0",
                 "php": "^8.1",
@@ -1575,7 +1575,7 @@
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2026-01-28T11:38:11+00:00"
+            "time": "2026-03-21T11:50:01+00:00"
         },
         {
             "name": "open-telemetry/sem-conv",
@@ -1633,6 +1633,71 @@
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
             "time": "2026-01-21T04:14:03+00:00"
+        },
+        {
+            "name": "opis/closure",
+            "version": "4.5.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/opis/closure.git",
+                "reference": "b97e42b95bb72d87507f5e2d137ceb239aea8d6b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/opis/closure/zipball/b97e42b95bb72d87507f5e2d137ceb239aea8d6b",
+                "reference": "b97e42b95bb72d87507f5e2d137ceb239aea8d6b",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "4.x-dev"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "src/functions.php"
+                ],
+                "psr-4": {
+                    "Opis\\Closure\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Marius Sarca",
+                    "email": "marius.sarca@gmail.com"
+                },
+                {
+                    "name": "Sorin Sarca",
+                    "email": "sarca_sorin@hotmail.com"
+                }
+            ],
+            "description": "A library that can be used to serialize closures (anonymous functions) and arbitrary data.",
+            "homepage": "https://opis.io/closure",
+            "keywords": [
+                "anonymous classes",
+                "anonymous functions",
+                "closure",
+                "function",
+                "serializable",
+                "serialization",
+                "serialize"
+            ],
+            "support": {
+                "issues": "https://github.com/opis/closure/issues",
+                "source": "https://github.com/opis/closure/tree/4.5.0"
+            },
+            "time": "2026-03-05T13:32:42+00:00"
         },
         {
             "name": "paragonie/constant_time_encoding",
@@ -3501,6 +3566,125 @@
             "time": "2026-02-09T12:46:39+00:00"
         },
         {
+            "name": "utopia-php/async",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/async.git",
+                "reference": "7a0c6957b41731a5c999382ad26a0b2fdbd19812"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/async/zipball/7a0c6957b41731a5c999382ad26a0b2fdbd19812",
+                "reference": "7a0c6957b41731a5c999382ad26a0b2fdbd19812",
+                "shasum": ""
+            },
+            "require": {
+                "opis/closure": "4.*",
+                "php": ">=8.1"
+            },
+            "require-dev": {
+                "amphp/amp": "3.*",
+                "amphp/parallel": "2.*",
+                "amphp/process": "^2.0",
+                "laravel/pint": "1.*",
+                "phpstan/phpstan": "2.*",
+                "phpunit/phpunit": "11.5.45",
+                "react/child-process": "0.*",
+                "react/event-loop": "1.*",
+                "swoole/ide-helper": "*"
+            },
+            "suggest": {
+                "amphp/amp": "Required for Amp promise adapter",
+                "amphp/parallel": "Required for Amp parallel adapter",
+                "ext-ev": "Required for ReactPHP event loop (recommended for best performance)",
+                "ext-parallel": "Required for parallel adapter (requires PHP ZTS build)",
+                "ext-sockets": "Required for Swoole Process adapter",
+                "ext-swoole": "Required for Swoole Thread and Process adapters (recommended for best performance)",
+                "react/child-process": "Required for ReactPHP parallel adapter",
+                "react/event-loop": "Required for ReactPHP promise and parallel adapters"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Async\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test-unit": [
+                    "vendor/bin/phpunit tests/Unit --exclude-group no-swoole"
+                ],
+                "test-promise-sync": [
+                    "vendor/bin/phpunit tests/E2e/Promise/SyncTest.php"
+                ],
+                "test-promise-swoole": [
+                    "vendor/bin/phpunit tests/E2e/Promise/Swoole"
+                ],
+                "test-promise-amp": [
+                    "vendor/bin/phpunit tests/E2e/Promise/Amp"
+                ],
+                "test-promise-react": [
+                    "vendor/bin/phpunit tests/E2e/Promise/React"
+                ],
+                "test-parallel-sync": [
+                    "vendor/bin/phpunit tests/E2e/Parallel/Sync"
+                ],
+                "test-parallel-swoole-thread": [
+                    "vendor/bin/phpunit tests/E2e/Parallel/Swoole/ThreadTest.php"
+                ],
+                "test-parallel-swoole-process": [
+                    "vendor/bin/phpunit tests/E2e/Parallel/Swoole/ProcessTest.php"
+                ],
+                "test-parallel-amp": [
+                    "vendor/bin/phpunit tests/E2e/Parallel/Amp"
+                ],
+                "test-parallel-react": [
+                    "vendor/bin/phpunit tests/E2e/Parallel/React"
+                ],
+                "test-parallel-ext": [
+                    "php -n -d extension=parallel.so -d extension=sockets.so vendor/bin/phpunit tests/E2e/Parallel/Parallel"
+                ],
+                "test-e2e": [
+                    "vendor/bin/phpunit tests/E2e --exclude-group ext-parallel"
+                ],
+                "test": [
+                    "@test-unit",
+                    "@test-e2e",
+                    "@test-parallel-ext"
+                ],
+                "lint": [
+                    "vendor/bin/pint"
+                ],
+                "format": [
+                    "php -d memory_limit=4G vendor/bin/pint"
+                ],
+                "check": [
+                    "vendor/bin/phpstan analyse src tests --level=max --memory-limit=4G"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Appwrite Team",
+                    "email": "team@appwrite.io"
+                }
+            ],
+            "description": "High-performance concurrent + parallel library with Promise and Parallel execution support for PHP.",
+            "support": {
+                "source": "https://github.com/utopia-php/async/tree/main",
+                "issues": "https://github.com/utopia-php/async/issues"
+            },
+            "time": "2026-01-09T06:16:09+00:00"
+        },
+        {
             "name": "utopia-php/audit",
             "version": "2.2.1",
             "source": {
@@ -3850,16 +4034,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "5.3.17",
+            "version": "dev-feat-query-lib",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "cff2b6ed63d3291b74110d086e16ff089fe05993"
+                "reference": "141df887976aa63613ea936b50dacf6e86bd516e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/cff2b6ed63d3291b74110d086e16ff089fe05993",
-                "reference": "cff2b6ed63d3291b74110d086e16ff089fe05993",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/141df887976aa63613ea936b50dacf6e86bd516e",
+                "reference": "141df887976aa63613ea936b50dacf6e86bd516e",
                 "shasum": ""
             },
             "require": {
@@ -3867,18 +4051,20 @@
                 "ext-mongodb": "*",
                 "ext-pdo": "*",
                 "php": ">=8.4",
+                "utopia-php/async": "@dev",
                 "utopia-php/cache": "1.*",
                 "utopia-php/console": "0.1.*",
                 "utopia-php/mongo": "1.*",
                 "utopia-php/pools": "1.*",
+                "utopia-php/query": "dev-feat-builder",
                 "utopia-php/validators": "0.2.*"
             },
             "require-dev": {
+                "brianium/paratest": "^7.7",
                 "fakerphp/faker": "1.23.*",
                 "laravel/pint": "*",
-                "pcov/clobber": "2.*",
-                "phpstan/phpstan": "1.*",
-                "phpunit/phpunit": "9.*",
+                "phpstan/phpstan": "^2.0",
+                "phpunit/phpunit": "^12.0",
                 "rregeer/phpunit-coverage-check": "0.3.*",
                 "swoole/ide-helper": "5.1.3",
                 "utopia-php/cli": "0.22.*"
@@ -3903,9 +4089,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/5.3.17"
+                "source": "https://github.com/utopia-php/database/tree/feat-query-lib"
             },
-            "time": "2026-03-20T01:18:52+00:00"
+            "time": "2026-03-26T03:34:52+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4788,6 +4974,53 @@
                 "source": "https://github.com/utopia-php/preloader/tree/0.2.4"
             },
             "time": "2020-10-24T07:04:59+00:00"
+        },
+        {
+            "name": "utopia-php/query",
+            "version": "dev-feat-builder",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/query.git",
+                "reference": "3f57d89f6a62600379884cbe1b8391e9d952f107"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/query/zipball/3f57d89f6a62600379884cbe1b8391e9d952f107",
+                "reference": "3f57d89f6a62600379884cbe1b8391e9d952f107",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.4"
+            },
+            "require-dev": {
+                "laravel/pint": "*",
+                "mongodb/mongodb": "^1.20",
+                "phpstan/phpstan": "*",
+                "phpunit/phpunit": "^12.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Query\\": "src/Query"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A simple library providing a query abstraction for filtering, ordering, and pagination",
+            "keywords": [
+                "framework",
+                "php",
+                "query",
+                "upf",
+                "utopia"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/query/issues",
+                "source": "https://github.com/utopia-php/query/tree/feat-builder"
+            },
+            "time": "2026-03-26T01:52:53+00:00"
         },
         {
             "name": "utopia-php/queue",
@@ -6195,11 +6428,11 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "2.1.42",
+            "version": "2.1.44",
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/1279e1ce86ba768f0780c9d889852b4e02ff40d0",
-                "reference": "1279e1ce86ba768f0780c9d889852b4e02ff40d0",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/4a88c083c668b2c364a425c9b3171b2d9ea5d218",
+                "reference": "4a88c083c668b2c364a425c9b3171b2d9ea5d218",
                 "shasum": ""
             },
             "require": {
@@ -6244,7 +6477,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-03-17T14:58:32+00:00"
+            "time": "2026-03-25T17:34:21+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -8433,9 +8666,18 @@
             "time": "2024-11-07T12:36:22+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-feat-query-lib",
+            "alias": "5.3.17",
+            "alias_normalized": "5.3.17.0"
+        }
+    ],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
