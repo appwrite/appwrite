@@ -761,7 +761,6 @@ Http::post('/v1/migrations/json/imports')
         $queueForMigrations
             ->setMigration($migration)
             ->setProject($project)
-            ->setProject($project)
             ->trigger();
 
         $response
