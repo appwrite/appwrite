@@ -4981,12 +4981,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/query.git",
-                "reference": "6094452bd585f21652fbda23a753664b6bbe1c86"
+                "reference": "efd571cd04963b91128fcdb1adb0b27c67417c32"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/query/zipball/6094452bd585f21652fbda23a753664b6bbe1c86",
-                "reference": "6094452bd585f21652fbda23a753664b6bbe1c86",
+                "url": "https://api.github.com/repos/utopia-php/query/zipball/efd571cd04963b91128fcdb1adb0b27c67417c32",
+                "reference": "efd571cd04963b91128fcdb1adb0b27c67417c32",
                 "shasum": ""
             },
             "require": {
@@ -5020,7 +5020,7 @@
                 "issues": "https://github.com/utopia-php/query/issues",
                 "source": "https://github.com/utopia-php/query/tree/feat-builder"
             },
-            "time": "2026-03-26T12:24:43+00:00"
+            "time": "2026-03-26T14:39:58+00:00"
         },
         {
             "name": "utopia-php/queue",
