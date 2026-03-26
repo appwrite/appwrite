@@ -108,10 +108,17 @@ class Delete extends Action
 
         $deviceDeleted = false;
         if ($file->getAttribute('chunksTotal') !== $file->getAttribute('chunksUploaded')) {
-            $deviceDeleted = $deviceForFiles->abort(
-                $file->getAttribute('path'),
-                ($file->getAttribute('metadata', [])['uploadId'] ?? '')
-            );
+            try {
+                $deviceDeleted = $deviceForFiles->abort(
+                    $file->getAttribute('path'),
+                    ($file->getAttribute('metadata', [])['uploadId'] ?? '')
+                );
+            } catch (\Exception) {
+                // If the partial upload chunks are already gone from the device
+                // (e.g. the upload never wrote anything to disk), treat it as deleted
+                // so the pending file document can still be removed from the database.
+                $deviceDeleted = true;
+            }
         } else {
             $deviceDeleted = $deviceForFiles->delete($file->getAttribute('path'));
         }

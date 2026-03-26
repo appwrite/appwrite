@@ -1069,6 +1069,87 @@ trait StorageBase
         $this->assertNotEmpty($preview['body']);
     }
 
+    public function testDeletePartiallyUploadedFile(): void
+    {
+        // Create a bucket for this test
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket Partial Upload',
+            'fileSecurity' => true,
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        // Simulate a partial (cancelled) chunked upload by sending only the first chunk
+        $source = __DIR__ . "/../../../resources/disk-a/large-file.mp4";
+        $totalSize = \filesize($source);
+        $chunkSize = 5 * 1024 * 1024; // 5MB chunks
+        $mimeType = mime_content_type($source);
+
+        $handle = @fopen($source, "rb");
+        $chunkData = @fread($handle, $chunkSize);
+        @fclose($handle);
+
+        $curlFile = new \CURLFile(
+            'data://' . $mimeType . ';base64,' . base64_encode($chunkData),
+            $mimeType,
+            'large-file.mp4'
+        );
+
+        // Send only the first chunk (bytes 0 to chunkSize-1 of totalSize)
+        $end = min($chunkSize - 1, $totalSize - 1);
+        $partialFile = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'content-range' => 'bytes 0-' . $end . '/' . $totalSize,
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => $curlFile,
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $partialFile['headers']['status-code']);
+        $fileId = $partialFile['body']['$id'];
+
+        // Confirm the file is in a pending state (chunksTotal > chunksUploaded)
+        $this->assertGreaterThan(
+            $partialFile['body']['chunksUploaded'],
+            $partialFile['body']['chunksTotal'],
+            'File should be partially uploaded (pending)'
+        );
+
+        // Delete the partially-uploaded (pending) file — this should succeed
+        $deleteResponse = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $deleteResponse['headers']['status-code']);
+        $this->assertEmpty($deleteResponse['body']);
+
+        // Confirm the file is gone
+        $getResponse = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(404, $getResponse['headers']['status-code']);
+    }
+
     public function testDeleteBucketFile(): void
     {
         // Create a fresh file just for deletion testing (not using cache since we delete it)
