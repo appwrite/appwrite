@@ -30,6 +30,7 @@ $isUpgrade = $isUpgrade ?? false;
                     </span>
                     <span class="install-text typography-text-m-400 text-neutral-primary" data-install-text></span>
                 </div>
+                <span class="install-counter typography-text-xs-400" data-install-counter></span>
                 <button type="button" class="install-row-toggle" aria-expanded="false" data-install-toggle>
                     <?php include __DIR__ . '/../../icons/chevron-down.svg'; ?>
                 </button>
@@ -50,4 +51,13 @@ $isUpgrade = $isUpgrade ?? false;
             </div>
         </div>
     </template>
+
+    <div class="install-global-actions is-hidden" data-install-global-actions>
+        <button type="button" class="button secondary" data-install-start-over>
+            <span class="button-text typography-text-m-500">Start Over</span>
+        </button>
+        <button type="button" class="button secondary" data-install-hard-reset>
+            <span class="button-text typography-text-m-500">Reset Everything</span>
+        </button>
+    </div>
 </div>

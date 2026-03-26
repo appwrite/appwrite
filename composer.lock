@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1404c8821e43b3fe92e06a8ed658ed26",
+    "content-hash": "f9225f2b580de0ccb796b2fb8c881384",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3889,38 +3889,7 @@
                     "Utopia\\Database\\": "src/Database"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Tests\\E2E\\": "tests/e2e",
-                    "Tests\\Unit\\": "tests/unit"
-                }
-            },
-            "scripts": {
-                "build": [
-                    "Composer\\Config::disableProcessTimeout",
-                    "docker compose build"
-                ],
-                "start": [
-                    "Composer\\Config::disableProcessTimeout",
-                    "docker compose up -d"
-                ],
-                "test": [
-                    "Composer\\Config::disableProcessTimeout",
-                    "docker compose exec tests vendor/bin/phpunit --configuration phpunit.xml"
-                ],
-                "lint": [
-                    "php -d memory_limit=2G ./vendor/bin/pint --test"
-                ],
-                "format": [
-                    "php -d memory_limit=2G ./vendor/bin/pint"
-                ],
-                "check": [
-                    "./vendor/bin/phpstan analyse --level 7 src tests --memory-limit 2G"
-                ],
-                "coverage": [
-                    "./vendor/bin/coverage-check ./tmp/clover.xml 90"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -3933,8 +3902,8 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/database/tree/5.3.17",
-                "issues": "https://github.com/utopia-php/database/issues"
+                "issues": "https://github.com/utopia-php/database/issues",
+                "source": "https://github.com/utopia-php/database/tree/5.3.17"
             },
             "time": "2026-03-20T01:18:52+00:00"
         },
@@ -4549,16 +4518,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.7.0",
+            "version": "1.8.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "97583ae502e40621ea91a71de19d053c5ae2e558"
+                "reference": "8633523b3343d492427331b6eec53f020f6ab7a7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/97583ae502e40621ea91a71de19d053c5ae2e558",
-                "reference": "97583ae502e40621ea91a71de19d053c5ae2e558",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/8633523b3343d492427331b6eec53f020f6ab7a7",
+                "reference": "8633523b3343d492427331b6eec53f020f6ab7a7",
                 "shasum": ""
             },
             "require": {
@@ -4598,9 +4567,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.7.0"
+                "source": "https://github.com/utopia-php/migration/tree/1.8.3"
             },
-            "time": "2026-03-10T06:36:27+00:00"
+            "time": "2026-03-19T09:18:47+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -5247,22 +5216,23 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "2.0.2",
+            "version": "3.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "5769679308bad498f2777547d48ab332166c4c0b"
+                "reference": "03b76ad5fd01bc50f809915bca6ff0745ea913af"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/5769679308bad498f2777547d48ab332166c4c0b",
-                "reference": "5769679308bad498f2777547d48ab332166c4c0b",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/03b76ad5fd01bc50f809915bca6ff0745ea913af",
+                "reference": "03b76ad5fd01bc50f809915bca6ff0745ea913af",
                 "shasum": ""
             },
             "require": {
                 "adhocore/jwt": "^1.1",
                 "php": ">=8.0",
-                "utopia-php/cache": "1.0.*"
+                "utopia-php/cache": "1.0.*",
+                "utopia-php/fetch": "0.5.*"
             },
             "require-dev": {
                 "laravel/pint": "1.*.*",
@@ -5289,9 +5259,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/vcs/issues",
-                "source": "https://github.com/utopia-php/vcs/tree/2.0.2"
+                "source": "https://github.com/utopia-php/vcs/tree/3.1.0"
             },
-            "time": "2026-03-13T15:25:16+00:00"
+            "time": "2026-03-24T08:49:14+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -5469,16 +5439,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.11.11",
+            "version": "1.12.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "cfc37c85161a5515af4cd2f9885a811f51a2483a"
+                "reference": "a724aa8db52f83ea35854a004837fa5ce990b736"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/cfc37c85161a5515af4cd2f9885a811f51a2483a",
-                "reference": "cfc37c85161a5515af4cd2f9885a811f51a2483a",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/a724aa8db52f83ea35854a004837fa5ce990b736",
+                "reference": "a724aa8db52f83ea35854a004837fa5ce990b736",
                 "shasum": ""
             },
             "require": {
@@ -5514,9 +5484,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.11.11"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.12.1"
             },
-            "time": "2026-03-19T16:21:03+00:00"
+            "time": "2026-03-24T05:18:43+00:00"
         },
         {
             "name": "brianium/paratest",
@@ -8485,9 +8455,6 @@
     },
     "platform-dev": {
         "ext-fileinfo": "*"
-    },
-    "platform-overrides": {
-        "php": "8.3"
     },
     "plugin-api-version": "2.9.0"
 }
