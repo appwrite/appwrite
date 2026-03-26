@@ -1978,6 +1978,52 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(404, $response['headers']['status-code']);
     }
 
+    public function testCreateAccountRecoveryWithoutName(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $session = $this->createAnonymousSession();
+        $email = uniqid() . 'recovery-null-name@localhost.test';
+        $password = 'test-recovery-null-name';
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertArrayHasKey('name', $response['body']);
+        $this->assertSame('', $response['body']['name']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/recovery', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'email' => $email,
+            'url' => 'http://localhost/recovery',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEmpty($response['body']['secret']);
+        $this->assertTrue((new DatetimeValidator())->isValid($response['body']['expire']));
+
+        $lastEmail = $this->getLastEmailByAddress($email, function ($email) {
+            $this->assertStringContainsString('Password Reset', $email['subject']);
+        });
+
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
+        $this->assertEquals($email, $lastEmail['to'][0]['address']);
+        $this->assertEquals('', $lastEmail['to'][0]['name']);
+        $this->assertEquals('Password Reset for ' . $this->getProject()['name'], $lastEmail['subject']);
+        $this->assertStringContainsStringIgnoringCase('Reset your ' . $this->getProject()['name'] . ' password using the link.', $lastEmail['text']);
+    }
+
     #[Retry(count: 1)]
     public function testUpdateAccountRecovery(): void
     {
