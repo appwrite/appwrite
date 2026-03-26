@@ -17,6 +17,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\FloatValidator;
 use Utopia\Validator\Nullable;
@@ -88,14 +89,14 @@ class Create extends Action
             throw new Exception($this->getInvalidValueException(), 'Minimum value must be lesser than maximum value');
         }
 
-        $validator = new Range($min, $max, Database::VAR_FLOAT);
+        $validator = new Range($min, $max, ColumnType::Float->value);
         if (!\is_null($default) && !$validator->isValid($default)) {
             throw new Exception($this->getInvalidValueException(), $validator->getDescription());
         }
 
         $attribute = $this->createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
-            'type' => Database::VAR_FLOAT,
+            'type' => ColumnType::Float->value,
             'size' => 0,
             'required' => $required,
             'default' => $default,

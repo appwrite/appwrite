@@ -17,6 +17,7 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
 
@@ -82,7 +83,7 @@ class Create extends Action
             $collectionId,
             new Document([
                 'key' => $key,
-                'type' => Database::VAR_DATETIME,
+                'type' => ColumnType::Datetime->value,
                 'size' => 0,
                 'required' => $required,
                 'default' => $default,

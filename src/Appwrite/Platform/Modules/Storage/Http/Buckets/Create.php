@@ -106,32 +106,8 @@ class Create extends Action
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Files collection is not configured.');
             }
 
-            $attributes = [];
-            $indexes = [];
-
-            foreach ($files['attributes'] as $attribute) {
-                $attributes[] = new Document([
-                    '$id' => $attribute['$id'],
-                    'type' => $attribute['type'],
-                    'size' => $attribute['size'],
-                    'required' => $attribute['required'],
-                    'signed' => $attribute['signed'],
-                    'array' => $attribute['array'],
-                    'filters' => $attribute['filters'],
-                    'default' => $attribute['default'] ?? null,
-                    'format' => $attribute['format'] ?? ''
-                ]);
-            }
-
-            foreach ($files['indexes'] as $index) {
-                $indexes[] = new Document([
-                    '$id' => $index['$id'],
-                    'type' => $index['type'],
-                    'attributes' => $index['attributes'],
-                    'lengths' => $index['lengths'],
-                    'orders' => $index['orders'],
-                ]);
-            }
+            $attributes = $files['attributes'];
+            $indexes = $files['indexes'];
 
             $dbForProject->createDocument('buckets', new Document([
                 '$id' => $bucketId,

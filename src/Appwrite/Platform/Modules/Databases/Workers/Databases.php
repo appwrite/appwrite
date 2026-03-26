@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Databases\Workers;
 use Appwrite\Event\Realtime;
 use Exception;
 use Utopia\Console;
+use Utopia\Database\Attribute;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception as DatabaseException;
@@ -13,9 +14,15 @@ use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
+use Utopia\Database\Index as IndexObject;
 use Utopia\Database\Query;
+use Utopia\Database\Relationship;
+use Utopia\Database\RelationType;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
+use Utopia\Query\Schema\ColumnType;
+use Utopia\Query\Schema\ForeignKeyAction;
+use Utopia\Query\Schema\IndexType;
 use Utopia\Queue\Message;
 
 class Databases extends Action
@@ -151,9 +158,9 @@ class Databases extends Action
         // Float/int/bool values may be converted to strings during serialization
         if ($default !== null) {
             $default = match ($type) {
-                Database::VAR_FLOAT => \floatval($default),
-                Database::VAR_INTEGER => \intval($default),
-                Database::VAR_BOOLEAN => \boolval($default),
+                ColumnType::Float->value => \floatval($default),
+                ColumnType::Integer->value => \intval($default),
+                ColumnType::Boolean->value => \boolval($default),
                 default => $default,
             };
         }
@@ -171,22 +178,22 @@ class Databases extends Action
 
         try {
             switch ($type) {
-                case Database::VAR_RELATIONSHIP:
+                case ColumnType::Relationship->value:
                     $relatedCollection = $dbForProject->getDocument('database_' . $database->getSequence(), $options['relatedCollection']);
                     if ($relatedCollection->isEmpty()) {
                         throw new DatabaseException('Collection/Table not found');
                     }
 
                     if (
-                        !$dbForProject->createRelationship(
+                        !$dbForProject->createRelationship(new Relationship(
                             collection: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                             relatedCollection: 'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(),
-                            type: $options['relationType'],
+                            type: RelationType::from($options['relationType']),
                             twoWay: $options['twoWay'],
-                            id: $key,
+                            key: $key,
                             twoWayKey: $options['twoWayKey'],
-                            onDelete: $options['onDelete'],
-                        )
+                            onDelete: ForeignKeyAction::from($options['onDelete']),
+                        ))
                     ) {
                         throw new DatabaseException('Failed to create attribute/column');
                     }
@@ -197,7 +204,18 @@ class Databases extends Action
                     }
                     break;
                 default:
-                    if (!$dbForProject->createAttribute('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
+                    if (!$dbForProject->createAttribute('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), new Attribute(
+                        key: $key,
+                        type: ColumnType::from($type),
+                        size: $size,
+                        required: $required,
+                        default: $default,
+                        signed: $signed,
+                        array: $array,
+                        format: $format,
+                        formatOptions: $formatOptions,
+                        filters: $filters,
+                    ))) {
                         throw new Exception('Failed to create attribute/column');
                     }
             }
@@ -283,7 +301,7 @@ class Databases extends Action
 
         try {
             try {
-                if ($type === Database::VAR_RELATIONSHIP) {
+                if ($type === ColumnType::Relationship->value) {
                     if ($options['twoWay']) {
                         $relatedCollection = $dbForProject->getDocument('database_' . $database->getSequence(), $options['relatedCollection']);
                         if ($relatedCollection->isEmpty()) {
@@ -449,7 +467,13 @@ class Databases extends Action
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         try {
-            if (!$dbForDatabases->createIndex('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key, $type, $attributes, $lengths, $orders)) {
+            if (!$dbForDatabases->createIndex('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), new IndexObject(
+                key: $key,
+                type: IndexType::from($type),
+                attributes: $attributes,
+                lengths: $lengths,
+                orders: $orders,
+            ))) {
                 throw new DatabaseException('Failed to create Index');
             }
             $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'available'));
@@ -578,7 +602,7 @@ class Databases extends Action
             'attributes',
             [
                 Query::equal('databaseInternalId', [$databaseInternalId]),
-                Query::equal('type', [Database::VAR_RELATIONSHIP]),
+                Query::equal('type', [ColumnType::Relationship->value]),
                 Query::notEqual('collectionInternalId', $collectionInternalId),
                 Query::contains('options', ['"relatedCollection":"'. $collectionId .'"']),
             ],

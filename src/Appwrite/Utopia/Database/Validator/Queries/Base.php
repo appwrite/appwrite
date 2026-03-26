@@ -3,7 +3,6 @@
 namespace Appwrite\Utopia\Database\Validator\Queries;
 
 use Utopia\Config\Config;
-use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Cursor;
@@ -12,6 +11,7 @@ use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Query\Order;
 use Utopia\Database\Validator\Query\Select;
+use Utopia\Query\Schema\ColumnType;
 
 class Base extends Queries
 {
@@ -44,40 +44,34 @@ class Base extends Queries
         $allAttributes = [];
         $attributes = [];
         foreach ($collection['attributes'] as $attribute) {
-            $key = $attribute['$id'];
+            $document = $attribute->toDocument();
 
-            $attributeDocument = new Document([
-                'key' => $key,
-                'type' => $attribute['type'],
-                'array' => $attribute['array'],
-            ]);
+            $allAttributes[] = $document;
 
-            $allAttributes[] = $attributeDocument;
-
-            if (isset($allowedAttributesLookup[$key])) {
-                $attributes[] = $attributeDocument;
+            if (isset($allowedAttributesLookup[$attribute->key])) {
+                $attributes[] = $document;
             }
         }
 
         $internalAttributes = [
             new Document([
                 'key' => '$id',
-                'type' => Database::VAR_STRING,
+                'type' => ColumnType::String->value,
                 'array' => false,
             ]),
             new Document([
                 'key' => '$createdAt',
-                'type' => Database::VAR_DATETIME,
+                'type' => ColumnType::Datetime->value,
                 'array' => false,
             ]),
             new Document([
                 'key' => '$updatedAt',
-                'type' => Database::VAR_DATETIME,
+                'type' => ColumnType::Datetime->value,
                 'array' => false,
             ]),
             new Document([
                 'key' => '$sequence',
-                'type' => Database::VAR_INTEGER,
+                'type' => ColumnType::Integer->value,
                 'array' => false,
             ])
         ];

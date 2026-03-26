@@ -7,6 +7,7 @@ use Appwrite\Utopia\Request\Filter;
 use Utopia\Database\Database;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
+use Utopia\Query\Schema\ColumnType;
 
 class V20 extends Filter
 {
@@ -165,7 +166,7 @@ class V20 extends Filter
 
         foreach ($attributes as $attr) {
             if (
-                ($attr['type'] ?? null) !== Database::VAR_RELATIONSHIP ||
+                ($attr['type'] ?? null) !== ColumnType::Relationship->value ||
                 $attr['status'] !== 'available'
             ) {
                 continue;

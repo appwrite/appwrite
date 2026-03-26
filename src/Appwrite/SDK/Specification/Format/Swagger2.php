@@ -12,11 +12,11 @@ use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\Operation;
 use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\Any;
-use Utopia\Database\Database;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Spatial;
 use Utopia\Http\Route;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Nullable;
@@ -450,9 +450,9 @@ class Swagger2 extends Format
                             ]
                         ];
                         $node['x-example'] = ($param['example'] ?? '') ?: match ($validator->getSpatialType()) {
-                            Database::VAR_POINT => '[1, 2]',
-                            Database::VAR_LINESTRING => '[[1, 2], [3, 4], [5, 6]]',
-                            Database::VAR_POLYGON => '[[[1, 2], [3, 4], [5, 6], [1, 2]]]',
+                            ColumnType::Point->value => '[1, 2]',
+                            ColumnType::Linestring->value => '[[1, 2], [3, 4], [5, 6]]',
+                            ColumnType::Polygon->value => '[[[1, 2], [3, 4], [5, 6], [1, 2]]]',
                         };
                         break;
                     case \Utopia\Emails\Validator\Email::class:
