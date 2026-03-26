@@ -21,6 +21,7 @@ use Appwrite\SDK\Language\Python;
 use Appwrite\SDK\Language\ReactNative;
 use Appwrite\SDK\Language\REST;
 use Appwrite\SDK\Language\Ruby;
+use Appwrite\SDK\Language\Rust;
 use Appwrite\SDK\Language\Swift;
 use Appwrite\SDK\Language\Web;
 use Appwrite\SDK\SDK;
@@ -300,6 +301,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     case 'kotlin':
                         $config = new Kotlin();
                         $warning = $warning . "\n\n > This is the Kotlin SDK for integrating with Appwrite from your Kotlin server-side code. If you're looking for the Android SDK you should check [appwrite/sdk-for-android](https://github.com/appwrite/sdk-for-android)";
+                        break;
+                    case 'rust':
+                        $config = new Rust();
                         break;
                     case 'graphql':
                         $config = new GraphQL();
