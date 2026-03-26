@@ -191,7 +191,7 @@ function createUser(Hash $hash, string $userId, ?string $email, ?string $passwor
                     Query::equal('identifier', [$email]),
                 ]);
                 if (!$existingTarget->isEmpty()) {
-                    $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
+                    $user->setAttribute('targets', $existingTarget, SetType::Append);
                 }
             }
         }
@@ -215,7 +215,7 @@ function createUser(Hash $hash, string $userId, ?string $email, ?string $passwor
                     Query::equal('identifier', [$phone]),
                 ]);
                 if (!$existingTarget->isEmpty()) {
-                    $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
+                    $user->setAttribute('targets', $existingTarget, SetType::Append);
                 }
             }
         }

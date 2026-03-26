@@ -391,9 +391,9 @@ class Databases extends Action
                         $dbForProject->deleteDocument('indexes', $index->getId());
                     } else {
                         $index
-                            ->setAttribute('attributes', $attributes, Document::SET_TYPE_ASSIGN)
-                            ->setAttribute('lengths', $lengths, Document::SET_TYPE_ASSIGN)
-                            ->setAttribute('orders', $orders, Document::SET_TYPE_ASSIGN);
+                            ->setAttribute('attributes', $attributes, SetType::Assign)
+                            ->setAttribute('lengths', $lengths, SetType::Assign)
+                            ->setAttribute('orders', $orders, SetType::Assign);
 
                         // Check if an index exists with the same attributes and orders
                         $exists = false;

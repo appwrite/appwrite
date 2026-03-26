@@ -514,7 +514,7 @@ Http::post('/v1/account')
                     Query::equal('identifier', [$email]),
                 ]);
                 if (!$existingTarget->isEmpty()) {
-                    $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
+                    $user->setAttribute('targets', $existingTarget, SetType::Append);
                 }
             }
 
@@ -2520,7 +2520,7 @@ Http::post('/v1/account/tokens/email')
                     Query::equal('identifier', [$email]),
                 ]);
                 if (!$existingTarget->isEmpty()) {
-                    $user->setAttribute('targets', $existingTarget, Document::SET_TYPE_APPEND);
+                    $user->setAttribute('targets', $existingTarget, SetType::Append);
                 }
             }
 
