@@ -11,10 +11,12 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub;
@@ -217,6 +219,45 @@ Http::post('/v1/mock/api-key-unprefixed')
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($key, Response::MODEL_KEY);
+    });
+
+Http::post('/v1/mock/tests/projects/:projectId/oauth2/x')
+    ->desc('Enable X OAuth2 provider for a project')
+    ->groups(['mock', 'api', 'projects'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->param('projectId', '', new UID(), 'Project ID.')
+    ->param('appId', '', new Text(256), 'Provider app ID.')
+    ->param('secret', '', new Text(512), 'Provider secret.')
+    ->param('enabled', true, new Boolean(), 'Provider enabled status.', true)
+    ->inject('response')
+    ->inject('dbForPlatform')
+    ->inject('authorization')
+    ->action(function (string $projectId, string $appId, string $secret, bool $enabled, Response $response, Database $dbForPlatform, Authorization $authorization) {
+        $isDevelopment = System::getEnv('_APP_ENV', 'development') === 'development';
+
+        if (!$isDevelopment) {
+            throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
+        }
+
+        $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $providers = $project->getAttribute('oAuthProviders', []);
+        $providers['xAppid'] = $appId;
+        $providers['xSecret'] = $secret;
+        $providers['xEnabled'] = $enabled;
+
+        $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+            'oAuthProviders' => $providers,
+        ])));
+
+        $authorization->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
 Http::get('/v1/mock/github/callback')

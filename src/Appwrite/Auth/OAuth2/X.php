@@ -38,17 +38,6 @@ class X extends OAuth2
         return 'x';
     }
 
-    /**
-     * @return bool
-     */
-    public function usesPKCE(): bool
-    {
-        return true;
-    }
-
-    /**
-     * @return string
-     */
     public function getLoginURL(): string
     {
         return 'https://x.com/i/oauth2/authorize?' . \http_build_query([
@@ -57,8 +46,6 @@ class X extends OAuth2
             'redirect_uri' => $this->callback,
             'scope' => \implode(' ', $this->getScopes()),
             'state' => \json_encode($this->state),
-            'code_challenge' => $this->getPKCEChallenge(),
-            'code_challenge_method' => 'S256',
         ]);
     }
 
@@ -70,13 +57,6 @@ class X extends OAuth2
     protected function getTokens(string $code): array
     {
         if (empty($this->tokens)) {
-            if (empty($this->pkceVerifier)) {
-                throw new Exception(\json_encode([
-                    'error' => 'invalid_request',
-                    'error_description' => 'Missing PKCE verifier.',
-                ]), 400);
-            }
-
             $headers = [
                 'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret),
                 'Content-Type: application/x-www-form-urlencoded',
@@ -91,7 +71,6 @@ class X extends OAuth2
                     'client_id' => $this->appID,
                     'grant_type' => 'authorization_code',
                     'redirect_uri' => $this->callback,
-                    'code_verifier' => $this->getPKCEVerifier(),
                 ])
             ), true);
         }
