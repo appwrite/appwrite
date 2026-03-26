@@ -8,6 +8,7 @@ use Utopia\Database\Exception;
 use Utopia\Database\Exception\Timeout;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Query\Method;
 
 /**
  * Service for managing transaction state and providing transaction-aware document operations

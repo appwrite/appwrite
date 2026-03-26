@@ -1374,9 +1374,9 @@ Http::error()
 
                         // orders
                         if (in_array($method, [
-                            QueryQueryMethod::OrderDesc,
-                            QueryQueryMethod::OrderAsc,
-                            QueryQueryMethod::OrderRandom
+                            QueryMethod::OrderDesc,
+                            QueryMethod::OrderAsc,
+                            QueryMethod::OrderRandom
                         ], true)) {
                             return [$method => !empty($attribute) ? [$attribute] : []];
                         }
