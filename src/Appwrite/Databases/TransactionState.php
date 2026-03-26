@@ -718,7 +718,7 @@ class TransactionState
                     }
                     break;
 
-                case Method::GreaterThan_EQUAL:
+                case Method::GreaterThanEqual:
                     if (!($docValue >= $values[0])) {
                         return false;
                     }

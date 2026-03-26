@@ -17,6 +17,7 @@ use Utopia\Database\Exception\Structure;
 use Utopia\Database\Index as IndexObject;
 use Utopia\Database\Query;
 use Utopia\Database\Relationship;
+use Utopia\Database\SetType;
 use Utopia\Database\RelationType;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
