@@ -11,7 +11,7 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
-use Utopia\Database\Adapter\Feature\Spatial;
+use Utopia\Database\Adapter\Feature\Spatial as SpatialFeature;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -79,7 +79,7 @@ class Create extends Action
 
     public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?array $default, UtopiaResponse $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
-        if (!$dbForProject->getAdapter() instanceof Spatial) {
+        if (!$dbForProject->getAdapter() instanceof SpatialFeature) {
             throw new Exception(Exception::GENERAL_FEATURE_UNSUPPORTED, 'Spatial columns are not supported by this database.');
         }
 
