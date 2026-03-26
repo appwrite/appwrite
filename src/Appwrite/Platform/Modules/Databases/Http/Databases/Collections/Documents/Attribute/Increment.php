@@ -25,6 +25,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Numeric;
 
@@ -198,7 +199,7 @@ class Increment extends Action
             fn ($document) => $document->getAttribute('key'),
             \array_filter(
                 $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn ($attribute) => $attribute->getAttribute('type') === ColumnType::Relationship->value
             )
         );
 

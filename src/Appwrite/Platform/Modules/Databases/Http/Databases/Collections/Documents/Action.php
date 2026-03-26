@@ -9,7 +9,6 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Validator\Authorization;
 
 abstract class Action extends DatabasesAction
 {
@@ -316,102 +315,6 @@ abstract class Action extends DatabasesAction
                 throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $validator->getDescription());
             }
         }
-    }
-
-    /**
-     * Resolves relationships in a document and attaches metadata.
-     */
-    protected function processDocument(
-        /* database */
-        Document $database,
-        Document $collection,
-        Document $document,
-        Database $dbForProject,
-        /* options */
-        array &$collectionsCache,
-        Authorization $authorization,
-        ?int &$operations = null,
-        int $depth = 0,
-    ): bool {
-        if ($operations !== null && $document->isEmpty()) {
-            return false;
-        }
-
-        if ($operations !== null) {
-            $operations++;
-        }
-
-        $collectionId = $collection->getId();
-        $document->removeAttribute('$collection');
-        $document->setAttribute('$databaseId', $database->getId());
-        $document->setAttribute('$' . $this->getCollectionsEventsContext() . 'Id', $collectionId);
-
-        // Stop processing relationships if max depth reached
-        if ($depth >= Database::RELATION_MAX_DEPTH) {
-            return true;
-        }
-
-        $relationships = $collectionsCache[$collectionId] ??= \array_filter(
-            $collection->getAttribute('attributes', []),
-            fn ($attr) => $attr->getAttribute('type') === Database::VAR_RELATIONSHIP
-        );
-
-        foreach ($relationships as $relationship) {
-            $key = $relationship->getAttribute('key');
-            $related = $document->getAttribute($key);
-
-            if (empty($related)) {
-                if (\in_array(\gettype($related), ['array', 'object']) && $operations !== null) {
-                    $operations++;
-                }
-                continue;
-            }
-
-            $relations = \is_array($related) ? $related : [$related];
-            $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-
-            if (!isset($collectionsCache[$relatedCollectionId])) {
-                $relatedCollectionDoc = $authorization->skip(
-                    fn () => $dbForProject->getDocument(
-                        'database_' . $database->getSequence(),
-                        $relatedCollectionId
-                    )
-                );
-
-                $collectionsCache[$relatedCollectionId] = \array_filter(
-                    $relatedCollectionDoc->getAttribute('attributes', []),
-                    fn ($attr) => $attr->getAttribute('type') === Database::VAR_RELATIONSHIP
-                );
-            }
-
-            foreach ($relations as $relation) {
-                if ($relation instanceof Document) {
-                    $relatedCollection = new Document([
-                        '$id' => $relatedCollectionId,
-                        'attributes' => $collectionsCache[$relatedCollectionId],
-                    ]);
-
-                    $this->processDocument(
-                        database: $database,
-                        collection: $relatedCollection,
-                        document: $relation,
-                        dbForProject: $dbForProject,
-                        collectionsCache: $collectionsCache,
-                        authorization: $authorization,
-                        operations: $operations,
-                        depth: $depth + 1
-                    );
-                }
-            }
-
-            if (\is_array($related)) {
-                $document->setAttribute($relationship->getAttribute('key'), \array_values($relations));
-            } elseif (empty($relations)) {
-                $document->setAttribute($relationship->getAttribute('key'), null);
-            }
-        }
-
-        return true;
     }
 
     /**

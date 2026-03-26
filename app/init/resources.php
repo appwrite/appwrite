@@ -28,6 +28,11 @@ use Appwrite\Network\Validator\Origin;
 use Appwrite\Network\Validator\Redirect;
 use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Database\Hooks\DocumentUsage;
+use Appwrite\Utopia\Database\Hooks\FunctionCache;
+use Appwrite\Utopia\Database\Hooks\Metadata;
+use Appwrite\Utopia\Database\Hooks\Usage;
+use Appwrite\Utopia\Database\Hooks\UserEvents;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Executor\Executor;
@@ -51,6 +56,9 @@ use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Hook\Permissions;
+use Utopia\Database\Hook\Relationships;
+use Utopia\Database\Hook\Tenancy;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
@@ -639,86 +647,7 @@ Http::setResource('dbForProject', function (Group $pools, Database $dbForPlatfor
             ->setNamespace('_' . $project->getSequence());
     }
 
-    /**
-     * This isolated event handling for `users.*.create` which is based on a `Database::EVENT_DOCUMENT_CREATE` listener may look odd, but it is **intentional**.
-     *
-     * Accounts can be created in many ways beyond `createAccount`
-     * (anonymous, OAuth, phone, etc.), and those flows are probably not covered in event tests; so we handle this here.
-     */
-    $eventDatabaseListener = function (Document $project, Document $document, Response $response, Event $queueForEvents, Func $queueForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime) {
-        // Only trigger events for user creation with the database listener.
-        if ($document->getCollection() !== 'users') {
-            return;
-        }
-
-        $queueForEvents
-            ->setEvent('users.[userId].create')
-            ->setParam('userId', $document->getId())
-            ->setPayload($response->output($document, Response::MODEL_USER));
-
-        // Trigger functions, webhooks, and realtime events
-        $queueForFunctions
-            ->from($queueForEvents)
-            ->trigger();
-
-        /** Trigger webhooks events only if a project has them enabled */
-        if (! empty($project->getAttribute('webhooks'))) {
-            $queueForWebhooks
-                ->from($queueForEvents)
-                ->trigger();
-        }
-
-        /** Trigger realtime events only for non console events */
-        if ($queueForEvents->getProject()->getId() !== 'console') {
-            $queueForRealtime
-                ->from($queueForEvents)
-                ->trigger();
-        }
-    };
-
-    /**
-     * Purge function events cache when functions are created, updated or deleted.
-     */
-    $functionsEventsCacheListener = function (string $event, Document $document, Document $project, Database $dbForProject) {
-
-        if ($document->getCollection() !== 'functions') {
-            return;
-        }
-
-        if ($project->isEmpty() || $project->getId() === 'console') {
-            return;
-        }
-
-        $hostname = $dbForProject->getAdapter()->getHostname();
-        $cacheKey = \sprintf(
-            '%s-cache-%s:%s:%s:project:%s:functions:events',
-            $dbForProject->getCacheName(),
-            $hostname ?? '',
-            $dbForProject->getNamespace(),
-            $dbForProject->getTenant(),
-            $project->getId()
-        );
-
-        $dbForProject->getCache()->purge($cacheKey);
-    };
-
-    /**
-     * Prefix metrics with database type when applicable.
-     * Avoids prefixing for legacy and tablesdb types to preserve historical metrics.
-     */
-    $getDatabaseTypePrefixedMetric = function (string $databaseType, string $metric): string {
-        if (
-            $databaseType === '' ||
-            $databaseType === DATABASE_TYPE_LEGACY ||
-            $databaseType === DATABASE_TYPE_TABLESDB
-        ) {
-            return $metric;
-        }
-
-        return $databaseType . '.' . $metric;
-    };
-
-    // Determine database type from request path, similar to api.php
+    // Determine database type from request path
     $path = $request->getURI();
     $databaseType = match (true) {
         str_contains($path, '/documentsdb') => DATABASE_TYPE_DOCUMENTSDB,
@@ -726,115 +655,6 @@ Http::setResource('dbForProject', function (Group $pools, Database $dbForPlatfor
         default => '',
     };
 
-    $usageDatabaseListener = function (string $event, Document $document, UsageContext $usage) use ($getDatabaseTypePrefixedMetric, $databaseType) {
-        $value = 1;
-
-        switch ($event) {
-            case Database::EVENT_DOCUMENT_DELETE:
-                $value = -1;
-                break;
-            case Database::EVENT_DOCUMENTS_DELETE:
-                $value = -1 * $document->getAttribute('modified', 0);
-                break;
-            case Database::EVENT_DOCUMENTS_CREATE:
-                $value = $document->getAttribute('modified', 0);
-                break;
-            case Database::EVENT_DOCUMENTS_UPSERT:
-                $value = $document->getAttribute('created', 0);
-                break;
-        }
-
-        switch (true) {
-            case $document->getCollection() === 'teams':
-                $usage->addMetric(METRIC_TEAMS, $value); // per project
-                break;
-            case $document->getCollection() === 'users':
-                $usage->addMetric(METRIC_USERS, $value); // per project
-                if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                    $usage->addReduce($document);
-                }
-                break;
-            case $document->getCollection() === 'sessions': // sessions
-                $usage->addMetric(METRIC_SESSIONS, $value); // per project
-                break;
-            case $document->getCollection() === 'databases': // databases
-                $metric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DATABASES);
-                $usage->addMetric($metric, $value); // per project
-
-                if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                    $usage->addReduce($document);
-                }
-                break;
-            case str_starts_with($document->getCollection(), 'database_') && ! str_contains($document->getCollection(), 'collection'): // collections
-                $parts = explode('_', $document->getCollection());
-                $databaseInternalId = $parts[1] ?? 0;
-                $collectionMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_COLLECTIONS);
-                $databaseIdCollectionMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DATABASE_ID_COLLECTIONS);
-                $usage
-                    ->addMetric($collectionMetric, $value) // per project
-                    ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, $databaseIdCollectionMetric), $value);
-
-                if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                    $usage->addReduce($document);
-                }
-                break;
-            case str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_'): // documents
-                $parts = explode('_', $document->getCollection());
-                $databaseInternalId = $parts[1] ?? 0;
-                $collectionInternalId = $parts[3] ?? 0;
-                $documentsMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DOCUMENTS);
-                $databaseIdDocumentsMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DATABASE_ID_DOCUMENTS);
-                $databaseIdCollectionIdDocumentsMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS);
-                $usage
-                    ->addMetric($documentsMetric, $value)  // per project
-                    ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, $databaseIdDocumentsMetric), $value) // per database
-                    ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], $databaseIdCollectionIdDocumentsMetric), $value);  // per collection
-                break;
-            case $document->getCollection() === 'buckets': // buckets
-                $usage->addMetric(METRIC_BUCKETS, $value); // per project
-                if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                    $usage
-                        ->addReduce($document);
-                }
-                break;
-            case str_starts_with($document->getCollection(), 'bucket_'): // files
-                $parts = explode('_', $document->getCollection());
-                $bucketInternalId = $parts[1];
-                $usage
-                    ->addMetric(METRIC_FILES, $value) // per project
-                    ->addMetric(METRIC_FILES_STORAGE, $document->getAttribute('sizeOriginal') * $value) // per project
-                    ->addMetric(str_replace('{bucketInternalId}', $bucketInternalId, METRIC_BUCKET_ID_FILES), $value) // per bucket
-                    ->addMetric(str_replace('{bucketInternalId}', $bucketInternalId, METRIC_BUCKET_ID_FILES_STORAGE), $document->getAttribute('sizeOriginal') * $value); // per bucket
-                break;
-            case $document->getCollection() === 'functions':
-                $usage->addMetric(METRIC_FUNCTIONS, $value); // per project
-
-                if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                    $usage
-                        ->addReduce($document);
-                }
-                break;
-            case $document->getCollection() === 'sites':
-                $usage->addMetric(METRIC_SITES, $value); // per project
-
-                if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                    $usage
-                        ->addReduce($document);
-                }
-                break;
-            case $document->getCollection() === 'deployments':
-                $usage
-                    ->addMetric(METRIC_DEPLOYMENTS, $value) // per project
-                    ->addMetric(METRIC_DEPLOYMENTS_STORAGE, $document->getAttribute('size') * $value) // per project
-                    ->addMetric(str_replace(['{resourceType}'], [$document->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_DEPLOYMENTS), $value) // per function
-                    ->addMetric(str_replace(['{resourceType}'], [$document->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_DEPLOYMENTS_STORAGE), $document->getAttribute('size') * $value)
-                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getAttribute('resourceType'), $document->getAttribute('resourceInternalId')], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS), $value) // per function
-                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getAttribute('resourceType'), $document->getAttribute('resourceInternalId')], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE), $document->getAttribute('size') * $value);
-                break;
-            default:
-                break;
-        }
-    };
 
     // Clone the queues, to prevent events triggered by the database listener
     // from overwriting the events that are supposed to be triggered in the shutdown hook.
@@ -844,23 +664,21 @@ Http::setResource('dbForProject', function (Group $pools, Database $dbForPlatfor
     $queueForRealtime = new Realtime();
 
     $database
-        ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $usage))
-        ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $usage))
-        ->on(Database::EVENT_DOCUMENTS_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $usage))
-        ->on(Database::EVENT_DOCUMENTS_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $usage))
-        ->on(Database::EVENT_DOCUMENTS_UPSERT, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $usage))
-        ->on(Database::EVENT_DOCUMENT_CREATE, 'create-trigger-events', fn ($event, $document) => $eventDatabaseListener(
+        ->addHook(new Usage($usage, $databaseType))
+        ->addHook(new UserEvents(
             $project,
-            $document,
             $response,
             $queueForEventsClone->from($queueForEvents),
             $queueForFunctions->from($queueForEvents),
             $queueForWebhooks->from($queueForEvents),
-            $queueForRealtime->from($queueForEvents)
+            $queueForRealtime->from($queueForEvents),
         ))
-        ->on(Database::EVENT_DOCUMENT_CREATE, 'purge-function-events-cache', fn ($event, $document) => $functionsEventsCacheListener($event, $document, $project, $database))
-        ->on(Database::EVENT_DOCUMENT_UPDATE, 'purge-function-events-cache', fn ($event, $document) => $functionsEventsCacheListener($event, $document, $project, $database))
-        ->on(Database::EVENT_DOCUMENT_DELETE, 'purge-function-events-cache', fn ($event, $document) => $functionsEventsCacheListener($event, $document, $project, $database));
+        ->addHook(new FunctionCache($project, $database))
+        ->addHook(new Permissions());
+
+    if ($database->getSharedTables() && ($database->getTenant() !== null)) {
+        $database->addHook(new Tenancy($database->getTenant()));
+    }
 
     return $database;
 }, ['pools', 'dbForPlatform', 'cache', 'project', 'response', 'publisher', 'publisherFunctions', 'publisherWebhooks', 'queueForEvents', 'queueForFunctions', 'queueForWebhooks', 'queueForRealtime', 'usage', 'authorization', 'request']);
@@ -880,13 +698,16 @@ Http::setResource('dbForPlatform', function (Group $pools, Cache $cache, Authori
         ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
 
     $database->setDocumentType('users', User::class);
+    $database->addHook(new Permissions());
 
     return $database;
 }, ['pools', 'cache', 'authorization']);
 
-Http::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Document $project, Request $request, UsageContext $usage, Authorization $authorization) {
+Http::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Document $project, Request $request, UsageContext $usage, Authorization $authorization, Database $dbForProject) {
 
-    return function (Document $database) use ($pools, $cache, $project, $request, $usage, $authorization): Database {
+    return function (Document $database) use ($pools, $cache, $project, $request, $usage, $authorization, $dbForProject): Database {
+        $originalDatabase = $database;
+        $context = str_contains($request->getURI(), '/tablesdb/') ? 'table' : 'collection';
         $databaseDSN = $database->getAttribute('database', $project->getAttribute('database', ''));
         $databaseType = $database->getAttribute('type', '');
 
@@ -935,86 +756,39 @@ Http::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Docume
             $database->setTimeout($timeout);
         }
 
-        // Register database event listeners for usage stats collection
         $documentsMetric = METRIC_DOCUMENTS;
         $databaseIdDocumentsMetric = METRIC_DATABASE_ID_DOCUMENTS;
         $databaseIdCollectionIdDocumentsMetric = METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS;
         if ($databaseType !== DATABASE_TYPE_LEGACY && $databaseType !== DATABASE_TYPE_TABLESDB) {
-            $documentsMetric = $databaseType. '.' .$documentsMetric;
-            $databaseIdDocumentsMetric = $databaseType. '.' .$databaseIdDocumentsMetric;
-            $databaseIdCollectionIdDocumentsMetric = $databaseType . '.' .$databaseIdCollectionIdDocumentsMetric;
+            $documentsMetric = $databaseType . '.' . $documentsMetric;
+            $databaseIdDocumentsMetric = $databaseType . '.' . $databaseIdDocumentsMetric;
+            $databaseIdCollectionIdDocumentsMetric = $databaseType . '.' . $databaseIdCollectionIdDocumentsMetric;
         }
+
         $database
-            ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', function ($event, $document) use ($usage, $documentsMetric, $databaseIdDocumentsMetric, $databaseIdCollectionIdDocumentsMetric) {
-                $value = 1;
+            ->addHook(new DocumentUsage(
+                $usage,
+                $documentsMetric,
+                $databaseIdDocumentsMetric,
+                $databaseIdCollectionIdDocumentsMetric,
+            ))
+            ->addHook(new Permissions())
+            ->addHook(new Relationships($database))
+            ->addHook(new Metadata(
+                database: $originalDatabase,
+                context: $context,
+                dbForProject: $dbForProject,
+                authorization: $authorization,
+            ));
 
-                if (str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_')) {
-                    $parts = explode('_', $document->getCollection());
-                    $databaseInternalId   = $parts[1] ?? 0;
-                    $collectionInternalId = $parts[3] ?? 0;
-                    $usage
-                        ->addMetric($documentsMetric, $value)  // per project
-                        ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, $databaseIdDocumentsMetric), $value) // per database
-                        ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], $databaseIdCollectionIdDocumentsMetric), $value);  // per collection
-                }
-            })
-            ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', function ($event, $document) use ($usage, $documentsMetric, $databaseIdDocumentsMetric, $databaseIdCollectionIdDocumentsMetric) {
-                $value = -1;
-
-                if (str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_')) {
-                    $parts = explode('_', $document->getCollection());
-                    $databaseInternalId   = $parts[1] ?? 0;
-                    $collectionInternalId = $parts[3] ?? 0;
-                    $usage
-                        ->addMetric($documentsMetric, $value)  // per project
-                        ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, $databaseIdDocumentsMetric), $value) // per database
-                        ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId,  $collectionInternalId], $databaseIdCollectionIdDocumentsMetric), $value);  // per collection
-                }
-            })
-            ->on(Database::EVENT_DOCUMENTS_CREATE, 'calculate-usage', function ($event, $document) use ($usage, $documentsMetric, $databaseIdDocumentsMetric, $databaseIdCollectionIdDocumentsMetric) {
-                $value = $document->getAttribute('modified', 0);
-
-                if (str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_')) {
-                    $parts = explode('_', $document->getCollection());
-                    $databaseInternalId   = $parts[1] ?? 0;
-                    $collectionInternalId = $parts[3] ?? 0;
-                    $usage
-                        ->addMetric($documentsMetric, $value)  // per project
-                        ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, $databaseIdDocumentsMetric), $value) // per database
-                        ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId,  $collectionInternalId], $databaseIdCollectionIdDocumentsMetric), $value);  // per collection
-                }
-            })
-            ->on(Database::EVENT_DOCUMENTS_DELETE, 'calculate-usage', function ($event, $document) use ($usage, $documentsMetric, $databaseIdDocumentsMetric, $databaseIdCollectionIdDocumentsMetric) {
-                $value = -1 * $document->getAttribute('modified', 0);
-
-                if (str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_')) {
-                    $parts = explode('_', $document->getCollection());
-                    $databaseInternalId   = $parts[1] ?? 0;
-                    $collectionInternalId = $parts[3] ?? 0;
-                    $usage
-                        ->addMetric($documentsMetric, $value)  // per project
-                        ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, $databaseIdDocumentsMetric), $value) // per database
-                        ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId,  $collectionInternalId], $databaseIdCollectionIdDocumentsMetric), $value);  // per collection
-                }
-            })
-            ->on(Database::EVENT_DOCUMENTS_UPSERT, 'calculate-usage', function ($event, $document) use ($usage, $documentsMetric, $databaseIdDocumentsMetric, $databaseIdCollectionIdDocumentsMetric) {
-                $value = $document->getAttribute('created', 0);
-
-                if (str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_')) {
-                    $parts = explode('_', $document->getCollection());
-                    $databaseInternalId   = $parts[1] ?? 0;
-                    $collectionInternalId = $parts[3] ?? 0;
-                    $usage
-                        ->addMetric($documentsMetric, $value)  // per project
-                        ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, $databaseIdDocumentsMetric), $value) // per database
-                        ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId,  $collectionInternalId], $databaseIdCollectionIdDocumentsMetric), $value);  // per collection
-                }
-            });
+        if ($database->getSharedTables() && ($database->getTenant() !== null)) {
+            $database->addHook(new Tenancy($database->getTenant()));
+        }
 
         return $database;
     };
 
-}, ['pools','cache','project','request','usage','authorization']);
+}, ['pools','cache','project','request','usage','authorization', 'dbForProject']);
 
 Http::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache, Authorization $authorization) {
     $databases = [];
@@ -1070,8 +844,13 @@ Http::setResource('getProjectDB', function (Group $pools, Database $dbForPlatfor
 
         $adapter = new DatabasePool($pools->get($dsn->getHost()));
         $database = new Database($adapter, $cache);
+        $database->addHook(new Permissions());
         $databases[$dsn->getHost()] = $database;
         $configure($database);
+
+        if ($database->getSharedTables() && ($database->getTenant() !== null)) {
+            $database->addHook(new Tenancy($database->getTenant()));
+        }
 
         return $database;
     };
@@ -1097,9 +876,12 @@ Http::setResource('getLogsDB', function (Group $pools, Cache $cache, Authorizati
             ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
             ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
 
+        $database->addHook(new Permissions());
+
         // set tenant
         if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
             $database->setTenant($project->getSequence());
+            $database->addHook(new Tenancy($project->getSequence()));
         }
 
         return $database;

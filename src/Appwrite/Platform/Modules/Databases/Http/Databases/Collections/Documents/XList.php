@@ -218,23 +218,9 @@ class XList extends Action
             throw new Exception(Exception::DATABASE_TIMEOUT);
         }
 
-        $operations = 0;
-        $collectionsCache = [];
-        foreach ($documents as $document) {
-            $this->processDocument(
-                database: $database,
-                collection: $collection,
-                document: $document,
-                dbForProject: $dbForProject,
-                collectionsCache: $collectionsCache,
-                authorization: $authorization,
-                operations: $operations
-            );
-        }
-
         $usage
-            ->addMetric($this->getDatabasesOperationReadMetric(), max($operations, 1))
-            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationReadMetric()), $operations);
+            ->addMetric($this->getDatabasesOperationReadMetric(), 1)
+            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationReadMetric()), 1);
 
         $response->dynamic(new Document([
             'total' => $total,
