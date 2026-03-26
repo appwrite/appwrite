@@ -1780,4 +1780,322 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]);
     }
+
+    public function testCreateVectorsDBJSONExport(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ];
+
+        // Create vectorsdb database
+        $database = $this->client->call(Client::METHOD_POST, '/vectorsdb', $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'VectorsDB Export Test'
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        // Create collection with dimension 16
+        $collection = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections', $headers, [
+            'collectionId' => ID::unique(),
+            'name' => 'VecExportCol',
+            'dimension' => 16,
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        // Seed 5 documents
+        for ($i = 1; $i <= 5; $i++) {
+            $embeddings = array_map(fn () => round((mt_rand() / mt_getrandmax()) * 2 - 1, 6), range(1, 16));
+            $doc = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections/' . $collectionId . '/documents', $headers, [
+                'documentId' => ID::unique(),
+                'data' => [
+                    'embeddings' => $embeddings,
+                    'metadata' => ['title' => 'Doc ' . $i, 'score' => round($i * 0.2, 1)]
+                ]
+            ]);
+            $this->assertEquals(201, $doc['headers']['status-code'], 'Failed to create vector document ' . $i);
+        }
+
+        // Trigger JSON export
+        $migration = $this->client->call(Client::METHOD_POST, '/migrations/json/exports', $headers, [
+            'resourceId' => $databaseId . ':' . $collectionId,
+            'filename' => 'vectorsdb-export-test',
+            'columns' => [],
+            'queries' => [],
+            'notify' => true,
+        ]);
+        $this->assertEquals(202, $migration['headers']['status-code']);
+        $migrationId = $migration['body']['$id'];
+
+        // Poll until completed
+        $this->assertEventually(function () use ($migrationId, $headers) {
+            $migration = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, $headers);
+
+            $this->assertEquals(200, $migration['headers']['status-code']);
+            $this->assertEquals('finished', $migration['body']['stage']);
+            $this->assertEquals('completed', $migration['body']['status']);
+            $this->assertEquals('Appwrite', $migration['body']['source']);
+            $this->assertEquals('JSON', $migration['body']['destination']);
+        }, 30_000, 500);
+
+        // Verify email notification
+        $lastEmail = $this->getLastEmail();
+        $this->assertNotEmpty($lastEmail);
+        $this->assertEquals('Your JSON export is ready', $lastEmail['subject']);
+
+        // Download and verify JSON content
+        $body = $lastEmail['html'];
+        preg_match('/href="([^"]*)"/', $body, $matches);
+        $this->assertNotEmpty($matches[1], 'Download link should be present in email');
+
+        $downloadUrl = html_entity_decode($matches[1]);
+        $parsedUrl = parse_url($downloadUrl);
+        parse_str($parsedUrl['query'] ?? '', $queryParams);
+
+        $jsonFile = $this->client->call(Client::METHOD_GET, $parsedUrl['path'], [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'origin' => 'http://localhost',
+        ], $queryParams);
+
+        $this->assertNotEmpty($jsonFile['body']);
+        $jsonData = $jsonFile['body'];
+        $this->assertNotEmpty($jsonData, 'JSON export should not be empty');
+
+        // Verify content has embeddings
+        $decoded = json_decode($jsonData, true);
+        $this->assertNotNull($decoded);
+        $this->assertGreaterThanOrEqual(5, count($decoded));
+        $this->assertArrayHasKey('embeddings', $decoded[0]);
+        $this->assertCount(16, $decoded[0]['embeddings'], 'Embeddings should have 16 dimensions');
+        $this->assertArrayHasKey('metadata', $decoded[0]);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/vectorsdb/' . $databaseId, $headers);
+    }
+
+    public function testCreateVectorsDBJSONImport(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ];
+
+        // Create vectorsdb database
+        $database = $this->client->call(Client::METHOD_POST, '/vectorsdb', $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'VectorsDB Import Test'
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        // Create collection with dimension 16
+        $collection = $this->client->call(Client::METHOD_POST, '/vectorsdb/' . $databaseId . '/collections', $headers, [
+            'collectionId' => ID::unique(),
+            'name' => 'VecImportCol',
+            'dimension' => 16,
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        // Create bucket and upload test file
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
+            'bucketId' => ID::unique(),
+            'name' => 'VectorsDB Import Bucket',
+            'maximumFileSize' => 2000000,
+            'allowedFileExtensions' => ['json'],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new \CURLFile(realpath(__DIR__ . '/../../../resources/json/vectorsdb-documents.json'), 'application/json', 'vectorsdb-documents.json'),
+        ]);
+        $this->assertEquals(201, $file['headers']['status-code']);
+        $fileId = $file['body']['$id'];
+
+        // Trigger import
+        $migration = $this->performJsonMigration([
+            'fileId' => $fileId,
+            'bucketId' => $bucketId,
+            'resourceId' => $databaseId . ':' . $collectionId,
+        ]);
+        $this->assertEquals(202, $migration['headers']['status-code']);
+
+        // Poll until completed
+        $this->assertEventually(function () use ($migration, $headers) {
+            $migrationId = $migration['body']['$id'];
+            $result = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, $headers);
+
+            $this->assertEquals(200, $result['headers']['status-code']);
+            $this->assertEquals('finished', $result['body']['stage']);
+            $this->assertEquals('completed', $result['body']['status']);
+            $this->assertEquals('JSON', $result['body']['source']);
+            $this->assertEquals('Appwrite', $result['body']['destination']);
+        }, 30_000, 500);
+
+        // Verify documents were imported
+        $docs = $this->client->call(Client::METHOD_GET, '/vectorsdb/' . $databaseId . '/collections/' . $collectionId . '/documents', $headers);
+        $this->assertEquals(200, $docs['headers']['status-code']);
+        $this->assertEquals(10, $docs['body']['total'], 'Should have imported 10 vectorsdb documents');
+
+        // Verify first document structure
+        $firstDoc = $docs['body']['documents'][0];
+        $this->assertArrayHasKey('embeddings', $firstDoc);
+        $this->assertCount(16, $firstDoc['embeddings'], 'Imported embeddings should have 16 dimensions');
+        $this->assertArrayHasKey('metadata', $firstDoc);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/vectorsdb/' . $databaseId, $headers);
+    }
+
+    public function testCreateDocumentsDBJSONExport(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ];
+
+        // Create documentsdb database
+        $database = $this->client->call(Client::METHOD_POST, '/documentsdb', $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'DocumentsDB Export Test'
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        // Create collection (schemaless — no attributes needed)
+        $collection = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections', $headers, [
+            'collectionId' => ID::unique(),
+            'name' => 'DocExportCol',
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        // Seed 5 documents
+        for ($i = 1; $i <= 5; $i++) {
+            $doc = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections/' . $collectionId . '/documents', $headers, [
+                'documentId' => ID::unique(),
+                'data' => [
+                    'name' => 'User ' . $i,
+                    'email' => 'user' . $i . '@test.com',
+                    'age' => 20 + $i,
+                    'address' => ['city' => 'City ' . $i, 'zip' => '1000' . $i]
+                ]
+            ]);
+            $this->assertEquals(201, $doc['headers']['status-code'], 'Failed to create document ' . $i);
+        }
+
+        // Trigger JSON export
+        $migration = $this->client->call(Client::METHOD_POST, '/migrations/json/exports', $headers, [
+            'resourceId' => $databaseId . ':' . $collectionId,
+            'filename' => 'documentsdb-export-test',
+            'columns' => [],
+            'queries' => [],
+            'notify' => false,
+        ]);
+        $this->assertEquals(202, $migration['headers']['status-code']);
+        $migrationId = $migration['body']['$id'];
+
+        // Poll until completed
+        $this->assertEventually(function () use ($migrationId, $headers) {
+            $migration = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, $headers);
+
+            $this->assertEquals(200, $migration['headers']['status-code']);
+            $this->assertEquals('finished', $migration['body']['stage']);
+            $this->assertEquals('completed', $migration['body']['status']);
+            $this->assertEquals('Appwrite', $migration['body']['source']);
+            $this->assertEquals('JSON', $migration['body']['destination']);
+        }, 30_000, 500);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/documentsdb/' . $databaseId, $headers);
+    }
+
+    public function testCreateDocumentsDBJSONImport(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ];
+
+        // Create documentsdb database
+        $database = $this->client->call(Client::METHOD_POST, '/documentsdb', $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'DocumentsDB Import Test'
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        // Create collection (schemaless)
+        $collection = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections', $headers, [
+            'collectionId' => ID::unique(),
+            'name' => 'DocImportCol',
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        // Create bucket and upload test file
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
+            'bucketId' => ID::unique(),
+            'name' => 'DocumentsDB Import Bucket',
+            'maximumFileSize' => 2000000,
+            'allowedFileExtensions' => ['json'],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new \CURLFile(realpath(__DIR__ . '/../../../resources/json/documentsdb-documents.json'), 'application/json', 'documentsdb-documents.json'),
+        ]);
+        $this->assertEquals(201, $file['headers']['status-code']);
+        $fileId = $file['body']['$id'];
+
+        // Trigger import
+        $migration = $this->performJsonMigration([
+            'fileId' => $fileId,
+            'bucketId' => $bucketId,
+            'resourceId' => $databaseId . ':' . $collectionId,
+        ]);
+        $this->assertEquals(202, $migration['headers']['status-code']);
+
+        // Poll until completed
+        $this->assertEventually(function () use ($migration, $headers) {
+            $migrationId = $migration['body']['$id'];
+            $result = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, $headers);
+
+            $this->assertEquals(200, $result['headers']['status-code']);
+            $this->assertEquals('finished', $result['body']['stage']);
+            $this->assertEquals('completed', $result['body']['status']);
+            $this->assertEquals('JSON', $result['body']['source']);
+            $this->assertEquals('Appwrite', $result['body']['destination']);
+        }, 30_000, 500);
+
+        // Verify documents were imported
+        $docs = $this->client->call(Client::METHOD_GET, '/documentsdb/' . $databaseId . '/collections/' . $collectionId . '/documents', $headers);
+        $this->assertEquals(200, $docs['headers']['status-code']);
+        $this->assertEquals(10, $docs['body']['total'], 'Should have imported 10 documentsdb documents');
+
+        // Verify first document has nested data
+        $firstDoc = $docs['body']['documents'][0];
+        $this->assertArrayHasKey('name', $firstDoc);
+        $this->assertArrayHasKey('address', $firstDoc);
+        $this->assertIsArray($firstDoc['address']);
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/documentsdb/' . $databaseId, $headers);
+    }
 }
