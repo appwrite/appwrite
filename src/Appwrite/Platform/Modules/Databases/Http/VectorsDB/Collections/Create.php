@@ -12,6 +12,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Config\Config;
+use Utopia\Database\Attribute;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -117,18 +118,15 @@ class Create extends CollectionAction
         /** @var Database $dbForDatabases */
         $dbForDatabases = $getDatabasesDB($database);
 
-        $attributes = [];
-        $indexes = [];
         $collections = (Config::getParam('collections', [])['vectorsdb'] ?? [])['collections'] ?? [];
-        foreach ($collections['defaultAttributes'] as $attribute) {
-            if ($attribute['$id'] === 'embeddings') {
-                $attribute['size'] = $dimension;
+        $attributes = \array_map(function (Attribute $attribute) use ($dimension) {
+            if ($attribute->key === 'embeddings') {
+                $attribute = clone $attribute;
+                $attribute->size = $dimension;
             }
-            $attributes[] = new Document($attribute);
-        }
-        foreach ($collections['defaultIndexes'] as $index) {
-            $indexes[] = new Document($index);
-        }
+            return $attribute;
+        }, $collections['defaultAttributes']);
+        $indexes = $collections['defaultIndexes'];
         try {
             // passing null in creates only creates the metadata collection
             if (!$dbForDatabases->exists(null, Database::METADATA)) {
