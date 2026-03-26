@@ -75,7 +75,7 @@ class RuntimeQuery extends Query
      * @param array<Query> $queries
      * @return array Compiled query structure with 'type' key
      */
-    public static function compile(array $queries): array
+    public static function prepare(array $queries): array
     {
         if (empty($queries)) {
             return ['type' => 'selectAll'];

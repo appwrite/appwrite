@@ -85,7 +85,7 @@ class Realtime extends MessagingAdapter
 
         $data = [
             'strings' => $strings,
-            'compiled' => RuntimeQuery::compile($queryGroup),
+            'compiled' => RuntimeQuery::prepare($queryGroup),
         ];
 
         foreach ($roles as $role) {
