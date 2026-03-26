@@ -102,7 +102,7 @@ class Create extends Base
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'New API key must have expiry set, because currently authenticated API key has an expiry.');
             }
 
-            if (!\is_null($expire) && $expire > $apiKey->getExpire()) {
+            if (!\is_null($expire) && !\is_null($apiKey->getExpire()) && $expire > $apiKey->getExpire()) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'New API key expiry must be sooner than currently authenticated API key expiry.');
             }
         }
