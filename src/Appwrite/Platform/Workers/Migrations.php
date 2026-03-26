@@ -565,8 +565,9 @@ class Migrations extends Action
                     $destination?->success();
                     $source?->success();
                 }
-                if ($migration->getAttribute('destination') === DestinationCSV::getName()) {
-                    $this->handleCSVExportComplete($project, $migration, $queueForMails, $queueForRealtime, $platform, $authorization);
+                $destination_type = $migration->getAttribute('destination');
+                if ($destination_type === DestinationCSV::getName() || $destination_type === DestinationJSON::getName()) {
+                    $this->handleDataExportComplete($project, $migration, $queueForMails, $queueForRealtime, $platform, $authorization);
                 }
             } finally {
                 $source?->cleanup();
@@ -598,7 +599,7 @@ class Migrations extends Action
      * @param Authorization $authorization
      * @return void
      */
-    protected function handleCSVExportComplete(
+    protected function handleDataExportComplete(
         Document $project,
         Document $migration,
         Mail $queueForMails,
@@ -623,7 +624,8 @@ class Migrations extends Action
             throw new \Exception('Bucket not found');
         }
 
-        $path = $this->deviceForFiles->getPath($bucketId . '/' . $this->sanitizeFilename($filename) . '.csv');
+        $extension = $migration->getAttribute('destination') === DestinationJSON::getName() ? '.json' : '.csv';
+        $path = $this->deviceForFiles->getPath($bucketId . '/' . $this->sanitizeFilename($filename) . $extension);
         $size = $this->deviceForFiles->getFileSize($path);
         $mime = $this->deviceForFiles->getFileMimeType($path);
         $hash = $this->deviceForFiles->getFileHash($path);
@@ -647,7 +649,7 @@ class Migrations extends Action
                 $migration->setAttribute('errors', $errors);
                 $migration = $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
-                $this->sendCSVEmail(
+                $this->sendExportEmail(
                     success: false,
                     project: $project,
                     user: $user,
@@ -709,7 +711,7 @@ class Migrations extends Action
         $migration->setAttribute('options', $options);
         $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
-        $this->sendCSVEmail(
+        $this->sendExportEmail(
             success: true,
             project: $project,
             user: $user,
@@ -734,7 +736,7 @@ class Migrations extends Action
      * @return void
      * @throws \Exception
      */
-    protected function sendCSVEmail(
+    protected function sendExportEmail(
         bool $success,
         Document $project,
         Document $user,
