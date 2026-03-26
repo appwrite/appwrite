@@ -11,33 +11,33 @@ use Utopia\Validator\WhiteList;
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_EMAIL, function () {
     return new Email();
-}, ColumnType::String->value);
+}, ColumnType::String);
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_DATETIME, function () {
     return new DatetimeValidator();
-}, ColumnType::Datetime->value);
+}, ColumnType::Datetime);
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_ENUM, function ($attribute) {
     $elements = $attribute['formatOptions']['elements'] ?? [];
     return new WhiteList($elements, true);
-}, ColumnType::String->value);
+}, ColumnType::String);
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_IP, function () {
     return new IP();
-}, ColumnType::String->value);
+}, ColumnType::String);
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_URL, function () {
     return new URL();
-}, ColumnType::String->value);
+}, ColumnType::String);
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_INT_RANGE, function ($attribute) {
     $min = $attribute['formatOptions']['min'] ?? -INF;
     $max = $attribute['formatOptions']['max'] ?? INF;
     return new Range($min, $max, Range::TYPE_INTEGER);
-}, ColumnType::Integer->value);
+}, ColumnType::Integer);
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_FLOAT_RANGE, function ($attribute) {
     $min = $attribute['formatOptions']['min'] ?? -INF;
     $max = $attribute['formatOptions']['max'] ?? INF;
     return new Range($min, $max, Range::TYPE_FLOAT);
-}, ColumnType::Float->value);
+}, ColumnType::Float);

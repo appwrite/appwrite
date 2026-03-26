@@ -343,7 +343,7 @@ abstract class Action extends UtopiaAction
         }
 
         if (!empty($format)) {
-            if (!Structure::hasFormat($format, $type)) {
+            if (!Structure::hasFormat($format, ColumnType::from($type))) {
                 throw new Exception($this->getFormatUnsupportedException(), "Format $format not available for $type columns.");
             }
         }
