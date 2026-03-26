@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\Keys;
 
+use Appwrite\Auth\Key;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
@@ -59,6 +60,7 @@ class XList extends Base
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('authorization')
+            ->inject('apiKey')
             ->callback($this->action(...));
     }
 
@@ -72,6 +74,7 @@ class XList extends Base
         Response $response,
         Database $dbForPlatform,
         Authorization $authorization,
+        ?Key $apiKey,
     ) {
         try {
             $queries = Query::parseQueries($queries);
@@ -119,7 +122,13 @@ class XList extends Base
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
 
-        // TODO: API keys cannot see secrets
+        $isProjectApiKey = $apiKey !== null && !empty($apiKey->getProjectId());
+
+        if ($isProjectApiKey) {
+            foreach ($keys as $key) {
+                $key->setAttribute('secret', '');
+            }
+        }
 
         $response->dynamic(new Document([
             'keys' => $keys,

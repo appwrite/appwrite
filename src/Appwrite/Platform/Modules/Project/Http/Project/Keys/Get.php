@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\Keys;
 
+use Appwrite\Auth\Key;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
@@ -53,6 +54,7 @@ class Get extends Base
             ->inject('dbForPlatform')
             ->inject('project')
             ->inject('authorization')
+            ->inject('apiKey')
             ->callback($this->action(...));
     }
 
@@ -62,6 +64,7 @@ class Get extends Base
         Database $dbForPlatform,
         Document $project,
         Authorization $authorization,
+        ?Key $apiKey,
     ) {
         $key = $authorization->skip(fn () => $dbForPlatform->getDocument('keys', $keyId));
 
@@ -69,7 +72,11 @@ class Get extends Base
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
-        // TODO: If authorized as api key, hide secret of key
+        $isProjectApiKey = $apiKey !== null && !empty($apiKey->getProjectId());
+
+        if ($isProjectApiKey) {
+            $key->setAttribute('secret', '');
+        }
 
         $response->dynamic($key, Response::MODEL_KEY);
     }
