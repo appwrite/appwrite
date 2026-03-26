@@ -21,7 +21,7 @@ class RuntimeQueryTest extends TestCase
      */
     private function compileAndFilter(array $queries, array $payload): ?array
     {
-        $compiled = RuntimeQuery::compile($queries);
+        $compiled = RuntimeQuery::prepare($queries);
         return RuntimeQuery::filter($compiled, $payload);
     }
 
