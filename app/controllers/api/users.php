@@ -52,6 +52,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\Database\SetType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Cursor;

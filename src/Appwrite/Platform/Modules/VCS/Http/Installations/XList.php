@@ -16,6 +16,7 @@ use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Query\Method;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
@@ -83,7 +84,7 @@ class XList extends Action
          * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
          */
         $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+            return \in_array($query->getMethod(), [Method::CursorAfter, Method::CursorBefore]);
         });
         $cursor = reset($cursor);
         if ($cursor) {

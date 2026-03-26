@@ -66,6 +66,7 @@ use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
+use Utopia\Query\Method;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Publisher;
 use Utopia\Queue\Queue;
@@ -1101,7 +1102,7 @@ Http::setResource('schema', function ($utopia, $dbForProject, $authorization) {
 
     $complexity = function (int $complexity, array $args) {
         $queries = Query::parseQueries($args['queries'] ?? []);
-        $query = Query::getByType($queries, [Query::TYPE_LIMIT])[0] ?? null;
+        $query = Query::getByType($queries, [Method::Limit])[0] ?? null;
         $limit = $query ? $query->getValue() : APP_LIMIT_LIST_DEFAULT;
 
         return $complexity * $limit;

@@ -3,6 +3,7 @@
 namespace Appwrite\Utopia\Database;
 
 use Utopia\Database\Query;
+use Utopia\Query\Method;
 
 /**
  * RuntimeQuery handles real-time query filtering for Appwrite's Realtime subscriptions.
@@ -13,23 +14,23 @@ class RuntimeQuery extends Query
 {
     public const ALLOWED_QUERIES = [
         // Equality & comparison
-        Query::TYPE_EQUAL,
-        Query::TYPE_NOT_EQUAL,
-        Query::TYPE_LESSER,
-        Query::TYPE_LESSER_EQUAL,
-        Query::TYPE_GREATER,
-        Query::TYPE_GREATER_EQUAL,
+        Method::Equal,
+        Method::NotEqual,
+        Method::LessThan,
+        Method::LessThanEqual,
+        Method::GreaterThan,
+        Method::GreaterThanEqual,
 
         // Null checks
-        Query::TYPE_IS_NULL,
-        Query::TYPE_IS_NOT_NULL,
+        Method::IsNull,
+        Method::IsNotNull,
 
         // Recursive checks
-        Query::TYPE_AND,
-        Query::TYPE_OR,
+        Method::And,
+        Method::Or,
 
         // Special: select("*") means "listen to all events"
-        Query::TYPE_SELECT
+        Method::Select
     ];
 
     /**
@@ -40,7 +41,7 @@ class RuntimeQuery extends Query
      */
     public static function isSelectAll(Query $query): bool
     {
-        if ($query->getMethod() !== Query::TYPE_SELECT) {
+        if ($query->getMethod() !== Method::Select) {
             return false;
         }
 
@@ -56,7 +57,7 @@ class RuntimeQuery extends Query
      */
     public static function validateSelectQuery(Query $query): void
     {
-        if ($query->getMethod() !== Query::TYPE_SELECT) {
+        if ($query->getMethod() !== Method::Select) {
             return;
         }
 
@@ -82,7 +83,7 @@ class RuntimeQuery extends Query
 
         // Check for select("*") upfront
         foreach ($queries as $query) {
-            if ($query->getMethod() === Query::TYPE_SELECT) {
+            if ($query->getMethod() === Method::Select) {
                 $values = $query->getValues();
                 if (count($values) === 1 && $values[0] === '*') {
                     return ['type' => 'selectAll'];
@@ -116,14 +117,14 @@ class RuntimeQuery extends Query
     {
         $method = $query->getMethod();
 
-        if ($method === Query::TYPE_AND) {
+        if ($method === Method::And) {
             return [
                 'op' => 'AND',
                 'conditions' => array_map([self::class, 'compileCondition'], $query->getValues()),
             ];
         }
 
-        if ($method === Query::TYPE_OR) {
+        if ($method === Method::Or) {
             return [
                 'op' => 'OR',
                 'conditions' => array_map([self::class, 'compileCondition'], $query->getValues()),
@@ -228,7 +229,7 @@ class RuntimeQuery extends Query
 
         // Inlined comparisons - no closures, no method calls
         switch ($op) {
-            case Query::TYPE_EQUAL:
+            case Method::Equal:
                 foreach ($targets as $target) {
                     if ($value === $target) {
                         return true;
@@ -236,7 +237,7 @@ class RuntimeQuery extends Query
                 }
                 return false;
 
-            case Query::TYPE_NOT_EQUAL:
+            case Method::NotEqual:
                 foreach ($targets as $target) {
                     if ($value === $target) {
                         return false;
@@ -244,7 +245,7 @@ class RuntimeQuery extends Query
                 }
                 return true;
 
-            case Query::TYPE_LESSER:
+            case Method::LessThan:
                 foreach ($targets as $target) {
                     if ($value < $target) {
                         return true;
@@ -252,7 +253,7 @@ class RuntimeQuery extends Query
                 }
                 return false;
 
-            case Query::TYPE_LESSER_EQUAL:
+            case Method::LessThanEqual:
                 foreach ($targets as $target) {
                     if ($value <= $target) {
                         return true;
@@ -260,7 +261,7 @@ class RuntimeQuery extends Query
                 }
                 return false;
 
-            case Query::TYPE_GREATER:
+            case Method::GreaterThan:
                 foreach ($targets as $target) {
                     if ($value > $target) {
                         return true;
@@ -268,7 +269,7 @@ class RuntimeQuery extends Query
                 }
                 return false;
 
-            case Query::TYPE_GREATER_EQUAL:
+            case Method::GreaterThanEqual:
                 foreach ($targets as $target) {
                     if ($value >= $target) {
                         return true;
@@ -276,10 +277,10 @@ class RuntimeQuery extends Query
                 }
                 return false;
 
-            case Query::TYPE_IS_NULL:
+            case Method::IsNull:
                 return $value === null;
 
-            case Query::TYPE_IS_NOT_NULL:
+            case Method::IsNotNull:
                 return $value !== null;
 
             default:
