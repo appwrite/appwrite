@@ -53,7 +53,7 @@
         "appwrite/php-clamav": "2.0.*",
         "utopia-php/abuse": "1.2.*",
         "utopia-php/analytics": "0.15.*",
-        "utopia-php/audit": "2.2.*",
+        "utopia-php/audit": "dev-feat-query-lib as 2.2.0",
         "utopia-php/auth": "0.5.*",
         "utopia-php/cache": "1.0.*",
         "utopia-php/cli": "0.22.*",

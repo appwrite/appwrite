@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ed42344c47c7bfe9bf74897e7bb91cc3",
+    "content-hash": "a51e9764f643f4283d593e63f61cb4e5",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3686,23 +3686,23 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "2.2.1",
+            "version": "dev-feat-query-lib",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "e3e2d6ad5c7f6377d9237df296a12eb7943892fd"
+                "reference": "ae866f6a6115bd9d6e6e7037978d5c5fb5b132d1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/e3e2d6ad5c7f6377d9237df296a12eb7943892fd",
-                "reference": "e3e2d6ad5c7f6377d9237df296a12eb7943892fd",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/ae866f6a6115bd9d6e6e7037978d5c5fb5b132d1",
+                "reference": "ae866f6a6115bd9d6e6e7037978d5c5fb5b132d1",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.0",
                 "utopia-php/database": "5.*",
                 "utopia-php/fetch": "0.5.*",
-                "utopia-php/validators": "0.2.*"
+                "utopia-php/validators": "*"
             },
             "require-dev": {
                 "laravel/pint": "1.*",
@@ -3729,9 +3729,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/2.2.1"
+                "source": "https://github.com/utopia-php/audit/tree/feat-query-lib"
             },
-            "time": "2026-02-02T10:39:25+00:00"
+            "time": "2026-03-26T15:29:23+00:00"
         },
         {
             "name": "utopia-php/auth",
@@ -8668,6 +8668,12 @@
     ],
     "aliases": [
         {
+            "package": "utopia-php/audit",
+            "version": "dev-feat-query-lib",
+            "alias": "2.2.0",
+            "alias_normalized": "2.2.0.0"
+        },
+        {
             "package": "utopia-php/database",
             "version": "dev-feat-query-lib",
             "alias": "5.3.17",
@@ -8676,6 +8682,7 @@
     ],
     "minimum-stability": "dev",
     "stability-flags": {
+        "utopia-php/audit": 20,
         "utopia-php/database": 20
     },
     "prefer-stable": true,
