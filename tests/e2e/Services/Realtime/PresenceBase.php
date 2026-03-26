@@ -749,7 +749,7 @@ abstract class PresenceBase extends Scope
         //   - the viewer sees exactly 100 owners
         //   - sample owners have the expected status
 
-        $totalUsers = 500;
+        $totalUsers = 50000;
         $groupSize = 100;
         $numGroups = (int) (\floor($totalUsers / $groupSize));
         $viewerCount = 10; // 2 viewers per group
