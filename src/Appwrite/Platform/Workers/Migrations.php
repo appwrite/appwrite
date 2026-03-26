@@ -28,6 +28,7 @@ use Utopia\Locale\Locale;
 use Utopia\Migration\Destination;
 use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;
 use Utopia\Migration\Destinations\CSV as DestinationCSV;
+use Utopia\Migration\Destinations\JSON as DestinationJSON;
 use Utopia\Migration\Exception as MigrationException;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Resources\Database\Database as ResourceDatabase;
@@ -37,6 +38,7 @@ use Utopia\Migration\Source;
 use Utopia\Migration\Sources\Appwrite as SourceAppwrite;
 use Utopia\Migration\Sources\CSV;
 use Utopia\Migration\Sources\Firebase;
+use Utopia\Migration\Sources\JSON;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
 use Utopia\Migration\Transfer;
@@ -250,6 +252,12 @@ class Migrations extends Action
                 $this->dbForProject,
                 $getDatabasesDB
             ),
+            JSON::getName() => new JSON(
+                $resourceId,
+                $migrationOptions['path'],
+                $this->deviceForMigrations,
+                $this->dbForProject,
+            ),
             default => throw new \Exception('Invalid source type'),
         };
 
@@ -287,6 +295,13 @@ class Migrations extends Action
                 $options['enclosure'],
                 $options['escape'],
                 $options['header'],
+            ),
+            DestinationJSON::getName() => new DestinationJSON(
+                $this->deviceForFiles,
+                $migration->getAttribute('resourceId'),
+                $options['bucketId'] ?? 'default',
+                $options['filename'],
+                $options['columns'] ?? [],
             ),
             default => throw new \Exception('Invalid destination type'),
         };

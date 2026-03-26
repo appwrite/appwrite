@@ -737,7 +737,14 @@ Http::post('/v1/migrations/json/imports')
         }
 
         $fileSize = $deviceForMigrations->getFileSize($newPath);
-        $resources = Transfer::extractServices([Transfer::GROUP_DATABASES]);
+
+        [$databaseId] = \explode(':', $resourceId, 2);
+        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        if ($database->isEmpty()) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+        $databaseType = $database->getAttribute('type');
+        $resources = Transfer::extractServices([getDatabaseTransferResourceServices($databaseType)]);
 
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => $migrationId,
@@ -857,13 +864,16 @@ Http::post('/v1/migrations/json/exports')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
         }
 
+        $databaseType = $database->getAttribute('type');
+        $resources = Transfer::extractServices([getDatabaseTransferResourceServices($databaseType)]);
+
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
             'stage' => 'init',
             'source' => Appwrite::getName(),
             'destination' => JSON::getName(),
-            'resources' => Transfer::extractServices([Transfer::GROUP_DATABASES]),
+            'resources' => $resources,
             'resourceId' => $resourceId,
             'resourceType' => Resource::TYPE_DATABASE,
             'statusCounters' => '{}',
