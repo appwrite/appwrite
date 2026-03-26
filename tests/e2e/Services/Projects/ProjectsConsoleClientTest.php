@@ -528,6 +528,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'queries' => [
                 '{"method":"select","values":["name", "$createdAt"]}',
+                Query::orderAsc('name')->toString(),
             ]
         ]);
 
@@ -535,7 +536,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $project = $list['body']['projects'][0];
 
-        $this->assertEquals('Project Test', $project['name']);
+        $this->assertEquals('Original Project', $project['name']);
         $this->assertArrayHasKey('$id', $project);
         $this->assertArrayHasKey('$createdAt', $project);
         $this->assertArrayHasKey('$updatedAt', $project);
