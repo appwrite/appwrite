@@ -111,10 +111,10 @@
             return normalized.summary || 'Installation failed.';
         }
         if (status === STATUS.COMPLETED) return step.done;
-        return step.inProgress;
+        return message || step.inProgress;
     };
 
-    const updateInstallRow = (row, step, status, message) => {
+    const updateInstallRow = (row, step, status, message, details) => {
         if (!row || !step) return;
         row.dataset.status = status;
         row.dataset.step = step.id;
@@ -136,6 +136,15 @@
                     text.classList.remove('is-enter');
                 });
             }
+        }
+
+        const counter = row.querySelector('[data-install-counter]');
+        if (counter) {
+            const started = details?.containerStarted ?? 0;
+            const total = details?.containerTotal;
+            counter.textContent = (status === STATUS.IN_PROGRESS && total > 0 && started < total)
+                ? `${started}/${total}`
+                : '';
         }
 
         // Show/hide "Navigate to Console" button for account setup errors
@@ -349,7 +358,7 @@
         const normalizedDomain = (formState?.appDomain || '').trim() || 'localhost';
         const normalizedHttpPort = (formState?.httpPort || '').trim() || '80';
         const normalizedHttpsPort = (formState?.httpsPort || '').trim() || '443';
-        const normalizedEmail = (formState?.emailCertificates || '').trim();
+        const normalizedEmail = (formState?.emailCertificates || '').trim() || (formState?.accountEmail || '').trim();
         const normalizedAssistantKey = (formState?.assistantOpenAIKey || '').trim();
         const normalizedAccountEmail = (formState?.accountEmail || '').trim();
         const normalizedAccountPassword = (formState?.accountPassword || '').trim();
@@ -529,7 +538,7 @@
                     if (!state) return;
                     const row = ensureRow(step);
                     if (row) {
-                        updateInstallRow(row, step, state.status || STATUS.IN_PROGRESS, state.message);
+                        updateInstallRow(row, step, state.status || STATUS.IN_PROGRESS, state.message, state.details);
                         if (state.status === STATUS?.ERROR) {
                             updateInstallErrorDetails(row, {
                                 message: state.message,
@@ -579,6 +588,9 @@
                     }
                 }
             }
+            if (payload.status === STATUS.ERROR) {
+                showGlobalActions();
+            }
             scheduleFallback();
         };
 
@@ -616,6 +628,7 @@
 
         const applySnapshot = (snapshot) => {
             if (!snapshot || !snapshot.steps) return;
+            let hasErrors = false;
             INSTALLATION_STEPS.forEach((step) => {
                 const detail = snapshot.steps[step.id];
                 if (!detail) return;
@@ -624,8 +637,14 @@
                     message: detail.message,
                     details: snapshot.details?.[step.id]
                 });
+                if (detail.status === STATUS.ERROR) {
+                    hasErrors = true;
+                }
             });
             renderProgress();
+            if (hasErrors) {
+                showGlobalActions();
+            }
         };
 
         const checkAllCompleted = () => {
@@ -674,6 +693,7 @@
             }
             stopSyncedSpinnerRotation();
             setUnloadGuard(false);
+            clearInstallLock?.();
         };
 
         const SSL_STEP = {
@@ -890,9 +910,22 @@
             }
         };
 
+        const isSnapshotTerminal = (snapshot) => {
+            if (!snapshot?.steps) return true;
+            const stepEntries = Object.values(snapshot.steps);
+            if (stepEntries.length === 0) return true;
+            const hasError = stepEntries.some((s) => s.status === STATUS.ERROR);
+            if (hasError) return true;
+            const allCompleted = INSTALLATION_STEPS.every((step) => {
+                const detail = snapshot.steps[step.id];
+                return detail && detail.status === STATUS.COMPLETED;
+            });
+            return allCompleted;
+        };
+
         const resumeInstall = async (installId) => {
             const snapshot = await fetchInstallStatus(installId);
-            if (!snapshot) return false;
+            if (!snapshot || isSnapshotTerminal(snapshot)) return false;
             activeInstall = {
                 installId,
                 controller: new AbortController(),
@@ -966,6 +999,60 @@
             }
         });
 
+        const globalActions = root.querySelector('[data-install-global-actions]');
+
+        const showGlobalActions = () => {
+            if (globalActions) {
+                globalActions.classList.remove('is-hidden');
+            }
+        };
+
+        const performReset = async (hard) => {
+            const installId = activeInstall?.installId || getInstallLock?.()?.installId || getStoredInstallId?.();
+
+            try {
+                const res = await fetch('/install/reset', {
+                    method: 'POST',
+                    headers: withCsrfHeader({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({ installId: installId || '', hard })
+                });
+                if (hard && !res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    showToast?.({
+                        status: 'error',
+                        title: 'Reset failed',
+                        description: data?.message || 'Could not stop containers. Try running "docker compose down -v" manually.',
+                        dismissible: true
+                    });
+                    return;
+                }
+            } catch (e) {
+                console.error('Reset request failed:', e);
+            }
+
+            clearInstallLock?.();
+            clearInstallId?.();
+            cleanupInstallFlow();
+            window.location.href = '/?step=1';
+        };
+
+        const startOverButton = root.querySelector('[data-install-start-over]');
+        if (startOverButton) {
+            startOverButton.addEventListener('click', () => performReset(false));
+        }
+
+        const hardResetButton = root.querySelector('[data-install-hard-reset]');
+        if (hardResetButton) {
+            hardResetButton.addEventListener('click', () => {
+                const confirmed = window.confirm(
+                    'This will stop all containers, remove all volumes (including database data, uploads, and certificates), and delete configuration files.\n\nThis action cannot be undone. Continue?'
+                );
+                if (confirmed) {
+                    performReset(true);
+                }
+            });
+        }
+
         // When the user switches back to this tab, check if installation
         // finished while the tab was in the background.
         document.addEventListener('visibilitychange', () => {
@@ -974,6 +1061,14 @@
             }
         });
 
+        const startFreshInstall = () => {
+            clearInstallId?.();
+            clearInstallLock?.();
+            const newInstallId = generateInstallId();
+            storeInstallId?.(newInstallId);
+            startInstallStream(newInstallId);
+        };
+
         const lock = getInstallLock?.();
         const existingInstallId = lock?.installId || getStoredInstallId?.();
         if (existingInstallId) {
@@ -981,15 +1076,11 @@
                 if (!resumed) {
                     clearInstallId?.();
                     clearInstallLock?.();
-                    const newInstallId = generateInstallId();
-                    storeInstallId?.(newInstallId);
-                    startInstallStream(newInstallId);
+                    window.location.href = '/?step=1';
                 }
             });
         } else {
-            const newInstallId = generateInstallId();
-            storeInstallId?.(newInstallId);
-            startInstallStream(newInstallId);
+            startFreshInstall();
         }
     };
 
