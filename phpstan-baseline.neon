@@ -211,12 +211,6 @@ parameters:
 			path: src/Appwrite/Auth/Validator/PersonalData.php
 
 		-
-			message: '#^PHPDoc tag @var above a method has no effect\.$#'
-			identifier: varTag.misplaced
-			count: 1
-			path: src/Appwrite/Databases/TransactionState.php
-
-		-
 			message: '#^PHPDoc tag @param has invalid value \(DeviceDetector\)\: Unexpected token "\\n     ", expected variable at offset 32 on line 2$#'
 			identifier: phpDoc.parseError
 			count: 1
@@ -1217,55 +1211,11 @@ parameters:
 			identifier: return.phpDocType
 			count: 1
 			path: src/Appwrite/Utopia/Response/Model/User.php
-
-		-
-			message: '#^Attribute class Tests\\E2E\\General\\Retry does not exist\.$#'
-			identifier: attribute.notFound
-			count: 1
-			path: tests/e2e/General/UsageTest.php
-
 		-
 			message: '#^Unsafe access to private property Tests\\E2E\\Services\\Databases\\Legacy\\DatabasesStringTypesTest\:\:\$setupCache through static\:\:\.$#'
 			identifier: staticClassAccess.privateProperty
 			count: 4
 			path: tests/e2e/Services/Databases/Legacy/DatabasesStringTypesTest.php
-
-		-
-			message: '#^Variable \$library might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: tests/e2e/Services/Databases/LegacyConsoleClientTest.php
-
-		-
-			message: '#^Variable \$person might not be defined\.$#'
-			identifier: variable.undefined
-			count: 4
-			path: tests/e2e/Services/Databases/LegacyConsoleClientTest.php
-
-		-
-			message: '#^Variable \$library might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: tests/e2e/Services/Databases/LegacyCustomClientTest.php
-
-		-
-			message: '#^Variable \$person might not be defined\.$#'
-			identifier: variable.undefined
-			count: 4
-			path: tests/e2e/Services/Databases/LegacyCustomClientTest.php
-
-		-
-			message: '#^Variable \$library might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: tests/e2e/Services/Databases/LegacyCustomServerTest.php
-
-		-
-			message: '#^Variable \$person might not be defined\.$#'
-			identifier: variable.undefined
-			count: 4
-			path: tests/e2e/Services/Databases/LegacyCustomServerTest.php
-
 		-
 			message: '#^Call to an undefined method Tests\\E2E\\Services\\Databases\\Permissions\\LegacyPermissionsGuestTest\:\:getIndexUrl\(\)\.$#'
 			identifier: method.notFound
@@ -1649,43 +1599,6 @@ parameters:
 			identifier: method.notFound
 			count: 1
 			path: tests/e2e/Services/TablesDB/Permissions/TablesDBPermissionsTeamTest.php
-
-		-
-			message: '#^Variable \$library might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: tests/e2e/Services/TablesDB/TablesDBConsoleClientTest.php
-
-		-
-			message: '#^Variable \$person might not be defined\.$#'
-			identifier: variable.undefined
-			count: 4
-			path: tests/e2e/Services/TablesDB/TablesDBConsoleClientTest.php
-
-		-
-			message: '#^Variable \$library might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: tests/e2e/Services/TablesDB/TablesDBCustomClientTest.php
-
-		-
-			message: '#^Variable \$person might not be defined\.$#'
-			identifier: variable.undefined
-			count: 4
-			path: tests/e2e/Services/TablesDB/TablesDBCustomClientTest.php
-
-		-
-			message: '#^Variable \$library might not be defined\.$#'
-			identifier: variable.undefined
-			count: 1
-			path: tests/e2e/Services/TablesDB/TablesDBCustomServerTest.php
-
-		-
-			message: '#^Variable \$person might not be defined\.$#'
-			identifier: variable.undefined
-			count: 4
-			path: tests/e2e/Services/TablesDB/TablesDBCustomServerTest.php
-
 		-
 			message: '#^Unsafe access to private property Tests\\E2E\\Services\\Tokens\\TokensConsoleClientTest\:\:\$bucketAndFileData through static\:\:\.$#'
 			identifier: staticClassAccess.privateProperty
