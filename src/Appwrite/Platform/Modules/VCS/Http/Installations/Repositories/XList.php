@@ -51,7 +51,7 @@ use Utopia\Detector\Detector\Packager;
 use Utopia\Detector\Detector\Runtime;
 use Utopia\Detector\Detector\Strategy;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Query\Method;
+use Utopia\Query\Method as QueryMethod;
 use Utopia\System\System;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -130,8 +130,8 @@ class XList extends Action
         $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
         $queries = Query::parseQueries($queries);
-        $limitQuery = current(array_filter($queries, fn ($query) => $query->getMethod() === Method::Limit));
-        $offsetQuery = current(array_filter($queries, fn ($query) => $query->getMethod() === Method::Offset));
+        $limitQuery = current(array_filter($queries, fn ($query) => $query->getMethod() === QueryMethod::Limit));
+        $offsetQuery = current(array_filter($queries, fn ($query) => $query->getMethod() === QueryMethod::Offset));
 
         $limit = !empty($limitQuery) ? $limitQuery->getValue() : 4;
         $offset = !empty($offsetQuery) ? $offsetQuery->getValue() : 0;

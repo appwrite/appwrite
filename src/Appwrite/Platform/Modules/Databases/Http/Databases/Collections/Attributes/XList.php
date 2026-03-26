@@ -18,7 +18,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
-use Utopia\Query\Method;
+use Utopia\Query\Method as QueryMethod;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\Boolean;
 
@@ -96,7 +96,7 @@ class XList extends Action
 
         $cursor = \array_filter(
             $queries,
-            fn ($query) => \in_array($query->getMethod(), [Method::CursorAfter, Method::CursorBefore])
+            fn ($query) => \in_array($query->getMethod(), [QueryMethod::CursorAfter, QueryMethod::CursorBefore])
         );
         $cursor = \reset($cursor);
 
