@@ -49,7 +49,7 @@ class Create extends Action
             ->setHttpPath('/v1/account/mfa/challenges')
             ->httpAlias('/v1/account/mfa/challenge')
             ->desc('Create MFA challenge')
-            ->groups(['api', 'account', 'mfa', 'queueForMails'])
+            ->groups(['api', 'account', 'mfa', 'outgoingEmail'])
             ->label('scope', 'account')
             ->label('event', 'users.[userId].challenges.[challengeId].create')
             ->label('audits.event', 'challenge.create')
