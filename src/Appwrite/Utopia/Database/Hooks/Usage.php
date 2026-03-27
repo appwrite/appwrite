@@ -28,12 +28,17 @@ class Usage implements Lifecycle
         }
 
         $value = match ($event) {
+            Event::DocumentCreate => 1,
             Event::DocumentDelete => -1,
-            Event::DocumentsDelete => -1 * $data->getAttribute('modified', 0),
             Event::DocumentsCreate => $data->getAttribute('modified', 0),
+            Event::DocumentsDelete => -1 * $data->getAttribute('modified', 0),
             Event::DocumentsUpsert => $data->getAttribute('created', 0),
-            default => 1,
+            default => null,
         };
+
+        if ($value === null) {
+            return;
+        }
 
         $collection = $data->getCollection();
 
