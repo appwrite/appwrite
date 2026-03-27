@@ -362,6 +362,41 @@ class FunctionsCustomClientTest extends Scope
         $this->cleanupFunction($functionId);
     }
 
+    public function testGetCurrentSessionWithFunctionJwt()
+    {
+        $user = $this->getUser();
+
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test JWT current session',
+            'execute' => [Role::user($user['$id'])->toString()],
+            'commands' => 'bash setup.sh && npm ci',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 15,
+        ]);
+
+        $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('dynamic-api-key'),
+            'activate' => true,
+        ]);
+
+        $execution = $this->createExecution($functionId, [
+            'async' => 'false',
+            'path' => '/?mode=session-current',
+        ]);
+
+        $output = json_decode($execution['body']['responseBody'], true);
+
+        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEquals(200, $execution['body']['responseStatusCode']);
+        $this->assertEquals($user['sessionId'], $output['$id']);
+        $this->assertEquals($user['$id'], $output['userId']);
+        $this->assertTrue($output['current']);
+
+        $this->cleanupFunction($functionId);
+    }
+
     public function testListTemplates()
     {
         /**

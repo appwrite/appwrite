@@ -206,6 +206,17 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, arr
     $queueForMails->trigger();
 }
 
+function getCurrentSessionId(User $user, Store $store, ProofsToken $proofForToken): string|false
+{
+    $sessionId = $store->getProperty('sessionId', '');
+
+    if (!empty($sessionId)) {
+        return $sessionId;
+    }
+
+    return $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+}
+
 
 $createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, Authorization $authorization) {
 
@@ -642,13 +653,13 @@ Http::get('/v1/account/sessions')
 
 
         $sessions = $user->getAttribute('sessions', []);
-        $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+        $current = getCurrentSessionId($user, $store, $proofForToken);
 
         foreach ($sessions as $key => $session) {/** @var Document $session */
             $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
             $session->setAttribute('countryName', $countryName);
-            $session->setAttribute('current', ($current == $session->getId()) ? true : false);
+            $session->setAttribute('current', ($current === $session->getId()));
             $session->setAttribute('secret', $session->getAttribute('secret', ''));
 
             $sessions[$key] = $session;
@@ -695,6 +706,7 @@ Http::delete('/v1/account/sessions')
 
         $protocol = $request->getProtocol();
         $sessions = $user->getAttribute('sessions', []);
+        $currentSessionId = getCurrentSessionId($user, $store, $proofForToken);
 
         foreach ($sessions as $session) {/** @var Document $session */
             $dbForProject->deleteDocument('sessions', $session->getId());
@@ -707,7 +719,7 @@ Http::delete('/v1/account/sessions')
                 ->setAttribute('current', false)
                 ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));
 
-            if ($proofForToken->verify($store->getProperty('secret', ''), $session->getAttribute('secret'))) {
+            if ($currentSessionId === $session->getId()) {
                 $session->setAttribute('current', true);
 
                 // If current session delete the cookies too
@@ -762,8 +774,9 @@ Http::get('/v1/account/sessions/:sessionId')
     ->action(function (?string $sessionId, Response $response, User $user, Locale $locale, Store $store, ProofsToken $proofForToken) {
 
         $sessions = $user->getAttribute('sessions', []);
+        $currentSessionId = getCurrentSessionId($user, $store, $proofForToken);
         $sessionId = ($sessionId === 'current')
-            ? $user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
+            ? $currentSessionId
             : $sessionId;
 
         foreach ($sessions as $session) {/** @var Document $session */
@@ -771,7 +784,7 @@ Http::get('/v1/account/sessions/:sessionId')
                 $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
                 $session
-                    ->setAttribute('current', ($proofForToken->verify($store->getProperty('secret', ''), $session->getAttribute('secret'))))
+                    ->setAttribute('current', ($currentSessionId === $session->getId()))
                     ->setAttribute('countryName', $countryName)
                     ->setAttribute('secret', $session->getAttribute('secret', ''))
                 ;
@@ -819,8 +832,9 @@ Http::delete('/v1/account/sessions/:sessionId')
     ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Delete $queueForDeletes, Store $store, ProofsToken $proofForToken) {
 
         $protocol = $request->getProtocol();
+        $currentSessionId = getCurrentSessionId($user, $store, $proofForToken);
         $sessionId = ($sessionId === 'current')
-            ? $user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
+            ? $currentSessionId
             : $sessionId;
 
         $sessions = $user->getAttribute('sessions', []);
@@ -837,7 +851,7 @@ Http::delete('/v1/account/sessions/:sessionId')
 
             $session->setAttribute('current', false);
 
-            if ($proofForToken->verify($store->getProperty('secret', ''), $session->getAttribute('secret'))) { // If current session delete the cookies too
+            if ($currentSessionId === $session->getId()) { // If current session delete the cookies too
                 $session
                     ->setAttribute('current', true)
                     ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));
@@ -904,7 +918,7 @@ Http::patch('/v1/account/sessions/:sessionId')
     ->action(function (?string $sessionId, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Store $store, ProofsToken $proofForToken) {
 
         $sessionId = ($sessionId === 'current')
-            ? $user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
+            ? getCurrentSessionId($user, $store, $proofForToken)
             : $sessionId;
         $sessions = $user->getAttribute('sessions', []);
 
@@ -1674,7 +1688,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             $sessionUpgrade = true;
         }
 
-        $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+        $current = getCurrentSessionId($user, $store, $proofForToken);
 
         if ($current) { // Delete current session of new one.
             $currentDocument = $dbForProject->getDocument('sessions', $current);
@@ -3036,7 +3050,7 @@ Http::post('/v1/account/jwts')
     ->inject('store')
     ->inject('proofForToken')
     ->action(function (int $duration, Response $response, User $user, Store $store, ProofsToken $proofForToken) {
-        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+        $sessionId = getCurrentSessionId($user, $store, $proofForToken);
 
         if (!$sessionId) {
             throw new Exception(Exception::USER_SESSION_NOT_FOUND);
@@ -3265,7 +3279,7 @@ Http::patch('/v1/account/password')
 
         $sessions = $user->getAttribute('sessions', []);
 
-        $current = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+        $current = getCurrentSessionId($user, $store, $proofForToken);
 
         $invalidate = $project->getAttribute('auths', default: [])['invalidateSessions'] ?? false;
         if ($invalidate && !empty($current)) {
@@ -4447,7 +4461,7 @@ Http::post('/v1/account/targets/push')
 
         $device = $detector->getDevice();
 
-        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+        $sessionId = getCurrentSessionId($user, $store, $proofForToken);
         $session = $dbForProject->getDocument('sessions', $sessionId);
 
         try {
