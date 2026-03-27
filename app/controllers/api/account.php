@@ -15,6 +15,7 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Extend\Exception;
+use Appwrite\Filter\Name;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Network\Validator\Redirect;
 use Appwrite\OpenSSL\OpenSSL;
@@ -404,6 +405,7 @@ Http::post('/v1/account')
     ->inject('authorization')
     ->inject('hooks')
     ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Authorization $authorization, Hooks $hooks) {
+        $name = (new Name())->apply($name);
 
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
@@ -3179,6 +3181,7 @@ Http::patch('/v1/account/name')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->action(function (string $name, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+        $name = (new Name())->apply($name);
 
         $user->setAttribute('name', $name);
 

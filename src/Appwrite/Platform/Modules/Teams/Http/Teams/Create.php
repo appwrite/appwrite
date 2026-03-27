@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Teams\Http\Teams;
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Filter\Name;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -70,6 +71,8 @@ class Create extends Action
 
     public function action(string $teamId, string $name, array $roles, Response $response, Document $user, Database $dbForProject, Authorization $authorization, Event $queueForEvents)
     {
+        $name = (new Name())->apply($name);
+
         $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
         $isAppUser = User::isApp($authorization->getRoles());
 
