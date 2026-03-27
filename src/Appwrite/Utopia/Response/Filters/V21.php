@@ -11,6 +11,16 @@ class V21 extends Filter
     public function parse(array $content, string $model): array
     {
         return match ($model) {
+            Response::MODEL_PLATFORM_WEB => $this->parsePlatform($content),
+            Response::MODEL_PLATFORM_APPLE => $this->parsePlatform($content),
+            Response::MODEL_PLATFORM_ANDROID => $this->parsePlatform($content),
+            Response::MODEL_PLATFORM_WINDOWS => $this->parsePlatform($content),
+            Response::MODEL_PLATFORM_LINUX => $this->parsePlatform($content),
+            Response::MODEL_PLATFORM_LIST => $this->handleList(
+                $content,
+                "platforms",
+                fn ($item) => $this->parsePlatform($item),
+            ),
             Response::MODEL_SITE => $this->parseSite($content),
             Response::MODEL_SITE_LIST => $this->handleList(
                 $content,
@@ -42,6 +52,27 @@ class V21 extends Filter
     protected function parseSite(array $content): array
     {
         $content = $this->parseSpecs($content);
+        return $content;
+    }
+
+    protected function parsePlatform(array $content): array
+    {
+        // Map platform-specific identifier fields back to 'key'
+        $content['key'] = $content['bundleIdentifier']
+            ?? $content['applicationId']
+            ?? $content['packageIdentifierName']
+            ?? $content['packageName']
+            ?? $content['key']
+            ?? '';
+        unset($content['bundleIdentifier']);
+        unset($content['applicationId']);
+        unset($content['packageIdentifierName']);
+        unset($content['packageName']);
+
+        // Restore fields removed in v1.9
+        $content['store'] = $content['store'] ?? '';
+        $content['hostname'] = $content['hostname'] ?? '';
+
         return $content;
     }
 

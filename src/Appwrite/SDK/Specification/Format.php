@@ -753,6 +753,9 @@ abstract class Format
     protected function getNestedModels(Model $model, array &$usedModels): void
     {
         foreach ($model->getRules() as $rule) {
+            if (($rule['hidden'] ?? false) === true) {
+                continue;
+            }
             if (!in_array($model->getType(), $usedModels)) {
                 continue;
             }

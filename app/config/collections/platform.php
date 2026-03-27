@@ -594,7 +594,7 @@ $platformCollections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('key'),
+                '$id' => ID::custom('key'), // For app platforms
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -605,7 +605,7 @@ $platformCollections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('store'),
+                '$id' => ID::custom('store'), // Unused at the moment
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 256,
@@ -616,7 +616,7 @@ $platformCollections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('hostname'),
+                '$id' => ID::custom('hostname'), // For web platforms
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 256,
