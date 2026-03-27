@@ -101,7 +101,7 @@ class Mail extends Event
     /**
      * Sets preview for the mail event.
      *
-     * @return string
+     * @return self
      */
     public function setPreview(string $preview): self
     {
