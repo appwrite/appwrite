@@ -256,7 +256,6 @@ class Response extends SwooleResponse
     public const MODEL_MOCK_NUMBER = 'mockNumber';
     public const MODEL_AUTH_PROVIDER = 'authProvider';
     public const MODEL_AUTH_PROVIDER_LIST = 'authProviderList';
-    public const MODEL_PLATFORM_APP = 'platformApp'; // Deprecated - kept for backwards compatibility
     public const MODEL_PLATFORM_APPLE = 'platformApple';
     public const MODEL_PLATFORM_ANDROID = 'platformAndroid';
     public const MODEL_PLATFORM_WINDOWS = 'platformWindows';

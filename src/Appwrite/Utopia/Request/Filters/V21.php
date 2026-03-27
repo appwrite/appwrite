@@ -12,48 +12,57 @@ class V21 extends Filter
     {
         switch ($model) {
             case 'project.createWebPlatform':
-            case 'project.createAppPlatform':
                 $content = $this->fillPlatformId($content);
-
-                // Remove store ID
-                unset($content['store']);
-
-                // key -> identifier
-                $content['identifier'] = $content['identifier'] ?? $content['key'] ?? null;
-                unset($content['key']);
-
+                $content = $this->removePlatformStore($content);
+                unset($content['key']); // Key unsupported
+                break;
+            case 'project.updateWebPlatform':
+                $content = $this->removePlatformStore($content);
+                unset($content['key']); // Key unsupported
+                break;
+            case 'project.createApplePlatform':
+                $content = $this->fillPlatformId($content);
+                $content = $this->removePlatformStore($content);
+                $content = $this->replacePlatformKey($content, 'bundleIdentifier');
+                unset($content['hostname']); // Hostname unsupported
+                break;
+            case 'project.updateApplePlatform':
+                $content = $this->removePlatformStore($content);
+                $content = $this->replacePlatformKey($content, 'bundleIdentifier');
+                unset($content['hostname']); // Hostname unsupported
+                break;
+            case 'project.createAndroidPlatform':
+                $content = $this->fillPlatformId($content);
+                $content = $this->removePlatformStore($content);
+                $content = $this->replacePlatformKey($content, 'applicationId');
+                unset($content['hostname']); // Hostname unsupported
+                break;
+            case 'project.updateAndroidPlatform':
+                $content = $this->removePlatformStore($content);
+                $content = $this->replacePlatformKey($content, 'applicationId');
+                unset($content['hostname']); // Hostname unsupported
+                break;
+            case 'project.createWindowsPlatform':
+                $content = $this->fillPlatformId($content);
+                $content = $this->removePlatformStore($content);
+                $content = $this->replacePlatformKey($content, 'packageIdentifierName');
+                unset($content['hostname']); // Hostname unsupported
+                break;
+            case 'project.updateWindowsPlatform':
+                $content = $this->removePlatformStore($content);
+                $content = $this->replacePlatformKey($content, 'packageIdentifierName');
+                unset($content['hostname']); // Hostname unsupported
                 break;
             case 'project.createLinuxPlatform':
                 $content = $this->fillPlatformId($content);
-
-                // Remove store ID
-                unset($content['store']);
-
-                // key -> packageName
-                $content['packageName'] = $content['packageName'] ?? $content['identifier'] ?? $content['key'] ?? null;
-                unset($content['key']);
-                unset($content['identifier']);
-
-                break;
-            case 'project.updateWebPlatform':
-            case 'project.updateAppPlatform':
-                // Remove store ID
-                unset($content['store']);
-
-                // key -> identifier
-                $content['identifier'] = $content['identifier'] ?? $content['key'] ?? null;
-                unset($content['key']);
-
+                $content = $this->removePlatformStore($content);
+                $content = $this->replacePlatformKey($content, 'packageName');
+                unset($content['hostname']); // Hostname unsupported
                 break;
             case 'project.updateLinuxPlatform':
-                // Remove store ID
-                unset($content['store']);
-
-                // key -> packageName
-                $content['packageName'] = $content['packageName'] ?? $content['identifier'] ?? $content['key'] ?? null;
-                unset($content['key']);
-                unset($content['identifier']);
-
+                $content = $this->removePlatformStore($content);
+                $content = $this->replacePlatformKey($content, 'packageName');
+                unset($content['hostname']); // Hostname unsupported
                 break;
             case 'project.listPlatforms':
                 $content = $this->preservePlatformsQueries($content);
@@ -115,6 +124,20 @@ class V21 extends Filter
     protected function fillPlatformId(array $content): array
     {
         $content['platformId'] = $content['platformId'] ?? 'unique()';
+        return $content;
+    }
+
+    protected function replacePlatformKey(array $content, string $newKey): array
+    {
+        $content[$newKey] = $content[$newKey] ?? $content['key'] ?? null;
+        unset($content['key']);
+
+        return $content;
+    }
+
+    protected function removePlatformStore(array $content): array
+    {
+        unset($content['store']);
         return $content;
     }
 

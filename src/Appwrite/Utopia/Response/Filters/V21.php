@@ -12,7 +12,6 @@ class V21 extends Filter
     {
         return match ($model) {
             Response::MODEL_PLATFORM_WEB => $this->parsePlatform($content),
-            Response::MODEL_PLATFORM_APP => $this->parsePlatform($content),
             Response::MODEL_PLATFORM_APPLE => $this->parsePlatform($content),
             Response::MODEL_PLATFORM_ANDROID => $this->parsePlatform($content),
             Response::MODEL_PLATFORM_WINDOWS => $this->parsePlatform($content),
@@ -63,14 +62,12 @@ class V21 extends Filter
             ?? $content['applicationId']
             ?? $content['packageIdentifierName']
             ?? $content['packageName']
-            ?? $content['identifier']
             ?? $content['key']
             ?? '';
         unset($content['bundleIdentifier']);
         unset($content['applicationId']);
         unset($content['packageIdentifierName']);
         unset($content['packageName']);
-        unset($content['identifier']);
 
         // Restore fields removed in v1.9
         $content['store'] = $content['store'] ?? '';

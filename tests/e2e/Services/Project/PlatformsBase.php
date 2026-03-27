@@ -13,14 +13,15 @@ trait PlatformsBase
 {
     use Async;
 
-    // Create web platform tests
+    // =========================================================================
+    // Create Web platform tests
+    // =========================================================================
 
     public function testCreateWebPlatform(): void
     {
         $platform = $this->createWebPlatform(
             ID::unique(),
             'My Web App',
-            'web',
             'app.example.com',
         );
 
@@ -52,46 +53,11 @@ trait PlatformsBase
         $this->deletePlatform($platform['body']['$id']);
     }
 
-    public function testCreateWebPlatformFlutterWeb(): void
-    {
-        $platform = $this->createWebPlatform(
-            ID::unique(),
-            'Flutter Web App',
-            'flutter-web',
-            'flutter.example.com',
-        );
-
-        $this->assertSame(201, $platform['headers']['status-code']);
-        $this->assertSame('flutter-web', $platform['body']['type']);
-        $this->assertSame('flutter.example.com', $platform['body']['hostname']);
-
-        // Cleanup
-        $this->deletePlatform($platform['body']['$id']);
-    }
-
-    public function testCreateWebPlatformReactNativeWeb(): void
-    {
-        $platform = $this->createWebPlatform(
-            ID::unique(),
-            'React Native Web App',
-            'react-native-web',
-            'rn.example.com',
-        );
-
-        $this->assertSame(201, $platform['headers']['status-code']);
-        $this->assertSame('react-native-web', $platform['body']['type']);
-        $this->assertSame('rn.example.com', $platform['body']['hostname']);
-
-        // Cleanup
-        $this->deletePlatform($platform['body']['$id']);
-    }
-
     public function testCreateWebPlatformWithoutAuthentication(): void
     {
         $response = $this->createWebPlatform(
             ID::unique(),
             'No Auth Web',
-            'web',
             'noauth.example.com',
             false
         );
@@ -104,7 +70,6 @@ trait PlatformsBase
         $platform = $this->createWebPlatform(
             '!invalid-id!',
             'Invalid ID Web',
-            'web',
             'invalid.example.com',
         );
 
@@ -116,32 +81,7 @@ trait PlatformsBase
         $response = $this->createWebPlatform(
             ID::unique(),
             null,
-            'web',
             'missing.example.com',
-        );
-
-        $this->assertSame(400, $response['headers']['status-code']);
-    }
-
-    public function testCreateWebPlatformMissingType(): void
-    {
-        $response = $this->createWebPlatform(
-            ID::unique(),
-            'Missing Type Web',
-            null,
-            'missing.example.com',
-        );
-
-        $this->assertSame(400, $response['headers']['status-code']);
-    }
-
-    public function testCreateWebPlatformInvalidType(): void
-    {
-        $response = $this->createWebPlatform(
-            ID::unique(),
-            'Invalid Type',
-            'android',
-            'invalid.example.com',
         );
 
         $this->assertSame(400, $response['headers']['status-code']);
@@ -152,27 +92,11 @@ trait PlatformsBase
         $response = $this->createWebPlatform(
             ID::unique(),
             'Empty Hostname',
-            'web',
             '',
         );
 
         $this->assertSame(400, $response['headers']['status-code']);
     }
-
-    /*
-    TODO: Enable in future; Currently Hostname validator seems to allow invalid, possibly for some other flows.
-    public function testCreateWebPlatformInvalidHostname(): void
-    {
-        $response = $this->createWebPlatform(
-            ID::unique(),
-            'Empty Hostname',
-            'web',
-            'notavalid!hostname',
-        );
-
-        $this->assertSame(400, $response['headers']['status-code']);
-    }
-    */
 
     public function testCreateWebPlatformDuplicateId(): void
     {
@@ -181,7 +105,6 @@ trait PlatformsBase
         $platform = $this->createWebPlatform(
             $platformId,
             'Web Dup 1',
-            'web',
             'dup1.example.com',
         );
 
@@ -191,7 +114,6 @@ trait PlatformsBase
         $duplicate = $this->createWebPlatform(
             $platformId,
             'Web Dup 2',
-            'web',
             'dup2.example.com',
         );
 
@@ -209,7 +131,6 @@ trait PlatformsBase
         $platform = $this->createWebPlatform(
             $customId,
             'Custom ID Web',
-            'web',
             'custom.example.com',
         );
 
@@ -225,21 +146,22 @@ trait PlatformsBase
         $this->deletePlatform($customId);
     }
 
+    // =========================================================================
     // Create Apple platform tests
+    // =========================================================================
 
     public function testCreateApplePlatform(): void
     {
         $platform = $this->createApplePlatform(
             ID::unique(),
-            'My iOS App',
-            'apple-ios',
+            'My Apple App',
             'com.example.myapp',
         );
 
         $this->assertSame(201, $platform['headers']['status-code']);
         $this->assertNotEmpty($platform['body']['$id']);
-        $this->assertSame('My iOS App', $platform['body']['name']);
-        $this->assertSame('apple-ios', $platform['body']['type']);
+        $this->assertSame('My Apple App', $platform['body']['name']);
+        $this->assertSame('apple', $platform['body']['type']);
         $this->assertSame('com.example.myapp', $platform['body']['bundleIdentifier']);
 
         $dateValidator = new DatetimeValidator();
@@ -250,8 +172,8 @@ trait PlatformsBase
         $get = $this->getPlatform($platform['body']['$id']);
         $this->assertSame(200, $get['headers']['status-code']);
         $this->assertSame($platform['body']['$id'], $get['body']['$id']);
-        $this->assertSame('My iOS App', $get['body']['name']);
-        $this->assertSame('apple-ios', $get['body']['type']);
+        $this->assertSame('My Apple App', $get['body']['name']);
+        $this->assertSame('apple', $get['body']['type']);
         $this->assertSame('com.example.myapp', $get['body']['bundleIdentifier']);
 
         // Verify via LIST
@@ -264,102 +186,11 @@ trait PlatformsBase
         $this->deletePlatform($platform['body']['$id']);
     }
 
-    public function testCreateApplePlatformMacOS(): void
-    {
-        $platform = $this->createApplePlatform(
-            ID::unique(),
-            'My macOS App',
-            'apple-macos',
-            'com.example.macosapp',
-        );
-
-        $this->assertSame(201, $platform['headers']['status-code']);
-        $this->assertSame('apple-macos', $platform['body']['type']);
-        $this->assertSame('com.example.macosapp', $platform['body']['bundleIdentifier']);
-
-        // Cleanup
-        $this->deletePlatform($platform['body']['$id']);
-    }
-
-    // Create Android platform tests
-
-    public function testCreateAndroidPlatform(): void
-    {
-        $platform = $this->createAndroidPlatform(
-            ID::unique(),
-            'My Android App',
-            'com.example.android',
-        );
-
-        $this->assertSame(201, $platform['headers']['status-code']);
-        $this->assertSame('android', $platform['body']['type']);
-        $this->assertSame('com.example.android', $platform['body']['applicationId']);
-
-        // Verify via GET
-        $get = $this->getPlatform($platform['body']['$id']);
-        $this->assertSame(200, $get['headers']['status-code']);
-        $this->assertSame('android', $get['body']['type']);
-        $this->assertSame('com.example.android', $get['body']['applicationId']);
-
-        // Cleanup
-        $this->deletePlatform($platform['body']['$id']);
-    }
-
-    // Create Windows platform tests
-
-    public function testCreateWindowsPlatform(): void
-    {
-        $platform = $this->createWindowsPlatform(
-            ID::unique(),
-            'My Windows App',
-            'com.example.windows',
-        );
-
-        $this->assertSame(201, $platform['headers']['status-code']);
-        $this->assertSame('windows', $platform['body']['type']);
-        $this->assertSame('com.example.windows', $platform['body']['packageIdentifierName']);
-
-        // Verify via GET
-        $get = $this->getPlatform($platform['body']['$id']);
-        $this->assertSame(200, $get['headers']['status-code']);
-        $this->assertSame('windows', $get['body']['type']);
-        $this->assertSame('com.example.windows', $get['body']['packageIdentifierName']);
-
-        // Cleanup
-        $this->deletePlatform($platform['body']['$id']);
-    }
-
-    // Create Linux platform tests
-
-    public function testCreateLinuxPlatform(): void
-    {
-        $platform = $this->createLinuxPlatform(
-            ID::unique(),
-            'My Linux App',
-            'linux',
-            'com.example.linux',
-        );
-
-        $this->assertSame(201, $platform['headers']['status-code']);
-        $this->assertSame('linux', $platform['body']['type']);
-        $this->assertSame('com.example.linux', $platform['body']['packageName']);
-
-        // Verify via GET
-        $get = $this->getPlatform($platform['body']['$id']);
-        $this->assertSame(200, $get['headers']['status-code']);
-        $this->assertSame('linux', $get['body']['type']);
-        $this->assertSame('com.example.linux', $get['body']['packageName']);
-
-        // Cleanup
-        $this->deletePlatform($platform['body']['$id']);
-    }
-
     public function testCreateApplePlatformWithoutAuthentication(): void
     {
         $response = $this->createApplePlatform(
             ID::unique(),
-            'No Auth App',
-            'apple-ios',
+            'No Auth Apple',
             'com.example.noauth',
             false
         );
@@ -371,8 +202,7 @@ trait PlatformsBase
     {
         $platform = $this->createApplePlatform(
             '!invalid-id!',
-            'Invalid ID App',
-            'apple-ios',
+            'Invalid ID Apple',
             'com.example.invalidid',
         );
 
@@ -384,20 +214,136 @@ trait PlatformsBase
         $response = $this->createApplePlatform(
             ID::unique(),
             null,
-            'apple-ios',
             'com.example.missingname',
         );
 
         $this->assertSame(400, $response['headers']['status-code']);
     }
 
-    public function testCreateApplePlatformMissingType(): void
+    public function testCreateApplePlatformMissingIdentifier(): void
     {
         $response = $this->createApplePlatform(
             ID::unique(),
-            'Missing Type',
+            'Missing Identifier',
             null,
-            'com.example.missingtype',
+        );
+
+        $this->assertSame(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateApplePlatformDuplicateId(): void
+    {
+        $platformId = ID::unique();
+
+        $platform = $this->createApplePlatform(
+            $platformId,
+            'Apple Dup 1',
+            'com.example.dup1',
+        );
+
+        $this->assertSame(201, $platform['headers']['status-code']);
+
+        $duplicate = $this->createApplePlatform(
+            $platformId,
+            'Apple Dup 2',
+            'com.example.dup2',
+        );
+
+        $this->assertSame(409, $duplicate['headers']['status-code']);
+        $this->assertSame('platform_already_exists', $duplicate['body']['type']);
+
+        // Cleanup
+        $this->deletePlatform($platformId);
+    }
+
+    public function testCreateApplePlatformCustomId(): void
+    {
+        $customId = 'my-custom-apple-platform';
+
+        $platform = $this->createApplePlatform(
+            $customId,
+            'Custom ID Apple',
+            'com.example.customid',
+        );
+
+        $this->assertSame(201, $platform['headers']['status-code']);
+        $this->assertSame($customId, $platform['body']['$id']);
+
+        // Verify via GET
+        $get = $this->getPlatform($customId);
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame($customId, $get['body']['$id']);
+
+        // Cleanup
+        $this->deletePlatform($customId);
+    }
+
+    // =========================================================================
+    // Create Android platform tests
+    // =========================================================================
+
+    public function testCreateAndroidPlatform(): void
+    {
+        $platform = $this->createAndroidPlatform(
+            ID::unique(),
+            'My Android App',
+            'com.example.android',
+        );
+
+        $this->assertSame(201, $platform['headers']['status-code']);
+        $this->assertNotEmpty($platform['body']['$id']);
+        $this->assertSame('My Android App', $platform['body']['name']);
+        $this->assertSame('android', $platform['body']['type']);
+        $this->assertSame('com.example.android', $platform['body']['applicationId']);
+
+        $dateValidator = new DatetimeValidator();
+        $this->assertSame(true, $dateValidator->isValid($platform['body']['$createdAt']));
+        $this->assertSame(true, $dateValidator->isValid($platform['body']['$updatedAt']));
+
+        // Verify via GET
+        $get = $this->getPlatform($platform['body']['$id']);
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('android', $get['body']['type']);
+        $this->assertSame('com.example.android', $get['body']['applicationId']);
+
+        // Verify via LIST
+        $list = $this->listPlatforms(null, true);
+        $this->assertSame(200, $list['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $list['body']['total']);
+
+        // Cleanup
+        $this->deletePlatform($platform['body']['$id']);
+    }
+
+    public function testCreateAndroidPlatformWithoutAuthentication(): void
+    {
+        $response = $this->createAndroidPlatform(
+            ID::unique(),
+            'No Auth Android',
+            'com.example.noauth',
+            false
+        );
+
+        $this->assertSame(401, $response['headers']['status-code']);
+    }
+
+    public function testCreateAndroidPlatformInvalidId(): void
+    {
+        $platform = $this->createAndroidPlatform(
+            '!invalid-id!',
+            'Invalid ID Android',
+            'com.example.invalidid',
+        );
+
+        $this->assertSame(400, $platform['headers']['status-code']);
+    }
+
+    public function testCreateAndroidPlatformMissingName(): void
+    {
+        $response = $this->createAndroidPlatform(
+            ID::unique(),
+            null,
+            'com.example.missingname',
         );
 
         $this->assertSame(400, $response['headers']['status-code']);
@@ -414,24 +360,21 @@ trait PlatformsBase
         $this->assertSame(400, $response['headers']['status-code']);
     }
 
-    public function testCreateApplePlatformDuplicateId(): void
+    public function testCreateAndroidPlatformDuplicateId(): void
     {
         $platformId = ID::unique();
 
-        $platform = $this->createApplePlatform(
+        $platform = $this->createAndroidPlatform(
             $platformId,
-            'App Dup 1',
-            'apple-ios',
+            'Android Dup 1',
             'com.example.dup1',
         );
 
         $this->assertSame(201, $platform['headers']['status-code']);
 
-        // Attempt to create with same ID
-        $duplicate = $this->createApplePlatform(
+        $duplicate = $this->createAndroidPlatform(
             $platformId,
-            'App Dup 2',
-            'apple-ios',
+            'Android Dup 2',
             'com.example.dup2',
         );
 
@@ -448,7 +391,7 @@ trait PlatformsBase
 
         $platform = $this->createAndroidPlatform(
             $customId,
-            'Custom ID App',
+            'Custom ID Android',
             'com.example.customid',
         );
 
@@ -464,21 +407,274 @@ trait PlatformsBase
         $this->deletePlatform($customId);
     }
 
-    // Update web platform tests
+    // =========================================================================
+    // Create Windows platform tests
+    // =========================================================================
 
-    public function testUpdateWebPlatform(): void
+    public function testCreateWindowsPlatform(): void
     {
-        $platform = $this->createWebPlatform(
+        $platform = $this->createWindowsPlatform(
             ID::unique(),
-            'Original Web',
-            'web',
-            'original.example.com',
+            'My Windows App',
+            'com.example.windows',
         );
 
         $this->assertSame(201, $platform['headers']['status-code']);
+        $this->assertNotEmpty($platform['body']['$id']);
+        $this->assertSame('My Windows App', $platform['body']['name']);
+        $this->assertSame('windows', $platform['body']['type']);
+        $this->assertSame('com.example.windows', $platform['body']['packageIdentifierName']);
+
+        $dateValidator = new DatetimeValidator();
+        $this->assertSame(true, $dateValidator->isValid($platform['body']['$createdAt']));
+        $this->assertSame(true, $dateValidator->isValid($platform['body']['$updatedAt']));
+
+        // Verify via GET
+        $get = $this->getPlatform($platform['body']['$id']);
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('windows', $get['body']['type']);
+        $this->assertSame('com.example.windows', $get['body']['packageIdentifierName']);
+
+        // Verify via LIST
+        $list = $this->listPlatforms(null, true);
+        $this->assertSame(200, $list['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $list['body']['total']);
+
+        // Cleanup
+        $this->deletePlatform($platform['body']['$id']);
+    }
+
+    public function testCreateWindowsPlatformWithoutAuthentication(): void
+    {
+        $response = $this->createWindowsPlatform(
+            ID::unique(),
+            'No Auth Windows',
+            'com.example.noauth',
+            false
+        );
+
+        $this->assertSame(401, $response['headers']['status-code']);
+    }
+
+    public function testCreateWindowsPlatformInvalidId(): void
+    {
+        $platform = $this->createWindowsPlatform(
+            '!invalid-id!',
+            'Invalid ID Windows',
+            'com.example.invalidid',
+        );
+
+        $this->assertSame(400, $platform['headers']['status-code']);
+    }
+
+    public function testCreateWindowsPlatformMissingName(): void
+    {
+        $response = $this->createWindowsPlatform(
+            ID::unique(),
+            null,
+            'com.example.missingname',
+        );
+
+        $this->assertSame(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateWindowsPlatformMissingIdentifier(): void
+    {
+        $response = $this->createWindowsPlatform(
+            ID::unique(),
+            'Missing Identifier',
+            null,
+        );
+
+        $this->assertSame(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateWindowsPlatformDuplicateId(): void
+    {
+        $platformId = ID::unique();
+
+        $platform = $this->createWindowsPlatform(
+            $platformId,
+            'Windows Dup 1',
+            'com.example.dup1',
+        );
+
+        $this->assertSame(201, $platform['headers']['status-code']);
+
+        $duplicate = $this->createWindowsPlatform(
+            $platformId,
+            'Windows Dup 2',
+            'com.example.dup2',
+        );
+
+        $this->assertSame(409, $duplicate['headers']['status-code']);
+        $this->assertSame('platform_already_exists', $duplicate['body']['type']);
+
+        // Cleanup
+        $this->deletePlatform($platformId);
+    }
+
+    public function testCreateWindowsPlatformCustomId(): void
+    {
+        $customId = 'my-custom-windows-platform';
+
+        $platform = $this->createWindowsPlatform(
+            $customId,
+            'Custom ID Windows',
+            'com.example.customid',
+        );
+
+        $this->assertSame(201, $platform['headers']['status-code']);
+        $this->assertSame($customId, $platform['body']['$id']);
+
+        // Verify via GET
+        $get = $this->getPlatform($customId);
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame($customId, $get['body']['$id']);
+
+        // Cleanup
+        $this->deletePlatform($customId);
+    }
+
+    // =========================================================================
+    // Create Linux platform tests
+    // =========================================================================
+
+    public function testCreateLinuxPlatform(): void
+    {
+        $platform = $this->createLinuxPlatform(
+            ID::unique(),
+            'My Linux App',
+            'com.example.linux',
+        );
+
+        $this->assertSame(201, $platform['headers']['status-code']);
+        $this->assertNotEmpty($platform['body']['$id']);
+        $this->assertSame('My Linux App', $platform['body']['name']);
+        $this->assertSame('linux', $platform['body']['type']);
+        $this->assertSame('com.example.linux', $platform['body']['packageName']);
+
+        $dateValidator = new DatetimeValidator();
+        $this->assertSame(true, $dateValidator->isValid($platform['body']['$createdAt']));
+        $this->assertSame(true, $dateValidator->isValid($platform['body']['$updatedAt']));
+
+        // Verify via GET
+        $get = $this->getPlatform($platform['body']['$id']);
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('linux', $get['body']['type']);
+        $this->assertSame('com.example.linux', $get['body']['packageName']);
+
+        // Verify via LIST
+        $list = $this->listPlatforms(null, true);
+        $this->assertSame(200, $list['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $list['body']['total']);
+
+        // Cleanup
+        $this->deletePlatform($platform['body']['$id']);
+    }
+
+    public function testCreateLinuxPlatformWithoutAuthentication(): void
+    {
+        $response = $this->createLinuxPlatform(
+            ID::unique(),
+            'No Auth Linux',
+            'com.example.noauth',
+            false
+        );
+
+        $this->assertSame(401, $response['headers']['status-code']);
+    }
+
+    public function testCreateLinuxPlatformInvalidId(): void
+    {
+        $platform = $this->createLinuxPlatform(
+            '!invalid-id!',
+            'Invalid ID Linux',
+            'com.example.invalidid',
+        );
+
+        $this->assertSame(400, $platform['headers']['status-code']);
+    }
+
+    public function testCreateLinuxPlatformMissingName(): void
+    {
+        $response = $this->createLinuxPlatform(
+            ID::unique(),
+            null,
+            'com.example.missingname',
+        );
+
+        $this->assertSame(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateLinuxPlatformMissingIdentifier(): void
+    {
+        $response = $this->createLinuxPlatform(
+            ID::unique(),
+            'Missing Identifier',
+            null,
+        );
+
+        $this->assertSame(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateLinuxPlatformDuplicateId(): void
+    {
+        $platformId = ID::unique();
+
+        $platform = $this->createLinuxPlatform(
+            $platformId,
+            'Linux Dup 1',
+            'com.example.dup1',
+        );
+
+        $this->assertSame(201, $platform['headers']['status-code']);
+
+        $duplicate = $this->createLinuxPlatform(
+            $platformId,
+            'Linux Dup 2',
+            'com.example.dup2',
+        );
+
+        $this->assertSame(409, $duplicate['headers']['status-code']);
+        $this->assertSame('platform_already_exists', $duplicate['body']['type']);
+
+        // Cleanup
+        $this->deletePlatform($platformId);
+    }
+
+    public function testCreateLinuxPlatformCustomId(): void
+    {
+        $customId = 'my-custom-linux-platform';
+
+        $platform = $this->createLinuxPlatform(
+            $customId,
+            'Custom ID Linux',
+            'com.example.customid',
+        );
+
+        $this->assertSame(201, $platform['headers']['status-code']);
+        $this->assertSame($customId, $platform['body']['$id']);
+
+        // Verify via GET
+        $get = $this->getPlatform($customId);
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame($customId, $get['body']['$id']);
+
+        // Cleanup
+        $this->deletePlatform($customId);
+    }
+
+    // =========================================================================
+    // Update Web platform tests
+    // =========================================================================
+
+    public function testUpdateWebPlatform(): void
+    {
+        $platform = $this->createWebPlatform(ID::unique(), 'Original Web', 'original.example.com');
+        $this->assertSame(201, $platform['headers']['status-code']);
         $platformId = $platform['body']['$id'];
 
-        // Update name and hostname
         $updated = $this->updateWebPlatform($platformId, 'Updated Web', 'updated.example.com');
 
         $this->assertSame(200, $updated['headers']['status-code']);
@@ -498,17 +694,10 @@ trait PlatformsBase
 
     public function testUpdateWebPlatformWithoutAuthentication(): void
     {
-        $platform = $this->createWebPlatform(
-            ID::unique(),
-            'Auth Update Web',
-            'web',
-            'authupdate.example.com',
-        );
-
+        $platform = $this->createWebPlatform(ID::unique(), 'Auth Update Web', 'authupdate.example.com');
         $this->assertSame(201, $platform['headers']['status-code']);
         $platformId = $platform['body']['$id'];
 
-        // Attempt update without authentication
         $response = $this->updateWebPlatform($platformId, 'Updated', 'updated.example.com', false);
 
         $this->assertSame(401, $response['headers']['status-code']);
@@ -527,17 +716,10 @@ trait PlatformsBase
 
     public function testUpdateWebPlatformMethodUnsupported(): void
     {
-        // Create an Android platform
-        $platform = $this->createAndroidPlatform(
-            ID::unique(),
-            'Android Platform',
-            'com.example.app',
-        );
-
+        $platform = $this->createAndroidPlatform(ID::unique(), 'Android Platform', 'com.example.app');
         $this->assertSame(201, $platform['headers']['status-code']);
         $platformId = $platform['body']['$id'];
 
-        // Attempt to update via web endpoint
         $updated = $this->updateWebPlatform($platformId, 'Updated Name', 'updated.example.com');
 
         $this->assertSame(400, $updated['headers']['status-code']);
@@ -547,21 +729,16 @@ trait PlatformsBase
         $this->deletePlatform($platformId);
     }
 
+    // =========================================================================
     // Update Apple platform tests
+    // =========================================================================
 
     public function testUpdateApplePlatform(): void
     {
-        $platform = $this->createApplePlatform(
-            ID::unique(),
-            'Original Apple',
-            'apple-ios',
-            'com.example.original',
-        );
-
+        $platform = $this->createApplePlatform(ID::unique(), 'Original Apple', 'com.example.original');
         $this->assertSame(201, $platform['headers']['status-code']);
         $platformId = $platform['body']['$id'];
 
-        // Update name and bundleIdentifier
         $updated = $this->updateApplePlatform($platformId, 'Updated Apple', 'com.example.updated');
 
         $this->assertSame(200, $updated['headers']['status-code']);
@@ -579,20 +756,67 @@ trait PlatformsBase
         $this->deletePlatform($platformId);
     }
 
-    // Update Android platform tests
-
-    public function testUpdateAndroidPlatform(): void
+    public function testUpdateApplePlatformWithoutAuthentication(): void
     {
-        $platform = $this->createAndroidPlatform(
-            ID::unique(),
-            'Original Android',
-            'com.example.original',
-        );
-
+        $platform = $this->createApplePlatform(ID::unique(), 'Auth Update Apple', 'com.example.authupdate');
         $this->assertSame(201, $platform['headers']['status-code']);
         $platformId = $platform['body']['$id'];
 
-        // Update name and applicationId
+        $response = $this->updateApplePlatform($platformId, 'Updated', 'com.example.updated', false);
+
+        $this->assertSame(401, $response['headers']['status-code']);
+
+        // Cleanup
+        $this->deletePlatform($platformId);
+    }
+
+    public function testUpdateApplePlatformNotFound(): void
+    {
+        $updated = $this->updateApplePlatform('non-existent-id', 'New Name', 'com.example.new');
+
+        $this->assertSame(404, $updated['headers']['status-code']);
+        $this->assertSame('platform_not_found', $updated['body']['type']);
+    }
+
+    public function testUpdateApplePlatformMethodUnsupported(): void
+    {
+        $platform = $this->createWebPlatform(ID::unique(), 'Web Platform', 'web.example.com');
+        $this->assertSame(201, $platform['headers']['status-code']);
+        $platformId = $platform['body']['$id'];
+
+        $updated = $this->updateApplePlatform($platformId, 'Updated Name', 'com.example.updated');
+
+        $this->assertSame(400, $updated['headers']['status-code']);
+        $this->assertSame('platform_method_unsupported', $updated['body']['type']);
+
+        // Cleanup
+        $this->deletePlatform($platformId);
+    }
+
+    public function testUpdateApplePlatformMissingIdentifier(): void
+    {
+        $platform = $this->createApplePlatform(ID::unique(), 'Missing Id Apple', 'com.example.missingid');
+        $this->assertSame(201, $platform['headers']['status-code']);
+        $platformId = $platform['body']['$id'];
+
+        $updated = $this->updateApplePlatform($platformId, 'Updated Name', null);
+
+        $this->assertSame(400, $updated['headers']['status-code']);
+
+        // Cleanup
+        $this->deletePlatform($platformId);
+    }
+
+    // =========================================================================
+    // Update Android platform tests
+    // =========================================================================
+
+    public function testUpdateAndroidPlatform(): void
+    {
+        $platform = $this->createAndroidPlatform(ID::unique(), 'Original Android', 'com.example.original');
+        $this->assertSame(201, $platform['headers']['status-code']);
+        $platformId = $platform['body']['$id'];
+
         $updated = $this->updateAndroidPlatform($platformId, 'Updated Android', 'com.example.updated');
 
         $this->assertSame(200, $updated['headers']['status-code']);
@@ -612,16 +836,10 @@ trait PlatformsBase
 
     public function testUpdateAndroidPlatformWithoutAuthentication(): void
     {
-        $platform = $this->createAndroidPlatform(
-            ID::unique(),
-            'Auth Update Android',
-            'com.example.authupdate',
-        );
-
+        $platform = $this->createAndroidPlatform(ID::unique(), 'Auth Update Android', 'com.example.authupdate');
         $this->assertSame(201, $platform['headers']['status-code']);
         $platformId = $platform['body']['$id'];
 
-        // Attempt update without authentication
         $response = $this->updateAndroidPlatform($platformId, 'Updated', 'com.example.updated', false);
 
         $this->assertSame(401, $response['headers']['status-code']);
@@ -638,21 +856,13 @@ trait PlatformsBase
         $this->assertSame('platform_not_found', $updated['body']['type']);
     }
 
-    public function testUpdateApplePlatformMethodUnsupported(): void
+    public function testUpdateAndroidPlatformMethodUnsupported(): void
     {
-        // Create a web platform
-        $platform = $this->createWebPlatform(
-            ID::unique(),
-            'Web Platform',
-            'web',
-            'web.example.com',
-        );
-
+        $platform = $this->createWebPlatform(ID::unique(), 'Web Platform', 'web.example.com');
         $this->assertSame(201, $platform['headers']['status-code']);
         $platformId = $platform['body']['$id'];
 
-        // Attempt to update via Apple endpoint
-        $updated = $this->updateApplePlatform($platformId, 'Updated Name', 'com.example.updated');
+        $updated = $this->updateAndroidPlatform($platformId, 'Updated Name', 'com.example.updated');
 
         $this->assertSame(400, $updated['headers']['status-code']);
         $this->assertSame('platform_method_unsupported', $updated['body']['type']);
@@ -663,16 +873,10 @@ trait PlatformsBase
 
     public function testUpdateAndroidPlatformMissingIdentifier(): void
     {
-        $platform = $this->createAndroidPlatform(
-            ID::unique(),
-            'Missing Id App',
-            'com.example.missingid',
-        );
-
+        $platform = $this->createAndroidPlatform(ID::unique(), 'Missing Id Android', 'com.example.missingid');
         $this->assertSame(201, $platform['headers']['status-code']);
         $platformId = $platform['body']['$id'];
 
-        // Update without applicationId should fail
         $updated = $this->updateAndroidPlatform($platformId, 'Updated Name', null);
 
         $this->assertSame(400, $updated['headers']['status-code']);
@@ -681,17 +885,169 @@ trait PlatformsBase
         $this->deletePlatform($platformId);
     }
 
+    // =========================================================================
+    // Update Windows platform tests
+    // =========================================================================
+
+    public function testUpdateWindowsPlatform(): void
+    {
+        $platform = $this->createWindowsPlatform(ID::unique(), 'Original Windows', 'com.example.original');
+        $this->assertSame(201, $platform['headers']['status-code']);
+        $platformId = $platform['body']['$id'];
+
+        $updated = $this->updateWindowsPlatform($platformId, 'Updated Windows', 'com.example.updated');
+
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame($platformId, $updated['body']['$id']);
+        $this->assertSame('Updated Windows', $updated['body']['name']);
+        $this->assertSame('com.example.updated', $updated['body']['packageIdentifierName']);
+
+        // Verify update persisted via GET
+        $get = $this->getPlatform($platformId);
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('Updated Windows', $get['body']['name']);
+        $this->assertSame('com.example.updated', $get['body']['packageIdentifierName']);
+
+        // Cleanup
+        $this->deletePlatform($platformId);
+    }
+
+    public function testUpdateWindowsPlatformWithoutAuthentication(): void
+    {
+        $platform = $this->createWindowsPlatform(ID::unique(), 'Auth Update Windows', 'com.example.authupdate');
+        $this->assertSame(201, $platform['headers']['status-code']);
+        $platformId = $platform['body']['$id'];
+
+        $response = $this->updateWindowsPlatform($platformId, 'Updated', 'com.example.updated', false);
+
+        $this->assertSame(401, $response['headers']['status-code']);
+
+        // Cleanup
+        $this->deletePlatform($platformId);
+    }
+
+    public function testUpdateWindowsPlatformNotFound(): void
+    {
+        $updated = $this->updateWindowsPlatform('non-existent-id', 'New Name', 'com.example.new');
+
+        $this->assertSame(404, $updated['headers']['status-code']);
+        $this->assertSame('platform_not_found', $updated['body']['type']);
+    }
+
+    public function testUpdateWindowsPlatformMethodUnsupported(): void
+    {
+        $platform = $this->createWebPlatform(ID::unique(), 'Web Platform', 'web.example.com');
+        $this->assertSame(201, $platform['headers']['status-code']);
+        $platformId = $platform['body']['$id'];
+
+        $updated = $this->updateWindowsPlatform($platformId, 'Updated Name', 'com.example.updated');
+
+        $this->assertSame(400, $updated['headers']['status-code']);
+        $this->assertSame('platform_method_unsupported', $updated['body']['type']);
+
+        // Cleanup
+        $this->deletePlatform($platformId);
+    }
+
+    public function testUpdateWindowsPlatformMissingIdentifier(): void
+    {
+        $platform = $this->createWindowsPlatform(ID::unique(), 'Missing Id Windows', 'com.example.missingid');
+        $this->assertSame(201, $platform['headers']['status-code']);
+        $platformId = $platform['body']['$id'];
+
+        $updated = $this->updateWindowsPlatform($platformId, 'Updated Name', null);
+
+        $this->assertSame(400, $updated['headers']['status-code']);
+
+        // Cleanup
+        $this->deletePlatform($platformId);
+    }
+
+    // =========================================================================
+    // Update Linux platform tests
+    // =========================================================================
+
+    public function testUpdateLinuxPlatform(): void
+    {
+        $platform = $this->createLinuxPlatform(ID::unique(), 'Original Linux', 'com.example.original');
+        $this->assertSame(201, $platform['headers']['status-code']);
+        $platformId = $platform['body']['$id'];
+
+        $updated = $this->updateLinuxPlatform($platformId, 'Updated Linux', 'com.example.updated');
+
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame($platformId, $updated['body']['$id']);
+        $this->assertSame('Updated Linux', $updated['body']['name']);
+        $this->assertSame('com.example.updated', $updated['body']['packageName']);
+
+        // Verify update persisted via GET
+        $get = $this->getPlatform($platformId);
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('Updated Linux', $get['body']['name']);
+        $this->assertSame('com.example.updated', $get['body']['packageName']);
+
+        // Cleanup
+        $this->deletePlatform($platformId);
+    }
+
+    public function testUpdateLinuxPlatformWithoutAuthentication(): void
+    {
+        $platform = $this->createLinuxPlatform(ID::unique(), 'Auth Update Linux', 'com.example.authupdate');
+        $this->assertSame(201, $platform['headers']['status-code']);
+        $platformId = $platform['body']['$id'];
+
+        $response = $this->updateLinuxPlatform($platformId, 'Updated', 'com.example.updated', false);
+
+        $this->assertSame(401, $response['headers']['status-code']);
+
+        // Cleanup
+        $this->deletePlatform($platformId);
+    }
+
+    public function testUpdateLinuxPlatformNotFound(): void
+    {
+        $updated = $this->updateLinuxPlatform('non-existent-id', 'New Name', 'com.example.new');
+
+        $this->assertSame(404, $updated['headers']['status-code']);
+        $this->assertSame('platform_not_found', $updated['body']['type']);
+    }
+
+    public function testUpdateLinuxPlatformMethodUnsupported(): void
+    {
+        $platform = $this->createWebPlatform(ID::unique(), 'Web Platform', 'web.example.com');
+        $this->assertSame(201, $platform['headers']['status-code']);
+        $platformId = $platform['body']['$id'];
+
+        $updated = $this->updateLinuxPlatform($platformId, 'Updated Name', 'com.example.updated');
+
+        $this->assertSame(400, $updated['headers']['status-code']);
+        $this->assertSame('platform_method_unsupported', $updated['body']['type']);
+
+        // Cleanup
+        $this->deletePlatform($platformId);
+    }
+
+    public function testUpdateLinuxPlatformMissingIdentifier(): void
+    {
+        $platform = $this->createLinuxPlatform(ID::unique(), 'Missing Id Linux', 'com.example.missingid');
+        $this->assertSame(201, $platform['headers']['status-code']);
+        $platformId = $platform['body']['$id'];
+
+        $updated = $this->updateLinuxPlatform($platformId, 'Updated Name', null);
+
+        $this->assertSame(400, $updated['headers']['status-code']);
+
+        // Cleanup
+        $this->deletePlatform($platformId);
+    }
+
+    // =========================================================================
     // Get platform tests
+    // =========================================================================
 
     public function testGetWebPlatform(): void
     {
-        $platform = $this->createWebPlatform(
-            ID::unique(),
-            'Get Test Web',
-            'web',
-            'gettest.example.com',
-        );
-
+        $platform = $this->createWebPlatform(ID::unique(), 'Get Test Web', 'gettest.example.com');
         $this->assertSame(201, $platform['headers']['status-code']);
         $platformId = $platform['body']['$id'];
 
@@ -711,14 +1067,31 @@ trait PlatformsBase
         $this->deletePlatform($platformId);
     }
 
+    public function testGetApplePlatform(): void
+    {
+        $platform = $this->createApplePlatform(ID::unique(), 'Get Test Apple', 'com.example.gettest');
+        $this->assertSame(201, $platform['headers']['status-code']);
+        $platformId = $platform['body']['$id'];
+
+        $get = $this->getPlatform($platformId);
+
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame($platformId, $get['body']['$id']);
+        $this->assertSame('Get Test Apple', $get['body']['name']);
+        $this->assertSame('apple', $get['body']['type']);
+        $this->assertSame('com.example.gettest', $get['body']['bundleIdentifier']);
+
+        $dateValidator = new DatetimeValidator();
+        $this->assertSame(true, $dateValidator->isValid($get['body']['$createdAt']));
+        $this->assertSame(true, $dateValidator->isValid($get['body']['$updatedAt']));
+
+        // Cleanup
+        $this->deletePlatform($platformId);
+    }
+
     public function testGetAndroidPlatform(): void
     {
-        $platform = $this->createAndroidPlatform(
-            ID::unique(),
-            'Get Test Android',
-            'com.example.gettest',
-        );
-
+        $platform = $this->createAndroidPlatform(ID::unique(), 'Get Test Android', 'com.example.gettest');
         $this->assertSame(201, $platform['headers']['status-code']);
         $platformId = $platform['body']['$id'];
 
@@ -738,6 +1111,50 @@ trait PlatformsBase
         $this->deletePlatform($platformId);
     }
 
+    public function testGetWindowsPlatform(): void
+    {
+        $platform = $this->createWindowsPlatform(ID::unique(), 'Get Test Windows', 'com.example.gettest');
+        $this->assertSame(201, $platform['headers']['status-code']);
+        $platformId = $platform['body']['$id'];
+
+        $get = $this->getPlatform($platformId);
+
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame($platformId, $get['body']['$id']);
+        $this->assertSame('Get Test Windows', $get['body']['name']);
+        $this->assertSame('windows', $get['body']['type']);
+        $this->assertSame('com.example.gettest', $get['body']['packageIdentifierName']);
+
+        $dateValidator = new DatetimeValidator();
+        $this->assertSame(true, $dateValidator->isValid($get['body']['$createdAt']));
+        $this->assertSame(true, $dateValidator->isValid($get['body']['$updatedAt']));
+
+        // Cleanup
+        $this->deletePlatform($platformId);
+    }
+
+    public function testGetLinuxPlatform(): void
+    {
+        $platform = $this->createLinuxPlatform(ID::unique(), 'Get Test Linux', 'com.example.gettest');
+        $this->assertSame(201, $platform['headers']['status-code']);
+        $platformId = $platform['body']['$id'];
+
+        $get = $this->getPlatform($platformId);
+
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame($platformId, $get['body']['$id']);
+        $this->assertSame('Get Test Linux', $get['body']['name']);
+        $this->assertSame('linux', $get['body']['type']);
+        $this->assertSame('com.example.gettest', $get['body']['packageName']);
+
+        $dateValidator = new DatetimeValidator();
+        $this->assertSame(true, $dateValidator->isValid($get['body']['$createdAt']));
+        $this->assertSame(true, $dateValidator->isValid($get['body']['$updatedAt']));
+
+        // Cleanup
+        $this->deletePlatform($platformId);
+    }
+
     public function testGetPlatformNotFound(): void
     {
         $get = $this->getPlatform('non-existent-id');
@@ -748,17 +1165,10 @@ trait PlatformsBase
 
     public function testGetPlatformWithoutAuthentication(): void
     {
-        $platform = $this->createWebPlatform(
-            ID::unique(),
-            'Auth Get Web',
-            'web',
-            'authget.example.com',
-        );
-
+        $platform = $this->createWebPlatform(ID::unique(), 'Auth Get Web', 'authget.example.com');
         $this->assertSame(201, $platform['headers']['status-code']);
         $platformId = $platform['body']['$id'];
 
-        // Attempt GET without authentication
         $response = $this->getPlatform($platformId, false);
 
         $this->assertSame(401, $response['headers']['status-code']);
@@ -767,40 +1177,34 @@ trait PlatformsBase
         $this->deletePlatform($platformId);
     }
 
+    // =========================================================================
     // List platforms tests
+    // =========================================================================
 
     public function testListPlatforms(): void
     {
-        // Create multiple platforms
-        $web = $this->createWebPlatform(
-            ID::unique(),
-            'List Web',
-            'web',
-            'listweb.example.com',
-        );
+        // Create one of each platform type
+        $web = $this->createWebPlatform(ID::unique(), 'List Web', 'listweb.example.com');
         $this->assertSame(201, $web['headers']['status-code']);
 
-        $android = $this->createAndroidPlatform(
-            ID::unique(),
-            'List Android',
-            'com.example.listapp',
-        );
+        $apple = $this->createApplePlatform(ID::unique(), 'List Apple', 'com.example.listapple');
+        $this->assertSame(201, $apple['headers']['status-code']);
+
+        $android = $this->createAndroidPlatform(ID::unique(), 'List Android', 'com.example.listandroid');
         $this->assertSame(201, $android['headers']['status-code']);
 
-        $apple = $this->createApplePlatform(
-            ID::unique(),
-            'List Apple',
-            'apple-ios',
-            'com.example.listapple',
-        );
-        $this->assertSame(201, $apple['headers']['status-code']);
+        $windows = $this->createWindowsPlatform(ID::unique(), 'List Windows', 'com.example.listwindows');
+        $this->assertSame(201, $windows['headers']['status-code']);
+
+        $linux = $this->createLinuxPlatform(ID::unique(), 'List Linux', 'com.example.listlinux');
+        $this->assertSame(201, $linux['headers']['status-code']);
 
         // List all
         $list = $this->listPlatforms(null, true);
 
         $this->assertSame(200, $list['headers']['status-code']);
-        $this->assertGreaterThanOrEqual(3, $list['body']['total']);
-        $this->assertGreaterThanOrEqual(3, \count($list['body']['platforms']));
+        $this->assertGreaterThanOrEqual(5, $list['body']['total']);
+        $this->assertGreaterThanOrEqual(5, \count($list['body']['platforms']));
         $this->assertIsArray($list['body']['platforms']);
 
         // Verify structure of returned platforms
@@ -814,28 +1218,20 @@ trait PlatformsBase
 
         // Cleanup
         $this->deletePlatform($web['body']['$id']);
-        $this->deletePlatform($android['body']['$id']);
         $this->deletePlatform($apple['body']['$id']);
+        $this->deletePlatform($android['body']['$id']);
+        $this->deletePlatform($windows['body']['$id']);
+        $this->deletePlatform($linux['body']['$id']);
     }
 
     public function testListPlatformsWithLimit(): void
     {
-        $platform1 = $this->createWebPlatform(
-            ID::unique(),
-            'Limit Web 1',
-            'web',
-            'limit1.example.com',
-        );
+        $platform1 = $this->createWebPlatform(ID::unique(), 'Limit Web 1', 'limit1.example.com');
         $this->assertSame(201, $platform1['headers']['status-code']);
 
-        $platform2 = $this->createAndroidPlatform(
-            ID::unique(),
-            'Limit App 2',
-            'com.example.limit2',
-        );
+        $platform2 = $this->createAndroidPlatform(ID::unique(), 'Limit Android 2', 'com.example.limit2');
         $this->assertSame(201, $platform2['headers']['status-code']);
 
-        // List with limit of 1
         $list = $this->listPlatforms([
             Query::limit(1)->toString(),
         ], true);
@@ -851,27 +1247,16 @@ trait PlatformsBase
 
     public function testListPlatformsWithOffset(): void
     {
-        $platform1 = $this->createWebPlatform(
-            ID::unique(),
-            'Offset Web 1',
-            'web',
-            'offset1.example.com',
-        );
+        $platform1 = $this->createWebPlatform(ID::unique(), 'Offset Web 1', 'offset1.example.com');
         $this->assertSame(201, $platform1['headers']['status-code']);
 
-        $platform2 = $this->createAndroidPlatform(
-            ID::unique(),
-            'Offset App 2',
-            'com.example.offset2',
-        );
+        $platform2 = $this->createAndroidPlatform(ID::unique(), 'Offset Android 2', 'com.example.offset2');
         $this->assertSame(201, $platform2['headers']['status-code']);
 
-        // List all to get total
         $listAll = $this->listPlatforms(null, true);
         $this->assertSame(200, $listAll['headers']['status-code']);
         $totalAll = \count($listAll['body']['platforms']);
 
-        // List with offset
         $listOffset = $this->listPlatforms([
             Query::offset(1)->toString(),
         ], true);
@@ -886,15 +1271,9 @@ trait PlatformsBase
 
     public function testListPlatformsWithoutTotal(): void
     {
-        $platform = $this->createWebPlatform(
-            ID::unique(),
-            'No Total Web',
-            'web',
-            'nototal.example.com',
-        );
+        $platform = $this->createWebPlatform(ID::unique(), 'No Total Web', 'nototal.example.com');
         $this->assertSame(201, $platform['headers']['status-code']);
 
-        // List with total=false
         $list = $this->listPlatforms(null, false);
 
         $this->assertSame(200, $list['headers']['status-code']);
@@ -907,22 +1286,12 @@ trait PlatformsBase
 
     public function testListPlatformsCursorPagination(): void
     {
-        $platform1 = $this->createWebPlatform(
-            ID::unique(),
-            'Cursor Web 1',
-            'web',
-            'cursor1.example.com',
-        );
+        $platform1 = $this->createWebPlatform(ID::unique(), 'Cursor Web 1', 'cursor1.example.com');
         $this->assertSame(201, $platform1['headers']['status-code']);
 
-        $platform2 = $this->createAndroidPlatform(
-            ID::unique(),
-            'Cursor App 2',
-            'com.example.cursor2',
-        );
+        $platform2 = $this->createAndroidPlatform(ID::unique(), 'Cursor Android 2', 'com.example.cursor2');
         $this->assertSame(201, $platform2['headers']['status-code']);
 
-        // Get first page with limit 1
         $page1 = $this->listPlatforms([
             Query::limit(1)->toString(),
         ], true);
@@ -931,7 +1300,6 @@ trait PlatformsBase
         $this->assertCount(1, $page1['body']['platforms']);
         $cursorId = $page1['body']['platforms'][0]['$id'];
 
-        // Get next page using cursor
         $page2 = $this->listPlatforms([
             Query::limit(1)->toString(),
             Query::cursorAfter(new Document(['$id' => $cursorId]))->toString(),
@@ -964,19 +1332,10 @@ trait PlatformsBase
 
     public function testListPlatformsFilterByType(): void
     {
-        $web = $this->createWebPlatform(
-            ID::unique(),
-            'Filter Web',
-            'web',
-            'filter.example.com',
-        );
+        $web = $this->createWebPlatform(ID::unique(), 'Filter Web', 'filter.example.com');
         $this->assertSame(201, $web['headers']['status-code']);
 
-        $android = $this->createAndroidPlatform(
-            ID::unique(),
-            'Filter Android',
-            'com.example.filter',
-        );
+        $android = $this->createAndroidPlatform(ID::unique(), 'Filter Android', 'com.example.filter');
         $this->assertSame(201, $android['headers']['status-code']);
 
         // Filter by web type
@@ -1008,12 +1367,7 @@ trait PlatformsBase
 
     public function testListPlatformsFilterByName(): void
     {
-        $platform = $this->createWebPlatform(
-            ID::unique(),
-            'UniqueFilterName',
-            'web',
-            'filtername.example.com',
-        );
+        $platform = $this->createWebPlatform(ID::unique(), 'UniqueFilterName', 'filtername.example.com');
         $this->assertSame(201, $platform['headers']['status-code']);
 
         $list = $this->listPlatforms([
@@ -1030,12 +1384,7 @@ trait PlatformsBase
 
     public function testListPlatformsFilterByHostname(): void
     {
-        $platform = $this->createWebPlatform(
-            ID::unique(),
-            'Hostname Filter',
-            'web',
-            'uniquehostname.example.com',
-        );
+        $platform = $this->createWebPlatform(ID::unique(), 'Hostname Filter', 'uniquehostname.example.com');
         $this->assertSame(201, $platform['headers']['status-code']);
 
         $list = $this->listPlatforms([
@@ -1050,17 +1399,13 @@ trait PlatformsBase
         $this->deletePlatform($platform['body']['$id']);
     }
 
+    // =========================================================================
     // Delete platform tests
+    // =========================================================================
 
     public function testDeletePlatform(): void
     {
-        $platform = $this->createWebPlatform(
-            ID::unique(),
-            'Delete Web',
-            'web',
-            'delete.example.com',
-        );
-
+        $platform = $this->createWebPlatform(ID::unique(), 'Delete Web', 'delete.example.com');
         $this->assertSame(201, $platform['headers']['status-code']);
         $platformId = $platform['body']['$id'];
 
@@ -1089,17 +1434,10 @@ trait PlatformsBase
 
     public function testDeletePlatformWithoutAuthentication(): void
     {
-        $platform = $this->createWebPlatform(
-            ID::unique(),
-            'Delete Auth Web',
-            'web',
-            'deleteauth.example.com',
-        );
-
+        $platform = $this->createWebPlatform(ID::unique(), 'Delete Auth Web', 'deleteauth.example.com');
         $this->assertSame(201, $platform['headers']['status-code']);
         $platformId = $platform['body']['$id'];
 
-        // Attempt DELETE without authentication
         $response = $this->deletePlatform($platformId, false);
 
         $this->assertSame(401, $response['headers']['status-code']);
@@ -1114,60 +1452,44 @@ trait PlatformsBase
 
     public function testDeletePlatformRemovedFromList(): void
     {
-        $platform = $this->createWebPlatform(
-            ID::unique(),
-            'Delete List Web',
-            'web',
-            'deletelist.example.com',
-        );
-
+        $platform = $this->createWebPlatform(ID::unique(), 'Delete List Web', 'deletelist.example.com');
         $this->assertSame(201, $platform['headers']['status-code']);
         $platformId = $platform['body']['$id'];
 
-        // Get list count before delete
         $listBefore = $this->listPlatforms(null, true);
         $this->assertSame(200, $listBefore['headers']['status-code']);
         $countBefore = $listBefore['body']['total'];
 
-        // Delete
         $delete = $this->deletePlatform($platformId);
         $this->assertSame(204, $delete['headers']['status-code']);
 
-        // Get list count after delete
         $listAfter = $this->listPlatforms(null, true);
         $this->assertSame(200, $listAfter['headers']['status-code']);
         $this->assertSame($countBefore - 1, $listAfter['body']['total']);
 
-        // Verify the deleted platform is not in the list
         $ids = \array_column($listAfter['body']['platforms'], '$id');
         $this->assertNotContains($platformId, $ids);
     }
 
     public function testDeletePlatformDoubleDelete(): void
     {
-        $platform = $this->createWebPlatform(
-            ID::unique(),
-            'Double Delete Web',
-            'web',
-            'doubledelete.example.com',
-        );
-
+        $platform = $this->createWebPlatform(ID::unique(), 'Double Delete Web', 'doubledelete.example.com');
         $this->assertSame(201, $platform['headers']['status-code']);
         $platformId = $platform['body']['$id'];
 
-        // First delete succeeds
         $delete = $this->deletePlatform($platformId);
         $this->assertSame(204, $delete['headers']['status-code']);
 
-        // Second delete returns 404
         $delete = $this->deletePlatform($platformId);
         $this->assertSame(404, $delete['headers']['status-code']);
         $this->assertSame('platform_not_found', $delete['body']['type']);
     }
 
+    // =========================================================================
     // Helpers
+    // =========================================================================
 
-    protected function createWebPlatform(string $platformId, ?string $name, ?string $type, ?string $hostname, bool $authenticated = true): mixed
+    protected function createWebPlatform(string $platformId, ?string $name, ?string $hostname, bool $authenticated = true): mixed
     {
         $params = [
             'platformId' => $platformId,
@@ -1175,10 +1497,6 @@ trait PlatformsBase
 
         if ($name !== null) {
             $params['name'] = $name;
-        }
-
-        if ($type !== null) {
-            $params['type'] = $type;
         }
 
         if ($hostname !== null) {
@@ -1197,7 +1515,7 @@ trait PlatformsBase
         return $this->client->call(Client::METHOD_POST, '/project/platforms/web', $headers, $params);
     }
 
-    protected function createApplePlatform(string $platformId, ?string $name, ?string $type, ?string $bundleIdentifier, bool $authenticated = true): mixed
+    protected function createApplePlatform(string $platformId, ?string $name, ?string $bundleIdentifier, bool $authenticated = true): mixed
     {
         $params = [
             'platformId' => $platformId,
@@ -1205,10 +1523,6 @@ trait PlatformsBase
 
         if ($name !== null) {
             $params['name'] = $name;
-        }
-
-        if ($type !== null) {
-            $params['type'] = $type;
         }
 
         if ($bundleIdentifier !== null) {
@@ -1279,7 +1593,7 @@ trait PlatformsBase
         return $this->client->call(Client::METHOD_POST, '/project/platforms/windows', $headers, $params);
     }
 
-    protected function createLinuxPlatform(string $platformId, ?string $name, ?string $type, ?string $packageName, bool $authenticated = true): mixed
+    protected function createLinuxPlatform(string $platformId, ?string $name, ?string $packageName, bool $authenticated = true): mixed
     {
         $params = [
             'platformId' => $platformId,
@@ -1287,10 +1601,6 @@ trait PlatformsBase
 
         if ($name !== null) {
             $params['name'] = $name;
-        }
-
-        if ($type !== null) {
-            $params['type'] = $type;
         }
 
         if ($packageName !== null) {

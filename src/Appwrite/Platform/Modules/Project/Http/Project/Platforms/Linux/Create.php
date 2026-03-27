@@ -86,7 +86,7 @@ class Create extends Base
             'type' => Platform::TYPE_LINUX,
             'name' => $name,
             'key' => $packageName,
-            'hostname' => null, // Web platform attribute
+            'hostname' => '', // Web platform attribute
         ]);
 
         try {

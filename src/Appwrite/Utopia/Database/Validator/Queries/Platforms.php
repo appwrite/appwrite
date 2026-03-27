@@ -8,7 +8,6 @@ class Platforms extends Base
         'type',
         'name',
         'hostname',
-        'identifier',
         'bundleIdentifier',
         'applicationId',
         'packageIdentifierName',

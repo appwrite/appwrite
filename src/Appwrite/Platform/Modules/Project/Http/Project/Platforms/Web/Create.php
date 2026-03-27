@@ -86,7 +86,7 @@ class Create extends Base
             'projectId' => $project->getId(),
             'type' => Platform::TYPE_WEB,
             'name' => $name,
-            'key' => null, // App platform attribute
+            'key' => '', // App platform attribute
             'hostname' => $hostname
         ]);
 
