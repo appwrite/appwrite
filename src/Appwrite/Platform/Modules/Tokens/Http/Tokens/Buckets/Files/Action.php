@@ -11,12 +11,12 @@ use Utopia\Platform\Action as UtopiaAction;
 
 class Action extends UtopiaAction
 {
-    protected function getFileAndBucket(Database $dbForProject, Authorization $authorization, string $bucketId, string $fileId): array
+    protected function getFileAndBucket(Database $dbForProject, Authorization $authorization, User $user, string $bucketId, string $fileId): array
     {
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        $isAPIKey = User::isApp($authorization->getRoles());
-        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
+        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);

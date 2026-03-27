@@ -85,6 +85,7 @@ class Delete extends Action
             ->inject('transactionState')
             ->inject('plan')
             ->inject('authorization')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -101,12 +102,13 @@ class Delete extends Action
         Context $usage,
         TransactionState $transactionState,
         array $plan,
-        Authorization $authorization
+        Authorization $authorization,
+        User $user
     ): void {
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-        $isAPIKey = User::isApp($authorization->getRoles());
-        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
+        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);

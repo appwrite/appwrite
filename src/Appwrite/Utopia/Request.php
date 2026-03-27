@@ -215,7 +215,7 @@ class Request extends UtopiaRequest
         $forwardedUserAgent = $this->getHeader('x-forwarded-user-agent');
         if (!empty($forwardedUserAgent)) {
             $roles = $this->authorization->getRoles();
-            $isAppUser = User::isApp($roles);
+            $isAppUser = $this->user?->isApp($roles) ?? false;
 
             if ($isAppUser) {
                 return $forwardedUserAgent;
@@ -239,9 +239,15 @@ class Request extends UtopiaRequest
     }
 
     private ?Authorization $authorization = null;
+    private ?User $user = null;
 
     public function setAuthorization(Authorization $authorization): void
     {
         $this->authorization = $authorization;
+    }
+
+    public function setUser(User $user): void
+    {
+        $this->user = $user;
     }
 }

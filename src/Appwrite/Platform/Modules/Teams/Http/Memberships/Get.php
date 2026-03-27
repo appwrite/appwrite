@@ -52,10 +52,11 @@ class Get extends Action
             ->inject('project')
             ->inject('dbForProject')
             ->inject('authorization')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, string $membershipId, Response $response, Document $project, Database $dbForProject, Authorization $authorization)
+    public function action(string $teamId, string $membershipId, Response $response, Document $project, Database $dbForProject, Authorization $authorization, User $user)
     {
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -76,25 +77,25 @@ class Get extends Action
         ];
 
         $roles = $authorization->getRoles();
-        $isPrivilegedUser = User::isPrivileged($roles);
-        $isAppUser = User::isApp($roles);
+        $isPrivilegedUser = $user->isPrivileged($roles);
+        $isAppUser = $user->isApp($roles);
 
         $membershipsPrivacy = array_map(function ($privacy) use ($isPrivilegedUser, $isAppUser) {
             return $privacy || $isPrivilegedUser || $isAppUser;
         }, $membershipsPrivacy);
 
-        $user = !empty(array_filter($membershipsPrivacy))
+        $memberUser = !empty(array_filter($membershipsPrivacy))
             ? $dbForProject->getDocument('users', $membership->getAttribute('userId'))
             : new Document();
 
         if ($membershipsPrivacy['mfa']) {
-            $mfa = $user->getAttribute('mfa', false);
+            $mfa = $memberUser->getAttribute('mfa', false);
 
             if ($mfa) {
-                $totp = TOTP::getAuthenticatorFromUser($user);
+                $totp = TOTP::getAuthenticatorFromUser($memberUser);
                 $totpEnabled = $totp && $totp->getAttribute('verified', false);
-                $emailEnabled = $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false);
-                $phoneEnabled = $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false);
+                $emailEnabled = $memberUser->getAttribute('email', false) && $memberUser->getAttribute('emailVerification', false);
+                $phoneEnabled = $memberUser->getAttribute('phone', false) && $memberUser->getAttribute('phoneVerification', false);
 
                 if (!$totpEnabled && !$emailEnabled && !$phoneEnabled) {
                     $mfa = false;
@@ -105,11 +106,11 @@ class Get extends Action
         }
 
         if ($membershipsPrivacy['userName']) {
-            $membership->setAttribute('userName', $user->getAttribute('name'));
+            $membership->setAttribute('userName', $memberUser->getAttribute('name'));
         }
 
         if ($membershipsPrivacy['userEmail']) {
-            $membership->setAttribute('userEmail', $user->getAttribute('email'));
+            $membership->setAttribute('userEmail', $memberUser->getAttribute('email'));
         }
 
         $membership->setAttribute('teamName', $team->getAttribute('name'));

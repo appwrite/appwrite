@@ -7,6 +7,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\Queries\FileTokens;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
@@ -57,14 +58,15 @@ class XList extends Action
             ->param('queries', [], new FileTokens(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', FileTokens::ALLOWED_ATTRIBUTES), true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
+            ->inject('user')
             ->inject('dbForProject')
             ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $bucketId, string $fileId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Authorization $authorization)
+    public function action(string $bucketId, string $fileId, array $queries, bool $includeTotal, Response $response, User $user, Database $dbForProject, Authorization $authorization)
     {
-        ['bucket' => $bucket, 'file' => $file] = $this->getFileAndBucket($dbForProject, $authorization, $bucketId, $fileId);
+        ['bucket' => $bucket, 'file' => $file] = $this->getFileAndBucket($dbForProject, $authorization, $user, $bucketId, $fileId);
 
         $queries = Query::parseQueries($queries);
         $queries[] = Query::equal('resourceType', [TOKENS_RESOURCE_TYPE_FILES]);

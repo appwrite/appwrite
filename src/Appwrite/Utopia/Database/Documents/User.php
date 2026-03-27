@@ -102,7 +102,7 @@ class User extends Document
      *
      * @return bool
      */
-    public static function isPrivileged(array $roles): bool
+    public function isPrivileged(array $roles): bool
     {
         if (
             in_array(self::ROLE_OWNER, $roles) ||
@@ -122,7 +122,7 @@ class User extends Document
      *
      * @return bool
      */
-    public static function isApp(array $roles): bool
+    public function isApp(array $roles): bool
     {
         if (in_array(self::ROLE_APPS, $roles)) {
             return true;
@@ -173,8 +173,6 @@ class User extends Document
                 return $session->getId();
             }
         }
-
-        return false;
 
         return false;
     }

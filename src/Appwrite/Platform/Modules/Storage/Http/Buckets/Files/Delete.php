@@ -66,6 +66,7 @@ class Delete extends Action
             ->inject('deviceForFiles')
             ->inject('queueForDeletes')
             ->inject('authorization')
+            ->inject('user')
             ->callback($this->action(...));
     }
 
@@ -77,12 +78,13 @@ class Delete extends Action
         Event $queueForEvents,
         Device $deviceForFiles,
         DeleteEvent $queueForDeletes,
-        Authorization $authorization
+        Authorization $authorization,
+        User $user
     ) {
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        $isAPIKey = User::isApp($authorization->getRoles());
-        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
+        $isAPIKey = $user->isApp($authorization->getRoles());
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
