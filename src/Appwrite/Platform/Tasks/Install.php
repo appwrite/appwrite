@@ -107,7 +107,7 @@ class Install extends Action
             file_put_contents($this->path . '/' . $composeFileName . '.' . $time . '.backup', $data);
             $compose = new Compose($data);
             $appwrite = $compose->getService('appwrite');
-            $oldVersion = $appwrite?->getImageVersion();
+            $oldImage = $appwrite?->getImage() ?? null;
             try {
                 $ports = $compose->getService('traefik')->getPorts();
             } catch (\Throwable $th) {
@@ -118,7 +118,7 @@ class Install extends Action
                 Console::warning('Traefik not found. Falling back to default ports.');
             }
 
-            if ($oldVersion) {
+            if (!empty($oldImage)) {
                 foreach ($compose->getServices() as $service) {
                     if (!$service) {
                         continue;
@@ -516,12 +516,14 @@ class Install extends Action
         $this->applyLocalPaths($isLocalInstall, false);
 
         $isCLI = php_sapi_name() === 'cli';
-        if ($isLocalInstall || $isUpgrade) {
-            $useExistingConfig = false;
-        } else {
-            $useExistingConfig = file_exists($this->path . '/' . $this->getComposeFileName())
-                    && file_exists($this->path . '/' . $this->getEnvFileName());
-        }
+        $existingComposePath = $this->path . '/' . $this->getComposeFileName();
+        $existingEnvPath = $this->path . '/' . $this->getEnvFileName();
+        $useExistingConfig = $this->shouldReuseExistingConfig(
+            $isLocalInstall,
+            $isUpgrade,
+            file_exists($existingComposePath) && file_exists($existingEnvPath),
+            $this->readExistingComposeImage()
+        );
 
         if ($isLocalInstall) {
             $image = 'appwrite';
@@ -538,6 +540,8 @@ class Install extends Action
             $version = 'local';
         }
 
+        $appwriteImage = $this->resolveComposeAppwriteImage($isLocalInstall, $organization, $image, $version);
+
         $assistantKey = (string) ($input['_APP_ASSISTANT_OPENAI_API_KEY'] ?? '');
         $enableAssistant = trim($assistantKey) !== '';
 
@@ -547,8 +551,10 @@ class Install extends Action
             ->setParam('version', $version)
             ->setParam('organization', $organization)
             ->setParam('image', $image)
+            ->setParam('appwriteImage', $appwriteImage)
             ->setParam('database', $database)
             ->setParam('hostPath', $this->hostPath)
+            ->setParam('useHostSourceMount', $isLocalInstall)
             ->setParam('enableAssistant', $enableAssistant);
 
         $templateForEnv->setParam('vars', $input);
@@ -1294,6 +1300,63 @@ class Install extends Action
         $composeFile = $this->path . '/' . $this->getComposeFileName();
         $data = @file_get_contents($composeFile);
         return !empty($data) ? $data : '';
+    }
+
+    protected function readExistingComposeImage(): ?string
+    {
+        $data = $this->readExistingCompose();
+
+        if ($data === '') {
+            return null;
+        }
+
+        try {
+            $compose = new Compose($data);
+            return $compose->getService('appwrite')?->getImage();
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    protected function shouldUseLocalAppwriteImage(): bool
+    {
+        return \trim((string) \getenv('_APP_VERSION')) === 'dev' && $this->dockerImageExists('appwrite-dev');
+    }
+
+    protected function resolveComposeAppwriteImage(bool $isLocalInstall, string $organization, string $image, string $version): string
+    {
+        if ($isLocalInstall || $this->shouldUseLocalAppwriteImage()) {
+            return 'appwrite-dev';
+        }
+
+        return $organization . '/' . $image . ':' . $version;
+    }
+
+    protected function shouldReuseExistingConfig(bool $isLocalInstall, bool $isUpgrade, bool $configFilesExist, ?string $existingImage = null): bool
+    {
+        if ($isLocalInstall || $isUpgrade || !$configFilesExist) {
+            return false;
+        }
+
+        // Avoid sticky mutable or legacy dev tags from previous failed installer runs.
+        if ($existingImage !== null && $this->isStaleMutableAppwriteImageReference($existingImage)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    protected function isStaleMutableAppwriteImageReference(string $image): bool
+    {
+        return \in_array(\strtolower(\trim($image)), ['appwrite/appwrite:dev', 'appwrite/appwrite:unknown'], true);
+    }
+
+    protected function dockerImageExists(string $image): bool
+    {
+        $result = 1;
+        $output = [];
+        \exec('docker image inspect ' . \escapeshellarg($image) . ' >/dev/null 2>&1', $output, $result);
+        return $result === 0;
     }
 
     protected function generatePasswordValue(string $varName, Password $password): string
