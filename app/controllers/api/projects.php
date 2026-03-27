@@ -1480,7 +1480,7 @@ Http::patch('/v1/projects/:projectId/smtp')
 
 Http::post('/v1/projects/:projectId/smtp/tests')
     ->desc('Create SMTP test')
-    ->groups(['api', 'projects'])
+    ->groups(['api', 'projects', 'outgoingEmail'])
     ->label('scope', 'projects.write')
     ->label('sdk', [
         new Method(
