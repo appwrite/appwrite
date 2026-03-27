@@ -22,7 +22,7 @@
     "check": "tsc --noEmit"
   },
   "dependencies": {
-    "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@69509a7",
+    "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@6b80a15",
     "@faker-js/faker": "^10.1.0",
     "@hookform/resolvers": "^5.2.2",
     "@monaco-editor/react": "^4.7.0",
@@ -83,8 +83,10 @@
     "react-day-picker": "^9.11.0",
     "react-dom": "^19.1.1",
     "react-hook-form": "^7.63.0",
+    "react-markdown": "^10.1.0",
     "react-resizable-panels": "^3.0.6",
     "recharts": "^3.2.1",
+    "remark-gfm": "^4.0.1",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.0.2",
     "tailwindcss": "^4.1.13",

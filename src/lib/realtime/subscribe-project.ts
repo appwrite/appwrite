@@ -106,6 +106,23 @@ function hasEvent(events: string[], name: string): boolean {
   return false
 }
 
+function invalidateAssistantQueries(
+  queryClient: QueryClient,
+  payload: Record<string, unknown> | null,
+): void {
+  const conversationId = payload?.conversationId as string | undefined
+
+  queryClient.invalidateQueries({ queryKey: ['assistant', 'conversations'] })
+
+  if (conversationId) {
+    queryClient.invalidateQueries({
+      queryKey: ['assistant', 'messages', conversationId],
+    })
+  } else {
+    queryClient.invalidateQueries({ queryKey: ['assistant', 'messages'] })
+  }
+}
+
 export type OnMigrationEvent = (payload: unknown) => void
 
 /**
@@ -119,6 +136,18 @@ function handleRealtimeEvent(
   onMigrationEvent?: OnMigrationEvent,
 ): void {
   const { events, channels } = response
+  const payload =
+    response.payload && typeof response.payload === 'object'
+      ? (response.payload as Record<string, unknown>)
+      : null
+
+  const hasAssistantEvent =
+    events.some((eventName) => eventName.includes('assistant')) ||
+    channels.some((channel) => channel.includes('assistant'))
+
+  if (hasAssistantEvent) {
+    invalidateAssistantQueries(queryClient, payload)
+  }
 
   // Project-scoped filter: only react if this event is for our project
   const projectChannel = `projects.${projectId}`
@@ -175,7 +204,6 @@ function handleRealtimeEvent(
 
   // Migration events: always process (merge by $id only updates if in current project's list)
   if (hasEvent(events, REALTIME_EVENTS.MIGRATIONS_ANY)) {
-    const payload = response.payload
     if (
       payload != null &&
       typeof payload === 'object' &&
@@ -252,7 +280,6 @@ function handleRealtimeEvent(
   }
 
   if (hasEvent(events, REALTIME_EVENTS.RULES_UPDATE)) {
-    const payload = response.payload
     if (
       payload != null &&
       typeof payload === 'object' &&

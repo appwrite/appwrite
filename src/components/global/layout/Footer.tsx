@@ -80,7 +80,7 @@ export function ConsoleFooter() {
           </div>
 
           {/* Separator */}
-          <div className="h-4 w-px bg-border flex-shrink-0 hidden sm:block" />
+          <div className="hidden h-4 w-px flex-shrink-0 bg-border @[520px]:block" />
 
           {/* Resource Links */}
           <nav className="flex items-center flex-shrink-0">
@@ -95,17 +95,17 @@ export function ConsoleFooter() {
                   {link.label}
                 </a>
                 {index < resourceLinks.length - 1 && (
-                  <span className="text-border hidden sm:inline">·</span>
+                  <span className="hidden text-border @[520px]:inline">·</span>
                 )}
               </div>
             ))}
           </nav>
 
           {/* Separator */}
-          <div className="mx-1 h-4 w-px bg-border flex-shrink-0 hidden md:block" />
+          <div className="mx-1 hidden h-4 w-px flex-shrink-0 bg-border @[680px]:block" />
 
           {/* Social Icons */}
-          <div className="flex items-center gap-1 flex-shrink-0 hidden md:flex">
+          <div className="hidden flex-shrink-0 items-center gap-1 @[680px]:flex">
             {socialLinks.map((social) => (
               <a
                 key={social.label}
@@ -132,7 +132,7 @@ export function ConsoleFooter() {
             href="https://appwrite.io/docs/advanced/security"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[12px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground hidden lg:flex"
+            className="hidden items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[12px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[920px]:flex"
           >
             <ShieldCheck
               className="h-3.5 w-3.5 shrink-0 opacity-70"
@@ -144,10 +144,10 @@ export function ConsoleFooter() {
           </a>
 
           {/* Separator */}
-          <div className="h-4 w-px bg-border flex-shrink-0 hidden lg:block" />
+          <div className="hidden h-4 w-px flex-shrink-0 bg-border @[920px]:block" />
 
           {/* Legal Links */}
-          <nav className="flex items-center hidden sm:flex">
+          <nav className="hidden items-center @[520px]:flex">
             {legalLinks.map((link, index) => (
               <div key={link.label} className="flex items-center">
                 <a
@@ -166,7 +166,7 @@ export function ConsoleFooter() {
           </nav>
 
           {/* Separator */}
-          <div className="h-4 w-px bg-border flex-shrink-0 hidden sm:block" />
+          <div className="hidden h-4 w-px flex-shrink-0 bg-border @[520px]:block" />
 
           {/* Copyright */}
           <span className="px-2.5 py-1.5 text-[13px] text-muted-foreground whitespace-nowrap">

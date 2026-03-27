@@ -210,7 +210,9 @@ export function View({ projectId, initialData }: ViewProps) {
     initialData: initialData?.apiKeysRaw,
   })
   const effectiveApiKeys =
-    apiKeys.length > 0 ? apiKeys : (initialData?.apiKeys ?? [])
+    apiKeys.length > 0 || initialData?.apiKeysRaw
+      ? apiKeys
+      : (initialData?.apiKeys ?? [])
   const showLoadingKeys = isLoadingKeys && !initialData
 
   // Create mutation

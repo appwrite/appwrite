@@ -338,6 +338,27 @@ export async function updateDomainTeam(domainId: string, teamId: string) {
 }
 
 /**
+ * Mutation function to update domain auto-renewal status
+ *
+ * @param domainId - The domain ID
+ * @param autoRenewal - Whether auto-renewal should be enabled
+ * @returns Updated domain object
+ */
+export async function updateDomainAutoRenewal(
+  domainId: string,
+  autoRenewal: boolean,
+) {
+  if (!domainId) {
+    throw new Error('Domain ID is required')
+  }
+
+  return await sdk.forConsole.domains.updateAutoRenewal({
+    domainId,
+    autoRenewal,
+  })
+}
+
+/**
  * Query function to fetch DNS records for a domain
  *
  * @param domainId - The domain ID
@@ -857,13 +878,15 @@ export function useDomainPrices(
     return map
   }, [domains, queries])
 
-  const hasError = queries.some((q) => q.error)
-  const isFetching = queries.some((q) => q.isFetching)
+  const hasError = queries.some((q: { error: unknown }) => q.error)
+  const isFetching = queries.some((q: { isFetching: boolean }) => q.isFetching)
 
   return {
     pricesByDomain,
     isFetching,
-    error: hasError ? queries.find((q) => q.error)?.error : undefined,
+    error: hasError
+      ? queries.find((q: { error: unknown }) => q.error)?.error
+      : undefined,
   }
 }
 
@@ -978,6 +1001,41 @@ export function useUpdateDomainTeam(organizationId: string | null | undefined) {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['domains', 'organization', organizationId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: Dependencies.DOMAINS,
+      })
+    },
+  })
+}
+
+/**
+ * Hook to update a domain's auto-renewal status
+ *
+ * @param organizationId - The organization ID (for cache invalidation)
+ * @returns Mutation hook for updating auto-renewal
+ */
+export function useUpdateDomainAutoRenewal(
+  organizationId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      domainId,
+      autoRenewal,
+    }: {
+      domainId: string
+      autoRenewal: boolean
+    }) => {
+      return await updateDomainAutoRenewal(domainId, autoRenewal)
+    },
+    onSuccess: (_, { domainId }) => {
+      queryClient.invalidateQueries({
+        queryKey: ['domains', 'organization', organizationId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['domain', domainId],
       })
       queryClient.invalidateQueries({
         queryKey: Dependencies.DOMAINS,

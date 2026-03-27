@@ -807,13 +807,15 @@ export function useDeleteApiKey(projectId: string | null | undefined) {
         keyId,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
         queryKey: ['apiKeys', projectId],
+        type: 'all',
       })
       // Also invalidate project query since keys are part of project data
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ['project', projectId],
+        refetchType: 'all',
       })
     },
   })

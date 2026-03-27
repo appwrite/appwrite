@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { createDomainTransferOut } from '@/lib/react-query/hooks/domains'
 import { cn } from '@/lib/utils'
@@ -71,6 +71,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -100,6 +101,7 @@ import {
   useUpdateDomainTeam,
   useDeleteOrganizationDomain,
   useOrganizations,
+  useUpdateDomainAutoRenewal,
 } from '@/lib/react-query/hooks'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import {
@@ -164,6 +166,7 @@ export function View({ initialData }: ViewProps = {}) {
   const [bulkDeleteRecordsDialogOpen, setBulkDeleteRecordsDialogOpen] =
     useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [autoRenewalEnabled, setAutoRenewalEnabled] = useState(true)
 
   const search = useSearch({ strict: false }) as
     | Record<string, unknown>
@@ -274,6 +277,17 @@ export function View({ initialData }: ViewProps = {}) {
         : 'text-yellow-600 dark:text-yellow-500',
     }
   }, [domain])
+  const canManageAutoRenewal =
+    domain?.registrar?.toLowerCase() === 'appwrite' && !!domainId
+  const metadataActionClassName = 'h-auto p-0 text-[11px] font-medium'
+  const autoRenewalStatusClassName = autoRenewalEnabled
+    ? 'text-green-600 dark:text-green-500'
+    : 'text-yellow-600 dark:text-yellow-500'
+
+  useEffect(() => {
+    if (!domain) return
+    setAutoRenewalEnabled(!!domain.autoRenewal)
+  }, [domain?.$id, domain?.autoRenewal])
 
   // Derive active tab from pathname
   const activeTab = useMemo(() => {
@@ -413,7 +427,7 @@ export function View({ initialData }: ViewProps = {}) {
 
   // Deletable records (non-locked) on current page for bulk actions
   const deletableRecords = useMemo(
-    () => dnsRecords.filter((r) => !r.lock),
+    () => dnsRecords.filter((r: Models.DnsRecord) => !r.lock),
     [dnsRecords],
   )
 
@@ -466,7 +480,9 @@ export function View({ initialData }: ViewProps = {}) {
     if (selectedRecords.size === deletableRecords.length) {
       setSelectedRecords(new Set())
     } else {
-      setSelectedRecords(new Set(deletableRecords.map((r) => r.$id)))
+      setSelectedRecords(
+        new Set(deletableRecords.map((r: Models.DnsRecord) => r.$id)),
+      )
     }
   }
 
@@ -751,6 +767,7 @@ export function View({ initialData }: ViewProps = {}) {
 
   // Transfer domain mutation
   const transferDomainMutation = useUpdateDomainTeam(orgId)
+  const updateAutoRenewalMutation = useUpdateDomainAutoRenewal(orgId)
 
   const createTransferOutMutation = useMutation({
     mutationFn: async () => {
@@ -829,6 +846,26 @@ export function View({ initialData }: ViewProps = {}) {
         toast.error(getErrorMessage(error) || 'Failed to delete domain')
       },
     })
+  }
+
+  const handleUpdateAutoRenewal = () => {
+    if (!domainId || !domain) return
+    updateAutoRenewalMutation.mutate(
+      { domainId, autoRenewal: autoRenewalEnabled },
+      {
+        onSuccess: (updatedDomain) => {
+          setAutoRenewalEnabled(!!updatedDomain.autoRenewal)
+          toast.success(
+            updatedDomain.autoRenewal
+              ? 'Auto renewal has been enabled'
+              : 'Auto renewal has been disabled',
+          )
+        },
+        onError: (error) => {
+          toast.error(getErrorMessage(error) || 'Failed to update auto renewal')
+        },
+      },
+    )
   }
 
   const getRecordTypeColor = (type: string) => {
@@ -973,12 +1010,15 @@ export function View({ initialData }: ViewProps = {}) {
                               {verificationStatus.label}
                             </code>
                             {!verificationStatus.isVerified && (
-                              <button
+                              <Button
+                                variant="link"
+                                size="sm"
                                 onClick={() => setRetryDialogOpen(true)}
-                                className="text-[11px] text-primary hover:text-primary/80 font-medium shrink-0"
+                                className={metadataActionClassName}
+                                disabled={retryVerificationMutation.isPending}
                               >
-                                Retry
-                              </button>
+                                Verify
+                              </Button>
                             )}
                           </>
                         )}
@@ -1029,9 +1069,31 @@ export function View({ initialData }: ViewProps = {}) {
                         Auto renewal
                       </p>
                       <div className="min-h-[1.25rem] flex items-center">
-                        <code className="text-[12px] font-mono text-foreground">
-                          {domain.autoRenewal ? 'Enabled' : 'Disabled'}
-                        </code>
+                        <div className="flex items-center gap-1.5">
+                          <code
+                            className={cn(
+                              'text-[12px] font-mono font-medium',
+                              domain.autoRenewal
+                                ? 'text-green-600 dark:text-green-500'
+                                : 'text-yellow-600 dark:text-yellow-500',
+                            )}
+                          >
+                            {domain.autoRenewal ? 'Enabled' : 'Disabled'}
+                          </code>
+                          <Button
+                            variant="link"
+                            size="sm"
+                            className={metadataActionClassName}
+                            onClick={() =>
+                              navigate({
+                                to: '/organizations/$orgId/domains/$domainId/settings',
+                                params: { orgId: orgId!, domainId: domainId! },
+                              })
+                            }
+                          >
+                            Update
+                          </Button>
+                        </div>
                       </div>
                     </div>
 
@@ -1290,7 +1352,7 @@ export function View({ initialData }: ViewProps = {}) {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {dnsRecords.map((record) => {
+                        {dnsRecords.map((record: Models.DnsRecord) => {
                           const nameValue = record.name || '@'
                           const value = record.value
                           const isAppwriteManaged =
@@ -1611,6 +1673,77 @@ export function View({ initialData }: ViewProps = {}) {
             </>
           ) : (
             <div className="space-y-6">
+              {domain && (
+                <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                  <div className="px-6 py-4">
+                    <h3 className="text-[15px] font-semibold text-foreground">
+                      Auto renewal
+                    </h3>
+                    <p className="text-[13px] text-muted-foreground mt-2">
+                      Choose whether this domain should renew automatically
+                      before it expires.
+                    </p>
+                  </div>
+                  <div className="border-t border-border" />
+                  <div className="px-6 py-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="space-y-1">
+                        <Label
+                          htmlFor="auto-renewal-toggle"
+                          className="text-[13px] font-medium text-foreground"
+                        >
+                          Enable auto renewal
+                        </Label>
+                        <p className="text-[12px] text-muted-foreground">
+                          <span className={cn('font-medium', autoRenewalStatusClassName)}>
+                            {autoRenewalEnabled ? 'Enabled' : 'Disabled'}
+                          </span>
+                        </p>
+                      </div>
+                      <Switch
+                        id="auto-renewal-toggle"
+                        checked={autoRenewalEnabled}
+                        onCheckedChange={setAutoRenewalEnabled}
+                        disabled={
+                          !canManageAutoRenewal ||
+                          updateAutoRenewalMutation.isPending
+                        }
+                      />
+                    </div>
+                    <div className="mt-4 rounded-md border border-border bg-muted/40 px-3 py-2">
+                      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                        Renewal price
+                      </p>
+                      <p className="mt-1 text-[13px] font-medium text-foreground">
+                        {domain.renewalPrice > 0
+                          ? `$${(domain.renewalPrice / 100).toFixed(2)}/yr`
+                          : '—'}
+                      </p>
+                    </div>
+                    {!canManageAutoRenewal && (
+                      <p className="mt-3 text-[12px] text-muted-foreground">
+                        Auto renewal is available for domains registered with
+                        Appwrite.
+                      </p>
+                    )}
+                  </div>
+                  <div className="px-6 py-4 border-t border-border bg-muted/30">
+                    <Button
+                      size="sm"
+                      className="h-9 text-[13px]"
+                      disabled={
+                        !canManageAutoRenewal ||
+                        updateAutoRenewalMutation.isPending ||
+                        domain.autoRenewal === autoRenewalEnabled
+                      }
+                      onClick={handleUpdateAutoRenewal}
+                    >
+                      Update
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               {/* Transfer Domain Section */}
               {domain && (
                 <div className="rounded-xl border border-border bg-card/50 overflow-hidden">

@@ -1,61 +1,115 @@
-import { createContext, useContext, useState, useCallback } from 'react'
-import { useRef, useEffect } from 'react'
-import { useDebugOverrides } from '@/lib/debug-overrides'
 import {
-  X,
-  Send,
-  Lightbulb,
-  User,
+  createContext,
+  memo,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
+import { useLocation, useParams } from '@tanstack/react-router'
+import { useDebugOverrides } from '@/lib/debug-overrides'
+import { toast } from 'sonner'
+import {
+  ChevronsUpDown,
   Loader2,
+  MessageSquare,
+  Plus,
+  Send,
+  Trash2,
+  X,
+  Lightbulb,
   GripVertical,
 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
-
-interface Message {
-  id: string
-  role: 'user' | 'assistant'
-  content: string
-  timestamp: Date
-}
+import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { StreamingMarkdown } from '@/components/global/shared/StreamingMarkdown'
+import {
+  useAssistantConversations,
+  useAssistantMessages,
+  useCreateAssistantConversation,
+  useCreateAssistantMessage,
+  useDeleteAssistantConversation,
+  type AssistantConversation,
+  type AssistantMessage,
+} from '@/lib/react-query/hooks'
 
 interface AIChatContextValue {
   isOpen: boolean
-  messages: Message[]
-  isLoading: boolean
+  activeConversationId: string | null
   openChat: () => void
   closeChat: () => void
   toggleChat: () => void
-  addMessage: (message: Message) => void
-  setMessages: React.Dispatch<React.SetStateAction<Message[]>>
-  setIsLoading: (loading: boolean) => void
+  setActiveConversationId: (conversationId: string | null) => void
 }
 
 const AIChatContext = createContext<AIChatContextValue | null>(null)
+const OPEN_STATE_STORAGE_KEY = 'ai-chat-panel-open'
+const AUTH_ROUTE_PATHNAMES = new Set([
+  '/sign-in',
+  '/sign-up',
+  '/recovery',
+  '/mfa',
+  '/join',
+  '/sign-out',
+  '/verify-email',
+])
+
+function isAssistantBlockedPath(pathname: string): boolean {
+  return AUTH_ROUTE_PATHNAMES.has(pathname)
+}
 
 export function AIChatProvider({ children }: { children: React.ReactNode }) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [messages, setMessages] = useState<Message[]>([])
-  const [isLoading, setIsLoading] = useState(false)
+  const location = useLocation()
+  const isAssistantBlocked = useMemo(
+    () => isAssistantBlockedPath(location.pathname),
+    [location.pathname],
+  )
+  const [isOpen, setIsOpen] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return localStorage.getItem(OPEN_STATE_STORAGE_KEY) === 'true'
+  })
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(
+    null,
+  )
 
-  const openChat = useCallback(() => setIsOpen(true), [])
+  const openChat = useCallback(() => {
+    if (isAssistantBlocked) return
+    setIsOpen(true)
+  }, [isAssistantBlocked])
   const closeChat = useCallback(() => setIsOpen(false), [])
-  const toggleChat = useCallback(() => setIsOpen((prev) => !prev), [])
-  const addMessage = useCallback((message: Message) => {
-    setMessages((prev) => [...prev, message])
-  }, [])
+  const toggleChat = useCallback(() => {
+    if (isAssistantBlocked) return
+    setIsOpen((prev) => !prev)
+  }, [isAssistantBlocked])
+
+  useEffect(() => {
+    if (isAssistantBlocked && isOpen) {
+      setIsOpen(false)
+    }
+  }, [isAssistantBlocked, isOpen])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    localStorage.setItem(OPEN_STATE_STORAGE_KEY, isOpen ? 'true' : 'false')
+  }, [isOpen])
 
   return (
     <AIChatContext.Provider
       value={{
         isOpen,
-        messages,
-        isLoading,
+        activeConversationId,
         openChat,
         closeChat,
         toggleChat,
-        addMessage,
-        setMessages,
-        setIsLoading,
+        setActiveConversationId,
       }}
     >
       {children}
@@ -69,14 +123,11 @@ export function useAIChat() {
     // Return no-op functions if used outside provider
     return {
       isOpen: false,
-      messages: [],
-      isLoading: false,
+      activeConversationId: null,
       openChat: () => {},
       closeChat: () => {},
       toggleChat: () => {},
-      addMessage: () => {},
-      setMessages: () => {},
-      setIsLoading: () => {},
+      setActiveConversationId: () => {},
     }
   }
   return context
@@ -94,12 +145,76 @@ const MAX_WIDTH = 600
 const DEFAULT_WIDTH = 400
 const STORAGE_KEY = 'ai-chat-panel-width'
 
+interface AssistantMessageRowProps {
+  messageId: string
+  role: string
+  messageText: string
+  deferCodeBlocks: boolean
+}
+
+const AssistantMessageRow = memo(
+  function AssistantMessageRow({
+    role,
+    messageText,
+    deferCodeBlocks,
+  }: AssistantMessageRowProps) {
+    const isUserMessage = role.toLowerCase() === 'user'
+
+    return (
+      <div className="space-y-1.5">
+        <div
+          className={cn('flex', isUserMessage ? 'justify-end' : 'justify-start')}
+        >
+          <div
+            className={cn(
+              'max-w-[88%] rounded-md px-2.5 py-1.5 text-[13px]',
+              isUserMessage && 'whitespace-pre-wrap',
+              isUserMessage
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-card text-foreground',
+            )}
+          >
+            {isUserMessage ? (
+              messageText
+            ) : (
+              <StreamingMarkdown
+                content={messageText}
+                deferCodeBlocks={deferCodeBlocks}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  },
+  (prev, next) =>
+    prev.messageId === next.messageId &&
+    prev.role === next.role &&
+    prev.messageText === next.messageText &&
+    prev.deferCodeBlocks === next.deferCodeBlocks,
+)
+
 export function AIChatPanel() {
   const overrides = useDebugOverrides()
-  const { isOpen, closeChat, messages, isLoading, setMessages, setIsLoading } =
-    useAIChat()
+  const {
+    isOpen,
+    closeChat,
+    activeConversationId,
+    setActiveConversationId,
+  } = useAIChat()
+  const params = useParams({ strict: false }) as {
+    projectId?: string
+    orgId?: string
+    teamId?: string
+  }
+  const location = useLocation()
+  const isAssistantBlocked = useMemo(
+    () => isAssistantBlockedPath(location.pathname),
+    [location.pathname],
+  )
   const showPanel = overrides.showAIAssistant
   const [input, setInput] = useState('')
+  const [conversationsPopoverOpen, setConversationsPopoverOpen] = useState(false)
   const [width, setWidth] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem(STORAGE_KEY)
@@ -116,6 +231,36 @@ export function AIChatPanel() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
+  const {
+    data: conversationsData,
+    isLoading: conversationsLoading,
+    isFetching: conversationsFetching,
+  } = useAssistantConversations()
+  const conversations: AssistantConversation[] = conversationsData ?? []
+  const createConversationMutation = useCreateAssistantConversation()
+  const deleteConversationMutation = useDeleteAssistantConversation()
+  const createMessageMutation = useCreateAssistantMessage()
+
+  const activeConversation = useMemo(
+    () => conversations.find((conversation) => conversation.$id === activeConversationId),
+    [activeConversationId, conversations],
+  )
+
+  const { data: messagesData, isFetching: messagesFetching } = useAssistantMessages(
+    activeConversationId,
+  )
+  const messages: AssistantMessage[] = messagesData ?? []
+  const latestMessageId = messages[messages.length - 1]?.$id
+
+  const isConversationRunning = useMemo(() => {
+    if (!activeConversation) return false
+    const status = activeConversation.status?.toLowerCase()
+    const lockState = activeConversation.lockState?.toLowerCase()
+    return status === 'running' || status === 'queued' || lockState === 'locked'
+  }, [activeConversation])
+
+  const isThinking =
+    createMessageMutation.isPending || isConversationRunning || messagesFetching
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -135,6 +280,25 @@ export function AIChatPanel() {
       localStorage.setItem(STORAGE_KEY, width.toString())
     }
   }, [width])
+
+  // Pick initial conversation if none is selected
+  useEffect(() => {
+    if (
+      activeConversationId &&
+      conversations.some(
+        (conversation: AssistantConversation) => conversation.$id === activeConversationId,
+      )
+    ) {
+      return
+    }
+
+    if (conversations.length > 0) {
+      setActiveConversationId(conversations[0].$id)
+      return
+    }
+
+    setActiveConversationId(null)
+  }, [activeConversationId, conversations, setActiveConversationId])
 
   // Handle resize drag
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -173,36 +337,79 @@ export function AIChatPanel() {
     }
   }, [isResizing])
 
-  if (!showPanel) return null
+  if (!showPanel || isAssistantBlocked) return null
 
-  const handleSend = async (content: string = input) => {
-    if (!content.trim() || isLoading) return
-
-    const userMessage = {
-      id: crypto.randomUUID(),
-      role: 'user' as const,
-      content: content.trim(),
-      timestamp: new Date(),
+  const handleCreateConversation = async () => {
+    if (!params.projectId) {
+      toast.error('Open a project to create a new conversation.')
+      return
     }
 
-    setMessages((prev) => [...prev, userMessage])
-    setInput('')
-    setIsLoading(true)
+    try {
+      const conversation = await createConversationMutation.mutateAsync({
+        projectId: params.projectId,
+        title: 'New conversation',
+      })
+      setActiveConversationId(conversation.$id)
+      setConversationsPopoverOpen(false)
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Failed to create conversation'))
+    }
+  }
 
-    // Simulate AI response (replace with actual API call)
-    setTimeout(
-      () => {
-        const assistantMessage = {
-          id: crypto.randomUUID(),
-          role: 'assistant' as const,
-          content: getSimulatedResponse(content),
-          timestamp: new Date(),
+  const handleDeleteConversation = async (conversationId: string) => {
+    try {
+      await deleteConversationMutation.mutateAsync(conversationId)
+      if (conversationId === activeConversationId) {
+        const nextConversation = conversations.find((c) => c.$id !== conversationId)
+        setActiveConversationId(nextConversation?.$id ?? null)
+      }
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Failed to delete conversation'))
+    }
+  }
+
+  const handleSend = async (content: string = input) => {
+    const trimmed = content.trim()
+    if (!trimmed || createMessageMutation.isPending) return
+    setInput('')
+
+    let conversationId = activeConversationId
+
+    try {
+      if (!conversationId) {
+        if (!params.projectId) {
+          toast.error('Open a project to start a new conversation.')
+          return
         }
-        setMessages((prev) => [...prev, assistantMessage])
-        setIsLoading(false)
-      },
-      1000 + Math.random() * 1000,
-    )
+
+        const createdConversation = await createConversationMutation.mutateAsync({
+          projectId: params.projectId,
+          title: makeConversationTitle(trimmed),
+        })
+        conversationId = createdConversation.$id
+        setActiveConversationId(createdConversation.$id)
+      }
+      if (!conversationId) return
+
+      await createMessageMutation.mutateAsync({
+        conversationId,
+        contentText: trimmed,
+        context: {
+          contextTeamId: params.orgId ?? params.teamId,
+          contextProjectId: params.projectId ?? activeConversation?.projectId,
+          contextOrganizationId: params.orgId,
+          contextPagePath: location.pathname,
+          contextPageTitle:
+            typeof document !== 'undefined' ? document.title : undefined,
+          contextPageUrl:
+            typeof window !== 'undefined' ? window.location.href : undefined,
+        },
+        continueRun: true,
+      })
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Failed to send message'))
+    }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -236,168 +443,233 @@ export function AIChatPanel() {
         </div>
       </div>
 
-      {/* Header */}
-      <div className="flex h-14 shrink-0 items-center justify-between border-b border-border px-4">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-            <Lightbulb className="h-4 w-4 text-primary" />
-          </div>
-          <h2 className="text-sm font-semibold text-foreground">Assistant</h2>
-        </div>
-        <button
-          onClick={closeChat}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4">
-        {messages.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center">
-            <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-              <Lightbulb className="h-8 w-8 text-primary" />
-            </div>
-            <h3 className="mb-2 text-lg font-semibold text-foreground">
-              How can I help you?
-            </h3>
-            <p className="mb-6 text-center text-sm text-muted-foreground">
-              Ask me anything about Appwrite, your project, or how to build your
-              app.
-            </p>
-            <div className="w-full space-y-2">
-              {suggestedQuestions.map((question) => (
-                <button
-                  key={question}
-                  onClick={() => handleSend(question)}
-                  className="w-full rounded-lg border border-border bg-card p-3 text-left text-sm text-foreground transition-colors hover:bg-accent"
+      <div className="flex h-full min-h-0">
+        <div className="flex min-w-0 flex-1 flex-col">
+          <div className="flex h-14 min-h-14 shrink-0 items-center justify-between border-b border-border px-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1">
+                <Popover
+                  open={conversationsPopoverOpen}
+                  onOpenChange={setConversationsPopoverOpen}
                 >
-                  {question}
-                </button>
-              ))}
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="h-8 max-w-[248px] justify-start px-1.5 text-left"
+                    >
+                      <div className="flex min-w-0 items-center gap-1.5">
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10">
+                          <MessageSquare className="h-3.5 w-3.5 text-primary" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-[13px] font-semibold text-foreground">
+                            {activeConversation?.title || 'New conversation'}
+                          </p>
+                        </div>
+                        <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      </div>
+                    </Button>
+                  </PopoverTrigger>
+
+                  <PopoverContent align="start" className="w-[300px] p-0">
+                    <div className="border-b border-border px-2 py-1.5">
+                      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                        Conversations
+                      </p>
+                    </div>
+
+                    <div className="max-h-[300px] overflow-y-auto p-1.5">
+                    {conversationsLoading || conversationsFetching ? (
+                      <div className="flex items-center gap-1.5 px-1.5 py-2 text-[11px] text-muted-foreground">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        Loading conversations...
+                      </div>
+                    ) : conversations.length === 0 ? (
+                      <div className="px-1.5 py-2 text-[11px] text-muted-foreground">
+                        No conversations yet.
+                      </div>
+                    ) : (
+                      <div className="space-y-0.5">
+                        {conversations.map((conversation: AssistantConversation) => {
+                          const isActive = conversation.$id === activeConversationId
+                          return (
+                            <div
+                              key={conversation.$id}
+                              className={cn(
+                                'group flex items-center gap-1 rounded-md border border-transparent px-1.5 py-1 transition-colors',
+                                isActive
+                                  ? 'border-border bg-accent'
+                                  : 'hover:border-border hover:bg-accent/60',
+                              )}
+                            >
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setActiveConversationId(conversation.$id)
+                                  setConversationsPopoverOpen(false)
+                                }}
+                                className="min-w-0 flex-1 text-left"
+                              >
+                                <p className="truncate text-[12px] font-medium text-foreground">
+                                  {conversation.title || 'Untitled conversation'}
+                                </p>
+                              </button>
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6 shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
+                                onClick={(event) => {
+                                  event.stopPropagation()
+                                  handleDeleteConversation(conversation.$id)
+                                }}
+                                disabled={deleteConversationMutation.isPending}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="h-8 w-8 shrink-0 p-0"
+                  onClick={handleCreateConversation}
+                  disabled={createConversationMutation.isPending}
+                >
+                  {createConversationMutation.isPending ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Plus className="h-3.5 w-3.5" />
+                  )}
+                </Button>
+              </div>
+            </div>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={closeChat}
+                className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
             </div>
           </div>
-        ) : (
-          <div className="space-y-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
+
+          <div className="min-h-0 flex-1 overflow-y-auto p-3">
+            {messages.length === 0 ? (
+              <div className="flex h-full flex-col items-center justify-center">
+                <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
+                  <Lightbulb className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="mb-2 text-lg font-semibold text-foreground">
+                  How can I help you?
+                </h3>
+                <p className="mb-6 text-center text-sm text-muted-foreground">
+                  Ask about your project, and I can plan and execute actions.
+                </p>
+                <div className="w-full max-w-md space-y-2">
+                  {suggestedQuestions.map((question) => (
+                    <button
+                      key={question}
+                      onClick={() => handleSend(question)}
+                      className="w-full rounded-lg border border-border bg-card p-3 text-left text-sm text-foreground transition-colors hover:bg-accent"
+                    >
+                      {question}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {messages.map((message: AssistantMessage) => {
+                  const messageText = message.contentText || ''
+                  const isUserMessage = message.role.toLowerCase() === 'user'
+
+                  // Avoid duplicate AI placeholders: when the backend created an empty
+                  // assistant message during generation, we only show the "Thinking..."
+                  // row below (single AI response state).
+                  if (!isUserMessage && !messageText.trim()) {
+                    return null
+                  }
+
+                  return (
+                    <AssistantMessageRow
+                      key={message.$id}
+                      messageId={message.$id}
+                      role={message.role}
+                      messageText={messageText}
+                      deferCodeBlocks={
+                        isThinking && message.$id === latestMessageId
+                      }
+                    />
+                  )
+                })}
+                {isThinking && (
+                  <div className="flex">
+                    <div className="flex items-center gap-1.5 rounded-md bg-card px-2.5 py-1.5 text-[13px] text-muted-foreground">
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      <span>Thinking...</span>
+                    </div>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+            )}
+          </div>
+
+          <div className="shrink-0 border-t border-border p-3">
+            <div className="flex items-end gap-1.5 rounded-md border border-border bg-card p-1.5">
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask a question..."
+                rows={1}
+                className="max-h-32 min-h-[34px] flex-1 resize-none bg-transparent px-1.5 py-1 text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none"
+                style={{
+                  height: 'auto',
+                  minHeight: '34px',
+                }}
+                onInput={(e) => {
+                  const target = e.target as HTMLTextAreaElement
+                  target.style.height = 'auto'
+                  target.style.height = `${Math.min(target.scrollHeight, 128)}px`
+                }}
+              />
+              <button
+                onClick={() => handleSend()}
+                disabled={!input.trim() || createMessageMutation.isPending}
                 className={cn(
-                  'flex gap-3',
-                  message.role === 'user' && 'flex-row-reverse',
+                  'flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors',
+                  input.trim() && !createMessageMutation.isPending
+                    ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                    : 'bg-muted text-muted-foreground',
                 )}
               >
-                <div
-                  className={cn(
-                    'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg',
-                    message.role === 'assistant'
-                      ? 'bg-primary/10'
-                      : 'bg-accent',
-                  )}
-                >
-                  {message.role === 'assistant' ? (
-                    <Lightbulb className="h-4 w-4 text-primary" />
-                  ) : (
-                    <User className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </div>
-                <div
-                  className={cn(
-                    'max-w-[85%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap',
-                    message.role === 'assistant'
-                      ? 'bg-card text-foreground'
-                      : 'bg-primary text-primary-foreground',
-                  )}
-                >
-                  {message.content}
-                </div>
-              </div>
-            ))}
-            {isLoading && (
-              <div className="flex gap-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                  <Lightbulb className="h-4 w-4 text-primary" />
-                </div>
-                <div className="flex items-center gap-2 rounded-lg bg-card px-3 py-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Thinking...</span>
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
+                <Send className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <p className="mt-1.5 text-center text-[11px] text-muted-foreground">
+              Press Enter to send, Shift+Enter for new line
+            </p>
           </div>
-        )}
-      </div>
-
-      {/* Input */}
-      <div className="shrink-0 border-t border-border p-4">
-        <div className="flex items-end gap-2 rounded-lg border border-border bg-card p-2">
-          <textarea
-            ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Ask a question..."
-            rows={1}
-            className="max-h-32 min-h-[36px] flex-1 resize-none bg-transparent px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
-            style={{
-              height: 'auto',
-              minHeight: '36px',
-            }}
-            onInput={(e) => {
-              const target = e.target as HTMLTextAreaElement
-              target.style.height = 'auto'
-              target.style.height = `${Math.min(target.scrollHeight, 128)}px`
-            }}
-          />
-          <button
-            onClick={() => handleSend()}
-            disabled={!input.trim() || isLoading}
-            className={cn(
-              'flex h-9 w-9 shrink-0 items-center justify-center rounded-md transition-colors',
-              input.trim() && !isLoading
-                ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                : 'bg-muted text-muted-foreground',
-            )}
-          >
-            <Send className="h-4 w-4" />
-          </button>
         </div>
-        <p className="mt-2 text-center text-xs text-muted-foreground">
-          Press Enter to send, Shift+Enter for new line
-        </p>
       </div>
     </div>
   )
 }
 
-// Simulated responses for demo purposes
-function getSimulatedResponse(question: string): string {
-  const lowerQuestion = question.toLowerCase()
-
-  if (lowerQuestion.includes('database')) {
-    return "To create a new database in Appwrite:\n\n1. Go to the Databases section in your project\n2. Click 'Create database'\n3. Enter a name and optional ID\n4. Start adding collections to organize your data\n\nNeed help with anything specific about databases?"
-  }
-
-  if (
-    lowerQuestion.includes('authentication') ||
-    lowerQuestion.includes('auth')
-  ) {
-    return 'Setting up authentication in Appwrite is straightforward:\n\n1. Navigate to the Auth section\n2. Enable the authentication methods you need (Email/Password, OAuth, etc.)\n3. Configure your security settings\n4. Use the Appwrite SDK to implement sign-up and sign-in in your app\n\nWould you like more details on a specific auth method?'
-  }
-
-  if (
-    lowerQuestion.includes('storage') ||
-    lowerQuestion.includes('upload') ||
-    lowerQuestion.includes('file')
-  ) {
-    return "To upload files to Appwrite Storage:\n\n1. Go to the Storage section\n2. Create a bucket with your desired permissions\n3. Use the SDK's storage.createFile() method to upload\n4. Set appropriate file permissions for access control\n\nWant me to show you a code example?"
-  }
-
-  if (lowerQuestion.includes('function') || lowerQuestion.includes('deploy')) {
-    return "To deploy a function in Appwrite:\n\n1. Go to the Functions section\n2. Click 'Create function'\n3. Choose your runtime (Node.js, Python, etc.)\n4. Write your function code or upload a deployment\n5. Configure triggers (HTTP, schedule, events)\n6. Deploy and test!\n\nNeed help with function triggers or execution?"
-  }
-
-  return "I'm here to help you with Appwrite! I can assist with:\n\n• Database setup and queries\n• Authentication configuration\n• File storage and management\n• Serverless functions\n• Real-time subscriptions\n• And much more!\n\nWhat would you like to know?"
+function makeConversationTitle(text: string): string {
+  const cleanText = text.trim().replace(/\s+/g, ' ')
+  if (!cleanText) return 'New conversation'
+  return cleanText.length > 42 ? `${cleanText.slice(0, 42)}...` : cleanText
 }
+
