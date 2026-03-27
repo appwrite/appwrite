@@ -77,6 +77,7 @@ docker run -it --rm \
     --entrypoint="install" \
     appwrite/appwrite:1.9.0
 ```
+> **Note:** You can replace `1.9.0` with the [latest stable version](https://github.com/appwrite/appwrite/releases/latest) if needed. Using a fixed version ensures reproducibility, while updating allows access to new features and fixes.
 
 ### Windows
 
@@ -89,6 +90,7 @@ docker run -it --rm ^
     --entrypoint="install" ^
     appwrite/appwrite:1.9.0
 ```
+> **Note:** You can replace `1.9.0` with the [latest stable version](https://github.com/appwrite/appwrite/releases/latest) if needed. Using a fixed version ensures reproducibility, while updating allows access to new features and fixes.
 
 #### PowerShell
 
@@ -99,6 +101,7 @@ docker run -it --rm `
     --entrypoint="install" `
     appwrite/appwrite:1.9.0
 ```
+> **Note:** You can replace `1.9.0` with the [latest stable version](https://github.com/appwrite/appwrite/releases/latest) if needed. Using a fixed version ensures reproducibility, while updating allows access to new features and fixes.
 
 Once the Docker installation is complete, go to http://localhost to access the Appwrite console from your browser. Please note that on non-Linux native hosts, the server might take a few minutes to start after completing the installation.
 
