@@ -35,7 +35,7 @@ class Install extends Action
             ->param('appDomain', '', new AppDomain(), 'Application domain (hostname, IP, or bracket IPv6 with optional port)')
             ->param('httpPort', 80, new Range(1, 65535), 'HTTP port')
             ->param('httpsPort', 443, new Range(1, 65535), 'HTTPS port')
-            ->param('emailCertificates', '', new Email(), 'Email for SSL certificates')
+            ->param('emailCertificates', '', new Email(allowEmpty: true), 'Email for SSL certificates', true)
             ->param('opensslKey', '', new Text(64, 0), 'Secret API key', true)
             ->param('assistantOpenAIKey', '', new Text(256, 0), 'OpenAI API key for assistant', true)
             ->param('accountEmail', '', new Email(allowEmpty: true), 'Account email address', true)
@@ -90,6 +90,9 @@ class Install extends Action
 
         $appDomain = trim($appDomain);
         $emailCertificates = trim($emailCertificates);
+        if ($emailCertificates === '') {
+            $emailCertificates = trim($accountEmail);
+        }
         $opensslKey = trim($opensslKey);
         $assistantOpenAIKey = trim($assistantOpenAIKey);
 
@@ -140,6 +143,8 @@ class Install extends Action
 
         @unlink(Server::INSTALLER_COMPLETE_FILE);
 
+        $state->clearStaleLockIfNeeded();
+
         try {
             $lockResult = $state->reserveGlobalLock($installId);
         } catch (\Throwable $e) {
@@ -175,15 +180,23 @@ class Install extends Action
         if (file_exists($existingPath)) {
             $existing = $state->readProgressFile($installId);
             if (!empty($existing['steps']) && $retryStep === null) {
-                $state->updateGlobalLock($installId, Server::STATUS_ERROR);
-                if ($wantsStream) {
-                    $this->writeSseEvent($swooleResponse, Server::STATUS_ERROR, ['message' => 'Installation already started']);
-                    $swooleResponse->end();
+                $previousHadError = isset($existing['error']);
+                $allCompleted = !$previousHadError && $this->allStepsCompleted($existing['steps']);
+
+                if ($previousHadError || $allCompleted) {
+                    @unlink($existingPath);
+                    $existing = null;
                 } else {
-                    $response->setStatusCode(Response::STATUS_CODE_CONFLICT);
-                    $response->json(['success' => false, 'message' => 'Installation already started']);
+                    $state->updateGlobalLock($installId, Server::STATUS_ERROR);
+                    if ($wantsStream) {
+                        $this->writeSseEvent($swooleResponse, Server::STATUS_ERROR, ['message' => 'Installation already started']);
+                        $swooleResponse->end();
+                    } else {
+                        $response->setStatusCode(Response::STATUS_CODE_CONFLICT);
+                        $response->json(['success' => false, 'message' => 'Installation already started']);
+                    }
+                    return;
                 }
-                return;
             }
         }
 
@@ -207,7 +220,8 @@ class Install extends Action
                 '_APP_ASSISTANT_OPENAI_API_KEY' => $assistantOpenAIKey,
             ];
 
-            if ($this->hasPayload($existing)) {
+            $previousHadError = is_array($existing) && isset($existing['error']);
+            if ($this->hasPayload($existing) && !$previousHadError) {
                 $stored = $existing['payload'];
                 $inputValues = [
                     'httpPort' => (string) $httpPort,
@@ -368,8 +382,6 @@ class Install extends Action
             $state->updateGlobalLock($installId, Server::STATUS_ERROR);
         }
 
-        @unlink(Server::INSTALLER_CONFIG_FILE);
-
         if ($wantsStream) {
             $this->writeSseEvent($swooleResponse, Server::STATUS_ERROR, [
                 'message' => $e->getMessage(),
@@ -390,6 +402,16 @@ class Install extends Action
     private function hasPayload(mixed $data): bool
     {
         return is_array($data) && isset($data['payload']) && is_array($data['payload']);
+    }
+
+    private function allStepsCompleted(array $steps): bool
+    {
+        foreach ($steps as $step) {
+            if (($step['status'] ?? '') !== Server::STATUS_COMPLETED) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private function deriveNameFromEmail(string $email): string
