@@ -5,7 +5,7 @@
 services:
   appwrite-mongo-express:
     profiles: ["mongodb"]
-    image: mongo-express
+    image: mongo-express:1.1.0-rc.3
     container_name: appwrite-mongo-express
     networks:
       - appwrite
@@ -19,7 +19,7 @@ services:
       - mongodb
 
   adminer:
-    image: adminer
+    image: adminer:4.17.1
     container_name: appwrite-adminer
     restart: always
     ports:
