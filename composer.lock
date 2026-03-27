@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f9225f2b580de0ccb796b2fb8c881384",
+    "content-hash": "98a9cffeea945bf19942a259a64fdb7b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1633,6 +1633,71 @@
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
             "time": "2026-01-21T04:14:03+00:00"
+        },
+        {
+            "name": "opis/closure",
+            "version": "4.5.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/opis/closure.git",
+                "reference": "b97e42b95bb72d87507f5e2d137ceb239aea8d6b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/opis/closure/zipball/b97e42b95bb72d87507f5e2d137ceb239aea8d6b",
+                "reference": "b97e42b95bb72d87507f5e2d137ceb239aea8d6b",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "4.x-dev"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "src/functions.php"
+                ],
+                "psr-4": {
+                    "Opis\\Closure\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Marius Sarca",
+                    "email": "marius.sarca@gmail.com"
+                },
+                {
+                    "name": "Sorin Sarca",
+                    "email": "sarca_sorin@hotmail.com"
+                }
+            ],
+            "description": "A library that can be used to serialize closures (anonymous functions) and arbitrary data.",
+            "homepage": "https://opis.io/closure",
+            "keywords": [
+                "anonymous classes",
+                "anonymous functions",
+                "closure",
+                "function",
+                "serializable",
+                "serialization",
+                "serialize"
+            ],
+            "support": {
+                "issues": "https://github.com/opis/closure/issues",
+                "source": "https://github.com/opis/closure/tree/4.5.0"
+            },
+            "time": "2026-03-05T13:32:42+00:00"
         },
         {
             "name": "paragonie/constant_time_encoding",
@@ -3499,6 +3564,125 @@
                 "source": "https://github.com/utopia-php/analytics/tree/0.15.2"
             },
             "time": "2026-02-09T12:46:39+00:00"
+        },
+        {
+            "name": "utopia-php/async",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/async.git",
+                "reference": "7a0c6957b41731a5c999382ad26a0b2fdbd19812"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/async/zipball/7a0c6957b41731a5c999382ad26a0b2fdbd19812",
+                "reference": "7a0c6957b41731a5c999382ad26a0b2fdbd19812",
+                "shasum": ""
+            },
+            "require": {
+                "opis/closure": "4.*",
+                "php": ">=8.1"
+            },
+            "require-dev": {
+                "amphp/amp": "3.*",
+                "amphp/parallel": "2.*",
+                "amphp/process": "^2.0",
+                "laravel/pint": "1.*",
+                "phpstan/phpstan": "2.*",
+                "phpunit/phpunit": "11.5.45",
+                "react/child-process": "0.*",
+                "react/event-loop": "1.*",
+                "swoole/ide-helper": "*"
+            },
+            "suggest": {
+                "amphp/amp": "Required for Amp promise adapter",
+                "amphp/parallel": "Required for Amp parallel adapter",
+                "ext-ev": "Required for ReactPHP event loop (recommended for best performance)",
+                "ext-parallel": "Required for parallel adapter (requires PHP ZTS build)",
+                "ext-sockets": "Required for Swoole Process adapter",
+                "ext-swoole": "Required for Swoole Thread and Process adapters (recommended for best performance)",
+                "react/child-process": "Required for ReactPHP parallel adapter",
+                "react/event-loop": "Required for ReactPHP promise and parallel adapters"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Async\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test-unit": [
+                    "vendor/bin/phpunit tests/Unit --exclude-group no-swoole"
+                ],
+                "test-promise-sync": [
+                    "vendor/bin/phpunit tests/E2e/Promise/SyncTest.php"
+                ],
+                "test-promise-swoole": [
+                    "vendor/bin/phpunit tests/E2e/Promise/Swoole"
+                ],
+                "test-promise-amp": [
+                    "vendor/bin/phpunit tests/E2e/Promise/Amp"
+                ],
+                "test-promise-react": [
+                    "vendor/bin/phpunit tests/E2e/Promise/React"
+                ],
+                "test-parallel-sync": [
+                    "vendor/bin/phpunit tests/E2e/Parallel/Sync"
+                ],
+                "test-parallel-swoole-thread": [
+                    "vendor/bin/phpunit tests/E2e/Parallel/Swoole/ThreadTest.php"
+                ],
+                "test-parallel-swoole-process": [
+                    "vendor/bin/phpunit tests/E2e/Parallel/Swoole/ProcessTest.php"
+                ],
+                "test-parallel-amp": [
+                    "vendor/bin/phpunit tests/E2e/Parallel/Amp"
+                ],
+                "test-parallel-react": [
+                    "vendor/bin/phpunit tests/E2e/Parallel/React"
+                ],
+                "test-parallel-ext": [
+                    "php -n -d extension=parallel.so -d extension=sockets.so vendor/bin/phpunit tests/E2e/Parallel/Parallel"
+                ],
+                "test-e2e": [
+                    "vendor/bin/phpunit tests/E2e --exclude-group ext-parallel"
+                ],
+                "test": [
+                    "@test-unit",
+                    "@test-e2e",
+                    "@test-parallel-ext"
+                ],
+                "lint": [
+                    "vendor/bin/pint"
+                ],
+                "format": [
+                    "php -d memory_limit=4G vendor/bin/pint"
+                ],
+                "check": [
+                    "vendor/bin/phpstan analyse src tests --level=max --memory-limit=4G"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Appwrite Team",
+                    "email": "team@appwrite.io"
+                }
+            ],
+            "description": "High-performance concurrent + parallel library with Promise and Parallel execution support for PHP.",
+            "support": {
+                "source": "https://github.com/utopia-php/async/tree/main",
+                "issues": "https://github.com/utopia-php/async/issues"
+            },
+            "time": "2026-01-09T06:16:09+00:00"
         },
         {
             "name": "utopia-php/audit",
@@ -8435,7 +8619,9 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/async": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

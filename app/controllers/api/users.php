@@ -28,6 +28,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Users;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
+use Utopia\Async\Promise;
 use Utopia\Audit\Audit;
 use Utopia\Auth\Hash;
 use Utopia\Auth\Hashes\Argon2;
@@ -2750,23 +2751,29 @@ Http::get('/v1/users/usage')
         ];
 
         $authorization->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
-            foreach ($metrics as $count => $metric) {
-                $result =  $dbForProject->findOne('stats', [
+            $limit = $days['limit'];
+            $period = $days['period'];
+
+            $tasks = [];
+            foreach ($metrics as $metric) {
+                $tasks[$metric . '_total'] = fn () => $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', ['inf'])
                 ]);
-
-                $stats[$metric]['total'] = $result['value'] ?? 0;
-                $limit = $days['limit'];
-                $period = $days['period'];
-                $results = $dbForProject->find('stats', [
+                $tasks[$metric . '_data'] = fn () => $dbForProject->find('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', [$period]),
                     Query::limit($limit),
                     Query::orderDesc('time'),
                 ]);
+            }
+
+            $results = Promise::map($tasks)->await();
+
+            foreach ($metrics as $metric) {
+                $stats[$metric]['total'] = $results[$metric . '_total']['value'] ?? 0;
                 $stats[$metric]['data'] = [];
-                foreach ($results as $result) {
+                foreach ($results[$metric . '_data'] as $result) {
                     $stats[$metric]['data'][$result->getAttribute('time')] = [
                         'value' => $result->getAttribute('value'),
                     ];

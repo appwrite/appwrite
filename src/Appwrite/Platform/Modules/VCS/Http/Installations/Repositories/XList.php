@@ -9,6 +9,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Swoole\Coroutine\WaitGroup;
+use Utopia\Async\Promise;
 use Utopia\Config\Adapters\Dotenv as ConfigDotenv;
 use Utopia\Config\Config;
 use Utopia\Config\Exceptions\Parse;
@@ -56,8 +57,6 @@ use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\FileNotFound;
-
-use function Swoole\Coroutine\batch;
 
 class XList extends Action
 {
@@ -153,7 +152,7 @@ class XList extends Action
             return $repo;
         }, $repos);
 
-        $repos = batch(\array_map(function ($repo) use ($type, $github) {
+        $repos = Promise::map(\array_map(function ($repo) use ($type, $github) {
             return function () use ($repo, $type, $github) {
                 $files = $github->listRepositoryContents($repo['organization'], $repo['name'], '');
                 $files = \array_column($files, 'name');
@@ -307,7 +306,7 @@ class XList extends Action
 
                 return $repo;
             };
-        }, $repos));
+        }, $repos))->await();
 
         $repos = \array_map(function ($repo) {
             return new Document($repo);

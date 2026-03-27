@@ -148,7 +148,7 @@ class Interval extends Action
 
                     $staleExecutions = $dbForProject->find('executions', [
                         Query::equal('status', ['processing']),
-                        Query::lessThan('$createdAt', $staleThreshold),
+                        Query::createdBefore($staleThreshold),
                         Query::limit(100),
                     ]);
 
