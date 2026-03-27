@@ -8,6 +8,9 @@ use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Runtime;
 use Utopia\Database\Document;
 use Utopia\Logger\Log;
+use Utopia\Messaging\Adapter\Email as EmailAdapter;
+use Utopia\Messaging\Messages\Email as EmailMessage;
+use Utopia\Messaging\Messages\Email\Attachment as EmailAttachment;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Registry\Registry;
@@ -132,58 +135,38 @@ class Mails extends Action
         // render() will return the subject in <p> tags, so use strip_tags() to remove them
         $subject = \strip_tags($subjectTemplate->render());
 
-        /** @var PHPMailer $mail */
-        $mail = empty($smtp)
+        $transport = empty($smtp)
             ? $register->get('smtp')
             : $this->getMailer($smtp);
-
-        $mail->clearAddresses();
-        $mail->clearAllRecipients();
-        $mail->clearReplyTos();
-        $mail->clearAttachments();
-        $mail->clearBCCs();
-        $mail->clearCCs();
-        $mail->addAddress($recipient, $name);
-        $mail->Subject = $subject;
-        $mail->Body = $body;
-
-        $mail->AltBody = $body;
-        $mail->AltBody = preg_replace('/<style\b[^>]*>(.*?)<\/style>/is', '', $mail->AltBody);
-        $mail->AltBody = \strip_tags($mail->AltBody);
-        $mail->AltBody = \trim($mail->AltBody);
-
-        $replyTo = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-        $replyToName = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
-
         $customMailOptions = $payload['customMailOptions'] ?? [];
-
-        // fallback hierarchy: Custom options > SMTP config > Defaults.
-        if (!empty($customMailOptions['senderEmail']) || !empty($customMailOptions['senderName'])) {
-            $fromEmail = $customMailOptions['senderEmail'] ?? $mail->From;
-            $fromName = $customMailOptions['senderName'] ?? $mail->FromName;
-            $mail->setFrom($fromEmail, $fromName);
-        }
-
-        if (!empty($customMailOptions['replyToEmail']) || !empty($customMailOptions['replyToName'])) {
-            $replyTo = $customMailOptions['replyToEmail'] ?? $replyTo;
-            $replyToName = $customMailOptions['replyToName'] ?? $replyToName;
-        } elseif (!empty($smtp)) {
-            $replyTo = !empty($smtp['replyTo']) ? $smtp['replyTo'] : ($smtp['senderEmail'] ?? $replyTo);
-            $replyToName = $smtp['senderName'] ?? $replyToName;
-        }
-
-        $mail->addReplyTo($replyTo, $replyToName);
-        if (!empty($attachment['content'] ?? '')) {
-            $mail->AddStringAttachment(
-                base64_decode($attachment['content']),
-                $attachment['filename'] ?? 'unknown.file',
-                $attachment['encoding'] ?? PHPMailer::ENCODING_BASE64,
-                $attachment['type'] ?? 'plain/text'
-            );
-        }
+        $mailOptions = $this->resolveMailOptions(
+            $smtp,
+            $customMailOptions,
+            $transport instanceof PHPMailer ? ($transport->From ?: null) : null,
+            $transport instanceof PHPMailer ? ($transport->FromName ?: null) : null
+        );
 
         try {
-            $mail->send();
+            match (true) {
+                $transport instanceof PHPMailer => $this->sendWithMailer(
+                    $transport,
+                    $recipient,
+                    $name,
+                    $subject,
+                    $body,
+                    $attachment,
+                    $mailOptions
+                ),
+                $transport instanceof EmailAdapter => $this->sendWithAdapter(
+                    $transport,
+                    $recipient,
+                    $subject,
+                    $body,
+                    $attachment,
+                    $mailOptions
+                ),
+                default => throw new Exception('SMTP resource must resolve to PHPMailer or a Utopia email adapter'),
+            };
         } catch (\Throwable $error) {
             if ($type === 'smtp') {
                 throw new Exception('Error sending mail: ' . $error->getMessage(), 401);
@@ -224,5 +207,166 @@ class Mails extends Action
         $mail->isHTML();
 
         return $mail;
+    }
+
+    /**
+     * @param array<string, mixed> $smtp
+     * @param array<string, mixed> $customMailOptions
+     * @param string|null $defaultFromEmail
+     * @param string|null $defaultFromName
+     * @return array<string, string>
+     */
+    protected function resolveMailOptions(
+        array $smtp,
+        array $customMailOptions,
+        ?string $defaultFromEmail = null,
+        ?string $defaultFromName = null
+    ): array {
+        $defaultFromEmail ??= System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+        $defaultFromName ??= \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
+
+        $fromEmail = !empty($smtp['senderEmail']) ? $smtp['senderEmail'] : $defaultFromEmail;
+        $fromName = !empty($smtp['senderName']) ? $smtp['senderName'] : $defaultFromName;
+
+        if (!empty($customMailOptions['senderEmail']) || !empty($customMailOptions['senderName'])) {
+            $fromEmail = $customMailOptions['senderEmail'] ?? $fromEmail;
+            $fromName = $customMailOptions['senderName'] ?? $fromName;
+        }
+
+        $replyToEmail = $defaultFromEmail;
+        $replyToName = $defaultFromName;
+
+        if (!empty($customMailOptions['replyToEmail']) || !empty($customMailOptions['replyToName'])) {
+            $replyToEmail = $customMailOptions['replyToEmail'] ?? $replyToEmail;
+            $replyToName = $customMailOptions['replyToName'] ?? $replyToName;
+        } elseif (!empty($smtp)) {
+            $replyToEmail = !empty($smtp['replyTo']) ? $smtp['replyTo'] : $fromEmail;
+            $replyToName = $fromName;
+        }
+
+        return [
+            'fromEmail' => $fromEmail,
+            'fromName' => $fromName,
+            'replyToEmail' => $replyToEmail,
+            'replyToName' => $replyToName,
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $attachment
+     * @param array<string, string> $mailOptions
+     * @throws \PHPMailer\PHPMailer\Exception
+     */
+    protected function sendWithMailer(
+        PHPMailer $mail,
+        string $recipient,
+        string $name,
+        string $subject,
+        string $body,
+        array $attachment,
+        array $mailOptions
+    ): void {
+        $mail->clearAddresses();
+        $mail->clearAllRecipients();
+        $mail->clearReplyTos();
+        $mail->clearAttachments();
+        $mail->clearBCCs();
+        $mail->clearCCs();
+        $mail->addAddress($recipient, $name);
+        $mail->Subject = $subject;
+        $mail->Body = $body;
+
+        $mail->AltBody = $body;
+        $mail->AltBody = preg_replace('/<style\b[^>]*>(.*?)<\/style>/is', '', $mail->AltBody);
+        $mail->AltBody = \strip_tags($mail->AltBody);
+        $mail->AltBody = \trim($mail->AltBody);
+
+        $mail->setFrom($mailOptions['fromEmail'], $mailOptions['fromName']);
+        $mail->addReplyTo($mailOptions['replyToEmail'], $mailOptions['replyToName']);
+
+        if (!empty($attachment['content'] ?? '')) {
+            $mail->AddStringAttachment(
+                base64_decode($attachment['content']),
+                $attachment['filename'] ?? 'unknown.file',
+                $attachment['encoding'] ?? PHPMailer::ENCODING_BASE64,
+                $attachment['type'] ?? 'plain/text'
+            );
+        }
+
+        $mail->send();
+    }
+
+    /**
+     * @param array<string, mixed> $attachment
+     * @param array<string, string> $mailOptions
+     * @throws \Exception
+     */
+    protected function sendWithAdapter(
+        EmailAdapter $adapter,
+        string $recipient,
+        string $subject,
+        string $body,
+        array $attachment,
+        array $mailOptions
+    ): void {
+        $tempAttachmentPath = null;
+        $attachments = null;
+
+        if (!empty($attachment['content'] ?? '')) {
+            $tempAttachmentPath = $this->createAttachmentFile($attachment);
+            $attachments = [
+                new EmailAttachment(
+                    $attachment['filename'] ?? 'unknown.file',
+                    $tempAttachmentPath,
+                    $attachment['type'] ?? 'plain/text'
+                )
+            ];
+        }
+
+        try {
+            $adapter->send(new EmailMessage(
+                [$recipient],
+                $subject,
+                $body,
+                $mailOptions['fromName'],
+                $mailOptions['fromEmail'],
+                $mailOptions['replyToName'],
+                $mailOptions['replyToEmail'],
+                null,
+                null,
+                $attachments,
+                true
+            ));
+        } finally {
+            if ($tempAttachmentPath !== null && \file_exists($tempAttachmentPath)) {
+                \unlink($tempAttachmentPath);
+            }
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $attachment
+     * @return string
+     * @throws Exception
+     */
+    protected function createAttachmentFile(array $attachment): string
+    {
+        $content = base64_decode($attachment['content'] ?? '', true);
+
+        if ($content === false) {
+            throw new Exception('Invalid attachment encoding');
+        }
+
+        $path = \tempnam(\sys_get_temp_dir(), 'appwrite-mail-');
+
+        if ($path === false) {
+            throw new Exception('Failed to prepare attachment');
+        }
+
+        if (\file_put_contents($path, $content) === false) {
+            throw new Exception('Failed to prepare attachment');
+        }
+
+        return $path;
     }
 }
