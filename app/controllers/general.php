@@ -1140,7 +1140,9 @@ Http::init()
         */
         $abuseKey = 'initHook:outgoingEmail,projectId:{projectId}';
 
-        $timeLimit = $timelimit($abuseKey, limit: 1000, time: 3600); // 1000 emails per hour , per project
+        $limitPerHour = \intval(System::getEnv('_APP_EMAILS_ABUSE_LIMIT', '1000'));
+
+        $timeLimit = $timelimit($abuseKey, limit: $limitPerHour, time: 3600); // 1000 emails per hour , per project
         $timeLimit
             ->setParam('{projectId}', $project->getId());
 
