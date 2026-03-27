@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Account;
 
 use Appwrite\Tests\Retry;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -11,6 +12,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\System\System;
 
 use function sleep;
 
@@ -4149,5 +4151,48 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(401, $verification3['headers']['status-code']);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testEmailAbuseLimit(): void
+    {
+        if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'disabled') {
+            $this->markTestSkipped('Abuse checks are disabled.');
+        }
+
+        $email = 'abuse.email.' . bin2hex(random_bytes(8)) . '@example.com';
+        $password = 'password';
+        $baseHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+
+        $account = $this->client->call(Client::METHOD_POST, '/account', $baseHeaders, [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => 'Email Abuse Test',
+        ]);
+
+        $this->assertEquals(201, $account['headers']['status-code']);
+
+        // Successful requests up to the limit should all pass
+        for ($i = 0; $i < 20; $i++) {
+            $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $baseHeaders, [
+                'email' => $email,
+                'password' => $password,
+            ]);
+
+            $this->assertEquals(201, $session['headers']['status-code'], 'Request ' . ($i + 1) . ' of 20 should succeed.');
+        }
+
+        // The next request should be rate limited
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $baseHeaders, [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(429, $session['headers']['status-code']);
     }
 }
