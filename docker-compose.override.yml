@@ -51,7 +51,7 @@ services:
       - "traefik.http.routers.appwrite_adminer_https.tls=true"
 
   redis-insight:
-    image: redis/redisinsight:latest
+    image: redis/redisinsight:3.2.0
     restart: unless-stopped
     networks:
       - appwrite
