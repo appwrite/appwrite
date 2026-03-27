@@ -160,6 +160,7 @@ class Mails extends Action
                 $transport instanceof EmailAdapter => $this->sendWithAdapter(
                     $transport,
                     $recipient,
+                    $name,
                     $subject,
                     $body,
                     $attachment,
@@ -289,7 +290,7 @@ class Mails extends Action
                 base64_decode($attachment['content']),
                 $attachment['filename'] ?? 'unknown.file',
                 $attachment['encoding'] ?? PHPMailer::ENCODING_BASE64,
-                $attachment['type'] ?? 'plain/text'
+                $attachment['type'] ?? 'text/plain'
             );
         }
 
@@ -304,6 +305,7 @@ class Mails extends Action
     protected function sendWithAdapter(
         EmailAdapter $adapter,
         string $recipient,
+        string $name,
         string $subject,
         string $body,
         array $attachment,
@@ -318,12 +320,14 @@ class Mails extends Action
                 new EmailAttachment(
                     $attachment['filename'] ?? 'unknown.file',
                     $tempAttachmentPath,
-                    $attachment['type'] ?? 'plain/text'
+                    $attachment['type'] ?? 'text/plain'
                 )
             ];
         }
 
         try {
+            // EmailMessage accepts recipients as strings only, so adapter-based sends
+            // currently cannot preserve the display name PHPMailer includes in the To header.
             $adapter->send(new EmailMessage(
                 [$recipient],
                 $subject,
@@ -335,6 +339,8 @@ class Mails extends Action
                 null,
                 null,
                 $attachments,
+                // EmailMessage carries a single body plus an HTML flag, so adapter transports
+                // cannot send a multipart alternative body until the upstream message model grows one.
                 true
             ));
         } finally {
@@ -364,6 +370,7 @@ class Mails extends Action
         }
 
         if (\file_put_contents($path, $content) === false) {
+            \unlink($path);
             throw new Exception('Failed to prepare attachment');
         }
 
