@@ -288,18 +288,11 @@ jobs:
         run: docker compose exec -T appwrite vars
 
       - name: Run Unit Tests
-        uses: itznotabug/php-retry@v3
-        with:
-          max_attempts: 2
-          retry_wait_seconds: 60
-          timeout_minutes: 15
-          job_id: ${{ job.check_run_id }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          test_dir: tests/unit
-          command: >-
-            docker compose exec
-            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-            appwrite test /usr/src/code/tests/unit
+        timeout-minutes: 15
+        run: >-
+          docker compose exec
+          -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
+          appwrite test /usr/src/code/tests/unit --stop-on-failure
 
   e2e_general:
     name: Tests / E2E / General
@@ -340,18 +333,11 @@ jobs:
           done
 
       - name: Run General Tests
-        uses: itznotabug/php-retry@v3
-        with:
-          max_attempts: 2
-          retry_wait_seconds: 60
-          timeout_minutes: 15
-          job_id: ${{ job.check_run_id }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          test_dir: tests/e2e/General
-          command: >-
-            docker compose exec -T
-            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-            appwrite test /usr/src/code/tests/e2e/General
+        timeout-minutes: 15
+        run: >-
+          docker compose exec -T
+          -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
+          appwrite test /usr/src/code/tests/e2e/General --stop-on-failure
 
       - name: Failure Logs
         if: failure()
@@ -465,26 +451,19 @@ jobs:
           done
 
       - name: Run tests
-        uses: itznotabug/php-retry@v3
-        with:
-          max_attempts: 2
-          retry_wait_seconds: 60
-          timeout_minutes: 20
-          job_id: ${{ job.check_run_id }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          test_dir: tests/e2e/Services/${{ matrix.service }}
-          command: |
-            SERVICE_PATH="/usr/src/code/tests/e2e/Services/${{ matrix.service }}"
+        timeout-minutes: 20
+        run: |
+          SERVICE_PATH="/usr/src/code/tests/e2e/Services/${{ matrix.service }}"
 
-            # Services that rely on sequential test method execution (shared static state)
-            FUNCTIONAL_FLAG="--functional"
-            case "${{ matrix.service }}" in
-              Databases|TablesDB|Functions|Realtime) FUNCTIONAL_FLAG="" ;;
-            esac
+          # Services that rely on sequential test method execution (shared static state)
+          FUNCTIONAL_FLAG="--functional"
+          case "${{ matrix.service }}" in
+            Databases|TablesDB|Functions|Realtime) FUNCTIONAL_FLAG="" ;;
+          esac
 
-            docker compose exec -T \
-              -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
-              appwrite vendor/bin/paratest --processes $(nproc) $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --log-junit tests/e2e/Services/${{ matrix.service }}/junit.xml
+          docker compose exec -T \
+            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
+            appwrite vendor/bin/paratest --processes $(nproc) $FUNCTIONAL_FLAG "$SERVICE_PATH" --exclude-group abuseEnabled --exclude-group screenshots --stop-on-failure --log-junit tests/e2e/Services/${{ matrix.service }}/junit.xml
 
       - name: Failure Logs
         if: failure()
@@ -531,18 +510,11 @@ jobs:
           docker compose up -d --quiet-pull --wait
 
       - name: Run tests
-        uses: itznotabug/php-retry@v3
-        with:
-          max_attempts: 2
-          retry_wait_seconds: 60
-          timeout_minutes: 15
-          job_id: ${{ job.check_run_id }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          test_dir: tests/e2e
-          command: >-
-            docker compose exec -T
-            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-            appwrite test /usr/src/code/tests/e2e --group=abuseEnabled
+        timeout-minutes: 15
+        run: >-
+          docker compose exec -T
+          -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
+          appwrite test /usr/src/code/tests/e2e --group=abuseEnabled --stop-on-failure
 
       - name: Failure Logs
         if: failure()
@@ -596,18 +568,11 @@ jobs:
           done
 
       - name: Run tests
-        uses: itznotabug/php-retry@v3
-        with:
-          max_attempts: 2
-          retry_wait_seconds: 60
-          timeout_minutes: 15
-          job_id: ${{ job.check_run_id }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          test_dir: tests/e2e/Services/Sites
-          command: >-
-            docker compose exec -T
-            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
-            appwrite test /usr/src/code/tests/e2e/Services/Sites --group=screenshots
+        timeout-minutes: 15
+        run: >-
+          docker compose exec -T
+          -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
+          appwrite test /usr/src/code/tests/e2e/Services/Sites --group=screenshots --stop-on-failure
 
       - name: Failure Logs
         if: failure()
