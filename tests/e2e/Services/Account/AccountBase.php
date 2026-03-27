@@ -142,6 +142,48 @@ trait AccountBase
         ];
     }
 
+    public function testCreateAccountNameFilter(): void
+    {
+        $headers = array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]);
+
+        // Name with email gets stripped
+        $response = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+            'userId' => ID::unique(),
+            'email' => uniqid() . 'filter1@localhost.test',
+            'password' => 'password',
+            'name' => 'John user@example.com',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals('John', $response['body']['name']);
+
+        // Name with phone number gets stripped
+        $response = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+            'userId' => ID::unique(),
+            'email' => uniqid() . 'filter2@localhost.test',
+            'password' => 'password',
+            'name' => 'John +1234567890',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals('John', $response['body']['name']);
+
+        // Name with URL gets stripped
+        $response = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+            'userId' => ID::unique(),
+            'email' => uniqid() . 'filter3@localhost.test',
+            'password' => 'password',
+            'name' => 'John https://example.com',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals('John', $response['body']['name']);
+    }
+
     public function testEmailOTPSession(): void
     {
         $isConsoleProject = $this->getProject()['$id'] === 'console';
