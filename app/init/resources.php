@@ -674,7 +674,8 @@ Http::setResource('dbForProject', function (Group $pools, Database $dbForPlatfor
             $queueForWebhooks->from($queueForEvents),
             $queueForRealtime->from($queueForEvents),
         ))
-        ->addHook(new FunctionCache($project, $database));
+        ->addHook(new FunctionCache($project, $database))
+        ->addHook(new Permissions());
 
     return $database;
 }, ['pools', 'dbForPlatform', 'cache', 'project', 'response', 'publisher', 'publisherFunctions', 'publisherWebhooks', 'queueForEvents', 'queueForFunctions', 'queueForWebhooks', 'queueForRealtime', 'usage', 'authorization', 'request']);
@@ -694,6 +695,7 @@ Http::setResource('dbForPlatform', function (Group $pools, Cache $cache, Authori
         ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
 
     $database->setDocumentType('users', User::class);
+    $database->addHook(new Permissions());
 
     return $database;
 }, ['pools', 'cache', 'authorization']);
@@ -838,6 +840,7 @@ Http::setResource('getProjectDB', function (Group $pools, Database $dbForPlatfor
 
         $adapter = new DatabasePool($pools->get($dsn->getHost()));
         $database = new Database($adapter, $cache);
+        $database->addHook(new Permissions());
         $databases[$dsn->getHost()] = $database;
         $configure($database);
 
@@ -864,6 +867,8 @@ Http::setResource('getLogsDB', function (Group $pools, Cache $cache, Authorizati
             ->setNamespace('logsV1')
             ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
             ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
+
+        $database->addHook(new Permissions());
 
         // set tenant
         if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {

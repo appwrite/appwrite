@@ -23,6 +23,7 @@ use Utopia\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Hook\Permissions;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Dependency;
 use Utopia\DSN\DSN;
@@ -132,6 +133,8 @@ $setResource('dbForPlatform', function ($pools, $cache, $authorization) {
         throw new Exception('Console is not ready yet. Please try again later.');
     }
 
+    $dbForPlatform->addHook(new Permissions());
+
     return $dbForPlatform;
 }, ['pools', 'cache', 'authorization']);
 
@@ -203,6 +206,8 @@ $setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $c
             ->setMetadata('host', \gethostname())
             ->setMetadata('project', $project->getId());
 
+        $database->addHook(new Permissions());
+
         return $database;
     };
 }, ['pools', 'dbForPlatform', 'cache', 'authorization']);
@@ -226,6 +231,8 @@ $setResource('getLogsDB', function (Group $pools, Cache $cache, Authorization $a
             ->setNamespace('logsV1')
             ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_TASK)
             ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
+
+        $database->addHook(new Permissions());
 
         // set tenant
         if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
