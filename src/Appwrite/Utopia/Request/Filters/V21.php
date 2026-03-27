@@ -23,6 +23,18 @@ class V21 extends Filter
                 unset($content['key']);
 
                 break;
+            case 'project.createLinuxPlatform':
+                $content = $this->fillPlatformId($content);
+
+                // Remove store ID
+                unset($content['store']);
+
+                // key -> packageName
+                $content['packageName'] = $content['packageName'] ?? $content['identifier'] ?? $content['key'] ?? null;
+                unset($content['key']);
+                unset($content['identifier']);
+
+                break;
             case 'project.updateWebPlatform':
             case 'project.updateAppPlatform':
                 // Remove store ID
@@ -31,6 +43,16 @@ class V21 extends Filter
                 // key -> identifier
                 $content['identifier'] = $content['identifier'] ?? $content['key'] ?? null;
                 unset($content['key']);
+
+                break;
+            case 'project.updateLinuxPlatform':
+                // Remove store ID
+                unset($content['store']);
+
+                // key -> packageName
+                $content['packageName'] = $content['packageName'] ?? $content['identifier'] ?? $content['key'] ?? null;
+                unset($content['key']);
+                unset($content['identifier']);
 
                 break;
             case 'project.listPlatforms':

@@ -80,7 +80,7 @@ class XList extends Base
         }
 
         foreach ($queries as $query) {
-            if ($query->getAttribute() === 'identifier') {
+            if (\in_array($query->getAttribute(), ['identifier', 'bundleIdentifier', 'applicationId', 'packageIdentifierName', 'packageName'])) {
                 $query->setAttribute('key');
             }
         }

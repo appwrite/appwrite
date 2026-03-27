@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Project\Http\Project\Platforms\Web;
+namespace Appwrite\Platform\Modules\Project\Http\Project\Platforms\Windows;
 
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
@@ -18,7 +18,6 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator\Hostname;
 use Utopia\Validator\Text;
 
 class Create extends Base
@@ -27,15 +26,15 @@ class Create extends Base
 
     public static function getName()
     {
-        return 'createProjectWebPlatform';
+        return 'createProjectWindowsPlatform';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
-            ->setHttpPath('/v1/project/platforms/web')
-            ->desc('Create project web platform')
+            ->setHttpPath('/v1/project/platforms/windows')
+            ->desc('Create project Windows platform')
             ->groups(['api', 'project'])
             ->label('scope', 'project.write')
             ->label('event', 'platforms.[platformId].create')
@@ -44,21 +43,21 @@ class Create extends Base
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'platforms',
-                name: 'createWebPlatform',
+                name: 'createWindowsPlatform',
                 description: <<<EOT
-                Create a new web platform for your project. Use this endpoint to register a new platform where your users will run your application which will interact with the Appwrite API.
+                Create a new Windows platform for your project. Use this endpoint to register a new Windows platform where your users will run your application which will interact with the Appwrite API.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
-                        model: Response::MODEL_PLATFORM_WEB,
+                        model: Response::MODEL_PLATFORM_WINDOWS,
                     )
                 ],
             ))
             ->param('platformId', '', fn (Database $dbForPlatform) => new CustomId(false, $dbForPlatform->getAdapter()->getMaxUIDLength()), 'Platform ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForPlatform'])
             ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
-            ->param('hostname', '', new Hostname(), 'Platform web hostname. Max length: 256 chars.')
+            ->param('packageIdentifierName', '', new Text(256), 'Windows package identifier name. Max length: 256 chars.')
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('project')
@@ -70,7 +69,7 @@ class Create extends Base
     public function action(
         string $platformId,
         string $name,
-        string $hostname,
+        string $packageIdentifierName,
         Response $response,
         QueueEvent $queueForEvents,
         Document $project,
@@ -84,10 +83,10 @@ class Create extends Base
             '$permissions' => [],
             'projectInternalId' => $project->getSequence(),
             'projectId' => $project->getId(),
-            'type' => Platform::TYPE_WEB,
+            'type' => Platform::TYPE_WINDOWS,
             'name' => $name,
-            'key' => null, // App platform attribute
-            'hostname' => $hostname
+            'key' => $packageIdentifierName,
+            'hostname' => '',
         ]);
 
         try {
@@ -102,6 +101,6 @@ class Create extends Base
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($platform, Response::MODEL_PLATFORM_WEB);
+            ->dynamic($platform, Response::MODEL_PLATFORM_WINDOWS);
     }
 }

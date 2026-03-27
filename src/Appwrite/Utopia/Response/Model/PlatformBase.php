@@ -2,10 +2,22 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
+use Appwrite\Network\Platform;
 use Appwrite\Utopia\Response\Model;
 
 abstract class PlatformBase extends Model
 {
+    public function getSupportedTypes(): array
+    {
+        return [
+            Platform::TYPE_WINDOWS,
+            Platform::TYPE_APPLE,
+            Platform::TYPE_ANDROID,
+            Platform::TYPE_LINUX,
+            Platform::TYPE_WEB,
+        ];
+    }
+
     public function __construct()
     {
         $this
@@ -32,6 +44,13 @@ abstract class PlatformBase extends Model
                 'description' => 'Platform name.',
                 'default' => '',
                 'example' => 'My Web App',
+            ])
+            ->addRule('type', [
+                'type' => self::TYPE_ENUM,
+                'description' => 'Platform type. Possible values are: ' . implode(', ', self::getSupportedTypes()) . '.',
+                'default' => '',
+                'example' => Platform::TYPE_WEB,
+                'enum' => self::getSupportedTypes(),
             ])
         ;
     }

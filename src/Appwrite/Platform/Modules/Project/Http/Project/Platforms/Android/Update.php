@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Project\Http\Project\Platforms\Web;
+namespace Appwrite\Platform\Modules\Project\Http\Project\Platforms\Android;
 
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
@@ -17,7 +17,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator\Hostname;
 use Utopia\Validator\Text;
 
 class Update extends Base
@@ -26,14 +25,14 @@ class Update extends Base
 
     public static function getName()
     {
-        return 'updateProjectWebPlatform';
+        return 'updateProjectAndroidPlatform';
     }
 
     public function __construct()
     {
         $this->setHttpMethod(Action::HTTP_REQUEST_METHOD_PUT)
-            ->setHttpPath('/v1/project/platforms/web/:platformId')
-            ->desc('Update project web platform')
+            ->setHttpPath('/v1/project/platforms/android/:platformId')
+            ->desc('Update project Android platform')
             ->groups(['api', 'project'])
             ->label('scope', 'project.write')
             ->label('event', 'platforms.[platformId].update')
@@ -42,21 +41,21 @@ class Update extends Base
             ->label('sdk', new Method(
                 namespace: 'project',
                 group: 'platforms',
-                name: 'updateWebPlatform',
+                name: 'updateAndroidPlatform',
                 description: <<<EOT
-                Update a web platform by its unique ID. Use this endpoint to update the platform's name or hostname.
+                Update an Android platform by its unique ID. Use this endpoint to update the platform's name or application ID.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_PLATFORM_WEB,
+                        model: Response::MODEL_PLATFORM_ANDROID,
                     )
                 ]
             ))
             ->param('platformId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Platform ID.', false, ['dbForPlatform'])
             ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
-            ->param('hostname', '', new Hostname(), 'Platform client hostname. Max length: 256 chars.')
+            ->param('applicationId', '', new Text(256), 'Android application ID. Max length: 256 chars.')
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
@@ -68,7 +67,7 @@ class Update extends Base
     public function action(
         string $platformId,
         string $name,
-        string $hostname,
+        string $applicationId,
         Response $response,
         QueueEvent $queueForEvents,
         Database $dbForPlatform,
@@ -81,13 +80,13 @@ class Update extends Base
             throw new Exception(Exception::PLATFORM_NOT_FOUND);
         }
 
-        if ($platform->getAttribute('type', '') !== Platform::TYPE_WEB) {
+        if ($platform->getAttribute('type', '') !== Platform::TYPE_ANDROID) {
             throw new Exception(Exception::PLATFORM_METHOD_UNSUPPORTED);
         }
 
         $updates = new Document([
             'name' => $name,
-            'hostname' => $hostname,
+            'key' => $applicationId,
         ]);
 
         try {
@@ -100,6 +99,6 @@ class Update extends Base
 
         $queueForEvents->setParam('platformId', $platform->getId());
 
-        $response->dynamic($platform, Response::MODEL_PLATFORM_WEB);
+        $response->dynamic($platform, Response::MODEL_PLATFORM_ANDROID);
     }
 }

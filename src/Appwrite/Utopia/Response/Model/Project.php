@@ -184,7 +184,10 @@ class Project extends Model
             ->addRule('platforms', [
                 'type' => [
                     Response::MODEL_PLATFORM_WEB,
-                    Response::MODEL_PLATFORM_APP,
+                    Response::MODEL_PLATFORM_APPLE,
+                    Response::MODEL_PLATFORM_ANDROID,
+                    Response::MODEL_PLATFORM_WINDOWS,
+                    Response::MODEL_PLATFORM_LINUX,
                 ],
                 'description' => 'List of Platforms.',
                 'default' => [],

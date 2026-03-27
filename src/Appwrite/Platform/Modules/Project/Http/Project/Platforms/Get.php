@@ -3,9 +3,8 @@
 namespace Appwrite\Platform\Modules\Project\Http\Project\Platforms;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Platform;
 use Appwrite\Platform\Modules\Compute\Base;
-use Appwrite\Platform\Modules\Project\Http\Project\Platforms\App\Create as AppPlatformCreate;
-use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Web\Create as WebPlatformCreate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -48,7 +47,10 @@ class Get extends Base
                         code: Response::STATUS_CODE_OK,
                         model: [
                             Response::MODEL_PLATFORM_WEB,
-                            Response::MODEL_PLATFORM_APP
+                            Response::MODEL_PLATFORM_APPLE,
+                            Response::MODEL_PLATFORM_ANDROID,
+                            Response::MODEL_PLATFORM_WINDOWS,
+                            Response::MODEL_PLATFORM_LINUX,
                         ],
                     )
                 ]
@@ -74,16 +76,16 @@ class Get extends Base
             throw new Exception(Exception::PLATFORM_NOT_FOUND);
         }
 
-        $webPlatforms = WebPlatformCreate::getSupportedTypes();
-        $appPlatforms = AppPlatformCreate::getSupportedTypes();
+        $type = $platform->getAttribute('type');
 
-        if (\in_array($platform->getAttribute('type'), $webPlatforms)) {
-            $model = Response::MODEL_PLATFORM_WEB;
-        } elseif (\in_array($platform->getAttribute('type'), $appPlatforms)) {
-            $model = Response::MODEL_PLATFORM_APP;
-        } else {
-            throw new Exception(Exception::GENERAL_UNKNOWN, 'Platform type ' . $platform->getAttribute('type') . ' is not supported');
-        }
+        $model = match($type) {
+            Platform::TYPE_WEB => Response::MODEL_PLATFORM_WEB,
+            Platform::TYPE_APPLE => Response::MODEL_PLATFORM_APPLE,
+            Platform::TYPE_ANDROID => Response::MODEL_PLATFORM_ANDROID,
+            Platform::TYPE_WINDOWS => Response::MODEL_PLATFORM_WINDOWS,
+            Platform::TYPE_LINUX => Response::MODEL_PLATFORM_LINUX,
+            default => throw new Exception(Exception::GENERAL_UNKNOWN, 'Platform type ' . $type . ' is not supported'),
+        };
 
         $response->dynamic($platform, $model);
     }

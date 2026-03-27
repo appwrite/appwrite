@@ -9,6 +9,10 @@ class Platforms extends Base
         'name',
         'hostname',
         'identifier',
+        'bundleIdentifier',
+        'applicationId',
+        'packageIdentifierName',
+        'packageName',
     ];
 
     /**

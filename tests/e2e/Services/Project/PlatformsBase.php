@@ -225,11 +225,11 @@ trait PlatformsBase
         $this->deletePlatform($customId);
     }
 
-    // Create app platform tests
+    // Create Apple platform tests
 
-    public function testCreateAppPlatform(): void
+    public function testCreateApplePlatform(): void
     {
-        $platform = $this->createAppPlatform(
+        $platform = $this->createApplePlatform(
             ID::unique(),
             'My iOS App',
             'apple-ios',
@@ -240,7 +240,7 @@ trait PlatformsBase
         $this->assertNotEmpty($platform['body']['$id']);
         $this->assertSame('My iOS App', $platform['body']['name']);
         $this->assertSame('apple-ios', $platform['body']['type']);
-        $this->assertSame('com.example.myapp', $platform['body']['identifier']);
+        $this->assertSame('com.example.myapp', $platform['body']['bundleIdentifier']);
 
         $dateValidator = new DatetimeValidator();
         $this->assertSame(true, $dateValidator->isValid($platform['body']['$createdAt']));
@@ -252,7 +252,7 @@ trait PlatformsBase
         $this->assertSame($platform['body']['$id'], $get['body']['$id']);
         $this->assertSame('My iOS App', $get['body']['name']);
         $this->assertSame('apple-ios', $get['body']['type']);
-        $this->assertSame('com.example.myapp', $get['body']['identifier']);
+        $this->assertSame('com.example.myapp', $get['body']['bundleIdentifier']);
 
         // Verify via LIST
         $list = $this->listPlatforms(null, true);
@@ -264,46 +264,102 @@ trait PlatformsBase
         $this->deletePlatform($platform['body']['$id']);
     }
 
-    public function testCreateAppPlatformAndroid(): void
+    public function testCreateApplePlatformMacOS(): void
     {
-        $platform = $this->createAppPlatform(
+        $platform = $this->createApplePlatform(
+            ID::unique(),
+            'My macOS App',
+            'apple-macos',
+            'com.example.macosapp',
+        );
+
+        $this->assertSame(201, $platform['headers']['status-code']);
+        $this->assertSame('apple-macos', $platform['body']['type']);
+        $this->assertSame('com.example.macosapp', $platform['body']['bundleIdentifier']);
+
+        // Cleanup
+        $this->deletePlatform($platform['body']['$id']);
+    }
+
+    // Create Android platform tests
+
+    public function testCreateAndroidPlatform(): void
+    {
+        $platform = $this->createAndroidPlatform(
             ID::unique(),
             'My Android App',
-            'android',
             'com.example.android',
         );
 
         $this->assertSame(201, $platform['headers']['status-code']);
         $this->assertSame('android', $platform['body']['type']);
-        $this->assertSame('com.example.android', $platform['body']['identifier']);
+        $this->assertSame('com.example.android', $platform['body']['applicationId']);
+
+        // Verify via GET
+        $get = $this->getPlatform($platform['body']['$id']);
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('android', $get['body']['type']);
+        $this->assertSame('com.example.android', $get['body']['applicationId']);
 
         // Cleanup
         $this->deletePlatform($platform['body']['$id']);
     }
 
-    public function testCreateAppPlatformFlutterIos(): void
+    // Create Windows platform tests
+
+    public function testCreateWindowsPlatform(): void
     {
-        $platform = $this->createAppPlatform(
+        $platform = $this->createWindowsPlatform(
             ID::unique(),
-            'Flutter iOS App',
-            'flutter-ios',
-            'com.example.flutterios',
+            'My Windows App',
+            'com.example.windows',
         );
 
         $this->assertSame(201, $platform['headers']['status-code']);
-        $this->assertSame('flutter-ios', $platform['body']['type']);
-        $this->assertSame('com.example.flutterios', $platform['body']['identifier']);
+        $this->assertSame('windows', $platform['body']['type']);
+        $this->assertSame('com.example.windows', $platform['body']['packageIdentifierName']);
+
+        // Verify via GET
+        $get = $this->getPlatform($platform['body']['$id']);
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('windows', $get['body']['type']);
+        $this->assertSame('com.example.windows', $get['body']['packageIdentifierName']);
 
         // Cleanup
         $this->deletePlatform($platform['body']['$id']);
     }
 
-    public function testCreateAppPlatformWithoutAuthentication(): void
+    // Create Linux platform tests
+
+    public function testCreateLinuxPlatform(): void
     {
-        $response = $this->createAppPlatform(
+        $platform = $this->createLinuxPlatform(
+            ID::unique(),
+            'My Linux App',
+            'linux',
+            'com.example.linux',
+        );
+
+        $this->assertSame(201, $platform['headers']['status-code']);
+        $this->assertSame('linux', $platform['body']['type']);
+        $this->assertSame('com.example.linux', $platform['body']['packageName']);
+
+        // Verify via GET
+        $get = $this->getPlatform($platform['body']['$id']);
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('linux', $get['body']['type']);
+        $this->assertSame('com.example.linux', $get['body']['packageName']);
+
+        // Cleanup
+        $this->deletePlatform($platform['body']['$id']);
+    }
+
+    public function testCreateApplePlatformWithoutAuthentication(): void
+    {
+        $response = $this->createApplePlatform(
             ID::unique(),
             'No Auth App',
-            'android',
+            'apple-ios',
             'com.example.noauth',
             false
         );
@@ -311,33 +367,33 @@ trait PlatformsBase
         $this->assertSame(401, $response['headers']['status-code']);
     }
 
-    public function testCreateAppPlatformInvalidId(): void
+    public function testCreateApplePlatformInvalidId(): void
     {
-        $platform = $this->createAppPlatform(
+        $platform = $this->createApplePlatform(
             '!invalid-id!',
             'Invalid ID App',
-            'android',
+            'apple-ios',
             'com.example.invalidid',
         );
 
         $this->assertSame(400, $platform['headers']['status-code']);
     }
 
-    public function testCreateAppPlatformMissingName(): void
+    public function testCreateApplePlatformMissingName(): void
     {
-        $response = $this->createAppPlatform(
+        $response = $this->createApplePlatform(
             ID::unique(),
             null,
-            'android',
+            'apple-ios',
             'com.example.missingname',
         );
 
         $this->assertSame(400, $response['headers']['status-code']);
     }
 
-    public function testCreateAppPlatformMissingType(): void
+    public function testCreateApplePlatformMissingType(): void
     {
-        $response = $this->createAppPlatform(
+        $response = $this->createApplePlatform(
             ID::unique(),
             'Missing Type',
             null,
@@ -347,36 +403,35 @@ trait PlatformsBase
         $this->assertSame(400, $response['headers']['status-code']);
     }
 
-    public function testCreateAppPlatformMissingIdentifier(): void
+    public function testCreateAndroidPlatformMissingIdentifier(): void
     {
-        $response = $this->createAppPlatform(
+        $response = $this->createAndroidPlatform(
             ID::unique(),
             'Missing Identifier',
-            'android',
             null,
         );
 
         $this->assertSame(400, $response['headers']['status-code']);
     }
 
-    public function testCreateAppPlatformDuplicateId(): void
+    public function testCreateApplePlatformDuplicateId(): void
     {
         $platformId = ID::unique();
 
-        $platform = $this->createAppPlatform(
+        $platform = $this->createApplePlatform(
             $platformId,
             'App Dup 1',
-            'android',
+            'apple-ios',
             'com.example.dup1',
         );
 
         $this->assertSame(201, $platform['headers']['status-code']);
 
         // Attempt to create with same ID
-        $duplicate = $this->createAppPlatform(
+        $duplicate = $this->createApplePlatform(
             $platformId,
             'App Dup 2',
-            'android',
+            'apple-ios',
             'com.example.dup2',
         );
 
@@ -387,14 +442,13 @@ trait PlatformsBase
         $this->deletePlatform($platformId);
     }
 
-    public function testCreateAppPlatformCustomId(): void
+    public function testCreateAndroidPlatformCustomId(): void
     {
-        $customId = 'my-custom-app-platform';
+        $customId = 'my-custom-android-platform';
 
-        $platform = $this->createAppPlatform(
+        $platform = $this->createAndroidPlatform(
             $customId,
             'Custom ID App',
-            'android',
             'com.example.customid',
         );
 
@@ -473,11 +527,10 @@ trait PlatformsBase
 
     public function testUpdateWebPlatformMethodUnsupported(): void
     {
-        // Create an app platform
-        $platform = $this->createAppPlatform(
+        // Create an Android platform
+        $platform = $this->createAndroidPlatform(
             ID::unique(),
-            'App Platform',
-            'android',
+            'Android Platform',
             'com.example.app',
         );
 
@@ -494,44 +547,74 @@ trait PlatformsBase
         $this->deletePlatform($platformId);
     }
 
-    // Update app platform tests
+    // Update Apple platform tests
 
-    public function testUpdateAppPlatform(): void
+    public function testUpdateApplePlatform(): void
     {
-        $platform = $this->createAppPlatform(
+        $platform = $this->createApplePlatform(
             ID::unique(),
-            'Original App',
-            'android',
+            'Original Apple',
+            'apple-ios',
             'com.example.original',
         );
 
         $this->assertSame(201, $platform['headers']['status-code']);
         $platformId = $platform['body']['$id'];
 
-        // Update name and identifier
-        $updated = $this->updateAppPlatform($platformId, 'Updated App', 'com.example.updated');
+        // Update name and bundleIdentifier
+        $updated = $this->updateApplePlatform($platformId, 'Updated Apple', 'com.example.updated');
 
         $this->assertSame(200, $updated['headers']['status-code']);
         $this->assertSame($platformId, $updated['body']['$id']);
-        $this->assertSame('Updated App', $updated['body']['name']);
-        $this->assertSame('com.example.updated', $updated['body']['identifier']);
+        $this->assertSame('Updated Apple', $updated['body']['name']);
+        $this->assertSame('com.example.updated', $updated['body']['bundleIdentifier']);
 
         // Verify update persisted via GET
         $get = $this->getPlatform($platformId);
         $this->assertSame(200, $get['headers']['status-code']);
-        $this->assertSame('Updated App', $get['body']['name']);
-        $this->assertSame('com.example.updated', $get['body']['identifier']);
+        $this->assertSame('Updated Apple', $get['body']['name']);
+        $this->assertSame('com.example.updated', $get['body']['bundleIdentifier']);
 
         // Cleanup
         $this->deletePlatform($platformId);
     }
 
-    public function testUpdateAppPlatformWithoutAuthentication(): void
+    // Update Android platform tests
+
+    public function testUpdateAndroidPlatform(): void
     {
-        $platform = $this->createAppPlatform(
+        $platform = $this->createAndroidPlatform(
             ID::unique(),
-            'Auth Update App',
-            'android',
+            'Original Android',
+            'com.example.original',
+        );
+
+        $this->assertSame(201, $platform['headers']['status-code']);
+        $platformId = $platform['body']['$id'];
+
+        // Update name and applicationId
+        $updated = $this->updateAndroidPlatform($platformId, 'Updated Android', 'com.example.updated');
+
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame($platformId, $updated['body']['$id']);
+        $this->assertSame('Updated Android', $updated['body']['name']);
+        $this->assertSame('com.example.updated', $updated['body']['applicationId']);
+
+        // Verify update persisted via GET
+        $get = $this->getPlatform($platformId);
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('Updated Android', $get['body']['name']);
+        $this->assertSame('com.example.updated', $get['body']['applicationId']);
+
+        // Cleanup
+        $this->deletePlatform($platformId);
+    }
+
+    public function testUpdateAndroidPlatformWithoutAuthentication(): void
+    {
+        $platform = $this->createAndroidPlatform(
+            ID::unique(),
+            'Auth Update Android',
             'com.example.authupdate',
         );
 
@@ -539,7 +622,7 @@ trait PlatformsBase
         $platformId = $platform['body']['$id'];
 
         // Attempt update without authentication
-        $response = $this->updateAppPlatform($platformId, 'Updated', 'com.example.updated', false);
+        $response = $this->updateAndroidPlatform($platformId, 'Updated', 'com.example.updated', false);
 
         $this->assertSame(401, $response['headers']['status-code']);
 
@@ -547,15 +630,15 @@ trait PlatformsBase
         $this->deletePlatform($platformId);
     }
 
-    public function testUpdateAppPlatformNotFound(): void
+    public function testUpdateAndroidPlatformNotFound(): void
     {
-        $updated = $this->updateAppPlatform('non-existent-id', 'New Name', 'com.example.new');
+        $updated = $this->updateAndroidPlatform('non-existent-id', 'New Name', 'com.example.new');
 
         $this->assertSame(404, $updated['headers']['status-code']);
         $this->assertSame('platform_not_found', $updated['body']['type']);
     }
 
-    public function testUpdateAppPlatformMethodUnsupported(): void
+    public function testUpdateApplePlatformMethodUnsupported(): void
     {
         // Create a web platform
         $platform = $this->createWebPlatform(
@@ -568,8 +651,8 @@ trait PlatformsBase
         $this->assertSame(201, $platform['headers']['status-code']);
         $platformId = $platform['body']['$id'];
 
-        // Attempt to update via app endpoint
-        $updated = $this->updateAppPlatform($platformId, 'Updated Name', 'com.example.updated');
+        // Attempt to update via Apple endpoint
+        $updated = $this->updateApplePlatform($platformId, 'Updated Name', 'com.example.updated');
 
         $this->assertSame(400, $updated['headers']['status-code']);
         $this->assertSame('platform_method_unsupported', $updated['body']['type']);
@@ -578,20 +661,19 @@ trait PlatformsBase
         $this->deletePlatform($platformId);
     }
 
-    public function testUpdateAppPlatformMissingIdentifier(): void
+    public function testUpdateAndroidPlatformMissingIdentifier(): void
     {
-        $platform = $this->createAppPlatform(
+        $platform = $this->createAndroidPlatform(
             ID::unique(),
             'Missing Id App',
-            'android',
             'com.example.missingid',
         );
 
         $this->assertSame(201, $platform['headers']['status-code']);
         $platformId = $platform['body']['$id'];
 
-        // Update without identifier should fail
-        $updated = $this->updateAppPlatform($platformId, 'Updated Name', null);
+        // Update without applicationId should fail
+        $updated = $this->updateAndroidPlatform($platformId, 'Updated Name', null);
 
         $this->assertSame(400, $updated['headers']['status-code']);
 
@@ -629,12 +711,11 @@ trait PlatformsBase
         $this->deletePlatform($platformId);
     }
 
-    public function testGetAppPlatform(): void
+    public function testGetAndroidPlatform(): void
     {
-        $platform = $this->createAppPlatform(
+        $platform = $this->createAndroidPlatform(
             ID::unique(),
-            'Get Test App',
-            'android',
+            'Get Test Android',
             'com.example.gettest',
         );
 
@@ -645,9 +726,9 @@ trait PlatformsBase
 
         $this->assertSame(200, $get['headers']['status-code']);
         $this->assertSame($platformId, $get['body']['$id']);
-        $this->assertSame('Get Test App', $get['body']['name']);
+        $this->assertSame('Get Test Android', $get['body']['name']);
         $this->assertSame('android', $get['body']['type']);
-        $this->assertSame('com.example.gettest', $get['body']['identifier']);
+        $this->assertSame('com.example.gettest', $get['body']['applicationId']);
 
         $dateValidator = new DatetimeValidator();
         $this->assertSame(true, $dateValidator->isValid($get['body']['$createdAt']));
@@ -699,21 +780,20 @@ trait PlatformsBase
         );
         $this->assertSame(201, $web['headers']['status-code']);
 
-        $app = $this->createAppPlatform(
+        $android = $this->createAndroidPlatform(
             ID::unique(),
-            'List App',
-            'android',
+            'List Android',
             'com.example.listapp',
         );
-        $this->assertSame(201, $app['headers']['status-code']);
+        $this->assertSame(201, $android['headers']['status-code']);
 
-        $flutter = $this->createAppPlatform(
+        $apple = $this->createApplePlatform(
             ID::unique(),
-            'List Flutter',
-            'flutter-ios',
-            'com.example.listflutter',
+            'List Apple',
+            'apple-ios',
+            'com.example.listapple',
         );
-        $this->assertSame(201, $flutter['headers']['status-code']);
+        $this->assertSame(201, $apple['headers']['status-code']);
 
         // List all
         $list = $this->listPlatforms(null, true);
@@ -734,8 +814,8 @@ trait PlatformsBase
 
         // Cleanup
         $this->deletePlatform($web['body']['$id']);
-        $this->deletePlatform($app['body']['$id']);
-        $this->deletePlatform($flutter['body']['$id']);
+        $this->deletePlatform($android['body']['$id']);
+        $this->deletePlatform($apple['body']['$id']);
     }
 
     public function testListPlatformsWithLimit(): void
@@ -748,10 +828,9 @@ trait PlatformsBase
         );
         $this->assertSame(201, $platform1['headers']['status-code']);
 
-        $platform2 = $this->createAppPlatform(
+        $platform2 = $this->createAndroidPlatform(
             ID::unique(),
             'Limit App 2',
-            'android',
             'com.example.limit2',
         );
         $this->assertSame(201, $platform2['headers']['status-code']);
@@ -780,10 +859,9 @@ trait PlatformsBase
         );
         $this->assertSame(201, $platform1['headers']['status-code']);
 
-        $platform2 = $this->createAppPlatform(
+        $platform2 = $this->createAndroidPlatform(
             ID::unique(),
             'Offset App 2',
-            'android',
             'com.example.offset2',
         );
         $this->assertSame(201, $platform2['headers']['status-code']);
@@ -837,10 +915,9 @@ trait PlatformsBase
         );
         $this->assertSame(201, $platform1['headers']['status-code']);
 
-        $platform2 = $this->createAppPlatform(
+        $platform2 = $this->createAndroidPlatform(
             ID::unique(),
             'Cursor App 2',
-            'android',
             'com.example.cursor2',
         );
         $this->assertSame(201, $platform2['headers']['status-code']);
@@ -895,13 +972,12 @@ trait PlatformsBase
         );
         $this->assertSame(201, $web['headers']['status-code']);
 
-        $app = $this->createAppPlatform(
+        $android = $this->createAndroidPlatform(
             ID::unique(),
-            'Filter App',
-            'android',
+            'Filter Android',
             'com.example.filter',
         );
-        $this->assertSame(201, $app['headers']['status-code']);
+        $this->assertSame(201, $android['headers']['status-code']);
 
         // Filter by web type
         $list = $this->listPlatforms([
@@ -927,7 +1003,7 @@ trait PlatformsBase
 
         // Cleanup
         $this->deletePlatform($web['body']['$id']);
-        $this->deletePlatform($app['body']['$id']);
+        $this->deletePlatform($android['body']['$id']);
     }
 
     public function testListPlatformsFilterByName(): void
@@ -1121,7 +1197,7 @@ trait PlatformsBase
         return $this->client->call(Client::METHOD_POST, '/project/platforms/web', $headers, $params);
     }
 
-    protected function createAppPlatform(string $platformId, ?string $name, ?string $type, ?string $identifier, bool $authenticated = true): mixed
+    protected function createApplePlatform(string $platformId, ?string $name, ?string $type, ?string $bundleIdentifier, bool $authenticated = true): mixed
     {
         $params = [
             'platformId' => $platformId,
@@ -1135,8 +1211,8 @@ trait PlatformsBase
             $params['type'] = $type;
         }
 
-        if ($identifier !== null) {
-            $params['identifier'] = $identifier;
+        if ($bundleIdentifier !== null) {
+            $params['bundleIdentifier'] = $bundleIdentifier;
         }
 
         $headers = [
@@ -1148,7 +1224,89 @@ trait PlatformsBase
             $headers = array_merge($headers, $this->getHeaders());
         }
 
-        return $this->client->call(Client::METHOD_POST, '/project/platforms/app', $headers, $params);
+        return $this->client->call(Client::METHOD_POST, '/project/platforms/apple', $headers, $params);
+    }
+
+    protected function createAndroidPlatform(string $platformId, ?string $name, ?string $applicationId, bool $authenticated = true): mixed
+    {
+        $params = [
+            'platformId' => $platformId,
+        ];
+
+        if ($name !== null) {
+            $params['name'] = $name;
+        }
+
+        if ($applicationId !== null) {
+            $params['applicationId'] = $applicationId;
+        }
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+
+        if ($authenticated) {
+            $headers = array_merge($headers, $this->getHeaders());
+        }
+
+        return $this->client->call(Client::METHOD_POST, '/project/platforms/android', $headers, $params);
+    }
+
+    protected function createWindowsPlatform(string $platformId, ?string $name, ?string $packageIdentifierName, bool $authenticated = true): mixed
+    {
+        $params = [
+            'platformId' => $platformId,
+        ];
+
+        if ($name !== null) {
+            $params['name'] = $name;
+        }
+
+        if ($packageIdentifierName !== null) {
+            $params['packageIdentifierName'] = $packageIdentifierName;
+        }
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+
+        if ($authenticated) {
+            $headers = array_merge($headers, $this->getHeaders());
+        }
+
+        return $this->client->call(Client::METHOD_POST, '/project/platforms/windows', $headers, $params);
+    }
+
+    protected function createLinuxPlatform(string $platformId, ?string $name, ?string $type, ?string $packageName, bool $authenticated = true): mixed
+    {
+        $params = [
+            'platformId' => $platformId,
+        ];
+
+        if ($name !== null) {
+            $params['name'] = $name;
+        }
+
+        if ($type !== null) {
+            $params['type'] = $type;
+        }
+
+        if ($packageName !== null) {
+            $params['packageName'] = $packageName;
+        }
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+
+        if ($authenticated) {
+            $headers = array_merge($headers, $this->getHeaders());
+        }
+
+        return $this->client->call(Client::METHOD_POST, '/project/platforms/linux', $headers, $params);
     }
 
     protected function updateWebPlatform(string $platformId, ?string $name = null, ?string $hostname = null, bool $authenticated = true): mixed
@@ -1175,7 +1333,7 @@ trait PlatformsBase
         return $this->client->call(Client::METHOD_PUT, '/project/platforms/web/' . $platformId, $headers, $params);
     }
 
-    protected function updateAppPlatform(string $platformId, ?string $name = null, ?string $identifier = null, bool $authenticated = true): mixed
+    protected function updateApplePlatform(string $platformId, ?string $name = null, ?string $bundleIdentifier = null, bool $authenticated = true): mixed
     {
         $params = [];
 
@@ -1183,8 +1341,8 @@ trait PlatformsBase
             $params['name'] = $name;
         }
 
-        if ($identifier !== null) {
-            $params['identifier'] = $identifier;
+        if ($bundleIdentifier !== null) {
+            $params['bundleIdentifier'] = $bundleIdentifier;
         }
 
         $headers = [
@@ -1196,7 +1354,79 @@ trait PlatformsBase
             $headers = array_merge($headers, $this->getHeaders());
         }
 
-        return $this->client->call(Client::METHOD_PUT, '/project/platforms/app/' . $platformId, $headers, $params);
+        return $this->client->call(Client::METHOD_PUT, '/project/platforms/apple/' . $platformId, $headers, $params);
+    }
+
+    protected function updateAndroidPlatform(string $platformId, ?string $name = null, ?string $applicationId = null, bool $authenticated = true): mixed
+    {
+        $params = [];
+
+        if ($name !== null) {
+            $params['name'] = $name;
+        }
+
+        if ($applicationId !== null) {
+            $params['applicationId'] = $applicationId;
+        }
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+
+        if ($authenticated) {
+            $headers = array_merge($headers, $this->getHeaders());
+        }
+
+        return $this->client->call(Client::METHOD_PUT, '/project/platforms/android/' . $platformId, $headers, $params);
+    }
+
+    protected function updateWindowsPlatform(string $platformId, ?string $name = null, ?string $packageIdentifierName = null, bool $authenticated = true): mixed
+    {
+        $params = [];
+
+        if ($name !== null) {
+            $params['name'] = $name;
+        }
+
+        if ($packageIdentifierName !== null) {
+            $params['packageIdentifierName'] = $packageIdentifierName;
+        }
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+
+        if ($authenticated) {
+            $headers = array_merge($headers, $this->getHeaders());
+        }
+
+        return $this->client->call(Client::METHOD_PUT, '/project/platforms/windows/' . $platformId, $headers, $params);
+    }
+
+    protected function updateLinuxPlatform(string $platformId, ?string $name = null, ?string $packageName = null, bool $authenticated = true): mixed
+    {
+        $params = [];
+
+        if ($name !== null) {
+            $params['name'] = $name;
+        }
+
+        if ($packageName !== null) {
+            $params['packageName'] = $packageName;
+        }
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+
+        if ($authenticated) {
+            $headers = array_merge($headers, $this->getHeaders());
+        }
+
+        return $this->client->call(Client::METHOD_PUT, '/project/platforms/linux/' . $platformId, $headers, $params);
     }
 
     protected function getPlatform(string $platformId, bool $authenticated = true): mixed
