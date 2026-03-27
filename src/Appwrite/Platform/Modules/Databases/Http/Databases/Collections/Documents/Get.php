@@ -121,23 +121,11 @@ class Get extends Action
             throw new Exception($this->getNotFoundException(), params: [$documentId]);
         }
 
-        $operations = 0;
-        $collectionsCache = [];
-        $this->processDocument(
-            database: $database,
-            collection: $collection,
-            document: $document,
-            dbForProject: $dbForProject,
-            collectionsCache: $collectionsCache,
-            authorization: $authorization,
-            operations: $operations
-        );
-
         $usage
-            ->addMetric($this->getDatabasesOperationReadMetric(), max($operations, 1))
-            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationReadMetric()), $operations);
+            ->addMetric($this->getDatabasesOperationReadMetric(), 1)
+            ->addMetric(str_replace('{databaseInternalId}', $database->getSequence(), $this->getDatabasesIdOperationReadMetric()), 1);
 
-        $response->addHeader('X-Debug-Operations', $operations);
+        $response->addHeader('X-Debug-Operations', 1);
 
         $response->dynamic($document, $this->getResponseModel());
     }

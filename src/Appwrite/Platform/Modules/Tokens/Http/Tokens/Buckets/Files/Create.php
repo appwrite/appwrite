@@ -13,6 +13,7 @@ use Utopia\Auth\Proofs\Token;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
@@ -79,10 +80,10 @@ class Create extends Action
         ['bucket' => $bucket, 'file' => $file] = $this->getFileAndBucket($dbForProject, $authorization, $bucketId, $fileId);
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $bucketPermission =  $authorization->isValid(new Input(Database::PERMISSION_UPDATE, $bucket->getUpdate()));
+        $bucketPermission =  $authorization->isValid(new Input(PermissionType::Update, $bucket->getUpdate()));
 
         if ($fileSecurity) {
-            $filePermission = $authorization->isValid(new Input(Database::PERMISSION_UPDATE, $file->getUpdate()));
+            $filePermission = $authorization->isValid(new Input(PermissionType::Update, $file->getUpdate()));
             if (!$bucketPermission && !$filePermission) {
                 throw new Exception(Exception::USER_UNAUTHORIZED);
             }

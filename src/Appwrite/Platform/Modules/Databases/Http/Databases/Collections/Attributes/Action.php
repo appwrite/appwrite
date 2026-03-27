@@ -8,6 +8,8 @@ use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Throwable;
+use Utopia\Database\Adapter\Feature\Spatial;
+use Utopia\Database\Capability;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -17,10 +19,12 @@ use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Exception\Truncate as TruncateException;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\RelationSide;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Structure;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Platform\Action as UtopiaAction;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\Range;
 
 abstract class Action extends UtopiaAction
@@ -233,55 +237,55 @@ abstract class Action extends UtopiaAction
         $isCollections = $this->isCollectionsAPI();
 
         return match ($type) {
-            Database::VAR_BOOLEAN => $isCollections
+            ColumnType::Boolean->value => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_BOOLEAN
                 : UtopiaResponse::MODEL_COLUMN_BOOLEAN,
 
-            Database::VAR_INTEGER => $isCollections
+            ColumnType::Integer->value => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_INTEGER
                 : UtopiaResponse::MODEL_COLUMN_INTEGER,
 
-            Database::VAR_FLOAT => $isCollections
+            ColumnType::Float->value => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_FLOAT
                 : UtopiaResponse::MODEL_COLUMN_FLOAT,
 
-            Database::VAR_DATETIME => $isCollections
+            ColumnType::Datetime->value => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_DATETIME
                 : UtopiaResponse::MODEL_COLUMN_DATETIME,
 
-            Database::VAR_RELATIONSHIP => $isCollections
+            ColumnType::Relationship->value => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_RELATIONSHIP
                 : UtopiaResponse::MODEL_COLUMN_RELATIONSHIP,
 
-            Database::VAR_POINT => $isCollections
+            ColumnType::Point->value => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_POINT
                 : UtopiaResponse::MODEL_COLUMN_POINT,
 
-            Database::VAR_LINESTRING => $isCollections
+            ColumnType::Linestring->value => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_LINE
                 : UtopiaResponse::MODEL_COLUMN_LINE,
 
-            Database::VAR_POLYGON => $isCollections
+            ColumnType::Polygon->value => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_POLYGON
                 : UtopiaResponse::MODEL_COLUMN_POLYGON,
 
-            Database::VAR_VARCHAR => $isCollections
+            ColumnType::Varchar->value => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_VARCHAR
                 : UtopiaResponse::MODEL_COLUMN_VARCHAR,
 
-            Database::VAR_TEXT => $isCollections
+            ColumnType::Text->value => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_TEXT
                 : UtopiaResponse::MODEL_COLUMN_TEXT,
 
-            Database::VAR_MEDIUMTEXT => $isCollections
+            ColumnType::MediumText->value => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_MEDIUMTEXT
                 : UtopiaResponse::MODEL_COLUMN_MEDIUMTEXT,
 
-            Database::VAR_LONGTEXT => $isCollections
+            ColumnType::LongText->value => $isCollections
                 ? UtopiaResponse::MODEL_ATTRIBUTE_LONGTEXT
                 : UtopiaResponse::MODEL_COLUMN_LONGTEXT,
 
-            Database::VAR_STRING => match ($format) {
+            ColumnType::String->value => match ($format) {
                 APP_DATABASE_ATTRIBUTE_EMAIL => $isCollections
                     ? UtopiaResponse::MODEL_ATTRIBUTE_EMAIL
                     : UtopiaResponse::MODEL_COLUMN_EMAIL,
@@ -322,7 +326,7 @@ abstract class Action extends UtopiaAction
         $default = $attribute->getAttribute('default');
         $options = $attribute->getAttribute('options', []);
 
-        if (in_array($type, Database::SPATIAL_TYPES) && !$dbForProject->getAdapter()->getSupportForSpatialAttributes()) {
+        if (in_array($type, [ColumnType::Point->value, ColumnType::Linestring->value, ColumnType::Polygon->value]) && !$dbForProject->getAdapter() instanceof Spatial) {
             throw new Exception($this->getSpatialTypeNotSupportedException(), params: [$type]);
         }
 
@@ -339,7 +343,7 @@ abstract class Action extends UtopiaAction
         }
 
         if (!empty($format)) {
-            if (!Structure::hasFormat($format, $type)) {
+            if (!Structure::hasFormat($format, ColumnType::from($type))) {
                 throw new Exception($this->getFormatUnsupportedException(), "Format $format not available for $type columns.");
             }
         }
@@ -353,8 +357,8 @@ abstract class Action extends UtopiaAction
             throw new Exception($this->getDefaultUnsupportedException(), 'Cannot set default value for array ' . $this->getContext() . 's');
         }
 
-        if ($type === Database::VAR_RELATIONSHIP) {
-            $options['side'] = Database::RELATION_SIDE_PARENT;
+        if ($type === ColumnType::Relationship->value) {
+            $options['side'] = RelationSide::Parent->value;
             $relatedCollection = $dbForProject->getDocument('database_' . $db->getSequence(), $options['relatedCollection'] ?? '');
             if ($relatedCollection->isEmpty()) {
                 $parent = $this->isCollectionsAPI() ? 'collection' : 'table';
@@ -384,8 +388,8 @@ abstract class Action extends UtopiaAction
             ]);
 
             if (
-                !$dbForProject->getAdapter()->getSupportForSpatialIndexNull() &&
-                \in_array($attribute->getAttribute('type'), Database::SPATIAL_TYPES) &&
+                !$dbForProject->getAdapter()->supports(Capability::SpatialIndexNull) &&
+                \in_array($attribute->getAttribute('type'), [ColumnType::Point->value, ColumnType::Linestring->value, ColumnType::Polygon->value]) &&
                 $attribute->getAttribute('required')
             ) {
                 $hasData = $authorization->skip(fn () => $dbForProject
@@ -412,11 +416,11 @@ abstract class Action extends UtopiaAction
         $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $collectionId);
         $dbForProject->purgeCachedCollection('database_' . $db->getSequence() . '_collection_' . $collection->getSequence());
 
-        if ($type === Database::VAR_RELATIONSHIP && $options['twoWay']) {
+        if ($type === ColumnType::Relationship->value && $options['twoWay']) {
             $twoWayKey = $options['twoWayKey'];
             $options['relatedCollection'] = $collection->getId();
             $options['twoWayKey'] = $key;
-            $options['side'] = Database::RELATION_SIDE_CHILD;
+            $options['side'] = RelationSide::Child->value;
 
             try {
                 $twoWayAttribute = new Document([
@@ -516,7 +520,7 @@ abstract class Action extends UtopiaAction
             throw new Exception($this->getTypeInvalidException());
         }
 
-        if ($attribute->getAttribute('type') === Database::VAR_STRING && $attribute->getAttribute(('filter') !== $filter)) {
+        if ($attribute->getAttribute('type') === ColumnType::String->value && $attribute->getAttribute(('filter') !== $filter)) {
             throw new Exception($this->getTypeInvalidException());
         }
 
@@ -549,9 +553,9 @@ abstract class Action extends UtopiaAction
                 }
 
                 if ($attribute->getAttribute('format') === APP_DATABASE_ATTRIBUTE_INT_RANGE) {
-                    $validator = new Range($min, $max, Database::VAR_INTEGER);
+                    $validator = new Range($min, $max, ColumnType::Integer);
                 } else {
-                    $validator = new Range($min, $max, Database::VAR_FLOAT);
+                    $validator = new Range($min, $max, ColumnType::Float);
 
                     if (!is_null($default)) {
                         $default = \floatval($default);
@@ -593,7 +597,7 @@ abstract class Action extends UtopiaAction
                 break;
         }
 
-        if ($type === Database::VAR_RELATIONSHIP) {
+        if ($type === ColumnType::Relationship->value) {
             $primaryDocumentOptions = \array_merge($attribute->getAttribute('options', []), $options);
             $attribute->setAttribute('options', $primaryDocumentOptions);
             try {

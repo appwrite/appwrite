@@ -12,6 +12,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Range;
@@ -64,9 +65,9 @@ class Create extends Action
         $permissions = [];
         if (!empty($user->getId())) {
             $allowedPermissions = [
-                Database::PERMISSION_READ,
-                Database::PERMISSION_UPDATE,
-                Database::PERMISSION_DELETE,
+                PermissionType::Read,
+                PermissionType::Update,
+                PermissionType::Delete,
             ];
 
             foreach ($allowedPermissions as $permission) {

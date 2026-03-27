@@ -53,14 +53,14 @@
         "appwrite/php-clamav": "2.0.*",
         "utopia-php/abuse": "1.2.*",
         "utopia-php/analytics": "0.15.*",
-        "utopia-php/audit": "2.2.*",
+        "utopia-php/audit": "dev-feat-query-lib as 2.2.0",
         "utopia-php/auth": "0.5.*",
         "utopia-php/cache": "1.0.*",
         "utopia-php/cli": "0.22.*",
         "utopia-php/compression": "0.1.*",
         "utopia-php/config": "1.*",
         "utopia-php/console": "0.1.*",
-        "utopia-php/database": "5.*",
+        "utopia-php/database": "dev-feat-query-lib as 5.3.17",
         "utopia-php/agents": "1.*",
         "utopia-php/detector": "0.2.*",
         "utopia-php/domains": "1.*",
@@ -111,6 +111,12 @@
     "provide": {
         "ext-phpiredis": "*"
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/async.git"
+        }
+    ],
     "config": {
         "platform": {
         },

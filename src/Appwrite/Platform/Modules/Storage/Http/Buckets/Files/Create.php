@@ -24,6 +24,7 @@ use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Permissions;
@@ -82,7 +83,7 @@ class Create extends Action
             ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
             ->param('fileId', '', new CustomId(), 'File ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
             ->param('file', [], new File(), 'Binary file. Appwrite SDKs provide helpers to handle file input. [Learn about file input](https://appwrite.io/docs/products/storage/upload-download#input-file).', skipValidation: true)
-            ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE])), 'An array of permission strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+            ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [PermissionType::Read, PermissionType::Update, PermissionType::Delete, PermissionType::Write])), 'An array of permission strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
@@ -119,14 +120,14 @@ class Create extends Action
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        if (!$authorization->isValid(new Input(Database::PERMISSION_CREATE, $bucket->getCreate()))) {
+        if (!$authorization->isValid(new Input(PermissionType::Create, $bucket->getCreate()))) {
             throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
 
         $allowedPermissions = [
-            Database::PERMISSION_READ,
-            Database::PERMISSION_UPDATE,
-            Database::PERMISSION_DELETE,
+            PermissionType::Read,
+            PermissionType::Update,
+            PermissionType::Delete,
         ];
 
         // Map aggregate permissions to into the set of individual permissions they represent.
@@ -145,10 +146,10 @@ class Create extends Action
         // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = $authorization->getRoles();
         if (!$isAPIKey && !$isPrivilegedUser) {
-            foreach (\Utopia\Database\Database::PERMISSIONS as $type) {
+            foreach ([PermissionType::Read, PermissionType::Create, PermissionType::Update, PermissionType::Delete] as $type) {
                 foreach ($permissions as $permission) {
                     $permission = Permission::parse($permission);
-                    if ($permission->getPermission() != $type) {
+                    if ($permission->getPermission() != $type->value) {
                         continue;
                     }
                     $role = (new Role(
@@ -387,7 +388,7 @@ class Create extends Action
                  * However as with chunk upload even if we are updating, we are essentially creating a file
                  * adding it's new chunk so we validate create permission instead of update
                  */
-                if (!$authorization->isValid(new Input(Database::PERMISSION_CREATE, $bucket->getCreate()))) {
+                if (!$authorization->isValid(new Input(PermissionType::Create, $bucket->getCreate()))) {
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
                 $file = $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, $file));
@@ -434,7 +435,7 @@ class Create extends Action
                  * However as with chunk upload even if we are updating, we are essentially creating a file
                  * adding it's new chunk so we validate create permission instead of update
                  */
-                if (!$authorization->isValid(new Input(Database::PERMISSION_CREATE, $bucket->getCreate()))) {
+                if (!$authorization->isValid(new Input(PermissionType::Create, $bucket->getCreate()))) {
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
 

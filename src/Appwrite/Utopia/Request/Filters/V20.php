@@ -7,6 +7,8 @@ use Appwrite\Utopia\Request\Filter;
 use Utopia\Database\Database;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
+use Utopia\Query\Method;
+use Utopia\Query\Schema\ColumnType;
 
 class V20 extends Filter
 {
@@ -84,7 +86,7 @@ class V20 extends Filter
             // Remove any existing select queries
             $parsed = \array_filter(
                 $parsed,
-                fn ($query) => $query->getMethod() !== Query::TYPE_SELECT
+                fn ($query) => $query->getMethod() !== Method::Select
             );
 
             // Add wildcard + relationship(s) selects
@@ -165,7 +167,7 @@ class V20 extends Filter
 
         foreach ($attributes as $attr) {
             if (
-                ($attr['type'] ?? null) !== Database::VAR_RELATIONSHIP ||
+                ($attr['type'] ?? null) !== ColumnType::Relationship->value ||
                 $attr['status'] !== 'available'
             ) {
                 continue;

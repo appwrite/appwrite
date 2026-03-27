@@ -21,6 +21,7 @@ use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Query\Method as QueryMethod;
 use Utopia\Validator\Boolean;
 
 class XList extends Base
@@ -119,7 +120,7 @@ class XList extends Base
         // Capture what statuses the caller explicitly requested, before we mutate the query.
         $requestedStatuses = [];
         foreach ($queries as $query) {
-            if ($query->getMethod() === Query::TYPE_EQUAL && $query->getAttribute() === 'status') {
+            if ($query->getMethod() === QueryMethod::Equal && $query->getAttribute() === 'status') {
                 $requestedStatuses = [...$requestedStatuses, ...$query->getValues()];
             }
         }
@@ -128,7 +129,7 @@ class XList extends Base
         // waiting/processing executions created before the timeout threshold, so timed-out
         // executions that were never marked failed in the DB are included in the results.
         foreach ($queries as $index => $query) {
-            if ($query->getMethod() === Query::TYPE_EQUAL && $query->getAttribute() === 'status' && \in_array('failed', $query->getValues())) {
+            if ($query->getMethod() === QueryMethod::Equal && $query->getAttribute() === 'status' && \in_array('failed', $query->getValues())) {
                 $queries[$index] = Query::or([
                     $query,
                     Query::and([

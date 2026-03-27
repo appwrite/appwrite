@@ -65,9 +65,9 @@ class V17Test extends TestCase
                 ],
                 [
                     'queries' => [
-                        '{"method":"cursorAfter","values":["exampleId"]}',
-                        '{"method":"search","attribute":"name","values":["example"]}',
-                        '{"method":"isNotNull","attribute":"name"}'
+                        '{"method":"cursorAfter"}',
+                        '{"method":"search"}',
+                        '{"method":"isNotNull"}'
                     ]
                 ],
             ]

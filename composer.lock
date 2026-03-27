@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f9225f2b580de0ccb796b2fb8c881384",
+    "content-hash": "a51e9764f643f4283d593e63f61cb4e5",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1633,6 +1633,71 @@
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
             "time": "2026-01-21T04:14:03+00:00"
+        },
+        {
+            "name": "opis/closure",
+            "version": "4.5.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/opis/closure.git",
+                "reference": "b97e42b95bb72d87507f5e2d137ceb239aea8d6b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/opis/closure/zipball/b97e42b95bb72d87507f5e2d137ceb239aea8d6b",
+                "reference": "b97e42b95bb72d87507f5e2d137ceb239aea8d6b",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "4.x-dev"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "src/functions.php"
+                ],
+                "psr-4": {
+                    "Opis\\Closure\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Marius Sarca",
+                    "email": "marius.sarca@gmail.com"
+                },
+                {
+                    "name": "Sorin Sarca",
+                    "email": "sarca_sorin@hotmail.com"
+                }
+            ],
+            "description": "A library that can be used to serialize closures (anonymous functions) and arbitrary data.",
+            "homepage": "https://opis.io/closure",
+            "keywords": [
+                "anonymous classes",
+                "anonymous functions",
+                "closure",
+                "function",
+                "serializable",
+                "serialization",
+                "serialize"
+            ],
+            "support": {
+                "issues": "https://github.com/opis/closure/issues",
+                "source": "https://github.com/opis/closure/tree/4.5.0"
+            },
+            "time": "2026-03-05T13:32:42+00:00"
         },
         {
             "name": "paragonie/constant_time_encoding",
@@ -3501,24 +3566,143 @@
             "time": "2026-02-09T12:46:39+00:00"
         },
         {
-            "name": "utopia-php/audit",
-            "version": "2.2.1",
+            "name": "utopia-php/async",
+            "version": "dev-main",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/audit.git",
-                "reference": "e3e2d6ad5c7f6377d9237df296a12eb7943892fd"
+                "url": "https://github.com/utopia-php/async.git",
+                "reference": "7a0c6957b41731a5c999382ad26a0b2fdbd19812"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/e3e2d6ad5c7f6377d9237df296a12eb7943892fd",
-                "reference": "e3e2d6ad5c7f6377d9237df296a12eb7943892fd",
+                "url": "https://api.github.com/repos/utopia-php/async/zipball/7a0c6957b41731a5c999382ad26a0b2fdbd19812",
+                "reference": "7a0c6957b41731a5c999382ad26a0b2fdbd19812",
+                "shasum": ""
+            },
+            "require": {
+                "opis/closure": "4.*",
+                "php": ">=8.1"
+            },
+            "require-dev": {
+                "amphp/amp": "3.*",
+                "amphp/parallel": "2.*",
+                "amphp/process": "^2.0",
+                "laravel/pint": "1.*",
+                "phpstan/phpstan": "2.*",
+                "phpunit/phpunit": "11.5.45",
+                "react/child-process": "0.*",
+                "react/event-loop": "1.*",
+                "swoole/ide-helper": "*"
+            },
+            "suggest": {
+                "amphp/amp": "Required for Amp promise adapter",
+                "amphp/parallel": "Required for Amp parallel adapter",
+                "ext-ev": "Required for ReactPHP event loop (recommended for best performance)",
+                "ext-parallel": "Required for parallel adapter (requires PHP ZTS build)",
+                "ext-sockets": "Required for Swoole Process adapter",
+                "ext-swoole": "Required for Swoole Thread and Process adapters (recommended for best performance)",
+                "react/child-process": "Required for ReactPHP parallel adapter",
+                "react/event-loop": "Required for ReactPHP promise and parallel adapters"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Async\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test-unit": [
+                    "vendor/bin/phpunit tests/Unit --exclude-group no-swoole"
+                ],
+                "test-promise-sync": [
+                    "vendor/bin/phpunit tests/E2e/Promise/SyncTest.php"
+                ],
+                "test-promise-swoole": [
+                    "vendor/bin/phpunit tests/E2e/Promise/Swoole"
+                ],
+                "test-promise-amp": [
+                    "vendor/bin/phpunit tests/E2e/Promise/Amp"
+                ],
+                "test-promise-react": [
+                    "vendor/bin/phpunit tests/E2e/Promise/React"
+                ],
+                "test-parallel-sync": [
+                    "vendor/bin/phpunit tests/E2e/Parallel/Sync"
+                ],
+                "test-parallel-swoole-thread": [
+                    "vendor/bin/phpunit tests/E2e/Parallel/Swoole/ThreadTest.php"
+                ],
+                "test-parallel-swoole-process": [
+                    "vendor/bin/phpunit tests/E2e/Parallel/Swoole/ProcessTest.php"
+                ],
+                "test-parallel-amp": [
+                    "vendor/bin/phpunit tests/E2e/Parallel/Amp"
+                ],
+                "test-parallel-react": [
+                    "vendor/bin/phpunit tests/E2e/Parallel/React"
+                ],
+                "test-parallel-ext": [
+                    "php -n -d extension=parallel.so -d extension=sockets.so vendor/bin/phpunit tests/E2e/Parallel/Parallel"
+                ],
+                "test-e2e": [
+                    "vendor/bin/phpunit tests/E2e --exclude-group ext-parallel"
+                ],
+                "test": [
+                    "@test-unit",
+                    "@test-e2e",
+                    "@test-parallel-ext"
+                ],
+                "lint": [
+                    "vendor/bin/pint"
+                ],
+                "format": [
+                    "php -d memory_limit=4G vendor/bin/pint"
+                ],
+                "check": [
+                    "vendor/bin/phpstan analyse src tests --level=max --memory-limit=4G"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Appwrite Team",
+                    "email": "team@appwrite.io"
+                }
+            ],
+            "description": "High-performance concurrent + parallel library with Promise and Parallel execution support for PHP.",
+            "support": {
+                "source": "https://github.com/utopia-php/async/tree/main",
+                "issues": "https://github.com/utopia-php/async/issues"
+            },
+            "time": "2026-01-09T06:16:09+00:00"
+        },
+        {
+            "name": "utopia-php/audit",
+            "version": "dev-feat-query-lib",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/audit.git",
+                "reference": "ae866f6a6115bd9d6e6e7037978d5c5fb5b132d1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/ae866f6a6115bd9d6e6e7037978d5c5fb5b132d1",
+                "reference": "ae866f6a6115bd9d6e6e7037978d5c5fb5b132d1",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.0",
                 "utopia-php/database": "5.*",
                 "utopia-php/fetch": "0.5.*",
-                "utopia-php/validators": "0.2.*"
+                "utopia-php/validators": "*"
             },
             "require-dev": {
                 "laravel/pint": "1.*",
@@ -3545,9 +3729,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/2.2.1"
+                "source": "https://github.com/utopia-php/audit/tree/feat-query-lib"
             },
-            "time": "2026-02-02T10:39:25+00:00"
+            "time": "2026-03-26T15:29:23+00:00"
         },
         {
             "name": "utopia-php/auth",
@@ -3850,16 +4034,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "5.3.17",
+            "version": "dev-feat-query-lib",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "cff2b6ed63d3291b74110d086e16ff089fe05993"
+                "reference": "ec959e33d8f5f74f760ecfdbc16b7f3f9391aaa4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/cff2b6ed63d3291b74110d086e16ff089fe05993",
-                "reference": "cff2b6ed63d3291b74110d086e16ff089fe05993",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/ec959e33d8f5f74f760ecfdbc16b7f3f9391aaa4",
+                "reference": "ec959e33d8f5f74f760ecfdbc16b7f3f9391aaa4",
                 "shasum": ""
             },
             "require": {
@@ -3867,18 +4051,20 @@
                 "ext-mongodb": "*",
                 "ext-pdo": "*",
                 "php": ">=8.4",
+                "utopia-php/async": "@dev",
                 "utopia-php/cache": "1.*",
                 "utopia-php/console": "0.1.*",
                 "utopia-php/mongo": "1.*",
                 "utopia-php/pools": "1.*",
+                "utopia-php/query": "dev-feat-builder",
                 "utopia-php/validators": "0.2.*"
             },
             "require-dev": {
+                "brianium/paratest": "^7.7",
                 "fakerphp/faker": "1.23.*",
                 "laravel/pint": "*",
-                "pcov/clobber": "2.*",
-                "phpstan/phpstan": "1.*",
-                "phpunit/phpunit": "9.*",
+                "phpstan/phpstan": "^2.0",
+                "phpunit/phpunit": "^12.0",
                 "rregeer/phpunit-coverage-check": "0.3.*",
                 "swoole/ide-helper": "5.1.3",
                 "utopia-php/cli": "0.22.*"
@@ -3903,9 +4089,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/5.3.17"
+                "source": "https://github.com/utopia-php/database/tree/feat-query-lib"
             },
-            "time": "2026-03-20T01:18:52+00:00"
+            "time": "2026-03-27T01:59:39+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4788,6 +4974,53 @@
                 "source": "https://github.com/utopia-php/preloader/tree/0.2.4"
             },
             "time": "2020-10-24T07:04:59+00:00"
+        },
+        {
+            "name": "utopia-php/query",
+            "version": "dev-feat-builder",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/query.git",
+                "reference": "efd571cd04963b91128fcdb1adb0b27c67417c32"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/query/zipball/efd571cd04963b91128fcdb1adb0b27c67417c32",
+                "reference": "efd571cd04963b91128fcdb1adb0b27c67417c32",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.4"
+            },
+            "require-dev": {
+                "laravel/pint": "*",
+                "mongodb/mongodb": "^1.20",
+                "phpstan/phpstan": "*",
+                "phpunit/phpunit": "^12.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Query\\": "src/Query"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A simple library providing a query abstraction for filtering, ordering, and pagination",
+            "keywords": [
+                "framework",
+                "php",
+                "query",
+                "upf",
+                "utopia"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/query/issues",
+                "source": "https://github.com/utopia-php/query/tree/feat-builder"
+            },
+            "time": "2026-03-26T14:39:58+00:00"
         },
         {
             "name": "utopia-php/queue",
@@ -8433,9 +8666,25 @@
             "time": "2024-11-07T12:36:22+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/audit",
+            "version": "dev-feat-query-lib",
+            "alias": "2.2.0",
+            "alias_normalized": "2.2.0.0"
+        },
+        {
+            "package": "utopia-php/database",
+            "version": "dev-feat-query-lib",
+            "alias": "5.3.17",
+            "alias_normalized": "5.3.17.0"
+        }
+    ],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/audit": 20,
+        "utopia-php/database": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

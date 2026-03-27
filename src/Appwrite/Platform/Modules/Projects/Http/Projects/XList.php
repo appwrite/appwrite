@@ -139,8 +139,8 @@ class XList extends Action
         $projectAttributes = $collections['platform']['projects']['attributes'] ?? [];
 
         foreach ($projectAttributes as $attribute) {
-            $attributeId = $attribute['$id'] ?? null;
-            $filters = $attribute['filters'] ?? [];
+            $attributeId = $attribute->key ?? null;
+            $filters = $attribute->filters ?? [];
 
             if ($attributeId === null || empty($filters)) {
                 continue;

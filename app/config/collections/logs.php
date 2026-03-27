@@ -1,94 +1,67 @@
 <?php
 
+use Utopia\Database\Attribute;
 use Utopia\Database\Database;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Index;
+use Utopia\Query\Schema\ColumnType;
+use Utopia\Query\Schema\IndexType;
 
-$logsCollection = [];
-
-$logsCollection['stats'] = [
-    '$collection' => ID::custom(Database::METADATA),
-    '$id' => ID::custom('stats'),
-    'name' => 'stats',
-    'attributes' => [
-        [
-            '$id' => ID::custom('metric'),
-            'type' => Database::VAR_STRING,
-            'format' => '',
-            'size' => 255,
-            'signed' => true,
-            'required' => true,
-            'default' => null,
-            'array' => false,
-            'filters' => [],
+return [
+    'stats' => [
+        '$collection' => '_metadata',
+        '$id' => 'stats',
+        'name' => 'stats',
+        'attributes' => [
+            new Attribute(
+                key: 'metric',
+                type: ColumnType::String,
+                size: Database::LENGTH_KEY,
+                required: true,
+            ),
+            new Attribute(
+                key: 'region',
+                type: ColumnType::String,
+                size: Database::LENGTH_KEY,
+                required: true,
+            ),
+            new Attribute(
+                key: 'value',
+                type: ColumnType::Integer,
+                size: 8,
+                required: true,
+            ),
+            new Attribute(
+                key: 'time',
+                type: ColumnType::Datetime,
+                signed: false,
+                filters: ['datetime'],
+            ),
+            new Attribute(
+                key: 'period',
+                type: ColumnType::String,
+                size: 4,
+                required: true,
+            ),
         ],
-        [
-            '$id' => ID::custom('region'),
-            'type' => Database::VAR_STRING,
-            'format' => '',
-            'size' => 255,
-            'signed' => true,
-            'required' => true,
-            'default' => null,
-            'array' => false,
-            'filters' => [],
-        ],
-        [
-            '$id' => ID::custom('value'),
-            'type' => Database::VAR_INTEGER,
-            'format' => '',
-            'size' => 8,
-            'signed' => true,
-            'required' => true,
-            'default' => null,
-            'array' => false,
-            'filters' => [],
-        ],
-        [
-            '$id' => ID::custom('time'),
-            'type' => Database::VAR_DATETIME,
-            'format' => '',
-            'size' => 0,
-            'signed' => false,
-            'required' => false,
-            'default' => null,
-            'array' => false,
-            'filters' => ['datetime'],
-        ],
-        [
-            '$id' => ID::custom('period'),
-            'type' => Database::VAR_STRING,
-            'format' => '',
-            'size' => 4,
-            'signed' => true,
-            'required' => true,
-            'default' => null,
-            'array' => false,
-            'filters' => [],
-        ],
-    ],
-    'indexes' => [
-        [
-            '$id' => ID::custom('_key_time'),
-            'type' => Database::INDEX_KEY,
-            'attributes' => ['time'],
-            'lengths' => [],
-            'orders' => [Database::ORDER_DESC],
-        ],
-        [
-            '$id' => ID::custom('_key_period_time'),
-            'type' => Database::INDEX_KEY,
-            'attributes' => ['period', 'time'],
-            'lengths' => [],
-            'orders' => [Database::ORDER_ASC],
-        ],
-        [
-            '$id' => ID::custom('_key_metric_period_time'),
-            'type' => Database::INDEX_UNIQUE,
-            'attributes' => ['metric', 'period', 'time'],
-            'lengths' => [],
-            'orders' => [Database::ORDER_DESC],
+        'indexes' => [
+            new Index(
+                key: '_key_time',
+                type: IndexType::Key,
+                attributes: ['time'],
+                orders: ['DESC'],
+            ),
+            new Index(
+                key: '_key_period_time',
+                type: IndexType::Key,
+                attributes: ['period', 'time'],
+                orders: ['ASC'],
+            ),
+            new Index(
+                key: '_key_metric_period_time',
+                type: IndexType::Unique,
+                attributes: ['metric', 'period', 'time'],
+                orders: ['DESC'],
+            ),
         ],
     ],
 ];
-
-return $logsCollection;

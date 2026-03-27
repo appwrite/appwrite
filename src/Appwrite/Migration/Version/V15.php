@@ -11,6 +11,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\System\System;
 
 class V15 extends Migration
@@ -362,7 +363,7 @@ class V15 extends Migration
                 $this->dbForProject->updateAttribute(
                     collection: $table,
                     id: $attribute,
-                    type: Database::VAR_DATETIME,
+                    type: ColumnType::Datetime->value,
                     signed: false
                 );
             } catch (\Throwable $th) {

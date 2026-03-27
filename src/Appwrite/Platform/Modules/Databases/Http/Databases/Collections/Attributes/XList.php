@@ -18,6 +18,8 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Method as QueryMethod;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\Boolean;
 
 class XList extends Action
@@ -94,7 +96,7 @@ class XList extends Action
 
         $cursor = \array_filter(
             $queries,
-            fn ($query) => \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE])
+            fn ($query) => \in_array($query->getMethod(), [QueryMethod::CursorAfter, QueryMethod::CursorBefore])
         );
         $cursor = \reset($cursor);
 
@@ -136,7 +138,7 @@ class XList extends Action
         }
 
         foreach ($attributes as $attribute) {
-            if ($attribute->getAttribute('type') === Database::VAR_STRING) {
+            if ($attribute->getAttribute('type') === ColumnType::String->value) {
                 $filters = $attribute->getAttribute('filters', []);
                 $attribute->setAttribute('encrypt', in_array('encrypt', $filters));
             }

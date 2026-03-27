@@ -22,6 +22,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
@@ -101,7 +102,7 @@ class Delete extends Action
 
         $hasRelationships = \array_filter(
             $collection->getAttribute('attributes', []),
-            fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            fn ($attribute) => $attribute->getAttribute('type') === ColumnType::Relationship->value
         );
 
         if ($hasRelationships) {

@@ -5,6 +5,7 @@ namespace Appwrite\Utopia\Request\Filters;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request\Filter;
 use Utopia\Database\Query;
+use Utopia\Query\Method;
 
 class V17 extends Filter
 {
@@ -228,36 +229,36 @@ class V17 extends Filter
         }
 
         switch ($method) {
-            case Query::TYPE_EQUAL:
-            case Query::TYPE_NOT_EQUAL:
-            case Query::TYPE_LESSER:
-            case Query::TYPE_LESSER_EQUAL:
-            case Query::TYPE_GREATER:
-            case Query::TYPE_GREATER_EQUAL:
-            case Query::TYPE_CONTAINS:
-            case Query::TYPE_SEARCH:
-            case Query::TYPE_IS_NULL:
-            case Query::TYPE_IS_NOT_NULL:
-            case Query::TYPE_STARTS_WITH:
-            case Query::TYPE_ENDS_WITH:
+            case Method::Equal:
+            case Method::NotEqual:
+            case Method::LessThan:
+            case Method::LessThanEqual:
+            case Method::GreaterThan:
+            case Method::GreaterThanEqual:
+            case Method::Contains:
+            case Method::Search:
+            case Method::IsNull:
+            case Method::IsNotNull:
+            case Method::StartsWith:
+            case Method::EndsWith:
                 $attribute = $parsedParams[0] ?? '';
                 if (count($parsedParams) < 2) {
                     return new Query($method, $attribute);
                 }
                 return new Query($method, $attribute, \is_array($parsedParams[1]) ? $parsedParams[1] : [$parsedParams[1]]);
 
-            case Query::TYPE_BETWEEN:
+            case Method::Between:
                 return new Query($method, $parsedParams[0], [$parsedParams[1], $parsedParams[2]]);
-            case Query::TYPE_SELECT:
+            case Method::Select:
                 return new Query($method, values: $parsedParams[0]);
-            case Query::TYPE_ORDER_ASC:
-            case Query::TYPE_ORDER_DESC:
+            case Method::OrderAsc:
+            case Method::OrderDesc:
                 return new Query($method, $parsedParams[0] ?? '');
 
-            case Query::TYPE_LIMIT:
-            case Query::TYPE_OFFSET:
-            case Query::TYPE_CURSOR_AFTER:
-            case Query::TYPE_CURSOR_BEFORE:
+            case Method::Limit:
+            case Method::Offset:
+            case Method::CursorAfter:
+            case Method::CursorBefore:
                 if (count($parsedParams) > 0) {
                     return new Query($method, values: [$parsedParams[0]]);
                 }

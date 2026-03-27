@@ -11,6 +11,7 @@ use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\Query\Method;
 
 class Realtime extends MessagingAdapter
 {
@@ -84,7 +85,7 @@ class Realtime extends MessagingAdapter
 
         $data = [
             'strings' => $strings,
-            'compiled' => RuntimeQuery::compile($queryGroup),
+            'compiled' => RuntimeQuery::prepare($queryGroup),
         ];
 
         foreach ($roles as $role) {
@@ -426,11 +427,11 @@ class Realtime extends MessagingAdapter
                 );
             }
 
-            if ($method === Query::TYPE_SELECT) {
+            if ($method === Method::Select) {
                 RuntimeQuery::validateSelectQuery($query);
             }
 
-            if (in_array($method, [Query::TYPE_AND, Query::TYPE_OR], true)) {
+            if (in_array($method, [Method::And, Method::Or], true)) {
                 \array_push($stack, ...$query->getValues());
             }
         }

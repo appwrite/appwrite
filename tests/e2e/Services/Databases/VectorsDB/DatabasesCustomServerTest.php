@@ -13,6 +13,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Query\Schema\IndexType;
 
 class DatabasesCustomServerTest extends Scope
 {
@@ -368,7 +369,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
             'key' => 'embedding_euclidean_v2',
-            'type' => Database::INDEX_HNSW_EUCLIDEAN,
+            'type' => IndexType::HnswEuclidean->value,
             'attributes' => ['embeddings']
         ]);
         $this->assertEquals(202, $create['headers']['status-code']);
@@ -404,7 +405,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
             'key' => 'embedding_euclidean',
-            'type' => Database::INDEX_HNSW_EUCLIDEAN,
+            'type' => IndexType::HnswEuclidean->value,
             'attributes' => ['embeddings']
         ]);
         $this->assertEquals(202, $eu['headers']['status-code']);
@@ -415,7 +416,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
             'key' => 'embedding_dot',
-            'type' => Database::INDEX_HNSW_DOT,
+            'type' => IndexType::HnswDot->value,
             'attributes' => ['embeddings']
         ]);
         $this->assertEquals(202, $dot['headers']['status-code']);
@@ -426,7 +427,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
             'key' => 'embedding_cosine',
-            'type' => Database::INDEX_HNSW_COSINE,
+            'type' => IndexType::HnswCosine->value,
             'attributes' => ['embeddings']
         ]);
         $this->assertEquals(202, $cos['headers']['status-code']);
@@ -452,7 +453,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
         $this->assertEquals(200, $get['headers']['status-code']);
         $this->assertEquals('embedding_euclidean', $get['body']['key']);
-        $this->assertEquals(Database::INDEX_HNSW_EUCLIDEAN, $get['body']['type']);
+        $this->assertEquals(IndexType::HnswEuclidean->value, $get['body']['type']);
 
         // Delete index
         $del = $this->client->call(Client::METHOD_DELETE, "/vectorsdb/{$databaseId}/collections/{$collectionId}/indexes/embedding_dot", [

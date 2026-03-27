@@ -15,6 +15,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
@@ -85,7 +86,7 @@ class Update extends Action
             dbForProject: $dbForProject,
             queueForEvents: $queueForEvents,
             authorization: $authorization,
-            type: Database::VAR_STRING,
+            type: ColumnType::String->value,
             filter: APP_DATABASE_ATTRIBUTE_ENUM,
             default: $default,
             required: $required,
