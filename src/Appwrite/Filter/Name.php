@@ -21,7 +21,7 @@ class Name implements Filter
         $words = \array_filter($words, fn (string $word) => !\str_contains($word, '@') || !\str_contains($word, '.'));
 
         // Remove URLs
-        $words = \array_filter($words, fn (string $word) => !\str_starts_with($word, '://') && !\str_starts_with(\strtolower($word), 'www.'));
+        $words = \array_filter($words, fn (string $word) => !\str_contains($word, '://') && !\str_starts_with(\strtolower($word), 'www.'));
 
         // Remove phone numbers
         $words = \array_filter($words, function (string $word) {
