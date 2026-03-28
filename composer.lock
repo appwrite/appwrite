@@ -4002,16 +4002,16 @@
         },
         {
             "name": "utopia-php/dns",
-            "version": "1.6.5",
+            "version": "1.6.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/dns.git",
-                "reference": "574327f0f5fabefa7048030c5634cde33ad10640"
+                "reference": "917901ecfe5f09a540e4f689b6cbb80b9f55035d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/dns/zipball/574327f0f5fabefa7048030c5634cde33ad10640",
-                "reference": "574327f0f5fabefa7048030c5634cde33ad10640",
+                "url": "https://api.github.com/repos/utopia-php/dns/zipball/917901ecfe5f09a540e4f689b6cbb80b9f55035d",
+                "reference": "917901ecfe5f09a540e4f689b6cbb80b9f55035d",
                 "shasum": ""
             },
             "require": {
@@ -4053,9 +4053,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/dns/issues",
-                "source": "https://github.com/utopia-php/dns/tree/1.6.5"
+                "source": "https://github.com/utopia-php/dns/tree/1.6.6"
             },
-            "time": "2026-02-19T16:06:46+00:00"
+            "time": "2026-03-27T11:13:50+00:00"
         },
         {
             "name": "utopia-php/domains",
