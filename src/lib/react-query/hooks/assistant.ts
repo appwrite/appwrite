@@ -4,9 +4,9 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
-import { ContentType, Query } from '@appwrite.io/console'
+import { ContentType, ID, Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
-import { sdk } from '@/lib/appwrite/sdk'
+import { getProjectRegion, sdk } from '@/lib/appwrite/sdk'
 import { DEFAULT_STALE_TIME } from './constants'
 
 function toAssistantQueries(queries: string[]): string {
@@ -41,6 +41,8 @@ export interface AssistantMessageContext {
   contextPageUrl?: string
 }
 
+export const ASSISTANT_ATTACHMENTS_BUCKET_ID = 'attachements'
+
 export function assistantConversationsQueryOptions() {
   return queryOptions({
     queryKey: ['assistant', 'conversations'],
@@ -60,6 +62,36 @@ export function assistantMessagesQueryOptions(
   })
 }
 
+export async function fetchAssistantAttachmentFiles(fileIds: string[]) {
+  const uniqueFileIds = [...new Set(fileIds.filter(Boolean))]
+  if (uniqueFileIds.length === 0) return []
+
+  const files = await Promise.all(
+    uniqueFileIds.map(async (fileId) => {
+      try {
+        return await sdk.forConsole.storage.getFile({
+          bucketId: ASSISTANT_ATTACHMENTS_BUCKET_ID,
+          fileId,
+        })
+      } catch {
+        return null
+      }
+    }),
+  )
+
+  return files.filter((file): file is Models.File => file !== null)
+}
+
+export function assistantAttachmentFilesQueryOptions(fileIds: string[]) {
+  const uniqueFileIds = [...new Set(fileIds.filter(Boolean))]
+  return queryOptions({
+    queryKey: ['assistant', 'attachments', ...uniqueFileIds],
+    queryFn: () => fetchAssistantAttachmentFiles(uniqueFileIds),
+    enabled: uniqueFileIds.length > 0,
+    staleTime: DEFAULT_STALE_TIME,
+  })
+}
+
 export function useAssistantConversations() {
   return useQuery(assistantConversationsQueryOptions())
 }
@@ -68,6 +100,10 @@ export function useAssistantMessages(
   conversationId: string | null | undefined,
 ) {
   return useQuery(assistantMessagesQueryOptions(conversationId))
+}
+
+export function useAssistantAttachmentFiles(fileIds: string[]) {
+  return useQuery(assistantAttachmentFilesQueryOptions(fileIds))
 }
 
 export function useCreateAssistantConversation() {
@@ -119,11 +155,22 @@ export function useCreateAssistantMessage() {
       contentText: string
       continueRun?: boolean
       context?: AssistantMessageContext
+      attachments?: string[]
     }) => {
       const assistant = sdk.forConsole.assistant as unknown as {
-        createMessage: (
-          payload: Record<string, unknown>,
-        ) => Promise<Models.AssistantMessage>
+        createMessage: (payload: {
+          conversationId: string
+          contentText: string
+          contentType: ContentType
+          contextTeamId?: string
+          contextProjectId?: string
+          contextOrganizationId?: string
+          contextPagePath?: string
+          contextPageTitle?: string
+          contextPageUrl?: string
+          attachments?: string[]
+          continueRun?: boolean
+        }) => Promise<Models.AssistantMessage>
       }
 
       return await assistant.createMessage({
@@ -136,6 +183,7 @@ export function useCreateAssistantMessage() {
         contextPagePath: params.context?.contextPagePath,
         contextPageTitle: params.context?.contextPageTitle,
         contextPageUrl: params.context?.contextPageUrl,
+        attachments: params.attachments ?? [],
         continueRun: params.continueRun ?? true,
       })
     },
@@ -148,6 +196,29 @@ export function useCreateAssistantMessage() {
           queryKey: ['assistant', 'messages', message.conversationId],
         }),
       ])
+    },
+  })
+}
+
+export function useUploadAssistantAttachments() {
+  return useMutation({
+    mutationFn: async (params: { files: File[]; projectId?: string }) => {
+      const region = params.projectId
+        ? getProjectRegion(params.projectId) ?? 'unknown'
+        : 'unknown'
+      const consoleSdk = sdk.forConsoleIn(region)
+
+      const uploadedFiles = await Promise.all(
+        params.files.map((file) =>
+          consoleSdk.storage.createFile({
+            bucketId: ASSISTANT_ATTACHMENTS_BUCKET_ID,
+            fileId: ID.unique(),
+            file,
+          }),
+        ),
+      )
+
+      return uploadedFiles.map((file) => file.$id)
     },
   })
 }

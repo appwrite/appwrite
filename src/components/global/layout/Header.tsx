@@ -163,18 +163,18 @@ export function ConsoleHeader({
     <div className="@container w-full">
       <header
         className={cn(
-          'flex h-14 min-h-14 flex-wrap items-center justify-between gap-1 sm:gap-2 border-b border-border bg-background',
-          'pl-3 pr-3 sm:pl-4 sm:pr-4 @[1000px]:pr-6 lg:pl-0',
+          'flex h-14 min-h-14 flex-wrap items-center justify-between gap-1 @[640px]:gap-2 border-b border-border bg-background',
+          'pl-3 pr-3 @[640px]:pl-4 @[640px]:pr-4 @[900px]:pl-0 @[1000px]:pr-6',
           className,
         )}
       >
         {/* Left: Menu + Logo (+ nav border when project) + Project Selector */}
-        <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-2">
+        <div className="flex min-w-0 flex-1 items-center gap-1.5 @[640px]:gap-2">
           {/* Mobile menu button - only show when in project context and sidebar is hidden */}
           {!isOrgOverview && (
             <button
               onClick={onMenuClick}
-              className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground lg:hidden"
+              className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[900px]:hidden"
             >
               <Menu className="h-5 w-5" />
             </button>
@@ -207,13 +207,13 @@ export function ConsoleHeader({
                 <>
                   {/* Desktop: 60px logo column, border continues from nav */}
                   <div
-                    className="hidden h-14 shrink-0 items-center justify-center border-r border-border lg:flex"
+                    className="hidden h-14 shrink-0 items-center justify-center border-r border-border @[900px]:flex"
                     style={{ width: logoColumnWidth }}
                   >
                     {logoLink()}
                   </div>
                   {/* Mobile */}
-                  {logoLink('lg:hidden')}
+                  {logoLink('@[900px]:hidden')}
                 </>
               )
             }
@@ -222,12 +222,12 @@ export function ConsoleHeader({
             return (
               <>
                 <div
-                  className="hidden h-14 shrink-0 items-center justify-center lg:flex"
+                  className="hidden h-14 shrink-0 items-center justify-center @[900px]:flex"
                   style={{ width: logoColumnWidth }}
                 >
                   {logoLink()}
                 </div>
-                {logoLink('lg:hidden')}
+                {logoLink('@[900px]:hidden')}
               </>
             )
           })()}
@@ -578,7 +578,7 @@ export function ConsoleHeader({
         </div>
 
         {/* Right: Actions */}
-        <div className="flex shrink-0 items-center gap-1 sm:gap-2 min-w-0">
+        <div className="flex shrink-0 items-center gap-1 @[640px]:gap-2 min-w-0">
           {/* Search - hidden on small containers or when hideSearch (e.g. native app bar) */}
           {!hideSearch && (
             <>
@@ -642,7 +642,7 @@ export function ConsoleHeader({
 
           {/* Divider before Upgrade Button - hidden on small containers */}
           {showUpgradeButton && (
-            <div className="mx-1 sm:mx-2 hidden h-5 w-px shrink-0 bg-border @[850px]:block" />
+            <div className="mx-1 hidden h-5 w-px shrink-0 bg-border @[640px]:mx-2 @[850px]:block" />
           )}
 
           {/* Upgrade Button - hidden on small containers; only when plan cost is 0 */}
@@ -668,7 +668,7 @@ export function ConsoleHeader({
           )}
 
           {/* Divider - hidden on small containers */}
-          <div className="mx-1 sm:mx-2 hidden h-5 w-px shrink-0 bg-border @[700px]:block" />
+          <div className="mx-1 hidden h-5 w-px shrink-0 bg-border @[640px]:mx-2 @[700px]:block" />
 
           {/* User Menu */}
           <DropdownMenu>

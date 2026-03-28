@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@appwrite.io/console':
-        specifier: https://pkg.vc/-/@appwrite/@appwrite.io/console@6b80a15
-        version: https://pkg.vc/-/@appwrite/@appwrite.io/console@6b80a15
+        specifier: https://pkg.vc/-/@appwrite/@appwrite.io/console@8f7c5ec
+        version: https://pkg.vc/-/@appwrite/@appwrite.io/console@8f7c5ec
       '@faker-js/faker':
         specifier: ^10.1.0
         version: 10.1.0
@@ -318,8 +318,8 @@ packages:
   '@apm-js-collab/tracing-hooks@0.3.1':
     resolution: {integrity: sha512-Vu1CbmPURlN5fTboVuKMoJjbO5qcq9fA5YXpskx3dXe/zTBvjODFoerw+69rVBlRLrJpwPqSDqEuJDEKIrTldw==}
 
-  '@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@6b80a15':
-    resolution: {tarball: https://pkg.vc/-/@appwrite/@appwrite.io/console@6b80a15}
+  '@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@8f7c5ec':
+    resolution: {tarball: https://pkg.vc/-/@appwrite/@appwrite.io/console@8f7c5ec}
     version: 7.0.0
 
   '@asamuzakjp/css-color@3.2.0':
@@ -6287,7 +6287,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@6b80a15':
+  '@appwrite.io/console@https://pkg.vc/-/@appwrite/@appwrite.io/console@8f7c5ec':
     dependencies:
       json-bigint: 1.0.0
 

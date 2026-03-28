@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Popover,
   PopoverContent,
@@ -13,6 +13,10 @@ interface DateTooltipProps {
   className?: string
   /** If true, shows formatted date instead of relative time */
   showFormattedDate?: boolean
+  /** If true, keeps relative time labels updated on an interval */
+  live?: boolean
+  /** Refresh interval for live mode (default: 30s) */
+  liveUpdateMs?: number
 }
 
 /**
@@ -23,12 +27,22 @@ export function DateTooltip({
   date,
   className,
   showFormattedDate = false,
+  live = false,
+  liveUpdateMs = 30_000,
 }: DateTooltipProps) {
   const dateObj = typeof date === 'string' ? new Date(date) : date
+  const [nowMs, setNowMs] = useState(() => Date.now())
+
+  useEffect(() => {
+    if (!live || showFormattedDate) return
+    const intervalId = window.setInterval(() => {
+      setNowMs(Date.now())
+    }, Math.max(5_000, liveUpdateMs))
+    return () => window.clearInterval(intervalId)
+  }, [live, liveUpdateMs, showFormattedDate])
 
   // Calculate relative time
-  const now = new Date()
-  const diffMs = dateObj.getTime() - now.getTime()
+  const diffMs = dateObj.getTime() - nowMs
   const isFuture = diffMs > 0
   const absDiffMs = Math.abs(diffMs)
   const diffSeconds = Math.floor(absDiffMs / 1000)
