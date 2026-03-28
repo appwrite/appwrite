@@ -1,0 +1,70 @@
+name: "Copilot Setup Steps"
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+
+jobs:
+  # The job MUST be called `copilot-setup-steps` or it will not be picked up by Copilot.
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      # -----------------------------------------------------------------------
+      # PHP setup (required for static analysis / linting without Docker)
+      # -----------------------------------------------------------------------
+      - name: Set up PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: >-
+            curl, imagick, mbstring, json, yaml, dom, redis,
+            pdo, openssl, zlib, sockets, fileinfo
+          tools: composer:v2
+          coverage: none
+
+      - name: Install PHP dependencies
+        run: composer install --ignore-platform-reqs --optimize-autoloader --no-interaction --no-plugins --no-scripts --prefer-dist
+
+      # -----------------------------------------------------------------------
+      # Docker — build the appwrite-dev image and pull all other dependency
+      # images from docker-compose.yml so they're cached for Copilot.
+      # -----------------------------------------------------------------------
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Appwrite dev image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: development
+          push: false
+          load: true
+          tags: appwrite-dev
+          cache-from: |
+            type=gha,scope=appwrite-dev-${{ github.ref }}
+            type=gha,scope=appwrite-dev-refs/heads/main
+          cache-to: type=gha,mode=max,scope=appwrite-dev-${{ github.ref }}
+          build-args: |
+            DEBUG=false
+            TESTING=true
+            VERSION=dev
+
+      - name: Pull docker-compose dependency images
+        run: |
+          docker compose config --format json \
+            | python3 -c "import json,sys; [print(k) for k,v in json.load(sys.stdin)['services'].items() if v.get('image','') != 'appwrite-dev']" \
+            | xargs docker compose pull
