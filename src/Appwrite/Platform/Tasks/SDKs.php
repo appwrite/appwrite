@@ -14,7 +14,6 @@ use Appwrite\SDK\Language\Flutter;
 use Appwrite\SDK\Language\Go;
 use Appwrite\SDK\Language\GraphQL;
 use Appwrite\SDK\Language\Kotlin;
-use Appwrite\SDK\Language\Markdown;
 use Appwrite\SDK\Language\Node;
 use Appwrite\SDK\Language\PHP;
 use Appwrite\SDK\Language\Python;
@@ -25,6 +24,7 @@ use Appwrite\SDK\Language\Rust;
 use Appwrite\SDK\Language\Swift;
 use Appwrite\SDK\Language\Web;
 use Appwrite\SDK\SDK;
+use Appwrite\Spec\StaticSpec;
 use Appwrite\Spec\Swagger2;
 use CzProject\GitPhp\Git;
 use Utopia\Agents\Adapters\OpenAI;
@@ -50,7 +50,10 @@ class SDKs extends Action
 
     public static function getPlatforms(): array
     {
-        return Specs::getPlatforms();
+        return [
+            ...Specs::getPlatforms(),
+            APP_SDK_PLATFORM_STATIC,
+        ];
     }
 
     protected function getSdkConfigPath(): string
@@ -171,15 +174,21 @@ class SDKs extends Action
 
                 Console::log('');
                 Console::info("━━━ {$language['name']} SDK ({$platform['name']}, {$version}) ━━━");
-                Console::log('  Fetching API spec...');
+                $specFormat = $language['spec'] ?? 'swagger2';
+                $spec = null;
+                if ($specFormat === 'static') {
+                    Console::log('  Using static SDK spec...');
+                } else {
+                    Console::log('  Fetching API spec...');
 
-                $specPath = __DIR__ . '/../../../../app/config/specs/swagger2-' . $version . '-' . $language['family'] . '.json';
+                    $specPath = __DIR__ . '/../../../../app/config/specs/swagger2-' . $version . '-' . $language['family'] . '.json';
 
-                if (!file_exists($specPath)) {
-                    throw new \Exception('Spec file not found: ' . $specPath . '. Please run "docker compose exec appwrite specs --version=' . $version . '" first to generate the specs.');
+                    if (!file_exists($specPath)) {
+                        throw new \Exception('Spec file not found: ' . $specPath . '. Please run "docker compose exec appwrite specs --version=' . $version . '" first to generate the specs.');
+                    }
+
+                    $spec = file_get_contents($specPath);
                 }
-
-                $spec = file_get_contents($specPath);
 
                 $cover = 'https://github.com/appwrite/appwrite/raw/main/public/images/github.png';
                 $result = \realpath(__DIR__ . '/../../../../app') . '/sdks/' . $key . '-' . $language['key'];
@@ -311,10 +320,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     case 'rest':
                         $config = new REST();
                         break;
-                    case 'markdown':
-                        $config = new Markdown();
-                        $config->setNPMPackage('@appwrite.io/docs');
-                        break;
                     case 'agent-skills':
                         $config = new AgentSkills();
                         break;
@@ -442,7 +447,18 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ? '  Generating examples...'
                     : '  Generating SDK...');
 
-                $sdk = new SDK($config, new Swagger2($spec));
+                $sdk = new SDK(
+                    $config,
+                    $specFormat === 'static'
+                        ? new StaticSpec(
+                            title: 'Appwrite',
+                            description: 'Appwrite backend as a service',
+                            version: $version,
+                            licenseName: 'BSD-3-Clause',
+                            licenseURL: 'https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE',
+                        )
+                        : new Swagger2($spec)
+                );
 
                 $sdk
                     ->setName($language['name'])
@@ -483,6 +499,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
                 try {
                     $sdk->generate($result);
+                    Console::success($examplesOnly
+                        ? "  Examples generated at {$result}"
+                        : "  SDK generated at {$result}");
                 } catch (\Throwable $exception) {
                     Console::error($exception->getMessage());
                 }
