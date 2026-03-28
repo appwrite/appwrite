@@ -3756,6 +3756,65 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(401, $response['headers']['status-code']);
     }
 
+    public function testConvertAnonymousAccountMagicUrl(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $session = $this->createAnonymousSession();
+        $email = \uniqid() . 'anonymous-magic@localhost.test';
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $anonymousUserId = $response['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($anonymousUserId, $response['body']['userId']);
+
+        $lastEmail = $this->getLastEmailByAddress($email);
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
+        $token = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 64);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/magic-url', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'userId' => $anonymousUserId,
+            'secret' => $token,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $upgradedSession = $response['cookies']['a_session_' . $projectId];
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $upgradedSession,
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($anonymousUserId, $response['body']['$id']);
+        $this->assertEquals($email, $response['body']['email']);
+        $this->assertTrue($response['body']['emailVerification']);
+    }
+
     public function testCreateMagicUrl(): void
     {
         // Use uniqid for uniqueness in parallel test execution
