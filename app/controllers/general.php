@@ -37,6 +37,7 @@ use Executor\Executor;
 use MaxMind\Db\Reader;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Table;
+use Utopia\Abuse\Abuse;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Console;
@@ -1125,6 +1126,34 @@ Http::init()
            }
        });
    });
+
+/**
+ * Email worker abuse protection
+ */
+Http::init()
+    ->groups(['outgoingEmail'])
+    ->inject('project')
+    ->inject('timelimit')
+    ->action(function (Document $project, $timelimit) {
+        /*
+        * Abuse Check
+        */
+        $abuseKey = 'initHook:outgoingEmail,projectId:{projectId}';
+
+        $limitPerHour = \intval(System::getEnv('_APP_EMAILS_ABUSE_LIMIT', '1000'));
+
+        $timeLimit = $timelimit($abuseKey, limit: $limitPerHour, time: 3600); // 1000 emails per hour , per project
+        $timeLimit
+            ->setParam('{projectId}', $project->getId());
+
+        $abuse = new Abuse($timeLimit);
+
+        $enabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
+
+        if ($enabled && $abuse->check()) {
+            throw new AppwriteException(AppwriteException::GENERAL_RATE_LIMIT_EXCEEDED);
+        }
+    });
 
 Http::options()
     ->inject('utopia')
