@@ -47,6 +47,7 @@ use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
@@ -367,9 +368,48 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             throw $exception;
         }
 
+        // Check execution permissions for functions.
         if ($type === 'function') {
+            $userJwt = $request->getHeader('x-appwrite-user-jwt', '');
             $permissions = $resource->getAttribute('execute');
-            if (!(\in_array('any', $permissions)) && !(\in_array('guests', $permissions))) {
+            $isExecutionAllowed = (\in_array('any', $permissions)) || (\in_array('guests', $permissions));
+
+            if (!$isExecutionAllowed && !empty($userJwt)) {
+                $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
+                $payload = [];
+                try {
+                    $payload = $jwt->decode($userJwt);
+                } catch (JWTException $error) {
+                    // isExecutionAllowed remains false
+                }
+
+                $associatedUser = null;
+                $userExists = false;
+
+                $userId = $payload['userId'] ?? '';
+                if (!empty($userId)) {
+                    /** @var \Appwrite\Utopia\Database\Documents\User $associatedUser */
+                    $associatedUser = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
+                    if (!$associatedUser->isEmpty() && $associatedUser->getAttribute('status', false)) {
+                        $userExists = true;
+                    }
+                }
+
+                $sessionExists = false;
+                $jwtSessionId = $payload['sessionId'] ?? '';
+                if (!empty($jwtSessionId) && isset($associatedUser)) {
+                    $sessionExists = !empty($associatedUser->find('$id', $jwtSessionId, 'sessions'));
+                }
+
+                if ($userExists && $sessionExists) {
+                    foreach ($associatedUser->getRoles($authorization) as $role) {
+                        $authorization->addRole($role);
+                    }
+                    $isExecutionAllowed = $authorization->isValid(new Input('execute', $permissions));
+                }
+            }
+
+            if (!$isExecutionAllowed) {
                 $exception = new AppwriteException(AppwriteException::FUNCTION_EXECUTE_PERMISSION_MISSING, view: $errorView);
                 $exception->addCTA('View settings', $url . '/console/project-' . $project->getAttribute('region', 'default') . '-' . $project->getId() . '/functions/function-' . $resource->getId() . '/settings');
                 throw $exception;
