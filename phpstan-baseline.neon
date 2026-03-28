@@ -577,12 +577,6 @@ parameters:
 			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Transactions/Update.php
 
 		-
-			message: '#^Variable \$currentDocumentId on left side of \?\? always exists and is always null\.$#'
-			identifier: nullCoalesce.variable
-			count: 1
-			path: src/Appwrite/Platform/Modules/Databases/Http/Databases/Transactions/Update.php
-
-		-
 			message: '#^Offset ''deviceBrand'' does not exist on int\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
