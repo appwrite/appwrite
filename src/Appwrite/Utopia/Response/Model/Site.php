@@ -123,7 +123,7 @@ class Site extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'The install command used to install the site dependencies.',
                 'default' => '',
-                'example' => 'npm install',
+                'example' => 'npm ci',
             ])
             ->addRule('buildCommand', [
                 'type' => self::TYPE_STRING,

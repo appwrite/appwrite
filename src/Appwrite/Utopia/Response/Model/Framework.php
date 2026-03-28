@@ -39,7 +39,7 @@ class Framework extends Model
                 'type' => Response::MODEL_FRAMEWORK_ADAPTER,
                 'description' => 'List of supported adapters.',
                 'default' => '',
-                'example' => [[ 'key' => 'static', 'buildRuntime' => 'node-22', 'buildCommand' => 'npm run build', 'installCommand' => 'npm install', 'outputDirectory' => './dist' ]],
+                'example' => [[ 'key' => 'static', 'buildRuntime' => 'node-22', 'buildCommand' => 'npm run build', 'installCommand' => 'npm ci', 'outputDirectory' => './dist' ]],
                 'array' => true,
             ])
         ;

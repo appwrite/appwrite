@@ -180,7 +180,7 @@ class VCSConsoleClientTest extends Scope
 
         $this->assertEquals(200, $framework['headers']['status-code']);
         $this->assertEquals($framework['body']['framework'], 'sveltekit');
-        $this->assertEquals($framework['body']['installCommand'], 'npm install');
+        $this->assertEquals($framework['body']['installCommand'], 'npm ci');
         $this->assertEquals($framework['body']['buildCommand'], 'npm run build');
         $this->assertEquals($framework['body']['outputDirectory'], './build');
 
@@ -195,7 +195,7 @@ class VCSConsoleClientTest extends Scope
 
         $this->assertEquals(200, $framework['headers']['status-code']);
         $this->assertEquals($framework['body']['framework'], 'astro');
-        $this->assertEquals($framework['body']['installCommand'], 'npm install');
+        $this->assertEquals($framework['body']['installCommand'], 'npm ci');
         $this->assertEquals($framework['body']['buildCommand'], 'npm run build');
         $this->assertEquals($framework['body']['outputDirectory'], './dist');
 
@@ -210,7 +210,7 @@ class VCSConsoleClientTest extends Scope
 
         $this->assertEquals(200, $framework['headers']['status-code']);
         $this->assertEquals($framework['body']['framework'], 'remix');
-        $this->assertEquals($framework['body']['installCommand'], 'npm install');
+        $this->assertEquals($framework['body']['installCommand'], 'npm ci');
         $this->assertEquals($framework['body']['buildCommand'], 'npm run build');
         $this->assertEquals($framework['body']['outputDirectory'], './build');
 

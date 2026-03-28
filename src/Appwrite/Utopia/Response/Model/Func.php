@@ -144,7 +144,7 @@ class Func extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'The build command used to build the deployment.',
                 'default' => '',
-                'example' => 'npm install',
+                'example' => 'npm ci',
             ])
             ->addRule('version', [
                 'type' => self::TYPE_STRING,

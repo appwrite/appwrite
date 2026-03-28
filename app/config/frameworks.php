@@ -21,14 +21,14 @@ return [
             'ssr' => [
                 'key' => 'ssr',
                 'buildCommand' => 'npm run build',
-                'installCommand' => 'npm install',
+                'installCommand' => 'npm ci',
                 'outputDirectory' => './dist/analog',
                 'startCommand' => 'bash helpers/analog/server.sh',
             ],
             'static' => [
                 'key' => 'static',
                 'buildCommand' => 'npm run build',
-                'installCommand' => 'npm install',
+                'installCommand' => 'npm ci',
                 'outputDirectory' => './dist/analog/public',
                 'startCommand' => 'bash helpers/server.sh',
                 'fallbackFile' => 'index.html'
@@ -47,14 +47,14 @@ return [
             'ssr' => [
                 'key' => 'ssr',
                 'buildCommand' => 'npm run build',
-                'installCommand' => 'npm install',
+                'installCommand' => 'npm ci',
                 'outputDirectory' => './dist/angular',
                 'startCommand' => 'bash helpers/angular/server.sh',
             ],
             'static' => [
                 'key' => 'static',
                 'buildCommand' => 'npm run build',
-                'installCommand' => 'npm install',
+                'installCommand' => 'npm ci',
                 'outputDirectory' => './dist/angular/browser',
                 'startCommand' => 'bash helpers/server.sh',
                 'fallbackFile' => 'index.csr.html'
@@ -73,14 +73,14 @@ return [
             'ssr' => [
                 'key' => 'ssr',
                 'buildCommand' => 'npm run build',
-                'installCommand' => 'npm install',
+                'installCommand' => 'npm ci',
                 'outputDirectory' => './.next',
                 'startCommand' => 'bash helpers/next-js/server.sh',
             ],
             'static' => [
                 'key' => 'static',
                 'buildCommand' => 'npm run build',
-                'installCommand' => 'npm install',
+                'installCommand' => 'npm ci',
                 'outputDirectory' => './out',
                 'startCommand' => 'bash helpers/server.sh',
             ]
@@ -96,7 +96,7 @@ return [
             'static' => [
                 'key' => 'static',
                 'buildCommand' => 'npm run build',
-                'installCommand' => 'npm install',
+                'installCommand' => 'npm ci',
                 'outputDirectory' => './dist',
                 'startCommand' => 'bash helpers/server.sh',
                 'fallbackFile' => 'index.html'
@@ -115,14 +115,14 @@ return [
             'ssr' => [
                 'key' => 'ssr',
                 'buildCommand' => 'npm run build',
-                'installCommand' => 'npm install',
+                'installCommand' => 'npm ci',
                 'outputDirectory' => './.output',
                 'startCommand' => 'bash helpers/nuxt/server.sh',
             ],
             'static' => [
                 'key' => 'static',
                 'buildCommand' => 'npm run generate',
-                'installCommand' => 'npm install',
+                'installCommand' => 'npm ci',
                 'outputDirectory' => './output/public',
                 'startCommand' => 'bash helpers/server.sh',
             ]
@@ -138,7 +138,7 @@ return [
             'static' => [
                 'key' => 'static',
                 'buildCommand' => 'npm run build',
-                'installCommand' => 'npm install',
+                'installCommand' => 'npm ci',
                 'outputDirectory' => './dist',
                 'startCommand' => 'bash helpers/server.sh',
                 'fallbackFile' => 'index.html'
@@ -157,14 +157,14 @@ return [
             'ssr' => [
                 'key' => 'ssr',
                 'buildCommand' => 'npm run build',
-                'installCommand' => 'npm install',
+                'installCommand' => 'npm ci',
                 'outputDirectory' => './build',
                 'startCommand' => 'bash helpers/sveltekit/server.sh',
             ],
             'static' => [
                 'key' => 'static',
                 'buildCommand' => 'npm run build',
-                'installCommand' => 'npm install',
+                'installCommand' => 'npm ci',
                 'outputDirectory' => './build',
                 'startCommand' => 'bash helpers/server.sh',
             ]
@@ -182,14 +182,14 @@ return [
             'ssr' => [
                 'key' => 'ssr',
                 'buildCommand' => 'npm run build',
-                'installCommand' => 'npm install',
+                'installCommand' => 'npm ci',
                 'outputDirectory' => './dist',
                 'startCommand' => 'bash helpers/astro/server.sh',
             ],
             'static' => [
                 'key' => 'static',
                 'buildCommand' => 'npm run build',
-                'installCommand' => 'npm install',
+                'installCommand' => 'npm ci',
                 'outputDirectory' => './dist',
                 'startCommand' => 'bash helpers/server.sh',
             ]
@@ -207,14 +207,14 @@ return [
             'ssr' => [
                 'key' => 'ssr',
                 'buildCommand' => 'npm run build',
-                'installCommand' => 'npm install',
+                'installCommand' => 'npm ci',
                 'outputDirectory' => './.output',
                 'startCommand' => 'bash helpers/tanstack-start/server.sh',
             ],
             'static' => [
                 'key' => 'static',
                 'buildCommand' => 'npm run build',
-                'installCommand' => 'npm install',
+                'installCommand' => 'npm ci',
                 'outputDirectory' => './dist/client',
                 'startCommand' => 'bash helpers/server.sh',
             ]
@@ -232,14 +232,14 @@ return [
             'ssr' => [
                 'key' => 'ssr',
                 'buildCommand' => 'npm run build',
-                'installCommand' => 'npm install',
+                'installCommand' => 'npm ci',
                 'outputDirectory' => './build',
                 'startCommand' => 'bash helpers/remix/server.sh',
             ],
             'static' => [
                 'key' => 'static',
                 'buildCommand' => 'npm run build',
-                'installCommand' => 'npm install',
+                'installCommand' => 'npm ci',
                 'outputDirectory' => './build/client',
                 'startCommand' => 'bash helpers/server.sh',
             ]
@@ -255,7 +255,7 @@ return [
             'static' => [
                 'key' => 'static',
                 'buildCommand' => 'npm run build',
-                'installCommand' => 'npm install',
+                'installCommand' => 'npm ci',
                 'outputDirectory' => './dist',
                 'startCommand' => 'bash helpers/server.sh',
                 'fallbackFile' => 'index.html'
@@ -289,7 +289,7 @@ return [
             'static' => [
                 'key' => 'static',
                 'buildCommand' => 'npm run build',
-                'installCommand' => 'npm install',
+                'installCommand' => 'npm ci',
                 'outputDirectory' => './dist',
                 'startCommand' => 'bash helpers/server.sh',
                 'fallbackFile' => 'index.html'
@@ -306,7 +306,7 @@ return [
             'static' => [
                 'key' => 'static',
                 'buildCommand' => 'npm run build',
-                'installCommand' => 'npm install',
+                'installCommand' => 'npm ci',
                 'outputDirectory' => './dist',
                 'startCommand' => 'bash helpers/server.sh',
             ],

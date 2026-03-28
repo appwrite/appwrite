@@ -27,7 +27,7 @@ class DetectionRuntime extends Detection
                 'type' => self::TYPE_STRING,
                 'description' => 'Function install and build commands',
                 'default' => '',
-                'example' => 'npm install && npm run build',
+                'example' => 'npm ci && npm run build',
             ]);
     }
 
