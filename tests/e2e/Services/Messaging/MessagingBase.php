@@ -126,6 +126,12 @@ trait MessagingBase
                 'teamId' => 'my-teamid',
                 'bundleId' => 'my-bundleid',
             ],
+            'telnyx' => [
+                'providerId' => ID::unique(),
+                'name' => 'Telnyx1',
+                'apiKey' => 'my-apikey',
+                'from' => '+123456789',
+            ],
         ];
         $providers = [];
 
@@ -217,6 +223,10 @@ trait MessagingBase
                 'authKeyId' => 'my-authkeyid',
                 'teamId' => 'my-teamid',
                 'bundleId' => 'my-bundleid',
+            ],
+            'telnyx' => [
+                'name' => 'Telnyx2',
+                'apiKey' => 'my-apikey',
             ],
         ];
 
@@ -999,7 +1009,7 @@ trait MessagingBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         // Count may vary due to other tests creating providers
-        $this->assertGreaterThanOrEqual(11, \count($response['body']['providers']));
+        $this->assertGreaterThanOrEqual(12, \count($response['body']['providers']));
 
         return $providers;
     }
