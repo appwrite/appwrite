@@ -317,6 +317,43 @@ class Migrations extends Action
     }
 
     /**
+     * @return array<string>
+     */
+    protected function getAPIKeyScopes(): array
+    {
+        return [
+            'users.read',
+            'users.write',
+            'teams.read',
+            'teams.write',
+            'buckets.read',
+            'buckets.write',
+            'files.read',
+            'files.write',
+            'functions.read',
+            'functions.write',
+            'sites.read',
+            'sites.write',
+            'tokens.read',
+            'tokens.write',
+            'providers.read',
+            'providers.write',
+            'topics.read',
+            'topics.write',
+            'subscribers.read',
+            'subscribers.write',
+            'messages.read',
+            'messages.write',
+            'targets.read',
+            'targets.write',
+            'webhooks.read',
+            'webhooks.write',
+            'project.read',
+            'project.write',
+        ];
+    }
+
+    /**
      * @throws Exception
      */
     protected function generateAPIKey(Document $project): string
@@ -336,36 +373,7 @@ class Migrations extends Action
                 METRIC_NETWORK_INBOUND,
                 METRIC_NETWORK_OUTBOUND,
             ],
-            'scopes' => [
-                'users.read',
-                'users.write',
-                'teams.read',
-                'teams.write',
-                'buckets.read',
-                'buckets.write',
-                'files.read',
-                'files.write',
-                'functions.read',
-                'functions.write',
-                'sites.read',
-                'sites.write',
-                'tokens.read',
-                'tokens.write',
-                'providers.read',
-                'providers.write',
-                'topics.read',
-                'topics.write',
-                'subscribers.read',
-                'subscribers.write',
-                'messages.read',
-                'messages.write',
-                'targets.read',
-                'targets.write',
-                'webhooks.read',
-                'webhooks.write',
-                'project.read',
-                'project.write'
-            ]
+            'scopes' => $this->getAPIKeyScopes()
         ]);
 
         return API_KEY_DYNAMIC . '_' . $apiKey;
