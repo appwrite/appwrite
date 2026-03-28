@@ -69,6 +69,10 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
+        if (empty($document->getSequence()) || empty($document->getAttribute('databaseInternalId'))) {
+            return [];
+        }
+
         $attributes = $database->getAuthorization()->skip(fn () => $database->find('attributes', [
             Query::equal('collectionInternalId', [$document->getSequence()]),
             Query::equal('databaseInternalId', [$document->getAttribute('databaseInternalId')]),
@@ -108,6 +112,10 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
+        if (empty($document->getSequence()) || empty($document->getAttribute('databaseInternalId'))) {
+            return [];
+        }
+
         return $database->getAuthorization()->skip(fn () => $database
             ->find('indexes', [
                 Query::equal('collectionInternalId', [$document->getSequence()]),
@@ -123,6 +131,10 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
+        if (empty($document->getSequence())) {
+            return [];
+        }
+
         return $database->getAuthorization()->skip(fn () => $database
             ->find('platforms', [
                 Query::equal('projectInternalId', [$document->getSequence()]),
@@ -137,6 +149,10 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
+        if (empty($document->getSequence())) {
+            return [];
+        }
+
         return $database->getAuthorization()->skip(fn () => $database
             ->find('keys', [
                 Query::equal('resourceType', ['projects']),
@@ -152,6 +168,10 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
+        if (empty($document->getSequence())) {
+            return [];
+        }
+
         return $database->getAuthorization()->skip(fn () => $database
             ->find('devKeys', [
                 Query::equal('projectInternalId', [$document->getSequence()]),
@@ -166,6 +186,10 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
+        if (empty($document->getSequence())) {
+            return [];
+        }
+
         return $database->getAuthorization()->skip(fn () => $database
             ->find('webhooks', [
                 Query::equal('projectInternalId', [$document->getSequence()]),
@@ -180,6 +204,10 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
+        if (empty($document->getSequence())) {
+            return [];
+        }
+
         return  $database->getAuthorization()->skip(fn () => $database->find('sessions', [
             Query::equal('userInternalId', [$document->getSequence()]),
             Query::limit(APP_LIMIT_SUBQUERY),
@@ -193,6 +221,10 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
+        if (empty($document->getSequence())) {
+            return [];
+        }
+
         return  $database->getAuthorization()->skip(fn () => $database
             ->find('tokens', [
                 Query::equal('userInternalId', [$document->getSequence()]),
@@ -207,6 +239,10 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
+        if (empty($document->getSequence())) {
+            return [];
+        }
+
         return  $database->getAuthorization()->skip(fn () => $database
             ->find('challenges', [
                 Query::equal('userInternalId', [$document->getSequence()]),
@@ -221,6 +257,10 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
+        if (empty($document->getSequence())) {
+            return [];
+        }
+
         return $database->getAuthorization()->skip(fn () => $database
             ->find('authenticators', [
                 Query::equal('userInternalId', [$document->getSequence()]),
@@ -235,6 +275,10 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
+        if (empty($document->getSequence())) {
+            return [];
+        }
+
         return  $database->getAuthorization()->skip(fn () => $database
             ->find('memberships', [
                 Query::equal('userInternalId', [$document->getSequence()]),
@@ -249,6 +293,10 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
+        if (empty($document->getSequence())) {
+            return [];
+        }
+
         $resourceType = match ($document->getCollection()) {
             'functions' => ['function'],
             'sites' => ['site'],
@@ -335,6 +383,10 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
+        if (empty($document->getSequence())) {
+            return [];
+        }
+
         return  $database->getAuthorization()->skip(fn () => $database
             ->find('targets', [
                 Query::equal('userInternalId', [$document->getSequence()]),
@@ -349,6 +401,10 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
+        if (empty($document->getSequence())) {
+            return [];
+        }
+
         $targetIds =  $database->getAuthorization()->skip(fn () => \array_map(
             fn ($document) => $document->getAttribute('targetInternalId'),
             $database->find('subscribers', [

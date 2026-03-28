@@ -84,7 +84,7 @@ class Get extends Action
             $storageStats = $authorization->skip(fn () => $dbForLogs->getDocument(
                 'stats',
                 $statsDocId,
-                [Query::select(['value'])]
+                [Query::select('value')]
             ));
 
             $totalSize = $storageStats->getAttribute('value', 0);

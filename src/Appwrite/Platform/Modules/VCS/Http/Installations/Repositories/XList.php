@@ -7,6 +7,7 @@ use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Validator\Queries\Types;
 use Appwrite\Utopia\Response;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\Config\Adapters\Dotenv as ConfigDotenv;
@@ -15,9 +16,6 @@ use Utopia\Config\Exceptions\Parse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Queries;
-use Utopia\Database\Validator\Query\Limit;
-use Utopia\Database\Validator\Query\Offset;
 use Utopia\Detector\Detection\Framework\Analog;
 use Utopia\Detector\Detection\Framework\Angular;
 use Utopia\Detector\Detection\Framework\Astro;
@@ -97,7 +95,7 @@ class XList extends Action
             ->param('installationId', '', new Text(256), 'Installation Id')
             ->param('type', '', new WhiteList(['runtime', 'framework']), 'Detector type. Must be one of the following: runtime, framework')
             ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-            ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+            ->param('queries', [], new Types([Query::TYPE_LIMIT, Query::TYPE_OFFSET]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
             ->inject('gitHub')
             ->inject('response')
             ->inject('dbForPlatform')

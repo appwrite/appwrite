@@ -113,6 +113,8 @@ class Create extends Action
                 'enabled' => $enabled,
                 'name' => $name,
                 'search' => \implode(' ', [$collectionId, $name]),
+                'attributes' => null,
+                'indexes' => null,
             ]));
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException(), params: [$collectionId]);

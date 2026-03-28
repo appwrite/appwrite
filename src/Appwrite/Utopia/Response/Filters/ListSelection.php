@@ -20,12 +20,11 @@ class ListSelection extends Filter
 
         $selections = [];
         foreach ($this->selectQueries as $query) {
-            foreach ($query->getValues() as $value) {
-                if ($value === '*') {
-                    return $content;
-                }
-                $selections[$value] = true;
+            if ($query->getAttribute() === '*') {
+                return $content;
             }
+
+            $selections[$query->getAttribute()] = true;
         }
 
         return $this->handleList($content, $this->itemsKey, function (array $item) use ($selections) {

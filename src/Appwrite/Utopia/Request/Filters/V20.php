@@ -88,7 +88,10 @@ class V20 extends Filter
             );
 
             // Add wildcard + relationship(s) selects
-            $parsed[] = Query::select($selects);
+            $parsed[] = Query::parseQuery([
+                'method' => Query::TYPE_SELECT,
+                'values' => $selects,
+            ]);
         }
 
         $resolvedQueries = [];
