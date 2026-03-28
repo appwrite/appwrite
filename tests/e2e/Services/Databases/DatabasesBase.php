@@ -6499,6 +6499,183 @@ trait DatabasesBase
         $this->assertEquals(Database::RELATION_MUTATE_CASCADE, $attribute['body']['onDelete']);
     }
 
+    public function testOneWayRelationshipDoesNotRequireTwoWayKey(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $data = $this->setupDatabase();
+        $databaseId = $data['databaseId'];
+
+        $source = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Source',
+            $this->getSecurityParam() => true,
+        ]);
+
+        $related = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Related',
+            $this->getSecurityParam() => true,
+        ]);
+
+        $existing = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $source['body']['$id']) . '/relationship', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getRelatedIdParam() => $related['body']['$id'],
+            'type' => Database::RELATION_ONE_TO_ONE,
+            'twoWay' => true,
+            'key' => 'existingRelation',
+            'twoWayKey' => $source['body']['$id'],
+            'onDelete' => Database::RELATION_MUTATE_CASCADE,
+        ]);
+
+        $this->assertEquals(202, $existing['headers']['status-code']);
+        $this->waitForAttribute($databaseId, $source['body']['$id'], 'existingRelation');
+        $this->waitForAttribute($databaseId, $related['body']['$id'], $source['body']['$id']);
+
+        $response = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $source['body']['$id']) . '/relationship', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getRelatedIdParam() => $related['body']['$id'],
+            'type' => Database::RELATION_ONE_TO_ONE,
+            'twoWay' => false,
+            'key' => 'myRelation',
+            'onDelete' => Database::RELATION_MUTATE_CASCADE,
+        ]);
+
+        $this->assertEquals(202, $response['headers']['status-code'], json_encode($response['body']));
+        $this->assertEquals('myRelation', $response['body']['key']);
+        $this->assertEquals(false, $response['body']['twoWay']);
+        $this->assertEquals('', $response['body']['twoWayKey']);
+
+        $this->waitForAttribute($databaseId, $source['body']['$id'], 'myRelation');
+    }
+
+    public function testOneWayRelationshipIgnoresProvidedTwoWayKey(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $data = $this->setupDatabase();
+        $databaseId = $data['databaseId'];
+
+        $source = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Source',
+            $this->getSecurityParam() => true,
+        ]);
+
+        $related = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Related',
+            $this->getSecurityParam() => true,
+        ]);
+
+        $response = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $source['body']['$id']) . '/relationship', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getRelatedIdParam() => $related['body']['$id'],
+            'type' => Database::RELATION_ONE_TO_ONE,
+            'twoWay' => false,
+            'key' => 'myRelation',
+            'twoWayKey' => 'shouldBeIgnored',
+            'onDelete' => Database::RELATION_MUTATE_CASCADE,
+        ]);
+
+        $this->assertEquals(202, $response['headers']['status-code'], json_encode($response['body']));
+        $this->assertEquals('', $response['body']['twoWayKey']);
+
+        $this->waitForAttribute($databaseId, $source['body']['$id'], 'myRelation');
+    }
+
+    public function testMultipleOneWayRelationshipsToSameRelatedTable(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $data = $this->setupDatabase();
+        $databaseId = $data['databaseId'];
+
+        $source = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Source',
+            $this->getSecurityParam() => true,
+        ]);
+
+        $related = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Related',
+            $this->getSecurityParam() => true,
+        ]);
+
+        $first = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $source['body']['$id']) . '/relationship', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getRelatedIdParam() => $related['body']['$id'],
+            'type' => Database::RELATION_ONE_TO_ONE,
+            'twoWay' => false,
+            'key' => 'firstRelation',
+            'onDelete' => Database::RELATION_MUTATE_SET_NULL,
+        ]);
+
+        $this->assertEquals(202, $first['headers']['status-code'], json_encode($first['body']));
+        $this->waitForAttribute($databaseId, $source['body']['$id'], 'firstRelation');
+
+        $second = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $source['body']['$id']) . '/relationship', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getRelatedIdParam() => $related['body']['$id'],
+            'type' => Database::RELATION_ONE_TO_ONE,
+            'twoWay' => false,
+            'key' => 'secondRelation',
+            'onDelete' => Database::RELATION_MUTATE_SET_NULL,
+        ]);
+
+        $this->assertEquals(202, $second['headers']['status-code'], json_encode($second['body']));
+        $this->waitForAttribute($databaseId, $source['body']['$id'], 'secondRelation');
+    }
+
     public function testManyToOneRelationship(): void
     {
         if (!$this->getSupportForRelationships()) {
