@@ -9,7 +9,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Http\Http;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
 use Utopia\Validator\Text;
@@ -32,6 +31,7 @@ class Migrate extends Action
             ->inject('getProjectDB')
             ->inject('register')
             ->inject('authorization')
+            ->inject('console')
             ->callback($this->action(...));
     }
 
@@ -48,7 +48,8 @@ class Migrate extends Action
         Database $dbForPlatform,
         callable $getProjectDB,
         Registry $register,
-        Authorization $authorization
+        Authorization $authorization,
+        Document $console
     ): void {
 
         if (!\array_key_exists($version, Migration::$versions)) {
@@ -124,8 +125,6 @@ class Migrate extends Action
 
             Console::log('Migrated ' . ++$count . '/' . $total . ' projects...');
         });
-
-        $console = (new Http('UTC'))->getResource('console');
 
         try {
             $migration

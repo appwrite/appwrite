@@ -33,7 +33,9 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\DI\Container;
 use Utopia\DSN\DSN;
+use Utopia\Http\Adapter\FPM\Server as HttpServer;
 use Utopia\Http\Http;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
@@ -47,6 +49,8 @@ use Utopia\WebSocket\Server;
  * @var Registry $register
  */
 require_once __DIR__ . '/init.php';
+
+$registerRequestResources ??= require __DIR__ . '/init/resources/request.php';
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
@@ -240,6 +244,11 @@ if (!function_exists('triggerStats')) {
         return;
     }
 }
+
+global $container;
+$container->set('pools', function ($register) {
+    return $register->get('pools');
+}, ['register']);
 
 $realtime = getRealtime();
 
@@ -615,16 +624,22 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     Console::error('Failed to restart pub/sub...');
 });
 
-$server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime) {
-    $app = new Http('UTC');
+$server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime, $registerRequestResources) {
+    global $container;
     $request = new Request($request);
     $response = new Response(new SwooleResponse());
 
     Console::info("Connection open (user: {$connection})");
 
-    Http::setResource('pools', fn () => $register->get('pools'));
-    Http::setResource('request', fn () => $request);
-    Http::setResource('response', fn () => $response);
+    $connectionContainer = new Container($container);
+
+    $adapter = new HttpServer($connectionContainer);
+    $app = new Http($adapter, 'UTC');
+    $connectionContainer->set('utopia', fn () => $app);
+    $connectionContainer->set('request', fn () => $request);
+    $connectionContainer->set('response', fn () => $response);
+
+    $registerRequestResources($connectionContainer);
 
     $project = null;
     $logUser = null;
