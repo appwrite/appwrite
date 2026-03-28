@@ -61,6 +61,13 @@ services:
     container_name: appwrite
     <<: [*x-logging, *x-build]
     image: appwrite-dev
+    build:
+      context: .
+      target: development
+      args:
+        DEBUG: true
+        TESTING: true
+        VERSION: dev
     healthcheck:
       test: ["CMD", "doctor"]
       interval: 5s

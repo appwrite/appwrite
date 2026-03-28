@@ -1,3 +1,11 @@
+# Unreleased
+
+## What's Changed
+
+* Alphabetically sorted .env.dist and dev/xdebug.ini
+* Enable DEBUG build arg in docker-compose.yml for development builds
+* Fix XDebug port to 9003 for XDebug 3 compatibility in CONTRIBUTING.md
+
 # Version 1.9.0
 
 ## What's Changed
