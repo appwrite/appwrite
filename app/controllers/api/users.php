@@ -14,6 +14,7 @@ use Appwrite\Detector\Detector;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Filter\Name;
 use Appwrite\Hooks\Hooks;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -76,6 +77,9 @@ use Utopia\Validator\WhiteList;
 function createUser(Hash $hash, string $userId, ?string $email, ?string $password, ?string $phone, ?string $name, Document $project, Database $dbForProject, Hooks $hooks): Document
 {
     $name = $name ?? '';
+
+    $name = (new Name())->apply($name);
+
     $plaintextPassword = $password;
     $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
 
@@ -1321,6 +1325,7 @@ Http::patch('/v1/users/:userId/name')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->action(function (string $userId, string $name, Response $response, Database $dbForProject, Event $queueForEvents) {
+        $name = (new Name())->apply($name);
 
         $user = $dbForProject->getDocument('users', $userId);
 

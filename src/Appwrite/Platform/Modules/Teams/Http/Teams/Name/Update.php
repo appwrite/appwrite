@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Teams\Http\Teams\Name;
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Filter\Name;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -58,6 +59,8 @@ class Update extends Action
 
     public function action(string $teamId, string $name, Response $response, Database $dbForProject, Event $queueForEvents)
     {
+        $name = (new Name())->apply($name);
+
         $team = $dbForProject->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
