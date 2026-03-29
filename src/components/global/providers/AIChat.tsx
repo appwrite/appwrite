@@ -4,6 +4,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -12,12 +13,14 @@ import { useLocation, useParams } from '@tanstack/react-router'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { toast } from 'sonner'
 import {
+  Check,
   ChevronsUpDown,
   ChevronLeft,
   ChevronRight,
+  Copy,
   Paperclip,
   Loader2,
-  MessageSquare,
+  Pencil,
   Plus,
   Send,
   Trash2,
@@ -25,7 +28,6 @@ import {
   ZoomIn,
   ZoomOut,
   Lightbulb,
-  GripVertical,
   ExternalLink,
   Maximize2,
 } from 'lucide-react'
@@ -45,12 +47,12 @@ import {
 import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { StreamingMarkdown } from '@/components/global/shared/StreamingMarkdown'
-import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import {
   useAssistantConversations,
   useAssistantAttachmentFiles,
   useAssistantMessages,
+  ASSISTANT_MESSAGES_PAGE_SIZE,
   useCreateAssistantConversation,
   useCreateAssistantMessage,
   useDeleteAssistantConversation,
@@ -224,9 +226,15 @@ interface AssistantMessageRowProps {
   role: string
   messageText: string
   messageAttachments?: string[]
-  messageCreatedAt?: string
   deferCodeBlocks: boolean
   placeholderCandidates: Partial<Record<PlaceholderToken, string[]>>
+  copied: boolean
+  onCopyMessage: (messageId: string, text: string) => void
+  onStartEditResend: (
+    messageId: string,
+    text: string,
+    attachmentIds: string[],
+  ) => void
 }
 
 interface MessageAttachmentsProps {
@@ -270,6 +278,18 @@ function formatAttachmentSize(size?: number): string | null {
 
 function getPreviewAspectClass(isPortrait: boolean): string {
   return isPortrait ? 'aspect-[9/16]' : 'aspect-video'
+}
+
+function isRtlMessageText(text: string): boolean {
+  // Detect first strong-direction character and treat Arabic/Hebrew scripts as RTL.
+  for (const character of text) {
+    if (/\s/.test(character)) continue
+    if (/[A-Za-z0-9]/.test(character)) return false
+    if (/[\u0590-\u05FF\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(character)) {
+      return true
+    }
+  }
+  return false
 }
 
 function MessageAttachments({
@@ -838,8 +858,8 @@ function MessageAttachments({
                       className={cn(
                         'relative aspect-square w-28 shrink-0 cursor-pointer overflow-hidden rounded-md border bg-muted/20 transition-colors sm:w-32',
                         index === fullscreenAttachment
-                          ? 'border-primary ring-1 ring-primary/50'
-                          : 'border-border hover:border-primary/50',
+                          ? 'border-primary ring-1 ring-primary/50 classic:border-sidebar-accent classic:ring-sidebar-accent/70'
+                          : 'border-border hover:border-primary/50 classic:hover:border-sidebar-accent',
                       )}
                     >
                       <img
@@ -873,14 +893,20 @@ function MessageAttachments({
 
 const AssistantMessageRow = memo(
   function AssistantMessageRow({
+    messageId,
     role,
     messageText,
     messageAttachments,
-    messageCreatedAt,
     deferCodeBlocks,
     placeholderCandidates,
+    copied,
+    onCopyMessage,
+    onStartEditResend,
   }: AssistantMessageRowProps) {
     const isUserMessage = role.toLowerCase() === 'user'
+    const isRtlMessage = useMemo(() => isRtlMessageText(messageText), [messageText])
+    const alignRight = isUserMessage ? !isRtlMessage : isRtlMessage
+    const attachmentsAlignment: 'left' | 'right' = alignRight ? 'right' : 'left'
     const placeholderTokens = useMemo(
       () => extractPlaceholderTokens(messageText),
       [messageText],
@@ -922,30 +948,112 @@ const AssistantMessageRow = memo(
     }, [messageText])
 
     return (
-      <div className="space-y-1.5">
+      <div className="group/message cursor-default space-y-1.5">
         <div
-          className={cn('flex', isUserMessage ? 'justify-end' : 'justify-start')}
+          className={cn('flex', alignRight ? 'justify-end' : 'justify-start')}
         >
           {isUserMessage ? (
-            <div className="max-w-[88%]">
+            <div
+              className={cn(
+                'flex max-w-[88%] flex-col',
+                alignRight ? 'items-end' : 'items-start',
+              )}
+            >
               <div
+                dir={isRtlMessage ? 'rtl' : 'ltr'}
                 className={cn(
-                  'rounded-md bg-primary px-2.5 py-1.5 text-[13px] whitespace-pre-wrap text-primary-foreground',
+                  'inline-block max-w-full cursor-default rounded-md bg-primary px-2.5 py-1.5 text-[13px] whitespace-pre-wrap text-primary-foreground classic:bg-sidebar-accent classic:text-sidebar-foreground',
                 )}
               >
                 {messageText}
               </div>
-              <MessageAttachments attachmentIds={messageAttachments} alignment="right" />
-              {messageCreatedAt ? (
-                <DateTooltip
-                  date={messageCreatedAt}
-                  live
-                  className="mt-1 block text-right text-[10px] text-muted-foreground"
-                />
-              ) : null}
+              <MessageAttachments
+                attachmentIds={messageAttachments}
+                alignment={attachmentsAlignment}
+              />
+              <div
+                dir="ltr"
+                className={cn(
+                  'mt-1 flex h-5 w-full items-center gap-0.5 opacity-0 transition-opacity duration-150 pointer-events-none group-hover/message:opacity-100 group-hover/message:pointer-events-auto group-focus-within/message:opacity-100 group-focus-within/message:pointer-events-auto',
+                  alignRight ? 'justify-end' : 'justify-start',
+                )}
+              >
+                {/* time ago hidden for now */}
+                {alignRight ? (
+                  <>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
+                      onClick={() => onCopyMessage(messageId, messageText)}
+                      aria-label="Copy message"
+                    >
+                      {copied ? (
+                        <Check className="h-2.5 w-2.5" />
+                      ) : (
+                        <Copy className="h-2.5 w-2.5" />
+                      )}
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
+                      onClick={() =>
+                        onStartEditResend(
+                          messageId,
+                          messageText,
+                          messageAttachments ?? [],
+                        )
+                      }
+                      aria-label="Edit and resend message"
+                    >
+                      <Pencil className="h-2.5 w-2.5" />
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
+                      onClick={() =>
+                        onStartEditResend(
+                          messageId,
+                          messageText,
+                          messageAttachments ?? [],
+                        )
+                      }
+                      aria-label="Edit and resend message"
+                    >
+                      <Pencil className="h-2.5 w-2.5" />
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
+                      onClick={() => onCopyMessage(messageId, messageText)}
+                      aria-label="Copy message"
+                    >
+                      {copied ? (
+                        <Check className="h-2.5 w-2.5" />
+                      ) : (
+                        <Copy className="h-2.5 w-2.5" />
+                      )}
+                    </Button>
+                  </>
+                )}
+                {/* time ago hidden for now */}
+              </div>
             </div>
           ) : (
-            <div className="max-w-[88%] rounded-md bg-card px-2.5 py-1.5 text-[13px] text-foreground">
+            <div
+              dir={isRtlMessage ? 'rtl' : 'ltr'}
+              className="max-w-[88%] cursor-default px-2.5 py-1.5 text-[13px] text-foreground"
+            >
               <div className="space-y-2">
                 {unresolvedSelectableTokens.length > 0 && (
                   <div className="rounded-md border border-border bg-muted/20 p-2">
@@ -994,12 +1102,38 @@ const AssistantMessageRow = memo(
                   content={resolvedAssistantText}
                   deferCodeBlocks={deferCodeBlocks}
                 />
+                <div
+                  dir={isRtlMessage ? 'rtl' : 'ltr'}
+                  className={cn(
+                    'mt-1 flex h-5 w-full items-center justify-start gap-0.5 opacity-0 transition-opacity duration-150 pointer-events-none group-hover/message:opacity-100 group-hover/message:pointer-events-auto group-focus-within/message:opacity-100 group-focus-within/message:pointer-events-auto',
+                  )}
+                >
+                  {/* time ago hidden for now */}
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="h-4 w-4 p-0 text-muted-foreground hover:text-foreground"
+                    onClick={() => onCopyMessage(messageId, messageText)}
+                    aria-label="Copy message"
+                  >
+                    {copied ? (
+                      <Check className="h-2.5 w-2.5" />
+                    ) : (
+                      <Copy className="h-2.5 w-2.5" />
+                    )}
+                  </Button>
+                  {/* time ago hidden for now */}
+                </div>
               </div>
             </div>
           )}
         </div>
         {!isUserMessage ? (
-          <MessageAttachments attachmentIds={messageAttachments} alignment="left" />
+          <MessageAttachments
+            attachmentIds={messageAttachments}
+            alignment={attachmentsAlignment}
+          />
         ) : null}
       </div>
     )
@@ -1009,9 +1143,9 @@ const AssistantMessageRow = memo(
     prev.role === next.role &&
     prev.messageText === next.messageText &&
     prev.messageAttachments === next.messageAttachments &&
-    prev.messageCreatedAt === next.messageCreatedAt &&
     prev.deferCodeBlocks === next.deferCodeBlocks &&
-    prev.placeholderCandidates === next.placeholderCandidates,
+    prev.placeholderCandidates === next.placeholderCandidates &&
+    prev.copied === next.copied,
 )
 
 export function AIChatPanel() {
@@ -1034,6 +1168,13 @@ export function AIChatPanel() {
   )
   const showPanel = overrides.showAIAssistant
   const [input, setInput] = useState('')
+  const [messagesLimit, setMessagesLimit] = useState(ASSISTANT_MESSAGES_PAGE_SIZE)
+  const [isLoadingOlderMessages, setIsLoadingOlderMessages] = useState(false)
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null)
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
+  const [editingMessageAttachments, setEditingMessageAttachments] = useState<string[]>(
+    [],
+  )
   const [pendingAttachments, setPendingAttachments] = useState<
     ComposerPendingAttachment[]
   >([])
@@ -1058,9 +1199,16 @@ export function AIChatPanel() {
   })
   const [isResizing, setIsResizing] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
+  const copiedMessageTimeoutRef = useRef<number | null>(null)
+  const previousConversationIdRef = useRef<string | null>(null)
+  const previousLatestMessageIdRef = useRef<string | null>(null)
+  const olderMessagesAnchorRef = useRef<{ scrollTop: number; scrollHeight: number } | null>(
+    null,
+  )
   const {
     data: conversationsData,
     isLoading: conversationsLoading,
@@ -1120,8 +1268,16 @@ export function AIChatPanel() {
     project?.teamId,
   ])
 
-  const { data: messagesData } = useAssistantMessages(activeConversationId)
-  const messages: AssistantMessage[] = messagesData ?? []
+  const { data: messagesData, isFetching: isFetchingMessages } = useAssistantMessages(
+    activeConversationId,
+    messagesLimit,
+  )
+  const messages: AssistantMessage[] = messagesData?.messages ?? []
+  const totalMessages = messagesData?.total ?? messages.length
+  const hasOlderMessages = totalMessages > messages.length
+  const { data: editingAttachmentFilesData } = useAssistantAttachmentFiles(
+    editingMessageAttachments,
+  )
   const latestMessageId = messages[messages.length - 1]?.$id
   const latestMessage = messages[messages.length - 1]
 
@@ -1159,17 +1315,49 @@ export function AIChatPanel() {
     () => [...pendingAttachments].reverse(),
     [pendingAttachments],
   )
-  const focusInput = useCallback(() => {
+  const isInputRtl = useMemo(() => isRtlMessageText(input), [input])
+  const focusInput = useCallback((placeCursorAtEnd = false) => {
     if (typeof window === 'undefined') return
     window.setTimeout(() => {
-      inputRef.current?.focus()
+      const inputElement = inputRef.current
+      if (!inputElement) return
+      inputElement.focus()
+
+      if (placeCursorAtEnd) {
+        const endPosition = inputElement.value.length
+        inputElement.setSelectionRange(endPosition, endPosition)
+      }
     }, 0)
   }, [])
 
-  // Auto-scroll to bottom when new messages arrive
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  useLayoutEffect(() => {
+    const conversationId = activeConversationId ?? null
+    const currentLatestMessageId = latestMessageId ?? null
+    const conversationChanged = previousConversationIdRef.current !== conversationId
+
+    if (olderMessagesAnchorRef.current && messagesContainerRef.current) {
+      const { scrollTop, scrollHeight } = olderMessagesAnchorRef.current
+      const newScrollHeight = messagesContainerRef.current.scrollHeight
+      messagesContainerRef.current.scrollTop =
+        scrollTop + (newScrollHeight - scrollHeight)
+      olderMessagesAnchorRef.current = null
+    } else {
+      const latestMessageChanged =
+        previousLatestMessageIdRef.current !== currentLatestMessageId
+
+      if (
+        currentLatestMessageId &&
+        (conversationChanged || latestMessageChanged)
+      ) {
+        messagesEndRef.current?.scrollIntoView({
+          behavior: conversationChanged ? 'auto' : 'smooth',
+        })
+      }
+    }
+
+    previousConversationIdRef.current = conversationId
+    previousLatestMessageIdRef.current = currentLatestMessageId
+  }, [activeConversationId, latestMessageId, messages.length])
 
   // Focus input when panel opens
   useEffect(() => {
@@ -1184,6 +1372,14 @@ export function AIChatPanel() {
       localStorage.setItem(STORAGE_KEY, width.toString())
     }
   }, [width])
+
+  useEffect(() => {
+    return () => {
+      if (copiedMessageTimeoutRef.current !== null) {
+        window.clearTimeout(copiedMessageTimeoutRef.current)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     pendingAttachmentsRef.current = pendingAttachments
@@ -1207,6 +1403,16 @@ export function AIChatPanel() {
 
     setActiveConversationId(null)
   }, [activeConversationId, conversations, setActiveConversationId])
+
+  useEffect(() => {
+    setMessagesLimit(ASSISTANT_MESSAGES_PAGE_SIZE)
+  }, [activeConversationId])
+
+  useEffect(() => {
+    if (isLoadingOlderMessages && !isFetchingMessages) {
+      setIsLoadingOlderMessages(false)
+    }
+  }, [isFetchingMessages, isLoadingOlderMessages])
 
   // Handle resize drag
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -1380,6 +1586,12 @@ export function AIChatPanel() {
     })
   }, [])
 
+  const handleRemoveEditingAttachment = useCallback((attachmentId: string) => {
+    setEditingMessageAttachments((previous) =>
+      previous.filter((id) => id !== attachmentId),
+    )
+  }, [])
+
   const handleSend = async (content: string = input) => {
     const trimmed = content.trim()
     if (!trimmed || createMessageMutation.isPending || isWaitingForAttachments) return
@@ -1428,23 +1640,31 @@ export function AIChatPanel() {
         return
       }
 
-      const attachmentIds = pendingAttachmentsRef.current
+      const pendingAttachmentIds = pendingAttachmentsRef.current
         .filter(
           (attachment): attachment is ComposerPendingAttachment & { fileId: string } =>
             attachment.status === 'ready' && !!attachment.fileId,
         )
         .map((attachment) => attachment.fileId)
 
-      setPendingAttachments([])
-      setComposerImageOrientations({})
+      const attachmentIds = editingMessageId
+        ? Array.from(
+            new Set([...editingMessageAttachments, ...pendingAttachmentIds]),
+          )
+        : pendingAttachmentIds
+
+      if (editingMessageId) {
+        setEditingMessageId(null)
+        setEditingMessageAttachments([])
+      }
 
       await createMessageMutation.mutateAsync({
         conversationId,
         contentText: trimmed,
         context: {
-          contextTeamId: params.orgId ?? params.teamId,
+          contextTeamId: params.orgId ?? params.teamId ?? project?.teamId,
           contextProjectId: params.projectId ?? activeConversation?.projectId,
-          contextOrganizationId: params.orgId,
+          contextOrganizationId: params.orgId ?? params.teamId ?? project?.teamId,
           contextPagePath: location.pathname,
           contextPageTitle:
             typeof document !== 'undefined' ? document.title : undefined,
@@ -1454,6 +1674,9 @@ export function AIChatPanel() {
         attachments: attachmentIds,
         continueRun: true,
       })
+
+      setPendingAttachments([])
+      setComposerImageOrientations({})
     } catch (error) {
       // Keep selected attachments in place when message send fails.
       toast.error(getErrorMessage(error, 'Failed to send message'))
@@ -1461,6 +1684,60 @@ export function AIChatPanel() {
       setIsWaitingForAttachments(false)
     }
   }
+
+  const handleCopyMessage = useCallback(async (messageId: string, text: string) => {
+    const trimmed = text.trim()
+    if (!trimmed) return
+    try {
+      await navigator.clipboard.writeText(trimmed)
+      setCopiedMessageId(messageId)
+      if (copiedMessageTimeoutRef.current !== null) {
+        window.clearTimeout(copiedMessageTimeoutRef.current)
+      }
+      copiedMessageTimeoutRef.current = window.setTimeout(() => {
+        setCopiedMessageId(null)
+      }, 1500)
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Failed to copy message'))
+    }
+  }, [])
+
+  const handleStartEditResend = useCallback(
+    (messageId: string, text: string, attachmentIds: string[]) => {
+      setEditingMessageId(messageId)
+      setEditingMessageAttachments(attachmentIds)
+      setPendingAttachments([])
+      setComposerImageOrientations({})
+      setInput(text)
+      focusInput(true)
+    },
+    [focusInput],
+  )
+
+  const handleCancelEditResend = useCallback(() => {
+    setEditingMessageId(null)
+    setEditingMessageAttachments([])
+    setPendingAttachments([])
+    setComposerImageOrientations({})
+    setInput('')
+  }, [])
+
+  const handleLoadOlderMessages = useCallback(() => {
+    if (!hasOlderMessages || isFetchingMessages || isLoadingOlderMessages) return
+
+    const container = messagesContainerRef.current
+    if (container) {
+      olderMessagesAnchorRef.current = {
+        scrollTop: container.scrollTop,
+        scrollHeight: container.scrollHeight,
+      }
+    }
+
+    setIsLoadingOlderMessages(true)
+    setMessagesLimit((current) =>
+      Math.min(current + ASSISTANT_MESSAGES_PAGE_SIZE, totalMessages),
+    )
+  }, [hasOlderMessages, isFetchingMessages, isLoadingOlderMessages, totalMessages])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -1484,14 +1761,10 @@ export function AIChatPanel() {
       <div
         onMouseDown={handleMouseDown}
         className={cn(
-          'absolute left-0 top-0 z-10 flex h-full w-1.5 cursor-col-resize items-center justify-center transition-colors hover:bg-primary/20',
-          isResizing && 'bg-primary/30',
+          'absolute left-0 top-0 z-10 flex h-full w-1.5 cursor-col-resize items-center justify-center transition-colors hover:bg-primary/20 classic:hover:bg-sidebar-accent/60',
+          isResizing && 'bg-primary/30 classic:bg-sidebar-accent/70',
         )}
-      >
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 opacity-0 transition-opacity hover:opacity-100">
-          <GripVertical className="h-6 w-6 text-muted-foreground" />
-        </div>
-      </div>
+      />
 
       <div className="flex h-full min-h-0">
         <div className="flex min-w-0 flex-1 flex-col">
@@ -1509,9 +1782,6 @@ export function AIChatPanel() {
                       className="h-8 max-w-[248px] justify-start px-1.5 text-left"
                     >
                       <div className="flex min-w-0 items-center gap-1.5">
-                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10">
-                          <MessageSquare className="h-3.5 w-3.5 text-primary" />
-                        </div>
                         <div className="min-w-0">
                           <p className="truncate text-[13px] font-semibold text-foreground">
                             {activeConversation?.title || 'New conversation'}
@@ -1547,7 +1817,7 @@ export function AIChatPanel() {
                             <div
                               key={conversation.$id}
                               className={cn(
-                                'group flex items-center gap-1 rounded-md border border-transparent px-1.5 py-1 transition-colors',
+                                'group flex cursor-pointer items-center gap-1 rounded-md border border-transparent px-1.5 py-1 transition-colors',
                                 isActive
                                   ? 'border-border bg-accent'
                                   : 'hover:border-border hover:bg-accent/60',
@@ -1559,7 +1829,7 @@ export function AIChatPanel() {
                                   setActiveConversationId(conversation.$id)
                                   setConversationsPopoverOpen(false)
                                 }}
-                                className="min-w-0 flex-1 text-left"
+                                className="min-w-0 flex-1 cursor-pointer text-left"
                               >
                                 <p className="truncate text-[12px] font-medium text-foreground">
                                   {conversation.title || 'Untitled conversation'}
@@ -1612,11 +1882,11 @@ export function AIChatPanel() {
             </div>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto p-3">
+          <div ref={messagesContainerRef} className="min-h-0 flex-1 overflow-y-auto p-3">
             {messages.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center">
-                <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-                  <Lightbulb className="h-8 w-8 text-primary" />
+                <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 classic:bg-sidebar-accent">
+                  <Lightbulb className="h-8 w-8 text-primary classic:text-sidebar-foreground" />
                 </div>
                 <h3 className="mb-2 text-lg font-semibold text-foreground">
                   How can I help you?
@@ -1638,6 +1908,27 @@ export function AIChatPanel() {
               </div>
             ) : (
               <div className="space-y-3">
+                {hasOlderMessages ? (
+                  <div className="flex justify-center">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={isFetchingMessages || isLoadingOlderMessages}
+                      className="h-7 px-2 text-[11px] text-muted-foreground"
+                      onClick={handleLoadOlderMessages}
+                    >
+                      {isLoadingOlderMessages ? (
+                        <>
+                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                          Loading older messages...
+                        </>
+                      ) : (
+                        'Load older messages'
+                      )}
+                    </Button>
+                  </div>
+                ) : null}
                 {messages.map((message: AssistantMessage) => {
                   const messageText = message.contentText || ''
                   const messageAttachments = getMessageAttachments(message)
@@ -1657,8 +1948,10 @@ export function AIChatPanel() {
                       role={message.role}
                       messageText={messageText}
                       messageAttachments={messageAttachments}
-                      messageCreatedAt={message.$createdAt}
                       placeholderCandidates={placeholderCandidates}
+                      copied={copiedMessageId === message.$id}
+                      onCopyMessage={handleCopyMessage}
+                      onStartEditResend={handleStartEditResend}
                       deferCodeBlocks={
                         isThinking && message.$id === latestMessageId
                       }
@@ -1667,7 +1960,7 @@ export function AIChatPanel() {
                 })}
                 {isThinking && (
                   <div className="flex">
-                    <div className="flex items-center gap-1.5 rounded-md bg-card px-2.5 py-1.5 text-[13px] text-muted-foreground">
+                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 text-[13px] text-muted-foreground">
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
                       <span>Thinking...</span>
                     </div>
@@ -1679,6 +1972,105 @@ export function AIChatPanel() {
           </div>
 
           <div className="shrink-0 border-t border-border p-3">
+            {editingMessageId ? (
+              <div className="mb-2 flex items-center justify-between rounded-md border border-border bg-muted/20 px-2.5 py-1.5">
+                <p className="truncate text-[11px] text-muted-foreground">
+                  Editing message{editingMessageAttachments.length > 0
+                    ? ` (${editingMessageAttachments.length} attachment${editingMessageAttachments.length > 1 ? 's' : ''} selected)`
+                    : ''}
+                </p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-[11px]"
+                  onClick={handleCancelEditResend}
+                >
+                  Cancel
+                </Button>
+              </div>
+            ) : null}
+            {editingMessageId && editingMessageAttachments.length > 0 ? (
+              <div className="mb-2 overflow-x-auto">
+                <div className="flex min-w-max flex-nowrap gap-1.5 pb-1">
+                  {editingMessageAttachments.map((attachmentId) => {
+                    const attachmentFile = editingAttachmentFilesData?.find(
+                      (file) => file.$id === attachmentId,
+                    )
+                    const attachmentName =
+                      attachmentFile?.name ||
+                      `Attachment ${attachmentId.slice(0, 8)}`
+                    const isImageAttachment = attachmentFile?.mimeType?.startsWith('image/')
+                    const attachmentSize =
+                      typeof attachmentFile?.sizeOriginal === 'number'
+                        ? formatAttachmentSize(attachmentFile.sizeOriginal)
+                        : null
+
+                    return (
+                      <div
+                        key={attachmentId}
+                        className="w-40 shrink-0 rounded-md border border-border bg-muted/20 p-1.5"
+                      >
+                        {isImageAttachment ? (
+                          <img
+                            src={sdk.forConsole.storage.getFilePreview({
+                              bucketId: ASSISTANT_ATTACHMENTS_BUCKET_ID,
+                              fileId: attachmentId,
+                              height: 240,
+                            })}
+                            alt={attachmentName}
+                            onLoad={(event) => {
+                              const image = event.currentTarget as HTMLImageElement
+                              const orientation =
+                                image.naturalHeight > image.naturalWidth
+                                  ? 'portrait'
+                                  : 'landscape'
+                              setComposerImageOrientations((previous) =>
+                                previous[attachmentId] === orientation
+                                  ? previous
+                                  : { ...previous, [attachmentId]: orientation },
+                              )
+                            }}
+                            className={cn(
+                              'mb-1 w-full rounded object-cover',
+                              getPreviewAspectClass(
+                                composerImageOrientations[attachmentId] ===
+                                  'portrait',
+                              ),
+                            )}
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="mb-1 flex aspect-video w-full items-center justify-center rounded bg-muted/40">
+                            <Paperclip className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                        )}
+                        <div className="flex items-start gap-1.5">
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-[11px] font-medium text-foreground">
+                              {attachmentName}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground">
+                              {attachmentSize ?? 'Ready'}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleRemoveEditingAttachment(attachmentId)
+                            }
+                            className="rounded p-0.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                            aria-label={`Remove ${attachmentName}`}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            ) : null}
             {pendingAttachments.length > 0 ? (
               <div className="mb-2 overflow-x-auto">
                 <div className="flex min-w-max flex-nowrap gap-1.5 pb-1">
@@ -1762,7 +2154,8 @@ export function AIChatPanel() {
                 onChange={(e) => setInput(e.target.value)}
                 onPaste={handleInputPaste}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask a question..."
+                placeholder={editingMessageId ? 'Edit message...' : 'Ask a question...'}
+                dir={isInputRtl ? 'rtl' : 'ltr'}
                 rows={1}
                 className="max-h-32 min-h-[34px] flex-1 resize-none bg-transparent px-1.5 py-1 text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none"
                 style={{

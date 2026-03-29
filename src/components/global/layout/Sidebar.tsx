@@ -433,7 +433,7 @@ export function ConsoleSidebar({
       {/* Desktop Sidebar - GPU layer + width-only transition to reduce lag */}
       <aside
         className={cn(
-          'relative hidden flex-col border-r border-border bg-background lg:flex',
+          'relative hidden flex-col border-r border-border bg-background @[1024px]:flex',
           'h-full flex-shrink-0 overflow-visible',
           'transition-[width] duration-150 ease-out',
           '[transform:translateZ(0)] [backface-visibility:hidden]',
@@ -487,7 +487,7 @@ export function ConsoleSidebar({
       {/* Mobile Sidebar - GPU-accelerated transform; inert when closed so it's skipped in tab order */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col border-r border-border bg-background',
+          'fixed inset-y-0 left-0 z-[130] flex w-[280px] flex-col border-r border-border bg-background',
           'transition-transform duration-200 ease-out [backface-visibility:hidden]',
           mobileOpen ? 'translate-x-0' : '-translate-x-full',
         )}

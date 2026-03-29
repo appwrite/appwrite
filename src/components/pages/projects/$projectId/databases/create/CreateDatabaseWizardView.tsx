@@ -21,7 +21,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { createProjectDatabase } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -88,6 +88,7 @@ function validateDatabaseId(id: string): boolean {
 export function CreateDatabaseWizardView() {
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const pid = projectId as string
   const { features } = useConsoleProfile()
 
@@ -128,11 +129,15 @@ export function CreateDatabaseWizardView() {
   const createMutation = useMutation({
     mutationFn: (data: { databaseId?: string; name: string }) =>
       createProjectDatabase(pid, data),
-    onSuccess: () => {
+    onSuccess: async (database) => {
+      await queryClient.refetchQueries({
+        queryKey: ['databases', 'project', pid],
+        type: 'all',
+      })
       toast.success('Database created')
       navigate({
-        to: '/projects/$projectId/databases',
-        params: { projectId: pid },
+        to: '/projects/$projectId/databases/$databaseId',
+        params: { projectId: pid, databaseId: database.$id },
       })
     },
     onError: (error) => {

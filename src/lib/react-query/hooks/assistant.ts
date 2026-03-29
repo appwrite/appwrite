@@ -1,4 +1,5 @@
 import {
+  keepPreviousData,
   queryOptions,
   useMutation,
   useQuery,
@@ -8,6 +9,8 @@ import { ContentType, ID, Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { getProjectRegion, sdk } from '@/lib/appwrite/sdk'
 import { DEFAULT_STALE_TIME } from './constants'
+
+export const ASSISTANT_MESSAGES_PAGE_SIZE = 25
 
 function toAssistantQueries(queries: string[]): string {
   // Assistant SDK typing currently expects `string`, while backend requires an
@@ -23,14 +26,25 @@ export async function fetchAssistantConversations() {
   return response.conversations ?? []
 }
 
-export async function fetchAssistantMessages(conversationId: string) {
-  if (!conversationId) return []
+export async function fetchAssistantMessages(
+  conversationId: string,
+  limit: number = ASSISTANT_MESSAGES_PAGE_SIZE,
+) {
+  if (!conversationId) {
+    return { messages: [], total: 0 }
+  }
   const response = await sdk.forConsole.assistant.listMessages({
     conversationId,
-    queries: toAssistantQueries([Query.orderAsc('$createdAt')]),
+    queries: toAssistantQueries([
+      Query.orderDesc('$createdAt'),
+      Query.limit(limit),
+    ]),
   })
-  const messages = response.messages ?? []
-  return messages
+  const messages = (response.messages ?? []).slice().reverse()
+  return {
+    messages,
+    total: response.total ?? messages.length,
+  }
 }
 export interface AssistantMessageContext {
   contextTeamId?: string
@@ -53,11 +67,13 @@ export function assistantConversationsQueryOptions() {
 
 export function assistantMessagesQueryOptions(
   conversationId: string | null | undefined,
+  limit: number = ASSISTANT_MESSAGES_PAGE_SIZE,
 ) {
   return queryOptions({
-    queryKey: ['assistant', 'messages', conversationId],
-    queryFn: () => fetchAssistantMessages(conversationId!),
+    queryKey: ['assistant', 'messages', conversationId, limit],
+    queryFn: () => fetchAssistantMessages(conversationId!, limit),
     enabled: !!conversationId,
+    placeholderData: keepPreviousData,
     staleTime: DEFAULT_STALE_TIME,
   })
 }
@@ -98,8 +114,9 @@ export function useAssistantConversations() {
 
 export function useAssistantMessages(
   conversationId: string | null | undefined,
+  limit: number = ASSISTANT_MESSAGES_PAGE_SIZE,
 ) {
-  return useQuery(assistantMessagesQueryOptions(conversationId))
+  return useQuery(assistantMessagesQueryOptions(conversationId, limit))
 }
 
 export function useAssistantAttachmentFiles(fileIds: string[]) {

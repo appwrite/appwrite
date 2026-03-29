@@ -171,7 +171,7 @@ code {
 }
 
 /*
- * Classic — legacy Appwrite cloud console (Pink) palette: neutral surfaces + brand pink (#fd366e)
+ * Classic — legacy Appwrite cloud console palette: neutral surfaces + pink only for CTA
  * and purple secondary; Inter body / Poppins headings. Debug menu only.
  * Tokens aligned with console/src/themes/dark-cloud.json
  */
@@ -196,22 +196,40 @@ code {
   --destructive-foreground: rgb(255 255 255);
   --border: rgb(45 45 49);
   --input: rgb(45 45 49);
-  --ring: rgb(253 54 110);
+  --ring: rgb(129 129 134);
   --chart-1: rgb(124 103 254);
   --chart-2: rgb(133 219 216);
   --chart-3: rgb(104 163 254);
   --chart-4: rgb(254 149 103);
   --chart-5: rgb(254 211 103);
-  --chart-brand: rgb(253 54 110);
+  --chart-brand: rgb(45 45 49);
   --radius: 0.5rem;
   --sidebar: rgb(20 20 22);
   --sidebar-foreground: rgb(237 237 240);
-  --sidebar-primary: rgb(253 54 110);
+  --sidebar-primary: rgb(237 237 240);
   --sidebar-primary-foreground: rgb(255 255 255);
   --sidebar-accent: rgb(45 45 49);
   --sidebar-accent-foreground: rgb(237 237 240);
   --sidebar-border: rgb(45 45 49);
-  --sidebar-ring: rgb(253 54 110);
+  --sidebar-ring: rgb(129 129 134);
+}
+
+/*
+ * Keep debug dark-chrome themes on the same readable text/icon baseline as dark.
+ * This prevents dark-on-dark combinations from custom palette experiments.
+ */
+.classic,
+.crazy,
+.stealth {
+  --foreground: oklch(0.985 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --muted-foreground: oklch(0.705 0.015 286.067);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
 }
 
 .stealth {

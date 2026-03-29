@@ -15,6 +15,7 @@ import { Copy, Check, Maximize2 } from 'lucide-react'
 import { Highlight, Prism, themes } from 'prism-react-renderer'
 import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils'
+import { isResolvedThemeDarkChrome } from '@/lib/html-theme'
 import { Button } from '@/components/ui/button'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { toast } from 'sonner'
@@ -232,7 +233,9 @@ export function CodeBlock({
   }
 
   const effectiveLanguage = extrasReady ? prismLanguage : 'plaintext'
-  const prismTheme = resolvedTheme === 'dark' ? themes.vsDark : themes.vsLight
+  const prismTheme = isResolvedThemeDarkChrome(resolvedTheme)
+    ? themes.vsDark
+    : themes.vsLight
 
   const renderCopyButton = () => {
     if (!showCopy) return null

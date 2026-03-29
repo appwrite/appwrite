@@ -164,7 +164,7 @@ export function ConsoleHeader({
       <header
         className={cn(
           'flex h-14 min-h-14 flex-wrap items-center justify-between gap-1 @[640px]:gap-2 border-b border-border bg-background',
-          'pl-3 pr-3 @[640px]:pl-4 @[640px]:pr-4 @[900px]:pl-0 @[1000px]:pr-6',
+          'pl-3 pr-3 @[640px]:pl-4 @[640px]:pr-4 @[1024px]:pl-0 @[1000px]:pr-6',
           className,
         )}
       >
@@ -174,7 +174,7 @@ export function ConsoleHeader({
           {!isOrgOverview && (
             <button
               onClick={onMenuClick}
-              className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[900px]:hidden"
+              className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[1024px]:hidden"
             >
               <Menu className="h-5 w-5" />
             </button>
@@ -207,13 +207,13 @@ export function ConsoleHeader({
                 <>
                   {/* Desktop: 60px logo column, border continues from nav */}
                   <div
-                    className="hidden h-14 shrink-0 items-center justify-center border-r border-border @[900px]:flex"
+                    className="hidden h-14 shrink-0 items-center justify-center border-r border-border @[1024px]:flex"
                     style={{ width: logoColumnWidth }}
                   >
                     {logoLink()}
                   </div>
                   {/* Mobile */}
-                  {logoLink('@[900px]:hidden')}
+                  {logoLink('@[1024px]:hidden')}
                 </>
               )
             }
@@ -222,12 +222,12 @@ export function ConsoleHeader({
             return (
               <>
                 <div
-                  className="hidden h-14 shrink-0 items-center justify-center @[900px]:flex"
+                  className="hidden h-14 shrink-0 items-center justify-center @[1024px]:flex"
                   style={{ width: logoColumnWidth }}
                 >
                   {logoLink()}
                 </div>
-                {logoLink('@[900px]:hidden')}
+                {logoLink('@[1024px]:hidden')}
               </>
             )
           })()}
@@ -236,8 +236,11 @@ export function ConsoleHeader({
           {!isOrgOverview && (
             <>
               {/* Project Selector */}
-              <div className="hidden min-w-0 @[700px]:block">
-                <ProjectSelector projectId={projectId} />
+              <div className="hidden min-w-0 flex-1 @[700px]:block">
+                <ProjectSelector
+                  projectId={projectId}
+                  className="max-w-full min-w-0"
+                />
               </div>
 
               {/* Connect button - only owners/developers; show when project has never received a ping */}

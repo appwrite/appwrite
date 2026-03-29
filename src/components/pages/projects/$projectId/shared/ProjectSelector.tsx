@@ -440,7 +440,8 @@ export function ProjectSelector({
 
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogContent
-            className="flex h-[100dvh] max-h-none w-screen max-w-none flex-col gap-0 rounded-none border-0 p-0 sm:rounded-none"
+            className="fixed inset-0 left-0 top-0 z-[132] flex h-[100dvh] max-h-none w-[100dvw] max-w-none translate-x-0 translate-y-0 flex-col gap-0 rounded-none border-0 p-0 sm:max-w-none sm:rounded-none"
+            overlayClassName="z-[131]"
             showCloseButton={false}
           >
             <DialogTitle className="sr-only">Select Project</DialogTitle>
@@ -495,7 +496,7 @@ export function ProjectSelector({
         <PopoverTrigger asChild>
           <button
             className={cn(
-              'flex h-9 items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent cursor-pointer',
+              'flex h-9 max-w-full min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent cursor-pointer',
               className,
             )}
           >
@@ -503,7 +504,7 @@ export function ProjectSelector({
               name={resolvedProject.name}
               size="sm"
             />
-            <div className="min-w-0 flex items-center gap-2">
+            <div className="min-w-0 flex flex-1 items-center gap-2 overflow-hidden">
               <p
                 className="truncate text-[13px] font-medium text-foreground"
                 title={`${currentProjectTeam?.name || resolvedTeam.name} / ${resolvedProject.name}`}
@@ -778,7 +779,7 @@ function ProjectSelectorContent({
                           : 'hover:bg-accent/50',
                         isCurrentProject &&
                           selectedProject?.$id !== project.$id &&
-                          'bg-primary/10 hover:bg-primary/20',
+                          'bg-primary/10 hover:bg-primary/20 classic:bg-sidebar-accent classic:hover:bg-sidebar-accent/80',
                       )}
                     >
                       <InitialsAvatar name={project.name} size="sm" />
@@ -1024,7 +1025,7 @@ function MobileProjectSelectorContent({
             </span>
             <button
               onClick={() => setActiveTab('teams')}
-              className="ml-auto cursor-pointer text-[12px] text-primary hover:underline"
+              className="ml-auto cursor-pointer text-[12px] text-primary hover:underline classic:text-muted-foreground"
             >
               Change
             </button>
@@ -1072,7 +1073,7 @@ function MobileProjectSelectorContent({
                             : 'hover:bg-accent/50',
                           isCurrentProject &&
                             selectedProject?.$id !== project.$id &&
-                            'bg-primary/10 hover:bg-primary/20',
+                            'bg-primary/10 hover:bg-primary/20 classic:bg-sidebar-accent classic:hover:bg-sidebar-accent/80',
                         )}
                       >
                         <InitialsAvatar name={project.name} size="sm" />

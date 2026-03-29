@@ -124,13 +124,13 @@ export function ConsoleLayout({
       {/* Mobile sidebar overlay */}
       {sidebar?.mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/60"
+          className="fixed inset-0 z-[120] bg-black/60"
           onClick={sidebar.onMobileClose}
         />
       )}
 
       {/* Sidebar + Content below header - overflow-x-visible so sidebar collapse toggle isn't clipped */}
-      <div className="flex flex-1 min-h-0 overflow-x-visible overflow-y-hidden">
+      <div className="@container flex flex-1 min-h-0 overflow-x-visible overflow-y-hidden">
         {/* Sidebar - only render if sidebar config provided */}
         {sidebar && (
           <ConsoleSidebar
