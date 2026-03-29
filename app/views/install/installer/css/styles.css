@@ -691,6 +691,19 @@ body {
     transform: translateY(10px);
 }
 
+.install-counter {
+    margin-left: auto;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    white-space: nowrap;
+    user-select: none;
+    color: var(--fgcolor-neutral-secondary);
+}
+
+.install-row[data-status='in-progress'] .install-counter:not(:empty) {
+    opacity: 1;
+}
+
 .install-row-toggle {
     margin-left: auto;
     width: 32px;
@@ -895,6 +908,17 @@ body {
     justify-content: flex-end;
     flex-direction: row;
     gap: var(--gap-m);
+}
+
+.install-global-actions {
+    display: flex;
+    justify-content: center;
+    gap: var(--gap-m);
+    padding: var(--space-4) 0;
+}
+
+.install-global-actions.is-hidden {
+    display: none;
 }
 
 .install-error-details .button {

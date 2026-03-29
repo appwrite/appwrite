@@ -390,10 +390,7 @@
                 if (!parsePort(httpPort, 'HTTP')) valid = false;
                 if (!parsePort(httpsPort, 'HTTPS')) valid = false;
 
-                if (!sslEmail || !sslEmail.value.trim()) {
-                    setFieldError?.(sslEmail, 'Please enter an email address for SSL certificates');
-                    valid = false;
-                } else if (!isValidEmail?.(sslEmail.value.trim())) {
+                if (sslEmail && sslEmail.value.trim() && !isValidEmail?.(sslEmail.value.trim())) {
                     setFieldError?.(sslEmail, 'Please enter a valid email address');
                     valid = false;
                 }

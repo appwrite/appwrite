@@ -492,6 +492,8 @@ class Realtime extends MessagingAdapter
                 break;
             case 'databases':
             case 'tablesdb':
+            case 'documentsdb':
+            case 'vectorsdb':
                 $resource = $parts[4] ?? '';
                 if (in_array($resource, ['columns', 'attributes', 'indexes'])) {
                     $channels[] = 'console';
@@ -511,12 +513,20 @@ class Realtime extends MessagingAdapter
                     $resourceId = $tableId ?: $collectionId;
                     $channels = [];
 
-                    // sending legacy + tablesdb events to both legacy and tablesdb
-                    $channels = array_values(array_unique(array_merge(
-                        self::getDatabaseChannels('legacy', $database->getId(), $resourceId, $payload->getId(), 'databases'),
-                        self::getDatabaseChannels('tablesdb', $database->getId(), $resourceId, $payload->getId(), 'databases'),
-                        self::getDatabaseChannels('tablesdb', $database->getId(), $resourceId, $payload->getId())
-                    )));
+                    switch ($parts[0]) {
+                        case 'databases':
+                        case 'tablesdb':
+                            // sending legacy + tablesdb events to both legacy and tablesdb
+                            $channels = array_values(array_unique(array_merge(
+                                self::getDatabaseChannels('legacy', $database->getId(), $resourceId, $payload->getId(), 'databases'),
+                                self::getDatabaseChannels('tablesdb', $database->getId(), $resourceId, $payload->getId(), 'databases'),
+                                self::getDatabaseChannels('tablesdb', $database->getId(), $resourceId, $payload->getId())
+                            )));
+                            break;
+                        default:
+                            // only prefixed events
+                            $channels = array_values(self::getDatabaseChannels($parts[0], $database->getId(), $resourceId, $payload->getId()));
+                    }
 
                     $roles = $collection->getAttribute('documentSecurity', false)
                         ? \array_merge($collection->getRead(), $payload->getRead())
@@ -582,6 +592,7 @@ class Realtime extends MessagingAdapter
      * @param string $resourceId The collection/table ID
      * @param string $payloadId The document/row ID
      * @param string $prefixOverride Override the channel prefix when different API types share the same terminology but need different prefixes
+     * (e.g., 'databases' and 'documentsdb' use same terminology but need different prefixes)
      * @return array Array of channel names
      */
     private static function getDatabaseChannels(
@@ -615,6 +626,13 @@ class Realtime extends MessagingAdapter
                 $channels[] = "{$basePrefix}.{$databaseId}.tables.{$resourceId}.rows.{$payloadId}";
                 break;
 
+            case 'documentsdb':
+            case 'vectorsdb':
+                $channels[] = 'documents';
+                $channels[] = "{$basePrefix}.{$databaseId}.collections.{$resourceId}.documents";
+                $channels[] = "{$basePrefix}.{$databaseId}.collections.{$resourceId}.documents.{$payloadId}";
+                break;
+
             default:
                 $basePrefix = 'databases';
                 $channels[] = 'documents';
@@ -623,6 +641,7 @@ class Realtime extends MessagingAdapter
                 break;
 
         }
+
         return $channels;
     }
 }

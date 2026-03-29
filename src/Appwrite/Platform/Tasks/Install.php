@@ -25,6 +25,7 @@ class Install extends Action
 
     private const int HEALTH_CHECK_ATTEMPTS = 30;
     private const int HEALTH_CHECK_DELAY_SECONDS = 1;
+    private const int PROC_CLOSE_TIMEOUT_SECONDS = 60;
 
     private const string PATTERN_ENV_VAR_NAME = '/^[A-Z0-9_]+$/';
     private const string PATTERN_DB_PASSWORD_VAR = '/^_APP_DB_.*_PASS$/';
@@ -169,9 +170,9 @@ class Install extends Action
                 }
             }
 
-            // Block database type changes on existing installations.
-            // Only enforce if the existing config explicitly set _APP_DB_ADAPTER
-            // (pre-1.9.0 installs never had this variable).
+            // Detect database type from existing installation.
+            // 1.9.0+ installs have _APP_DB_ADAPTER; pre-1.9.0 installs
+            // can be detected by the DB service name or _APP_DB_HOST.
             $existingDatabase = null;
             foreach ($compose->getServices() as $service) {
                 if (!$service) {
@@ -190,10 +191,15 @@ class Install extends Action
                     $existingDatabase = (new Env($rawEnv))->list()['_APP_DB_ADAPTER'] ?? null;
                 }
             }
-            if ($existingDatabase !== null && $existingDatabase !== $database) {
-                Console::error("Cannot change database type from '{$existingDatabase}' to '{$database}'.");
-                Console::error('Changing database types on an existing installation is not supported.');
-                Console::exit(1);
+            if ($existingDatabase === null) {
+                $existingDatabase = $this->detectDatabaseFromCompose($compose);
+            }
+            if ($existingDatabase !== null) {
+                if ($existingDatabase !== $database) {
+                    $database = $existingDatabase;
+                    Console::info("Detected existing database: {$database}");
+                }
+                $vars['_APP_DB_ADAPTER']['default'] = $database;
             }
         }
 
@@ -210,7 +216,8 @@ class Install extends Action
             Console::info('Open your browser at: http://localhost:' . InstallerServer::INSTALLER_WEB_PORT);
             Console::info('Press Ctrl+C to cancel installation');
 
-            $this->startWebServer($defaultHttpPort, $defaultHttpsPort, $organization, $image, $noStart, $vars);
+            $detectedDb = ($existingInstallation && isset($existingDatabase)) ? $existingDatabase : null;
+            $this->startWebServer($defaultHttpPort, $defaultHttpsPort, $organization, $image, $noStart, $vars, $isUpgrade, $detectedDb);
             return;
         }
 
@@ -599,7 +606,12 @@ class Install extends Action
             if (!$noStart && $startIndex <= 2) {
                 $currentStep = InstallerServer::STEP_DOCKER_CONTAINERS;
                 $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_IN_PROGRESS, $messages);
-                $this->runDockerCompose($input, $isLocalInstall, $useExistingConfig, $isCLI);
+                $this->runDockerCompose($input, $isLocalInstall, $useExistingConfig, $isCLI, $progress, $isUpgrade);
+
+                if (!$isUpgrade) {
+                    $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_COMPLETED, $messages);
+                    $this->updateProgress($progress, InstallerServer::STEP_ACCOUNT_SETUP, InstallerServer::STATUS_IN_PROGRESS, messageOverride: 'Creating Appwrite account...');
+                }
 
                 if (!$isLocalInstall) {
                     $this->connectInstallerToAppwriteNetwork();
@@ -607,10 +619,15 @@ class Install extends Action
 
                 $domain = $input['_APP_DOMAIN'] ?? 'localhost';
 
-                // Wait for Appwrite API to be healthy before marking containers as ready
-                $apiUrl = $this->waitForApiReady($domain, $httpPort, $isLocalInstall, $progress, InstallerServer::STEP_DOCKER_CONTAINERS);
+                $healthStep = $isUpgrade ? InstallerServer::STEP_DOCKER_CONTAINERS : InstallerServer::STEP_ACCOUNT_SETUP;
+                if (!$isUpgrade) {
+                    $currentStep = InstallerServer::STEP_ACCOUNT_SETUP;
+                }
+                $apiUrl = $this->waitForApiReady($domain, $httpPort, $isLocalInstall, $progress, $healthStep);
 
-                $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_COMPLETED, $messages);
+                if ($isUpgrade) {
+                    $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_COMPLETED, $messages);
+                }
 
                 if (!$isUpgrade) {
                     $this->createInitialAdminAccount($account, $progress, $apiUrl, $domain);
@@ -658,8 +675,9 @@ class Install extends Action
                 messageOverride: 'Creating Appwrite account'
             );
 
-            // Create the account — tolerate "already exists" so we can still
-            // create a session (common when re-running the installer).
+            // Create the account — tolerate "already exists" and "console
+            // is restricted" errors so we can still create a session
+            // (common when re-running the installer or upgrading).
             $userId = null;
             try {
                 $userId = $this->makeApiCall('/v1/account', [
@@ -669,7 +687,10 @@ class Install extends Action
                     'name' => $name
                 ], false, $apiUrl, $domain);
             } catch (\Throwable $e) {
-                if (\stripos($e->getMessage(), 'already exists') === false) {
+                $message = $e->getMessage();
+                $accountExists = \stripos($message, 'already exists') !== false
+                    || \stripos($message, 'console is restricted') !== false;
+                if (!$accountExists) {
                     throw $e;
                 }
             }
@@ -732,6 +753,8 @@ class Install extends Action
         $name = $account['name'] ?? 'Admin';
         $email = $account['email'] ?? 'admin@selfhosted.local';
 
+        $hostIp = gethostbyname($domain);
+
         $payload = [
             'action' => $type,
             'account' => 'self-hosted',
@@ -744,6 +767,11 @@ class Install extends Action
                 'email' => $email,
                 'domain' => $domain,
                 'database' => $database,
+                'hostIp' => $hostIp !== $domain ? $hostIp : null,
+                'os' => php_uname('s') . ' ' . php_uname('r'),
+                'arch' => php_uname('m'),
+                'cpus' => ((int) trim((string) \shell_exec('nproc'))) ?: null,
+                'ram' => (int) round(((float) trim((string) \shell_exec('grep MemTotal /proc/meminfo | awk \'{print $2}\''))) / 1024),
             ]),
         ];
 
@@ -766,7 +794,7 @@ class Install extends Action
      *  - host.docker.internal:{port} — reaches host-published ports from inside a container
      *  - localhost:{port} — works when running directly on the host (local dev)
      */
-    private function waitForApiReady(string $domain, string $httpPort, bool $isLocalInstall, ?callable $progress, string $step = InstallerServer::STEP_DOCKER_CONTAINERS): string
+    private function waitForApiReady(string $domain, string $httpPort, bool $isLocalInstall, ?callable $progress, string $step = InstallerServer::STEP_ACCOUNT_SETUP): string
     {
         $client = new Client();
         $client
@@ -776,12 +804,16 @@ class Install extends Action
 
         $healthPath = '/v1/health/version';
 
-        // Local dev: reach Traefik via localhost on the host.
-        // Docker: reach Appwrite directly via Docker internal DNS (network connect is guaranteed).
-        $candidate = $isLocalInstall
-            ? 'http://localhost:' . $httpPort . $healthPath
-            : self::APPWRITE_API_URL . $healthPath;
-        $candidates = [$candidate];
+        if ($isLocalInstall) {
+            $candidates = [
+                'http://localhost:' . $httpPort . $healthPath,
+            ];
+        } else {
+            $candidates = [
+                self::APPWRITE_API_URL . $healthPath,
+                'http://host.docker.internal:' . $httpPort . $healthPath,
+            ];
+        }
 
         $lastErrors = [];
 
@@ -803,7 +835,7 @@ class Install extends Action
                     $progress(
                         $step,
                         InstallerServer::STATUS_IN_PROGRESS,
-                        'Waiting for Appwrite to be ready (' . ($i + 1) . '/' . self::HEALTH_CHECK_ATTEMPTS . ')',
+                        'Waiting for Appwrite to be ready...',
                         []
                     );
                 } catch (\Throwable) {
@@ -964,7 +996,7 @@ class Install extends Action
         }
     }
 
-    protected function runDockerCompose(array $input, bool $isLocalInstall, bool $useExistingConfig, bool $isCLI): void
+    protected function runDockerCompose(array $input, bool $isLocalInstall, bool $useExistingConfig, bool $isCLI, ?callable $progress = null, bool $isUpgrade = false): void
     {
         $env = '';
         if (!$useExistingConfig) {
@@ -1004,8 +1036,28 @@ class Install extends Action
         $command[] = '-d';
         $command[] = '--remove-orphans';
         $command[] = '--renew-anon-volumes';
-        $commandLine = $env . implode(' ', array_map(escapeshellarg(...), $command)) . ' 2>&1';
-        \exec($commandLine, $output, $exit);
+        $commandLine = $env . implode(' ', array_map(escapeshellarg(...), $command));
+
+        if ($progress) {
+            $totalServices = $this->countComposeServices($composeFile);
+            if ($totalServices > 0) {
+                $verb = $isUpgrade ? 'Restarting' : 'Starting';
+                try {
+                    $progress(
+                        InstallerServer::STEP_DOCKER_CONTAINERS,
+                        InstallerServer::STATUS_IN_PROGRESS,
+                        "$verb Docker containers...",
+                        ['containerStarted' => 0, 'containerTotal' => $totalServices]
+                    );
+                } catch (\Throwable) {
+                }
+            }
+            $result = $this->execWithContainerProgress($commandLine, $totalServices, $progress, $isUpgrade);
+            $output = $result['output'];
+            $exit = $result['exit'];
+        } else {
+            \exec($commandLine . ' 2>&1', $output, $exit);
+        }
 
         if ($exit !== 0) {
             $message = trim(implode("\n", $output));
@@ -1015,6 +1067,126 @@ class Install extends Action
         if ($isLocalInstall && $isCLI && !empty($output)) {
             Console::log(implode("\n", $output));
         }
+    }
+
+    private function countComposeServices(string $composeFile): int
+    {
+        $content = @file_get_contents($composeFile);
+        if ($content === false) {
+            return 0;
+        }
+        $count = preg_match_all('/^\s*container_name:/m', $content);
+        return $count !== false ? $count : 0;
+    }
+
+    private function execWithContainerProgress(string $commandLine, int $totalServices, callable $progress, bool $isUpgrade): array
+    {
+        $verb = $isUpgrade ? 'Restarting' : 'Starting';
+        $message = "$verb Docker containers...";
+        $started = 0;
+        $output = [];
+
+        $process = proc_open(
+            $commandLine . ' 2>&1',
+            [1 => ['pipe', 'w']],
+            $pipes
+        );
+
+        if (!is_resource($process)) {
+            return ['output' => [], 'exit' => 1];
+        }
+
+        stream_set_blocking($pipes[1], false);
+        $deadline = time() + self::PROC_CLOSE_TIMEOUT_SECONDS;
+        $buffer = '';
+
+        while (time() < $deadline) {
+            $status = proc_get_status($process);
+
+            $read = [$pipes[1]];
+            $write = null;
+            $except = null;
+            $changed = @stream_select($read, $write, $except, 1);
+
+            if ($changed > 0) {
+                $chunk = fread($pipes[1], 8192);
+                if ($chunk === false || $chunk === '') {
+                    if (!$status['running']) {
+                        break;
+                    }
+                    continue;
+                }
+                $buffer .= $chunk;
+                while (($pos = strpos($buffer, "\n")) !== false) {
+                    $trimmed = rtrim(substr($buffer, 0, $pos), "\r");
+                    $buffer = substr($buffer, $pos + 1);
+                    $output[] = $trimmed;
+
+                    if (str_contains($trimmed, 'Container') && (str_contains($trimmed, 'Started') || str_contains($trimmed, 'Running'))) {
+                        $started = min($started + 1, $totalServices);
+                        if ($totalServices > 0) {
+                            try {
+                                $progress(
+                                    InstallerServer::STEP_DOCKER_CONTAINERS,
+                                    InstallerServer::STATUS_IN_PROGRESS,
+                                    $message,
+                                    ['containerStarted' => $started, 'containerTotal' => $totalServices]
+                                );
+                            } catch (\Throwable) {
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (!$status['running'] && ($changed === 0 || feof($pipes[1]))) {
+                break;
+            }
+        }
+
+        if ($buffer !== '') {
+            $output[] = rtrim($buffer, "\r\n");
+        }
+
+        fclose($pipes[1]);
+
+        $exit = $this->procCloseWithTimeout($process, self::PROC_CLOSE_TIMEOUT_SECONDS);
+
+        return ['output' => $output, 'exit' => $exit];
+    }
+
+    /**
+     * Wait up to $timeoutSeconds for a process to exit, then kill it.
+     *
+     * proc_close() blocks indefinitely which can hang the installer if
+     * docker compose refuses to exit after all containers are running.
+     *
+     * @param resource $process A process resource from proc_open()
+     */
+    private function procCloseWithTimeout($process, int $timeoutSeconds): int
+    {
+        $deadline = time() + $timeoutSeconds;
+
+        while (time() < $deadline) {
+            $status = proc_get_status($process);
+            if (!$status['running']) {
+                $exitCode = $status['exitcode'];
+                $closeCode = proc_close($process);
+                return $exitCode !== -1 ? $exitCode : $closeCode;
+            }
+            usleep(250_000);
+        }
+
+        proc_terminate($process, SIGTERM);
+        usleep(500_000);
+
+        if (proc_get_status($process)['running']) {
+            proc_terminate($process, SIGKILL);
+        }
+
+        proc_close($process);
+
+        return 124;
     }
 
     protected function isLocalInstall(): bool
@@ -1087,6 +1259,34 @@ class Install extends Action
         }
         $this->path = '/usr/src/code';
         $this->hostPath = $this->getInstallerHostPath();
+    }
+
+    /**
+     * Detect the database adapter from a pre-1.9.0 compose file by
+     * checking which DB service exists or reading _APP_DB_HOST.
+     */
+    private function detectDatabaseFromCompose(Compose $compose): ?string
+    {
+        $serviceNames = array_keys($compose->getServices());
+        $dbServices = ['mariadb', 'mongodb', 'postgresql'];
+        foreach ($dbServices as $db) {
+            if (in_array($db, $serviceNames, true)) {
+                return $db;
+            }
+        }
+
+        foreach ($compose->getServices() as $service) {
+            if (!$service) {
+                continue;
+            }
+            $env = $service->getEnvironment()->list();
+            $host = $env['_APP_DB_HOST'] ?? null;
+            if ($host !== null && in_array($host, $dbServices, true)) {
+                return $host;
+            }
+        }
+
+        return null;
     }
 
     protected function readExistingCompose(): string

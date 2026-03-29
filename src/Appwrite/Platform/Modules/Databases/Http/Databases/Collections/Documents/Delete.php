@@ -79,6 +79,7 @@ class Delete extends Action
             ->inject('requestTimestamp')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('queueForEvents')
             ->inject('usage')
             ->inject('transactionState')
@@ -95,6 +96,7 @@ class Delete extends Action
         ?\DateTime $requestTimestamp,
         UtopiaResponse $response,
         Database $dbForProject,
+        callable $getDatabasesDB,
         Event $queueForEvents,
         Context $usage,
         TransactionState $transactionState,
@@ -116,14 +118,15 @@ class Delete extends Action
             throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
+        $dbForDatabases = $getDatabasesDB($database);
         // Read permission should not be required for delete
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
         if ($transactionId !== null) {
             // Use transaction-aware document retrieval to see changes from same transaction
-            $document = $transactionState->getDocument($collectionTableId, $documentId, $transactionId);
+            $document = $transactionState->getDocument($database, $collectionTableId, $documentId, $transactionId);
         } else {
-            $document = $authorization->skip(fn () => $dbForProject->getDocument($collectionTableId, $documentId));
+            $document = $authorization->skip(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId));
         }
 
         if ($document->isEmpty()) {
@@ -187,8 +190,8 @@ class Delete extends Action
         }
 
         try {
-            $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $database, $collection, $documentId) {
-                $dbForProject->deleteDocument(
+            $dbForDatabases->withRequestTimestamp($requestTimestamp, function () use ($dbForDatabases, $database, $collection, $documentId) {
+                $dbForDatabases->deleteDocument(
                     'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
                     $documentId
                 );

@@ -114,6 +114,8 @@ services:
         condition: service_started
       appwrite-geo:
         condition: service_healthy
+      ollama:
+        condition: service_started
     entrypoint:
       - php
       - -e
@@ -161,6 +163,12 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER_VECTORSDB
+      - _APP_DB_HOST_VECTORSDB
+      - _APP_DB_PORT_VECTORSDB
+      - _APP_DB_SCHEMA_VECTORSDB
+      - _APP_DB_USER_VECTORSDB
+      - _APP_DB_PASS_VECTORSDB
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
       - _APP_SMTP_SECURE
@@ -250,7 +258,7 @@ services:
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: appwrite/console:7.5.7
+    image: appwrite/console:7.8.26
     restart: unless-stopped
     networks:
       - appwrite
@@ -299,6 +307,7 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
       - redis
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -315,6 +324,12 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER_VECTORSDB
+      - _APP_DB_HOST_VECTORSDB
+      - _APP_DB_PORT_VECTORSDB
+      - _APP_DB_SCHEMA_VECTORSDB
+      - _APP_DB_USER_VECTORSDB
+      - _APP_DB_PASS_VECTORSDB
       - _APP_USAGE_STATS
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_CONFIG_REALTIME
@@ -334,6 +349,7 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -367,6 +383,7 @@ services:
       - ${_APP_DB_HOST:-mongodb}
       - request-catcher-sms
       - request-catcher-webhook
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -397,6 +414,7 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
+      - ollama
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -406,6 +424,7 @@ services:
       - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -462,9 +481,11 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -480,6 +501,12 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER_VECTORSDB
+      - _APP_DB_HOST_VECTORSDB
+      - _APP_DB_PORT_VECTORSDB
+      - _APP_DB_SCHEMA_VECTORSDB
+      - _APP_DB_USER_VECTORSDB
+      - _APP_DB_PASS_VECTORSDB
       - _APP_LOGGING_CONFIG
       - _APP_WORKERS_NUM
       - _APP_QUEUE_NAME
@@ -501,6 +528,7 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -633,6 +661,7 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
+      - ollama
     volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -852,6 +881,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
+      
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
     environment:
@@ -1048,6 +1078,7 @@ services:
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -1081,6 +1112,7 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
       - redis
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -1111,6 +1143,7 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
       - redis
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -1141,6 +1174,7 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
       - redis
+      - ollama
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -1246,7 +1280,6 @@ services:
       start_period: 5s
 
   mariadb:
-    profiles: ["mariadb"]
     image: mariadb:10.11 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
     <<: *x-logging
@@ -1270,7 +1303,6 @@ services:
       retries: 12
 
   mongodb:
-    profiles: ["mongodb"]
     image: mongo:8.2.5
     container_name: appwrite-mongodb
     <<: *x-logging
@@ -1306,32 +1338,41 @@ services:
       retries: 10
       start_period: 30s
 
-
-
   postgresql:
-    profiles: ["postgresql"]
-    build:
-      context: ./tests/resources/postgresql
-      args:
-        POSTGRES_VERSION: 17
+    image: appwrite/postgres:0.1.0
     container_name: appwrite-postgresql
     <<: *x-logging
     networks:
       - appwrite
     volumes:
-      - appwrite-postgresql:/var/lib/postgresql:rw
+      - appwrite-postgresql:/var/lib/postgresql/18/data:rw
     ports:
       - "5432:5432"
     environment:
       - POSTGRES_DB=${_APP_DB_SCHEMA}
       - POSTGRES_USER=${_APP_DB_USER}
       - POSTGRES_PASSWORD=${_APP_DB_PASS}
-    command: "postgres"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${_APP_DB_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U ${_APP_DB_USER} -d ${_APP_DB_SCHEMA}"]
       interval: 5s
       timeout: 5s
-      retries: 12
+      retries: 10
+      start_period: 10s
+    command: "postgres"
+
+  ollama:
+    image: appwrite/ollama:0.1.1
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    restart: unless-stopped
+    environment:
+      MODELS: ${_APP_EMBEDDING_MODELS:-embeddinggemma}
+      OLLAMA_KEEP_ALIVE: 24h
+    volumes:
+      - appwrite-models:/root/.ollama
+    networks:
+      - appwrite
 
   redis:
     image: redis:7.4.7-alpine
@@ -1454,3 +1495,4 @@ volumes:
   appwrite-sites:
   appwrite-builds:
   appwrite-config:
+  appwrite-models:

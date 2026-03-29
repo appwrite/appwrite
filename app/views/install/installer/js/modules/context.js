@@ -13,7 +13,9 @@
         DOCKER_COMPOSE: 'docker-compose',
         ENV_VARS: 'env-vars',
         DOCKER_CONTAINERS: 'docker-containers',
-        ACCOUNT_SETUP: 'account-setup'
+        ACCOUNT_SETUP: 'account-setup',
+        SSL_CERTIFICATE: 'ssl-certificate',
+        REDIRECT: 'redirect'
     });
 
     const STATUS = Object.freeze({
@@ -75,7 +77,7 @@
         {
             id: STEP_IDS.ACCOUNT_SETUP,
             inProgress: 'Creating Appwrite account...',
-            done: 'Appwrite account created (redirecting...)'
+            done: 'Appwrite account created'
         }
     ]);
 

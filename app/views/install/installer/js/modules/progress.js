@@ -21,7 +21,7 @@
         storeInstallId,
         clearInstallId
     } = window.InstallerStepsState || {};
-    const { extractHostname, isLocalHost } = window.InstallerStepsValidation || {};
+    const { extractHostname, isLocalHost, isIPAddress } = window.InstallerStepsValidation || {};
     const { generateSecretKey } = window.InstallerStepsUI || {};
     const { showToast } = window.InstallerToast || {};
 
@@ -111,10 +111,10 @@
             return normalized.summary || 'Installation failed.';
         }
         if (status === STATUS.COMPLETED) return step.done;
-        return step.inProgress;
+        return message || step.inProgress;
     };
 
-    const updateInstallRow = (row, step, status, message) => {
+    const updateInstallRow = (row, step, status, message, details) => {
         if (!row || !step) return;
         row.dataset.status = status;
         row.dataset.step = step.id;
@@ -136,6 +136,15 @@
                     text.classList.remove('is-enter');
                 });
             }
+        }
+
+        const counter = row.querySelector('[data-install-counter]');
+        if (counter) {
+            const started = details?.containerStarted ?? 0;
+            const total = details?.containerTotal;
+            counter.textContent = (status === STATUS.IN_PROGRESS && total > 0 && started < total)
+                ? `${started}/${total}`
+                : '';
         }
 
         // Show/hide "Navigate to Console" button for account setup errors
@@ -251,7 +260,7 @@
         return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
     };
 
-    const buildRedirectUrl = () => {
+    const buildRedirectUrl = (protocol) => {
         const dataset = getBodyDataset?.() ?? {};
         const rawDomain = (formState?.appDomain || dataset.defaultAppDomain || '').trim();
         if (!rawDomain) return '';
@@ -266,22 +275,53 @@
         } else if (normalizedHost === 'traefik') {
             host = rawDomain.replace(hostForProtocol, 'localhost');
         }
-        let protocol = 'http';
-        let port = httpPort;
-        if (httpsPort && httpsPort !== '0' && !isLocalHost?.(normalizedHost)) {
-            protocol = 'https';
-            port = httpsPort;
-        }
-        if (!hasPort && port && ((protocol === 'http' && port !== '80') || (protocol === 'https' && port !== '443'))) {
+        const port = protocol === 'https' ? httpsPort : httpPort;
+        const defaultPort = protocol === 'https' ? '443' : '80';
+        if (!hasPort && port && port !== defaultPort) {
             host = `${host}:${port}`;
         }
         return `${protocol}://${host}`;
     };
 
-    const redirectToApp = () => {
-        const url = buildRedirectUrl();
+    const normalizeHostname = (rawDomain) => {
+        const hostname = extractHostname?.(rawDomain)?.toLowerCase?.() ?? '';
+        if (hostname === '0.0.0.0' || hostname === 'traefik') return 'localhost';
+        return hostname;
+    };
+
+    const canUseHttps = () => {
+        const dataset = getBodyDataset?.() ?? {};
+        const rawDomain = (formState?.appDomain || dataset.defaultAppDomain || '').trim();
+        const httpsPort = (formState?.httpsPort || dataset.defaultHttpsPort || '').trim();
+        if (!httpsPort || httpsPort === '0') return false;
+        const hostname = normalizeHostname(rawDomain);
+        return !isLocalHost?.(hostname) && !isIPAddress?.(hostname);
+    };
+
+    const pollCertificate = async (domain, port, maxAttempts, intervalMs) => {
+        for (let i = 0; i < maxAttempts; i++) {
+            try {
+                const response = await fetch(
+                    `/install/certificate?domain=${encodeURIComponent(domain)}&port=${encodeURIComponent(port)}`,
+                    { cache: 'no-store' }
+                );
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.ready) return true;
+                }
+            } catch {
+                // Installer server may have shut down
+            }
+            if (i < maxAttempts - 1) {
+                await new Promise((resolve) => setTimeout(resolve, intervalMs));
+            }
+        }
+        return false;
+    };
+
+    const redirectToApp = (protocol) => {
+        const url = buildRedirectUrl(protocol);
         if (!url) return;
-        // Fire-and-forget: tell the installer server it can shut down
         fetch('/install/shutdown', { method: 'POST', headers: withCsrfHeader() }).catch(() => {});
         window.location.href = url;
     };
@@ -318,7 +358,7 @@
         const normalizedDomain = (formState?.appDomain || '').trim() || 'localhost';
         const normalizedHttpPort = (formState?.httpPort || '').trim() || '80';
         const normalizedHttpsPort = (formState?.httpsPort || '').trim() || '443';
-        const normalizedEmail = (formState?.emailCertificates || '').trim();
+        const normalizedEmail = (formState?.emailCertificates || '').trim() || (formState?.accountEmail || '').trim();
         const normalizedAssistantKey = (formState?.assistantOpenAIKey || '').trim();
         const normalizedAccountEmail = (formState?.accountEmail || '').trim();
         const normalizedAccountPassword = (formState?.accountPassword || '').trim();
@@ -406,6 +446,7 @@
 
     const initStep5 = (root) => {
         if (!root) return;
+        let resolvedProtocol = 'http';
 
         if (activeInstall?.controller) {
             activeInstall.controller.abort();
@@ -497,7 +538,7 @@
                     if (!state) return;
                     const row = ensureRow(step);
                     if (row) {
-                        updateInstallRow(row, step, state.status || STATUS.IN_PROGRESS, state.message);
+                        updateInstallRow(row, step, state.status || STATUS.IN_PROGRESS, state.message, state.details);
                         if (state.status === STATUS?.ERROR) {
                             updateInstallErrorDetails(row, {
                                 message: state.message,
@@ -547,6 +588,9 @@
                     }
                 }
             }
+            if (payload.status === STATUS.ERROR) {
+                showGlobalActions();
+            }
             scheduleFallback();
         };
 
@@ -584,6 +628,7 @@
 
         const applySnapshot = (snapshot) => {
             if (!snapshot || !snapshot.steps) return;
+            let hasErrors = false;
             INSTALLATION_STEPS.forEach((step) => {
                 const detail = snapshot.steps[step.id];
                 if (!detail) return;
@@ -592,8 +637,14 @@
                     message: detail.message,
                     details: snapshot.details?.[step.id]
                 });
+                if (detail.status === STATUS.ERROR) {
+                    hasErrors = true;
+                }
             });
             renderProgress();
+            if (hasErrors) {
+                showGlobalActions();
+            }
         };
 
         const checkAllCompleted = () => {
@@ -605,9 +656,7 @@
             const accountState = progressState.get(STEP_IDS.ACCOUNT_SETUP);
             const sessionDetails = sseSessionDetails || accountState?.details;
             finalizeInstall();
-            notifyInstallComplete(activeInstall?.installId, sessionDetails).finally(() => {
-                setTimeout(() => redirectToApp(), TIMINGS?.redirectDelay ?? 0);
-            });
+            startSslCheck(sessionDetails);
         };
 
         const startPolling = () => {
@@ -644,6 +693,77 @@
             }
             stopSyncedSpinnerRotation();
             setUnloadGuard(false);
+            clearInstallLock?.();
+        };
+
+        const SSL_STEP = {
+            id: STEP_IDS.SSL_CERTIFICATE,
+            inProgress: 'Generating SSL certificate...',
+            done: 'SSL certificate verified'
+        };
+
+        const REDIRECT_STEP = {
+            id: STEP_IDS.REDIRECT,
+            inProgress: 'Redirecting to console...',
+            done: 'Redirecting to console...'
+        };
+
+        const showRedirectStep = (sessionDetails, protocol) => {
+            animatePanelHeight(() => {
+                progressState.set(REDIRECT_STEP.id, {
+                    status: STATUS.IN_PROGRESS,
+                    message: REDIRECT_STEP.inProgress
+                });
+                const row = ensureRow(REDIRECT_STEP);
+                if (row) {
+                    updateInstallRow(row, REDIRECT_STEP, STATUS.IN_PROGRESS, REDIRECT_STEP.inProgress);
+                }
+            });
+            startSyncedSpinnerRotation(list);
+
+            notifyInstallComplete(activeInstall?.installId, sessionDetails).finally(() => {
+                setTimeout(() => redirectToApp(protocol), TIMINGS?.redirectDelay ?? 0);
+            });
+        };
+
+        const startSslCheck = (sessionDetails) => {
+            if (!canUseHttps()) {
+                showRedirectStep(sessionDetails, 'http');
+                return;
+            }
+
+            animatePanelHeight(() => {
+                progressState.set(SSL_STEP.id, {
+                    status: STATUS.IN_PROGRESS,
+                    message: SSL_STEP.inProgress
+                });
+                const row = ensureRow(SSL_STEP);
+                if (row) {
+                    updateInstallRow(row, SSL_STEP, STATUS.IN_PROGRESS, SSL_STEP.inProgress);
+                }
+            });
+            startSyncedSpinnerRotation(list);
+
+            const dataset = getBodyDataset?.() ?? {};
+            const rawDomain = (formState?.appDomain || dataset.defaultAppDomain || '').trim();
+            const httpsPort = (formState?.httpsPort || dataset.defaultHttpsPort || '443').trim();
+            const domain = normalizeHostname(rawDomain);
+            pollCertificate(domain, httpsPort, 15, 2000).then((ready) => {
+                stopSyncedSpinnerRotation();
+                const certMessage = ready ? SSL_STEP.done : 'Certificate not ready, continuing over HTTP';
+                animatePanelHeight(() => {
+                    progressState.set(SSL_STEP.id, {
+                        status: STATUS.COMPLETED,
+                        message: certMessage
+                    });
+                    const row = ensureRow(SSL_STEP);
+                    if (row) {
+                        updateInstallRow(row, SSL_STEP, STATUS.COMPLETED, certMessage);
+                    }
+                });
+                resolvedProtocol = ready ? 'https' : 'http';
+                showRedirectStep(sessionDetails, resolvedProtocol);
+            });
         };
 
         const startInstallStream = async (installId, options = {}) => {
@@ -746,9 +866,7 @@
                         const accountState = progressState.get(STEP_IDS.ACCOUNT_SETUP);
                         const sessionDetails = sseSessionDetails || accountState?.details;
                         finalizeInstall();
-                        notifyInstallComplete(activeInstall?.installId, sessionDetails).finally(() => {
-                            setTimeout(() => redirectToApp(), TIMINGS?.redirectDelay ?? 0);
-                        });
+                        startSslCheck(sessionDetails);
                         return;
                     }
                     if (event === SSE_EVENTS.ERROR) {
@@ -792,9 +910,22 @@
             }
         };
 
+        const isSnapshotTerminal = (snapshot) => {
+            if (!snapshot?.steps) return true;
+            const stepEntries = Object.values(snapshot.steps);
+            if (stepEntries.length === 0) return true;
+            const hasError = stepEntries.some((s) => s.status === STATUS.ERROR);
+            if (hasError) return true;
+            const allCompleted = INSTALLATION_STEPS.every((step) => {
+                const detail = snapshot.steps[step.id];
+                return detail && detail.status === STATUS.COMPLETED;
+            });
+            return allCompleted;
+        };
+
         const resumeInstall = async (installId) => {
             const snapshot = await fetchInstallStatus(installId);
-            if (!snapshot) return false;
+            if (!snapshot || isSnapshotTerminal(snapshot)) return false;
             activeInstall = {
                 installId,
                 controller: new AbortController(),
@@ -857,7 +988,7 @@
             const retryButton = event.target.closest('[data-install-retry]');
 
             if (consoleButton) {
-                redirectToApp();
+                redirectToApp(resolvedProtocol);
                 return;
             }
 
@@ -868,6 +999,60 @@
             }
         });
 
+        const globalActions = root.querySelector('[data-install-global-actions]');
+
+        const showGlobalActions = () => {
+            if (globalActions) {
+                globalActions.classList.remove('is-hidden');
+            }
+        };
+
+        const performReset = async (hard) => {
+            const installId = activeInstall?.installId || getInstallLock?.()?.installId || getStoredInstallId?.();
+
+            try {
+                const res = await fetch('/install/reset', {
+                    method: 'POST',
+                    headers: withCsrfHeader({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({ installId: installId || '', hard })
+                });
+                if (hard && !res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    showToast?.({
+                        status: 'error',
+                        title: 'Reset failed',
+                        description: data?.message || 'Could not stop containers. Try running "docker compose down -v" manually.',
+                        dismissible: true
+                    });
+                    return;
+                }
+            } catch (e) {
+                console.error('Reset request failed:', e);
+            }
+
+            clearInstallLock?.();
+            clearInstallId?.();
+            cleanupInstallFlow();
+            window.location.href = '/?step=1';
+        };
+
+        const startOverButton = root.querySelector('[data-install-start-over]');
+        if (startOverButton) {
+            startOverButton.addEventListener('click', () => performReset(false));
+        }
+
+        const hardResetButton = root.querySelector('[data-install-hard-reset]');
+        if (hardResetButton) {
+            hardResetButton.addEventListener('click', () => {
+                const confirmed = window.confirm(
+                    'This will stop all containers, remove all volumes (including database data, uploads, and certificates), and delete configuration files.\n\nThis action cannot be undone. Continue?'
+                );
+                if (confirmed) {
+                    performReset(true);
+                }
+            });
+        }
+
         // When the user switches back to this tab, check if installation
         // finished while the tab was in the background.
         document.addEventListener('visibilitychange', () => {
@@ -876,6 +1061,14 @@
             }
         });
 
+        const startFreshInstall = () => {
+            clearInstallId?.();
+            clearInstallLock?.();
+            const newInstallId = generateInstallId();
+            storeInstallId?.(newInstallId);
+            startInstallStream(newInstallId);
+        };
+
         const lock = getInstallLock?.();
         const existingInstallId = lock?.installId || getStoredInstallId?.();
         if (existingInstallId) {
@@ -883,15 +1076,11 @@
                 if (!resumed) {
                     clearInstallId?.();
                     clearInstallLock?.();
-                    const newInstallId = generateInstallId();
-                    storeInstallId?.(newInstallId);
-                    startInstallStream(newInstallId);
+                    window.location.href = '/?step=1';
                 }
             });
         } else {
-            const newInstallId = generateInstallId();
-            storeInstallId?.(newInstallId);
-            startInstallStream(newInstallId);
+            startFreshInstall();
         }
     };
 

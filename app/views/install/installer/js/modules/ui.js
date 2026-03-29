@@ -240,6 +240,9 @@
             if (key === 'database') {
                 value = toDatabaseLabel(formState?.database);
             }
+            if (key === 'emailCertificates' && !value) {
+                value = formState?.accountEmail;
+            }
             if (value) {
                 node.textContent = value;
             }
