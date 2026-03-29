@@ -94,6 +94,7 @@ function ProjectLayout() {
   const { projectId } = Route.useParams()
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [hidePausedCurtain, setHidePausedCurtain] = useState(false)
   const loaderData = Route.useLoaderData() as ProjectLayoutLoaderData
   const { project, isLoading: isProjectLoading, error: projectError } =
     useProject(projectId)
@@ -102,9 +103,10 @@ function ProjectLayout() {
   // Use loader data for first paint so paused curtain shows immediately (no layout shift)
   const projectForPaused =
     loaderData?.project ?? (project ? { $id: project.$id, teamId: project.teamId, status: project.status } : null)
-  const isPaused =
-    (loaderData?.project?.status === 'paused') ||
-    (!isProjectLoading && project?.status === 'paused')
+  const isPausedFromProject = project?.status === 'paused'
+  const isPausedFromLoader =
+    !project && loaderData?.project?.status === 'paused'
+  const isPaused = (isPausedFromProject || isPausedFromLoader) && !hidePausedCurtain
 
   // Extract active section from pathname
   const pathParts = location.pathname.split('/')
@@ -173,6 +175,13 @@ function ProjectLayout() {
   useEffect(() => {
     setSidebarOpen(false)
   }, [location.pathname])
+
+  // If project state is paused again, allow the curtain to show.
+  useEffect(() => {
+    if (project?.status === 'paused') {
+      setHidePausedCurtain(false)
+    }
+  }, [project?.status])
 
   // Keep project active: report console access when layout loads (cloud, non-paused). Fire-and-forget; backend has 6-day cooldown.
   // Dedupe: only one call per projectId per mount (avoids double call from Strict Mode or dependency updates).
@@ -246,6 +255,7 @@ function ProjectLayout() {
         <PausedProjectCurtain
           projectId={projectForPaused.$id}
           teamId={projectForPaused.teamId}
+          onRestoreSuccess={() => setHidePausedCurtain(true)}
         />
       )}
       <SessionMigrationsProvider>

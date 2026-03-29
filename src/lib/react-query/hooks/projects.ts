@@ -455,17 +455,32 @@ export function useResumeProject(projectId: string | undefined) {
         if (client.headers) delete client.headers[CONSOLE_FINGERPRINT_HEADER]
       }
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       if (!projectId) return
-      queryClient.invalidateQueries({ queryKey: ['project', projectId] })
-      // Invalidate all project-scoped queries so the next page load refetches fresh data
-      // and we avoid HTTP errors from stale project-scoped API state after resume
-      queryClient.invalidateQueries({
+      // Refetch the current project immediately so paused-state UI updates without reload.
+      await queryClient.refetchQueries({
+        queryKey: ['project', projectId],
+        exact: true,
+      })
+
+      // Refetch all project-scoped queries that include this project id.
+      await queryClient.refetchQueries({
         predicate: (query) => {
           const k = query.queryKey
           return (
             (k[0] === 'project' && k[1] === projectId) ||
             (k[1] === 'project' && k[2] === projectId)
+          )
+        },
+      })
+
+      // Project lists/pickers can exclude paused projects; refresh them too.
+      await queryClient.refetchQueries({
+        predicate: (query) => {
+          const k = query.queryKey
+          return (
+            k[0] === 'projects' ||
+            (k[0] === 'organization' && k[1] === 'projects')
           )
         },
       })
