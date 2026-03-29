@@ -33,7 +33,15 @@ Http::get('/v1/locale')
     ->inject('locale')
     ->inject('geoRecord')
     ->action(function (Request $request, Response $response, Locale $locale, GeoRecord $geoRecord) {
-        $response->dynamic($geoRecord, Response::MODEL_LOCALE);
+        $response->dynamic(new Document([
+            'ip' => $geoRecord->getIp(),
+            'countryCode' => $geoRecord->getCountryCode(),
+            'country' => $geoRecord->getCountryName(),
+            'continentCode' => $geoRecord->getContinentCode(),
+            'continent' => $geoRecord->getContinent(),
+            'eu' => $geoRecord->isEu(),
+            'currency' => $geoRecord->getCurrency() ?? '',
+        ]), Response::MODEL_LOCALE);
     });
 
 Http::get('/v1/locale/codes')
