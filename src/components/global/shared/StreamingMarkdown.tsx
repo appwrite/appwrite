@@ -100,6 +100,36 @@ function formatCodeLanguageLabel(language: CodeBlockLanguage): string {
   return labels[language] ?? language
 }
 
+function isExternalDomainLink(href?: string): boolean {
+  if (!href) return false
+
+  // Keep non-web protocols in the same context.
+  if (
+    href.startsWith('mailto:') ||
+    href.startsWith('tel:') ||
+    href.startsWith('#')
+  ) {
+    return false
+  }
+
+  try {
+    if (typeof window === 'undefined') {
+      // Without a browser origin, treat absolute web URLs as external.
+      return /^https?:\/\//i.test(href) || href.startsWith('//')
+    }
+
+    const current = new URL(window.location.href)
+    const resolved = new URL(href, current)
+
+    return (
+      (resolved.protocol === 'http:' || resolved.protocol === 'https:') &&
+      resolved.hostname !== current.hostname
+    )
+  } catch {
+    return false
+  }
+}
+
 export function StreamingMarkdown({
   content,
   className,
@@ -120,6 +150,20 @@ export function StreamingMarkdown({
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
+          a({ href, children, ...props }) {
+            const openInNewWindow = isExternalDomainLink(href)
+
+            return (
+              <a
+                href={href}
+                target={openInNewWindow ? '_blank' : undefined}
+                rel={openInNewWindow ? 'noopener noreferrer' : undefined}
+                {...props}
+              >
+                {children}
+              </a>
+            )
+          },
           hr() {
             return (
               <div

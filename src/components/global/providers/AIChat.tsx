@@ -222,6 +222,7 @@ const MIN_WIDTH = 320
 const MAX_WIDTH = 600
 const DEFAULT_WIDTH = 400
 const STORAGE_KEY = 'ai-chat-panel-width'
+const AUTO_SCROLL_BOTTOM_THRESHOLD = 24
 
 interface AssistantMessageRowProps {
   messageId: string
@@ -1208,6 +1209,7 @@ export function AIChatPanel() {
   const copiedMessageTimeoutRef = useRef<number | null>(null)
   const previousConversationIdRef = useRef<string | null>(null)
   const previousLatestMessageIdRef = useRef<string | null>(null)
+  const shouldAutoScrollRef = useRef(true)
   const olderMessagesAnchorRef = useRef<{ scrollTop: number; scrollHeight: number } | null>(
     null,
   )
@@ -1408,6 +1410,18 @@ export function AIChatPanel() {
     }, 0)
   }, [])
 
+  const isNearBottom = useCallback((container: HTMLDivElement) => {
+    const distanceFromBottom =
+      container.scrollHeight - (container.scrollTop + container.clientHeight)
+    return distanceFromBottom <= AUTO_SCROLL_BOTTOM_THRESHOLD
+  }, [])
+
+  const handleMessagesScroll = useCallback(() => {
+    const container = messagesContainerRef.current
+    if (!container) return
+    shouldAutoScrollRef.current = isNearBottom(container)
+  }, [isNearBottom])
+
   useLayoutEffect(() => {
     const conversationId = activeConversationId ?? null
     const currentLatestMessageId = latestMessageId ?? null
@@ -1425,7 +1439,7 @@ export function AIChatPanel() {
 
       if (
         currentLatestMessageId &&
-        (conversationChanged || latestMessageChanged)
+        (conversationChanged || (latestMessageChanged && shouldAutoScrollRef.current))
       ) {
         messagesEndRef.current?.scrollIntoView({
           behavior: conversationChanged ? 'auto' : 'smooth',
@@ -1436,6 +1450,12 @@ export function AIChatPanel() {
     previousConversationIdRef.current = conversationId
     previousLatestMessageIdRef.current = currentLatestMessageId
   }, [activeConversationId, latestMessageId, messages.length])
+
+  useLayoutEffect(() => {
+    // During generation, follow the latest content unless the user scrolled away.
+    if (!isThinking || !shouldAutoScrollRef.current) return
+    messagesEndRef.current?.scrollIntoView({ behavior: 'auto' })
+  }, [isThinking, latestMessage?.contentText, messages.length])
 
   // Focus input when panel opens
   useEffect(() => {
@@ -1484,6 +1504,11 @@ export function AIChatPanel() {
 
   useEffect(() => {
     setMessagesLimit(ASSISTANT_MESSAGES_PAGE_SIZE)
+  }, [activeConversationId])
+
+  useEffect(() => {
+    // Start each conversation in follow mode.
+    shouldAutoScrollRef.current = true
   }, [activeConversationId])
 
   useEffect(() => {
@@ -1980,7 +2005,11 @@ export function AIChatPanel() {
             </div>
           </div>
 
-          <div ref={messagesContainerRef} className="min-h-0 flex-1 overflow-y-auto p-3">
+          <div
+            ref={messagesContainerRef}
+            onScroll={handleMessagesScroll}
+            className="min-h-0 flex-1 overflow-y-auto p-3"
+          >
             {messages.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center">
                 <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 classic:bg-sidebar-accent">

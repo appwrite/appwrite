@@ -96,26 +96,26 @@ code {
 
   /* OLD VERSION - Strong black (original) - Uncomment to revert */
 
-  --background: oklch(0.141 0.005 285.823);
-  /* Hex for Monaco editor (--vscode-editor-background); use #09090b to match desired editor look */
-  --editor-bg: #09090b;
+  --background: #19191c;
+  /* Monaco editor background aligned with the dark palette */
+  --editor-bg: #141416;
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.141 0.005 285.823);
+  --card: #1d1d21;
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.141 0.005 285.823);
+  --popover: #1d1d21;
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.985 0 0);
   --primary-foreground: oklch(0.21 0.006 285.885);
-  --secondary: oklch(0.274 0.006 286.033);
+  --secondary: #2d2d31;
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.274 0.006 286.033);
+  --muted: #2d2d31;
   --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
+  --accent: #2d2d31;
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.396 0.141 25.723);
   --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.274 0.006 286.033);
-  --input: oklch(0.274 0.006 286.033);
+  --border: #2d2d31;
+  --input: #2d2d31;
   --ring: oklch(0.442 0.017 285.786);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
@@ -123,13 +123,13 @@ code {
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
   --chart-brand: oklch(0.6 0.26 358);
-  --sidebar: oklch(0.21 0.006 285.885);
+  --sidebar: #141416;
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
+  --sidebar-accent: #2d2d31;
   --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.274 0.006 286.033);
+  --sidebar-border: #2d2d31;
   --sidebar-ring: oklch(0.442 0.017 285.786);
 }
 

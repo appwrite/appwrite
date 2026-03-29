@@ -236,7 +236,7 @@ export function ConsoleHeader({
           {!isOrgOverview && (
             <>
               {/* Project Selector */}
-              <div className="hidden min-w-0 flex-1 @[700px]:block">
+              <div className="hidden min-w-0 @[700px]:block">
                 <ProjectSelector
                   projectId={projectId}
                   className="max-w-full min-w-0"
